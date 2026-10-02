@@ -12,6 +12,7 @@ import { Attribution, Wordmark } from '@/components/brand';
 import { useRoomSession } from '@/hooks/use-room-session';
 import { IdentityAvatar, InitialsBadge, errMessage } from '@/lib/identity';
 import { saveCreds } from '@/lib/room-creds';
+import { RoomExpressionControl } from '@/components/room-expression-control';
 
 const AUDIO_LABEL: Record<string, string> = {
   idle: 'Mic off',
@@ -41,6 +42,7 @@ function Live({ roomId, userId }: { roomId: string; userId: string }) {
   const roomQ = useGetRoom(roomId, { query: { enabled: !!s.creds, queryKey: getGetRoomQueryKey(roomId) } });
   const [copied, setCopied] = useState(false);
   const room = roomQ.data;
+  const self = room?.participants.find((p) => p.participantId === s.creds?.participantId);
   const audioOn = !['idle', 'closed', 'error'].includes(s.audioState);
 
   const leave = async () => { await s.leave(); setLocation('/user-portal'); };
@@ -73,6 +75,13 @@ function Live({ roomId, userId }: { roomId: string; userId: string }) {
         {s.playbackBlocked && <p className="w-full text-sm font-bold" role="alert">Your browser blocked sound. Press Resume playback to hear the room.</p>}
         {s.audioError && <p className="w-full text-sm font-bold text-destructive" role="alert" data-testid="text-audio-error">{s.audioError}</p>}
       </section>
+
+      {self?.identity && <RoomExpressionControl
+        roomId={roomId}
+        participantId={self.participantId}
+        identity={self.identity}
+        disabled={s.presence === 'expired'}
+      />}
 
       {s.presence === 'reconnecting' && <p className="mt-4 text-sm font-bold" role="status">Presence feed dropped. Reconnecting; heartbeats continue meanwhile.</p>}
       {s.presence === 'offline' && <p className="mt-4 text-sm font-bold text-destructive" role="alert">Presence feed closed. Reload to reconnect; you stay in the room while your heartbeat is valid.</p>}

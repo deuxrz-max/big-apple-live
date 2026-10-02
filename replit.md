@@ -58,6 +58,9 @@ Account names are reserved case-insensitively and kept after first claim.
 Emoji identities use the OpenMoji library, Male/spiky hair or Female/ponytails,
 and arbitrary six-digit body/hair colors. They are static presence anchors:
 no lip-sync, mouth animation, or audio-driven avatar effects.
+The supplied male spiked-hair and female ponytail portraits are visual references
+for the identity styles. Each user can manually change their own facial expression
+whenever they choose, including while in a room; expressions are not tied to gender.
 
 ## User preferences
 
