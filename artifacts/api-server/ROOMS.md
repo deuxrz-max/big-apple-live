@@ -1,7 +1,8 @@
 # Room session API
 
-This backend manages room state only. It does not route audio, send chat messages,
-or provide UI or user accounts.
+This backend manages room state and authenticated WebRTC signaling. A headless
+browser SDK captures and plays peer audio. The server does not carry or record
+audio, send chat messages, or provide application UI or user accounts.
 
 ## Lifecycle
 
@@ -58,3 +59,56 @@ return 409, and service/subscriber capacity returns 503.
 Anyone with a room ID can inspect or join it. Room IDs are locators, not access
 control. Account authentication, private-room authorization, and abuse/rate
 limits are separate future concerns.
+
+## WebRTC audio
+
+The existing room endpoints and 90-second heartbeat leases are unchanged.
+Audio signaling is an additional, authenticated layer. See
+`lib/room-audio/README.md` for browser usage and error handling.
+
+- `GET /api/room-audio.js` serves the standalone ES module `RoomAudioClient`.
+- `GET /api/rooms/{roomId}/audio/events` opens the private signaling stream.
+- `POST /api/rooms/{roomId}/audio/signals` sends a targeted SDP offer or answer.
+- `DELETE /api/rooms/{roomId}/audio/connections/{connectionId}` stops audio
+  without changing participant membership.
+- All three audio operations require
+  `Authorization: Bearer {participantSessionId}`. Credentials are not placed in
+  query strings, SDP, public room state, signaling events, or request logs.
+- The authenticated server derives the sender's public participant ID. It does
+  not trust a sender ID supplied by a client. SDP goes to one current audio
+  connection in the same room, never to public presence subscribers.
+- SDP includes ICE candidates (non-trickle ICE). The participant with the
+  lexically smaller public ID creates the offer, avoiding simultaneous offers.
+- Every stream connection gets a new public `connectionId`. Both sender and
+  target generations must match. Replacing a stream closes the old one;
+  closing an old stream cannot remove its replacement.
+- Leaving or lease expiry immediately removes audio peers and closes their
+  streams. Losing only an audio stream does not change room presence.
+- The server rate-limits SDP to 120 messages per connection per minute; SDP is
+  limited to 12,000 characters. No SDP history is retained.
+
+Authenticated stream events:
+
+| Event | Data |
+| --- | --- |
+| `audio.ready` | `{self: {participantId, connectionId}, peers: [...]}` |
+| `audio.peers` | `{peers: [...]}` (other connected audio participants) |
+| `audio.signal` | `{from: {participantId, connectionId}, description: {type, sdp}}` |
+| `audio.ended` | `{reason: "replaced" \| "participant-left" \| "disconnected"}` |
+
+This is a peer-to-peer mesh for small rooms. Configure a TURN service in the
+browser's `iceServers` for restrictive NATs/firewalls. Public STUN alone is not
+a guarantee that two arbitrary networks can exchange audio. For large rooms,
+an SFU architecture is a separate extension.
+
+## Tests
+
+- `pnpm --filter @workspace/api-server run test:rooms` — room lifecycle,
+  room-scoped signaling, private credentials, stale generations, leave/expiry.
+- With the API workflow running:
+  `pnpm --filter @workspace/api-server run test:audio` — two browser participants
+  using synthetic microphone input exchange real WebRTC audio packets, reconnect,
+  and leave with capture/playback cleaned up; microphone denial is also checked.
+- If Chromium is not installed for Playwright:
+  `pnpm --filter @workspace/api-server exec playwright install chromium`.
+  `ROOM_AUDIO_TEST_BASE_URL` can point the test at the development app origin.

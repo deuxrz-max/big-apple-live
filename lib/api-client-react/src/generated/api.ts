@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AudioSignalInput,
   CapacityErrorResponse,
   ErrorResponse,
   HealthStatus,
@@ -28,7 +29,8 @@ import type {
   RoomCreateInput,
   RoomJoinInput,
   RoomSession,
-  RoomState
+  RoomState,
+  SessionUnauthorizedResponse
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -620,4 +622,247 @@ export function useStreamRoomEvents<TData = Awaited<ReturnType<typeof streamRoom
 
 
 
+
+export const getStreamAudioEventsUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/rooms/${roomId}/audio/events`
+}
+
+/**
+ * Authenticates an existing active room session. Sends audio.ready, audio.peers, audio.signal, and audio.ended events. A new stream replaces an old stream for the same session without changing room membership.
+ * @summary Connect or reconnect a participant's WebRTC signaling stream
+ */
+export const streamAudioEvents = async (roomId: string, options?: Parameters<typeof customFetch>[1]): Promise<string> => {
+
+  return customFetch<string>(getStreamAudioEventsUrl(roomId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getStreamAudioEventsQueryKey = (roomId: string,) => {
+    return [
+    `/api/rooms/${roomId}/audio/events`
+    ] as const;
+    }
+
+
+export const getStreamAudioEventsQueryOptions = <TData = Awaited<ReturnType<typeof streamAudioEvents>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | CapacityErrorResponse>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamAudioEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getStreamAudioEventsQueryKey(roomId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof streamAudioEvents>>> = ({ signal }) => streamAudioEvents(roomId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof streamAudioEvents>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type StreamAudioEventsQueryResult = NonNullable<Awaited<ReturnType<typeof streamAudioEvents>>>
+export type StreamAudioEventsQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | CapacityErrorResponse>
+
+
+/**
+ * @summary Connect or reconnect a participant's WebRTC signaling stream
+ */
+
+export function useStreamAudioEvents<TData = Awaited<ReturnType<typeof streamAudioEvents>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | CapacityErrorResponse>>(
+ roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamAudioEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getStreamAudioEventsQueryOptions(roomId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSendAudioSignalUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/rooms/${roomId}/audio/signals`
+}
+
+/**
+ * @summary Deliver an SDP offer or answer to one active audio peer in this room
+ */
+export const sendAudioSignal = async (roomId: string,
+    audioSignalInput: AudioSignalInput, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<void>(getSendAudioSignalUrl(roomId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(audioSignalInput)
+  }
+);}
+
+
+
+
+
+export const getSendAudioSignalMutationKey = () => ['sendAudioSignal'] as const;
+
+export const getSendAudioSignalMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendAudioSignal>>, TError,SendAudioSignalMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendAudioSignal>>, TError,SendAudioSignalMutationVariables, TContext> => {
+
+const mutationKey = getSendAudioSignalMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendAudioSignal>>, SendAudioSignalMutationVariables> = (props) => {
+          const {roomId,data} = props ?? {};
+
+          return  sendAudioSignal(roomId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendAudioSignalMutationResult = NonNullable<Awaited<ReturnType<typeof sendAudioSignal>>>
+    export type SendAudioSignalMutationBody = BodyType<AudioSignalInput>
+    export type SendAudioSignalMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>
+    export type SendAudioSignalMutationVariables = {roomId: string;data: BodyType<AudioSignalInput>}
+
+    /**
+ * @summary Deliver an SDP offer or answer to one active audio peer in this room
+ */
+export const useSendAudioSignal = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendAudioSignal>>, TError,SendAudioSignalMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendAudioSignal>>,
+        TError,
+        SendAudioSignalMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSendAudioSignalMutationOptions(options));
+    }
+
+export const getDisconnectAudioUrl = (roomId: string,
+    connectionId: string,) => {
+
+
+
+
+  return `/api/rooms/${roomId}/audio/connections/${connectionId}`
+}
+
+/**
+ * @summary Disconnect only this participant's audio, leaving room membership intact
+ */
+export const disconnectAudio = async (roomId: string,
+    connectionId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDisconnectAudioUrl(roomId,connectionId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDisconnectAudioMutationKey = () => ['disconnectAudio'] as const;
+
+export const getDisconnectAudioMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disconnectAudio>>, TError,DisconnectAudioMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof disconnectAudio>>, TError,DisconnectAudioMutationVariables, TContext> => {
+
+const mutationKey = getDisconnectAudioMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof disconnectAudio>>, DisconnectAudioMutationVariables> = (props) => {
+          const {roomId,connectionId} = props ?? {};
+
+          return  disconnectAudio(roomId,connectionId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DisconnectAudioMutationResult = NonNullable<Awaited<ReturnType<typeof disconnectAudio>>>
+
+    export type DisconnectAudioMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse>
+    export type DisconnectAudioMutationVariables = {roomId: string;connectionId: string}
+
+    /**
+ * @summary Disconnect only this participant's audio, leaving room membership intact
+ */
+export const useDisconnectAudio = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disconnectAudio>>, TError,DisconnectAudioMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof disconnectAudio>>,
+        TError,
+        DisconnectAudioMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDisconnectAudioMutationOptions(options));
+    }
 

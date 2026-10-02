@@ -8,11 +8,13 @@
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test:rooms": "esbuild src/lib/room-store.test.ts --bundle --platform=node --format=esm --outfile=/tmp/room-store.test.mjs && node --test /tmp/room-store.test.mjs"
+    "test:rooms": "esbuild src/lib/room-store.test.ts src/lib/audio-signaling.test.ts --bundle --platform=node --format=esm --outdir=/tmp/room-backend-tests --out-extension:.js=.mjs && node --test /tmp/room-backend-tests/*.test.mjs",
+    "test:audio": "playwright test --config=playwright.config.ts"
   },
   "dependencies": {
     "@workspace/api-zod": "workspace:*",
     "@workspace/db": "workspace:*",
+    "@workspace/room-audio": "workspace:*",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "drizzle-orm": "catalog:",
@@ -21,6 +23,7 @@
     "pino-http": "^10.5.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",

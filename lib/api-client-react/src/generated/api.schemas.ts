@@ -5,6 +5,30 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type AudioDescriptionType = typeof AudioDescriptionType[keyof typeof AudioDescriptionType];
+
+
+export const AudioDescriptionType = {
+  offer: 'offer',
+  answer: 'answer',
+} as const;
+
+export interface AudioDescription {
+  type: AudioDescriptionType;
+  /**
+     * @minLength 1
+     * @maxLength 12000
+     */
+  sdp: string;
+}
+
+export interface AudioSignalInput {
+  sourceConnectionId: string;
+  targetParticipantId: string;
+  targetConnectionId: string;
+  description: AudioDescription;
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -45,6 +69,11 @@ export interface RoomSession {
 export interface ErrorResponse {
   error: string;
 }
+
+/**
+ * Missing, invalid, expired, or wrong-room private participant session credential
+ */
+export type SessionUnauthorizedResponse = ErrorResponse;
 
 /**
  * Invalid room or session ID

@@ -69,6 +69,13 @@ export class RoomStore {
     return { ...session.participant };
   }
 
+  /** Authenticate without extending the existing presence lease. */
+  getSessionParticipant(roomId: string, sessionId: string): Participant {
+    const session = this.requireRoom(roomId).sessions.get(sessionId);
+    if (!session) throw new RoomError(404, "Active participant session not found");
+    return { ...session.participant, joinedAt: new Date(session.participant.joinedAt) };
+  }
+
   leave(roomId: string, sessionId: string): void {
     const room = this.requireRoom(roomId);
     if (!room.sessions.delete(sessionId)) {

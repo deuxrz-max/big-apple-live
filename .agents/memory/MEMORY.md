@@ -1,0 +1,1 @@
+- [Headless WebRTC verification](webrtc-testing.md) — browser capture and shell Chromium support differ; verify real RTP/playback with synthetic input and report runner limits.

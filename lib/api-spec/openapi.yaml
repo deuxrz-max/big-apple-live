@@ -12,6 +12,8 @@ tags:
     description: Health operations
   - name: rooms
     description: Room and active participant session management
+  - name: audio
+    description: Authenticated room-scoped WebRTC signaling; media travels peer-to-peer
 paths:
   /healthz:
     get:
@@ -180,8 +182,94 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /rooms/{roomId}/audio/events:
+    get:
+      operationId: streamAudioEvents
+      tags: [audio]
+      summary: Connect or reconnect a participant's WebRTC signaling stream
+      description: Authenticates an existing active room session. Sends audio.ready, audio.peers, audio.signal, and audio.ended events. A new stream replaces an old stream for the same session without changing room membership.
+      security: [{ ParticipantSession: [] }]
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+      responses:
+        "200":
+          description: Authenticated server-sent signaling events
+          content:
+            text/event-stream:
+              schema: { type: string }
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/SessionUnauthorized"
+        "503":
+          $ref: "#/components/responses/CapacityError"
+  /rooms/{roomId}/audio/signals:
+    post:
+      operationId: sendAudioSignal
+      tags: [audio]
+      summary: Deliver an SDP offer or answer to one active audio peer in this room
+      security: [{ ParticipantSession: [] }]
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AudioSignalInput"
+      responses:
+        "204":
+          description: Delivered to the target's current signaling connection
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/SessionUnauthorized"
+        "404":
+          description: Target is not an audio peer in this room
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "409":
+          description: Stale connection generation or invalid negotiation direction
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "429":
+          description: Signaling rate limit exceeded for this connection
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+  /rooms/{roomId}/audio/connections/{connectionId}:
+    delete:
+      operationId: disconnectAudio
+      tags: [audio]
+      summary: Disconnect only this participant's audio, leaving room membership intact
+      security: [{ ParticipantSession: [] }]
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+        - name: connectionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Connection closed, or already disconnected; stale generations cannot close a replacement
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/SessionUnauthorized"
 components:
+  securitySchemes:
+    ParticipantSession:
+      type: http
+      scheme: bearer
+      bearerFormat: Private participantSessionId returned by room creation or join
   responses:
+    SessionUnauthorized:
+      description: Missing, invalid, expired, or wrong-room private participant session credential
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
     InvalidInput:
       description: Invalid room or session ID
       content:
@@ -211,6 +299,32 @@ components:
         type: string
         format: uuid
   schemas:
+    AudioDescription:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [offer, answer]
+        sdp:
+          type: string
+          minLength: 1
+          maxLength: 12000
+      required: [type, sdp]
+    AudioSignalInput:
+      type: object
+      properties:
+        sourceConnectionId:
+          type: string
+          format: uuid
+        targetParticipantId:
+          type: string
+          format: uuid
+        targetConnectionId:
+          type: string
+          format: uuid
+        description:
+          $ref: "#/components/schemas/AudioDescription"
+      required: [sourceConnectionId, targetParticipantId, targetConnectionId, description]
     HealthStatus:
       type: object
       properties:

@@ -15,6 +15,16 @@ async function buildAll() {
   await rm(distDir, { recursive: true, force: true });
 
   await esbuild({
+    entryPoints: [path.resolve(artifactDir, "../../lib/room-audio/src/index.ts")],
+    bundle: true,
+    platform: "browser",
+    format: "esm",
+    target: "es2022",
+    outfile: path.resolve(distDir, "room-audio.js"),
+    sourcemap: true,
+  });
+
+  await esbuild({
     entryPoints: [path.resolve(artifactDir, "src/index.ts")],
     platform: "node",
     bundle: true,

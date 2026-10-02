@@ -142,3 +142,58 @@ export const StreamRoomEventsParams = zod.object({
 export const StreamRoomEventsResponse = zod.unknown()
 
 
+/**
+ * Authenticates an existing active room session. Sends audio.ready, audio.peers, audio.signal, and audio.ended events. A new stream replaces an old stream for the same session without changing room membership.
+ * @summary Connect or reconnect a participant's WebRTC signaling stream
+ */
+export const streamAudioEventsPathRoomIdRegExp = new RegExp('^[A-Fa-f0-9]{12}$');
+
+
+export const StreamAudioEventsParams = zod.object({
+  "roomId": zod.coerce.string().regex(streamAudioEventsPathRoomIdRegExp).describe('Case-insensitive 12-character room code')
+})
+
+export const StreamAudioEventsResponse = zod.unknown()
+
+
+/**
+ * @summary Deliver an SDP offer or answer to one active audio peer in this room
+ */
+export const sendAudioSignalPathRoomIdRegExp = new RegExp('^[A-Fa-f0-9]{12}$');
+
+
+export const SendAudioSignalParams = zod.object({
+  "roomId": zod.coerce.string().regex(sendAudioSignalPathRoomIdRegExp).describe('Case-insensitive 12-character room code')
+})
+
+export const sendAudioSignalBodyDescriptionSdpMax = 12000;
+
+
+
+export const SendAudioSignalBody = zod.object({
+  "sourceConnectionId": zod.string().uuid(),
+  "targetParticipantId": zod.string().uuid(),
+  "targetConnectionId": zod.string().uuid(),
+  "description": zod.object({
+  "type": zod.enum(['offer', 'answer']),
+  "sdp": zod.string().min(1).max(sendAudioSignalBodyDescriptionSdpMax)
+})
+})
+
+export const SendAudioSignalResponse = zod.void()
+
+
+/**
+ * @summary Disconnect only this participant's audio, leaving room membership intact
+ */
+export const disconnectAudioPathRoomIdRegExp = new RegExp('^[A-Fa-f0-9]{12}$');
+
+
+export const DisconnectAudioParams = zod.object({
+  "roomId": zod.coerce.string().regex(disconnectAudioPathRoomIdRegExp).describe('Case-insensitive 12-character room code'),
+  "connectionId": zod.coerce.string().uuid()
+})
+
+export const DisconnectAudioResponse = zod.void()
+
+

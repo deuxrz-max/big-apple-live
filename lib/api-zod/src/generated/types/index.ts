@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './audioDescription';
+export * from './audioDescriptionType';
+export * from './audioSignalInput';
 export * from './capacityErrorResponse';
 export * from './errorResponse';
 export * from './healthStatus';
@@ -15,3 +18,4 @@ export * from './roomCreateInput';
 export * from './roomJoinInput';
 export * from './roomSession';
 export * from './roomState';
+export * from './sessionUnauthorizedResponse';
