@@ -2,7 +2,8 @@
 
 This backend manages room state and authenticated WebRTC signaling. A headless
 browser SDK captures and plays peer audio. The server does not carry or record
-audio, send chat messages, or provide application UI or user accounts.
+audio or send chat messages. The We Buggin web app now uses persistent Clerk
+accounts and emoji identity profiles alongside this session framework.
 
 ## Lifecycle
 
@@ -22,7 +23,36 @@ audio, send chat messages, or provide application UI or user accounts.
 
 Room IDs are case-insensitive, collision-checked, 12-character hexadecimal codes.
 Each join creates an independent session and public participant ID. Display
-names need not be unique and are not verified identities.
+guest names need not be unique and are not verified identities. Guest creation
+or join rejects names reserved by a registered account with 409.
+
+## Persistent accounts and emoji identity
+
+- `GET /api/me` (Clerk cookie authentication) returns `{profile: null}` until
+  identity signup is completed, then `{profile: {username, identity, updatedAt}}`.
+- `PUT /api/me` saves `{username, identity}` for the authenticated account.
+  Names use 3–24 ASCII letters/digits/underscore, are reserved case-insensitively,
+  and cannot be renamed after first claim. Conflicting claims return 409.
+- Identity is `{emojiId, gender: "Male" | "Female", color: "#RRGGBB",
+  hairColor: "#RRGGBB"}`. The server validates the library ID and both arbitrary
+  hex colors. Male uses spiky hair; Female uses ponytails in the static renderer.
+- `GET /api/emojis` returns the real OpenMoji catalog.
+  `GET /api/emojis/{emojiId}/{hexWithoutHash}/image` serves recolored static SVG.
+- `POST /api/account/rooms` and
+  `POST /api/account/rooms/{roomId}/join` derive name and identity from that
+  signed-in user's saved profile. They do not accept client identity claims.
+  Incomplete profiles return 409. Public snapshots contain `identity` and
+  `isRegistered`, never Clerk account IDs or private session credentials.
+- Each room response also includes the public `participantId` of the new
+  participant, so clients identify themselves by ID, never by matching a name.
+- Saving an emoji edit updates all active sessions owned by the account and
+  broadcasts snapshots without changing participant IDs, audio generations,
+  or heartbeat leases. Other accounts and guest sessions are unchanged.
+- Account names and emoji profiles persist in PostgreSQL. Rooms remain
+  ephemeral and single-process. Private room capabilities remain separate
+  from cookie-based account authentication.
+- Emoji avatars are presence indicators only, not lip-syncing voice avatars.
+  Mic start/stop, WebRTC statistics, and audio activity never animate them.
 
 ## Live state
 
@@ -57,8 +87,8 @@ usage. Missing rooms/sessions return 404, invalid input returns 400, full rooms
 return 409, and service/subscriber capacity returns 503.
 
 Anyone with a room ID can inspect or join it. Room IDs are locators, not access
-control. Account authentication, private-room authorization, and abuse/rate
-limits are separate future concerns.
+control. Account identity is supported, but private-room authorization and
+broader room abuse/rate limits remain separate concerns.
 
 ## WebRTC audio
 

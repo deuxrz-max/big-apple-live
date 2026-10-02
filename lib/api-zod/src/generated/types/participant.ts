@@ -5,9 +5,12 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { EmojiIdentity } from './emojiIdentity';
 
 export interface Participant {
   participantId: string;
   displayName: string;
   joinedAt: Date;
+  identity: EmojiIdentity | null;
+  isRegistered: boolean;
 }

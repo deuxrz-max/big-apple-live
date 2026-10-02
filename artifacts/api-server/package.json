@@ -8,10 +8,12 @@
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test:rooms": "esbuild src/lib/room-store.test.ts src/lib/audio-signaling.test.ts --bundle --platform=node --format=esm --outdir=/tmp/room-backend-tests --out-extension:.js=.mjs && node --test /tmp/room-backend-tests/*.test.mjs",
+    "test:rooms": "esbuild src/lib/room-store.test.ts src/lib/audio-signaling.test.ts src/lib/room-identity.test.ts --bundle --platform=node --format=esm --outdir=/tmp/room-backend-tests --out-extension:.js=.mjs && node --test /tmp/room-backend-tests/*.test.mjs",
     "test:audio": "playwright test --config=playwright.config.ts"
   },
   "dependencies": {
+    "@clerk/express": "^2.1.74",
+    "@clerk/shared": "^4.37.1",
     "@workspace/api-zod": "workspace:*",
     "@workspace/db": "workspace:*",
     "@workspace/room-audio": "workspace:*",
@@ -19,6 +21,8 @@
     "cors": "^2.8.6",
     "drizzle-orm": "catalog:",
     "express": "^5.2.1",
+    "http-proxy-middleware": "^4.2.0",
+    "openmoji": "^17.0.0",
     "pino": "^9.14.0",
     "pino-http": "^10.5.0"
   },

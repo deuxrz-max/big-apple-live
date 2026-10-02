@@ -6,14 +6,20 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './accountProfile';
 export * from './audioDescription';
 export * from './audioDescriptionType';
 export * from './audioSignalInput';
 export * from './capacityErrorResponse';
+export * from './emojiIdentity';
+export * from './emojiIdentityGender';
+export * from './emojiOption';
 export * from './errorResponse';
 export * from './healthStatus';
 export * from './invalidInputResponse';
 export * from './participant';
+export * from './profileEnvelope';
+export * from './profileInput';
 export * from './roomCreateInput';
 export * from './roomJoinInput';
 export * from './roomSession';

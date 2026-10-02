@@ -20,12 +20,16 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AccountProfile,
   AudioSignalInput,
   CapacityErrorResponse,
+  EmojiOption,
   ErrorResponse,
   HealthStatus,
   InvalidInputResponse,
   Participant,
+  ProfileEnvelope,
+  ProfileInput,
   RoomCreateInput,
   RoomJoinInput,
   RoomSession,
@@ -59,6 +63,442 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetMyProfileUrl = () => {
+
+
+
+
+  return `/api/me`
+}
+
+export const getMyProfile = async ( options?: Parameters<typeof customFetch>[1]): Promise<ProfileEnvelope> => {
+
+  return customFetch<ProfileEnvelope>(getGetMyProfileUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyProfileQueryKey = () => {
+    return [
+    `/api/me`
+    ] as const;
+    }
+
+
+export const getGetMyProfileQueryOptions = <TData = Awaited<ReturnType<typeof getMyProfile>>, TError = ErrorType<SessionUnauthorizedResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyProfileQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyProfile>>> = ({ signal }) => getMyProfile({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyProfile>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMyProfileQueryResult = NonNullable<Awaited<ReturnType<typeof getMyProfile>>>
+export type GetMyProfileQueryError = ErrorType<SessionUnauthorizedResponse>
+
+
+
+export function useGetMyProfile<TData = Awaited<ReturnType<typeof getMyProfile>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMyProfileQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSaveMyProfileUrl = () => {
+
+
+
+
+  return `/api/me`
+}
+
+export const saveMyProfile = async (profileInput: ProfileInput, options?: Parameters<typeof customFetch>[1]): Promise<AccountProfile> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AccountProfile>(getSaveMyProfileUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(profileInput)
+  }
+);}
+
+
+
+
+
+export const getSaveMyProfileMutationKey = () => ['saveMyProfile'] as const;
+
+export const getSaveMyProfileMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveMyProfile>>, TError,SaveMyProfileMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveMyProfile>>, TError,SaveMyProfileMutationVariables, TContext> => {
+
+const mutationKey = getSaveMyProfileMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveMyProfile>>, SaveMyProfileMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  saveMyProfile(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveMyProfileMutationResult = NonNullable<Awaited<ReturnType<typeof saveMyProfile>>>
+    export type SaveMyProfileMutationBody = BodyType<ProfileInput>
+    export type SaveMyProfileMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>
+    export type SaveMyProfileMutationVariables = {data: BodyType<ProfileInput>}
+
+    export const useSaveMyProfile = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveMyProfile>>, TError,SaveMyProfileMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveMyProfile>>,
+        TError,
+        SaveMyProfileMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSaveMyProfileMutationOptions(options));
+    }
+
+export const getGetEmojiCatalogUrl = () => {
+
+
+
+
+  return `/api/emojis`
+}
+
+export const getEmojiCatalog = async ( options?: Parameters<typeof customFetch>[1]): Promise<EmojiOption[]> => {
+
+  return customFetch<EmojiOption[]>(getGetEmojiCatalogUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetEmojiCatalogQueryKey = () => {
+    return [
+    `/api/emojis`
+    ] as const;
+    }
+
+
+export const getGetEmojiCatalogQueryOptions = <TData = Awaited<ReturnType<typeof getEmojiCatalog>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEmojiCatalog>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEmojiCatalogQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEmojiCatalog>>> = ({ signal }) => getEmojiCatalog({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEmojiCatalog>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetEmojiCatalogQueryResult = NonNullable<Awaited<ReturnType<typeof getEmojiCatalog>>>
+export type GetEmojiCatalogQueryError = ErrorType<unknown>
+
+
+
+export function useGetEmojiCatalog<TData = Awaited<ReturnType<typeof getEmojiCatalog>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEmojiCatalog>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetEmojiCatalogQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetEmojiImageUrl = (emojiId: string,
+    color: string,) => {
+
+
+
+
+  return `/api/emojis/${emojiId}/${color}/image`
+}
+
+export const getEmojiImage = async (emojiId: string,
+    color: string, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+
+  return customFetch<Blob>(getGetEmojiImageUrl(emojiId,color),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetEmojiImageQueryKey = (emojiId: string,
+    color: string,) => {
+    return [
+    `/api/emojis/${emojiId}/${color}/image`
+    ] as const;
+    }
+
+
+export const getGetEmojiImageQueryOptions = <TData = Awaited<ReturnType<typeof getEmojiImage>>, TError = ErrorType<InvalidInputResponse | ErrorResponse>>(emojiId: string,
+    color: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEmojiImage>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEmojiImageQueryKey(emojiId,color);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEmojiImage>>> = ({ signal }) => getEmojiImage(emojiId,color, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: emojiId !== null && emojiId !== undefined && color !== null && color !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEmojiImage>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetEmojiImageQueryResult = NonNullable<Awaited<ReturnType<typeof getEmojiImage>>>
+export type GetEmojiImageQueryError = ErrorType<InvalidInputResponse | ErrorResponse>
+
+
+
+export function useGetEmojiImage<TData = Awaited<ReturnType<typeof getEmojiImage>>, TError = ErrorType<InvalidInputResponse | ErrorResponse>>(
+ emojiId: string,
+    color: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEmojiImage>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetEmojiImageQueryOptions(emojiId,color,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateAccountRoomUrl = () => {
+
+
+
+
+  return `/api/account/rooms`
+}
+
+export const createAccountRoom = async ( options?: Parameters<typeof customFetch>[1]): Promise<RoomSession> => {
+
+  return customFetch<RoomSession>(getCreateAccountRoomUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCreateAccountRoomMutationKey = () => ['createAccountRoom'] as const;
+
+export const getCreateAccountRoomMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAccountRoom>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAccountRoom>>, TError,void, TContext> => {
+
+const mutationKey = getCreateAccountRoomMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAccountRoom>>, void> = () => {
+
+
+          return  createAccountRoom(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAccountRoomMutationResult = NonNullable<Awaited<ReturnType<typeof createAccountRoom>>>
+
+    export type CreateAccountRoomMutationError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>
+
+
+    export const useCreateAccountRoom = <TError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAccountRoom>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createAccountRoom>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCreateAccountRoomMutationOptions(options));
+    }
+
+export const getJoinAccountRoomUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/account/rooms/${roomId}/join`
+}
+
+export const joinAccountRoom = async (roomId: string, options?: Parameters<typeof customFetch>[1]): Promise<RoomSession> => {
+
+  return customFetch<RoomSession>(getJoinAccountRoomUrl(roomId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getJoinAccountRoomMutationKey = () => ['joinAccountRoom'] as const;
+
+export const getJoinAccountRoomMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinAccountRoom>>, TError,JoinAccountRoomMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof joinAccountRoom>>, TError,JoinAccountRoomMutationVariables, TContext> => {
+
+const mutationKey = getJoinAccountRoomMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof joinAccountRoom>>, JoinAccountRoomMutationVariables> = (props) => {
+          const {roomId} = props ?? {};
+
+          return  joinAccountRoom(roomId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type JoinAccountRoomMutationResult = NonNullable<Awaited<ReturnType<typeof joinAccountRoom>>>
+
+    export type JoinAccountRoomMutationError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>
+    export type JoinAccountRoomMutationVariables = {roomId: string}
+
+    export const useJoinAccountRoom = <TError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinAccountRoom>>, TError,JoinAccountRoomMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof joinAccountRoom>>,
+        TError,
+        JoinAccountRoomMutationVariables,
+        TContext
+      > => {
+      return useMutation(getJoinAccountRoomMutationOptions(options));
+    }
 
 export const getHealthCheckUrl = () => {
 

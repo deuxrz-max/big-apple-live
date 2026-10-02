@@ -1,0 +1,7 @@
+Emoji artwork: OpenMoji contributors, https://openmoji.org/
+Source artwork licensed under Creative Commons Attribution-ShareAlike 4.0:
+https://creativecommons.org/licenses/by-sa/4.0/
+
+We Buggin adaptations: configurable recoloring and Male/spiky-hair or
+Female/ponytail overlays. Adapted emoji artwork is shared under the same
+CC BY-SA 4.0 license. This notice applies to emoji artwork, not the entire app.

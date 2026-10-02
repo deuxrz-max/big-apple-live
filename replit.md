@@ -1,6 +1,7 @@
-# Room Chat Backend
+# We Buggin
 
-Room/session backend with live presence, authenticated WebRTC signaling, and a headless browser audio SDK.
+Voice-first rooms with persistent named accounts, customizable static emoji
+identities, live presence, and WebRTC audio.
 
 ## Run & Operate
 
@@ -9,7 +10,8 @@ Room/session backend with live presence, authenticated WebRTC signaling, and a h
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Room session features require no database or external service.
+- Room presence remains in memory. Account names/emoji profiles persist in PostgreSQL; Clerk owns account authentication.
+- `pnpm --filter @workspace/we-buggin run dev` — web app, using its managed workflow
 - `pnpm --filter @workspace/api-server run test:rooms` — room and signaling unit tests
 - `pnpm --filter @workspace/api-server run test:audio` — two-browser WebRTC/audio lifecycle test (running API and Playwright Chromium required)
 
@@ -51,11 +53,16 @@ Users can create a room with a unique shareable ID, join by ID, keep an active
 participant session, leave, and subscribe to live participant snapshots.
 Participants can also exchange peer-to-peer microphone audio through the
 headless SDK, with reconnection and permission/error handling.
+Users chose persistent accounts so people can keep dedicated names.
+Account names are reserved case-insensitively and kept after first claim.
+Emoji identities use the OpenMoji library, Male/spiky hair or Female/ponytails,
+and arbitrary six-digit body/hair colors. They are static presence anchors:
+no lip-sync, mouth animation, or audio-driven avatar effects.
 
 ## User preferences
 
 Preserve existing room lifecycle, heartbeat, presence, unique IDs, and private
-session credentials. No emoji libraries or unrelated UI.
+session credentials. Emoji/signup/room UI is now requested; avoid unrelated UI.
 
 ## Gotchas
 
@@ -64,6 +71,10 @@ session credentials. No emoji libraries or unrelated UI.
 - Regenerate API types after OpenAPI changes.
 - Native WebRTC requires HTTPS/localhost and microphone permission. Public STUN
   is not enough on every network; TURN can be supplied through SDK iceServers.
+- Clerk cookie authentication applies to account/profile endpoints only. Do not
+  interpret the audio SDK's private session Bearer capability as a Clerk JWT.
+- Registered room identities must be derived on the server from the signed-in
+  user's profile; never trust a posted name, account ID, or avatar as ownership.
 
 ## Pointers
 

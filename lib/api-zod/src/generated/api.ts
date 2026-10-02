@@ -8,6 +8,144 @@
 import * as zod from 'zod';
 
 
+export const getMyProfileResponseProfileOneIdentityEmojiIdMax = 100;
+
+export const getMyProfileResponseProfileOneIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getMyProfileResponseProfileOneIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
+export const GetMyProfileResponse = zod.object({
+  "profile": zod.union([zod.object({
+  "username": zod.string(),
+  "identity": zod.object({
+  "emojiId": zod.string().min(1).max(getMyProfileResponseProfileOneIdentityEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(getMyProfileResponseProfileOneIdentityColorRegExp),
+  "hairColor": zod.string().regex(getMyProfileResponseProfileOneIdentityHairColorRegExp)
+}),
+  "updatedAt": zod.coerce.date()
+}),zod.null()])
+})
+
+
+export const saveMyProfileBodyUsernameRegExp = new RegExp('^[A-Za-z0-9_]{3,24}$');
+export const saveMyProfileBodyIdentityEmojiIdMax = 100;
+
+export const saveMyProfileBodyIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const saveMyProfileBodyIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
+export const SaveMyProfileBody = zod.object({
+  "username": zod.string().regex(saveMyProfileBodyUsernameRegExp),
+  "identity": zod.object({
+  "emojiId": zod.string().min(1).max(saveMyProfileBodyIdentityEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(saveMyProfileBodyIdentityColorRegExp),
+  "hairColor": zod.string().regex(saveMyProfileBodyIdentityHairColorRegExp)
+})
+})
+
+export const saveMyProfileResponseIdentityEmojiIdMax = 100;
+
+export const saveMyProfileResponseIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const saveMyProfileResponseIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
+export const SaveMyProfileResponse = zod.object({
+  "username": zod.string(),
+  "identity": zod.object({
+  "emojiId": zod.string().min(1).max(saveMyProfileResponseIdentityEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(saveMyProfileResponseIdentityColorRegExp),
+  "hairColor": zod.string().regex(saveMyProfileResponseIdentityHairColorRegExp)
+}),
+  "updatedAt": zod.coerce.date()
+})
+
+
+export const GetEmojiCatalogResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "group": zod.string(),
+  "unicode": zod.string()
+})
+export const GetEmojiCatalogResponse = zod.array(GetEmojiCatalogResponseItem)
+
+
+export const getEmojiImagePathColorRegExp = new RegExp('^[0-9a-fA-F]{6}$');
+
+
+export const GetEmojiImageParams = zod.object({
+  "emojiId": zod.coerce.string(),
+  "color": zod.coerce.string().regex(getEmojiImagePathColorRegExp)
+})
+
+export const GetEmojiImageResponse = zod.unknown()
+
+
+export const createAccountRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax = 100;
+
+export const createAccountRoomResponseRoomParticipantsItemIdentityOneColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const createAccountRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
+export const CreateAccountRoomResponse = zod.object({
+  "participantSessionId": zod.string().uuid(),
+  "participantId": zod.string().uuid(),
+  "room": zod.object({
+  "roomId": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "participants": zod.array(zod.object({
+  "participantId": zod.string().uuid(),
+  "displayName": zod.string(),
+  "joinedAt": zod.coerce.date(),
+  "identity": zod.union([zod.object({
+  "emojiId": zod.string().min(1).max(createAccountRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(createAccountRoomResponseRoomParticipantsItemIdentityOneColorRegExp),
+  "hairColor": zod.string().regex(createAccountRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp)
+}),zod.null()]),
+  "isRegistered": zod.boolean()
+}))
+})
+})
+
+
+export const joinAccountRoomPathRoomIdRegExp = new RegExp('^[A-Fa-f0-9]{12}$');
+
+
+export const JoinAccountRoomParams = zod.object({
+  "roomId": zod.coerce.string().regex(joinAccountRoomPathRoomIdRegExp).describe('Case-insensitive 12-character room code')
+})
+
+export const joinAccountRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax = 100;
+
+export const joinAccountRoomResponseRoomParticipantsItemIdentityOneColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const joinAccountRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
+export const JoinAccountRoomResponse = zod.object({
+  "participantSessionId": zod.string().uuid(),
+  "participantId": zod.string().uuid(),
+  "room": zod.object({
+  "roomId": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "participants": zod.array(zod.object({
+  "participantId": zod.string().uuid(),
+  "displayName": zod.string(),
+  "joinedAt": zod.coerce.date(),
+  "identity": zod.union([zod.object({
+  "emojiId": zod.string().min(1).max(joinAccountRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(joinAccountRoomResponseRoomParticipantsItemIdentityOneColorRegExp),
+  "hairColor": zod.string().regex(joinAccountRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp)
+}),zod.null()]),
+  "isRegistered": zod.boolean()
+}))
+})
+})
+
+
 /**
  * Returns server health status
  * @summary Health check
@@ -28,15 +166,29 @@ export const CreateRoomBody = zod.object({
   "displayName": zod.string().min(1).max(createRoomBodyDisplayNameMax)
 })
 
+export const createRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax = 100;
+
+export const createRoomResponseRoomParticipantsItemIdentityOneColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const createRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
 export const CreateRoomResponse = zod.object({
   "participantSessionId": zod.string().uuid(),
+  "participantId": zod.string().uuid(),
   "room": zod.object({
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
   "participants": zod.array(zod.object({
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
-  "joinedAt": zod.coerce.date()
+  "joinedAt": zod.coerce.date(),
+  "identity": zod.union([zod.object({
+  "emojiId": zod.string().min(1).max(createRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(createRoomResponseRoomParticipantsItemIdentityOneColorRegExp),
+  "hairColor": zod.string().regex(createRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp)
+}),zod.null()]),
+  "isRegistered": zod.boolean()
 }))
 })
 })
@@ -52,13 +204,26 @@ export const GetRoomParams = zod.object({
   "roomId": zod.coerce.string().regex(getRoomPathRoomIdRegExp).describe('Case-insensitive 12-character room code')
 })
 
+export const getRoomResponseParticipantsItemIdentityOneEmojiIdMax = 100;
+
+export const getRoomResponseParticipantsItemIdentityOneColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getRoomResponseParticipantsItemIdentityOneHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
 export const GetRoomResponse = zod.object({
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
   "participants": zod.array(zod.object({
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
-  "joinedAt": zod.coerce.date()
+  "joinedAt": zod.coerce.date(),
+  "identity": zod.union([zod.object({
+  "emojiId": zod.string().min(1).max(getRoomResponseParticipantsItemIdentityOneEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(getRoomResponseParticipantsItemIdentityOneColorRegExp),
+  "hairColor": zod.string().regex(getRoomResponseParticipantsItemIdentityOneHairColorRegExp)
+}),zod.null()]),
+  "isRegistered": zod.boolean()
 }))
 })
 
@@ -81,15 +246,29 @@ export const JoinRoomBody = zod.object({
   "displayName": zod.string().min(1).max(joinRoomBodyDisplayNameMax)
 })
 
+export const joinRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax = 100;
+
+export const joinRoomResponseRoomParticipantsItemIdentityOneColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const joinRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
 export const JoinRoomResponse = zod.object({
   "participantSessionId": zod.string().uuid(),
+  "participantId": zod.string().uuid(),
   "room": zod.object({
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
   "participants": zod.array(zod.object({
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
-  "joinedAt": zod.coerce.date()
+  "joinedAt": zod.coerce.date(),
+  "identity": zod.union([zod.object({
+  "emojiId": zod.string().min(1).max(joinRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(joinRoomResponseRoomParticipantsItemIdentityOneColorRegExp),
+  "hairColor": zod.string().regex(joinRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp)
+}),zod.null()]),
+  "isRegistered": zod.boolean()
 }))
 })
 })
@@ -107,10 +286,23 @@ export const HeartbeatParticipantParams = zod.object({
   "sessionId": zod.coerce.string().uuid()
 })
 
+export const heartbeatParticipantResponseIdentityOneEmojiIdMax = 100;
+
+export const heartbeatParticipantResponseIdentityOneColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const heartbeatParticipantResponseIdentityOneHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
 export const HeartbeatParticipantResponse = zod.object({
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
-  "joinedAt": zod.coerce.date()
+  "joinedAt": zod.coerce.date(),
+  "identity": zod.union([zod.object({
+  "emojiId": zod.string().min(1).max(heartbeatParticipantResponseIdentityOneEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(heartbeatParticipantResponseIdentityOneColorRegExp),
+  "hairColor": zod.string().regex(heartbeatParticipantResponseIdentityOneHairColorRegExp)
+}),zod.null()]),
+  "isRegistered": zod.boolean()
 })
 
 

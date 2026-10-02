@@ -9,5 +9,6 @@ import type { RoomState } from './roomState';
 
 export interface RoomSession {
   participantSessionId: string;
+  participantId: string;
   room: RoomState;
 }

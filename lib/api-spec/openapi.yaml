@@ -15,6 +15,124 @@ tags:
   - name: audio
     description: Authenticated room-scoped WebRTC signaling; media travels peer-to-peer
 paths:
+  /me:
+    get:
+      operationId: getMyProfile
+      tags: [identity]
+      security: [{ AccountSession: [] }]
+      responses:
+        "200":
+          description: Saved account identity or null before onboarding
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProfileEnvelope" }
+        "401":
+          $ref: "#/components/responses/SessionUnauthorized"
+    put:
+      operationId: saveMyProfile
+      tags: [identity]
+      security: [{ AccountSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProfileInput" }
+      responses:
+        "200":
+          description: Saved dedicated name and identity
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccountProfile" }
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/SessionUnauthorized"
+        "409":
+          description: Dedicated name already taken or cannot be renamed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+  /emojis:
+    get:
+      operationId: getEmojiCatalog
+      tags: [identity]
+      responses:
+        "200":
+          description: OpenMoji emoji library, with searchable names and categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/EmojiOption" }
+  /emojis/{emojiId}/{color}/image:
+    get:
+      operationId: getEmojiImage
+      tags: [identity]
+      parameters:
+        - name: emojiId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: color
+          in: path
+          required: true
+          schema: { type: string, pattern: "^[0-9a-fA-F]{6}$" }
+      responses:
+        "200":
+          description: Static library SVG with custom color, never driven by audio
+          content:
+            image/svg+xml:
+              schema: { type: string }
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "404":
+          description: Unknown emoji
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+  /account/rooms:
+    post:
+      operationId: createAccountRoom
+      tags: [identity, rooms]
+      security: [{ AccountSession: [] }]
+      responses:
+        "201":
+          description: Room joined using the authenticated account's saved identity
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RoomSession" }
+        "401":
+          $ref: "#/components/responses/SessionUnauthorized"
+        "409":
+          description: Complete identity signup before joining
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+  /account/rooms/{roomId}/join:
+    post:
+      operationId: joinAccountRoom
+      tags: [identity, rooms]
+      security: [{ AccountSession: [] }]
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+      responses:
+        "201":
+          description: Participant joined using their own saved account identity
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RoomSession" }
+        "401":
+          $ref: "#/components/responses/SessionUnauthorized"
+        "404":
+          description: Room not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "409":
+          description: Profile incomplete or room full
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
   /healthz:
     get:
       operationId: healthCheck
@@ -54,6 +172,11 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "503":
           $ref: "#/components/responses/CapacityError"
+        "409":
+          description: Name is reserved by a registered account
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
   /rooms/{roomId}:
     get:
       operationId: getRoom
@@ -260,6 +383,11 @@ paths:
           $ref: "#/components/responses/SessionUnauthorized"
 components:
   securitySchemes:
+    AccountSession:
+      type: apiKey
+      in: cookie
+      name: __session
+      description: Clerk-managed account session cookie; separate from private participant capabilities
     ParticipantSession:
       type: http
       scheme: bearer
@@ -299,6 +427,45 @@ components:
         type: string
         format: uuid
   schemas:
+    EmojiIdentity:
+      type: object
+      properties:
+        emojiId: { type: string, minLength: 1, maxLength: 100 }
+        gender: { type: string, enum: [Male, Female] }
+        color: { type: string, pattern: "^#[0-9a-fA-F]{6}$" }
+        hairColor: { type: string, pattern: "^#[0-9a-fA-F]{6}$" }
+      required: [emojiId, gender, color, hairColor]
+    EmojiOption:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        group: { type: string }
+        unicode: { type: string }
+      required: [id, name, group, unicode]
+    ProfileInput:
+      type: object
+      properties:
+        username:
+          type: string
+          pattern: "^[A-Za-z0-9_]{3,24}$"
+        identity: { $ref: "#/components/schemas/EmojiIdentity" }
+      required: [username, identity]
+    AccountProfile:
+      type: object
+      properties:
+        username: { type: string }
+        identity: { $ref: "#/components/schemas/EmojiIdentity" }
+        updatedAt: { type: string, format: date-time }
+      required: [username, identity, updatedAt]
+    ProfileEnvelope:
+      type: object
+      properties:
+        profile:
+          anyOf:
+            - $ref: "#/components/schemas/AccountProfile"
+            - type: "null"
+      required: [profile]
     AudioDescription:
       type: object
       properties:
@@ -359,7 +526,12 @@ components:
         joinedAt:
           type: string
           format: date-time
-      required: [participantId, displayName, joinedAt]
+        identity:
+          anyOf:
+            - $ref: "#/components/schemas/EmojiIdentity"
+            - type: "null"
+        isRegistered: { type: boolean }
+      required: [participantId, displayName, joinedAt, identity, isRegistered]
     RoomState:
       type: object
       properties:
@@ -379,9 +551,12 @@ components:
         participantSessionId:
           type: string
           format: uuid
+        participantId:
+          type: string
+          format: uuid
         room:
           $ref: "#/components/schemas/RoomState"
-      required: [participantSessionId, room]
+      required: [participantSessionId, participantId, room]
     ErrorResponse:
       type: object
       properties:

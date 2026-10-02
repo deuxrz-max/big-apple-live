@@ -14,7 +14,7 @@ export interface RoomAudioOptions {
   onError?(error: RoomAudioError): void;
 }
 
-/** Headless audio client for an existing guest room session; creates no visible UI. */
+/** Headless audio client for an existing participant session; creates no visible UI. */
 export class RoomAudioClient {
   private active = false;
   private revision = 0;

@@ -6,6 +6,7 @@ import {
   LeaveRoomParams, StreamRoomEventsParams,
 } from "@workspace/api-zod";
 import { roomStore, RoomError } from "../lib/room-store";
+import { ensureGuestNameAvailable } from "../lib/account-profiles";
 
 const router: IRouter = Router();
 
@@ -20,13 +21,15 @@ function displayName(value: string): string {
   return name;
 }
 
-router.post("/rooms", (req, res) => {
+router.post("/rooms", async (req, res) => {
   const body = CreateRoomBody.safeParse(req.body);
   if (!body.success) {
     res.status(400).json({ error: "Display name must be between 1 and 40 characters" });
     return;
   }
-  const session = roomStore.create(displayName(body.data.displayName));
+  const name = displayName(body.data.displayName);
+  await ensureGuestNameAvailable(name);
+  const session = roomStore.create(name);
   res.status(201).json(CreateRoomResponse.parse(session));
 });
 
@@ -39,14 +42,16 @@ router.get("/rooms/:roomId", (req, res) => {
   res.json(GetRoomResponse.parse(roomStore.get(params.data.roomId)));
 });
 
-router.post("/rooms/:roomId/join", (req, res) => {
+router.post("/rooms/:roomId/join", async (req, res) => {
   const params = JoinRoomParams.safeParse(req.params);
   const body = JoinRoomBody.safeParse(req.body);
   if (!params.success || !body.success) {
     res.status(400).json({ error: "Valid room ID and display name are required" });
     return;
   }
-  const session = roomStore.join(params.data.roomId, displayName(body.data.displayName));
+  const name = displayName(body.data.displayName);
+  await ensureGuestNameAvailable(name);
+  const session = roomStore.join(params.data.roomId, name);
   res.status(201).json(JoinRoomResponse.parse(session));
 });
 

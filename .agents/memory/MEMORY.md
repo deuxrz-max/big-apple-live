@@ -1,1 +1,2 @@
 - [Headless WebRTC verification](webrtc-testing.md) — browser capture and shell Chromium support differ; verify real RTP/playback with synthetic input and report runner limits.
+- [Browser runner limits](browser-runner-limits.md) — clipboard reads can stall tests; preserve recovery context and distinguish interrupted checks from app failures.

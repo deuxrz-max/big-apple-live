@@ -5,6 +5,50 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type EmojiIdentityGender = typeof EmojiIdentityGender[keyof typeof EmojiIdentityGender];
+
+
+export const EmojiIdentityGender = {
+  Male: 'Male',
+  Female: 'Female',
+} as const;
+
+export interface EmojiIdentity {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  emojiId: string;
+  gender: EmojiIdentityGender;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  color: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  hairColor: string;
+}
+
+export interface EmojiOption {
+  id: string;
+  name: string;
+  group: string;
+  unicode: string;
+}
+
+export interface ProfileInput {
+  /** @pattern ^[A-Za-z0-9_]{3,24}$ */
+  username: string;
+  identity: EmojiIdentity;
+}
+
+export interface AccountProfile {
+  username: string;
+  identity: EmojiIdentity;
+  updatedAt: string;
+}
+
+export interface ProfileEnvelope {
+  profile: AccountProfile | null;
+}
+
 export type AudioDescriptionType = typeof AudioDescriptionType[keyof typeof AudioDescriptionType];
 
 
@@ -53,6 +97,8 @@ export interface Participant {
   participantId: string;
   displayName: string;
   joinedAt: string;
+  identity: EmojiIdentity | null;
+  isRegistered: boolean;
 }
 
 export interface RoomState {
@@ -63,6 +109,7 @@ export interface RoomState {
 
 export interface RoomSession {
   participantSessionId: string;
+  participantId: string;
   room: RoomState;
 }
 

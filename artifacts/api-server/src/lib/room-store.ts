@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from "node:crypto";
-import type { Participant, RoomSession, RoomState } from "@workspace/api-zod";
+import type { Participant, RoomSession, RoomState, EmojiIdentity } from "@workspace/api-zod";
 
 export const SESSION_TIMEOUT_MS = 90_000;
 export const EMPTY_ROOM_TIMEOUT_MS = 60 * 60 * 1000;
@@ -14,7 +14,14 @@ type RoomEvent =
   | { type: "room.snapshot"; data: RoomState }
   | { type: "room.expired"; data: { roomId: string } };
 type Listener = (event: RoomEvent) => void;
-type ActiveSession = { participant: Participant; lastSeenAt: number };
+type ActiveSession = { participant: Participant; lastSeenAt: number; accountId?: string };
+type AccountIdentity = { accountId: string; identity: EmojiIdentity };
+function copyParticipant(participant: Participant): Participant {
+  return {
+    ...participant, joinedAt: new Date(participant.joinedAt),
+    identity: participant.identity ? { ...participant.identity } : null,
+  };
+}
 type Room = {
   roomId: string;
   createdAt: Date;
@@ -29,7 +36,7 @@ export class RoomStore {
 
   constructor(private readonly now: () => number = Date.now) {}
 
-  create(displayName: string): RoomSession {
+  create(displayName: string, account?: AccountIdentity): RoomSession {
     this.sweep();
     if (this.rooms.size >= 10_000) {
       throw new RoomError(503, "Room capacity reached");
@@ -46,15 +53,15 @@ export class RoomStore {
       emptySince: null,
     };
     this.rooms.set(roomId, room);
-    return this.addSession(room, displayName);
+    return this.addSession(room, displayName, account);
   }
 
-  join(roomId: string, displayName: string): RoomSession {
+  join(roomId: string, displayName: string, account?: AccountIdentity): RoomSession {
     const room = this.requireRoom(roomId);
     if (room.sessions.size >= 100) {
       throw new RoomError(409, "Room participant capacity reached");
     }
-    return this.addSession(room, displayName);
+    return this.addSession(room, displayName, account);
   }
 
   get(roomId: string): RoomState {
@@ -66,14 +73,14 @@ export class RoomStore {
     const session = room.sessions.get(sessionId);
     if (!session) throw new RoomError(404, "Active participant session not found");
     session.lastSeenAt = this.now();
-    return { ...session.participant };
+    return copyParticipant(session.participant);
   }
 
   /** Authenticate without extending the existing presence lease. */
   getSessionParticipant(roomId: string, sessionId: string): Participant {
     const session = this.requireRoom(roomId).sessions.get(sessionId);
     if (!session) throw new RoomError(404, "Active participant session not found");
-    return { ...session.participant, joinedAt: new Date(session.participant.joinedAt) };
+    return copyParticipant(session.participant);
   }
 
   leave(roomId: string, sessionId: string): void {
@@ -98,6 +105,22 @@ export class RoomStore {
     for (const room of this.rooms.values()) this.expire(room);
   }
 
+  /** Profile edits affect only sessions owned by that authenticated account.
+   * Presence leases and public participant IDs remain unchanged. */
+  updateAccountIdentity(accountId: string, displayName: string, identity: EmojiIdentity): void {
+    for (const room of this.rooms.values()) {
+      this.expire(room);
+      let changed = false;
+      for (const session of room.sessions.values()) {
+        if (session.accountId !== accountId) continue;
+        session.participant.displayName = displayName;
+        session.participant.identity = { ...identity };
+        changed = true;
+      }
+      if (changed) this.broadcast(room);
+    }
+  }
+
   private requireRoom(roomId: string): Room {
     const id = roomId.toUpperCase();
     const room = this.rooms.get(id);
@@ -108,19 +131,23 @@ export class RoomStore {
     return room;
   }
 
-  private addSession(room: Room, displayName: string): RoomSession {
+  private addSession(room: Room, displayName: string, account?: AccountIdentity): RoomSession {
     const participantSessionId = randomUUID();
+    const participantId = randomUUID();
     room.sessions.set(participantSessionId, {
       participant: {
-        participantId: randomUUID(),
+        participantId,
         displayName,
         joinedAt: new Date(this.now()),
+        identity: account ? { ...account.identity } : null,
+        isRegistered: !!account,
       },
       lastSeenAt: this.now(),
+      accountId: account?.accountId,
     });
     room.emptySince = null;
     this.broadcast(room);
-    return { participantSessionId, room: this.snapshot(room) };
+    return { participantSessionId, participantId, room: this.snapshot(room) };
   }
 
   private expire(room: Room): void {
@@ -147,10 +174,7 @@ export class RoomStore {
     return {
       roomId: room.roomId,
       createdAt: new Date(room.createdAt),
-      participants: Array.from(room.sessions.values(), ({ participant }) => ({
-        ...participant,
-        joinedAt: new Date(participant.joinedAt),
-      })),
+      participants: Array.from(room.sessions.values(), ({ participant }) => copyParticipant(participant)),
     };
   }
 

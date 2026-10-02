@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "We Buggin"
+description = "Persistent named emoji identities and static room presence for the existing voice chat system."
+version = "1.0.0"
+id = "artifacts/we-buggin"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24150
+
+[services.development]
+run = "pnpm --filter @workspace/we-buggin run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/we-buggin", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/we-buggin/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24150"
+BASE_PATH = "/"
