@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: rooms
+    description: Room and active participant session management
 paths:
   /healthz:
     get:
@@ -24,7 +26,159 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /rooms:
+    post:
+      operationId: createRoom
+      tags: [rooms]
+      summary: Create a room and join as its first participant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoomCreateInput"
+      responses:
+        "201":
+          description: Room created with the creator's active participant session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomSession"
+        "400":
+          description: Invalid participant details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /rooms/{roomId}:
+    get:
+      operationId: getRoom
+      tags: [rooms]
+      summary: Get a room and its active participants
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+      responses:
+        "200":
+          description: Current room state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomState"
+        "404":
+          description: Room not found or expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /rooms/{roomId}/join:
+    post:
+      operationId: joinRoom
+      tags: [rooms]
+      summary: Join a room as a new participant session
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoomJoinInput"
+      responses:
+        "201":
+          description: Participant joined the room
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoomSession"
+        "400":
+          description: Invalid participant details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Room not found or expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /rooms/{roomId}/participants/{sessionId}/heartbeat:
+    post:
+      operationId: heartbeatParticipant
+      tags: [rooms]
+      summary: Keep a participant session active
+      description: Send periodically; participant sessions expire after 90 seconds without a heartbeat.
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Participant session remains active
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Participant"
+        "404":
+          description: Room or active participant session not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /rooms/{roomId}/participants/{sessionId}:
+    delete:
+      operationId: leaveRoom
+      tags: [rooms]
+      summary: End a participant session
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "204":
+          description: Participant session ended
+        "404":
+          description: Room or active participant session not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /rooms/{roomId}/events:
+    get:
+      operationId: streamRoomEvents
+      tags: [rooms]
+      summary: Subscribe to live room participant snapshots
+      description: Opens a server-sent event stream. Sends a room.snapshot event immediately and whenever room membership changes.
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+      responses:
+        "200":
+          description: Server-sent room.snapshot events containing the current RoomState
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        "404":
+          description: Room not found or expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
+  parameters:
+    RoomId:
+      name: roomId
+      in: path
+      required: true
+      description: Case-insensitive 12-character room code
+      schema:
+        type: string
+        pattern: "^[A-Fa-f0-9]{12}$"
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +187,60 @@ components:
           type: string
       required:
         - status
+    RoomCreateInput:
+      type: object
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 40
+      required: [displayName]
+    RoomJoinInput:
+      type: object
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 40
+      required: [displayName]
+    Participant:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        joinedAt:
+          type: string
+          format: date-time
+      required: [sessionId, displayName, joinedAt]
+    RoomState:
+      type: object
+      properties:
+        roomId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        participants:
+          type: array
+          items:
+            $ref: "#/components/schemas/Participant"
+      required: [roomId, createdAt, participants]
+    RoomSession:
+      type: object
+      properties:
+        participantSessionId:
+          type: string
+          format: uuid
+        room:
+          $ref: "#/components/schemas/RoomState"
+      required: [participantSessionId, room]
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
 
