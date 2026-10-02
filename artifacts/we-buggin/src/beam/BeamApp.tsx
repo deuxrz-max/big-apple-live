@@ -40,6 +40,7 @@ function BeamApp() {
   const storageNotice = getPersistenceNotice();
   return (
     <div className="beam-app">
+      <div className="bm-bg" aria-hidden="true"><i /><i /><i /></div>
       <nav className="bm-nav">
         <Link href="/" className="bm-logo" data-testid="link-logo">
           <span aria-hidden>🐞</span> WE BUGGIN

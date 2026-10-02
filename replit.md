@@ -5,14 +5,16 @@ identities, live presence, and WebRTC audio.
 
 ## Beam frontend
 
-The default entry now hosts a frontend-only beam demo: React/TypeScript, white
-space, black/white chrome and one electric-blue accent, bold condensed typography,
-no gradients or heavy decoration. Beam setup offers 2, 4, 9 or 12 total spots,
+The default entry now hosts a frontend-only beam demo: React/TypeScript, a dynamic
+black background with subtle slow ambient motion, high-contrast white chrome and
+one electric-blue accent, bold condensed typography, and no heavy decoration.
+Respect reduced-motion preferences. Beam setup offers 2, 4, 9 or 12 total spots,
 including the host. Enforce the chosen room capacity; 12 is the maximum, not the
 only room size. The setup starts with a seat-layout preview and selector, inspired
 by the user's pre-live reference. Participants use
-the supplied illustrated profile pictures, selected manually and displayed
-as-is; do not add emoji/SVG hair overlays. Avatars remain static, while emoji
+the supplied illustrated profile pictures, selected manually with their backgrounds
+removed to transparency; preserve the faces and full hairstyles, and do not add
+emoji/SVG hair overlays. Avatars remain static, while emoji
 reactions remain available. Message history is bounded, with no
 feed or infinite scrolling. Mock participants and local-only messaging must always
 be identified as a demo, not presented as a real network connection.
@@ -20,6 +22,8 @@ be identified as a demo, not presented as a real network connection.
 **Why:** The user explicitly requested an interactive, backend-independent
 streetwear-inspired frontend ready to connect to a backend later. Keep its mock
 storage separate from real accounts, reserved names, and private room sessions.
+The user subsequently requested a dynamic black beam background and background-free
+profile images; this replaces the earlier white beam theme, not the legacy account UI.
 
 The frontend lives in `artifacts/we-buggin/src/beam/`; its README documents the
 service boundary. Existing account and voice rooms remain at `/user-portal` and
