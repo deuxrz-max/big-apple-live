@@ -11,13 +11,10 @@ import Landing from '@/pages/landing';
 import UserPortal from '@/pages/user-portal';
 import RoomPage from '@/pages/room';
 import { clearAllCreds, loadCreds } from '@/lib/room-creds';
+import BeamApp from '@/beam/BeamApp';
 
 const queryClient = new QueryClient();
 
-const clerkPubKey = publishableKeyFromHost(
-  window.location.hostname,
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
-);
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -25,9 +22,6 @@ function stripBase(path: string): string {
   return basePath && path.startsWith(basePath) ? path.slice(basePath.length) || '/' : path;
 }
 
-if (!clerkPubKey) {
-  throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY in .env file');
-}
 
 const clerkAppearance = {
   theme: shadcn,
@@ -162,6 +156,11 @@ function RoutedErrorBoundary({ children }: { children: ReactNode }) {
 
 function ClerkProviderWithRoutes() {
   const [, setLocation] = useLocation();
+  const clerkPubKey = publishableKeyFromHost(
+    window.location.hostname,
+    import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
+  );
+  if (!clerkPubKey) throw new Error('Account rooms require a configured Clerk publishable key.');
   return (
     <ClerkProvider
       publishableKey={clerkPubKey}
@@ -169,6 +168,8 @@ function ClerkProviderWithRoutes() {
       appearance={clerkAppearance}
       signInUrl={`${basePath}/sign-in`}
       signUpUrl={`${basePath}/sign-up`}
+      signInFallbackRedirectUrl={`${basePath}/user-portal`}
+      signUpFallbackRedirectUrl={`${basePath}/user-portal`}
       localization={{
         signIn: { start: { title: 'Welcome back', subtitle: 'Sign in to get your face and name back' } },
         signUp: { start: { title: 'Get your name', subtitle: 'One account, one dedicated username' } },
@@ -181,6 +182,7 @@ function ClerkProviderWithRoutes() {
         <RoutedErrorBoundary>
           <Switch>
             <Route path="/" component={HomeRedirect} />
+            <Route path="/legacy" component={HomeRedirect} />
             <Route path="/sign-in/*?" component={SignInPage} />
             <Route path="/sign-up/*?" component={SignUpPage} />
             <Route path="/user-portal" component={Portal} />
@@ -193,10 +195,18 @@ function ClerkProviderWithRoutes() {
   );
 }
 
+function AppRoutes() {
+  const [path] = useLocation();
+  // The mock beam frontend is independent of auth, API, and real room sessions.
+  // Keep the existing authenticated account/voice routes intact.
+  if (path === '/' || path === '/beams' || path.startsWith('/beams/')) return <BeamApp />;
+  return <ClerkProviderWithRoutes />;
+}
+
 function App() {
   return (
     <WouterRouter base={basePath}>
-      <ClerkProviderWithRoutes />
+      <RoutedErrorBoundary><AppRoutes /></RoutedErrorBoundary>
     </WouterRouter>
   );
 }

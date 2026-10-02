@@ -3,6 +3,25 @@
 Voice-first rooms with persistent named accounts, customizable static emoji
 identities, live presence, and WebRTC audio.
 
+## Beam frontend
+
+The default entry now hosts a frontend-only beam demo: React/TypeScript, white
+space, black/white chrome and one electric-blue accent, bold condensed typography,
+no gradients or heavy decoration. Beam capacity is strictly 12. Participants use
+the supplied illustrated profile pictures, selected manually and displayed
+as-is; do not add emoji/SVG hair overlays. Avatars remain static, while emoji
+reactions remain available. Message history is bounded, with no
+feed or infinite scrolling. Mock participants and local-only messaging must always
+be identified as a demo, not presented as a real network connection.
+
+**Why:** The user explicitly requested an interactive, backend-independent
+streetwear-inspired frontend ready to connect to a backend later. Keep its mock
+storage separate from real accounts, reserved names, and private room sessions.
+
+The frontend lives in `artifacts/we-buggin/src/beam/`; its README documents the
+service boundary. Existing account and voice rooms remain at `/user-portal` and
+`/rooms/:roomId`, with the previous entry available at `/legacy`.
+
 ## Run & Operate
 
 - `pnpm --filter @workspace/api-server run dev` — run the API server using workflow-provided PORT

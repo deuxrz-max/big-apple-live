@@ -1,0 +1,136 @@
+import { useState } from 'react';
+import { useLocation } from 'wouter';
+import { BeamRoomLayout } from '../components/BeamRoomLayout';
+import { EmojiPicker } from '../components/EmojiPicker';
+import { MessageInput } from '../components/MessageInput';
+import { MessageList } from '../components/MessageList';
+import { ParticipantEmojiBadge } from '../components/ParticipantEmojiBadge';
+import { useAction, useCopy } from '../hooks/useBeam';
+import { leaveBeam, sendMessage, simulateAddPeer, simulateFill, simulateRemovePeer, updateIdentity } from '../services/beamService';
+import type { BeamRoom, Identity, Participant } from '../types';
+import { getPortrait } from '../portraits';
+
+interface Props {
+  room: BeamRoom;
+  self: Participant;
+  notice: string | null;
+  onNotice: (n: string | null) => void;
+}
+
+export function RoomPage({ room, self, notice, onNotice }: Props) {
+  const [, navigate] = useLocation();
+  const [changing, setChanging] = useState(false);
+  const send = useAction();
+  const sim = useAction();
+  const { state: copyState, copy } = useCopy();
+  const count = room.participants.length;
+  const slots = Array.from({ length: room.capacity }, (_, i) => room.participants[i] ?? null);
+
+  const leave = () => {
+    leaveBeam(room.code, self.id);
+    onNotice(null);
+    navigate('/beams/join');
+  };
+
+  const change = (handle: string, identity: Identity) => {
+    try {
+      updateIdentity(room.code, self.id, handle, identity);
+      onNotice(`You are now ${handle} · ${getPortrait(identity).label}`);
+      setChanging(false);
+      return null;
+    } catch (e) {
+      return e instanceof Error ? e.message : 'Could not update.';
+    }
+  };
+
+  return (
+    <>
+      <BeamRoomLayout
+        name={room.name}
+        count={count}
+        capacity={room.capacity}
+        code={
+          <span className="bm-code-wrap">
+            <span className="bm-label">Code</span>
+            <code className="bm-code-chip" data-testid="text-room-code">
+              {room.code}
+            </code>
+            <button type="button" className="bm-link-btn" onClick={() => copy(room.code)} data-testid="button-copy-code">
+              {copyState === 'ok' ? 'Copied' : 'Copy'}
+            </button>
+            {copyState === 'fail' && (
+              <span className="bm-error" role="alert">
+                Copy failed. Select the code and copy it manually.
+              </span>
+            )}
+          </span>
+        }
+        actions={
+          <>
+            <button type="button" className="bm-btn" onClick={() => setChanging(true)} data-testid="button-change-identity">
+              Change picture
+            </button>
+            <button type="button" className="bm-btn" onClick={leave} data-testid="button-leave">
+              Leave
+            </button>
+          </>
+        }
+        notice={
+          notice && (
+            <div className="bm-notice" role="status" data-testid="text-identity-confirmation">
+              <span>{notice}</span>
+              <button type="button" className="bm-icon-btn" onClick={() => onNotice(null)} aria-label="Dismiss">
+                ✕
+              </button>
+            </div>
+          )
+        }
+        roster={
+          <div className="bm-roster" data-testid="grid-roster">
+            {slots.map((p, i) =>
+              p ? (
+                <div key={p.id} className={`bm-tile ${p.id === self.id ? 'is-self' : ''}`}>
+                  <ParticipantEmojiBadge handle={p.handle} identity={p.identity} size="lg" isSelf={p.id === self.id} simulated={p.simulated} showHandle />
+                </div>
+              ) : (
+                <div key={`e${i}`} className="bm-tile bm-tile-empty" aria-hidden>
+                  <span>{i + 1}</span>
+                </div>
+              ),
+            )}
+          </div>
+        }
+        demo={
+          <div className="bm-sim">
+            <div className="bm-label">Frontend demo / simulated participants</div>
+            <div className="bm-sim-row">
+              <button type="button" className="bm-btn bm-btn-sm" onClick={() => sim.run(() => simulateAddPeer(room.code))} disabled={count >= room.capacity} data-testid="button-sim-add">
+                + Peer
+              </button>
+              <button type="button" className="bm-btn bm-btn-sm" onClick={() => sim.run(() => simulateRemovePeer(room.code))} data-testid="button-sim-remove">
+                − Peer
+              </button>
+              <button type="button" className="bm-btn bm-btn-sm" onClick={() => sim.run(() => simulateFill(room.code))} disabled={count >= room.capacity} data-testid="button-sim-fill">
+                Fill to 12
+              </button>
+            </div>
+            {sim.error && (
+              <p className="bm-error" role="alert">
+                {sim.error}
+              </p>
+            )}
+          </div>
+        }
+        stream={<MessageList messages={room.messages} participants={room.participants} selfId={self.id} />}
+        composer={
+          <MessageInput
+            error={send.error}
+            onSend={(t) => send.run(() => { sendMessage(room.code, self.id, 'text', t); return true; }) === true}
+            onReact={(r) => send.run(() => sendMessage(room.code, self.id, 'reaction', r))}
+          />
+        }
+      />
+      {changing && <EmojiPicker title="Change profile picture" initialHandle={self.handle} initialIdentity={self.identity} confirmLabel="Confirm" onConfirm={change} onCancel={() => setChanging(false)} />}
+    </>
+  );
+}
