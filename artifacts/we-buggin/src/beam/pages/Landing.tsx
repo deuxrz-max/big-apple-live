@@ -5,7 +5,7 @@ export function Landing() {
   return (
     <main className="bm-landing">
       <h1 className="bm-hero">
-        Twelve seats.
+        Your beam.
         <br />
         Your people.
       </h1>

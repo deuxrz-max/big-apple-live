@@ -3,7 +3,7 @@
 **Frontend demo / simulated participants.** No network, no auth, no audio. Mount `BeamApp` (default export) for `/` and `/beams/*`, outside Clerk. Routes: `/`, `/beams/new`, `/beams/join`, `/beams/:code`.
 
 ## Layout
-- `types.ts` domain models, `CAPACITY = 12`, `BeamError`.
+- `types.ts` domain models, `BEAM_CAPACITIES = [2, 4, 9, 12]`, a maximum of 12, `BeamError`. Each room stores its selected total capacity, including the host, and enforces that limit for joins and simulation controls. Existing 12-person saves remain valid.
 - `services/beamService.ts` the **mock adapter boundary**: in-memory store persisted to `localStorage` key `webuggin.beam.demo.v1`, with strict capacity, validation and a bounded history (60 messages). Seeded rooms: `LATEBG` (Late Night Buggin, 6 peers) and `FULL12` (full).
 - `hooks/useBeam.ts` `useSyncExternalStore` bindings; UI never touches storage directly.
 - `components/` BeamRoomLayout, ParticipantEmojiBadge, MessageList, MessageInput, EmojiPicker, CapacityIndicator, IdentityGlyph. The original component names are retained; identity components now display the user's supplied profile pictures, not Unicode emoji or SVG hairstyles.

@@ -9,6 +9,7 @@ import { useAction, useCopy } from '../hooks/useBeam';
 import { leaveBeam, sendMessage, simulateAddPeer, simulateFill, simulateRemovePeer, updateIdentity } from '../services/beamService';
 import type { BeamRoom, Identity, Participant } from '../types';
 import { getPortrait } from '../portraits';
+import { capacityColumns } from '../types';
 
 interface Props {
   room: BeamRoom;
@@ -86,7 +87,7 @@ export function RoomPage({ room, self, notice, onNotice }: Props) {
           )
         }
         roster={
-          <div className="bm-roster" data-testid="grid-roster">
+          <div className="bm-roster" style={{ gridTemplateColumns: `repeat(${capacityColumns(room.capacity)}, minmax(0, 1fr))` }} data-testid="grid-roster">
             {slots.map((p, i) =>
               p ? (
                 <div key={p.id} className={`bm-tile ${p.id === self.id ? 'is-self' : ''}`}>
@@ -111,7 +112,7 @@ export function RoomPage({ room, self, notice, onNotice }: Props) {
                 − Peer
               </button>
               <button type="button" className="bm-btn bm-btn-sm" onClick={() => sim.run(() => simulateFill(room.code))} disabled={count >= room.capacity} data-testid="button-sim-fill">
-                Fill to 12
+                Fill to {room.capacity}
               </button>
             </div>
             {sim.error && (

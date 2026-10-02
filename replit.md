@@ -7,7 +7,10 @@ identities, live presence, and WebRTC audio.
 
 The default entry now hosts a frontend-only beam demo: React/TypeScript, white
 space, black/white chrome and one electric-blue accent, bold condensed typography,
-no gradients or heavy decoration. Beam capacity is strictly 12. Participants use
+no gradients or heavy decoration. Beam setup offers 2, 4, 9 or 12 total spots,
+including the host. Enforce the chosen room capacity; 12 is the maximum, not the
+only room size. The setup starts with a seat-layout preview and selector, inspired
+by the user's pre-live reference. Participants use
 the supplied illustrated profile pictures, selected manually and displayed
 as-is; do not add emoji/SVG hair overlays. Avatars remain static, while emoji
 reactions remain available. Message history is bounded, with no

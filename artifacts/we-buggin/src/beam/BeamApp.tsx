@@ -34,7 +34,7 @@ function BeamApp() {
   const roomName = rooms[path.split('/')[2]?.toUpperCase()]?.name;
   const title = path === '/beams/new' ? 'Start a beam' : path === '/beams/join' ? 'Join a beam' : roomName;
   useEffect(() => {
-    document.title = title ? `${title} — We Buggin` : 'We Buggin — Twelve seats. Your people.';
+    document.title = title ? `${title} — We Buggin` : 'We Buggin — Your beam. Your people.';
     return () => { document.title = 'We Buggin'; };
   }, [title]);
   const storageNotice = getPersistenceNotice();

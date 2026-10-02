@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { PORTRAITS, getPortrait, portraitIdentity, isPortraitId } from '../src/beam/portraits';
+import { BEAM_CAPACITIES, type BeamCapacity } from '../src/beam/types';
 
 const saved = new Map<string, string>();
 let storageBlocked = false;
@@ -51,6 +52,41 @@ test('changing the own profile picture preserves peers and persists the selected
   const persisted = JSON.parse(saved.get(service.STORAGE_KEY)!);
   assert.equal(persisted.rooms.LATEBG.participants.find((p: { id: string }) => p.id === session.selfId).identity.portraitId, 'wink');
   assert.equal(next.room.messages.at(-1)?.text, 'picture test');
+});
+
+test('all four beam sizes persist, stop at their selected limit, and allow room resumption', () => {
+  for (const capacity of BEAM_CAPACITIES) {
+    service.resetDemo();
+    const code = service.createBeam(`Size ${capacity}`, 'host', portraitIdentity('spiked-smile'), capacity);
+    assert.equal(active().room.capacity, capacity);
+    assert.equal(active().room.participants.length, 1);
+    assert.equal(JSON.parse(saved.get(service.STORAGE_KEY)!).rooms[code].capacity, capacity);
+    service.simulateFill(code);
+    assert.equal(active().room.participants.length, capacity);
+    assert.throws(() => service.simulateAddPeer(code), { code: 'ROOM_FULL' });
+    const selfId = active().session.selfId;
+    service.joinBeam(code, 'host', portraitIdentity('wink'));
+    assert.equal(active().session.selfId, selfId);
+    assert.equal(active().room.participants.length, capacity);
+    service.leaveBeam(code, selfId);
+    service.simulateAddPeer(code);
+    assert.equal(service.getState().rooms[code].participants.length, capacity);
+    assert.throws(() => service.joinBeam(code, 'next_guest', identity), { code: 'ROOM_FULL' });
+    service.simulateRemovePeer(code);
+    service.joinBeam(code, 'next_guest', identity);
+    assert.equal(active().room.participants.length, capacity);
+    assert.equal(active().room.capacity, capacity);
+  }
+});
+
+test('unsupported beam sizes are rejected without changing an active room', () => {
+  service.resetDemo();
+  service.createBeam('Existing room', 'host', identity, 2);
+  const before = service.getState();
+  for (const capacity of [0, 1, 3, 6, 13, 99, NaN]) {
+    assert.throws(() => service.createBeam('Bad size', 'host', identity, capacity as BeamCapacity), { code: 'INVALID_CAPACITY' });
+    assert.equal(service.getState(), before);
+  }
 });
 
 test('joining demo creates the seventh participant and persists state', () => {

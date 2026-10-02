@@ -2,8 +2,9 @@ import { useState, type FormEvent } from 'react';
 import { Link, useLocation } from 'wouter';
 import { EmojiPicker } from '../components/EmojiPicker';
 import { checkJoinable, createBeam, isValidCode, joinBeam, normalizeCode } from '../services/beamService';
-import { BeamError, type Identity } from '../types';
-import { getPortrait } from '../portraits';
+import { BeamError, type BeamCapacity, type Identity } from '../types';
+import { getPortrait, portraitIdentity } from '../portraits';
+import { BeamSizePicker } from '../components/BeamSizePicker';
 
 interface Props {
   mode: 'create' | 'join';
@@ -16,6 +17,7 @@ export function EntryPage({ mode, initialCode = '', onEntered }: Props) {
   const [value, setValue] = useState(initialCode);
   const [error, setError] = useState<string | null>(null);
   const [picking, setPicking] = useState(false);
+  const [capacity, setCapacity] = useState<BeamCapacity>(4);
   const create = mode === 'create';
 
   const next = (e: FormEvent) => {
@@ -36,7 +38,7 @@ export function EntryPage({ mode, initialCode = '', onEntered }: Props) {
 
   const confirm = (handle: string, identity: Identity): string | null => {
     try {
-      const code = create ? createBeam(value, handle, identity) : joinBeam(value, handle, identity);
+      const code = create ? createBeam(value, handle, identity, capacity) : joinBeam(value, handle, identity);
       onEntered(`You are now ${handle} · ${getPortrait(identity).label}`);
       navigate(`/beams/${code}`);
       return null;
@@ -57,8 +59,9 @@ export function EntryPage({ mode, initialCode = '', onEntered }: Props) {
         ← Back
       </Link>
       <h1 className="bm-h1">{create ? 'Start a beam' : 'Join a beam'}</h1>
-      <p className="bm-lede">{create ? 'Name it. You get a code to share. Cap is 12.' : 'Enter the 6-character code.'}</p>
+      <p className="bm-lede">{create ? 'Set it up: pick the size, name it. You get a code to share.' : 'Enter the 6-character code.'}</p>
       <form onSubmit={next} className="bm-form" noValidate>
+        {create && <BeamSizePicker value={capacity} onChange={setCapacity} host={portraitIdentity('kiss')} />}
         <label className="bm-label" htmlFor="bm-field">
           {create ? 'Beam name' : 'Beam code'}
         </label>
@@ -72,7 +75,7 @@ export function EntryPage({ mode, initialCode = '', onEntered }: Props) {
           }}
           placeholder={create ? 'Late Night Buggin' : 'ABC123'}
           maxLength={create ? 32 : 6}
-          autoFocus
+          autoFocus={!create}
           autoComplete="off"
           aria-invalid={!!error}
           data-testid="input-entry"
@@ -83,11 +86,12 @@ export function EntryPage({ mode, initialCode = '', onEntered }: Props) {
           </p>
         )}
         <button type="submit" className="bm-btn bm-btn-primary bm-btn-lg" data-testid="button-continue">
-          Choose your picture
+          {create ? 'Go live' : 'Choose your picture'}
         </button>
+        {create && <p className="bm-demo-note">Next you pick your handle and picture. Demo only, nobody is streamed.</p>}
       </form>
       <p className="bm-demo-note">Frontend demo / simulated participants. Nothing leaves this browser.</p>
-      {picking && <EmojiPicker title="Pick your profile picture" onConfirm={confirm} onCancel={() => setPicking(false)} confirmLabel={create ? 'Confirm and start' : 'Confirm and join'} />}
+      {picking && <EmojiPicker title="Pick your profile picture" onConfirm={confirm} onCancel={() => setPicking(false)} confirmLabel={create ? `Confirm and start · ${capacity} per beam` : 'Confirm and join'} />}
     </main>
   );
 }

@@ -1,10 +1,12 @@
 import {
   BeamError,
   CAPACITY,
+  isBeamCapacity,
   MAX_MESSAGES,
   type BeamMessage,
   type BeamRoom,
   type BeamState,
+  type BeamCapacity,
   type Identity,
   type MessageKind,
   type Participant,
@@ -92,7 +94,7 @@ function valid(s: unknown): s is BeamState {
   if (!x || x.version !== 1 || typeof x.rooms !== 'object' || x.rooms === null) return false;
   const roomsValid = Object.entries(x.rooms).every(([code, r]) =>
     r && /^[A-Z0-9]{6}$/.test(code) && r.code === code && typeof r.name === 'string'
-      && r.capacity === CAPACITY && Array.isArray(r.participants) && r.participants.length <= CAPACITY
+      && isBeamCapacity(r.capacity) && Array.isArray(r.participants) && r.participants.length <= r.capacity
       && r.participants.every(p => p && typeof p.id === 'string' && typeof p.handle === 'string'
         && typeof p.simulated === 'boolean' && validIdentity(p.identity))
       && Array.isArray(r.messages) && r.messages.length <= MAX_MESSAGES
@@ -165,7 +167,7 @@ export function checkJoinable(rawCode: string): BeamRoom {
   const room = state.rooms[code];
   if (!room) throw new BeamError('NOT_FOUND', `No beam found for ${code}. Check the code and try again.`);
   const alreadyHere = state.session?.code === code && room.participants.some(p => p.id === state.session?.selfId);
-  if (!alreadyHere && room.participants.length >= CAPACITY) throw new BeamError('ROOM_FULL', `${room.name} is full (${CAPACITY}/${CAPACITY}). Try again when someone leaves.`);
+  if (!alreadyHere && room.participants.length >= room.capacity) throw new BeamError('ROOM_FULL', `${room.name} is full (${room.capacity}/${room.capacity}). Try again when someone leaves.`);
   return room;
 }
 
@@ -180,7 +182,7 @@ function enter(room: BeamRoom, handle: string, identity: Identity): string {
     updateIdentity(room.code, existing.id, h, identity);
     return room.code;
   }
-  if (room.participants.length >= CAPACITY) throw new BeamError('ROOM_FULL', 'This beam just filled up.');
+  if (room.participants.length >= room.capacity) throw new BeamError('ROOM_FULL', `This beam just filled up (${room.capacity}/${room.capacity}).`);
   const self: Participant = { id: id('me'), handle: h, identity, simulated: false, joinedAt: Date.now() };
   const rooms = { ...state.rooms };
   const previous = state.session && rooms[state.session.code];
@@ -197,14 +199,15 @@ function enter(room: BeamRoom, handle: string, identity: Identity): string {
   return room.code;
 }
 
-export function createBeam(name: string, handle: string, identity: Identity): string {
+export function createBeam(name: string, handle: string, identity: Identity, capacity: BeamCapacity = CAPACITY): string {
+  if (!isBeamCapacity(capacity)) throw new BeamError('INVALID_CAPACITY', 'Choose 2, 4, 9, or 12 spots for your beam.');
   const n = name.trim();
   if (n.length < 2 || n.length > 32) throw new BeamError('INVALID_NAME', 'Name your beam with 2 to 32 characters.');
   let code = '';
   do {
     code = Array.from({ length: 6 }, () => CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)]).join('');
   } while (state.rooms[code]);
-  const room: BeamRoom = { code, name: n, capacity: CAPACITY, participants: [], messages: [], createdAt: Date.now() };
+  const room: BeamRoom = { code, name: n, capacity, participants: [], messages: [], createdAt: Date.now() };
   return enter(room, handle, identity);
 }
 
@@ -257,7 +260,7 @@ export function sendMessage(code: string, selfId: string, kind: 'text' | 'reacti
 export function simulateAddPeer(code: string) {
   const room = state.rooms[code];
   if (!room) throw new BeamError('NOT_FOUND', 'Beam not found.');
-  if (room.participants.length >= room.capacity) throw new BeamError('ROOM_FULL', 'Beam is full (12/12).');
+  if (room.participants.length >= room.capacity) throw new BeamError('ROOM_FULL', `Beam is full (${room.capacity}/${room.capacity}).`);
   const used = new Set(room.participants.map((p) => p.handle));
   const idx = PEERS.findIndex(([h]) => !used.has(h));
   const [handle, emoji, style, hairColor] = idx >= 0 ? PEERS[idx] : [`sim${room.participants.length + 1}`, '🤖', 'none' as const, '#111111'];
@@ -278,8 +281,10 @@ export function simulateRemovePeer(code: string) {
 }
 
 export function simulateFill(code: string) {
-  let guard = CAPACITY;
-  while (guard-- > 0 && (state.rooms[code]?.participants.length ?? CAPACITY) < CAPACITY) simulateAddPeer(code);
+  const room = state.rooms[code];
+  if (!room) throw new BeamError('NOT_FOUND', 'Beam not found.');
+  let guard = room.capacity;
+  while (guard-- > 0 && state.rooms[code].participants.length < room.capacity) simulateAddPeer(code);
 }
 
 export function resetDemo() {

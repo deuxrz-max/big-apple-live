@@ -1,6 +1,10 @@
 import type { PortraitId } from './portraits';
 
 export const CAPACITY = 12;
+export const BEAM_CAPACITIES = [2, 4, 9, 12] as const;
+export type BeamCapacity = typeof BEAM_CAPACITIES[number];
+export const isBeamCapacity = (value: unknown): value is BeamCapacity => BEAM_CAPACITIES.some(size => size === value);
+export const capacityColumns = (capacity: number) => capacity === 9 ? 3 : capacity === 12 ? 4 : 2;
 export const MAX_MESSAGES = 60;
 
 export type HairStyle = 'none' | 'spiked' | 'ponytails';
@@ -37,7 +41,7 @@ export interface BeamMessage {
 export interface BeamRoom {
   code: string;
   name: string;
-  capacity: number;
+  capacity: BeamCapacity;
   participants: Participant[];
   messages: BeamMessage[];
   createdAt: number;
@@ -59,6 +63,7 @@ export type BeamErrorCode =
   | 'NOT_FOUND'
   | 'ROOM_FULL'
   | 'INVALID_NAME'
+  | 'INVALID_CAPACITY'
   | 'INVALID_HANDLE'
   | 'HANDLE_TAKEN'
   | 'NOT_MEMBER'
