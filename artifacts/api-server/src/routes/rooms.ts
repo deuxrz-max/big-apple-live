@@ -1,0 +1,114 @@
+import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
+import {
+  CreateRoomBody, CreateRoomResponse, GetRoomParams, GetRoomResponse,
+  JoinRoomBody, JoinRoomParams, JoinRoomResponse,
+  HeartbeatParticipantParams, HeartbeatParticipantResponse,
+  LeaveRoomParams, StreamRoomEventsParams,
+} from "@workspace/api-zod";
+import { roomStore, RoomError } from "../lib/room-store";
+
+const router: IRouter = Router();
+
+router.use((_req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  next();
+});
+
+function displayName(value: string): string {
+  const name = value.trim();
+  if (!name) throw new RoomError(400, "Display name must not be blank");
+  return name;
+}
+
+router.post("/rooms", (req, res) => {
+  const body = CreateRoomBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: "Display name must be between 1 and 40 characters" });
+    return;
+  }
+  const session = roomStore.create(displayName(body.data.displayName));
+  res.status(201).json(CreateRoomResponse.parse(session));
+});
+
+router.get("/rooms/:roomId", (req, res) => {
+  const params = GetRoomParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid room ID" });
+    return;
+  }
+  res.json(GetRoomResponse.parse(roomStore.get(params.data.roomId)));
+});
+
+router.post("/rooms/:roomId/join", (req, res) => {
+  const params = JoinRoomParams.safeParse(req.params);
+  const body = JoinRoomBody.safeParse(req.body);
+  if (!params.success || !body.success) {
+    res.status(400).json({ error: "Valid room ID and display name are required" });
+    return;
+  }
+  const session = roomStore.join(params.data.roomId, displayName(body.data.displayName));
+  res.status(201).json(JoinRoomResponse.parse(session));
+});
+
+router.post("/rooms/:roomId/participants/:sessionId/heartbeat", (req, res) => {
+  const params = HeartbeatParticipantParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid room ID or session ID" });
+    return;
+  }
+  const participant = roomStore.heartbeat(params.data.roomId, params.data.sessionId);
+  res.json(HeartbeatParticipantResponse.parse(participant));
+});
+
+router.delete("/rooms/:roomId/participants/:sessionId", (req, res) => {
+  const params = LeaveRoomParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid room ID or session ID" });
+    return;
+  }
+  roomStore.leave(params.data.roomId, params.data.sessionId);
+  res.status(204).end();
+});
+
+router.get("/rooms/:roomId/events", (req, res) => {
+  const params = StreamRoomEventsParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid room ID" });
+    return;
+  }
+  const snapshot = GetRoomResponse.parse(roomStore.get(params.data.roomId));
+  // Subscribe before sending headers so capacity failures remain normal JSON errors.
+  const unsubscribe = roomStore.subscribe(params.data.roomId, (event) => {
+    if (res.destroyed || res.writableEnded) return;
+    const data = event.type === "room.snapshot" ? GetRoomResponse.parse(event.data) : event.data;
+    // Slow consumers are disconnected rather than accumulating unbounded buffers.
+    if (!res.write(`event: ${event.type}\ndata: ${JSON.stringify(data)}\n\n`)) res.destroy();
+    if (event.type === "room.expired") res.end();
+  });
+  res.set({
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive",
+    "X-Accel-Buffering": "no",
+  });
+  res.flushHeaders();
+  res.write(`event: room.snapshot\ndata: ${JSON.stringify(snapshot)}\n\n`);
+  const keepalive = setInterval(() => {
+    if (!res.write(": keepalive\n\n")) res.destroy();
+  }, 15_000);
+  keepalive.unref();
+  res.on("close", () => {
+    clearInterval(keepalive);
+    unsubscribe();
+  });
+});
+
+router.use((err: unknown, _req: Request, res: Response, next: NextFunction) => {
+  if (err instanceof RoomError) {
+    res.status(err.status).json({ error: err.message });
+    return;
+  }
+  next(err);
+});
+
+export default router;

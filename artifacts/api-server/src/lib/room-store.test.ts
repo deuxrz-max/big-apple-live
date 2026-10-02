@@ -1,0 +1,73 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { RoomStore, RoomError, SESSION_TIMEOUT_MS, EMPTY_ROOM_TIMEOUT_MS } from "./room-store";
+
+test("create, join, isolation, and explicit leave keep snapshots current", () => {
+  const store = new RoomStore();
+  const first = store.create("Creator");
+  const second = store.create("Other room");
+  const joined = store.join(first.room.roomId.toLowerCase(), "Guest");
+  assert.notEqual(first.room.roomId, second.room.roomId);
+  assert.equal(joined.room.participants.length, 2);
+  assert.equal(store.get(second.room.roomId).participants.length, 1);
+  assert.notEqual(joined.participantSessionId, joined.room.participants[1]?.participantId);
+  assert.ok(!JSON.stringify(joined.room).includes(joined.participantSessionId));
+  store.leave(first.room.roomId, joined.participantSessionId);
+  assert.equal(store.get(first.room.roomId).participants.length, 1);
+  assert.throws(() => store.heartbeat(first.room.roomId, joined.participantSessionId), RoomError);
+});
+
+test("heartbeats preserve active sessions while inactive sessions expire", () => {
+  let now = 0;
+  const store = new RoomStore(() => now);
+  const creator = store.create("Creator");
+  store.join(creator.room.roomId, "Inactive");
+  now = 30_000;
+  store.heartbeat(creator.room.roomId, creator.participantSessionId);
+  now = SESSION_TIMEOUT_MS;
+  assert.equal(store.get(creator.room.roomId).participants.length, 1);
+  now += 30_000;
+  store.sweep();
+  assert.equal(store.get(creator.room.roomId).participants.length, 0);
+  assert.throws(() => store.heartbeat(creator.room.roomId, creator.participantSessionId), RoomError);
+});
+
+test("membership changes and expiry notify only the appropriate room subscribers", () => {
+  let now = 0;
+  const store = new RoomStore(() => now);
+  const creator = store.create("Creator");
+  const other = store.create("Other");
+  const events: string[] = [];
+  const unsubscribe = store.subscribe(creator.room.roomId, (event) => events.push(event.type));
+  store.join(other.room.roomId, "Unrelated");
+  assert.equal(events.length, 0);
+  store.join(creator.room.roomId, "Guest");
+  assert.deepEqual(events, ["room.snapshot"]);
+  now = SESSION_TIMEOUT_MS;
+  store.sweep();
+  assert.deepEqual(events, ["room.snapshot", "room.snapshot"]);
+  now += EMPTY_ROOM_TIMEOUT_MS;
+  store.sweep();
+  assert.equal(events.at(-1), "room.expired");
+  assert.throws(() => store.get(creator.room.roomId), RoomError);
+  unsubscribe();
+});
+
+test("returned snapshots cannot mutate stored membership", () => {
+  const store = new RoomStore();
+  const creator = store.create("Creator");
+  creator.room.participants.pop();
+  creator.room.createdAt.setFullYear(1900);
+  const current = store.get(creator.room.roomId);
+  assert.equal(current.participants.length, 1);
+  assert.notEqual(current.createdAt.getFullYear(), 1900);
+});
+
+test("unknown rooms and full rooms fail explicitly", () => {
+  const store = new RoomStore();
+  assert.throws(() => store.join("AAAAAAAAAAAA", "Guest"), RoomError);
+  const creator = store.create("Creator");
+  for (let i = 1; i < 100; i++) store.join(creator.room.roomId, `Guest ${i}`);
+  assert.throws(() => store.join(creator.room.roomId, "Overflow"),
+    (error: unknown) => error instanceof RoomError && error.status === 409);
+});

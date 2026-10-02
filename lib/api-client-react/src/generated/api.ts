@@ -20,8 +20,10 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  CapacityErrorResponse,
   ErrorResponse,
   HealthStatus,
+  InvalidInputResponse,
   Participant,
   RoomCreateInput,
   RoomJoinInput,
@@ -176,7 +178,7 @@ return customFetch<RoomSession>(getCreateRoomUrl(),
 
 export const getCreateRoomMutationKey = () => ['createRoom'] as const;
 
-export const getCreateRoomMutationOptions = <TError = ErrorType<ErrorResponse>,
+export const getCreateRoomMutationOptions = <TError = ErrorType<ErrorResponse | CapacityErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRoom>>, TError,CreateRoomMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createRoom>>, TError,CreateRoomMutationVariables, TContext> => {
 
@@ -205,13 +207,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateRoomMutationResult = NonNullable<Awaited<ReturnType<typeof createRoom>>>
     export type CreateRoomMutationBody = BodyType<RoomCreateInput>
-    export type CreateRoomMutationError = ErrorType<ErrorResponse>
+    export type CreateRoomMutationError = ErrorType<ErrorResponse | CapacityErrorResponse>
     export type CreateRoomMutationVariables = {data: BodyType<RoomCreateInput>}
 
     /**
  * @summary Create a room and join as its first participant
  */
-export const useCreateRoom = <TError = ErrorType<ErrorResponse>,
+export const useCreateRoom = <TError = ErrorType<ErrorResponse | CapacityErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRoom>>, TError,CreateRoomMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof createRoom>>,
@@ -255,7 +257,7 @@ export const getGetRoomQueryKey = (roomId: string,) => {
     }
 
 
-export const getGetRoomQueryOptions = <TData = Awaited<ReturnType<typeof getRoom>>, TError = ErrorType<ErrorResponse>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRoom>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetRoomQueryOptions = <TData = Awaited<ReturnType<typeof getRoom>>, TError = ErrorType<InvalidInputResponse | ErrorResponse>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRoom>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -274,14 +276,14 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetRoomQueryResult = NonNullable<Awaited<ReturnType<typeof getRoom>>>
-export type GetRoomQueryError = ErrorType<ErrorResponse>
+export type GetRoomQueryError = ErrorType<InvalidInputResponse | ErrorResponse>
 
 
 /**
  * @summary Get a room and its active participants
  */
 
-export function useGetRoom<TData = Awaited<ReturnType<typeof getRoom>>, TError = ErrorType<ErrorResponse>>(
+export function useGetRoom<TData = Awaited<ReturnType<typeof getRoom>>, TError = ErrorType<InvalidInputResponse | ErrorResponse>>(
  roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRoom>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
@@ -419,7 +421,7 @@ export const heartbeatParticipant = async (roomId: string,
 
 export const getHeartbeatParticipantMutationKey = () => ['heartbeatParticipant'] as const;
 
-export const getHeartbeatParticipantMutationOptions = <TError = ErrorType<ErrorResponse>,
+export const getHeartbeatParticipantMutationOptions = <TError = ErrorType<InvalidInputResponse | ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof heartbeatParticipant>>, TError,HeartbeatParticipantMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof heartbeatParticipant>>, TError,HeartbeatParticipantMutationVariables, TContext> => {
 
@@ -448,13 +450,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type HeartbeatParticipantMutationResult = NonNullable<Awaited<ReturnType<typeof heartbeatParticipant>>>
 
-    export type HeartbeatParticipantMutationError = ErrorType<ErrorResponse>
+    export type HeartbeatParticipantMutationError = ErrorType<InvalidInputResponse | ErrorResponse>
     export type HeartbeatParticipantMutationVariables = {roomId: string;sessionId: string}
 
     /**
  * @summary Keep a participant session active
  */
-export const useHeartbeatParticipant = <TError = ErrorType<ErrorResponse>,
+export const useHeartbeatParticipant = <TError = ErrorType<InvalidInputResponse | ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof heartbeatParticipant>>, TError,HeartbeatParticipantMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof heartbeatParticipant>>,
@@ -495,7 +497,7 @@ export const leaveRoom = async (roomId: string,
 
 export const getLeaveRoomMutationKey = () => ['leaveRoom'] as const;
 
-export const getLeaveRoomMutationOptions = <TError = ErrorType<ErrorResponse>,
+export const getLeaveRoomMutationOptions = <TError = ErrorType<InvalidInputResponse | ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof leaveRoom>>, TError,LeaveRoomMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof leaveRoom>>, TError,LeaveRoomMutationVariables, TContext> => {
 
@@ -524,13 +526,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type LeaveRoomMutationResult = NonNullable<Awaited<ReturnType<typeof leaveRoom>>>
 
-    export type LeaveRoomMutationError = ErrorType<ErrorResponse>
+    export type LeaveRoomMutationError = ErrorType<InvalidInputResponse | ErrorResponse>
     export type LeaveRoomMutationVariables = {roomId: string;sessionId: string}
 
     /**
  * @summary End a participant session
  */
-export const useLeaveRoom = <TError = ErrorType<ErrorResponse>,
+export const useLeaveRoom = <TError = ErrorType<InvalidInputResponse | ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof leaveRoom>>, TError,LeaveRoomMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof leaveRoom>>,
@@ -575,7 +577,7 @@ export const getStreamRoomEventsQueryKey = (roomId: string,) => {
     }
 
 
-export const getStreamRoomEventsQueryOptions = <TData = Awaited<ReturnType<typeof streamRoomEvents>>, TError = ErrorType<ErrorResponse>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamRoomEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getStreamRoomEventsQueryOptions = <TData = Awaited<ReturnType<typeof streamRoomEvents>>, TError = ErrorType<InvalidInputResponse | ErrorResponse | CapacityErrorResponse>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamRoomEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -594,14 +596,14 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type StreamRoomEventsQueryResult = NonNullable<Awaited<ReturnType<typeof streamRoomEvents>>>
-export type StreamRoomEventsQueryError = ErrorType<ErrorResponse>
+export type StreamRoomEventsQueryError = ErrorType<InvalidInputResponse | ErrorResponse | CapacityErrorResponse>
 
 
 /**
  * @summary Subscribe to live room participant snapshots
  */
 
-export function useStreamRoomEvents<TData = Awaited<ReturnType<typeof streamRoomEvents>>, TError = ErrorType<ErrorResponse>>(
+export function useStreamRoomEvents<TData = Awaited<ReturnType<typeof streamRoomEvents>>, TError = ErrorType<InvalidInputResponse | ErrorResponse | CapacityErrorResponse>>(
  roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamRoomEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {

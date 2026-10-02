@@ -7,7 +7,7 @@
  */
 
 export interface Participant {
-  sessionId: string;
+  participantId: string;
   displayName: string;
   joinedAt: Date;
 }

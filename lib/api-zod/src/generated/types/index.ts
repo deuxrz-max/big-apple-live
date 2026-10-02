@@ -6,8 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './capacityErrorResponse';
 export * from './errorResponse';
 export * from './healthStatus';
+export * from './invalidInputResponse';
 export * from './participant';
 export * from './roomCreateInput';
 export * from './roomJoinInput';

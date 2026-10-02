@@ -34,7 +34,7 @@ export const CreateRoomResponse = zod.object({
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
   "participants": zod.array(zod.object({
-  "sessionId": zod.string().uuid(),
+  "participantId": zod.string().uuid(),
   "displayName": zod.string(),
   "joinedAt": zod.coerce.date()
 }))
@@ -56,7 +56,7 @@ export const GetRoomResponse = zod.object({
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
   "participants": zod.array(zod.object({
-  "sessionId": zod.string().uuid(),
+  "participantId": zod.string().uuid(),
   "displayName": zod.string(),
   "joinedAt": zod.coerce.date()
 }))
@@ -87,7 +87,7 @@ export const JoinRoomResponse = zod.object({
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
   "participants": zod.array(zod.object({
-  "sessionId": zod.string().uuid(),
+  "participantId": zod.string().uuid(),
   "displayName": zod.string(),
   "joinedAt": zod.coerce.date()
 }))
@@ -108,7 +108,7 @@ export const HeartbeatParticipantParams = zod.object({
 })
 
 export const HeartbeatParticipantResponse = zod.object({
-  "sessionId": zod.string().uuid(),
+  "participantId": zod.string().uuid(),
   "displayName": zod.string(),
   "joinedAt": zod.coerce.date()
 })

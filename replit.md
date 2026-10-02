@@ -1,6 +1,6 @@
-# [Project name]
+# Room Chat Backend
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Backend-only room creation, joining, active participant sessions, and live room-state events.
 
 ## Run & Operate
 
@@ -9,7 +9,7 @@ _Replace the heading above with the project's name, and this line with one sente
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Room session features require no database or external service.
 
 ## Stack
 
@@ -22,23 +22,33 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `lib/api-spec/openapi.yaml` — API contract
+- `artifacts/api-server/src/lib/room-store.ts` — room/session state
+- `artifacts/api-server/src/routes/rooms.ts` — REST and server-sent events
+- `artifacts/api-server/ROOMS.md` — lifecycle, API usage, and limitations
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Presence is deliberately ephemeral and single-process for this initial framework.
+  This avoids treating database rows as evidence of a currently active user.
+- Heartbeat leases are used instead of treating event-stream connections as identity;
+  observing a room must not create or preserve a participant session.
+- Public participant IDs differ from private session credentials.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Users can create a room with a unique shareable ID, join by ID, keep an active
+participant session, leave, and subscribe to live participant snapshots.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+No audio routing or UI elements yet. Focus entirely on session management and room state.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Restarting the API clears rooms and participant sessions.
+- Multiple API instances require shared state and pub/sub first.
+- Regenerate API types after OpenAPI changes.
 
 ## Pointers
 

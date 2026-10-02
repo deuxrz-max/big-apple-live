@@ -26,7 +26,7 @@ export interface RoomJoinInput {
 }
 
 export interface Participant {
-  sessionId: string;
+  participantId: string;
   displayName: string;
   joinedAt: string;
 }
@@ -45,4 +45,14 @@ export interface RoomSession {
 export interface ErrorResponse {
   error: string;
 }
+
+/**
+ * Invalid room or session ID
+ */
+export type InvalidInputResponse = ErrorResponse;
+
+/**
+ * Service or event subscriber capacity reached
+ */
+export type CapacityErrorResponse = ErrorResponse;
 

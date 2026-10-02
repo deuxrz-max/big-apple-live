@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { roomStore } from "./lib/room-store";
 
 const rawPort = process.env["PORT"];
 
@@ -14,6 +15,9 @@ const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
+
+const presenceSweep = setInterval(() => roomStore.sweep(), 5_000);
+presenceSweep.unref();
 
 app.listen(port, (err) => {
   if (err) {
