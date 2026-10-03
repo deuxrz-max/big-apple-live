@@ -14,3 +14,12 @@ expressions only, persistent mood, and preservation of room/account logic.
 the matching hairstyle. If its artwork is missing, ignore that face rather
 than substituting the opposite hairstyle. The chosen multi-face policy is
 last qualifying face wins, so trailing unsupported emojis cannot reset it.
+
+Add new mood artwork as a new selectable picture rather than overwriting an
+existing saved picture; use it for future qualifying chat messages.
+
+**Why:** Existing selections and active moods must remain stable until the user
+changes their picture or sends a new qualifying face, as requested.
+
+**How to apply:** Preserve older artwork and saved choices when adding a newly
+supplied version of an already-supported expression.

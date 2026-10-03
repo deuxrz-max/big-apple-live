@@ -49,8 +49,8 @@ test('mood detection ignores ordinary emojis and unsupported compound faces', ()
   for (const text of ['hello', '❤️🔥💙👀👍', '😢😡🥺🤖', '🙂‍↔️', '🙂‍↕️', '😶‍🌫️']) {
     assert.equal(syncMood(before, text), before, text);
   }
-  assert.equal(syncMood(before, '😊️').portraitId, 'spiked-soft-smile');
-  assert.equal(syncMood(before, '😃 then 😆 and 😂🔥😘').portraitId, 'spiked-tears');
+  assert.equal(syncMood(before, '😊️').portraitId, 'spiked-smiling-eyes');
+  assert.equal(syncMood(before, '😃 then 😆 and 😂🔥😘').portraitId, 'spiked-blowing-kiss');
   assert.equal(syncMood(portraitIdentity('kiss'), '😃 then 😆 and 😂🔥😘').portraitId, 'kiss');
   const legacy = { ...identity, emoji: '🦋' };
   assert.equal(getPortrait(syncMood(legacy, '😊')).style, getPortrait(legacy).style);
@@ -68,18 +68,18 @@ test('chat commits sender mood instantly, preserves room logic and persists unti
   unsubscribe();
   assert.equal(notifications, 1);
   let next = active();
-  assert.equal(next.room.participants.find(p => p.id === session.selfId)?.identity.portraitId, 'spiked-soft-smile');
-  assert.equal(next.room.messages.at(-1)?.authorSnapshot?.identity.portraitId, 'spiked-soft-smile');
+  assert.equal(next.room.participants.find(p => p.id === session.selfId)?.identity.portraitId, 'spiked-smiling-eyes');
+  assert.equal(next.room.messages.at(-1)?.authorSnapshot?.identity.portraitId, 'spiked-smiling-eyes');
   assert.equal(next.room.messages.at(-1)?.text, 'feeling 😊');
-  for (const text of ['still here', '❤️🔥', '😘😡', '🙂‍↔️']) {
+  for (const text of ['still here', '❤️🔥', '😜😡', '🙂‍↔️']) {
     service.sendMessage(room.code, session.selfId, 'text', text);
-    assert.equal(active().room.participants.find(p => p.id === session.selfId)?.identity.portraitId, 'spiked-soft-smile');
+    assert.equal(active().room.participants.find(p => p.id === session.selfId)?.identity.portraitId, 'spiked-smiling-eyes');
   }
   const persisted = JSON.parse(saved.get(service.STORAGE_KEY)!);
-  assert.equal(persisted.rooms.LATEBG.participants.find((p: { id: string }) => p.id === session.selfId).identity.portraitId, 'spiked-soft-smile');
+  assert.equal(persisted.rooms.LATEBG.participants.find((p: { id: string }) => p.id === session.selfId).identity.portraitId, 'spiked-smiling-eyes');
   service.sendMessage(room.code, session.selfId, 'reaction', '😂');
   next = active();
-  assert.equal(next.room.participants.find(p => p.id === session.selfId)?.identity.portraitId, 'spiked-tears');
+  assert.equal(next.room.participants.find(p => p.id === session.selfId)?.identity.portraitId, 'spiked-tears-of-joy');
   assert.deepEqual(next.room.participants.filter(p => p.id !== session.selfId), peers);
   assert.equal(next.room.capacity, room.capacity);
   assert.deepEqual(next.session, session);
@@ -89,9 +89,9 @@ test('chat commits sender mood instantly, preserves room logic and persists unti
   assert.equal(service.getState(), before);
 });
 
-test('all nineteen supplied portraits are selectable and old saved identities keep their pictures', () => {
-  assert.equal(PORTRAITS.length, 19);
-  assert.equal(new Set(PORTRAITS.map(p => p.file)).size, 19);
+test('all thirty supplied portraits are selectable and old saved identities keep their pictures', () => {
+  assert.equal(PORTRAITS.length, 30);
+  assert.equal(new Set(PORTRAITS.map(p => p.file)).size, 30);
   for (const portrait of PORTRAITS) {
     assert.ok(isPortraitId(portrait.id));
     assert.equal(getPortrait(portraitIdentity(portrait.id)).id, portrait.id);
@@ -102,6 +102,221 @@ test('all nineteen supplied portraits are selectable and old saved identities ke
   assert.equal(getPortrait({ ...identity, emoji: '🦋' }).id, 'laugh-alternate');
   assert.equal(getPortrait({ ...identity, emoji: '👾' }).id, 'laugh');
   assert.equal(getPortrait({ ...identity, emoji: '🪩' }).id, 'wink');
+});
+
+test('loudly crying updates and persists a spiky sender without changing ponytail moods', () => {
+  const female = portraitIdentity('ponytail-grin');
+  assert.equal(syncMood(female, '😭'), female);
+  assert.equal(syncMood(female, '😊 then 😭').portraitId, 'ponytail-soft-smile');
+  assert.equal(syncMood(portraitIdentity('spiked-grin'), '😂 then 😭🔥').portraitId, 'spiked-loudly-crying');
+  service.resetDemo();
+  service.joinBeam('LATEBG', 'crying_me', portraitIdentity('spiked-smile'));
+  const { room, session } = active();
+  const peers = room.participants.filter(p => p.id !== session.selfId);
+  service.sendMessage(room.code, session.selfId, 'text', 'oh no 😭');
+  service.sendMessage(room.code, session.selfId, 'text', 'still here ❤️🔥');
+  const next = active();
+  const me = next.room.participants.find(p => p.id === session.selfId)!;
+  assert.equal(me.identity.portraitId, 'spiked-loudly-crying');
+  assert.equal(me.identity.style, 'spiked');
+  assert.deepEqual(next.room.participants.filter(p => p.id !== session.selfId), peers);
+  assert.equal(next.room.messages.at(-1)?.authorSnapshot?.identity.portraitId, 'spiked-loudly-crying');
+  const persisted = JSON.parse(saved.get(service.STORAGE_KEY)!);
+  assert.equal(persisted.rooms.LATEBG.participants.find((p: { id: string }) => p.id === session.selfId).identity.portraitId, 'spiked-loudly-crying');
+});
+
+test('ROFL persists for spiky senders without replacing crying, joy or ponytail variants', () => {
+  const female = portraitIdentity('ponytail-grin');
+  assert.equal(syncMood(female, '🤣'), female);
+  assert.equal(syncMood(female, '😊 then 🤣').portraitId, 'ponytail-soft-smile');
+  assert.equal(syncMood(portraitIdentity('spiked-smile'), '😭😂🤣🔥').portraitId, 'spiked-rofl');
+  assert.equal(syncMood(portraitIdentity('spiked-rofl'), '😂').portraitId, 'spiked-tears-of-joy');
+  assert.equal(syncMood(portraitIdentity('spiked-rofl'), '😭').portraitId, 'spiked-loudly-crying');
+  service.resetDemo();
+  service.joinBeam('LATEBG', 'rofl_me', portraitIdentity('spiked-smile'));
+  const { room, session } = active();
+  const peers = room.participants.filter(p => p.id !== session.selfId);
+  service.sendMessage(room.code, session.selfId, 'text', 'too funny 🤣');
+  service.sendMessage(room.code, session.selfId, 'reaction', '🔥');
+  const next = active();
+  const me = next.room.participants.find(p => p.id === session.selfId)!;
+  assert.equal(me.identity.portraitId, 'spiked-rofl');
+  assert.equal(me.identity.style, 'spiked');
+  assert.deepEqual(next.room.participants.filter(p => p.id !== session.selfId), peers);
+  assert.equal(next.room.messages.at(-1)?.authorSnapshot?.identity.portraitId, 'spiked-rofl');
+  const persisted = JSON.parse(saved.get(service.STORAGE_KEY)!);
+  assert.equal(persisted.rooms.LATEBG.participants.find((p: { id: string }) => p.id === session.selfId).identity.portraitId, 'spiked-rofl');
+});
+
+test('heart-eyes triggers a spiky mood but standalone hearts and ponytail identities do not', () => {
+  const female = portraitIdentity('ponytail-grin');
+  assert.equal(syncMood(female, '😍'), female);
+  assert.equal(syncMood(female, '😊😍❤️').portraitId, 'ponytail-soft-smile');
+  const male = portraitIdentity('spiked-grin');
+  assert.equal(syncMood(male, '❤️💖💙♥️🔥'), male);
+  assert.equal(syncMood(male, '🤣 then 😍❤️').portraitId, 'spiked-heart-eyes');
+  service.resetDemo();
+  service.joinBeam('LATEBG', 'heart_me', male);
+  const { room, session } = active();
+  const peers = room.participants.filter(p => p.id !== session.selfId);
+  service.sendMessage(room.code, session.selfId, 'text', 'love this 😍');
+  service.sendMessage(room.code, session.selfId, 'reaction', '❤️');
+  const next = active();
+  const me = next.room.participants.find(p => p.id === session.selfId)!;
+  assert.equal(me.identity.portraitId, 'spiked-heart-eyes');
+  assert.equal(me.identity.style, 'spiked');
+  assert.deepEqual(next.room.participants.filter(p => p.id !== session.selfId), peers);
+  assert.equal(next.room.messages.at(-1)?.authorSnapshot?.identity.portraitId, 'spiked-heart-eyes');
+  const persisted = JSON.parse(saved.get(service.STORAGE_KEY)!);
+  assert.equal(persisted.rooms.LATEBG.participants.find((p: { id: string }) => p.id === session.selfId).identity.portraitId, 'spiked-heart-eyes');
+});
+
+test('smiling with hearts persists for spiky senders while ordinary hearts and ponytail moods stay unchanged', () => {
+  const female = portraitIdentity('ponytail-grin');
+  assert.equal(syncMood(female, '🥰'), female);
+  assert.equal(syncMood(female, '😊 then 🥰❤️').portraitId, 'ponytail-soft-smile');
+  const male = portraitIdentity('spiked-grin');
+  assert.equal(syncMood(male, '❤️💖💙♥️🔥'), male);
+  assert.equal(syncMood(male, '😍 then 🥰❤️').portraitId, 'spiked-smiling-hearts');
+  assert.equal(syncMood(portraitIdentity('spiked-smiling-hearts'), '😍').portraitId, 'spiked-heart-eyes');
+  service.resetDemo();
+  service.joinBeam('LATEBG', 'hearts_me', male);
+  const { room, session } = active();
+  const peers = room.participants.filter(p => p.id !== session.selfId);
+  service.sendMessage(room.code, session.selfId, 'text', 'feeling loved 🥰');
+  service.sendMessage(room.code, session.selfId, 'reaction', '❤️');
+  const next = active();
+  const me = next.room.participants.find(p => p.id === session.selfId)!;
+  assert.equal(me.identity.portraitId, 'spiked-smiling-hearts');
+  assert.equal(me.identity.style, 'spiked');
+  assert.deepEqual(next.room.participants.filter(p => p.id !== session.selfId), peers);
+  assert.equal(next.room.messages.at(-1)?.authorSnapshot?.identity.portraitId, 'spiked-smiling-hearts');
+  const persisted = JSON.parse(saved.get(service.STORAGE_KEY)!);
+  assert.equal(persisted.rooms.LATEBG.participants.find((p: { id: string }) => p.id === session.selfId).identity.portraitId, 'spiked-smiling-hearts');
+});
+
+test('new smiling eyes is selected only on a qualifying message and preserves the old choice', () => {
+  const oldChoice = portraitIdentity('spiked-soft-smile');
+  assert.equal(getPortrait(oldChoice).id, 'spiked-soft-smile');
+  assert.equal(syncMood(oldChoice, 'still smiling ❤️🔥'), oldChoice);
+  assert.equal(syncMood(oldChoice, '😊').portraitId, 'spiked-smiling-eyes');
+  assert.equal(syncMood(portraitIdentity('ponytail-grin'), '😊').portraitId, 'ponytail-soft-smile');
+});
+
+test('melting persists for a spiky sender while ponytail moods and peers stay unchanged', () => {
+  const female = portraitIdentity('ponytail-grin');
+  assert.equal(syncMood(female, '🫠'), female);
+  assert.equal(syncMood(female, '😊 then 🫠🔥').portraitId, 'ponytail-soft-smile');
+  const male = portraitIdentity('spiked-grin');
+  assert.equal(syncMood(male, '🥰 then 🫠🔥').portraitId, 'spiked-melting');
+  assert.equal(syncMood(portraitIdentity('spiked-melting'), '😊').portraitId, 'spiked-smiling-eyes');
+  service.resetDemo();
+  service.joinBeam('LATEBG', 'melting_me', male);
+  const { room, session } = active();
+  const peers = room.participants.filter(p => p.id !== session.selfId);
+  service.sendMessage(room.code, session.selfId, 'text', 'what a day 🫠');
+  service.sendMessage(room.code, session.selfId, 'reaction', '🔥');
+  const next = active();
+  const me = next.room.participants.find(p => p.id === session.selfId)!;
+  assert.equal(me.identity.portraitId, 'spiked-melting');
+  assert.equal(me.identity.style, 'spiked');
+  assert.deepEqual(next.room.participants.filter(p => p.id !== session.selfId), peers);
+  assert.equal(next.room.messages.at(-1)?.authorSnapshot?.identity.portraitId, 'spiked-melting');
+  const persisted = JSON.parse(saved.get(service.STORAGE_KEY)!);
+  assert.equal(persisted.rooms.LATEBG.participants.find((p: { id: string }) => p.id === session.selfId).identity.portraitId, 'spiked-melting');
+});
+
+test('blowing a kiss keeps the matching hair variant and persists a spiky reaction sender', () => {
+  assert.equal(syncMood(portraitIdentity('ponytail-grin'), '😘').portraitId, 'kiss');
+  assert.equal(getPortrait(portraitIdentity('kiss')).id, 'kiss');
+  const male = portraitIdentity('spiked-grin');
+  assert.equal(syncMood(male, '😊 then 😘❤️').portraitId, 'spiked-blowing-kiss');
+  assert.equal(syncMood(portraitIdentity('spiked-blowing-kiss'), '😊').portraitId, 'spiked-smiling-eyes');
+  service.resetDemo();
+  service.joinBeam('LATEBG', 'kiss_me', male);
+  const { room, session } = active();
+  const peers = room.participants.filter(p => p.id !== session.selfId);
+  service.sendMessage(room.code, session.selfId, 'reaction', '😘');
+  service.sendMessage(room.code, session.selfId, 'text', 'still here ❤️');
+  const next = active();
+  const me = next.room.participants.find(p => p.id === session.selfId)!;
+  assert.equal(me.identity.portraitId, 'spiked-blowing-kiss');
+  assert.equal(me.identity.style, 'spiked');
+  assert.deepEqual(next.room.participants.filter(p => p.id !== session.selfId), peers);
+  assert.equal(next.room.messages.at(-1)?.authorSnapshot?.identity.portraitId, 'spiked-blowing-kiss');
+  const persisted = JSON.parse(saved.get(service.STORAGE_KEY)!);
+  assert.equal(persisted.rooms.LATEBG.participants.find((p: { id: string }) => p.id === session.selfId).identity.portraitId, 'spiked-blowing-kiss');
+});
+
+test('thinking persists for spiky senders without changing ponytail moods or skeptical artwork', () => {
+  const female = portraitIdentity('ponytail-grin');
+  assert.equal(syncMood(female, '🤔'), female);
+  assert.equal(syncMood(female, '😊 then 🤔🔥').portraitId, 'ponytail-soft-smile');
+  const male = portraitIdentity('spiked-grin');
+  assert.equal(syncMood(male, '🤨 then 🤔❤️').portraitId, 'spiked-thinking');
+  assert.equal(syncMood(portraitIdentity('spiked-thinking'), '🤨').portraitId, 'skeptical');
+  service.resetDemo();
+  service.joinBeam('LATEBG', 'thinking_me', male);
+  const { room, session } = active();
+  const peers = room.participants.filter(p => p.id !== session.selfId);
+  service.sendMessage(room.code, session.selfId, 'text', 'let me think 🤔');
+  service.sendMessage(room.code, session.selfId, 'reaction', '🔥');
+  const next = active();
+  const me = next.room.participants.find(p => p.id === session.selfId)!;
+  assert.equal(me.identity.portraitId, 'spiked-thinking');
+  assert.equal(me.identity.style, 'spiked');
+  assert.deepEqual(next.room.participants.filter(p => p.id !== session.selfId), peers);
+  assert.equal(next.room.messages.at(-1)?.authorSnapshot?.identity.portraitId, 'spiked-thinking');
+  const persisted = JSON.parse(saved.get(service.STORAGE_KEY)!);
+  assert.equal(persisted.rooms.LATEBG.participants.find((p: { id: string }) => p.id === session.selfId).identity.portraitId, 'spiked-thinking');
+});
+
+test('winking persists for a spiky sender without replacing the ponytail playful wink', () => {
+  const female = portraitIdentity('ponytail-grin');
+  assert.equal(syncMood(female, '😉'), female);
+  assert.equal(syncMood(female, '😜 then 😉🔥').portraitId, 'wink');
+  const male = portraitIdentity('spiked-grin');
+  assert.equal(syncMood(male, '😜'), male);
+  assert.equal(syncMood(male, '🤔 then 😉❤️').portraitId, 'spiked-winking');
+  assert.equal(syncMood(portraitIdentity('spiked-winking'), '😊').portraitId, 'spiked-smiling-eyes');
+  service.resetDemo();
+  service.joinBeam('LATEBG', 'winking_me', male);
+  const { room, session } = active();
+  const peers = room.participants.filter(p => p.id !== session.selfId);
+  service.sendMessage(room.code, session.selfId, 'reaction', '😉');
+  service.sendMessage(room.code, session.selfId, 'text', 'still here ❤️🔥');
+  const next = active();
+  const me = next.room.participants.find(p => p.id === session.selfId)!;
+  assert.equal(me.identity.portraitId, 'spiked-winking');
+  assert.equal(me.identity.style, 'spiked');
+  assert.deepEqual(next.room.participants.filter(p => p.id !== session.selfId), peers);
+  assert.equal(next.room.messages.at(-1)?.authorSnapshot?.identity.portraitId, 'spiked-winking');
+  const persisted = JSON.parse(saved.get(service.STORAGE_KEY)!);
+  assert.equal(persisted.rooms.LATEBG.participants.find((p: { id: string }) => p.id === session.selfId).identity.portraitId, 'spiked-winking');
+});
+
+test('neutral is an explicit spiky face, not an automatic reset for ordinary text or ponytail moods', () => {
+  const female = portraitIdentity('ponytail-grin');
+  assert.equal(syncMood(female, '😐'), female);
+  assert.equal(syncMood(female, '😊 then 😐🔥').portraitId, 'ponytail-soft-smile');
+  const male = portraitIdentity('spiked-winking');
+  assert.equal(syncMood(male, 'nothing new ❤️🔥'), male);
+  assert.equal(syncMood(male, '😉 then 😐❤️').portraitId, 'spiked-neutral');
+  assert.equal(syncMood(portraitIdentity('spiked-neutral'), '😊').portraitId, 'spiked-smiling-eyes');
+  service.resetDemo();
+  service.joinBeam('LATEBG', 'neutral_me', male);
+  const { room, session } = active();
+  const peers = room.participants.filter(p => p.id !== session.selfId);
+  service.sendMessage(room.code, session.selfId, 'text', 'feeling neutral 😐');
+  service.sendMessage(room.code, session.selfId, 'text', 'just talking ❤️🔥');
+  const next = active();
+  const me = next.room.participants.find(p => p.id === session.selfId)!;
+  assert.equal(me.identity.portraitId, 'spiked-neutral');
+  assert.equal(me.identity.style, 'spiked');
+  assert.deepEqual(next.room.participants.filter(p => p.id !== session.selfId), peers);
+  assert.equal(next.room.messages.at(-1)?.authorSnapshot?.identity.portraitId, 'spiked-neutral');
+  const persisted = JSON.parse(saved.get(service.STORAGE_KEY)!);
+  assert.equal(persisted.rooms.LATEBG.participants.find((p: { id: string }) => p.id === session.selfId).identity.portraitId, 'spiked-neutral');
 });
 
 test('changing the own profile picture preserves peers and persists the selected artwork', () => {

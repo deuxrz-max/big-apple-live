@@ -20,6 +20,17 @@ export const PORTRAITS = [
   { id: 'spiked-delighted', label: 'Delighted · spiked', file: 'spiked-delighted.webp', style: 'spiked', emoji: '😃' },
   { id: 'spiked-grin', label: 'Grin · spiked', file: 'spiked-grin.webp', style: 'spiked', emoji: '😁' },
   { id: 'spiked-smile', label: 'Smile · spiked', file: 'spiked-smile.webp', style: 'spiked', emoji: '🙂' },
+  { id: 'spiked-tears-of-joy', label: 'Tears of Joy · Spiky', file: 'spiked-tears-of-joy.webp', style: 'spiked', emoji: '😂' },
+  { id: 'spiked-loudly-crying', label: 'Loudly Crying · Spiky', file: 'spiked-loudly-crying.webp', style: 'spiked', emoji: '😭' },
+  { id: 'spiked-rofl', label: 'Rolling on the Floor Laughing · Spiky', file: 'spiked-rofl.webp', style: 'spiked', emoji: '🤣' },
+  { id: 'spiked-heart-eyes', label: 'Heart-Eyes · Spiky', file: 'spiked-heart-eyes.webp', style: 'spiked', emoji: '😍' },
+  { id: 'spiked-smiling-hearts', label: 'Smiling with Hearts · Spiky', file: 'spiked-smiling-hearts.webp', style: 'spiked', emoji: '🥰' },
+  { id: 'spiked-smiling-eyes', label: 'Smiling Eyes · Spiky', file: 'spiked-smiling-eyes.webp', style: 'spiked', emoji: '😊' },
+  { id: 'spiked-melting', label: 'Melting · Spiky', file: 'spiked-melting.webp', style: 'spiked', emoji: '🫠' },
+  { id: 'spiked-blowing-kiss', label: 'Blowing a Kiss · Spiky', file: 'spiked-blowing-kiss.webp', style: 'spiked', emoji: '😘' },
+  { id: 'spiked-thinking', label: 'Thinking · Spiky', file: 'spiked-thinking.webp', style: 'spiked', emoji: '🤔' },
+  { id: 'spiked-winking', label: 'Winking · Spiky', file: 'spiked-winking.webp', style: 'spiked', emoji: '😉' },
+  { id: 'spiked-neutral', label: 'Neutral · Spiky', file: 'spiked-neutral.webp', style: 'spiked', emoji: '😐' },
 ] as const;
 
 export type PortraitId = typeof PORTRAITS[number]['id'];
