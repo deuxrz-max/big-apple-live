@@ -12,6 +12,7 @@ import {
   type Participant,
 } from '../types';
 import { isPortraitId } from '../portraits';
+import { syncMood } from '../moodSync';
 
 /**
  * FRONTEND DEMO / SIMULATED PARTICIPANTS.
@@ -252,7 +253,15 @@ export function sendMessage(code: string, selfId: string, kind: 'text' | 'reacti
   const text = raw.trim();
   if (!text) throw new BeamError('EMPTY_MESSAGE', 'Write something first.');
   if (text.length > 280) throw new BeamError('TOO_LONG', 'Keep it under 280 characters.');
-  patchRoom({ ...room, messages: trim([...room.messages, msg(me, kind, text, Date.now())]) });
+  // One atomic commit persists the mood and notifies every room subscriber.
+  // Validation runs first: rejected messages never change the sender's image.
+  const identity = syncMood(me.identity, text);
+  const sender = identity === me.identity ? me : { ...me, identity };
+  patchRoom({
+    ...room,
+    participants: room.participants.map(p => p.id === me.id ? sender : p),
+    messages: trim([...room.messages, msg(sender, kind, text, Date.now())]),
+  });
 }
 
 /* ---- Clearly labeled simulation controls (user-triggered only) ---- */

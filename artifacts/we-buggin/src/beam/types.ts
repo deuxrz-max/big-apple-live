@@ -12,7 +12,7 @@ export type HairStyle = 'none' | 'spiked' | 'ponytails';
 export interface Identity {
   /** Uploaded artwork is the displayed profile identity. */
   portraitId?: PortraitId;
-  /** Retained only for compatibility with previously saved demo state. */
+  /** Selected expression, also retained for compatibility with old demo state. */
   emoji: string;
   style: HairStyle;
   hairColor: string;

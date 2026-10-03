@@ -1,7 +1,8 @@
 import { useRef, useState, type FormEvent } from 'react';
+import { FACE_MOODS } from '../moodSync';
 
 export const REACTIONS = ['🔥', '😂', '💀', '👀', '🫡', '❤️'];
-const TRAY = ['😀', '😎', '🥲', '🤝', '🙏', '💯', '✨', '🎧', '🫠', '🤯', '🥶', '🍕', '🪩', '🛹', '🌙', '👑'];
+const TRAY = [...Object.keys(FACE_MOODS), '😀', '😎', '🥲', '🤝', '🙏', '💯', '✨', '🎧', '🫠', '🤯', '🥶', '🍕', '🪩', '🛹', '🌙', '👑'];
 
 interface Props {
   onSend: (text: string) => boolean;

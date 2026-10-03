@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { PORTRAITS, getPortrait, portraitIdentity, isPortraitId } from '../src/beam/portraits';
 import { BEAM_CAPACITIES, type BeamCapacity } from '../src/beam/types';
+import { FACE_MOODS, syncMood } from '../src/beam/moodSync';
 
 const saved = new Map<string, string>();
 let storageBlocked = false;
@@ -22,6 +23,71 @@ const active = () => {
   assert.ok(state.session);
   return { state, session: state.session, room: state.rooms[state.session.code] };
 };
+
+test('all supported face moods select only the matching branded hair identity', () => {
+  for (const [emoji, mood] of Object.entries(FACE_MOODS)) {
+    assert.ok(mood.emotion);
+    for (const start of ['spiked-smile', 'ponytail-smile'] as const) {
+      const before = { ...portraitIdentity(start), hairColor: '#12AB34' };
+      const expected = mood.portraits[before.style as 'spiked' | 'ponytails'];
+      const after = syncMood(before, `hello ${emoji}`);
+      if (!expected) assert.equal(after, before);
+      else {
+        assert.equal(after.portraitId, expected);
+        assert.equal(getPortrait(after).style, before.style);
+        assert.equal(getPortrait(after).emoji, emoji);
+        assert.equal(after.emoji, emoji);
+        assert.equal(after.style, before.style);
+        assert.equal(after.hairColor, before.hairColor);
+      }
+    }
+  }
+});
+
+test('mood detection ignores ordinary emojis and unsupported compound faces', () => {
+  const before = portraitIdentity('spiked-grin');
+  for (const text of ['hello', '❤️🔥💙👀👍', '😢😡🥺🤖', '🙂‍↔️', '🙂‍↕️', '😶‍🌫️']) {
+    assert.equal(syncMood(before, text), before, text);
+  }
+  assert.equal(syncMood(before, '😊️').portraitId, 'spiked-soft-smile');
+  assert.equal(syncMood(before, '😃 then 😆 and 😂🔥😘').portraitId, 'spiked-tears');
+  assert.equal(syncMood(portraitIdentity('kiss'), '😃 then 😆 and 😂🔥😘').portraitId, 'kiss');
+  const legacy = { ...identity, emoji: '🦋' };
+  assert.equal(getPortrait(syncMood(legacy, '😊')).style, getPortrait(legacy).style);
+});
+
+test('chat commits sender mood instantly, preserves room logic and persists until another face', () => {
+  storageBlocked = false;
+  service.resetDemo();
+  service.joinBeam('LATEBG', 'mood_me', portraitIdentity('spiked-grin'));
+  const { room, session } = active();
+  const peers = room.participants.filter(p => p.id !== session.selfId);
+  let notifications = 0;
+  const unsubscribe = service.subscribe(() => { notifications++; });
+  service.sendMessage(room.code, session.selfId, 'text', 'feeling 😊');
+  unsubscribe();
+  assert.equal(notifications, 1);
+  let next = active();
+  assert.equal(next.room.participants.find(p => p.id === session.selfId)?.identity.portraitId, 'spiked-soft-smile');
+  assert.equal(next.room.messages.at(-1)?.authorSnapshot?.identity.portraitId, 'spiked-soft-smile');
+  assert.equal(next.room.messages.at(-1)?.text, 'feeling 😊');
+  for (const text of ['still here', '❤️🔥', '😘😡', '🙂‍↔️']) {
+    service.sendMessage(room.code, session.selfId, 'text', text);
+    assert.equal(active().room.participants.find(p => p.id === session.selfId)?.identity.portraitId, 'spiked-soft-smile');
+  }
+  const persisted = JSON.parse(saved.get(service.STORAGE_KEY)!);
+  assert.equal(persisted.rooms.LATEBG.participants.find((p: { id: string }) => p.id === session.selfId).identity.portraitId, 'spiked-soft-smile');
+  service.sendMessage(room.code, session.selfId, 'reaction', '😂');
+  next = active();
+  assert.equal(next.room.participants.find(p => p.id === session.selfId)?.identity.portraitId, 'spiked-tears');
+  assert.deepEqual(next.room.participants.filter(p => p.id !== session.selfId), peers);
+  assert.equal(next.room.capacity, room.capacity);
+  assert.deepEqual(next.session, session);
+  const before = service.getState();
+  assert.throws(() => service.sendMessage(room.code, session.selfId, 'text', '😆'.repeat(150)), { code: 'TOO_LONG' });
+  assert.throws(() => service.sendMessage(room.code, 'absent', 'text', '😆'), { code: 'NOT_MEMBER' });
+  assert.equal(service.getState(), before);
+});
 
 test('all nineteen supplied portraits are selectable and old saved identities keep their pictures', () => {
   assert.equal(PORTRAITS.length, 19);
