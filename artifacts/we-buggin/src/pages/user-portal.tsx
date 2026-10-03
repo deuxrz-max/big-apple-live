@@ -50,6 +50,7 @@ export default function UserPortal({ userId }: { userId: string }) {
           qc.setQueryData(getGetMyProfileQueryKey(), { profile: p });
           setEditing(false);
           setSaved(true);
+          if (!profile) setLocation('/home');
         },
       },
     );
@@ -72,6 +73,7 @@ export default function UserPortal({ userId }: { userId: string }) {
     <div className="min-h-[100dvh]">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-5 py-5">
         <Wordmark href="/user-portal" />
+        <button type="button" className="btn" onClick={() => setLocation('/home')} data-testid="button-discovery-home">Home</button>
         <button type="button" className="btn" onClick={() => signOut({ redirectUrl: import.meta.env.BASE_URL || '/' })} data-testid="button-sign-out">Sign out</button>
       </header>
 

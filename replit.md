@@ -29,6 +29,22 @@ The frontend lives in `artifacts/we-buggin/src/beam/`; its README documents the
 service boundary. Existing account and voice rooms remain at `/user-portal` and
 `/rooms/:roomId`, with the previous entry available at `/legacy`.
 
+## Post-signup home
+
+After account creation, greet users on a protected discovery home at `/home`,
+inspired by the user's two-column LiveMe reference with bottom navigation.
+Keep the dynamic black We Buggin theme and transparent, static portraits.
+First-time profile/name claims also return to this home; profile editing stays
+in the existing account portal. The discovery home must label browser-local beam
+examples as demos, never invent live streams, viewer counts, notifications or
+direct messages. Following demo beams is a device-local preference isolated by
+signed-in account, not a server-side social relationship.
+
+**Why:** The user requested a discovery-style greeting after creating an account.
+Real accounts and voice-room capabilities remain separate from the beam demo.
+Root authentication callbacks must let Clerk finish its handshake before showing
+the public demo or redirecting the signed-in user to discovery.
+
 ## Run & Operate
 
 - `pnpm --filter @workspace/api-server run dev` — run the API server using workflow-provided PORT

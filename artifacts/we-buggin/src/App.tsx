@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ClerkProvider, SignIn, SignUp, Show, useClerk, useUser } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
@@ -12,6 +12,7 @@ import UserPortal from '@/pages/user-portal';
 import RoomPage from '@/pages/room';
 import { clearAllCreds, loadCreds } from '@/lib/room-creds';
 import BeamApp from '@/beam/BeamApp';
+import DiscoveryHome from '@/discovery/DiscoveryHome';
 
 const queryClient = new QueryClient();
 
@@ -120,7 +121,7 @@ function ClerkQueryClientCacheInvalidator() {
 function HomeRedirect() {
   return (
     <>
-      <Show when="signed-in"><Redirect to="/user-portal" /></Show>
+      <Show when="signed-in"><Redirect to="/home" /></Show>
       <Show when="signed-out"><Landing /></Show>
     </>
   );
@@ -132,6 +133,16 @@ function Portal() {
     <>
       <Show when="signed-in">{user && <UserPortal key={user.id} userId={user.id} />}</Show>
       <Show when="signed-out"><Redirect to="/" /></Show>
+    </>
+  );
+}
+
+function DiscoveryRoute() {
+  const { user } = useUser();
+  return (
+    <>
+      <Show when="signed-in">{user && <DiscoveryHome key={user.id} userId={user.id} />}</Show>
+      <Show when="signed-out"><Redirect to="/sign-in" /></Show>
     </>
   );
 }
@@ -168,8 +179,9 @@ function ClerkProviderWithRoutes() {
       appearance={clerkAppearance}
       signInUrl={`${basePath}/sign-in`}
       signUpUrl={`${basePath}/sign-up`}
-      signInFallbackRedirectUrl={`${basePath}/user-portal`}
-      signUpFallbackRedirectUrl={`${basePath}/user-portal`}
+      signInFallbackRedirectUrl={`${basePath}/home`}
+      signUpFallbackRedirectUrl={`${basePath}/home`}
+      signUpForceRedirectUrl={`${basePath}/home`}
       localization={{
         signIn: { start: { title: 'Welcome back', subtitle: 'Sign in to get your face and name back' } },
         signUp: { start: { title: 'Get your name', subtitle: 'One account, one dedicated username' } },
@@ -185,6 +197,7 @@ function ClerkProviderWithRoutes() {
             <Route path="/legacy" component={HomeRedirect} />
             <Route path="/sign-in/*?" component={SignInPage} />
             <Route path="/sign-up/*?" component={SignUpPage} />
+            <Route path="/home" component={DiscoveryRoute} />
             <Route path="/user-portal" component={Portal} />
             <Route path="/rooms/:roomId" component={RoomRoute} />
             <Route component={NotFound} />
@@ -197,9 +210,18 @@ function ClerkProviderWithRoutes() {
 
 function AppRoutes() {
   const [path] = useLocation();
+  // Root callbacks must mount Clerk to consume its handshake. Keep it mounted
+  // even if Clerk removes the query parameters before the session is ready.
+  const [authCallback, setAuthCallback] = useState(() => {
+    const query = new URLSearchParams(window.location.search);
+    return query.has('__clerk_handshake') || query.has('__clerk_db_jwt') || query.has('__clerk_ticket');
+  });
+  useEffect(() => {
+    if (path !== '/') setAuthCallback(false);
+  }, [path]);
   // The mock beam frontend is independent of auth, API, and real room sessions.
   // Keep the existing authenticated account/voice routes intact.
-  if (path === '/' || path === '/beams' || path.startsWith('/beams/')) return <BeamApp />;
+  if ((path === '/' && !authCallback) || path === '/beams' || path.startsWith('/beams/')) return <BeamApp />;
   return <ClerkProviderWithRoutes />;
 }
 

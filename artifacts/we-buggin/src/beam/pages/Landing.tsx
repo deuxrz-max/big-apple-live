@@ -16,6 +16,11 @@ export function Landing() {
         <Link href="/beams/join" className="bm-link" data-testid="link-join-beam">
           Join a beam
         </Link>
+        <div className="bm-account-links">
+          <Link href="/sign-up" className="bm-link" data-testid="link-create-account">Create an account</Link>
+          <span aria-hidden="true"> / </span>
+          <Link href="/sign-in" className="bm-link" data-testid="link-sign-in">Sign in</Link>
+        </div>
       </div>
       <p className="bm-demo-note">
         Frontend demo / simulated participants. Try code <b>LATEBG</b> (6 people) or <b>FULL12</b> (full).{' '}
