@@ -31,6 +31,17 @@ export const PORTRAITS = [
   { id: 'spiked-thinking', label: 'Thinking · Spiky', file: 'spiked-thinking.webp', style: 'spiked', emoji: '🤔' },
   { id: 'spiked-winking', label: 'Winking · Spiky', file: 'spiked-winking.webp', style: 'spiked', emoji: '😉' },
   { id: 'spiked-neutral', label: 'Neutral · Spiky', file: 'spiked-neutral.webp', style: 'spiked', emoji: '😐' },
+  { id: 'ponytail-tears-of-joy', label: 'Tears of Joy · Ponytail', file: 'ponytail-tears-of-joy.webp', style: 'ponytails', emoji: '😂' },
+  { id: 'ponytail-rofl', label: 'Rolling on the Floor Laughing · Ponytail', file: 'ponytail-rofl.webp', style: 'ponytails', emoji: '🤣' },
+  { id: 'ponytail-heart-eyes', label: 'Heart-Eyes · Ponytail', file: 'ponytail-heart-eyes.webp', style: 'ponytails', emoji: '😍' },
+  { id: 'ponytail-smiling-hearts', label: 'Smiling with Hearts · Ponytail', file: 'ponytail-smiling-hearts.webp', style: 'ponytails', emoji: '🥰' },
+  { id: 'ponytail-smiling-eyes', label: 'Smiling Eyes · Ponytail', file: 'ponytail-smiling-eyes.webp', style: 'ponytails', emoji: '😊' },
+  { id: 'ponytail-melting', label: 'Melting · Ponytail', file: 'ponytail-melting.webp', style: 'ponytails', emoji: '🫠' },
+  { id: 'ponytail-grateful', label: 'Grateful / Deeply Touched · Ponytail', file: 'ponytail-grateful.webp', style: 'ponytails', emoji: '🥹' },
+  { id: 'ponytail-blowing-kiss', label: 'Blowing a Kiss · Ponytail', file: 'ponytail-blowing-kiss.webp', style: 'ponytails', emoji: '😘' },
+  { id: 'ponytail-thinking', label: 'Thinking · Ponytail', file: 'ponytail-thinking.webp', style: 'ponytails', emoji: '🤔' },
+  { id: 'ponytail-winking', label: 'Winking · Ponytail', file: 'ponytail-winking.webp', style: 'ponytails', emoji: '😉' },
+  { id: 'ponytail-neutral', label: 'Neutral · Ponytail', file: 'ponytail-neutral.webp', style: 'ponytails', emoji: '😐' },
 ] as const;
 
 export type PortraitId = typeof PORTRAITS[number]['id'];

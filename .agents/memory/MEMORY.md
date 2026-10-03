@@ -1,3 +1,4 @@
 - [Headless WebRTC verification](webrtc-testing.md) — browser capture and shell Chromium support differ; verify real RTP/playback with synthetic input and report runner limits.
 - [Browser runner limits](browser-runner-limits.md) — clipboard and auth-fixture limits; distinguish blocked signup checks from signed-in app verification.
 - [Mood Sync rules](mood-sync-rules.md) — Spiky means Male, Ponytail means Female; unsupported faces must not change hair or reset the current mood.
+- [Portrait cutout checks](portrait-cutouts.md) — inspect detached decorations after background removal; callbacks require workspace-relative image paths.
