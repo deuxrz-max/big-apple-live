@@ -23,3 +23,12 @@ changes their picture or sends a new qualifying face, as requested.
 
 **How to apply:** Preserve older artwork and saved choices when adding a newly
 supplied version of an already-supported expression.
+
+Keep existing artwork only for unmatched expressions; the user will supply
+the missing Ponytail 😭, Spiky 🥹, Spiky 😜, and Ponytail 🤨 variants.
+
+**Why:** The user chose "Keep existing artwork only" and stated "I will add the 4."
+
+**How to apply:** Do not generate or substitute artwork for these missing
+variants. Add it when supplied, without changing saved selections. Keep the
+normalized moods for 😉 and 😜 separate so their distinct artworks are preserved.

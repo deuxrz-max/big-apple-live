@@ -1,4 +1,5 @@
 import type { Identity } from './types';
+import { EMOJI_MOOD_KEYS } from './moodCatalog';
 
 export const PORTRAITS = [
   { id: 'kiss', label: 'Kiss', file: 'kiss.webp', style: 'ponytails', emoji: '😘' },
@@ -59,5 +60,11 @@ export function getPortrait(identity: Identity) {
 
 export function portraitIdentity(portraitId: PortraitId): Identity {
   const portrait = PORTRAITS.find(p => p.id === portraitId)!;
-  return { portraitId, emoji: portrait.emoji, style: portrait.style, hairColor: '#111111' };
+  return {
+    portraitId,
+    currentMood: EMOJI_MOOD_KEYS[portrait.emoji],
+    emoji: portrait.emoji,
+    style: portrait.style,
+    hairColor: '#111111',
+  };
 }

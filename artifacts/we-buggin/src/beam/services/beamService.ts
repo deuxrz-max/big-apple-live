@@ -13,6 +13,7 @@ import {
 } from '../types';
 import { isPortraitId } from '../portraits';
 import { syncMood } from '../moodSync';
+import { isMoodKey } from '../moodCatalog';
 
 /**
  * FRONTEND DEMO / SIMULATED PARTICIPANTS.
@@ -87,7 +88,8 @@ function seed(): BeamState {
 function validIdentity(i: Identity | undefined): boolean {
   return !!i && typeof i.emoji === 'string' && i.emoji.length > 0 && i.emoji.length <= 16
     && ['none', 'spiked', 'ponytails'].includes(i.style) && /^#[0-9a-f]{6}$/i.test(i.hairColor)
-    && (i.portraitId === undefined || isPortraitId(i.portraitId));
+    && (i.portraitId === undefined || isPortraitId(i.portraitId))
+    && (i.currentMood === undefined || isMoodKey(i.currentMood));
 }
 
 function valid(s: unknown): s is BeamState {

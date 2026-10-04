@@ -1,4 +1,5 @@
 import type { PortraitId } from './portraits';
+import type { MoodKey } from './moodCatalog';
 
 export const CAPACITY = 12;
 export const BEAM_CAPACITIES = [2, 4, 9, 12] as const;
@@ -12,6 +13,8 @@ export type HairStyle = 'none' | 'spiked' | 'ponytails';
 export interface Identity {
   /** Uploaded artwork is the displayed profile identity. */
   portraitId?: PortraitId;
+  /** Persisted with the image; optional so old saved identities remain valid. */
+  currentMood?: MoodKey;
   /** Selected expression, also retained for compatibility with old demo state. */
   emoji: string;
   style: HairStyle;

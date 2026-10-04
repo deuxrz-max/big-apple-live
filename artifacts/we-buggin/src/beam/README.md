@@ -24,6 +24,21 @@ This does not change account profiles or the separate authenticated voice-room
 logic. A future network chat adapter must derive the sender on the server and
 broadcast/persist this identity update with the accepted message.
 
+### Normalized mood state
+`moodCatalog.ts` maps supported facial emojis to typed normalized mood keys and
+maps each key to its available Spiky/Male and Ponytail/Female portrait IDs.
+`Identity.style` remains the existing core hair identity; no new signup field or
+selection screen is needed. `Identity.currentMood` is saved alongside
+`Identity.portraitId` by the existing message commit. Manual portrait selection
+sets the matching mood too. Old saves without `currentMood` remain valid and
+their portraits are not replaced or reinterpreted on load.
+
+The four missing variants are intentionally unsupported until supplied:
+Ponytail 😭, Spiky 🥹, Spiky 😜, and Ponytail 🤨. A face without matching artwork is
+skipped; the last supported face for that sender wins. No timer resets the mood.
+Chat messages, participant tiles, and room previews already use the shared
+`IdentityGlyph` renderer and the active portrait pointer, so no UI changes are needed.
+
 ## Plugging in a backend
 Replace the functions exported from `beamService.ts` (`createBeam`, `joinBeam`, `leaveBeam`, `updateIdentity`, `sendMessage`, `checkJoinable`) with API calls, keeping the `BeamError` codes (`ROOM_FULL`, `NOT_FOUND`, ...) so the UI messages stay intact. Swap `subscribe`/`getState` for server state (websocket or query cache). The `simulate*` functions and the "simulated participants" panel in `RoomPage` are demo-only; delete them. Capacity must also be enforced server-side.
 

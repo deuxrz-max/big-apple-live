@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import { PORTRAITS, getPortrait, portraitIdentity, isPortraitId } from '../src/beam/portraits';
 import { BEAM_CAPACITIES, type BeamCapacity } from '../src/beam/types';
 import { FACE_MOODS, syncMood } from '../src/beam/moodSync';
+import { EMOJI_MOOD_KEYS, MOOD_SPRITES, isMoodKey } from '../src/beam/moodCatalog';
 
 const saved = new Map<string, string>();
 let storageBlocked = false;
@@ -42,6 +43,68 @@ test('all supported face moods select only the matching branded hair identity', 
       }
     }
   }
+});
+
+test('normalized moods use valid same-hairstyle sprites and keep missing artwork unsupported', () => {
+  for (const [emoji, moodKey] of Object.entries(EMOJI_MOOD_KEYS)) {
+    assert.equal(isMoodKey(moodKey), true);
+    assert.equal(FACE_MOODS[emoji].moodKey, moodKey);
+    for (const start of ['spiked-smile', 'ponytail-smile'] as const) {
+      const before = portraitIdentity(start);
+      const after = syncMood(before, emoji);
+      const expected = FACE_MOODS[emoji].portraits[before.style as 'spiked' | 'ponytails'];
+      if (!expected) {
+        assert.equal(after, before);
+      } else {
+        assert.equal(after.currentMood, moodKey);
+        assert.equal(after.portraitId, expected);
+        assert.equal(after.style, before.style);
+      }
+    }
+  }
+  assert.equal(isMoodKey('not_a_mood'), false);
+  assert.equal(isMoodKey('toString'), false);
+  assert.equal(isMoodKey(null), false);
+  assert.equal(MOOD_SPRITES.winking.portraits.spiked, 'spiked-winking');
+  assert.equal(syncMood(portraitIdentity('wink'), '😉').currentMood, 'winking');
+  assert.equal(syncMood(portraitIdentity('ponytail-winking'), '😜').currentMood, 'playful_wink');
+  const legacy = { emoji: '😁', style: 'spiked' as const, hairColor: '#111111', portraitId: 'spiked-grin' as const };
+  assert.equal(syncMood(legacy, 'hello ❤️🔥'), legacy);
+  assert.equal(syncMood(legacy, '😊 then 😂🔥😜').currentMood, 'tears_of_joy');
+});
+
+test('current mood persists atomically with the sender image without changing peers or manual choices', () => {
+  service.resetDemo();
+  service.joinBeam('LATEBG', 'saved_mood', portraitIdentity('ponytail-grin'));
+  const { room, session } = active();
+  const peers = room.participants.filter(p => p.id !== session.selfId);
+  let notifications = 0;
+  const unsubscribe = service.subscribe(() => { notifications++; });
+  service.sendMessage(room.code, session.selfId, 'text', '😊 then 🤔');
+  unsubscribe();
+  assert.equal(notifications, 1);
+  const focused = active().room.participants.find(p => p.id === session.selfId)!.identity;
+  assert.equal(focused.currentMood, 'thinking');
+  assert.equal(focused.portraitId, 'ponytail-thinking');
+  for (const text of ['plain text', '❤️🔥', '😶‍🌫️', '😭🤨']) {
+    service.sendMessage(room.code, session.selfId, 'text', text);
+    assert.equal(active().room.participants.find(p => p.id === session.selfId)!.identity, focused);
+  }
+  const next = active();
+  assert.deepEqual(next.room.participants.filter(p => p.id !== session.selfId), peers);
+  assert.equal(next.room.messages.at(-1)?.authorSnapshot?.identity.currentMood, 'thinking');
+  const persisted = JSON.parse(saved.get(service.STORAGE_KEY)!);
+  const persistedIdentity = persisted.rooms.LATEBG.participants
+    .find((p: { id: string }) => p.id === session.selfId).identity;
+  assert.equal(persistedIdentity.currentMood, 'thinking');
+  assert.equal(persistedIdentity.portraitId, 'ponytail-thinking');
+  const beforeRejected = service.getState();
+  assert.throws(() => service.sendMessage(room.code, session.selfId, 'text', '😂'.repeat(150)), { code: 'TOO_LONG' });
+  assert.equal(service.getState(), beforeRejected);
+  service.updateIdentity(room.code, session.selfId, 'saved_mood', portraitIdentity('wink'));
+  assert.equal(active().room.participants.find(p => p.id === session.selfId)!.identity.currentMood, 'playful_wink');
+  service.sendMessage(room.code, session.selfId, 'reaction', '😐');
+  assert.equal(active().room.participants.find(p => p.id === session.selfId)!.identity.currentMood, 'neutral');
 });
 
 test('mood detection ignores ordinary emojis and unsupported compound faces', () => {
