@@ -1,46 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { getGetEmojiCatalogQueryKey, useGetEmojiCatalog, type EmojiOption } from '@workspace/api-client-react';
-import { HEX_RE, IdentityAvatar, emojiImageUrl, type Identity } from '@/lib/identity';
-import { ExpressionChoices } from '@/components/expression-choices';
-
-function ColorField({ label, value, onChange, id }: { label: string; value: string; onChange: (v: string) => void; id: string }) {
-  const [text, setText] = useState(value);
-  useEffect(() => setText(value), [value]);
-  const valid = HEX_RE.test(text);
-  return (
-    <div>
-      <label htmlFor={`${id}-hex`} className="label-mono">{label}</label>
-      <div className="mt-1 flex items-center gap-2">
-        <input
-          type="color"
-          aria-label={`${label} color picker`}
-          value={value.toLowerCase()}
-          onChange={(e) => onChange(e.target.value.toUpperCase())}
-          className="h-11 w-14 shrink-0 cursor-pointer rounded-lg border-2 border-foreground bg-card p-0.5"
-          data-testid={`input-${id}-picker`}
-        />
-        <input
-          id={`${id}-hex`}
-          className="field font-mono uppercase"
-          value={text}
-          maxLength={7}
-          spellCheck={false}
-          aria-invalid={!valid}
-          onChange={(e) => {
-            let v = e.target.value.trim();
-            if (v && !v.startsWith('#')) v = `#${v}`;
-            setText(v);
-            if (HEX_RE.test(v)) onChange(v.toUpperCase());
-          }}
-          onBlur={() => setText(value)}
-          data-testid={`input-${id}-hex`}
-        />
-      </div>
-      {!valid && <p className="mt-1 text-xs text-destructive">Use six hex digits, like #E8187F.</p>}
-    </div>
-  );
-}
+import { IdentityAvatar, emojiImageUrl, type Identity } from '@/lib/identity';
 
 const PAGE = 90;
 
@@ -134,30 +95,25 @@ export function IdentityEditor({ value, onChange }: { value: Identity; onChange:
       </div>
       <div className="space-y-5">
         <fieldset>
-          <legend className="label-mono">Hair</legend>
-          <div role="radiogroup" aria-label="Hair style" className="mt-1 grid grid-cols-2 gap-2">
+          <legend className="label-mono">Choose your avatar type</legend>
+          <div role="radiogroup" aria-label="Avatar type" className="mt-1 grid grid-cols-2 gap-2">
             {(['Male', 'Female'] as const).map((g) => (
               <button
                 key={g}
                 type="button"
                 role="radio"
                 aria-checked={value.gender === g}
+                aria-label={g === 'Male' ? 'Male / Spiky hair' : 'Female / Ponytail'}
                 onClick={() => set({ gender: g })}
-                className={`btn ${value.gender === g ? 'btn-pink' : ''}`}
+                className={`btn flex-col py-4 ${value.gender === g ? 'btn-pink' : ''}`}
                 data-testid={`button-gender-${g.toLowerCase()}`}
               >
-                <span>{g}</span>
-                <span className="text-xs font-normal opacity-80">{g === 'Male' ? 'spiky hair' : 'ponytails'}</span>
+                <IdentityAvatar identity={{ ...value, gender: g }} size={80} />
+                <span>{g === 'Male' ? 'Male / Spiky hair' : 'Female / Ponytail'}</span>
               </button>
             ))}
           </div>
         </fieldset>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <ColorField id="body" label="Emoji body color" value={value.color} onChange={(color) => set({ color })} />
-          <ColorField id="hair" label="Hair color" value={value.hairColor} onChange={(hairColor) => set({ hairColor })} />
-        </div>
-        <ExpressionChoices identity={value} onSelect={(emojiId) => set({ emojiId })} />
-        <EmojiPicker value={value.emojiId} color={value.color} onSelect={(emojiId) => set({ emojiId })} />
       </div>
     </div>
   );

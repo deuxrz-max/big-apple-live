@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { PORTRAITS, getPortrait, portraitIdentity, isPortraitId } from '../src/beam/portraits';
+import { AVATAR_CHOICES, PORTRAITS, getPortrait, portraitIdentity, isPortraitId, selectAvatarType } from '../src/beam/portraits';
 import { BEAM_CAPACITIES, type BeamCapacity } from '../src/beam/types';
 import { FACE_MOODS, syncMood } from '../src/beam/moodSync';
 import { EMOJI_MOOD_KEYS, MOOD_SPRITES, isMoodKey } from '../src/beam/moodCatalog';
@@ -152,7 +152,23 @@ test('chat commits sender mood instantly, preserves room logic and persists unti
   assert.equal(service.getState(), before);
 });
 
-test('all forty-one supplied portraits are selectable and old saved identities keep their pictures', () => {
+test('avatar selection offers only two types and keeps expressions in Mood Sync', () => {
+  assert.deepEqual(AVATAR_CHOICES.map(choice => choice.label), ['Male / Spiky hair', 'Female / Ponytail']);
+  const existing = { ...portraitIdentity('ponytail-winking'), hairColor: '#12AB34' };
+  assert.equal(selectAvatarType(existing, 'ponytails'), existing);
+  const male = selectAvatarType(existing, 'spiked');
+  assert.equal(male.style, 'spiked');
+  assert.equal(male.portraitId, 'spiked-winking');
+  assert.equal(male.currentMood, 'winking');
+  assert.equal(male.hairColor, '#12AB34');
+  const missing = selectAvatarType(portraitIdentity('spiked-loudly-crying'), 'ponytails');
+  assert.equal(missing.portraitId, 'ponytail-neutral');
+  assert.equal(missing.currentMood, 'neutral');
+  assert.equal(syncMood(male, '😂').portraitId, 'spiked-tears-of-joy');
+  assert.equal(syncMood(missing, '😂').portraitId, 'ponytail-tears-of-joy');
+});
+
+test('all forty-one supplied portraits remain available and old saved identities keep their pictures', () => {
   assert.equal(PORTRAITS.length, 41);
   assert.equal(new Set(PORTRAITS.map(p => p.file)).size, 41);
   for (const portrait of PORTRAITS) {

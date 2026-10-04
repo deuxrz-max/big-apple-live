@@ -79,6 +79,7 @@
 .bm-modal { width: 100%; max-width: 640px; background: #fff; border: 2px solid #0a0a0a; padding: clamp(16px, 4vw, 28px); animation: bm-pop 0.14s ease-out; }
 .bm-modal { max-height: calc(100dvh - 24px); overflow-y: auto; }
 .bm-portrait-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.bm-portrait-grid.bm-avatar-types { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .bm-portrait-grid button { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 4px; background: #fff; border: 1px solid #e4e4e4; cursor: pointer; transition: border-color 0.1s; }
 .bm-portrait-grid button:hover { border-color: #0a0a0a; }
 .bm-portrait-grid button.is-on { border: 2px solid #1d3cff; padding: 9px 3px; }

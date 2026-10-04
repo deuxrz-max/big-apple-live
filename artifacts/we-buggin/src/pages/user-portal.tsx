@@ -104,7 +104,7 @@ export default function UserPortal({ userId }: { userId: string }) {
               <section className="sticker rise p-5 sm:p-7">
                 <h1 className="font-display text-4xl font-extrabold">{profile ? 'Edit your identity' : 'Make your identity'}</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {profile ? 'Your username stays the same. Look changes broadcast to rooms you are in.' : 'Pick a username first. Once claimed it cannot be renamed.'}
+                  {profile ? 'Choose Male / Spiky hair or Female / Ponytail. Your username stays the same.' : 'Pick a username and one of the two avatar types. Once claimed your username cannot be renamed.'}
                 </p>
                 <div className="mt-5 max-w-sm">
                   <label htmlFor="username" className="label-mono">Username</label>

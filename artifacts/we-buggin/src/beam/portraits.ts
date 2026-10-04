@@ -1,5 +1,5 @@
 import type { Identity } from './types';
-import { EMOJI_MOOD_KEYS } from './moodCatalog';
+import { EMOJI_MOOD_KEYS, MOOD_SPRITES, type BrandedHair, type MoodDefinition } from './moodCatalog';
 
 export const PORTRAITS = [
   { id: 'kiss', label: 'Kiss', file: 'kiss.webp', style: 'ponytails', emoji: '😘' },
@@ -67,4 +67,20 @@ export function portraitIdentity(portraitId: PortraitId): Identity {
     style: portrait.style,
     hairColor: '#111111',
   };
+}
+
+export const AVATAR_CHOICES = [
+  { style: 'spiked', label: 'Male / Spiky hair', portraitId: 'spiked-neutral' },
+  { style: 'ponytails', label: 'Female / Ponytail', portraitId: 'ponytail-neutral' },
+] as const;
+
+/** Selecting the same type preserves its picture; switching keeps a supported mood. */
+export function selectAvatarType(identity: Identity, style: BrandedHair): Identity {
+  if (identity.style === style) return identity;
+  const moodKey = identity.currentMood
+    ?? EMOJI_MOOD_KEYS[getPortrait(identity).emoji]
+    ?? 'neutral';
+  const mood: MoodDefinition = MOOD_SPRITES[moodKey];
+  const portraitId = mood.portraits[style] ?? MOOD_SPRITES.neutral.portraits[style];
+  return { ...identity, ...portraitIdentity(portraitId), hairColor: identity.hairColor };
 }

@@ -7,7 +7,7 @@
 - `services/beamService.ts` the **mock adapter boundary**: in-memory store persisted to `localStorage` key `webuggin.beam.demo.v1`, with strict capacity, validation and a bounded history (60 messages). Seeded rooms: `LATEBG` (Late Night Buggin, 6 peers) and `FULL12` (full).
 - `hooks/useBeam.ts` `useSyncExternalStore` bindings; UI never touches storage directly.
 - `components/` BeamRoomLayout, ParticipantEmojiBadge, MessageList, MessageInput, EmojiPicker, CapacityIndicator, IdentityGlyph. The original component names are retained; identity components now display the user's supplied profile pictures, not Unicode emoji or SVG hairstyles.
-- `portraits.ts` the 41 supplied pictures, including the original Kiss, Skeptical, Wink and Laugh choices plus ponytail, braid and spiked-hair expressions. Background-free lossless WebP copies in `public/profile-pictures/transparent/` are used by the shared renderer everywhere; original artwork in the parent directory is preserved. Pictures can be selected manually or changed by Mood Sync on a supported chat face. No microphone-driven expression changes or animated portraits. Adding choices must not change the deterministic legacy mapping or existing saved selections.
+- `portraits.ts` the 41 supplied pictures, including the original Kiss, Skeptical, Wink and Laugh choices plus ponytail, braid and spiked-hair expressions. Background-free lossless WebP copies in `public/profile-pictures/transparent/` are used by the shared renderer everywhere; original artwork in the parent directory is preserved. The profile picker offers only Male / Spiky hair and Female / Ponytail; expressions change through Mood Sync on a supported chat face. No microphone-driven expression changes or animated portraits. Adding artwork must not change the deterministic legacy mapping or existing saved selections.
 - `Identity.portraitId` is the current picture choice. Legacy emoji/style/color fields are kept solely to read existing browser-local saves without losing sessions or messages. Old identities map deterministically to supplied portraits until a user chooses one.
 - `beam.css` all styles scoped to `.beam-app` (and the `.bm-modal-back` portal-less overlay). Black surfaces with readable white text, blue accents and a slow ambient background; background motion stops for reduced-motion preferences. Portraits themselves do not animate.
 
@@ -29,8 +29,10 @@ broadcast/persist this identity update with the accepted message.
 maps each key to its available Spiky/Male and Ponytail/Female portrait IDs.
 `Identity.style` remains the existing core hair identity; no new signup field or
 selection screen is needed. `Identity.currentMood` is saved alongside
-`Identity.portraitId` by the existing message commit. Manual portrait selection
-sets the matching mood too. Old saves without `currentMood` remain valid and
+`Identity.portraitId` by the existing message commit. Avatar-type selection
+preserves the current mood when matching artwork exists, otherwise selecting
+the new type's neutral portrait. Selecting the same type preserves the image.
+Old saves without `currentMood` remain valid and
 their portraits are not replaced or reinterpreted on load.
 
 The four missing variants are intentionally unsupported until supplied:

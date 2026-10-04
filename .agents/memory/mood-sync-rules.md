@@ -32,3 +32,14 @@ the missing Ponytail 😭, Spiky 🥹, Spiky 😜, and Ponytail 🤨 variants.
 **How to apply:** Do not generate or substitute artwork for these missing
 variants. Add it when supplied, without changing saved selections. Keep the
 normalized moods for 😉 and 😜 separate so their distinct artworks are preserved.
+
+The profile screen should have only two choices: Male / Spiky hair and
+Female / Ponytail. Do not show the expression catalog or color customization
+as additional profile choices.
+
+**Why:** The user stated, "At the profile screen they should have only 2 choices
+to pick from male/spiky hair or female/ponytail."
+
+**How to apply:** Apply this to both Beam profile selection and authenticated
+profile editing. Keep expressions available to Mood Sync, not manual profile
+selection, and preserve an existing mood when the avatar type is unchanged.

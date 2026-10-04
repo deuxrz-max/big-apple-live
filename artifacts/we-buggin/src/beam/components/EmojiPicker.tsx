@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 
 import type { Identity } from '../types';
 import { validateHandle } from '../services/beamService';
 import { IdentityGlyph } from './IdentityGlyph';
-import { PORTRAITS, getPortrait, portraitIdentity } from '../portraits';
+import { AVATAR_CHOICES, getPortrait, portraitIdentity, selectAvatarType } from '../portraits';
 
 interface Props {
   title?: string;
@@ -16,7 +16,7 @@ interface Props {
 
 export function EmojiPicker({ title = 'Pick your profile picture', initialHandle = '', initialIdentity, confirmLabel = 'Confirm picture', onConfirm, onCancel }: Props) {
   const [handle, setHandle] = useState(initialHandle);
-  const [identity, setIdentity] = useState<Identity>(initialIdentity ?? portraitIdentity('kiss'));
+  const [identity, setIdentity] = useState<Identity>(initialIdentity ?? portraitIdentity('ponytail-neutral'));
   const [error, setError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<HTMLInputElement>(null);
@@ -105,21 +105,22 @@ export function EmojiPicker({ title = 'Pick your profile picture', initialHandle
             </div>
           </div>
 
-          <div className="bm-label">Profile pictures · change whenever you want</div>
-          <div className="bm-portrait-grid" role="radiogroup" aria-label="Profile picture">
-            {PORTRAITS.map((portrait) => (
+          <div className="bm-label">Choose your avatar type</div>
+          <p className="bm-you-are">Your expressions change through Mood Sync in chat.</p>
+          <div className="bm-portrait-grid bm-avatar-types" role="radiogroup" aria-label="Avatar type">
+            {AVATAR_CHOICES.map((choice) => (
               <button
-                key={portrait.id}
+                key={choice.style}
                 type="button"
                 role="radio"
-                aria-checked={getPortrait(identity).id === portrait.id}
-                aria-label={portrait.label}
-                className={getPortrait(identity).id === portrait.id ? 'is-on' : ''}
-                onClick={() => setIdentity(portraitIdentity(portrait.id))}
-                data-testid={`button-portrait-${portrait.id}`}
+                aria-checked={getPortrait(identity).style === choice.style}
+                aria-label={choice.label}
+                className={getPortrait(identity).style === choice.style ? 'is-on' : ''}
+                onClick={() => setIdentity(selectAvatarType(identity, choice.style))}
+                data-testid={`button-avatar-${choice.style}`}
               >
-                <IdentityGlyph identity={portraitIdentity(portrait.id)} size={96} />
-                <span>{portrait.label}</span>
+                <IdentityGlyph identity={portraitIdentity(choice.portraitId)} size={96} />
+                <span>{choice.label}</span>
               </button>
             ))}
           </div>
