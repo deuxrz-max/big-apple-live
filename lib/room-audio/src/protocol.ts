@@ -8,6 +8,7 @@ export interface AudioPeer {
 export type AudioEvent =
   | { type: "audio.ready"; data: { self: AudioPeer; peers: AudioPeer[] } }
   | { type: "audio.peers"; data: { peers: AudioPeer[] } }
+  | { type: "audio.microphones"; data: { participants: { participantId: string; micEnabled: boolean }[] } }
   | {
       type: "audio.signal";
       data: {

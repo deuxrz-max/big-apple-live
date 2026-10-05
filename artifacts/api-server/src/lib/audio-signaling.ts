@@ -44,6 +44,14 @@ export class AudioSignaling {
           );
           const current = this.groups.get(id);
           if (!current) return;
+          if (event.type === "room.snapshot") {
+            for (const connection of current.connections.values()) {
+              connection.sink.send({
+                type: "audio.microphones",
+                data: { participants: event.data.participants.map(p => ({ participantId: p.participantId, micEnabled: p.micEnabled })) },
+              });
+            }
+          }
           for (const connection of [...current.connections.values()]) {
             if (!active.has(connection.participantId)) {
               this.remove(id, connection, "participant-left");
@@ -69,6 +77,10 @@ export class AudioSignaling {
     sink.send({
       type: "audio.ready",
       data: { self: this.publicPeer(connection), peers: this.peers(group, participantId) },
+    });
+    sink.send({
+      type: "audio.microphones",
+      data: { participants: this.store.get(id).participants.map(p => ({ participantId: p.participantId, micEnabled: p.micEnabled })) },
     });
     this.broadcastPeers(group);
     return () => {

@@ -26,12 +26,22 @@ const AUDIO_LABEL: Record<string, string> = {
 };
 const PRESENCE_LABEL = { connecting: 'Connecting', live: 'Live', reconnecting: 'Reconnecting', expired: 'Session ended', offline: 'Offline' } as const;
 
-function Card({ p, self }: { p: Participant; self: boolean }) {
+function Card({ p, self, isHost, onControl }: {
+  p: Participant; self: boolean; isHost: boolean;
+  onControl: (id: string, action: 'mute' | 'request-unmute') => void;
+}) {
   return (
     <li className={`sticker flex flex-col items-center p-4 text-center ${self ? 'bg-secondary/60' : ''}`} data-testid={`card-participant-${p.participantId}`}>
       {p.identity ? <IdentityAvatar identity={p.identity} size={150} /> : <div className="grid h-[150px] place-items-center"><InitialsBadge name={p.displayName} /></div>}
       <p className="mt-2 font-display text-2xl font-extrabold" data-testid={`text-name-${p.participantId}`}>{p.displayName}</p>
       <p className="label-mono text-muted-foreground">{self ? 'You' : p.isRegistered ? 'Member' : 'Guest'}</p>
+      <p className="label-mono" data-testid={`status-mic-${p.participantId}`}>{p.micEnabled ? 'Mic on' : p.hostMuted ? 'Muted by creator' : 'Mic off'}</p>
+      {isHost && !self && (
+        <button type="button" className="btn mt-2" onClick={() => onControl(p.participantId, p.micEnabled ? 'mute' : 'request-unmute')}
+          data-testid={`button-control-mic-${p.participantId}`}>
+          {p.micEnabled ? 'Mute mic' : p.unmuteRequested ? 'Unmute requested' : 'Request mic on'}
+        </button>
+      )}
     </li>
   );
 }
@@ -44,6 +54,7 @@ function Live({ roomId, userId }: { roomId: string; userId: string }) {
   const room = roomQ.data;
   const self = room?.participants.find((p) => p.participantId === s.creds?.participantId);
   const audioOn = !['idle', 'closed', 'error'].includes(s.audioState);
+  const isHost = room?.hostParticipantId === s.creds?.participantId;
 
   const leave = async () => { await s.leave(); setLocation('/user-portal'); };
   const copy = async () => { await navigator.clipboard?.writeText(roomId).catch(() => undefined); setCopied(true); setTimeout(() => setCopied(false), 1500); };
@@ -63,11 +74,17 @@ function Live({ roomId, userId }: { roomId: string; userId: string }) {
       </div>
 
       <section className="sticker mt-5 flex flex-wrap items-center gap-3 p-4" aria-label="Audio controls">
-        <span className="label-mono mr-auto" role="status" data-testid="status-audio">{AUDIO_LABEL[s.audioState]}</span>
+        <span className="label-mono mr-auto" role="status" data-testid="status-audio">{self?.hostMuted ? 'Muted by creator' : audioOn && !self?.micEnabled ? 'Mic off' : AUDIO_LABEL[s.audioState]}</span>
+        {self?.unmuteRequested && <p className="w-full text-sm font-bold" role="status">The room creator requested your mic. Only you can turn it on.</p>}
         {!audioOn ? (
-          <button type="button" className="btn btn-pink" onClick={s.startAudio} disabled={s.audioState === 'requesting-microphone'} data-testid="button-start-audio"><Mic className="size-4" />Start mic</button>
+          <button type="button" className="btn btn-pink" onClick={s.startAudio} disabled={self?.hostMuted || s.audioState === 'requesting-microphone'} data-testid="button-start-audio"><Mic className="size-4" />{self?.unmuteRequested ? 'Accept and start mic' : 'Start mic'}</button>
         ) : (
-          <button type="button" className="btn" onClick={s.stopAudio} data-testid="button-stop-audio"><MicOff className="size-4" />Stop mic</button>
+          <>
+            {!self?.micEnabled && !self?.hostMuted && <button type="button" className="btn btn-pink" onClick={s.enableAudio} data-testid="button-enable-audio">
+              <Mic className="size-4" />{self?.unmuteRequested ? 'Accept and turn mic on' : 'Turn mic on'}
+            </button>}
+            <button type="button" className="btn" onClick={s.stopAudio} data-testid="button-stop-audio"><MicOff className="size-4" />Stop mic</button>
+          </>
         )}
         <button type="button" className="btn" onClick={s.reconnect} disabled={!audioOn} data-testid="button-reconnect-audio"><RefreshCw className="size-4" />Reconnect</button>
         <button type="button" className={`btn ${s.playbackBlocked ? 'btn-yellow' : ''}`} onClick={s.resume} disabled={!audioOn} data-testid="button-resume-playback"><Headphones className="size-4" />Resume playback</button>
@@ -97,7 +114,7 @@ function Live({ roomId, userId }: { roomId: string; userId: string }) {
         <>
           <p className="label-mono mt-6">{room.participants.length} here</p>
           <ul className="mt-2 grid grid-cols-2 gap-4 md:grid-cols-3" data-testid="list-participants">
-            {room.participants.map((p) => <Card key={p.participantId} p={p} self={p.participantId === s.creds?.participantId} />)}
+            {room.participants.map((p) => <Card key={p.participantId} p={p} self={p.participantId === s.creds?.participantId} isHost={!!isHost} onControl={s.controlMic} />)}
           </ul>
         </>
       )}

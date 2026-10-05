@@ -24,6 +24,7 @@ export function useRoomSession(roomId: string, userId: string) {
   const [audioError, setAudioError] = useState<string | null>(null);
   const [playbackBlocked, setPlaybackBlocked] = useState(false);
   const clientRef = useRef<RoomAudioClient | null>(null);
+  const micEnabledRef = useRef(false);
   const leftRef = useRef(false);
   const expiredRef = useRef(false);
 
@@ -53,6 +54,7 @@ export function useRoomSession(roomId: string, userId: string) {
       },
     });
     clientRef.current = client;
+    micEnabledRef.current = false;
 
     const es = new EventSource(`/api/rooms/${encodeURIComponent(roomId)}/events`);
     es.onopen = () => !expiredRef.current && setPresence('live');
@@ -64,6 +66,13 @@ export function useRoomSession(roomId: string, userId: string) {
       try {
         const parsed = JSON.parse((ev as MessageEvent).data);
         const room: RoomState = parsed.room ?? parsed;
+        const self = room.participants.find(p => p.participantId === creds.participantId);
+        micEnabledRef.current = !!self?.micEnabled;
+        client.setMicrophoneEnabled(micEnabledRef.current);
+        for (const participant of room.participants) {
+          if (participant.participantId !== creds.participantId)
+            client.setPeerMicrophoneEnabled(participant.participantId, participant.micEnabled);
+        }
         qc.setQueryData(getGetRoomQueryKey(roomId), room);
         setPresence('live');
       } catch {
@@ -91,6 +100,24 @@ export function useRoomSession(roomId: string, userId: string) {
     };
   }, [creds, roomId, userId, qc]);
 
+  const changeMic = useCallback(async (targetId: string, action: 'mute' | 'unmute' | 'request-unmute') => {
+    if (!creds) throw new Error('Your room session ended; join again.');
+    const res = await fetch(`/api/rooms/${encodeURIComponent(roomId)}/participants/${encodeURIComponent(targetId)}/microphone`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${creds.participantSessionId}` },
+      body: JSON.stringify({ action }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({})) as { error?: string };
+      throw new Error(data.error ?? `Could not update the microphone (${res.status})`);
+    }
+    const room = await res.json() as RoomState;
+    qc.setQueryData(getGetRoomQueryKey(roomId), room);
+    const self = room.participants.find(p => p.participantId === creds.participantId);
+    micEnabledRef.current = !!self?.micEnabled;
+    clientRef.current?.setMicrophoneEnabled(micEnabledRef.current);
+  }, [creds, roomId, qc]);
+
   const run = useCallback(async (fn: (c: RoomAudioClient) => Promise<void> | void) => {
     const c = clientRef.current;
     if (!c) return;
@@ -108,8 +135,15 @@ export function useRoomSession(roomId: string, userId: string) {
     audioState,
     audioError,
     playbackBlocked,
-    startAudio: () => run((c) => c.start()),
-    stopAudio: () => run(async (c) => { setPlaybackBlocked(false); await c.stop(); }),
+    startAudio: () => run(c => c.start()),
+    enableAudio: () => run(() => changeMic(creds!.participantId, 'unmute')),
+    stopAudio: () => run(async (c) => {
+      c.setMicrophoneEnabled(false);
+      setPlaybackBlocked(false);
+      await c.stop();
+    }),
+    controlMic: (participantId: string, action: 'mute' | 'request-unmute') =>
+      run(() => changeMic(participantId, action)),
     reconnect: () => run((c) => c.reconnect()),
     resume: () => run(async (c) => { await c.resumePlayback(); setPlaybackBlocked(false); }),
     leave: async () => {

@@ -4,6 +4,7 @@ import {
   JoinRoomBody, JoinRoomParams, JoinRoomResponse,
   HeartbeatParticipantParams, HeartbeatParticipantResponse,
   LeaveRoomParams, StreamRoomEventsParams,
+  ControlRoomMicrophoneParams, ControlRoomMicrophoneBody, ControlRoomMicrophoneResponse,
 } from "@workspace/api-zod";
 import { roomStore, RoomError } from "../lib/room-store";
 import { ensureGuestNameAvailable } from "../lib/account-profiles";
@@ -73,6 +74,16 @@ router.delete("/rooms/:roomId/participants/:sessionId", (req, res) => {
   }
   roomStore.leave(params.data.roomId, params.data.sessionId);
   res.status(204).end();
+});
+
+router.put("/rooms/:roomId/participants/:participantId/microphone", (req, res) => {
+  const params = ControlRoomMicrophoneParams.safeParse(req.params);
+  const body = ControlRoomMicrophoneBody.safeParse(req.body);
+  if (!params.success || !body.success) throw new RoomError(400, "Invalid microphone action or participant");
+  const match = /^Bearer ([0-9a-f-]{36})$/i.exec(req.get("Authorization") ?? "");
+  if (!match) throw new RoomError(401, "Private room session credential required");
+  const room = roomStore.controlMicrophone(params.data.roomId, match[1]!, params.data.participantId, body.data.action);
+  res.json(ControlRoomMicrophoneResponse.parse(room));
 });
 
 router.get("/rooms/:roomId/events", (req, res) => {

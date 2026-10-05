@@ -5,7 +5,7 @@ import { EmojiPicker } from '../components/EmojiPicker';
 import { MessageInput } from '../components/MessageInput';
 import { MessageList } from '../components/MessageList';
 import { ParticipantEmojiBadge } from '../components/ParticipantEmojiBadge';
-import { useAction, useCopy } from '../hooks/useBeam';
+import { useAction } from '../hooks/useBeam';
 import { leaveBeam, sendMessage, simulateAddPeer, simulateFill, simulateRemovePeer, updateIdentity } from '../services/beamService';
 import type { BeamRoom, Identity, Participant } from '../types';
 import { getPortrait } from '../portraits';
@@ -23,7 +23,6 @@ export function RoomPage({ room, self, notice, onNotice }: Props) {
   const [changing, setChanging] = useState(false);
   const send = useAction();
   const sim = useAction();
-  const { state: copyState, copy } = useCopy();
   const count = room.participants.length;
   const slots = Array.from({ length: room.capacity }, (_, i) => room.participants[i] ?? null);
 
@@ -48,24 +47,6 @@ export function RoomPage({ room, self, notice, onNotice }: Props) {
     <>
       <BeamRoomLayout
         name={room.name}
-        count={count}
-        capacity={room.capacity}
-        code={
-          <span className="bm-code-wrap">
-            <span className="bm-label">Code</span>
-            <code className="bm-code-chip" data-testid="text-room-code">
-              {room.code}
-            </code>
-            <button type="button" className="bm-link-btn" onClick={() => copy(room.code)} data-testid="button-copy-code">
-              {copyState === 'ok' ? 'Copied' : 'Copy'}
-            </button>
-            {copyState === 'fail' && (
-              <span className="bm-error" role="alert">
-                Copy failed. Select the code and copy it manually.
-              </span>
-            )}
-          </span>
-        }
         actions={
           <>
             <button type="button" className="bm-btn" onClick={() => setChanging(true)} data-testid="button-change-identity">
@@ -91,7 +72,7 @@ export function RoomPage({ room, self, notice, onNotice }: Props) {
             {slots.map((p, i) =>
               p ? (
                 <div key={p.id} className={`bm-tile ${p.id === self.id ? 'is-self' : ''}`}>
-                  <ParticipantEmojiBadge handle={p.handle} identity={p.identity} size="lg" isSelf={p.id === self.id} simulated={p.simulated} showHandle />
+                  <ParticipantEmojiBadge handle={p.handle} identity={p.identity} size="lg" simulated={p.simulated} showHandle />
                 </div>
               ) : (
                 <div key={`e${i}`} className="bm-tile bm-tile-empty" aria-hidden>

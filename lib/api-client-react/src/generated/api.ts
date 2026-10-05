@@ -27,6 +27,7 @@ import type {
   ErrorResponse,
   HealthStatus,
   InvalidInputResponse,
+  MicrophoneAction,
   Participant,
   ProfileEnvelope,
   ProfileInput,
@@ -983,6 +984,98 @@ export const useLeaveRoom = <TError = ErrorType<InvalidInputResponse | ErrorResp
         TContext
       > => {
       return useMutation(getLeaveRoomMutationOptions(options));
+    }
+
+export const getControlRoomMicrophoneUrl = (roomId: string,
+    participantId: string,) => {
+
+
+
+
+  return `/api/rooms/${roomId}/participants/${participantId}/microphone`
+}
+
+/**
+ * A creator cannot remotely activate someone else's microphone. The recipient must explicitly accept an unmute request and grant browser microphone permission.
+ * @summary Mute your own mic, or as creator mute or request to unmute another participant
+ */
+export const controlRoomMicrophone = async (roomId: string,
+    participantId: string,
+    microphoneAction: MicrophoneAction, options?: Parameters<typeof customFetch>[1]): Promise<RoomState> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<RoomState>(getControlRoomMicrophoneUrl(roomId,participantId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(microphoneAction)
+  }
+);}
+
+
+
+
+
+export const getControlRoomMicrophoneMutationKey = () => ['controlRoomMicrophone'] as const;
+
+export const getControlRoomMicrophoneMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof controlRoomMicrophone>>, TError,ControlRoomMicrophoneMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof controlRoomMicrophone>>, TError,ControlRoomMicrophoneMutationVariables, TContext> => {
+
+const mutationKey = getControlRoomMicrophoneMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof controlRoomMicrophone>>, ControlRoomMicrophoneMutationVariables> = (props) => {
+          const {roomId,participantId,data} = props ?? {};
+
+          return  controlRoomMicrophone(roomId,participantId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ControlRoomMicrophoneMutationResult = NonNullable<Awaited<ReturnType<typeof controlRoomMicrophone>>>
+    export type ControlRoomMicrophoneMutationBody = BodyType<MicrophoneAction>
+    export type ControlRoomMicrophoneMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>
+    export type ControlRoomMicrophoneMutationVariables = {roomId: string;participantId: string;data: BodyType<MicrophoneAction>}
+
+    /**
+ * @summary Mute your own mic, or as creator mute or request to unmute another participant
+ */
+export const useControlRoomMicrophone = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof controlRoomMicrophone>>, TError,ControlRoomMicrophoneMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof controlRoomMicrophone>>,
+        TError,
+        ControlRoomMicrophoneMutationVariables,
+        TContext
+      > => {
+      return useMutation(getControlRoomMicrophoneMutationOptions(options));
     }
 
 export const getStreamRoomEventsUrl = (roomId: string,) => {

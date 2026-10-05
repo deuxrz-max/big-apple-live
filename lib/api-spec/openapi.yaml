@@ -280,6 +280,45 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /rooms/{roomId}/participants/{participantId}/microphone:
+    put:
+      operationId: controlRoomMicrophone
+      tags: [audio]
+      summary: Mute your own mic, or as creator mute or request to unmute another participant
+      description: A creator cannot remotely activate someone else's microphone. The recipient must explicitly accept an unmute request and grant browser microphone permission.
+      security:
+        - ParticipantSession: []
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+        - name: participantId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MicrophoneAction" }
+      responses:
+        "200":
+          description: Updated room state, also broadcast to room subscribers
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RoomState" }
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/SessionUnauthorized"
+        "403":
+          description: Only the creator can control another participant
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "404":
+          description: Participant no longer in room
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
   /rooms/{roomId}/events:
     get:
       operationId: streamRoomEvents
@@ -427,6 +466,12 @@ components:
         type: string
         format: uuid
   schemas:
+    MicrophoneAction:
+      type: object
+      additionalProperties: false
+      required: [action]
+      properties:
+        action: { type: string, enum: [mute, unmute, request-unmute] }
     EmojiIdentity:
       type: object
       properties:
@@ -531,7 +576,10 @@ components:
             - $ref: "#/components/schemas/EmojiIdentity"
             - type: "null"
         isRegistered: { type: boolean }
-      required: [participantId, displayName, joinedAt, identity, isRegistered]
+        micEnabled: { type: boolean }
+        hostMuted: { type: boolean }
+        unmuteRequested: { type: boolean }
+      required: [participantId, displayName, joinedAt, identity, isRegistered, micEnabled, hostMuted, unmuteRequested]
     RoomState:
       type: object
       properties:
@@ -540,11 +588,12 @@ components:
         createdAt:
           type: string
           format: date-time
+        hostParticipantId: { type: string, format: uuid }
         participants:
           type: array
           items:
             $ref: "#/components/schemas/Participant"
-      required: [roomId, createdAt, participants]
+      required: [roomId, createdAt, hostParticipantId, participants]
     RoomSession:
       type: object
       properties:

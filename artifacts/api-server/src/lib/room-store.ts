@@ -25,6 +25,7 @@ function copyParticipant(participant: Participant): Participant {
 type Room = {
   roomId: string;
   createdAt: Date;
+  hostParticipantId: string;
   sessions: Map<string, ActiveSession>;
   listeners: Set<Listener>;
   emptySince: number | null;
@@ -48,6 +49,7 @@ export class RoomStore {
     const room: Room = {
       roomId,
       createdAt: new Date(this.now()),
+      hostParticipantId: "",
       sessions: new Map(),
       listeners: new Set(),
       emptySince: null,
@@ -81,6 +83,34 @@ export class RoomStore {
     const session = this.requireRoom(roomId).sessions.get(sessionId);
     if (!session) throw new RoomError(404, "Active participant session not found");
     return copyParticipant(session.participant);
+  }
+
+  /** Host can mute or request unmute; only the owner of the mic can accept and activate it. */
+  controlMicrophone(roomId: string, credential: string, targetId: string, action: "mute" | "unmute" | "request-unmute"): RoomState {
+    const room = this.requireRoom(roomId);
+    const actor = room.sessions.get(credential);
+    if (!actor) throw new RoomError(401, "Invalid or expired room session");
+    const target = [...room.sessions.values()].find(s => s.participant.participantId === targetId);
+    if (!target) throw new RoomError(404, "Participant not found in this room");
+    const isSelf = actor.participant.participantId === targetId;
+    const isHost = actor.participant.participantId === room.hostParticipantId;
+    if (!isSelf && !isHost) throw new RoomError(403, "Only the room creator can control other participants");
+    if (action === "request-unmute") {
+      if (!isHost || isSelf) throw new RoomError(403, "Only the room creator can request another participant to unmute");
+      target.participant.hostMuted = false;
+      target.participant.unmuteRequested = true;
+    } else if (action === "unmute") {
+      if (!isSelf) throw new RoomError(403, "A participant must accept their own unmute request");
+      if (target.participant.hostMuted) throw new RoomError(403, "The room creator has muted your microphone");
+      target.participant.micEnabled = true;
+      target.participant.unmuteRequested = false;
+    } else {
+      target.participant.micEnabled = false;
+      target.participant.unmuteRequested = false;
+      if (!isSelf) target.participant.hostMuted = true;
+    }
+    this.broadcast(room);
+    return this.snapshot(room);
   }
 
   leave(roomId: string, sessionId: string): void {
@@ -134,6 +164,7 @@ export class RoomStore {
   private addSession(room: Room, displayName: string, account?: AccountIdentity): RoomSession {
     const participantSessionId = randomUUID();
     const participantId = randomUUID();
+    if (!room.hostParticipantId) room.hostParticipantId = participantId;
     room.sessions.set(participantSessionId, {
       participant: {
         participantId,
@@ -141,6 +172,9 @@ export class RoomStore {
         joinedAt: new Date(this.now()),
         identity: account ? { ...account.identity } : null,
         isRegistered: !!account,
+        micEnabled: false,
+        hostMuted: false,
+        unmuteRequested: false,
       },
       lastSeenAt: this.now(),
       accountId: account?.accountId,
@@ -174,6 +208,7 @@ export class RoomStore {
     return {
       roomId: room.roomId,
       createdAt: new Date(room.createdAt),
+      hostParticipantId: room.hostParticipantId,
       participants: Array.from(room.sessions.values(), ({ participant }) => copyParticipant(participant)),
     };
   }

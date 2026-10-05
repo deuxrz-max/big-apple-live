@@ -7,19 +7,17 @@ interface Props {
   handle: string;
   identity: Identity;
   size?: keyof typeof SIZES;
-  isSelf?: boolean;
   simulated?: boolean;
   showHandle?: boolean;
 }
 
-export function ParticipantEmojiBadge({ handle, identity, size = 'md', isSelf, simulated, showHandle = false }: Props) {
+export function ParticipantEmojiBadge({ handle, identity, size = 'md', simulated, showHandle = false }: Props) {
   return (
     <div className={`bm-badge bm-badge-${size}`} data-testid={`badge-${handle}`} title={simulated ? `${handle} (simulated)` : handle}>
       <IdentityGlyph identity={identity} size={SIZES[size]} />
       {showHandle && (
         <span className="bm-badge-handle">
           {handle}
-          {isSelf && <em className="bm-you">YOU</em>}
         </span>
       )}
     </div>

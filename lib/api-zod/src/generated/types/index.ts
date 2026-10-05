@@ -17,6 +17,8 @@ export * from './emojiOption';
 export * from './errorResponse';
 export * from './healthStatus';
 export * from './invalidInputResponse';
+export * from './microphoneAction';
+export * from './microphoneActionAction';
 export * from './participant';
 export * from './profileEnvelope';
 export * from './profileInput';

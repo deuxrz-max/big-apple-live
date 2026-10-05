@@ -5,6 +5,19 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type MicrophoneActionAction = typeof MicrophoneActionAction[keyof typeof MicrophoneActionAction];
+
+
+export const MicrophoneActionAction = {
+  mute: 'mute',
+  unmute: 'unmute',
+  'request-unmute': 'request-unmute',
+} as const;
+
+export interface MicrophoneAction {
+  action: MicrophoneActionAction;
+}
+
 export type EmojiIdentityGender = typeof EmojiIdentityGender[keyof typeof EmojiIdentityGender];
 
 
@@ -99,11 +112,15 @@ export interface Participant {
   joinedAt: string;
   identity: EmojiIdentity | null;
   isRegistered: boolean;
+  micEnabled: boolean;
+  hostMuted: boolean;
+  unmuteRequested: boolean;
 }
 
 export interface RoomState {
   roomId: string;
   createdAt: string;
+  hostParticipantId: string;
   participants: Participant[];
 }
 

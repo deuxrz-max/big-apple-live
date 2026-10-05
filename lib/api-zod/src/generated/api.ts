@@ -95,6 +95,7 @@ export const CreateAccountRoomResponse = zod.object({
   "room": zod.object({
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
+  "hostParticipantId": zod.string().uuid(),
   "participants": zod.array(zod.object({
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
@@ -105,7 +106,10 @@ export const CreateAccountRoomResponse = zod.object({
   "color": zod.string().regex(createAccountRoomResponseRoomParticipantsItemIdentityOneColorRegExp),
   "hairColor": zod.string().regex(createAccountRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp)
 }),zod.null()]),
-  "isRegistered": zod.boolean()
+  "isRegistered": zod.boolean(),
+  "micEnabled": zod.boolean(),
+  "hostMuted": zod.boolean(),
+  "unmuteRequested": zod.boolean()
 }))
 })
 })
@@ -130,6 +134,7 @@ export const JoinAccountRoomResponse = zod.object({
   "room": zod.object({
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
+  "hostParticipantId": zod.string().uuid(),
   "participants": zod.array(zod.object({
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
@@ -140,7 +145,10 @@ export const JoinAccountRoomResponse = zod.object({
   "color": zod.string().regex(joinAccountRoomResponseRoomParticipantsItemIdentityOneColorRegExp),
   "hairColor": zod.string().regex(joinAccountRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp)
 }),zod.null()]),
-  "isRegistered": zod.boolean()
+  "isRegistered": zod.boolean(),
+  "micEnabled": zod.boolean(),
+  "hostMuted": zod.boolean(),
+  "unmuteRequested": zod.boolean()
 }))
 })
 })
@@ -178,6 +186,7 @@ export const CreateRoomResponse = zod.object({
   "room": zod.object({
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
+  "hostParticipantId": zod.string().uuid(),
   "participants": zod.array(zod.object({
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
@@ -188,7 +197,10 @@ export const CreateRoomResponse = zod.object({
   "color": zod.string().regex(createRoomResponseRoomParticipantsItemIdentityOneColorRegExp),
   "hairColor": zod.string().regex(createRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp)
 }),zod.null()]),
-  "isRegistered": zod.boolean()
+  "isRegistered": zod.boolean(),
+  "micEnabled": zod.boolean(),
+  "hostMuted": zod.boolean(),
+  "unmuteRequested": zod.boolean()
 }))
 })
 })
@@ -213,6 +225,7 @@ export const getRoomResponseParticipantsItemIdentityOneHairColorRegExp = new Reg
 export const GetRoomResponse = zod.object({
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
+  "hostParticipantId": zod.string().uuid(),
   "participants": zod.array(zod.object({
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
@@ -223,7 +236,10 @@ export const GetRoomResponse = zod.object({
   "color": zod.string().regex(getRoomResponseParticipantsItemIdentityOneColorRegExp),
   "hairColor": zod.string().regex(getRoomResponseParticipantsItemIdentityOneHairColorRegExp)
 }),zod.null()]),
-  "isRegistered": zod.boolean()
+  "isRegistered": zod.boolean(),
+  "micEnabled": zod.boolean(),
+  "hostMuted": zod.boolean(),
+  "unmuteRequested": zod.boolean()
 }))
 })
 
@@ -258,6 +274,7 @@ export const JoinRoomResponse = zod.object({
   "room": zod.object({
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
+  "hostParticipantId": zod.string().uuid(),
   "participants": zod.array(zod.object({
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
@@ -268,7 +285,10 @@ export const JoinRoomResponse = zod.object({
   "color": zod.string().regex(joinRoomResponseRoomParticipantsItemIdentityOneColorRegExp),
   "hairColor": zod.string().regex(joinRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp)
 }),zod.null()]),
-  "isRegistered": zod.boolean()
+  "isRegistered": zod.boolean(),
+  "micEnabled": zod.boolean(),
+  "hostMuted": zod.boolean(),
+  "unmuteRequested": zod.boolean()
 }))
 })
 })
@@ -302,7 +322,10 @@ export const HeartbeatParticipantResponse = zod.object({
   "color": zod.string().regex(heartbeatParticipantResponseIdentityOneColorRegExp),
   "hairColor": zod.string().regex(heartbeatParticipantResponseIdentityOneHairColorRegExp)
 }),zod.null()]),
-  "isRegistered": zod.boolean()
+  "isRegistered": zod.boolean(),
+  "micEnabled": zod.boolean(),
+  "hostMuted": zod.boolean(),
+  "unmuteRequested": zod.boolean()
 })
 
 
@@ -318,6 +341,50 @@ export const LeaveRoomParams = zod.object({
 })
 
 export const LeaveRoomResponse = zod.void()
+
+
+/**
+ * A creator cannot remotely activate someone else's microphone. The recipient must explicitly accept an unmute request and grant browser microphone permission.
+ * @summary Mute your own mic, or as creator mute or request to unmute another participant
+ */
+export const controlRoomMicrophonePathRoomIdRegExp = new RegExp('^[A-Fa-f0-9]{12}$');
+
+
+export const ControlRoomMicrophoneParams = zod.object({
+  "roomId": zod.coerce.string().regex(controlRoomMicrophonePathRoomIdRegExp).describe('Case-insensitive 12-character room code'),
+  "participantId": zod.coerce.string().uuid()
+})
+
+export const ControlRoomMicrophoneBody = zod.object({
+  "action": zod.enum(['mute', 'unmute', 'request-unmute'])
+})
+
+export const controlRoomMicrophoneResponseParticipantsItemIdentityOneEmojiIdMax = 100;
+
+export const controlRoomMicrophoneResponseParticipantsItemIdentityOneColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const controlRoomMicrophoneResponseParticipantsItemIdentityOneHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
+export const ControlRoomMicrophoneResponse = zod.object({
+  "roomId": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "hostParticipantId": zod.string().uuid(),
+  "participants": zod.array(zod.object({
+  "participantId": zod.string().uuid(),
+  "displayName": zod.string(),
+  "joinedAt": zod.coerce.date(),
+  "identity": zod.union([zod.object({
+  "emojiId": zod.string().min(1).max(controlRoomMicrophoneResponseParticipantsItemIdentityOneEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(controlRoomMicrophoneResponseParticipantsItemIdentityOneColorRegExp),
+  "hairColor": zod.string().regex(controlRoomMicrophoneResponseParticipantsItemIdentityOneHairColorRegExp)
+}),zod.null()]),
+  "isRegistered": zod.boolean(),
+  "micEnabled": zod.boolean(),
+  "hostMuted": zod.boolean(),
+  "unmuteRequested": zod.boolean()
+}))
+})
 
 
 /**

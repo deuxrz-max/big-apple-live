@@ -21,6 +21,7 @@ export class RoomAudioClient {
   private stream?: MediaStream;
   private self?: AudioPeer;
   private readonly peers = new Map<string, AudioConnection>();
+  private readonly allowedPeers = new Map<string, boolean>();
   private heartbeatTimer?: ReturnType<typeof setInterval>;
   private lifetime = new AbortController();
   private transport?: AbortController;
@@ -32,6 +33,18 @@ export class RoomAudioClient {
   }
 
   get state(): AudioState { return this.currentState; }
+
+  /** Never expose a captured track until the participant explicitly enables it. */
+  setMicrophoneEnabled(enabled: boolean): void {
+    for (const track of this.stream?.getAudioTracks() ?? []) track.enabled = enabled;
+  }
+
+  /** Apply the authoritative room roster to existing and future peer playback. */
+  setPeerMicrophoneEnabled(participantId: string, enabled: boolean): void {
+    this.allowedPeers.set(participantId, enabled);
+    const peer = this.peers.get(participantId);
+    if (peer) peer.audio.muted = !enabled;
+  }
 
   /** Resolves once capture starts. Use state/peer callbacks to observe connectivity. */
   async start(): Promise<void> {
@@ -64,6 +77,7 @@ export class RoomAudioClient {
       return;
     }
     this.stream = captured;
+    this.setMicrophoneEnabled(false);
     if (captured.getAudioTracks().length === 0) {
       const error = new RoomAudioError("microphone-unavailable", "Capture returned no audio input; check the input device and retry");
       this.fail(error);
@@ -75,6 +89,19 @@ export class RoomAudioClient {
     try {
       await this.heartbeat();
       if (!this.active || revision !== this.revision) return;
+      // start() is the participant's explicit consent; host requests never call it.
+      const response = await fetch(this.microphoneUrl(), {
+        method: "PUT", headers: { ...this.headers(), "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "unmute" }),
+        signal: AbortSignal.any([this.lifetime.signal, AbortSignal.timeout(10_000)]),
+      });
+      if (response.status === 403) {
+        throw new RoomAudioError("signaling-unavailable", "The room creator has muted your microphone");
+      }
+      await this.requireOk(response);
+      if (!this.active || revision !== this.revision) return;
+      // Initial audio.microphones event enables capture from the latest server state,
+      // avoiding a stale unmute response overriding a concurrent host mute.
       this.heartbeatTimer = setInterval(() => {
         void this.heartbeat().catch((error: RoomAudioError) => {
           if (!this.active) return;
@@ -105,8 +132,17 @@ export class RoomAudioClient {
   /** Stops capture and peer playback immediately; membership remains until leave/expiry. */
   async stop(): Promise<void> {
     const connectionId = this.self?.connectionId;
+    const wasActive = this.active;
     this.stopLocal();
     this.setState("closed");
+    if (wasActive) {
+      const response = await fetch(this.microphoneUrl(), {
+        method: "PUT", headers: { ...this.headers(), "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "mute" }),
+        signal: AbortSignal.timeout(5_000), keepalive: true,
+      });
+      if (![200, 401, 404].includes(response.status)) await this.requireOk(response);
+    }
     if (connectionId) {
       const response = await fetch(`${this.roomUrl}/audio/connections/${connectionId}`, {
         method: "DELETE", headers: this.headers(),
@@ -135,11 +171,13 @@ export class RoomAudioClient {
     return {
       state: this.state,
       microphoneActive: this.stream?.getAudioTracks().some((t) => t.readyState === "live") ?? false,
+      microphoneEnabled: this.stream?.getAudioTracks().some((t) => t.readyState === "live" && t.enabled) ?? false,
       peers: [...this.peers.entries()].map(([participantId, peer]) => ({
         participantId, connectionId: peer.options.remote.connectionId,
         state: peer.pc.connectionState,
         remoteTracks: (peer.audio.srcObject as MediaStream | null)?.getAudioTracks().length ?? 0,
         playbackActive: !!peer.audio.srcObject && !peer.audio.paused,
+        playbackMuted: peer.audio.muted,
       })),
     };
   }
@@ -168,6 +206,13 @@ export class RoomAudioClient {
     return `${this.roomUrl}/participants/${encodeURIComponent(this.options.participantSessionId)}`;
   }
 
+  private microphoneUrl(): string {
+    // Returned only by an authenticated heartbeat, not supplied by another caller.
+    return `${this.roomUrl}/participants/${encodeURIComponent(this.participantId ?? "")}/microphone`;
+  }
+
+  private participantId?: string;
+
   private async requireOk(response: Response): Promise<void> {
     if (response.ok) return;
     if ([401, 404].includes(response.status)) {
@@ -182,6 +227,8 @@ export class RoomAudioClient {
         method: "POST", signal: AbortSignal.any([this.lifetime.signal, AbortSignal.timeout(10_000)]),
       });
       await this.requireOk(response);
+      const participant = await response.json() as { participantId: string };
+      this.participantId = participant.participantId;
     } catch (error) {
       if (error instanceof RoomAudioError) throw error;
       throw new RoomAudioError("signaling-unavailable", "Room heartbeat could not reach the server");
@@ -245,6 +292,14 @@ export class RoomAudioClient {
       this.syncPeers(event.data.peers);
     } else if (event.type === "audio.peers") {
       this.syncPeers(event.data.peers);
+    } else if (event.type === "audio.microphones") {
+      for (const participant of event.data.participants) {
+        if (participant.participantId === this.self?.participantId) {
+          this.setMicrophoneEnabled(participant.micEnabled);
+        } else {
+          this.setPeerMicrophoneEnabled(participant.participantId, participant.micEnabled);
+        }
+      }
     } else if (event.type === "audio.signal") {
       const peer = this.peers.get(event.data.from.participantId);
       if (peer?.options.remote.connectionId === event.data.from.connectionId) peer.receive(event.data.description);
@@ -303,6 +358,7 @@ export class RoomAudioClient {
         },
         warning: (error) => this.options.onError?.(error),
       });
+      peer.audio.muted = !this.allowedPeers.get(remote.participantId);
       this.peers.set(remote.participantId, peer);
     }
     this.updateState();

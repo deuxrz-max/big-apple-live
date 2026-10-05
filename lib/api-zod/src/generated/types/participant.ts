@@ -13,4 +13,7 @@ export interface Participant {
   joinedAt: Date;
   identity: EmojiIdentity | null;
   isRegistered: boolean;
+  micEnabled: boolean;
+  hostMuted: boolean;
+  unmuteRequested: boolean;
 }

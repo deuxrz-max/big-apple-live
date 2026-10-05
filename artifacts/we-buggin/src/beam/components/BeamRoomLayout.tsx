@@ -1,11 +1,7 @@
 import type { ReactNode } from 'react';
-import { CapacityIndicator } from './CapacityIndicator';
 
 interface Props {
   name: string;
-  count: number;
-  capacity: number;
-  code: ReactNode;
   actions: ReactNode;
   notice?: ReactNode;
   roster: ReactNode;
@@ -14,7 +10,7 @@ interface Props {
   demo?: ReactNode;
 }
 
-export function BeamRoomLayout({ name, count, capacity, code, actions, notice, roster, stream, composer, demo }: Props) {
+export function BeamRoomLayout({ name, actions, notice, roster, stream, composer, demo }: Props) {
   return (
     <div className="bm-room">
       <header className="bm-room-head">
@@ -22,10 +18,6 @@ export function BeamRoomLayout({ name, count, capacity, code, actions, notice, r
           <h1 className="bm-room-name" data-testid="text-room-name">
             {name}
           </h1>
-          <div className="bm-room-sub">
-            <CapacityIndicator count={count} capacity={capacity} />
-            {code}
-          </div>
         </div>
         <div className="bm-room-actions">{actions}</div>
       </header>

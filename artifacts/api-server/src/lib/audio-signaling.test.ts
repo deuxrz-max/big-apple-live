@@ -20,6 +20,33 @@ function sink() {
   };
 }
 
+test("audio streams receive authoritative microphone changes without reconnecting peers", () => {
+  const store = new RoomStore();
+  const relay = new AudioSignaling(store);
+  const host = store.create("Host");
+  const visitor = store.join(host.room.roomId, "Visitor");
+  const a = sink(), b = sink();
+  relay.connect(host.room.roomId, host.participantSessionId, a);
+  relay.connect(host.room.roomId, visitor.participantSessionId, b);
+  const generation = b.self().connectionId;
+  const enabled = (s: ReturnType<typeof sink>) => {
+    const latest = s.events.filter(e => e.type === "audio.microphones").at(-1);
+    assert.ok(latest?.type === "audio.microphones");
+    return latest.data.participants.find(p => p.participantId === visitor.participantId)!.micEnabled;
+  };
+  assert.equal(enabled(b), false);
+  store.controlMicrophone(host.room.roomId, visitor.participantSessionId, visitor.participantId, "unmute");
+  assert.equal(enabled(a), true);
+  assert.equal(enabled(b), true);
+  store.controlMicrophone(host.room.roomId, host.participantSessionId, visitor.participantId, "mute");
+  assert.equal(enabled(a), false);
+  assert.equal(enabled(b), false);
+  store.controlMicrophone(host.room.roomId, host.participantSessionId, visitor.participantId, "request-unmute");
+  assert.equal(enabled(b), false);
+  assert.equal(b.self().connectionId, generation);
+  assert.equal(b.closed, false);
+});
+
 test("private credentials authenticate signaling; messages stay in the same room", () => {
   const store = new RoomStore();
   const relay = new AudioSignaling(store);

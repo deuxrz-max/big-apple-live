@@ -10,5 +10,6 @@ import type { Participant } from './participant';
 export interface RoomState {
   roomId: string;
   createdAt: Date;
+  hostParticipantId: string;
   participants: Participant[];
 }
