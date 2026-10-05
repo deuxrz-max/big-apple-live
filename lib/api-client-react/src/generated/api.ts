@@ -21,8 +21,12 @@ import type {
 
 import type {
   AccountProfile,
+  AccountRoomInput,
   AudioSignalInput,
   CapacityErrorResponse,
+  ChatAccepted,
+  ChatInput,
+  ChatMessage,
   EmojiOption,
   ErrorResponse,
   HealthStatus,
@@ -373,14 +377,28 @@ export const getCreateAccountRoomUrl = () => {
   return `/api/account/rooms`
 }
 
-export const createAccountRoom = async ( options?: Parameters<typeof customFetch>[1]): Promise<RoomSession> => {
+export const createAccountRoom = async (accountRoomInput?: AccountRoomInput, options?: Parameters<typeof customFetch>[1]): Promise<RoomSession> => {
 
-  return customFetch<RoomSession>(getCreateAccountRoomUrl(),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<RoomSession>(getCreateAccountRoomUrl(),
   {
     ...options,
-    method: 'POST'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(accountRoomInput)
   }
 );}
 
@@ -391,8 +409,8 @@ export const createAccountRoom = async ( options?: Parameters<typeof customFetch
 export const getCreateAccountRoomMutationKey = () => ['createAccountRoom'] as const;
 
 export const getCreateAccountRoomMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAccountRoom>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createAccountRoom>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAccountRoom>>, TError,CreateAccountRoomMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAccountRoom>>, TError,CreateAccountRoomMutationVariables, TContext> => {
 
 const mutationKey = getCreateAccountRoomMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -404,10 +422,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAccountRoom>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAccountRoom>>, CreateAccountRoomMutationVariables> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  createAccountRoom(requestOptions)
+          return  createAccountRoom(data,requestOptions)
         }
 
 
@@ -418,16 +436,16 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type CreateAccountRoomMutationResult = NonNullable<Awaited<ReturnType<typeof createAccountRoom>>>
-
+    export type CreateAccountRoomMutationBody = BodyType<AccountRoomInput> | undefined
     export type CreateAccountRoomMutationError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>
-
+    export type CreateAccountRoomMutationVariables = {data?: BodyType<AccountRoomInput>}
 
     export const useCreateAccountRoom = <TError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAccountRoom>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAccountRoom>>, TError,CreateAccountRoomMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof createAccountRoom>>,
         TError,
-        void,
+        CreateAccountRoomMutationVariables,
         TContext
       > => {
       return useMutation(getCreateAccountRoomMutationOptions(options));
@@ -567,6 +585,231 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getHealthCheckQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetRoomMessagesUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/account/rooms/${roomId}/messages`
+}
+
+export const getRoomMessages = async (roomId: string, options?: Parameters<typeof customFetch>[1]): Promise<ChatMessage[]> => {
+
+  return customFetch<ChatMessage[]>(getGetRoomMessagesUrl(roomId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetRoomMessagesQueryKey = (roomId: string,) => {
+    return [
+    `/api/account/rooms/${roomId}/messages`
+    ] as const;
+    }
+
+
+export const getGetRoomMessagesQueryOptions = <TData = Awaited<ReturnType<typeof getRoomMessages>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRoomMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRoomMessagesQueryKey(roomId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRoomMessages>>> = ({ signal }) => getRoomMessages(roomId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRoomMessages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetRoomMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof getRoomMessages>>>
+export type GetRoomMessagesQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>
+
+
+
+export function useGetRoomMessages<TData = Awaited<ReturnType<typeof getRoomMessages>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>>(
+ roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRoomMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetRoomMessagesQueryOptions(roomId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSendRoomMessageUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/account/rooms/${roomId}/messages`
+}
+
+export const sendRoomMessage = async (roomId: string,
+    chatInput: ChatInput, options?: Parameters<typeof customFetch>[1]): Promise<ChatAccepted> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ChatAccepted>(getSendRoomMessageUrl(roomId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(chatInput)
+  }
+);}
+
+
+
+
+
+export const getSendRoomMessageMutationKey = () => ['sendRoomMessage'] as const;
+
+export const getSendRoomMessageMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendRoomMessage>>, TError,SendRoomMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendRoomMessage>>, TError,SendRoomMessageMutationVariables, TContext> => {
+
+const mutationKey = getSendRoomMessageMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendRoomMessage>>, SendRoomMessageMutationVariables> = (props) => {
+          const {roomId,data} = props ?? {};
+
+          return  sendRoomMessage(roomId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendRoomMessageMutationResult = NonNullable<Awaited<ReturnType<typeof sendRoomMessage>>>
+    export type SendRoomMessageMutationBody = BodyType<ChatInput>
+    export type SendRoomMessageMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>
+    export type SendRoomMessageMutationVariables = {roomId: string;data: BodyType<ChatInput>}
+
+    export const useSendRoomMessage = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendRoomMessage>>, TError,SendRoomMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendRoomMessage>>,
+        TError,
+        SendRoomMessageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSendRoomMessageMutationOptions(options));
+    }
+
+export const getStreamAccountRoomEventsUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/account/rooms/${roomId}/events`
+}
+
+export const streamAccountRoomEvents = async (roomId: string, options?: Parameters<typeof customFetch>[1]): Promise<string> => {
+
+  return customFetch<string>(getStreamAccountRoomEventsUrl(roomId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getStreamAccountRoomEventsQueryKey = (roomId: string,) => {
+    return [
+    `/api/account/rooms/${roomId}/events`
+    ] as const;
+    }
+
+
+export const getStreamAccountRoomEventsQueryOptions = <TData = Awaited<ReturnType<typeof streamAccountRoomEvents>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse | CapacityErrorResponse>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamAccountRoomEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getStreamAccountRoomEventsQueryKey(roomId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof streamAccountRoomEvents>>> = ({ signal }) => streamAccountRoomEvents(roomId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof streamAccountRoomEvents>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type StreamAccountRoomEventsQueryResult = NonNullable<Awaited<ReturnType<typeof streamAccountRoomEvents>>>
+export type StreamAccountRoomEventsQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse | CapacityErrorResponse>
+
+
+
+export function useStreamAccountRoomEvents<TData = Awaited<ReturnType<typeof streamAccountRoomEvents>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse | CapacityErrorResponse>>(
+ roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamAccountRoomEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getStreamAccountRoomEventsQueryOptions(roomId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -986,98 +1229,6 @@ export const useLeaveRoom = <TError = ErrorType<InvalidInputResponse | ErrorResp
       return useMutation(getLeaveRoomMutationOptions(options));
     }
 
-export const getControlRoomMicrophoneUrl = (roomId: string,
-    participantId: string,) => {
-
-
-
-
-  return `/api/rooms/${roomId}/participants/${participantId}/microphone`
-}
-
-/**
- * A creator cannot remotely activate someone else's microphone. The recipient must explicitly accept an unmute request and grant browser microphone permission.
- * @summary Mute your own mic, or as creator mute or request to unmute another participant
- */
-export const controlRoomMicrophone = async (roomId: string,
-    participantId: string,
-    microphoneAction: MicrophoneAction, options?: Parameters<typeof customFetch>[1]): Promise<RoomState> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<RoomState>(getControlRoomMicrophoneUrl(roomId,participantId),
-  {
-    ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(microphoneAction)
-  }
-);}
-
-
-
-
-
-export const getControlRoomMicrophoneMutationKey = () => ['controlRoomMicrophone'] as const;
-
-export const getControlRoomMicrophoneMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof controlRoomMicrophone>>, TError,ControlRoomMicrophoneMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof controlRoomMicrophone>>, TError,ControlRoomMicrophoneMutationVariables, TContext> => {
-
-const mutationKey = getControlRoomMicrophoneMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof controlRoomMicrophone>>, ControlRoomMicrophoneMutationVariables> = (props) => {
-          const {roomId,participantId,data} = props ?? {};
-
-          return  controlRoomMicrophone(roomId,participantId,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ControlRoomMicrophoneMutationResult = NonNullable<Awaited<ReturnType<typeof controlRoomMicrophone>>>
-    export type ControlRoomMicrophoneMutationBody = BodyType<MicrophoneAction>
-    export type ControlRoomMicrophoneMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>
-    export type ControlRoomMicrophoneMutationVariables = {roomId: string;participantId: string;data: BodyType<MicrophoneAction>}
-
-    /**
- * @summary Mute your own mic, or as creator mute or request to unmute another participant
- */
-export const useControlRoomMicrophone = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof controlRoomMicrophone>>, TError,ControlRoomMicrophoneMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof controlRoomMicrophone>>,
-        TError,
-        ControlRoomMicrophoneMutationVariables,
-        TContext
-      > => {
-      return useMutation(getControlRoomMicrophoneMutationOptions(options));
-    }
-
 export const getStreamRoomEventsUrl = (roomId: string,) => {
 
 
@@ -1397,5 +1548,97 @@ export const useDisconnectAudio = <TError = ErrorType<InvalidInputResponse | Ses
         TContext
       > => {
       return useMutation(getDisconnectAudioMutationOptions(options));
+    }
+
+export const getControlRoomMicrophoneUrl = (roomId: string,
+    participantId: string,) => {
+
+
+
+
+  return `/api/rooms/${roomId}/participants/${participantId}/microphone`
+}
+
+/**
+ * A creator cannot remotely activate someone else's microphone. The recipient must explicitly accept an unmute request and grant browser microphone permission.
+ * @summary Mute your own mic, or as creator mute or request to unmute another participant
+ */
+export const controlRoomMicrophone = async (roomId: string,
+    participantId: string,
+    microphoneAction: MicrophoneAction, options?: Parameters<typeof customFetch>[1]): Promise<RoomState> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<RoomState>(getControlRoomMicrophoneUrl(roomId,participantId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(microphoneAction)
+  }
+);}
+
+
+
+
+
+export const getControlRoomMicrophoneMutationKey = () => ['controlRoomMicrophone'] as const;
+
+export const getControlRoomMicrophoneMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof controlRoomMicrophone>>, TError,ControlRoomMicrophoneMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof controlRoomMicrophone>>, TError,ControlRoomMicrophoneMutationVariables, TContext> => {
+
+const mutationKey = getControlRoomMicrophoneMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof controlRoomMicrophone>>, ControlRoomMicrophoneMutationVariables> = (props) => {
+          const {roomId,participantId,data} = props ?? {};
+
+          return  controlRoomMicrophone(roomId,participantId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ControlRoomMicrophoneMutationResult = NonNullable<Awaited<ReturnType<typeof controlRoomMicrophone>>>
+    export type ControlRoomMicrophoneMutationBody = BodyType<MicrophoneAction>
+    export type ControlRoomMicrophoneMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>
+    export type ControlRoomMicrophoneMutationVariables = {roomId: string;participantId: string;data: BodyType<MicrophoneAction>}
+
+    /**
+ * @summary Mute your own mic, or as creator mute or request to unmute another participant
+ */
+export const useControlRoomMicrophone = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof controlRoomMicrophone>>, TError,ControlRoomMicrophoneMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof controlRoomMicrophone>>,
+        TError,
+        ControlRoomMicrophoneMutationVariables,
+        TContext
+      > => {
+      return useMutation(getControlRoomMicrophoneMutationOptions(options));
     }
 

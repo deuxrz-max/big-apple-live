@@ -180,6 +180,9 @@ importers:
       '@workspace/api-zod':
         specifier: workspace:*
         version: link:../../lib/api-zod
+      '@workspace/beam-identity':
+        specifier: workspace:*
+        version: link:../../lib/beam-identity
       '@workspace/db':
         specifier: workspace:*
         version: link:../../lib/db
@@ -430,6 +433,9 @@ importers:
       '@clerk/themes':
         specifier: ^2.4.57
         version: 2.4.57(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
+      '@workspace/beam-identity':
+        specifier: workspace:*
+        version: link:../../lib/beam-identity
       '@workspace/room-audio':
         specifier: workspace:*
         version: link:../../lib/room-audio
@@ -644,6 +650,8 @@ importers:
       zod:
         specifier: 'catalog:'
         version: 3.25.76
+
+  lib/beam-identity: {}
 
   lib/db:
     dependencies:

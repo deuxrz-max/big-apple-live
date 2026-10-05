@@ -1,4 +1,7 @@
 import type { EmojiIdentity } from '@workspace/api-client-react';
+import { isPortraitId } from '@/beam/portraits';
+import { IdentityGlyph } from '@/beam/components/IdentityGlyph';
+import { beamIdentity } from '@/beam/services/beamService';
 
 export type Identity = EmojiIdentity;
 
@@ -64,6 +67,11 @@ interface Props {
 
 /** Static identity art: recolored OpenMoji SVG with hair layered behind and in front. */
 export function IdentityAvatar({ identity, size = 120, className }: Props) {
+  if (isPortraitId(identity.portraitId)) {
+    return <span className={className} data-testid={`img-identity-${identity.gender.toLowerCase()}`}>
+      <IdentityGlyph identity={beamIdentity(identity)} size={size} />
+    </span>;
+  }
   const c = identity.hairColor;
   const hi = shade(c, 0.35);
   const lo = shade(c, -0.35);

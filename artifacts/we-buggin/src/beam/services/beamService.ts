@@ -1,303 +1,313 @@
 import {
-  BeamError,
-  CAPACITY,
-  isBeamCapacity,
-  MAX_MESSAGES,
-  type BeamMessage,
-  type BeamRoom,
-  type BeamState,
-  type BeamCapacity,
-  type Identity,
-  type MessageKind,
-  type Participant,
-} from '../types';
-import { isPortraitId } from '../portraits';
-import { syncMood } from '../moodSync';
+  createAccountRoom, joinAccountRoom, getRoom, getMyProfile, saveMyProfile,
+  getRoomMessages, sendRoomMessage, heartbeatParticipant, leaveRoom,
+  type AccountProfile, type EmojiIdentity, type RoomState, type RoomSession,
+  type ChatMessage, type ChatAccepted,
+} from '@workspace/api-client-react';
+import { loadCreds, saveCreds, clearCreds } from '@/lib/room-creds';
+import { getPortrait, isPortraitId, portraitIdentity } from '../portraits';
 import { isMoodKey } from '../moodCatalog';
+import { BeamError, CAPACITY, isBeamCapacity, type BeamState, type BeamRoom, type Identity, type BeamCapacity } from '../types';
 
-/**
- * FRONTEND DEMO / SIMULATED PARTICIPANTS.
- * Local mock adapter. No network. Persisted under an isolated localStorage key.
- * A real backend replaces the exported functions in this file (see ../README.md).
- */
+/** Only the old isolated save is browser-local. Shared state always comes from API. */
 export const STORAGE_KEY = 'webuggin.beam.demo.v1';
-export const DEMO_ROOM_CODE = 'LATEBG';
-export const FULL_ROOM_CODE = 'FULL12';
-
-const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const HANDLE_RE = /^[A-Za-z0-9_.-]{2,12}$/;
-const id = (p: string) => `${p}_${Math.random().toString(36).slice(2, 9)}`;
-
-const PEERS: Array<[string, string, Identity['style'], string]> = [
-  ['moth', '🦋', 'none', '#111111'],
-  ['k.ito', '🥷', 'spiked', '#1d3cff'],
-  ['vex', '👾', 'none', '#111111'],
-  ['nine', '🪩', 'ponytails', '#111111'],
-  ['sol', '🌙', 'none', '#111111'],
-  ['dre', '🐺', 'spiked', '#111111'],
-  ['ash', '🧊', 'none', '#111111'],
-  ['juno', '🪐', 'ponytails', '#1d3cff'],
-  ['rook', '🦉', 'none', '#111111'],
-  ['pike', '🗿', 'none', '#111111'],
-  ['bao', '🍒', 'ponytails', '#111111'],
-  ['tess', '⚡', 'spiked', '#111111'],
-];
-
-function peer(i: number, now: number): Participant {
-  const [handle, emoji, style, hairColor] = PEERS[i];
-  return { id: `seed_${handle}`, handle, identity: { emoji, style, hairColor }, simulated: true, joinedAt: now - (60 - i) * 60000 };
-}
-
-function msg(p: Participant, kind: MessageKind, text: string, ts: number): BeamMessage {
-  return { id: id('m'), kind, authorId: p.id, authorSnapshot: { handle: p.handle, identity: p.identity }, text, ts };
-}
-
-function seed(): BeamState {
-  const now = Date.now();
-  const late = Array.from({ length: 6 }, (_, i) => peer(i, now));
-  const [moth, kito, vex, nine, sol, dre] = late;
-  const lateRoom: BeamRoom = {
-    code: DEMO_ROOM_CODE,
-    name: 'Late Night Buggin',
-    capacity: CAPACITY,
-    createdAt: now - 3600000,
-    participants: late,
-    messages: [
-      msg(moth, 'text', 'ok who is still up', now - 540000),
-      msg(kito, 'text', 'always', now - 500000),
-      msg(vex, 'text', 'drop is at 2. nobody say the name yet', now - 420000),
-      msg(nine, 'reaction', '👀', now - 400000),
-      msg(sol, 'text', 'tell them to make the tee boxier', now - 300000),
-      msg(dre, 'text', 'boxier or nothing', now - 240000),
-      msg(kito, 'reaction', '🔥', now - 200000),
-      msg(moth, 'text', 'room is open, seats left', now - 120000),
-    ],
-  };
-  const full = Array.from({ length: CAPACITY }, (_, i) => peer(i, now));
-  const fullRoom: BeamRoom = {
-    code: FULL_ROOM_CODE,
-    name: 'Full House',
-    capacity: CAPACITY,
-    createdAt: now - 7200000,
-    participants: full,
-    messages: [msg(full[0], 'text', 'twelve of us. door is shut.', now - 90000)],
-  };
-  return { version: 1, rooms: { [lateRoom.code]: lateRoom, [fullRoom.code]: fullRoom }, session: null };
-}
-
-function validIdentity(i: Identity | undefined): boolean {
-  return !!i && typeof i.emoji === 'string' && i.emoji.length > 0 && i.emoji.length <= 16
-    && ['none', 'spiked', 'ponytails'].includes(i.style) && /^#[0-9a-f]{6}$/i.test(i.hairColor)
-    && (i.portraitId === undefined || isPortraitId(i.portraitId))
-    && (i.currentMood === undefined || isMoodKey(i.currentMood));
-}
-
-function valid(s: unknown): s is BeamState {
-  const x = s as BeamState;
-  if (!x || x.version !== 1 || typeof x.rooms !== 'object' || x.rooms === null) return false;
-  const roomsValid = Object.entries(x.rooms).every(([code, r]) =>
-    r && /^[A-Z0-9]{6}$/.test(code) && r.code === code && typeof r.name === 'string'
-      && isBeamCapacity(r.capacity) && Array.isArray(r.participants) && r.participants.length <= r.capacity
-      && r.participants.every(p => p && typeof p.id === 'string' && typeof p.handle === 'string'
-        && typeof p.simulated === 'boolean' && validIdentity(p.identity))
-      && Array.isArray(r.messages) && r.messages.length <= MAX_MESSAGES
-      && r.messages.every(m => m && typeof m.id === 'string' && typeof m.text === 'string'
-        && ['text', 'reaction', 'system'].includes(m.kind) && Number.isFinite(m.ts)
-        && (m.authorId === null || typeof m.authorId === 'string')
-        && (m.authorSnapshot === null || (typeof m.authorSnapshot?.handle === 'string' && validIdentity(m.authorSnapshot.identity)))));
-  return roomsValid && (x.session === null || (!!x.session && typeof x.session.code === 'string'
-    && typeof x.session.selfId === 'string' && !!x.rooms[x.session.code]?.participants.some(p => p.id === x.session!.selfId)));
-}
-
-let persistenceNotice: string | null = null;
-
-function load(): BeamState {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed: unknown = JSON.parse(raw);
-      if (valid(parsed)) return parsed;
-      persistenceNotice = 'Saved demo data was invalid. A fresh demo has been loaded.';
-    }
-  } catch {
-    persistenceNotice = 'Demo storage could not be read. Changes may not survive a refresh.';
-  }
-  return seed();
-}
-
-let state: BeamState = load();
+let state: BeamState = { version: 1, rooms: {}, session: null };
+let userId: string | null = null;
+let profile: AccountProfile | null = null;
+let notice: string | null = null;
+let stopLive: (() => void) | undefined;
+let generation = 0;
 const listeners = new Set<() => void>();
-
-function commit(next: BeamState) {
-  state = next;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    persistenceNotice = null;
-  } catch {
-    persistenceNotice = 'Browser storage is unavailable. This demo works in memory; changes will be lost on refresh.';
-  }
-  listeners.forEach((l) => l());
-}
-
-export const subscribe = (l: () => void) => {
-  listeners.add(l);
-  return () => listeners.delete(l);
-};
+const profileVersions = new Map<string, number>();
+function notify() { listeners.forEach(l => l()); }
+function commit(next: BeamState) { state = next; notify(); }
+export const subscribe = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l); }; };
 export const getState = () => state;
-export const getPersistenceNotice = () => persistenceNotice;
-
+export const getProfileSnapshot = () => profile;
+export const getPersistenceNotice = () => notice;
 export const normalizeCode = (c: string) => c.toUpperCase().replace(/[\s-]/g, '');
-export const isValidCode = (c: string) => /^[A-Z0-9]{6}$/.test(normalizeCode(c));
+export const isValidCode = (c: string) => /^([A-Z0-9]{6}|[A-F0-9]{12})$/.test(normalizeCode(c));
+export const validateHandle = (h: string) => /^[A-Za-z0-9_]{3,24}$/.test(h.trim())
+  ? null : 'Dedicated name is 3–24 characters: letters, numbers, or underscores.';
 
-export function validateHandle(h: string): string | null {
-  return HANDLE_RE.test(h.trim()) ? null : 'Handle is 2 to 12 characters: letters, numbers, . _ -';
+export function configureBeamAccount(id: string | null) {
+  if (id === userId) return;
+  stopLive?.();
+  generation++;
+  userId = id;
+  profile = null;
+  profileVersions.clear();
+  notice = null;
+  commit({ version: 1, rooms: {}, session: null });
 }
-
-function patchRoom(room: BeamRoom, extra?: Partial<BeamState>) {
-  commit({ ...state, rooms: { ...state.rooms, [room.code]: room }, ...extra });
+function requireUser() {
+  if (!userId) throw new Error('Sign in to join a beam.');
+  return userId;
 }
-
-const trim = (m: BeamMessage[]) => m.slice(-MAX_MESSAGES);
-
-function sys(text: string): BeamMessage {
-  return { id: id('m'), kind: 'system', authorId: null, authorSnapshot: null, text, ts: Date.now() };
+function creds(code: string, selfId?: string) {
+  const c = loadCreds(requireUser(), code);
+  if (!c || (selfId && selfId !== c.participantId)) throw new BeamError('NOT_MEMBER', 'Join this beam first.');
+  return c;
 }
-
-/** Throws a BeamError if the room cannot currently be joined. */
-export function checkJoinable(rawCode: string): BeamRoom {
-  const code = normalizeCode(rawCode);
-  if (!isValidCode(code)) throw new BeamError('INVALID_CODE', 'Codes are 6 characters, letters and numbers.');
-  const room = state.rooms[code];
-  if (!room) throw new BeamError('NOT_FOUND', `No beam found for ${code}. Check the code and try again.`);
-  const alreadyHere = state.session?.code === code && room.participants.some(p => p.id === state.session?.selfId);
-  if (!alreadyHere && room.participants.length >= room.capacity) throw new BeamError('ROOM_FULL', `${room.name} is full (${room.capacity}/${room.capacity}). Try again when someone leaves.`);
-  return room;
+function headers(code: string, selfId?: string) {
+  return { 'X-Room-Session': creds(code, selfId).participantSessionId };
 }
-
-function enter(room: BeamRoom, handle: string, identity: Identity): string {
-  const h = handle.trim();
-  const err = validateHandle(h);
-  if (err) throw new BeamError('INVALID_HANDLE', err);
-  const existing = state.session?.code === room.code
-    ? room.participants.find(p => p.id === state.session?.selfId) : undefined;
-  if (room.participants.some((p) => p.id !== existing?.id && p.handle.toLowerCase() === h.toLowerCase())) throw new BeamError('HANDLE_TAKEN', `${h} is already in this beam.`);
-  if (existing) {
-    updateIdentity(room.code, existing.id, h, identity);
-    return room.code;
-  }
-  if (room.participants.length >= room.capacity) throw new BeamError('ROOM_FULL', `This beam just filled up (${room.capacity}/${room.capacity}).`);
-  const self: Participant = { id: id('me'), handle: h, identity, simulated: false, joinedAt: Date.now() };
-  const rooms = { ...state.rooms };
-  const previous = state.session && rooms[state.session.code];
-  if (previous && state.session) {
-    const previousSelfId = state.session.selfId;
-    const previousSelf = previous.participants.find(p => p.id === previousSelfId);
-    rooms[previous.code] = { ...previous,
-      participants: previous.participants.filter(p => p.id !== previousSelfId),
-      messages: previousSelf ? trim([...previous.messages, sys(`${previousSelf.handle} left`)]) : previous.messages,
-    };
-  }
-  rooms[room.code] = { ...room, participants: [...room.participants, self], messages: trim([...room.messages, sys(`${h} joined`)]) };
-  commit({ ...state, rooms, session: { code: room.code, selfId: self.id } });
-  return room.code;
+export function beamIdentity(identity: EmojiIdentity): Identity {
+  const fallback = portraitIdentity(identity.gender === 'Male' ? 'spiked-smile' : 'ponytail-smile');
+  const portrait = isPortraitId(identity.portraitId) ? getPortrait({ ...fallback, portraitId: identity.portraitId }) : getPortrait(fallback);
+  return {
+    portraitId: portrait.id, emoji: portrait.emoji,
+    style: identity.gender === 'Male' ? 'spiked' : 'ponytails', hairColor: identity.hairColor,
+    ...(isMoodKey(identity.currentMood) ? { currentMood: identity.currentMood } : {}),
+  };
 }
-
-export function createBeam(name: string, handle: string, identity: Identity, capacity: BeamCapacity = CAPACITY): string {
-  if (!isBeamCapacity(capacity)) throw new BeamError('INVALID_CAPACITY', 'Choose 2, 4, 9, or 12 spots for your beam.');
-  const n = name.trim();
-  if (n.length < 2 || n.length > 32) throw new BeamError('INVALID_NAME', 'Name your beam with 2 to 32 characters.');
-  let code = '';
-  do {
-    code = Array.from({ length: 6 }, () => CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)]).join('');
-  } while (state.rooms[code]);
-  const room: BeamRoom = { code, name: n, capacity, participants: [], messages: [], createdAt: Date.now() };
-  return enter(room, handle, identity);
+function snapshot(r: RoomState): BeamRoom {
+  return {
+    code: r.roomId, name: r.name, capacity: isBeamCapacity(r.capacity) ? r.capacity : CAPACITY,
+    createdAt: new Date(r.createdAt).getTime(),
+    participants: r.participants.map(p => ({
+      id: p.participantId, handle: p.displayName, joinedAt: new Date(p.joinedAt).getTime(),
+      simulated: false,
+      identity: p.identity ? beamIdentity(p.identity) : portraitIdentity('ponytail-smile'),
+    })),
+    messages: state.rooms[r.roomId]?.messages ?? [],
+  };
 }
-
-export function joinBeam(rawCode: string, handle: string, identity: Identity): string {
-  return enter(checkJoinable(rawCode), handle, identity);
+function applySnapshot(r: RoomState) {
+  // Voice-only legacy rooms still retain their own 100-person capacity.
+  if (!isBeamCapacity(r.capacity)) throw new Error('This is a voice room. Open it from your account portal.');
+  const own = state.session?.code === r.roomId
+    ? r.participants.find(p => p.participantId === state.session?.selfId) : undefined;
+  if (profile && own?.identity) profile = { ...profile, username: own.displayName, identity: own.identity };
+  commit({ ...state, rooms: { ...state.rooms, [r.roomId]: snapshot(r) } });
 }
-
-function mustBeMember(code: string, selfId: string) {
-  const room = state.rooms[code];
-  if (!room) throw new BeamError('NOT_FOUND', 'Beam not found.');
-  const me = room.participants.find((p) => p.id === selfId);
-  if (!me) throw new BeamError('NOT_MEMBER', 'You are not in this beam.');
-  return { room, me };
+function message(m: ChatMessage) {
+  return {
+    id: m.id, kind: m.kind, authorId: m.authorId,
+    authorSnapshot: { handle: m.username, identity: beamIdentity(m.identity) },
+    text: m.text, ts: new Date(m.createdAt).getTime(),
+  };
 }
-
-export function leaveBeam(code: string, selfId: string) {
-  const room = state.rooms[code];
-  if (room) {
-    const me = room.participants.find((p) => p.id === selfId);
-    patchRoom(
-      {
-        ...room,
-        participants: room.participants.filter((p) => p.id !== selfId),
-        messages: me ? trim([...room.messages, sys(`${me.handle} left`)]) : room.messages,
-      },
-      { session: null },
-    );
-  } else commit({ ...state, session: null });
-}
-
-export function updateIdentity(code: string, selfId: string, handle: string, identity: Identity) {
-  const { room, me } = mustBeMember(code, selfId);
-  const h = handle.trim();
-  const err = validateHandle(h);
-  if (err) throw new BeamError('INVALID_HANDLE', err);
-  if (room.participants.some((p) => p.id !== selfId && p.handle.toLowerCase() === h.toLowerCase())) throw new BeamError('HANDLE_TAKEN', `${h} is already in this beam.`);
-  patchRoom({ ...room, participants: room.participants.map((p) => (p.id === me.id ? { ...p, handle: h, identity } : p)) });
-}
-
-export function sendMessage(code: string, selfId: string, kind: 'text' | 'reaction', raw: string) {
-  const { room, me } = mustBeMember(code, selfId);
-  const text = raw.trim();
-  if (!text) throw new BeamError('EMPTY_MESSAGE', 'Write something first.');
-  if (text.length > 280) throw new BeamError('TOO_LONG', 'Keep it under 280 characters.');
-  // One atomic commit persists the mood and notifies every room subscriber.
-  // Validation runs first: rejected messages never change the sender's image.
-  const identity = syncMood(me.identity, text);
-  const sender = identity === me.identity ? me : { ...me, identity };
-  patchRoom({
-    ...room,
-    participants: room.participants.map(p => p.id === me.id ? sender : p),
-    messages: trim([...room.messages, msg(sender, kind, text, Date.now())]),
-  });
-}
-
-/* ---- Clearly labeled simulation controls (user-triggered only) ---- */
-
-export function simulateAddPeer(code: string) {
-  const room = state.rooms[code];
-  if (!room) throw new BeamError('NOT_FOUND', 'Beam not found.');
-  if (room.participants.length >= room.capacity) throw new BeamError('ROOM_FULL', `Beam is full (${room.capacity}/${room.capacity}).`);
-  const used = new Set(room.participants.map((p) => p.handle));
-  const idx = PEERS.findIndex(([h]) => !used.has(h));
-  const [handle, emoji, style, hairColor] = idx >= 0 ? PEERS[idx] : [`sim${room.participants.length + 1}`, '🤖', 'none' as const, '#111111'];
-  const p: Participant = { id: id('sim'), handle, identity: { emoji, style, hairColor }, simulated: true, joinedAt: Date.now() };
-  patchRoom({ ...room, participants: [...room.participants, p], messages: trim([...room.messages, sys(`${handle} joined (simulated)`)]) });
-}
-
-export function simulateRemovePeer(code: string) {
+function applyMessages(code: string, incoming: ChatMessage[]) {
   const room = state.rooms[code];
   if (!room) return;
-  const p = [...room.participants].reverse().find((x) => x.simulated);
-  if (!p) return;
-  patchRoom({
-    ...room,
-    participants: room.participants.filter((x) => x.id !== p.id),
-    messages: trim([...room.messages, sys(`${p.handle} left (simulated)`)]),
-  });
+  const merged = new Map(room.messages.map(m => [m.id, m]));
+  incoming.forEach(m => merged.set(m.id, message(m)));
+  const messages = [...merged.values()].sort((a, b) => a.ts - b.ts || a.id.localeCompare(b.id)).slice(-60);
+  commit({ ...state, rooms: { ...state.rooms, [code]: { ...room, messages } } });
 }
-
-export function simulateFill(code: string) {
+function applyAccepted(code: string, accepted: ChatAccepted) {
   const room = state.rooms[code];
-  if (!room) throw new BeamError('NOT_FOUND', 'Beam not found.');
-  let guard = room.capacity;
-  while (guard-- > 0 && state.rooms[code].participants.length < room.capacity) simulateAddPeer(code);
+  if (!room) return;
+  const version = new Date(accepted.profile.updatedAt).getTime();
+  if (version >= (profileVersions.get(accepted.profile.username) ?? 0)) {
+    profileVersions.set(accepted.profile.username, version);
+    if (accepted.message.authorId === state.session?.selfId) profile = accepted.profile;
+    commit({ ...state, rooms: { ...state.rooms, [code]: {
+      ...room, participants: room.participants.map(p => p.id === accepted.message.authorId
+        ? { ...p, identity: beamIdentity(accepted.profile.identity) } : p),
+    } } });
+  }
+  applyMessages(code, [accepted.message]);
 }
-
-export function resetDemo() {
-  commit(seed());
+export async function loadAccountProfile() {
+  requireUser();
+  const epoch = generation;
+  const result = await getMyProfile();
+  if (epoch !== generation) throw new Error('Account changed. Try again.');
+  profile = result.profile;
+  return profile;
+}
+/** Explicit selection only. Entering a room never resets an existing mood. */
+async function selectIdentity(handle: string, identity: Identity) {
+  const id = requireUser();
+  const epoch = generation;
+  const current = await loadAccountProfile();
+  if (id !== userId || epoch !== generation) throw new Error('Account changed. Try again.');
+  const portrait = getPortrait(identity);
+  const emojiId = [...portrait.emoji].map(c => c.codePointAt(0)!.toString(16).toUpperCase()).join('-');
+  const saved = await saveMyProfile({
+    username: current?.username ?? handle.trim(),
+    identity: {
+      emojiId, gender: portrait.style === 'spiked' ? 'Male' : 'Female',
+      color: current?.identity.color ?? '#F7C531', hairColor: identity.hairColor,
+      portraitId: portrait.id,
+      ...(identity.currentMood ? { currentMood: identity.currentMood } : {}),
+    },
+  });
+  if (id !== userId || epoch !== generation) throw new Error('Account changed. Try again.');
+  profile = saved;
+  profileVersions.set(saved.username, new Date(saved.updatedAt).getTime());
+  notify();
+  return saved;
+}
+export function legacyIdentity(): Identity | undefined {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') as BeamState | null;
+    const p = saved?.session && saved.rooms?.[saved.session.code]?.participants.find(p => p.id === saved.session!.selfId);
+    if (p && isPortraitId(p.identity.portraitId)) return p.identity;
+  } catch { /* Old saves are optional and never become shared room history. */ }
+  return undefined;
+}
+export async function checkJoinable(raw: string) {
+  const epoch = generation;
+  const code = normalizeCode(raw);
+  if (!isValidCode(code)) throw new BeamError('INVALID_CODE', 'Enter a six-character Beam code.');
+  const room = await getRoom(code);
+  if (epoch !== generation) throw new Error('Account changed. Try again.');
+  const alreadyHere = room.participants.some(p => p.isRegistered && p.displayName === profile?.username);
+  if (room.participants.length >= room.capacity && !alreadyHere) {
+    throw new BeamError('ROOM_FULL', `This beam is full (${room.capacity}/${room.capacity}).`);
+  }
+  applySnapshot(room);
+  return state.rooms[code];
+}
+async function enter(session: RoomSession, owner: string) {
+  if (owner !== userId) throw new Error('Account changed. Try again.');
+  const epoch = generation;
+  const previous = state.session;
+  if (previous && previous.code !== session.room.roomId) {
+    await leaveBeam(previous.code, previous.selfId);
+  }
+  if (owner !== userId || epoch !== generation) throw new Error('Account changed. Try again.');
+  saveCreds(owner, session.room.roomId, session);
+  if (previous?.code !== session.room.roomId || previous.selfId !== session.participantId) {
+    const cached = state.rooms[session.room.roomId];
+    if (cached) commit({ ...state, rooms: { ...state.rooms, [cached.code]: { ...cached, messages: [] } } });
+  }
+  applySnapshot(session.room);
+  commit({ ...state, session: { code: session.room.roomId, selfId: session.participantId } });
+  startLive(session.room.roomId);
+  return session.room.roomId;
+}
+export async function createBeam(name: string, handle: string, identity: Identity, capacity: BeamCapacity = CAPACITY) {
+  const owner = requireUser();
+  const epoch = generation;
+  if (!await loadAccountProfile()) await selectIdentity(handle, identity);
+  if (owner !== userId || epoch !== generation) throw new Error('Account changed. Try again.');
+  return enter(await createAccountRoom({ name: name.trim(), capacity }), owner);
+}
+export async function joinBeam(raw: string, handle: string, identity: Identity) {
+  const owner = requireUser();
+  const epoch = generation;
+  if (!await loadAccountProfile()) await selectIdentity(handle, identity);
+  if (owner !== userId || epoch !== generation) throw new Error('Account changed. Try again.');
+  return enter(await joinAccountRoom(normalizeCode(raw)), owner);
+}
+export async function restoreBeam(raw: string) {
+  const code = normalizeCode(raw);
+  const owner = requireUser();
+  const epoch = generation;
+  const c = loadCreds(owner, code);
+  const r = await getRoom(code);
+  if (epoch !== generation) return;
+  applySnapshot(r);
+  if (!c) return;
+  // Account-checked history prevents using a saved capability for a different user.
+  try {
+    const messages = await getRoomMessages(code, { headers: headers(code) });
+    if (epoch !== generation) return;
+    await heartbeatParticipant(code, c.participantSessionId);
+    if (epoch !== generation) return;
+    commit({ ...state, session: { code, selfId: c.participantId } });
+    applyMessages(code, messages);
+    startLive(code);
+  } catch (error) {
+    clearCreds(owner, code);
+    throw error;
+  }
+}
+export async function leaveBeam(code: string, selfId: string) {
+  const owner = requireUser();
+  const epoch = generation;
+  const c = creds(code, selfId);
+  await leaveRoom(code, c.participantSessionId);
+  clearCreds(owner, code);
+  if (epoch !== generation) return;
+  stopLive?.();
+  commit({ ...state, session: null });
+}
+export async function updateIdentity(code: string, selfId: string, handle: string, identity: Identity) {
+  const epoch = generation;
+  creds(code, selfId);
+  const saved = await selectIdentity(handle, identity);
+  if (epoch !== generation) return;
+  const room = state.rooms[code];
+  commit({ ...state, rooms: { ...state.rooms, [code]: {
+    ...room, participants: room.participants.map(p => p.id === selfId
+      ? { ...p, handle: saved.username, identity: beamIdentity(saved.identity) } : p),
+  } } });
+}
+export async function sendMessage(code: string, selfId: string, kind: 'text' | 'reaction', raw: string) {
+  const epoch = generation;
+  const accepted = await sendRoomMessage(code, { text: raw.trim(), kind }, { headers: headers(code, selfId) });
+  if (epoch === generation) applyAccepted(code, accepted);
+}
+/** Fetch-stream SSE supports the private room header, reconnect, and rehydration. */
+function startLive(code: string) {
+  stopLive?.();
+  const epoch = generation;
+  const controller = new AbortController();
+  let retry: ReturnType<typeof setTimeout> | undefined;
+  let heartbeatBusy = false;
+  const active = () => !controller.signal.aborted && epoch === generation;
+  const report = (error: unknown) => {
+    if (!active()) return;
+    notice = error instanceof Error ? error.message : 'Room connection lost. Retrying.';
+    commit({ ...state });
+  };
+  const heartbeat = setInterval(async () => {
+    if (heartbeatBusy || !active()) return;
+    heartbeatBusy = true;
+    try {
+      await heartbeatParticipant(code, creds(code).participantSessionId);
+    } catch (e) {
+      report(e);
+      if ([401, 404].includes((e as { status?: number }).status ?? 0) && active()) {
+        const owner = requireUser();
+        clearCreds(owner, code);
+        stopLive?.();
+        commit({ ...state, session: null });
+      }
+    }
+    finally { heartbeatBusy = false; }
+  }, 25_000);
+  async function stream() {
+    try {
+      const res = await fetch(`/api/account/rooms/${code}/events`, {
+        headers: headers(code), credentials: 'same-origin', signal: controller.signal,
+      });
+      if (!res.ok || !res.body) throw new Error('Room connection unavailable. Rejoin if your membership expired.');
+      // Subscribe first, then history: ID merge closes the reconnect race.
+      const history = await getRoomMessages(code, { headers: headers(code), signal: controller.signal });
+      if (!active()) return;
+      applyMessages(code, history);
+      notice = null;
+      commit({ ...state });
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      while (active()) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let boundary: number;
+        while ((boundary = buffer.indexOf('\n\n')) >= 0) {
+          const frame = buffer.slice(0, boundary);
+          buffer = buffer.slice(boundary + 2);
+          const event = frame.match(/^event: (.+)$/m)?.[1];
+          const data = frame.match(/^data: (.+)$/m)?.[1];
+          if (!data || !active()) continue;
+          if (event === 'room.snapshot') applySnapshot(JSON.parse(data));
+          if (event === 'chat.accepted') applyAccepted(code, JSON.parse(data));
+        }
+      }
+      if (active()) throw new Error('Room disconnected. Reconnecting…');
+    } catch (e) {
+      report(e);
+      if (active()) retry = setTimeout(stream, 2000);
+    }
+  }
+  stopLive = () => { controller.abort(); clearInterval(heartbeat); if (retry) clearTimeout(retry); };
+  void stream();
 }

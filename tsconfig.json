@@ -3,6 +3,7 @@
   "compileOnSave": false,
   "files": [],
   "references": [
+    { "path": "./lib/beam-identity" },
     {
       "path": "./lib/db"
     },

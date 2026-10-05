@@ -8,10 +8,12 @@
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test:rooms": "esbuild src/lib/room-store.test.ts src/lib/audio-signaling.test.ts src/lib/room-identity.test.ts --bundle --platform=node --format=esm --outdir=/tmp/room-backend-tests --out-extension:.js=.mjs && node --test /tmp/room-backend-tests/*.test.mjs",
-    "test:audio": "playwright test --config=playwright.config.ts"
+    "test:rooms": "esbuild src/lib/room-store.test.ts src/lib/audio-signaling.test.ts src/lib/room-identity.test.ts src/lib/beam-membership.test.ts --bundle --platform=node --format=esm --outdir=/tmp/room-backend-tests --out-extension:.js=.mjs && node --test /tmp/room-backend-tests/*.test.mjs",
+    "test:audio": "playwright test --config=playwright.config.ts",
+    "test:chat": "esbuild src/lib/room-chat.test.ts --bundle --platform=node --format=esm --banner:js=\"import { createRequire as createTestRequire } from 'node:module'; const require = createTestRequire(import.meta.url);\" --outfile=.tests/room-chat.test.mjs && node --test .tests/room-chat.test.mjs"
   },
   "dependencies": {
+    "@workspace/beam-identity": "workspace:*",
     "@clerk/express": "^2.1.74",
     "@clerk/shared": "^4.37.1",
     "@workspace/api-zod": "workspace:*",

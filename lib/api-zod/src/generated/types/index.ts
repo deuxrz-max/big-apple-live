@@ -7,11 +7,19 @@
  */
 
 export * from './accountProfile';
+export * from './accountRoomInput';
+export * from './accountRoomInputCapacity';
 export * from './audioDescription';
 export * from './audioDescriptionType';
 export * from './audioSignalInput';
 export * from './capacityErrorResponse';
+export * from './chatAccepted';
+export * from './chatInput';
+export * from './chatInputKind';
+export * from './chatMessage';
+export * from './chatMessageKind';
 export * from './emojiIdentity';
+export * from './emojiIdentityCurrentMood';
 export * from './emojiIdentityGender';
 export * from './emojiOption';
 export * from './errorResponse';
@@ -25,5 +33,6 @@ export * from './profileInput';
 export * from './roomCreateInput';
 export * from './roomJoinInput';
 export * from './roomSession';
+export * from './roomSessionHeaderParameter';
 export * from './roomState';
 export * from './sessionUnauthorizedResponse';

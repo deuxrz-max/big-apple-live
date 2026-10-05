@@ -25,13 +25,12 @@ function displayName(value: string): string {
 router.post("/rooms", async (req, res) => {
   const body = CreateRoomBody.safeParse(req.body);
   if (!body.success) {
-    res.status(400).json({ error: "Display name must be between 1 and 40 characters" });
+    res.status(400).json({ error: "Valid room ID and display name are required" });
     return;
   }
   const name = displayName(body.data.displayName);
   await ensureGuestNameAvailable(name);
-  const session = roomStore.create(name);
-  res.status(201).json(CreateRoomResponse.parse(session));
+  res.status(201).json(CreateRoomResponse.parse(roomStore.create(name)));
 });
 
 router.get("/rooms/:roomId", (req, res) => {
@@ -96,6 +95,8 @@ router.get("/rooms/:roomId/events", (req, res) => {
   // Subscribe before sending headers so capacity failures remain normal JSON errors.
   const unsubscribe = roomStore.subscribe(params.data.roomId, (event) => {
     if (res.destroyed || res.writableEnded) return;
+    // This legacy public stream exposes presence only, never private chat.
+    if (event.type === "chat.accepted") return;
     const data = event.type === "room.snapshot" ? GetRoomResponse.parse(event.data) : event.data;
     // Slow consumers are disconnected rather than accumulating unbounded buffers.
     if (!res.write(`event: ${event.type}\ndata: ${JSON.stringify(data)}\n\n`)) res.destroy();

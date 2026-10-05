@@ -8,8 +8,10 @@
 import type { Participant } from './participant';
 
 export interface RoomState {
+  hostParticipantId: string;
+  name: string;
+  capacity: number;
   roomId: string;
   createdAt: Date;
-  hostParticipantId: string;
   participants: Participant[];
 }

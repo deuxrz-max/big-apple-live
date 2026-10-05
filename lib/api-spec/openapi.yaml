@@ -95,6 +95,11 @@ paths:
       operationId: createAccountRoom
       tags: [identity, rooms]
       security: [{ AccountSession: [] }]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AccountRoomInput" }
       responses:
         "201":
           description: Room joined using the authenticated account's saved identity
@@ -146,6 +151,81 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /account/rooms/{roomId}/messages:
+    get:
+      operationId: getRoomMessages
+      tags: [rooms]
+      security: [{ AccountSession: [], AccountRoomSession: [] }]
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+        - $ref: "#/components/parameters/RoomSessionHeader"
+      responses:
+        "200":
+          description: Last 60 accepted messages, ordered oldest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ChatMessage" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "400": { $ref: "#/components/responses/InvalidInput" }
+        "404":
+          description: Room not found or expired
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+    post:
+      operationId: sendRoomMessage
+      tags: [rooms]
+      security: [{ AccountSession: [], AccountRoomSession: [] }]
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+        - $ref: "#/components/parameters/RoomSessionHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChatInput" }
+      responses:
+        "201":
+          description: Accepted message and authoritative sender profile, committed together
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChatAccepted" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "400": { $ref: "#/components/responses/InvalidInput" }
+        "404":
+          description: Room not found or expired
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "409":
+          description: Membership ended before the message could be accepted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+  /account/rooms/{roomId}/events:
+    get:
+      operationId: streamAccountRoomEvents
+      tags: [rooms]
+      security: [{ AccountSession: [], AccountRoomSession: [] }]
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+        - $ref: "#/components/parameters/RoomSessionHeader"
+      responses:
+        "200":
+          description: Authenticated room.snapshot and chat.accepted SSE events; each reconnect rehydrates history
+          content:
+            text/event-stream:
+              schema: { type: string }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "400": { $ref: "#/components/responses/InvalidInput" }
+        "503": { $ref: "#/components/responses/CapacityError" }
+        "404":
+          description: Room not found or expired
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
   /rooms:
     post:
       operationId: createRoom
@@ -280,45 +360,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-  /rooms/{roomId}/participants/{participantId}/microphone:
-    put:
-      operationId: controlRoomMicrophone
-      tags: [audio]
-      summary: Mute your own mic, or as creator mute or request to unmute another participant
-      description: A creator cannot remotely activate someone else's microphone. The recipient must explicitly accept an unmute request and grant browser microphone permission.
-      security:
-        - ParticipantSession: []
-      parameters:
-        - $ref: "#/components/parameters/RoomId"
-        - name: participantId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/MicrophoneAction" }
-      responses:
-        "200":
-          description: Updated room state, also broadcast to room subscribers
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/RoomState" }
-        "400":
-          $ref: "#/components/responses/InvalidInput"
-        "401":
-          $ref: "#/components/responses/SessionUnauthorized"
-        "403":
-          description: Only the creator can control another participant
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/ErrorResponse" }
-        "404":
-          description: Participant no longer in room
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/ErrorResponse" }
   /rooms/{roomId}/events:
     get:
       operationId: streamRoomEvents
@@ -420,8 +461,49 @@ paths:
           $ref: "#/components/responses/InvalidInput"
         "401":
           $ref: "#/components/responses/SessionUnauthorized"
+  /rooms/{roomId}/participants/{participantId}/microphone:
+    put:
+      operationId: controlRoomMicrophone
+      tags: [audio]
+      summary: Mute your own mic, or as creator mute or request to unmute another participant
+      description: A creator cannot remotely activate someone else's microphone. The recipient must explicitly accept an unmute request and grant browser microphone permission.
+      security: [{ ParticipantSession: [] }]
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+        - name: participantId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MicrophoneAction" }
+      responses:
+        "200":
+          description: Updated room state, also broadcast to room subscribers
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RoomState" }
+        "400": { $ref: "#/components/responses/InvalidInput" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "403":
+          description: Only the creator may moderate another mic; unmute requires its owner's explicit action
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "404":
+          description: Room or participant no longer present
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
 components:
   securitySchemes:
+    AccountRoomSession:
+      type: apiKey
+      in: header
+      name: X-Room-Session
+      description: Private participant session, checked against the signed-in account and room
     AccountSession:
       type: apiKey
       in: cookie
@@ -450,14 +532,20 @@ components:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
   parameters:
+    RoomSessionHeader:
+      name: X-Room-Session
+      in: header
+      required: true
+      description: Private participant session; must belong to the authenticated account in this room
+      schema: { type: string, format: uuid }
     RoomId:
       name: roomId
       in: path
       required: true
-      description: Case-insensitive 12-character room code
+      description: Case-insensitive six-character Beam code or legacy 12-character room code
       schema:
         type: string
-        pattern: "^[A-Fa-f0-9]{12}$"
+        pattern: "^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$"
     SessionId:
       name: sessionId
       in: path
@@ -472,6 +560,37 @@ components:
       required: [action]
       properties:
         action: { type: string, enum: [mute, unmute, request-unmute] }
+    AccountRoomInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 2, maxLength: 32 }
+        capacity: { type: integer, enum: [2, 4, 9, 12] }
+      required: [name, capacity]
+    ChatInput:
+      type: object
+      additionalProperties: false
+      properties:
+        text: { type: string, minLength: 1, maxLength: 280 }
+        kind: { type: string, enum: [text, reaction] }
+      required: [text, kind]
+    ChatMessage:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        roomId: { type: string }
+        authorId: { type: string, format: uuid }
+        username: { type: string }
+        identity: { $ref: "#/components/schemas/EmojiIdentity" }
+        kind: { type: string, enum: [text, reaction] }
+        text: { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, roomId, authorId, username, identity, kind, text, createdAt]
+    ChatAccepted:
+      type: object
+      properties:
+        message: { $ref: "#/components/schemas/ChatMessage" }
+        profile: { $ref: "#/components/schemas/AccountProfile" }
+      required: [message, profile]
     EmojiIdentity:
       type: object
       properties:
@@ -479,6 +598,12 @@ components:
         gender: { type: string, enum: [Male, Female] }
         color: { type: string, pattern: "^#[0-9a-fA-F]{6}$" }
         hairColor: { type: string, pattern: "^#[0-9a-fA-F]{6}$" }
+        portraitId:
+          type: [string, "null"]
+          description: Omitted preserves old artwork; null clears it on explicit manual identity edits
+        currentMood:
+          type: [string, "null"]
+          enum: [laughing, tears_of_joy, crying, rofl, heart_eyes, affectionate, melting, grateful, thinking, winking, neutral, smiling_eyes, delighted, grinning, smiling, kissing, playful_wink, skeptical, null]
       required: [emojiId, gender, color, hairColor]
     EmojiOption:
       type: object
@@ -563,6 +688,9 @@ components:
     Participant:
       type: object
       properties:
+        micEnabled: { type: boolean }
+        hostMuted: { type: boolean }
+        unmuteRequested: { type: boolean }
         participantId:
           type: string
           format: uuid
@@ -576,24 +704,23 @@ components:
             - $ref: "#/components/schemas/EmojiIdentity"
             - type: "null"
         isRegistered: { type: boolean }
-        micEnabled: { type: boolean }
-        hostMuted: { type: boolean }
-        unmuteRequested: { type: boolean }
       required: [participantId, displayName, joinedAt, identity, isRegistered, micEnabled, hostMuted, unmuteRequested]
     RoomState:
       type: object
       properties:
+        hostParticipantId: { type: string, format: uuid }
+        name: { type: string }
+        capacity: { type: integer }
         roomId:
           type: string
         createdAt:
           type: string
           format: date-time
-        hostParticipantId: { type: string, format: uuid }
         participants:
           type: array
           items:
             $ref: "#/components/schemas/Participant"
-      required: [roomId, createdAt, hostParticipantId, participants]
+      required: [roomId, createdAt, participants, name, capacity, hostParticipantId]
     RoomSession:
       type: object
       properties:

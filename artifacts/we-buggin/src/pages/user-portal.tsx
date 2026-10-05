@@ -137,7 +137,7 @@ export default function UserPortal({ userId }: { userId: string }) {
               <div className="sticker bg-primary/15 p-5">
                 <h2 className="font-display text-3xl font-extrabold">Start a room</h2>
                 <p className="mt-1 text-sm">You get a room code to share with friends.</p>
-                <button type="button" className="btn btn-pink mt-4" disabled={!profile || create.isPending} onClick={() => create.mutate(undefined, { onSuccess: enter })} data-testid="button-create-room">
+                <button type="button" className="btn btn-pink mt-4" disabled={!profile || create.isPending} onClick={() => create.mutate({}, { onSuccess: enter })} data-testid="button-create-room">
                   {create.isPending ? 'Opening...' : 'Create room'}
                 </button>
               </div>

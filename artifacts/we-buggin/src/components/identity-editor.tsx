@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { getGetEmojiCatalogQueryKey, useGetEmojiCatalog, type EmojiOption } from '@workspace/api-client-react';
 import { IdentityAvatar, emojiImageUrl, type Identity } from '@/lib/identity';
+import { beamIdentity } from '@/beam/services/beamService';
+import { getPortrait, selectAvatarType } from '@/beam/portraits';
 
 const PAGE = 90;
 
@@ -84,7 +86,15 @@ export function EmojiPicker({ value, color, onSelect, facesOnly = false, disable
 }
 
 export function IdentityEditor({ value, onChange }: { value: Identity; onChange: (v: Identity) => void }) {
-  const set = (p: Partial<Identity>) => onChange({ ...value, ...p });
+  const avatarType = (gender: Identity['gender']): Identity => {
+    if (value.gender === gender) return value;
+    const selected = selectAvatarType(beamIdentity(value), gender === 'Male' ? 'spiked' : 'ponytails');
+    const portrait = getPortrait(selected);
+    return {
+      ...value, gender, portraitId: portrait.id, currentMood: selected.currentMood,
+      emojiId: [...portrait.emoji].map(c => c.codePointAt(0)!.toString(16).toUpperCase()).join('-'),
+    };
+  };
   return (
     <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
       <div className="lg:sticky lg:top-6 lg:self-start">
@@ -104,11 +114,11 @@ export function IdentityEditor({ value, onChange }: { value: Identity; onChange:
                 role="radio"
                 aria-checked={value.gender === g}
                 aria-label={g === 'Male' ? 'Male / Spiky hair' : 'Female / Ponytail'}
-                onClick={() => set({ gender: g })}
+                onClick={() => onChange(avatarType(g))}
                 className={`btn flex-col py-4 ${value.gender === g ? 'btn-pink' : ''}`}
                 data-testid={`button-gender-${g.toLowerCase()}`}
               >
-                <IdentityAvatar identity={{ ...value, gender: g }} size={80} />
+                <IdentityAvatar identity={avatarType(g)} size={80} />
                 <span>{g === 'Male' ? 'Male / Spiky hair' : 'Female / Ponytail'}</span>
               </button>
             ))}

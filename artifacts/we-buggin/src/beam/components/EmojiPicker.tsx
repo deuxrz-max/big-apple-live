@@ -9,12 +9,14 @@ interface Props {
   initialHandle?: string;
   initialIdentity?: Identity;
   confirmLabel?: string;
+  lockHandle?: boolean;
   /** Return an error string to keep the picker open. */
-  onConfirm: (handle: string, identity: Identity) => string | null | void;
+  onConfirm: (handle: string, identity: Identity) => string | null | void | Promise<string | null | void>;
   onCancel: () => void;
 }
 
-export function EmojiPicker({ title = 'Pick your profile picture', initialHandle = '', initialIdentity, confirmLabel = 'Confirm picture', onConfirm, onCancel }: Props) {
+export function EmojiPicker({ title = 'Pick your profile picture', initialHandle = '', initialIdentity, confirmLabel = 'Confirm picture', lockHandle = false, onConfirm, onCancel }: Props) {
+  const [busy, setBusy] = useState(false);
   const [handle, setHandle] = useState(initialHandle);
   const [identity, setIdentity] = useState<Identity>(initialIdentity ?? portraitIdentity('ponytail-neutral'));
   const [error, setError] = useState<string | null>(null);
@@ -53,16 +55,21 @@ export function EmojiPicker({ title = 'Pick your profile picture', initialHandle
     }
   };
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
+    if (busy) return;
     const v = validateHandle(handle);
     if (v) {
       setError(v);
       handleRef.current?.focus();
       return;
     }
-    const res = onConfirm(handle.trim(), identity);
-    if (typeof res === 'string') setError(res);
+    setBusy(true);
+    try {
+      const res = await onConfirm(handle.trim(), identity);
+      if (typeof res === 'string') setError(res);
+    } catch (e) { setError(e instanceof Error ? e.message : 'Could not save picture.'); }
+    finally { setBusy(false); }
   };
 
   return (
@@ -89,12 +96,14 @@ export function EmojiPicker({ title = 'Pick your profile picture', initialHandle
                 ref={handleRef}
                 className="bm-input bm-input-box"
                 value={handle}
-                maxLength={12}
+                readOnly={lockHandle}
+                disabled={busy}
+                maxLength={24}
                 onChange={(e) => {
                   setHandle(e.target.value);
                   setError(null);
                 }}
-                placeholder="2–12 characters"
+                placeholder="3–24 characters"
                 autoComplete="off"
                 aria-invalid={!!error}
                 data-testid="input-handle"
@@ -134,7 +143,7 @@ export function EmojiPicker({ title = 'Pick your profile picture', initialHandle
             <button type="button" className="bm-btn" onClick={onCancel}>
               Cancel
             </button>
-            <button type="submit" className="bm-btn bm-btn-primary" data-testid="button-confirm-identity">
+            <button type="submit" disabled={busy} className="bm-btn bm-btn-primary" data-testid="button-confirm-identity">
               {confirmLabel}
             </button>
           </footer>

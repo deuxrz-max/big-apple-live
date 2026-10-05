@@ -5,30 +5,37 @@ export const REACTIONS = ['🔥', '😂', '💀', '👀', '🫡', '❤️'];
 const TRAY = [...Object.keys(FACE_MOODS), '😀', '😎', '🥲', '🤝', '🙏', '💯', '✨', '🎧', '🫠', '🤯', '🥶', '🍕', '🪩', '🛹', '🌙', '👑'];
 
 interface Props {
-  onSend: (text: string) => boolean;
-  onReact: (emoji: string) => void;
+  onSend: (text: string) => Promise<boolean>;
+  onReact: (emoji: string) => Promise<unknown>;
   error?: string | null;
 }
 
 export function MessageInput({ onSend, onReact, error }: Props) {
   const [text, setText] = useState('');
   const [tray, setTray] = useState(false);
+  const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const empty = text.trim().length === 0;
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
-    if (empty) return;
-    if (!onSend(text)) return;
-    setText('');
-    setTray(false);
+    if (empty || busy) return;
+    setBusy(true);
+    try {
+      if (!await onSend(text)) return;
+      setText('');
+      setTray(false);
+    } finally { setBusy(false); }
   };
 
   return (
     <div className="bm-composer">
       <div className="bm-reacts" role="group" aria-label="Quick reactions">
         {REACTIONS.map((r) => (
-          <button key={r} type="button" className="bm-react-btn" onClick={() => onReact(r)} aria-label={`React ${r}`} data-testid={`button-react-${r}`}>
+          <button key={r} type="button" disabled={busy} className="bm-react-btn" onClick={async () => {
+            setBusy(true);
+            try { await onReact(r); } finally { setBusy(false); }
+          }} aria-label={`React ${r}`} data-testid={`button-react-${r}`}>
             {r}
           </button>
         ))}
@@ -65,6 +72,7 @@ export function MessageInput({ onSend, onReact, error }: Props) {
           ref={inputRef}
           className="bm-input"
           value={text}
+          disabled={busy}
           onChange={(e) => setText(e.target.value)}
           placeholder="Say it…"
           maxLength={280}
@@ -72,7 +80,7 @@ export function MessageInput({ onSend, onReact, error }: Props) {
           autoComplete="off"
           data-testid="input-message"
         />
-        <button type="submit" className="bm-btn bm-btn-primary" disabled={empty} data-testid="button-send">
+        <button type="submit" className="bm-btn bm-btn-primary" disabled={empty || busy} data-testid="button-send">
           Send
         </button>
       </form>

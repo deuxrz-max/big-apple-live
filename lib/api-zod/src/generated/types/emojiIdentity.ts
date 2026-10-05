@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { EmojiIdentityCurrentMood } from './emojiIdentityCurrentMood';
 import type { EmojiIdentityGender } from './emojiIdentityGender';
 
 export interface EmojiIdentity {
@@ -18,4 +19,11 @@ export interface EmojiIdentity {
   color: string;
   /** @pattern ^#[0-9a-fA-F]{6}$ */
   hairColor: string;
+  /**
+     * Omitted preserves old artwork; null clears it on explicit manual identity edits
+     * @nullable
+     */
+  portraitId?: string | null;
+  /** @nullable */
+  currentMood?: EmojiIdentityCurrentMood;
 }

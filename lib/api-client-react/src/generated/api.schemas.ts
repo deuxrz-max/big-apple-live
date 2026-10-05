@@ -18,12 +18,83 @@ export interface MicrophoneAction {
   action: MicrophoneActionAction;
 }
 
+export type AccountRoomInputCapacity = typeof AccountRoomInputCapacity[keyof typeof AccountRoomInputCapacity];
+
+
+export const AccountRoomInputCapacity = {
+  NUMBER_2: 2,
+  NUMBER_4: 4,
+  NUMBER_9: 9,
+  NUMBER_12: 12,
+} as const;
+
+export interface AccountRoomInput {
+  /**
+     * @minLength 2
+     * @maxLength 32
+     */
+  name: string;
+  capacity: AccountRoomInputCapacity;
+}
+
+export type ChatInputKind = typeof ChatInputKind[keyof typeof ChatInputKind];
+
+
+export const ChatInputKind = {
+  text: 'text',
+  reaction: 'reaction',
+} as const;
+
+export interface ChatInput {
+  /**
+     * @minLength 1
+     * @maxLength 280
+     */
+  text: string;
+  kind: ChatInputKind;
+}
+
+export type ChatMessageKind = typeof ChatMessageKind[keyof typeof ChatMessageKind];
+
+
+export const ChatMessageKind = {
+  text: 'text',
+  reaction: 'reaction',
+} as const;
+
 export type EmojiIdentityGender = typeof EmojiIdentityGender[keyof typeof EmojiIdentityGender];
 
 
 export const EmojiIdentityGender = {
   Male: 'Male',
   Female: 'Female',
+} as const;
+
+/**
+ * @nullable
+ */
+export type EmojiIdentityCurrentMood = typeof EmojiIdentityCurrentMood[keyof typeof EmojiIdentityCurrentMood] | null;
+
+
+export const EmojiIdentityCurrentMood = {
+  laughing: 'laughing',
+  tears_of_joy: 'tears_of_joy',
+  crying: 'crying',
+  rofl: 'rofl',
+  heart_eyes: 'heart_eyes',
+  affectionate: 'affectionate',
+  melting: 'melting',
+  grateful: 'grateful',
+  thinking: 'thinking',
+  winking: 'winking',
+  neutral: 'neutral',
+  smiling_eyes: 'smiling_eyes',
+  delighted: 'delighted',
+  grinning: 'grinning',
+  smiling: 'smiling',
+  kissing: 'kissing',
+  playful_wink: 'playful_wink',
+  skeptical: 'skeptical',
 } as const;
 
 export interface EmojiIdentity {
@@ -37,6 +108,35 @@ export interface EmojiIdentity {
   color: string;
   /** @pattern ^#[0-9a-fA-F]{6}$ */
   hairColor: string;
+  /**
+     * Omitted preserves old artwork; null clears it on explicit manual identity edits
+     * @nullable
+     */
+  portraitId?: string | null;
+  /** @nullable */
+  currentMood?: EmojiIdentityCurrentMood;
+}
+
+export interface ChatMessage {
+  id: string;
+  roomId: string;
+  authorId: string;
+  username: string;
+  identity: EmojiIdentity;
+  kind: ChatMessageKind;
+  text: string;
+  createdAt: string;
+}
+
+export interface AccountProfile {
+  username: string;
+  identity: EmojiIdentity;
+  updatedAt: string;
+}
+
+export interface ChatAccepted {
+  message: ChatMessage;
+  profile: AccountProfile;
 }
 
 export interface EmojiOption {
@@ -50,12 +150,6 @@ export interface ProfileInput {
   /** @pattern ^[A-Za-z0-9_]{3,24}$ */
   username: string;
   identity: EmojiIdentity;
-}
-
-export interface AccountProfile {
-  username: string;
-  identity: EmojiIdentity;
-  updatedAt: string;
 }
 
 export interface ProfileEnvelope {
@@ -107,20 +201,22 @@ export interface RoomJoinInput {
 }
 
 export interface Participant {
+  micEnabled: boolean;
+  hostMuted: boolean;
+  unmuteRequested: boolean;
   participantId: string;
   displayName: string;
   joinedAt: string;
   identity: EmojiIdentity | null;
   isRegistered: boolean;
-  micEnabled: boolean;
-  hostMuted: boolean;
-  unmuteRequested: boolean;
 }
 
 export interface RoomState {
+  hostParticipantId: string;
+  name: string;
+  capacity: number;
   roomId: string;
   createdAt: string;
-  hostParticipantId: string;
   participants: Participant[];
 }
 
@@ -148,4 +244,9 @@ export type InvalidInputResponse = ErrorResponse;
  * Service or event subscriber capacity reached
  */
 export type CapacityErrorResponse = ErrorResponse;
+
+/**
+ * Private participant session; must belong to the authenticated account in this room
+ */
+export type RoomSessionHeaderParameter = string;
 

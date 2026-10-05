@@ -15,6 +15,15 @@ depending on clipboard.readText. Keep synthetic-account recovery information
 through runner-supported mechanisms, rather than only notebook variables.
 Never put login claims, credentials, or personal identifiers in project memory.
 
+Runner resets are not limited to clipboard calls. Keep completed browser
+observations distinct from unexecuted checks and from server-side test evidence.
+
+**Why:** A runner reset can erase authenticated contexts mid-flow without an app
+failure, and passing handler tests do not prove the interrupted browser steps.
+
+**How to apply:** Report browser and server checks separately; never describe a
+partial browser run as a full pass.
+
 Treat a current DOM snapshot and a settled screenshot as separate evidence.
 
 **Why:** Avatar test IDs reflected an edited identity while an immediate

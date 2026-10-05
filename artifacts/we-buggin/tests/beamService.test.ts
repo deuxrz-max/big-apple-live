@@ -17,7 +17,8 @@ Object.defineProperty(globalThis, 'localStorage', {
     },
   },
 });
-const service = await import('../src/beam/services/beamService');
+// Legacy browser saves remain readable in their isolated offline adapter.
+const service = await import('../src/beam/services/legacyBeamService');
 const identity = { emoji: '🌀', style: 'none' as const, hairColor: '#111111' };
 const active = () => {
   const state = service.getState();

@@ -1,5 +1,4 @@
 import { Link } from 'wouter';
-import { resetDemo } from '../services/beamService';
 
 export function Landing() {
   return (
@@ -23,10 +22,7 @@ export function Landing() {
         </div>
       </div>
       <p className="bm-demo-note">
-        Frontend demo / simulated participants. Try code <b>LATEBG</b> (6 people) or <b>FULL12</b> (full).{' '}
-        <button type="button" className="bm-link-btn" onClick={resetDemo} data-testid="button-reset-demo">
-          Reset demo data
-        </button>
+        Chat with real people. Share your beam code with friends.
       </p>
     </main>
   );

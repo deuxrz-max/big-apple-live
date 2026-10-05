@@ -10,6 +10,8 @@ export const accountProfiles = pgTable("account_profiles", {
   gender: text("gender", { enum: ["Male", "Female"] }).notNull(),
   color: text("color").notNull(),
   hairColor: text("hair_color").notNull(),
+  portraitId: text("portrait_id"),
+  currentMood: text("current_mood"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 export const insertAccountProfileSchema = createInsertSchema(accountProfiles);

@@ -19,10 +19,10 @@ export function useBeamRoom(code: string | undefined): {
 /** Wraps a service action; surfaces BeamError messages as state. */
 export function useAction() {
   const [error, setError] = useState<string | null>(null);
-  const run = useCallback(<T,>(fn: () => T): T | undefined => {
+  const run = useCallback(async <T,>(fn: () => T | Promise<T>): Promise<T | undefined> => {
     try {
       setError(null);
-      return fn();
+      return await fn();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.');
       return undefined;

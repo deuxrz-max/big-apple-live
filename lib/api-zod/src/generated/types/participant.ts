@@ -8,12 +8,12 @@
 import type { EmojiIdentity } from './emojiIdentity';
 
 export interface Participant {
+  micEnabled: boolean;
+  hostMuted: boolean;
+  unmuteRequested: boolean;
   participantId: string;
   displayName: string;
   joinedAt: Date;
   identity: EmojiIdentity | null;
   isRegistered: boolean;
-  micEnabled: boolean;
-  hostMuted: boolean;
-  unmuteRequested: boolean;
 }

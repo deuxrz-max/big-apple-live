@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { ClerkProvider, SignIn, SignUp, Show, useClerk, useUser } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
@@ -7,11 +7,11 @@ import { Redirect, Route, Switch, useLocation, useParams, Router as WouterRouter
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Wordmark } from '@/components/brand';
 import NotFound from '@/pages/not-found';
-import Landing from '@/pages/landing';
 import UserPortal from '@/pages/user-portal';
 import RoomPage from '@/pages/room';
 import { clearAllCreds, loadCreds } from '@/lib/room-creds';
 import BeamApp from '@/beam/BeamApp';
+import { configureBeamAccount } from '@/beam/services/beamService';
 import DiscoveryHome from '@/discovery/DiscoveryHome';
 
 const queryClient = new QueryClient();
@@ -106,6 +106,7 @@ function ClerkQueryClientCacheInvalidator() {
   useEffect(() => {
     const unsubscribe = addListener(({ user }) => {
       const userId = user?.id ?? null;
+      configureBeamAccount(userId);
       if (prevUserIdRef.current !== undefined && prevUserIdRef.current !== userId) {
         qc.clear();
         clearAllCreds();
@@ -122,7 +123,7 @@ function HomeRedirect() {
   return (
     <>
       <Show when="signed-in"><Redirect to="/home" /></Show>
-      <Show when="signed-out"><Landing /></Show>
+      <Show when="signed-out"><BeamApp /></Show>
     </>
   );
 }
@@ -194,6 +195,8 @@ function ClerkProviderWithRoutes() {
         <RoutedErrorBoundary>
           <Switch>
             <Route path="/" component={HomeRedirect} />
+            <Route path="/beams" component={BeamApp} />
+            <Route path="/beams/*?" component={BeamApp} />
             <Route path="/legacy" component={HomeRedirect} />
             <Route path="/sign-in/*?" component={SignInPage} />
             <Route path="/sign-up/*?" component={SignUpPage} />
@@ -209,19 +212,7 @@ function ClerkProviderWithRoutes() {
 }
 
 function AppRoutes() {
-  const [path] = useLocation();
-  // Root callbacks must mount Clerk to consume its handshake. Keep it mounted
-  // even if Clerk removes the query parameters before the session is ready.
-  const [authCallback, setAuthCallback] = useState(() => {
-    const query = new URLSearchParams(window.location.search);
-    return query.has('__clerk_handshake') || query.has('__clerk_db_jwt') || query.has('__clerk_ticket');
-  });
-  useEffect(() => {
-    if (path !== '/') setAuthCallback(false);
-  }, [path]);
-  // The mock beam frontend is independent of auth, API, and real room sessions.
-  // Keep the existing authenticated account/voice routes intact.
-  if ((path === '/' && !authCallback) || path === '/beams' || path.startsWith('/beams/')) return <BeamApp />;
+  // Keep Clerk mounted on every route, including root auth handshakes.
   return <ClerkProviderWithRoutes />;
 }
 

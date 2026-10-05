@@ -21,7 +21,9 @@ export const GetMyProfileResponse = zod.object({
   "emojiId": zod.string().min(1).max(getMyProfileResponseProfileOneIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
   "color": zod.string().regex(getMyProfileResponseProfileOneIdentityColorRegExp),
-  "hairColor": zod.string().regex(getMyProfileResponseProfileOneIdentityHairColorRegExp)
+  "hairColor": zod.string().regex(getMyProfileResponseProfileOneIdentityHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
 }),
   "updatedAt": zod.coerce.date()
 }),zod.null()])
@@ -41,7 +43,9 @@ export const SaveMyProfileBody = zod.object({
   "emojiId": zod.string().min(1).max(saveMyProfileBodyIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
   "color": zod.string().regex(saveMyProfileBodyIdentityColorRegExp),
-  "hairColor": zod.string().regex(saveMyProfileBodyIdentityHairColorRegExp)
+  "hairColor": zod.string().regex(saveMyProfileBodyIdentityHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
 })
 })
 
@@ -57,7 +61,9 @@ export const SaveMyProfileResponse = zod.object({
   "emojiId": zod.string().min(1).max(saveMyProfileResponseIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
   "color": zod.string().regex(saveMyProfileResponseIdentityColorRegExp),
-  "hairColor": zod.string().regex(saveMyProfileResponseIdentityHairColorRegExp)
+  "hairColor": zod.string().regex(saveMyProfileResponseIdentityHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
 }),
   "updatedAt": zod.coerce.date()
 })
@@ -83,6 +89,16 @@ export const GetEmojiImageParams = zod.object({
 export const GetEmojiImageResponse = zod.unknown()
 
 
+export const createAccountRoomBodyNameMin = 2;
+export const createAccountRoomBodyNameMax = 32;
+
+
+
+export const CreateAccountRoomBody = zod.object({
+  "name": zod.string().min(createAccountRoomBodyNameMin).max(createAccountRoomBodyNameMax),
+  "capacity": zod.union([zod.literal(2),zod.literal(4),zod.literal(9),zod.literal(12)])
+})
+
 export const createAccountRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax = 100;
 
 export const createAccountRoomResponseRoomParticipantsItemIdentityOneColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -93,10 +109,15 @@ export const CreateAccountRoomResponse = zod.object({
   "participantSessionId": zod.string().uuid(),
   "participantId": zod.string().uuid(),
   "room": zod.object({
+  "hostParticipantId": zod.string().uuid(),
+  "name": zod.string(),
+  "capacity": zod.number().int(),
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
-  "hostParticipantId": zod.string().uuid(),
   "participants": zod.array(zod.object({
+  "micEnabled": zod.boolean(),
+  "hostMuted": zod.boolean(),
+  "unmuteRequested": zod.boolean(),
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
   "joinedAt": zod.coerce.date(),
@@ -104,22 +125,21 @@ export const CreateAccountRoomResponse = zod.object({
   "emojiId": zod.string().min(1).max(createAccountRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
   "color": zod.string().regex(createAccountRoomResponseRoomParticipantsItemIdentityOneColorRegExp),
-  "hairColor": zod.string().regex(createAccountRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp)
+  "hairColor": zod.string().regex(createAccountRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
 }),zod.null()]),
-  "isRegistered": zod.boolean(),
-  "micEnabled": zod.boolean(),
-  "hostMuted": zod.boolean(),
-  "unmuteRequested": zod.boolean()
+  "isRegistered": zod.boolean()
 }))
 })
 })
 
 
-export const joinAccountRoomPathRoomIdRegExp = new RegExp('^[A-Fa-f0-9]{12}$');
+export const joinAccountRoomPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
 
 
 export const JoinAccountRoomParams = zod.object({
-  "roomId": zod.coerce.string().regex(joinAccountRoomPathRoomIdRegExp).describe('Case-insensitive 12-character room code')
+  "roomId": zod.coerce.string().regex(joinAccountRoomPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
 })
 
 export const joinAccountRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax = 100;
@@ -132,10 +152,15 @@ export const JoinAccountRoomResponse = zod.object({
   "participantSessionId": zod.string().uuid(),
   "participantId": zod.string().uuid(),
   "room": zod.object({
+  "hostParticipantId": zod.string().uuid(),
+  "name": zod.string(),
+  "capacity": zod.number().int(),
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
-  "hostParticipantId": zod.string().uuid(),
   "participants": zod.array(zod.object({
+  "micEnabled": zod.boolean(),
+  "hostMuted": zod.boolean(),
+  "unmuteRequested": zod.boolean(),
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
   "joinedAt": zod.coerce.date(),
@@ -143,12 +168,11 @@ export const JoinAccountRoomResponse = zod.object({
   "emojiId": zod.string().min(1).max(joinAccountRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
   "color": zod.string().regex(joinAccountRoomResponseRoomParticipantsItemIdentityOneColorRegExp),
-  "hairColor": zod.string().regex(joinAccountRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp)
+  "hairColor": zod.string().regex(joinAccountRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
 }),zod.null()]),
-  "isRegistered": zod.boolean(),
-  "micEnabled": zod.boolean(),
-  "hostMuted": zod.boolean(),
-  "unmuteRequested": zod.boolean()
+  "isRegistered": zod.boolean()
 }))
 })
 })
@@ -161,6 +185,120 @@ export const JoinAccountRoomResponse = zod.object({
 export const HealthCheckResponse = zod.object({
   "status": zod.string()
 })
+
+
+export const getRoomMessagesPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
+
+
+export const GetRoomMessagesParams = zod.object({
+  "roomId": zod.coerce.string().regex(getRoomMessagesPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
+})
+
+export const GetRoomMessagesHeader = zod.object({
+  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+})
+
+export const getRoomMessagesResponseIdentityEmojiIdMax = 100;
+
+export const getRoomMessagesResponseIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getRoomMessagesResponseIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
+export const GetRoomMessagesResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "roomId": zod.string(),
+  "authorId": zod.string().uuid(),
+  "username": zod.string(),
+  "identity": zod.object({
+  "emojiId": zod.string().min(1).max(getRoomMessagesResponseIdentityEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(getRoomMessagesResponseIdentityColorRegExp),
+  "hairColor": zod.string().regex(getRoomMessagesResponseIdentityHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
+}),
+  "kind": zod.enum(['text', 'reaction']),
+  "text": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const GetRoomMessagesResponse = zod.array(GetRoomMessagesResponseItem)
+
+
+export const sendRoomMessagePathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
+
+
+export const SendRoomMessageParams = zod.object({
+  "roomId": zod.coerce.string().regex(sendRoomMessagePathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
+})
+
+export const SendRoomMessageHeader = zod.object({
+  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+})
+
+export const sendRoomMessageBodyTextMax = 280;
+
+
+
+export const SendRoomMessageBody = zod.object({
+  "text": zod.string().min(1).max(sendRoomMessageBodyTextMax),
+  "kind": zod.enum(['text', 'reaction'])
+})
+
+export const sendRoomMessageResponseMessageIdentityEmojiIdMax = 100;
+
+export const sendRoomMessageResponseMessageIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const sendRoomMessageResponseMessageIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const sendRoomMessageResponseProfileIdentityEmojiIdMax = 100;
+
+export const sendRoomMessageResponseProfileIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const sendRoomMessageResponseProfileIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
+export const SendRoomMessageResponse = zod.object({
+  "message": zod.object({
+  "id": zod.string().uuid(),
+  "roomId": zod.string(),
+  "authorId": zod.string().uuid(),
+  "username": zod.string(),
+  "identity": zod.object({
+  "emojiId": zod.string().min(1).max(sendRoomMessageResponseMessageIdentityEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(sendRoomMessageResponseMessageIdentityColorRegExp),
+  "hairColor": zod.string().regex(sendRoomMessageResponseMessageIdentityHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
+}),
+  "kind": zod.enum(['text', 'reaction']),
+  "text": zod.string(),
+  "createdAt": zod.coerce.date()
+}),
+  "profile": zod.object({
+  "username": zod.string(),
+  "identity": zod.object({
+  "emojiId": zod.string().min(1).max(sendRoomMessageResponseProfileIdentityEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(sendRoomMessageResponseProfileIdentityColorRegExp),
+  "hairColor": zod.string().regex(sendRoomMessageResponseProfileIdentityHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
+}),
+  "updatedAt": zod.coerce.date()
+})
+})
+
+
+export const streamAccountRoomEventsPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
+
+
+export const StreamAccountRoomEventsParams = zod.object({
+  "roomId": zod.coerce.string().regex(streamAccountRoomEventsPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
+})
+
+export const StreamAccountRoomEventsHeader = zod.object({
+  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+})
+
+export const StreamAccountRoomEventsResponse = zod.unknown()
 
 
 /**
@@ -184,10 +322,15 @@ export const CreateRoomResponse = zod.object({
   "participantSessionId": zod.string().uuid(),
   "participantId": zod.string().uuid(),
   "room": zod.object({
+  "hostParticipantId": zod.string().uuid(),
+  "name": zod.string(),
+  "capacity": zod.number().int(),
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
-  "hostParticipantId": zod.string().uuid(),
   "participants": zod.array(zod.object({
+  "micEnabled": zod.boolean(),
+  "hostMuted": zod.boolean(),
+  "unmuteRequested": zod.boolean(),
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
   "joinedAt": zod.coerce.date(),
@@ -195,12 +338,11 @@ export const CreateRoomResponse = zod.object({
   "emojiId": zod.string().min(1).max(createRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
   "color": zod.string().regex(createRoomResponseRoomParticipantsItemIdentityOneColorRegExp),
-  "hairColor": zod.string().regex(createRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp)
+  "hairColor": zod.string().regex(createRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
 }),zod.null()]),
-  "isRegistered": zod.boolean(),
-  "micEnabled": zod.boolean(),
-  "hostMuted": zod.boolean(),
-  "unmuteRequested": zod.boolean()
+  "isRegistered": zod.boolean()
 }))
 })
 })
@@ -209,11 +351,11 @@ export const CreateRoomResponse = zod.object({
 /**
  * @summary Get a room and its active participants
  */
-export const getRoomPathRoomIdRegExp = new RegExp('^[A-Fa-f0-9]{12}$');
+export const getRoomPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
 
 
 export const GetRoomParams = zod.object({
-  "roomId": zod.coerce.string().regex(getRoomPathRoomIdRegExp).describe('Case-insensitive 12-character room code')
+  "roomId": zod.coerce.string().regex(getRoomPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
 })
 
 export const getRoomResponseParticipantsItemIdentityOneEmojiIdMax = 100;
@@ -223,10 +365,15 @@ export const getRoomResponseParticipantsItemIdentityOneHairColorRegExp = new Reg
 
 
 export const GetRoomResponse = zod.object({
+  "hostParticipantId": zod.string().uuid(),
+  "name": zod.string(),
+  "capacity": zod.number().int(),
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
-  "hostParticipantId": zod.string().uuid(),
   "participants": zod.array(zod.object({
+  "micEnabled": zod.boolean(),
+  "hostMuted": zod.boolean(),
+  "unmuteRequested": zod.boolean(),
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
   "joinedAt": zod.coerce.date(),
@@ -234,12 +381,11 @@ export const GetRoomResponse = zod.object({
   "emojiId": zod.string().min(1).max(getRoomResponseParticipantsItemIdentityOneEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
   "color": zod.string().regex(getRoomResponseParticipantsItemIdentityOneColorRegExp),
-  "hairColor": zod.string().regex(getRoomResponseParticipantsItemIdentityOneHairColorRegExp)
+  "hairColor": zod.string().regex(getRoomResponseParticipantsItemIdentityOneHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
 }),zod.null()]),
-  "isRegistered": zod.boolean(),
-  "micEnabled": zod.boolean(),
-  "hostMuted": zod.boolean(),
-  "unmuteRequested": zod.boolean()
+  "isRegistered": zod.boolean()
 }))
 })
 
@@ -247,11 +393,11 @@ export const GetRoomResponse = zod.object({
 /**
  * @summary Join a room as a new participant session
  */
-export const joinRoomPathRoomIdRegExp = new RegExp('^[A-Fa-f0-9]{12}$');
+export const joinRoomPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
 
 
 export const JoinRoomParams = zod.object({
-  "roomId": zod.coerce.string().regex(joinRoomPathRoomIdRegExp).describe('Case-insensitive 12-character room code')
+  "roomId": zod.coerce.string().regex(joinRoomPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
 })
 
 export const joinRoomBodyDisplayNameMax = 40;
@@ -272,10 +418,15 @@ export const JoinRoomResponse = zod.object({
   "participantSessionId": zod.string().uuid(),
   "participantId": zod.string().uuid(),
   "room": zod.object({
+  "hostParticipantId": zod.string().uuid(),
+  "name": zod.string(),
+  "capacity": zod.number().int(),
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
-  "hostParticipantId": zod.string().uuid(),
   "participants": zod.array(zod.object({
+  "micEnabled": zod.boolean(),
+  "hostMuted": zod.boolean(),
+  "unmuteRequested": zod.boolean(),
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
   "joinedAt": zod.coerce.date(),
@@ -283,12 +434,11 @@ export const JoinRoomResponse = zod.object({
   "emojiId": zod.string().min(1).max(joinRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
   "color": zod.string().regex(joinRoomResponseRoomParticipantsItemIdentityOneColorRegExp),
-  "hairColor": zod.string().regex(joinRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp)
+  "hairColor": zod.string().regex(joinRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
 }),zod.null()]),
-  "isRegistered": zod.boolean(),
-  "micEnabled": zod.boolean(),
-  "hostMuted": zod.boolean(),
-  "unmuteRequested": zod.boolean()
+  "isRegistered": zod.boolean()
 }))
 })
 })
@@ -298,11 +448,11 @@ export const JoinRoomResponse = zod.object({
  * Send periodically; participant sessions expire after 90 seconds without a heartbeat.
  * @summary Keep a participant session active
  */
-export const heartbeatParticipantPathRoomIdRegExp = new RegExp('^[A-Fa-f0-9]{12}$');
+export const heartbeatParticipantPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
 
 
 export const HeartbeatParticipantParams = zod.object({
-  "roomId": zod.coerce.string().regex(heartbeatParticipantPathRoomIdRegExp).describe('Case-insensitive 12-character room code'),
+  "roomId": zod.coerce.string().regex(heartbeatParticipantPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code'),
   "sessionId": zod.coerce.string().uuid()
 })
 
@@ -313,6 +463,9 @@ export const heartbeatParticipantResponseIdentityOneHairColorRegExp = new RegExp
 
 
 export const HeartbeatParticipantResponse = zod.object({
+  "micEnabled": zod.boolean(),
+  "hostMuted": zod.boolean(),
+  "unmuteRequested": zod.boolean(),
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
   "joinedAt": zod.coerce.date(),
@@ -320,23 +473,22 @@ export const HeartbeatParticipantResponse = zod.object({
   "emojiId": zod.string().min(1).max(heartbeatParticipantResponseIdentityOneEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
   "color": zod.string().regex(heartbeatParticipantResponseIdentityOneColorRegExp),
-  "hairColor": zod.string().regex(heartbeatParticipantResponseIdentityOneHairColorRegExp)
+  "hairColor": zod.string().regex(heartbeatParticipantResponseIdentityOneHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
 }),zod.null()]),
-  "isRegistered": zod.boolean(),
-  "micEnabled": zod.boolean(),
-  "hostMuted": zod.boolean(),
-  "unmuteRequested": zod.boolean()
+  "isRegistered": zod.boolean()
 })
 
 
 /**
  * @summary End a participant session
  */
-export const leaveRoomPathRoomIdRegExp = new RegExp('^[A-Fa-f0-9]{12}$');
+export const leaveRoomPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
 
 
 export const LeaveRoomParams = zod.object({
-  "roomId": zod.coerce.string().regex(leaveRoomPathRoomIdRegExp).describe('Case-insensitive 12-character room code'),
+  "roomId": zod.coerce.string().regex(leaveRoomPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code'),
   "sessionId": zod.coerce.string().uuid()
 })
 
@@ -344,58 +496,14 @@ export const LeaveRoomResponse = zod.void()
 
 
 /**
- * A creator cannot remotely activate someone else's microphone. The recipient must explicitly accept an unmute request and grant browser microphone permission.
- * @summary Mute your own mic, or as creator mute or request to unmute another participant
- */
-export const controlRoomMicrophonePathRoomIdRegExp = new RegExp('^[A-Fa-f0-9]{12}$');
-
-
-export const ControlRoomMicrophoneParams = zod.object({
-  "roomId": zod.coerce.string().regex(controlRoomMicrophonePathRoomIdRegExp).describe('Case-insensitive 12-character room code'),
-  "participantId": zod.coerce.string().uuid()
-})
-
-export const ControlRoomMicrophoneBody = zod.object({
-  "action": zod.enum(['mute', 'unmute', 'request-unmute'])
-})
-
-export const controlRoomMicrophoneResponseParticipantsItemIdentityOneEmojiIdMax = 100;
-
-export const controlRoomMicrophoneResponseParticipantsItemIdentityOneColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
-export const controlRoomMicrophoneResponseParticipantsItemIdentityOneHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
-
-
-export const ControlRoomMicrophoneResponse = zod.object({
-  "roomId": zod.string(),
-  "createdAt": zod.coerce.date(),
-  "hostParticipantId": zod.string().uuid(),
-  "participants": zod.array(zod.object({
-  "participantId": zod.string().uuid(),
-  "displayName": zod.string(),
-  "joinedAt": zod.coerce.date(),
-  "identity": zod.union([zod.object({
-  "emojiId": zod.string().min(1).max(controlRoomMicrophoneResponseParticipantsItemIdentityOneEmojiIdMax),
-  "gender": zod.enum(['Male', 'Female']),
-  "color": zod.string().regex(controlRoomMicrophoneResponseParticipantsItemIdentityOneColorRegExp),
-  "hairColor": zod.string().regex(controlRoomMicrophoneResponseParticipantsItemIdentityOneHairColorRegExp)
-}),zod.null()]),
-  "isRegistered": zod.boolean(),
-  "micEnabled": zod.boolean(),
-  "hostMuted": zod.boolean(),
-  "unmuteRequested": zod.boolean()
-}))
-})
-
-
-/**
  * Opens a server-sent event stream. Sends a room.snapshot event immediately and whenever room membership changes.
  * @summary Subscribe to live room participant snapshots
  */
-export const streamRoomEventsPathRoomIdRegExp = new RegExp('^[A-Fa-f0-9]{12}$');
+export const streamRoomEventsPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
 
 
 export const StreamRoomEventsParams = zod.object({
-  "roomId": zod.coerce.string().regex(streamRoomEventsPathRoomIdRegExp).describe('Case-insensitive 12-character room code')
+  "roomId": zod.coerce.string().regex(streamRoomEventsPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
 })
 
 export const StreamRoomEventsResponse = zod.unknown()
@@ -405,11 +513,11 @@ export const StreamRoomEventsResponse = zod.unknown()
  * Authenticates an existing active room session. Sends audio.ready, audio.peers, audio.signal, and audio.ended events. A new stream replaces an old stream for the same session without changing room membership.
  * @summary Connect or reconnect a participant's WebRTC signaling stream
  */
-export const streamAudioEventsPathRoomIdRegExp = new RegExp('^[A-Fa-f0-9]{12}$');
+export const streamAudioEventsPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
 
 
 export const StreamAudioEventsParams = zod.object({
-  "roomId": zod.coerce.string().regex(streamAudioEventsPathRoomIdRegExp).describe('Case-insensitive 12-character room code')
+  "roomId": zod.coerce.string().regex(streamAudioEventsPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
 })
 
 export const StreamAudioEventsResponse = zod.unknown()
@@ -418,11 +526,11 @@ export const StreamAudioEventsResponse = zod.unknown()
 /**
  * @summary Deliver an SDP offer or answer to one active audio peer in this room
  */
-export const sendAudioSignalPathRoomIdRegExp = new RegExp('^[A-Fa-f0-9]{12}$');
+export const sendAudioSignalPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
 
 
 export const SendAudioSignalParams = zod.object({
-  "roomId": zod.coerce.string().regex(sendAudioSignalPathRoomIdRegExp).describe('Case-insensitive 12-character room code')
+  "roomId": zod.coerce.string().regex(sendAudioSignalPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
 })
 
 export const sendAudioSignalBodyDescriptionSdpMax = 12000;
@@ -445,14 +553,62 @@ export const SendAudioSignalResponse = zod.void()
 /**
  * @summary Disconnect only this participant's audio, leaving room membership intact
  */
-export const disconnectAudioPathRoomIdRegExp = new RegExp('^[A-Fa-f0-9]{12}$');
+export const disconnectAudioPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
 
 
 export const DisconnectAudioParams = zod.object({
-  "roomId": zod.coerce.string().regex(disconnectAudioPathRoomIdRegExp).describe('Case-insensitive 12-character room code'),
+  "roomId": zod.coerce.string().regex(disconnectAudioPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code'),
   "connectionId": zod.coerce.string().uuid()
 })
 
 export const DisconnectAudioResponse = zod.void()
+
+
+/**
+ * A creator cannot remotely activate someone else's microphone. The recipient must explicitly accept an unmute request and grant browser microphone permission.
+ * @summary Mute your own mic, or as creator mute or request to unmute another participant
+ */
+export const controlRoomMicrophonePathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
+
+
+export const ControlRoomMicrophoneParams = zod.object({
+  "roomId": zod.coerce.string().regex(controlRoomMicrophonePathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code'),
+  "participantId": zod.coerce.string().uuid()
+})
+
+export const ControlRoomMicrophoneBody = zod.object({
+  "action": zod.enum(['mute', 'unmute', 'request-unmute'])
+})
+
+export const controlRoomMicrophoneResponseParticipantsItemIdentityOneEmojiIdMax = 100;
+
+export const controlRoomMicrophoneResponseParticipantsItemIdentityOneColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const controlRoomMicrophoneResponseParticipantsItemIdentityOneHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
+export const ControlRoomMicrophoneResponse = zod.object({
+  "hostParticipantId": zod.string().uuid(),
+  "name": zod.string(),
+  "capacity": zod.number().int(),
+  "roomId": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "participants": zod.array(zod.object({
+  "micEnabled": zod.boolean(),
+  "hostMuted": zod.boolean(),
+  "unmuteRequested": zod.boolean(),
+  "participantId": zod.string().uuid(),
+  "displayName": zod.string(),
+  "joinedAt": zod.coerce.date(),
+  "identity": zod.union([zod.object({
+  "emojiId": zod.string().min(1).max(controlRoomMicrophoneResponseParticipantsItemIdentityOneEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(controlRoomMicrophoneResponseParticipantsItemIdentityOneColorRegExp),
+  "hairColor": zod.string().regex(controlRoomMicrophoneResponseParticipantsItemIdentityOneHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
+}),zod.null()]),
+  "isRegistered": zod.boolean()
+}))
+})
 
 

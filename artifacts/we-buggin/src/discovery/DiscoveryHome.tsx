@@ -141,7 +141,7 @@ export default function DiscoveryHome({ userId }: { userId: string }) {
                 ))}
               </div>
             )}
-            <p className="dh-note">Demo rooms are stored in this browser only. Follows are saved on this device for your account only.</p>
+            <p className="dh-note">Beams opened in this session appear here. Chat and moods are shared; follows are saved on this device for your account.</p>
           </>
         )}
 
