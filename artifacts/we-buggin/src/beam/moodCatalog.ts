@@ -26,8 +26,8 @@ export const MOOD_SPRITES = {
   grinning: { emotion: 'grinning', portraits: { spiked: 'spiked-grin', ponytails: 'ponytail-grin' } },
   smiling: { emotion: 'smiling', portraits: { spiked: 'spiked-smile', ponytails: 'ponytail-smile' } },
   kissing: { emotion: 'kissing', portraits: { spiked: 'spiked-blowing-kiss', ponytails: 'ponytail-blowing-kiss' } },
-  playful_wink: { emotion: 'playful wink', portraits: { ponytails: 'wink' } },
-  skeptical: { emotion: 'skeptical', portraits: { spiked: 'skeptical' } },
+  playful_wink: { emotion: 'playful wink', portraits: { spiked: 'spiked-silly-wink', ponytails: 'wink' } },
+  skeptical: { emotion: 'skeptical', portraits: { spiked: 'skeptical', ponytails: 'ponytail-raised-eyebrow' } },
 } as const satisfies Record<string, MoodDefinition>;
 
 export type MoodKey = keyof typeof MOOD_SPRITES;

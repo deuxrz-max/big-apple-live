@@ -7,7 +7,7 @@
 - `services/beamService.ts` the **mock adapter boundary**: in-memory store persisted to `localStorage` key `webuggin.beam.demo.v1`, with strict capacity, validation and a bounded history (60 messages). Seeded rooms: `LATEBG` (Late Night Buggin, 6 peers) and `FULL12` (full).
 - `hooks/useBeam.ts` `useSyncExternalStore` bindings; UI never touches storage directly.
 - `components/` BeamRoomLayout, ParticipantEmojiBadge, MessageList, MessageInput, EmojiPicker, CapacityIndicator, IdentityGlyph. The original component names are retained; identity components now display the user's supplied profile pictures, not Unicode emoji or SVG hairstyles.
-- `portraits.ts` the 41 supplied pictures, including the original Kiss, Skeptical, Wink and Laugh choices plus ponytail, braid and spiked-hair expressions. Background-free lossless WebP copies in `public/profile-pictures/transparent/` are used by the shared renderer everywhere; original artwork in the parent directory is preserved. The profile picker offers only Male / Spiky hair and Female / Ponytail; expressions change through Mood Sync on a supported chat face. No microphone-driven expression changes or animated portraits. Adding artwork must not change the deterministic legacy mapping or existing saved selections.
+- `portraits.ts` the 43 supplied pictures, including the original Kiss, Skeptical, Wink and Laugh choices plus ponytail, braid and spiked-hair expressions. Background-free lossless WebP copies in `public/profile-pictures/transparent/` are used by the shared renderer everywhere; original artwork in the parent directory is preserved. The profile picker offers only Male / Spiky hair and Female / Ponytail; expressions change through Mood Sync on a supported chat face. No microphone-driven expression changes or animated portraits. Adding artwork must not change the deterministic legacy mapping or existing saved selections.
 - `Identity.portraitId` is the current picture choice. Legacy emoji/style/color fields are kept solely to read existing browser-local saves without losing sessions or messages. Old identities map deterministically to supplied portraits until a user chooses one.
 - `beam.css` all styles scoped to `.beam-app` (and the `.bm-modal-back` portal-less overlay). Black surfaces with readable white text, blue accents and a slow ambient background; background motion stops for reduced-motion preferences. Portraits themselves do not animate.
 
@@ -15,7 +15,9 @@
 Accepted text messages and quick reactions update only their sender's active
 portrait in the same persisted room commit. Supported faces are laughing,
 tears of joy, ROFL, heart-eyes, smiling with hearts, smiling eyes, melting, thinking, winking (😉), neutral, delighted, grinning, smiling and kissing for both hairstyles;
-playful wink (😜) and grateful / deeply touched (🥹) require ponytail artwork; skeptical and loudly crying require spiky artwork.
+playful / silly wink (😜) supports both hairstyles and remains separate from 😉.
+Skeptical / raised eyebrow (🤨) supports both hairstyles.
+Grateful / deeply touched (🥹) requires ponytail artwork; loudly crying requires spiky artwork.
 Spiky is the Male hair identity; Ponytail is Female. Missing matching variants,
 hearts, flames, ordinary text and unsupported compound faces leave the mood alone.
 The last qualifying face in a message wins. The mood survives reload with the
@@ -35,8 +37,8 @@ the new type's neutral portrait. Selecting the same type preserves the image.
 Old saves without `currentMood` remain valid and
 their portraits are not replaced or reinterpreted on load.
 
-The four missing variants are intentionally unsupported until supplied:
-Ponytail 😭, Spiky 🥹, Spiky 😜, and Ponytail 🤨. A face without matching artwork is
+The two missing variants are intentionally unsupported until supplied:
+Ponytail 😭 and Spiky 🥹. A face without matching artwork is
 skipped; the last supported face for that sender wins. No timer resets the mood.
 Chat messages, participant tiles, and room previews already use the shared
 `IdentityGlyph` renderer and the active portrait pointer, so no UI changes are needed.

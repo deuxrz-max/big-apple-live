@@ -25,7 +25,7 @@ changes their picture or sends a new qualifying face, as requested.
 supplied version of an already-supported expression.
 
 Keep existing artwork only for unmatched expressions; the user will supply
-the missing Ponytail 😭, Spiky 🥹, Spiky 😜, and Ponytail 🤨 variants.
+missing variants rather than having them generated.
 
 **Why:** The user chose "Keep existing artwork only" and stated "I will add the 4."
 

@@ -43,6 +43,8 @@ export const PORTRAITS = [
   { id: 'ponytail-thinking', label: 'Thinking · Ponytail', file: 'ponytail-thinking.webp', style: 'ponytails', emoji: '🤔' },
   { id: 'ponytail-winking', label: 'Winking · Ponytail', file: 'ponytail-winking.webp', style: 'ponytails', emoji: '😉' },
   { id: 'ponytail-neutral', label: 'Neutral · Ponytail', file: 'ponytail-neutral.webp', style: 'ponytails', emoji: '😐' },
+  { id: 'spiked-silly-wink', label: 'Silly Wink · Spiky', file: 'spiked-silly-wink.webp', style: 'spiked', emoji: '😜' },
+  { id: 'ponytail-raised-eyebrow', label: 'Raised Eyebrow · Ponytail', file: 'ponytail-raised-eyebrow.webp', style: 'ponytails', emoji: '🤨' },
 ] as const;
 
 export type PortraitId = typeof PORTRAITS[number]['id'];
