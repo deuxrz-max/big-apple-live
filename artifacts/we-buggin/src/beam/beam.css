@@ -142,6 +142,18 @@
 .bm-tile.is-self { border-color: var(--bm-ink); }
 .bm-tile-empty { border-color: transparent; color: var(--bm-line); font-family: var(--bm-display); font-size: 22px; font-weight: 700; }
 .bm-tile-empty:hover { border-color: transparent; }
+.bm-mic-tile { background: transparent; color: inherit; font: inherit; cursor: pointer; gap: 3px; }
+.bm-mic-tile:disabled { opacity: 1; cursor: default; }
+.bm-mic-tile:focus-visible { outline: 2px solid var(--bm-acc); outline-offset: 2px; }
+.bm-mic-status { font-size: 10px; color: var(--bm-mute); text-transform: uppercase; letter-spacing: .06em; }
+.bm-mic-surface { display: contents; }
+.bm-mic-overlay { position: fixed; inset: 0; background: #000b; z-index: 80; }
+.bm-mic-panel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 81; width: min(340px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; background: var(--bm-bg); color: var(--bm-ink); border: 1.5px solid var(--bm-ink); padding: 22px; box-shadow: 0 12px 60px #0008; }
+.bm-mic-panel h2 { font-family: var(--bm-display); text-transform: uppercase; font-size: 26px; line-height: 1.1; overflow-wrap: anywhere; }
+.bm-mic-description { font-size: 13px; color: var(--bm-mute); margin: 12px 0; }
+.bm-mic-buttons { display: grid; gap: 10px; margin: 16px 0; }
+.bm-mic-request { border: 1px solid var(--bm-line); padding: 12px; margin-top: 16px; display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; }
+.bm-mic-request p { width: 100%; }
 .bm-badge { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; }
 .bm-badge-handle { font-weight: 600; font-size: 13px; display: inline-flex; gap: 6px; align-items: center; max-width: 100%; }
 .bm-you { font-style: normal; font-size: 9px; letter-spacing: 0.12em; background: var(--bm-acc); color: #fff; padding: 1px 4px; }

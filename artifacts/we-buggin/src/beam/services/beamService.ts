@@ -1,6 +1,7 @@
 import {
   createAccountRoom, joinAccountRoom, getRoom, getMyProfile, saveMyProfile,
   getRoomMessages, sendRoomMessage, heartbeatParticipant, leaveRoom,
+  controlRoomMicrophone,
   type AccountProfile, type EmojiIdentity, type RoomState, type RoomSession,
   type ChatMessage, type ChatAccepted,
 } from '@workspace/api-client-react';
@@ -64,14 +65,32 @@ export function beamIdentity(identity: EmojiIdentity): Identity {
 function snapshot(r: RoomState): BeamRoom {
   return {
     code: r.roomId, name: r.name, capacity: isBeamCapacity(r.capacity) ? r.capacity : CAPACITY,
+    hostParticipantId: r.hostParticipantId,
     createdAt: new Date(r.createdAt).getTime(),
     participants: r.participants.map(p => ({
       id: p.participantId, handle: p.displayName, joinedAt: new Date(p.joinedAt).getTime(),
       simulated: false,
+      micEnabled: p.micEnabled, hostMuted: p.hostMuted, unmuteRequested: p.unmuteRequested,
       identity: p.identity ? beamIdentity(p.identity) : portraitIdentity('ponytail-smile'),
     })),
     messages: state.rooms[r.roomId]?.messages ?? [],
   };
+}
+
+/** Private capability stays outside public Beam snapshots. */
+export function getBeamAudioCredentials(code: string, selfId: string) {
+  return { ...creds(code, selfId) };
+}
+
+export async function controlBeamMicrophone(code: string, selfId: string, targetId: string, action: 'mute' | 'unmute' | 'request-unmute') {
+  const credential = creds(code, selfId);
+  const epoch = generation;
+  const room = await controlRoomMicrophone(code, targetId, { action }, {
+    headers: { Authorization: `Bearer ${credential.participantSessionId}` },
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (epoch !== generation) throw new Error('Account changed. Try again.');
+  applySnapshot(room);
 }
 function applySnapshot(r: RoomState) {
   // Voice-only legacy rooms still retain their own 100-person capacity.
@@ -225,6 +244,7 @@ export async function leaveBeam(code: string, selfId: string) {
   clearCreds(owner, code);
   if (epoch !== generation) return;
   stopLive?.();
+  notice = null;
   commit({ ...state, session: null });
 }
 export async function updateIdentity(code: string, selfId: string, handle: string, identity: Identity) {

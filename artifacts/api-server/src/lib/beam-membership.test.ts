@@ -7,6 +7,23 @@ const identity = {
   emojiId: "1F642", gender: "Male" as const, color: "#F7C531", hairColor: "#111111",
   portraitId: "spiked-smile", currentMood: "smiling" as const,
 };
+test("Beam creator controls survive a creator rejoin and never transfer to a visitor", () => {
+  const store = new RoomStore();
+  const creator = store.create("Creator", { accountId: "creator", identity }, { name: "MicBeam", capacity: 4 });
+  const visitor = store.join(creator.room.roomId, "Visitor", { accountId: "visitor", identity });
+  const code = creator.room.roomId;
+  store.leave(code, creator.participantSessionId);
+  assert.throws(() => store.controlMicrophone(code, visitor.participantSessionId, visitor.participantId, "request-unmute"), { status: 403 });
+  const rejoined = store.join(code, "Creator", { accountId: "creator", identity });
+  assert.equal(rejoined.room.hostParticipantId, rejoined.participantId);
+  store.controlMicrophone(code, rejoined.participantSessionId, visitor.participantId, "mute");
+  assert.equal(store.getSessionParticipant(code, visitor.participantSessionId).hostMuted, true);
+  assert.throws(() => store.controlMicrophone(code, visitor.participantSessionId, visitor.participantId, "unmute"), { status: 403 });
+  store.controlMicrophone(code, rejoined.participantSessionId, visitor.participantId, "request-unmute");
+  assert.equal(store.getSessionParticipant(code, visitor.participantSessionId).micEnabled, false);
+  store.controlMicrophone(code, visitor.participantSessionId, visitor.participantId, "unmute");
+  assert.equal(store.getSessionParticipant(code, visitor.participantSessionId).micEnabled, true);
+});
 test("Beam capacities remain exact, account resumption uses one seat, and legacy rooms remain 100", () => {
   for (const capacity of [2, 4, 9, 12] as const) {
     const store = new RoomStore();

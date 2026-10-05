@@ -27,6 +27,10 @@ export interface Participant {
   identity: Identity;
   simulated: boolean;
   joinedAt: number;
+  /** Optional only for old isolated demo saves; shared snapshots always include these. */
+  micEnabled?: boolean;
+  hostMuted?: boolean;
+  unmuteRequested?: boolean;
 }
 
 export type MessageKind = 'text' | 'reaction' | 'system';
@@ -43,6 +47,7 @@ export interface BeamMessage {
 
 export interface BeamRoom {
   code: string;
+  hostParticipantId?: string;
   name: string;
   capacity: BeamCapacity;
   participants: Participant[];

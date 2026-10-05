@@ -14,3 +14,9 @@ Remote unmute is a request that the visitor must explicitly accept; it must neve
 **Why:** Microphone capture is privacy-sensitive. The creator's request is not the microphone owner's consent.
 
 **How to apply:** Default to silent capture until the owner's explicit action succeeds. Apply mute state to both local tracks and remote playback, including the standalone audio client, not only the React screen.
+
+Muting a Beam microphone must keep playback connected so that the person can still hear the room. Leaving or switching away stops local capture.
+
+**Why:** A microphone control changes whether someone speaks, not whether they remain in the conversation.
+
+**How to apply:** Keep mute, audio disconnect, and room departure as separate actions. Creator privileges belong to the creating account and should be restored when that account rejoins, not transferred to a visitor.

@@ -30,6 +30,7 @@ type Room = {
   capacity: number;
   createdAt: Date;
   hostParticipantId: string;
+  hostAccountId?: string;
   sessions: Map<string, ActiveSession>;
   listeners: Set<Listener>;
   emptySince: number | null;
@@ -59,6 +60,7 @@ export class RoomStore {
       capacity: beam?.capacity ?? 100,
       createdAt: new Date(this.now()),
       hostParticipantId: "",
+      hostAccountId: account?.accountId,
       sessions: new Map(),
       listeners: new Set(),
       emptySince: null,
@@ -184,7 +186,9 @@ export class RoomStore {
   private addSession(room: Room, displayName: string, account?: AccountIdentity): RoomSession {
     const participantSessionId = randomUUID();
     const participantId = randomUUID();
-    if (!room.hostParticipantId) room.hostParticipantId = participantId;
+    if (!room.hostParticipantId || (account && account.accountId === room.hostAccountId)) {
+      room.hostParticipantId = participantId;
+    }
     room.sessions.set(participantSessionId, {
       participant: {
         participantId,

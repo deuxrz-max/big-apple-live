@@ -5,7 +5,9 @@ import { EmojiPicker } from '../components/EmojiPicker';
 import { MessageInput } from '../components/MessageInput';
 import { MessageList } from '../components/MessageList';
 import { ParticipantEmojiBadge } from '../components/ParticipantEmojiBadge';
-import { useAction, useCopy } from '../hooks/useBeam';
+import { useAction } from '../hooks/useBeam';
+import { useBeamAudio } from '../hooks/useBeamAudio';
+import { BeamMicrophoneMenu } from '../components/BeamMicrophoneMenu';
 import { leaveBeam, sendMessage, updateIdentity } from '../services/beamService';
 import type { BeamRoom, Identity, Participant } from '../types';
 import { getPortrait } from '../portraits';
@@ -22,6 +24,10 @@ export function RoomPage({ room, self, notice, onNotice }: Props) {
   const [, navigate] = useLocation();
   const [changing, setChanging] = useState(false);
   const send = useAction();
+  const audio = useBeamAudio(room.code, self.id);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const isCreator = room.hostParticipantId === self.id;
+  const selected = room.participants.find(p => p.id === selectedId && (isCreator || p.id === self.id));
   const slots = Array.from({ length: room.capacity }, (_, i) => room.participants[i] ?? null);
 
   const leave = async () => {
@@ -70,9 +76,14 @@ export function RoomPage({ room, self, notice, onNotice }: Props) {
           <div className="bm-roster" style={{ gridTemplateColumns: `repeat(${capacityColumns(room.capacity)}, minmax(0, 1fr))` }} data-testid="grid-roster">
             {slots.map((p, i) =>
               p ? (
-                <div key={p.id} className={`bm-tile ${p.id === self.id ? 'is-self' : ''}`}>
+                <button key={p.id} type="button" className={`bm-tile bm-mic-tile ${p.id === self.id ? 'is-self' : ''}`}
+                  disabled={!isCreator && p.id !== self.id}
+                  aria-label={`${p.handle}: ${p.micEnabled ? 'mic on' : 'mic off'}${isCreator || p.id === self.id ? '. Open microphone controls' : ''}`}
+                  aria-haspopup={isCreator || p.id === self.id ? 'dialog' : undefined}
+                  onClick={() => setSelectedId(p.id)} data-testid={`button-mic-tile-${p.id}`}>
                   <ParticipantEmojiBadge handle={p.handle} identity={p.identity} size="lg" simulated={p.simulated} showHandle />
-                </div>
+                  <span className="bm-mic-status">{p.micEnabled ? 'Mic on' : p.hostMuted ? 'Muted' : p.unmuteRequested ? 'Mic requested' : 'Mic off'}</span>
+                </button>
               ) : (
                 <div key={`e${i}`} className="bm-tile bm-tile-empty" aria-hidden>
                   <span>{i + 1}</span>
@@ -81,7 +92,19 @@ export function RoomPage({ room, self, notice, onNotice }: Props) {
             )}
           </div>
         }
-        demo={<p className="bm-demo-note">Shared room · messages and moods are saved to your account.</p>}
+        demo={
+          <div className="bm-beam-audio">
+            {self.unmuteRequested && <div className="bm-mic-request" role="status">
+              <p>The creator is asking you to turn on your microphone.</p>
+              <button type="button" className="bm-btn bm-btn-sm" disabled={audio.busy} onClick={audio.turnOn} data-testid="button-accept-beam-mic">Accept and turn on</button>
+              <button type="button" className="bm-link-btn" disabled={audio.busy} onClick={audio.turnOff} data-testid="button-decline-beam-mic">Keep mic off</button>
+            </div>}
+            {audio.error && !selected && <p className="bm-error" role="alert">{audio.error}</p>}
+            {audio.playbackBlocked && <button type="button" className="bm-btn bm-btn-sm" onClick={audio.resume}>Enable sound</button>}
+            {audio.state === 'reconnecting' && <p className="bm-label" role="status">Reconnecting audio…</p>}
+            <p className="bm-demo-note">{isCreator ? 'Tap a participant to control their microphone.' : 'Tap your picture to control your microphone.'}</p>
+          </div>
+        }
         stream={<MessageList messages={room.messages} participants={room.participants} selfId={self.id} />}
         composer={
           <MessageInput
@@ -91,6 +114,10 @@ export function RoomPage({ room, self, notice, onNotice }: Props) {
           />
         }
       />
+      <BeamMicrophoneMenu participant={selected} selfId={self.id} busy={audio.busy} error={audio.error}
+        onClose={() => setSelectedId(null)}
+        onMute={() => selected?.id === self.id ? audio.turnOff() : audio.control(selected!.id, 'mute')}
+        onUnmute={() => selected?.id === self.id ? audio.turnOn() : audio.control(selected!.id, 'request-unmute')} />
       {changing && <EmojiPicker title="Change profile picture" lockHandle initialHandle={self.handle} initialIdentity={self.identity} confirmLabel="Confirm" onConfirm={change} onCancel={() => setChanging(false)} />}
     </>
   );
