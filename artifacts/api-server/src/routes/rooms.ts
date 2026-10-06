@@ -96,7 +96,8 @@ router.get("/rooms/:roomId/events", (req, res) => {
   const unsubscribe = roomStore.subscribe(params.data.roomId, (event) => {
     if (res.destroyed || res.writableEnded) return;
     // This legacy public stream exposes presence only, never private chat.
-    if (event.type === "chat.accepted") return;
+    // Public roster streams never expose private chat-derived effects.
+    if (event.type !== "room.snapshot" && event.type !== "room.expired") return;
     const data = event.type === "room.snapshot" ? GetRoomResponse.parse(event.data) : event.data;
     // Slow consumers are disconnected rather than accumulating unbounded buffers.
     if (!res.write(`event: ${event.type}\ndata: ${JSON.stringify(data)}\n\n`)) res.destroy();

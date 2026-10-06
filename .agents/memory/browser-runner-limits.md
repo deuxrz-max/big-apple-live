@@ -15,6 +15,12 @@ depending on clipboard.readText. Keep synthetic-account recovery information
 through runner-supported mechanisms, rather than only notebook variables.
 Never put login claims, credentials, or personal identifiers in project memory.
 
+When a reset loses synthetic fixture emails and contexts, create fresh synthetic identities through the supported Clerk testing helper rather than asking the user to recover agent-generated accounts.
+
+**Why:** Fixture profiles can survive in the database while the notebook loses the email variables needed by the sign-in helper. The helper supports arbitrary new test identities.
+
+**How to apply:** Leave old profiles unchanged, use unique fresh fixtures, and keep their recovery details only in runner-supported temporary state.
+
 Runner resets are not limited to clipboard calls. Keep completed browser
 observations distinct from unexecuted checks and from server-side test evidence.
 

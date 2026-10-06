@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useLocation } from 'wouter';
 import { BeamRoomLayout } from '../components/BeamRoomLayout';
 import { EmojiPicker } from '../components/EmojiPicker';
+const RoomMoodCanvas = lazy(() => import('../components/RoomMoodCanvas').then(module => ({ default: module.RoomMoodCanvas })));
 import { MessageInput } from '../components/MessageInput';
 import { MessageList } from '../components/MessageList';
 import { ParticipantEmojiBadge } from '../components/ParticipantEmojiBadge';
@@ -50,6 +51,7 @@ export function RoomPage({ room, self, notice, onNotice }: Props) {
 
   return (
     <>
+      <Suspense fallback={null}><RoomMoodCanvas code={room.code} selfId={self.id} /></Suspense>
       <BeamRoomLayout
         name={room.name}
         actions={

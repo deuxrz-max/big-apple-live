@@ -1,0 +1,55 @@
+Add an HTML5 Canvas layer that sits BEHIND the existing chat UI and fills the whole beam area. This canvas is ONLY for visual effects (no input), and should resize with the window.
+2.
+Implement a simple particle engine on that canvas that can spawn floating emoji particles. Each particle:
+•
+Displays a single emoji character (for now support at least: ❤️, 💖, 💜, 😊, 😄, 😂, 🎤, 🎵, 🎶).
+•
+Starts near the bottom of the beam, with a little horizontal randomness.
+•
+Drifts upward with slight side-to-side noise.
+•
+Gradually fades out and is removed when fully transparent or off-screen.
+•
+Is drawn on every animation frame via requestAnimationFrame.
+3.
+Hook into the existing Socket.io chat message events on both server and client:
+•
+Whenever a chat message is received that contains one of the supported emojis, emit a separate event like emoji_particle with the emoji and sender room/beam ID.
+•
+On the client, listen for emoji_particle and spawn a small burst of emoji particles (3–8) on the canvas using that emoji.
+4.
+Implement a 'Room Mood' state on the server using Socket.io:
+•
+For each beam/room, track emoji usage over a rolling 3-minute window.
+•
+Maintain a time-stamped list or frequency map of emojis used in that room.
+•
+Every time an emoji comes in for that room, update the data structure and purge entries older than 3 minutes.
+•
+Every 3 minutes (use a setInterval), compute the most frequently used emoji in the last 3 minutes for that room. That becomes the current Room Mood for that room.
+•
+Broadcast a room_mood_update event via Socket.io to all clients in that room with the dominant emoji and a mapped style payload, like: { roomId, emoji: '❤️', moodColor: '#ff4b8b',   // warm pink glowColor: 'rgba(255, 75, 139, 0.7)' }
+5.
+On the client side, listen for room_mood_update and smoothly transition the background and glow:
+•
+Apply the mood color and glow to the canvas backdrop or a dedicated background div behind the chat.
+•
+Use CSS transitions or JS tweening (e.g. GSAP if available) to fade between moods over ~800–1500 ms.
+•
+Example mapping (you can adjust): ❤️ / 💖 / 💜  -> warm pink/purple glow 😊 / 😄 / 😂 -> bright yellow/orange glow 🎤 / 🎵 / 🎶 -> deep blue/purple stage-light glow
+•
+Make sure the chat text stays readable (adjust contrast, maybe a subtle dark overlay between the chat and the canvas).
+6.
+Keep everything fully synced in real time using Socket.io:
+•
+Emoji particles are created from server broadcast events so ALL users in the same beam see the same bursts, not just the sender.
+•
+Room mood updates are computed on the server every 3 minutes and broadcast to all clients in that room so the background color and glow transition in sync for everyone.
+7.
+IMPORTANT:
+•
+Do NOT break or rewrite the existing chat, login, or profile/avatar logic. Integrate this as an additional visual layer.
+•
+Put all new Canvas and particle logic in a separate module/file if possible (e.g., roomMoodCanvas.js) and import it into the main client bundle.
+•
+Keep the feature easy to toggle off with a single config flag (e.g. ENABLE_ROOM_MOOD_VISUALS) in case we need to disable the visuals in production."

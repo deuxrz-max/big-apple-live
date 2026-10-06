@@ -138,6 +138,7 @@ test("accepted chat persists sender-only mood atomically; rejects impersonation,
     assert.equal(acceptedEvents, 2);
     assert.ok(publicFrames.some(frame => frame.startsWith("event: room.snapshot")));
     assert.equal(publicFrames.some(frame => frame.includes("chat.accepted") || frame.includes("hello 😂")), false);
+    assert.equal(publicFrames.some(frame => frame.includes("emoji_particle") || frame.includes("room_mood_update")), false);
     closeHandlers.forEach(close => close());
     unsubscribe();
     roomStore.leave(roomId, b.participantSessionId);

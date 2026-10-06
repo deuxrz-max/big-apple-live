@@ -1,3 +1,4 @@
+export * from './room-mood';
 /** Supplied artwork only. Keep older IDs selectable and never substitute hair. */
 export const PORTRAIT_IDS = [
   'kiss', 'skeptical', 'wink', 'laugh', 'laugh-alternate', 'braided-tears',

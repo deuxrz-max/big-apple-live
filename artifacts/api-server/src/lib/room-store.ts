@@ -1,5 +1,7 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import type { Participant, RoomSession, RoomState, EmojiIdentity, ChatAccepted, AccountRoomInput } from "@workspace/api-zod";
+import { ENABLE_ROOM_MOOD_VISUALS, type EmojiParticleEvent, type RoomMoodUpdate } from "@workspace/beam-identity";
+import { RoomMoodTracker } from "./room-mood";
 
 export const SESSION_TIMEOUT_MS = 90_000;
 export const EMPTY_ROOM_TIMEOUT_MS = 60 * 60 * 1000;
@@ -11,6 +13,8 @@ export class RoomError extends Error {
 }
 
 type RoomEvent =
+  | { type: "emoji_particle"; data: EmojiParticleEvent }
+  | { type: "room_mood_update"; data: RoomMoodUpdate }
   | { type: "chat.accepted"; data: ChatAccepted }
   | { type: "room.snapshot"; data: RoomState }
   | { type: "room.expired"; data: { roomId: string } };
@@ -34,6 +38,7 @@ type Room = {
   sessions: Map<string, ActiveSession>;
   listeners: Set<Listener>;
   emptySince: number | null;
+  mood: RoomMoodTracker;
 };
 
 /** Single-process, ephemeral presence store. Session credentials are never in snapshots. */
@@ -64,6 +69,7 @@ export class RoomStore {
       sessions: new Map(),
       listeners: new Set(),
       emptySince: null,
+      mood: new RoomMoodTracker(this.now),
     };
     this.rooms.set(roomId, room);
     return this.addSession(room, displayName, account);
@@ -257,7 +263,27 @@ export class RoomStore {
 
   publishChat(roomId: string, historyId: string, accepted: ChatAccepted): void {
     const room = this.rooms.get(roomId.toUpperCase());
-    if (room?.historyId === historyId) this.emit(room, { type: "chat.accepted", data: accepted });
+    if (room?.historyId !== historyId) return;
+    this.emit(room, { type: "chat.accepted", data: accepted });
+    if (ENABLE_ROOM_MOOD_VISUALS) {
+      for (const data of room.mood.record(room.roomId, accepted.message.id, accepted.message.text)) {
+        this.emit(room, { type: "emoji_particle", data });
+      }
+    }
+  }
+
+  getRoomMood(roomId: string): RoomMoodUpdate {
+    const room = this.requireRoom(roomId);
+    return room.mood.current(room.roomId);
+  }
+
+  /** Called by the server's three-minute timer, including quiet rooms. */
+  tickRoomMoods(): void {
+    if (!ENABLE_ROOM_MOOD_VISUALS) return;
+    this.sweep();
+    for (const room of this.rooms.values()) {
+      this.emit(room, { type: "room_mood_update", data: room.mood.compute(room.roomId) });
+    }
   }
 }
 

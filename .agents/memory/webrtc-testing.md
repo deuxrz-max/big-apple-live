@@ -16,3 +16,9 @@ mocking RTCPeerConnection or signaling. Require remote audio tracks, playback,
 bidirectional RTP bytes, generation changes on reconnect, and ended local tracks
 on leave. Distinguish browser verification from a committed runner actually
 passing; never report a blocked runner as a passing test.
+
+The managed browser may stall during ICE gathering even with no STUN servers configured. A 15-second negotiation retry and missing SDP requests do not, by themselves, prove HTTP connection congestion or a signaling defect.
+
+**Why:** Both default-STUN and local-only native-peer checks stalled before exchanging descriptions while the visual Socket.io events worked. Neither check produced RTP evidence.
+
+**How to apply:** Distinguish candidate gathering, issued network requests, and actual media exchange. Report inconclusive media checks separately from successful visual or server checks; do not keep retrying an unchanged runner limitation.

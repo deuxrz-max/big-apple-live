@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import type { AudioEvent, AudioPeer } from "@workspace/room-audio";
 import { RoomStore, RoomError, SESSION_TIMEOUT_MS } from "./room-store";
 import { AudioSignaling } from "./audio-signaling";
+import type { ChatAccepted } from "@workspace/api-zod";
 
 function sink() {
   const events: AudioEvent[] = [];
@@ -45,6 +46,24 @@ test("audio streams receive authoritative microphone changes without reconnectin
   assert.equal(enabled(b), false);
   assert.equal(b.self().connectionId, generation);
   assert.equal(b.closed, false);
+});
+
+test("chat, emoji bursts and mood ticks never disconnect audio peers", () => {
+  const store = new RoomStore();
+  const relay = new AudioSignaling(store);
+  const host = store.create("Host");
+  const visitor = store.join(host.room.roomId, "Visitor");
+  const a = sink(), b = sink();
+  relay.connect(host.room.roomId, host.participantSessionId, a);
+  relay.connect(host.room.roomId, visitor.participantSessionId, b);
+  const before = [a.events.length, b.events.length];
+  store.publishChat(host.room.roomId, store.getHistoryId(host.room.roomId),
+    { message: { id: 'audio-safe-message', text: '❤️ 🎶' } } as ChatAccepted);
+  store.tickRoomMoods();
+  assert.equal(a.closed, false);
+  assert.equal(b.closed, false);
+  assert.deepEqual([a.events.length, b.events.length], before);
+  assert.equal(relay.authorize(host.room.roomId, host.participantSessionId), host.participantId);
 });
 
 test("private credentials authenticate signaling; messages stay in the same room", () => {

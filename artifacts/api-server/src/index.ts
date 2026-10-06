@@ -1,6 +1,8 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { roomStore } from "./lib/room-store";
+import { createServer } from "node:http";
+import { attachRoomMoodSocket } from "./lib/room-mood-socket";
 
 const rawPort = process.env["PORT"];
 
@@ -19,11 +21,12 @@ if (Number.isNaN(port) || port <= 0) {
 const presenceSweep = setInterval(() => roomStore.sweep(), 5_000);
 presenceSweep.unref();
 
-app.listen(port, (err) => {
-  if (err) {
-    logger.error({ err }, "Error listening on port");
-    process.exit(1);
-  }
-
+const server = createServer(app);
+attachRoomMoodSocket(server);
+server.listen(port, () => {
   logger.info({ port }, "Server listening");
+});
+server.on('error', err => {
+  logger.error({ err }, "Error listening on port");
+  process.exit(1);
 });

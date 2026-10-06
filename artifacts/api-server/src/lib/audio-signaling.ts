@@ -39,6 +39,8 @@ export class AudioSignaling {
       this.groups.set(id, group);
       try {
         group.unsubscribe = this.store.subscribe(id, (event) => {
+          // Chat and visual events do not remove participants or alter audio.
+          if (event.type !== "room.snapshot" && event.type !== "room.expired") return;
           const active = new Set(
             event.type === "room.snapshot" ? event.data.participants.map((p) => p.participantId) : [],
           );
