@@ -72,7 +72,11 @@ function BeamApp() {
         <Link href="/beams" className="bm-logo" data-testid="link-logo">
           <span aria-hidden>🐞</span> WE BUGGIN
         </Link>
-        <Link href="/user-portal" className="bm-tag">My account</Link>
+        <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end', minWidth: 0 }}>
+          <Link href="/community" className="bm-tag">People</Link>
+          <Link href="/community/rewards" className="bm-tag">Rewards</Link>
+          <Link href="/user-portal" className="bm-tag">My account</Link>
+        </span>
       </nav>
       {storageNotice && <p className="bm-demo-note" role="status" style={{ padding: '0 20px 16px' }}>{storageNotice}</p>}
       <Show when="signed-out">

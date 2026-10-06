@@ -19,3 +19,9 @@ export * from "./room-messages";
 //   export type Post = typeof postsTable.$inferSelect;
 
 export * from "./account-profiles";
+export * from "./social-settings";
+export * from "./social-wallets";
+export * from "./social-relations";
+export * from "./social-inventory";
+export * from "./social-ledger";
+export * from "./social-messages";

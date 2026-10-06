@@ -8,6 +8,407 @@
 import * as zod from 'zod';
 
 
+export const getSocialMeResponseProfileIdentityEmojiIdMax = 100;
+
+export const getSocialMeResponseProfileIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getSocialMeResponseProfileIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
+export const GetSocialMeResponse = zod.object({
+  "profile": zod.object({
+  "username": zod.string(),
+  "identity": zod.object({
+  "emojiId": zod.string().min(1).max(getSocialMeResponseProfileIdentityEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(getSocialMeResponseProfileIdentityColorRegExp),
+  "hairColor": zod.string().regex(getSocialMeResponseProfileIdentityHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
+}),
+  "bio": zod.string(),
+  "country": zod.union([zod.string(),zod.null()]),
+  "interests": zod.array(zod.string()),
+  "discoverable": zod.boolean(),
+  "favorite": zod.boolean(),
+  "blocked": zod.boolean(),
+  "receivedCredits": zod.number().int(),
+  "badgeId": zod.union([zod.string(),zod.null()])
+}),
+  "wallet": zod.object({
+  "balance": zod.number().int(),
+  "earned": zod.number().int(),
+  "received": zod.number().int(),
+  "sent": zod.number().int(),
+  "canClaimDaily": zod.boolean(),
+  "dailyReward": zod.number().int()
+}),
+  "inventory": zod.array(zod.string()),
+  "products": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "cost": zod.number().int()
+})),
+  "gifts": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "cost": zod.number().int()
+})),
+  "countries": zod.array(zod.object({
+  "code": zod.string(),
+  "name": zod.string()
+}))
+})
+
+
+export const saveSocialProfileBodyBioMax = 200;
+
+export const saveSocialProfileBodyCountryOneRegExp = new RegExp('^[A-Z]{2}$');
+export const saveSocialProfileBodyInterestsItemMax = 24;
+
+export const saveSocialProfileBodyInterestsMax = 8;
+
+
+
+export const SaveSocialProfileBody = zod.object({
+  "bio": zod.string().max(saveSocialProfileBodyBioMax),
+  "country": zod.union([zod.string().regex(saveSocialProfileBodyCountryOneRegExp),zod.null()]),
+  "interests": zod.array(zod.string().min(1).max(saveSocialProfileBodyInterestsItemMax)).max(saveSocialProfileBodyInterestsMax),
+  "discoverable": zod.boolean(),
+  "badgeId": zod.union([zod.string(),zod.null()])
+})
+
+export const saveSocialProfileResponseIdentityEmojiIdMax = 100;
+
+export const saveSocialProfileResponseIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const saveSocialProfileResponseIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
+export const SaveSocialProfileResponse = zod.object({
+  "username": zod.string(),
+  "identity": zod.object({
+  "emojiId": zod.string().min(1).max(saveSocialProfileResponseIdentityEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(saveSocialProfileResponseIdentityColorRegExp),
+  "hairColor": zod.string().regex(saveSocialProfileResponseIdentityHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
+}),
+  "bio": zod.string(),
+  "country": zod.union([zod.string(),zod.null()]),
+  "interests": zod.array(zod.string()),
+  "discoverable": zod.boolean(),
+  "favorite": zod.boolean(),
+  "blocked": zod.boolean(),
+  "receivedCredits": zod.number().int(),
+  "badgeId": zod.union([zod.string(),zod.null()])
+})
+
+
+export const getSocialPeopleQueryOffsetMin = 0;
+
+
+
+export const GetSocialPeopleQueryParams = zod.object({
+  "search": zod.coerce.string().optional(),
+  "gender": zod.enum(['Male', 'Female']).optional(),
+  "country": zod.coerce.string().optional(),
+  "favorites": zod.coerce.boolean().optional(),
+  "offset": zod.coerce.number().int().min(getSocialPeopleQueryOffsetMin).optional()
+})
+
+export const getSocialPeopleResponsePeopleItemIdentityEmojiIdMax = 100;
+
+export const getSocialPeopleResponsePeopleItemIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getSocialPeopleResponsePeopleItemIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
+export const GetSocialPeopleResponse = zod.object({
+  "people": zod.array(zod.object({
+  "username": zod.string(),
+  "identity": zod.object({
+  "emojiId": zod.string().min(1).max(getSocialPeopleResponsePeopleItemIdentityEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(getSocialPeopleResponsePeopleItemIdentityColorRegExp),
+  "hairColor": zod.string().regex(getSocialPeopleResponsePeopleItemIdentityHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
+}),
+  "bio": zod.string(),
+  "country": zod.union([zod.string(),zod.null()]),
+  "interests": zod.array(zod.string()),
+  "discoverable": zod.boolean(),
+  "favorite": zod.boolean(),
+  "blocked": zod.boolean(),
+  "receivedCredits": zod.number().int(),
+  "badgeId": zod.union([zod.string(),zod.null()])
+})),
+  "total": zod.number().int()
+})
+
+
+export const GetSocialPersonParams = zod.object({
+  "username": zod.coerce.string()
+})
+
+export const getSocialPersonResponseIdentityEmojiIdMax = 100;
+
+export const getSocialPersonResponseIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getSocialPersonResponseIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
+export const GetSocialPersonResponse = zod.object({
+  "username": zod.string(),
+  "identity": zod.object({
+  "emojiId": zod.string().min(1).max(getSocialPersonResponseIdentityEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(getSocialPersonResponseIdentityColorRegExp),
+  "hairColor": zod.string().regex(getSocialPersonResponseIdentityHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
+}),
+  "bio": zod.string(),
+  "country": zod.union([zod.string(),zod.null()]),
+  "interests": zod.array(zod.string()),
+  "discoverable": zod.boolean(),
+  "favorite": zod.boolean(),
+  "blocked": zod.boolean(),
+  "receivedCredits": zod.number().int(),
+  "badgeId": zod.union([zod.string(),zod.null()])
+})
+
+
+export const SetSocialRelationshipParams = zod.object({
+  "username": zod.coerce.string()
+})
+
+export const SetSocialRelationshipBody = zod.object({
+  "kind": zod.enum(['favorite', 'block']),
+  "active": zod.boolean()
+})
+
+export const SetSocialRelationshipResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+export const getSocialBlocksResponsePeopleItemIdentityEmojiIdMax = 100;
+
+export const getSocialBlocksResponsePeopleItemIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getSocialBlocksResponsePeopleItemIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
+export const GetSocialBlocksResponse = zod.object({
+  "people": zod.array(zod.object({
+  "username": zod.string(),
+  "identity": zod.object({
+  "emojiId": zod.string().min(1).max(getSocialBlocksResponsePeopleItemIdentityEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(getSocialBlocksResponsePeopleItemIdentityColorRegExp),
+  "hairColor": zod.string().regex(getSocialBlocksResponsePeopleItemIdentityHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
+}),
+  "bio": zod.string(),
+  "country": zod.union([zod.string(),zod.null()]),
+  "interests": zod.array(zod.string()),
+  "discoverable": zod.boolean(),
+  "favorite": zod.boolean(),
+  "blocked": zod.boolean(),
+  "receivedCredits": zod.number().int(),
+  "badgeId": zod.union([zod.string(),zod.null()])
+})),
+  "total": zod.number().int()
+})
+
+
+export const ClaimSocialDailyRewardResponse = zod.object({
+  "balance": zod.number().int(),
+  "earned": zod.number().int(),
+  "received": zod.number().int(),
+  "sent": zod.number().int(),
+  "canClaimDaily": zod.boolean(),
+  "dailyReward": zod.number().int()
+})
+
+
+export const SendSocialGiftBody = zod.object({
+  "recipient": zod.string(),
+  "giftId": zod.string(),
+  "idempotencyKey": zod.string().uuid()
+})
+
+export const SendSocialGiftResponse = zod.object({
+  "balance": zod.number().int(),
+  "earned": zod.number().int(),
+  "received": zod.number().int(),
+  "sent": zod.number().int(),
+  "canClaimDaily": zod.boolean(),
+  "dailyReward": zod.number().int()
+})
+
+
+export const PurchaseSocialProductBody = zod.object({
+  "itemId": zod.string(),
+  "idempotencyKey": zod.string().uuid()
+})
+
+export const PurchaseSocialProductResponse = zod.object({
+  "balance": zod.number().int(),
+  "earned": zod.number().int(),
+  "received": zod.number().int(),
+  "sent": zod.number().int(),
+  "canClaimDaily": zod.boolean(),
+  "dailyReward": zod.number().int()
+})
+
+
+export const GetSocialLedgerResponse = zod.object({
+  "transactions": zod.array(zod.object({
+  "id": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "delta": zod.number().int(),
+  "kind": zod.string(),
+  "description": zod.string(),
+  "peer": zod.union([zod.string(),zod.null()])
+}))
+})
+
+
+export const getSocialLeaderboardResponsePeopleItemIdentityEmojiIdMax = 100;
+
+export const getSocialLeaderboardResponsePeopleItemIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getSocialLeaderboardResponsePeopleItemIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
+export const GetSocialLeaderboardResponse = zod.object({
+  "people": zod.array(zod.object({
+  "username": zod.string(),
+  "identity": zod.object({
+  "emojiId": zod.string().min(1).max(getSocialLeaderboardResponsePeopleItemIdentityEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(getSocialLeaderboardResponsePeopleItemIdentityColorRegExp),
+  "hairColor": zod.string().regex(getSocialLeaderboardResponsePeopleItemIdentityHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
+}),
+  "bio": zod.string(),
+  "country": zod.union([zod.string(),zod.null()]),
+  "interests": zod.array(zod.string()),
+  "discoverable": zod.boolean(),
+  "favorite": zod.boolean(),
+  "blocked": zod.boolean(),
+  "receivedCredits": zod.number().int(),
+  "badgeId": zod.union([zod.string(),zod.null()])
+})),
+  "total": zod.number().int()
+})
+
+
+export const getSocialInboxResponseConversationsItemIdentityEmojiIdMax = 100;
+
+export const getSocialInboxResponseConversationsItemIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getSocialInboxResponseConversationsItemIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
+export const GetSocialInboxResponse = zod.object({
+  "conversations": zod.array(zod.object({
+  "username": zod.string(),
+  "identity": zod.object({
+  "emojiId": zod.string().min(1).max(getSocialInboxResponseConversationsItemIdentityEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(getSocialInboxResponseConversationsItemIdentityColorRegExp),
+  "hairColor": zod.string().regex(getSocialInboxResponseConversationsItemIdentityHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
+}),
+  "lastMessage": zod.string(),
+  "updatedAt": zod.coerce.date(),
+  "unreadCount": zod.number().int(),
+  "blocked": zod.boolean()
+}))
+})
+
+
+export const GetSocialConversationParams = zod.object({
+  "username": zod.coerce.string()
+})
+
+export const GetSocialConversationQueryParams = zod.object({
+  "cursor": zod.coerce.string().uuid().optional()
+})
+
+export const getSocialConversationResponsePersonIdentityEmojiIdMax = 100;
+
+export const getSocialConversationResponsePersonIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getSocialConversationResponsePersonIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
+export const GetSocialConversationResponse = zod.object({
+  "person": zod.object({
+  "username": zod.string(),
+  "identity": zod.object({
+  "emojiId": zod.string().min(1).max(getSocialConversationResponsePersonIdentityEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(getSocialConversationResponsePersonIdentityColorRegExp),
+  "hairColor": zod.string().regex(getSocialConversationResponsePersonIdentityHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
+}),
+  "bio": zod.string(),
+  "country": zod.union([zod.string(),zod.null()]),
+  "interests": zod.array(zod.string()),
+  "discoverable": zod.boolean(),
+  "favorite": zod.boolean(),
+  "blocked": zod.boolean(),
+  "receivedCredits": zod.number().int(),
+  "badgeId": zod.union([zod.string(),zod.null()])
+}),
+  "messages": zod.array(zod.object({
+  "id": zod.string(),
+  "sender": zod.string(),
+  "recipient": zod.string(),
+  "body": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "readAt": zod.union([zod.coerce.date(),zod.null()])
+})),
+  "nextCursor": zod.union([zod.string(),zod.null()]),
+  "blocked": zod.boolean()
+})
+
+
+export const SendSocialMessageParams = zod.object({
+  "username": zod.coerce.string()
+})
+
+export const sendSocialMessageBodyBodyMax = 1000;
+
+
+
+export const SendSocialMessageBody = zod.object({
+  "body": zod.string().min(1).max(sendSocialMessageBodyBodyMax),
+  "idempotencyKey": zod.string().uuid()
+})
+
+export const SendSocialMessageResponse = zod.object({
+  "id": zod.string(),
+  "sender": zod.string(),
+  "recipient": zod.string(),
+  "body": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "readAt": zod.union([zod.coerce.date(),zod.null()])
+})
+
+
+export const DeleteSocialConversationParams = zod.object({
+  "username": zod.coerce.string()
+})
+
+export const DeleteSocialConversationResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
 export const getMyProfileResponseProfileOneIdentityEmojiIdMax = 100;
 
 export const getMyProfileResponseProfileOneIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');

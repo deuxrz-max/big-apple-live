@@ -15,6 +15,30 @@ tags:
   - name: audio
     description: Authenticated room-scoped WebRTC signaling; media travels peer-to-peer
 paths:
+  /social/me:
+    $ref: './social.openapi.json#/paths/~1social~1me'
+  /social/people:
+    $ref: './social.openapi.json#/paths/~1social~1people'
+  /social/people/{username}:
+    $ref: './social.openapi.json#/paths/~1social~1people~1{username}'
+  /social/people/{username}/relationship:
+    $ref: './social.openapi.json#/paths/~1social~1people~1{username}~1relationship'
+  /social/blocks:
+    $ref: './social.openapi.json#/paths/~1social~1blocks'
+  /social/wallet/claim:
+    $ref: './social.openapi.json#/paths/~1social~1wallet~1claim'
+  /social/gifts:
+    $ref: './social.openapi.json#/paths/~1social~1gifts'
+  /social/store/purchase:
+    $ref: './social.openapi.json#/paths/~1social~1store~1purchase'
+  /social/wallet/transactions:
+    $ref: './social.openapi.json#/paths/~1social~1wallet~1transactions'
+  /social/leaderboard:
+    $ref: './social.openapi.json#/paths/~1social~1leaderboard'
+  /social/messages:
+    $ref: './social.openapi.json#/paths/~1social~1messages'
+  /social/messages/{username}:
+    $ref: './social.openapi.json#/paths/~1social~1messages~1{username}'
   /me:
     get:
       operationId: getMyProfile

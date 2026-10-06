@@ -13,6 +13,7 @@ import { clearAllCreds, loadCreds } from '@/lib/room-creds';
 import BeamApp from '@/beam/BeamApp';
 import { configureBeamAccount } from '@/beam/services/beamService';
 import DiscoveryHome from '@/discovery/DiscoveryHome';
+import SocialApp from '@/social/SocialApp';
 
 const queryClient = new QueryClient();
 
@@ -148,6 +149,16 @@ function DiscoveryRoute() {
   );
 }
 
+function CommunityRoute() {
+  const { user } = useUser();
+  return (
+    <>
+      <Show when="signed-in">{user && <SocialApp key={user.id} userId={user.id} />}</Show>
+      <Show when="signed-out"><Redirect to="/sign-in" /></Show>
+    </>
+  );
+}
+
 function RoomRoute() {
   const { user } = useUser();
   const { roomId = '' } = useParams<{ roomId: string }>();
@@ -201,6 +212,8 @@ function ClerkProviderWithRoutes() {
             <Route path="/sign-in/*?" component={SignInPage} />
             <Route path="/sign-up/*?" component={SignUpPage} />
             <Route path="/home" component={DiscoveryRoute} />
+            <Route path="/community" component={CommunityRoute} />
+            <Route path="/community/*?" component={CommunityRoute} />
             <Route path="/user-portal" component={Portal} />
             <Route path="/rooms/:roomId" component={RoomRoute} />
             <Route component={NotFound} />

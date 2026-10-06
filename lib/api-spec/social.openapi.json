@@ -1,0 +1,1239 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Social",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/social/me": {
+      "get": {
+        "operationId": "getSocialMe",
+        "tags": [
+          "social"
+        ],
+        "security": [
+          {
+            "AccountSession": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialMe"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
+          },
+          "401": {
+            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
+          },
+          "403": {
+            "description": "Blocked or not permitted"
+          },
+          "409": {
+            "description": "Already claimed, conflicting retry or insufficient credits"
+          }
+        }
+      },
+      "put": {
+        "operationId": "saveSocialProfile",
+        "tags": [
+          "social"
+        ],
+        "security": [
+          {
+            "AccountSession": []
+          }
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SocialProfileInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialPerson"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
+          },
+          "401": {
+            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
+          },
+          "403": {
+            "description": "Blocked or not permitted"
+          },
+          "409": {
+            "description": "Already claimed, conflicting retry or insufficient credits"
+          }
+        }
+      }
+    },
+    "/social/people": {
+      "get": {
+        "operationId": "getSocialPeople",
+        "tags": [
+          "social"
+        ],
+        "security": [
+          {
+            "AccountSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "gender",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "Male",
+                "Female"
+              ]
+            }
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "favorites",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialPeople"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
+          },
+          "401": {
+            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
+          },
+          "403": {
+            "description": "Blocked or not permitted"
+          },
+          "409": {
+            "description": "Already claimed, conflicting retry or insufficient credits"
+          }
+        }
+      }
+    },
+    "/social/people/{username}": {
+      "get": {
+        "operationId": "getSocialPerson",
+        "tags": [
+          "social"
+        ],
+        "security": [
+          {
+            "AccountSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialPerson"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
+          },
+          "401": {
+            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
+          },
+          "403": {
+            "description": "Blocked or not permitted"
+          },
+          "409": {
+            "description": "Already claimed, conflicting retry or insufficient credits"
+          }
+        }
+      }
+    },
+    "/social/people/{username}/relationship": {
+      "put": {
+        "operationId": "setSocialRelationship",
+        "tags": [
+          "social"
+        ],
+        "security": [
+          {
+            "AccountSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SocialRelationshipInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialAction"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
+          },
+          "401": {
+            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
+          },
+          "403": {
+            "description": "Blocked or not permitted"
+          },
+          "409": {
+            "description": "Already claimed, conflicting retry or insufficient credits"
+          }
+        }
+      }
+    },
+    "/social/blocks": {
+      "get": {
+        "operationId": "getSocialBlocks",
+        "tags": [
+          "social"
+        ],
+        "security": [
+          {
+            "AccountSession": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialPeople"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
+          },
+          "401": {
+            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
+          },
+          "403": {
+            "description": "Blocked or not permitted"
+          },
+          "409": {
+            "description": "Already claimed, conflicting retry or insufficient credits"
+          }
+        }
+      }
+    },
+    "/social/wallet/claim": {
+      "post": {
+        "operationId": "claimSocialDailyReward",
+        "tags": [
+          "social"
+        ],
+        "security": [
+          {
+            "AccountSession": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialWallet"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
+          },
+          "401": {
+            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
+          },
+          "403": {
+            "description": "Blocked or not permitted"
+          },
+          "409": {
+            "description": "Already claimed, conflicting retry or insufficient credits"
+          }
+        }
+      }
+    },
+    "/social/gifts": {
+      "post": {
+        "operationId": "sendSocialGift",
+        "tags": [
+          "social"
+        ],
+        "security": [
+          {
+            "AccountSession": []
+          }
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SocialGiftInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialWallet"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
+          },
+          "401": {
+            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
+          },
+          "403": {
+            "description": "Blocked or not permitted"
+          },
+          "409": {
+            "description": "Already claimed, conflicting retry or insufficient credits"
+          }
+        }
+      }
+    },
+    "/social/store/purchase": {
+      "post": {
+        "operationId": "purchaseSocialProduct",
+        "tags": [
+          "social"
+        ],
+        "security": [
+          {
+            "AccountSession": []
+          }
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SocialPurchaseInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialWallet"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
+          },
+          "401": {
+            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
+          },
+          "403": {
+            "description": "Blocked or not permitted"
+          },
+          "409": {
+            "description": "Already claimed, conflicting retry or insufficient credits"
+          }
+        }
+      }
+    },
+    "/social/wallet/transactions": {
+      "get": {
+        "operationId": "getSocialLedger",
+        "tags": [
+          "social"
+        ],
+        "security": [
+          {
+            "AccountSession": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialLedger"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
+          },
+          "401": {
+            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
+          },
+          "403": {
+            "description": "Blocked or not permitted"
+          },
+          "409": {
+            "description": "Already claimed, conflicting retry or insufficient credits"
+          }
+        }
+      }
+    },
+    "/social/leaderboard": {
+      "get": {
+        "operationId": "getSocialLeaderboard",
+        "tags": [
+          "social"
+        ],
+        "security": [
+          {
+            "AccountSession": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialPeople"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
+          },
+          "401": {
+            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
+          },
+          "403": {
+            "description": "Blocked or not permitted"
+          },
+          "409": {
+            "description": "Already claimed, conflicting retry or insufficient credits"
+          }
+        }
+      }
+    },
+    "/social/messages": {
+      "get": {
+        "operationId": "getSocialInbox",
+        "tags": [
+          "social"
+        ],
+        "security": [
+          {
+            "AccountSession": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialInbox"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
+          },
+          "401": {
+            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
+          },
+          "403": {
+            "description": "Blocked or not permitted"
+          },
+          "409": {
+            "description": "Already claimed, conflicting retry or insufficient credits"
+          }
+        }
+      }
+    },
+    "/social/messages/{username}": {
+      "get": {
+        "operationId": "getSocialConversation",
+        "tags": [
+          "social"
+        ],
+        "security": [
+          {
+            "AccountSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialConversation"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
+          },
+          "401": {
+            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
+          },
+          "403": {
+            "description": "Blocked or not permitted"
+          },
+          "409": {
+            "description": "Already claimed, conflicting retry or insufficient credits"
+          }
+        }
+      },
+      "post": {
+        "operationId": "sendSocialMessage",
+        "tags": [
+          "social"
+        ],
+        "security": [
+          {
+            "AccountSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SocialMessageInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
+          },
+          "401": {
+            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
+          },
+          "403": {
+            "description": "Blocked or not permitted"
+          },
+          "409": {
+            "description": "Already claimed, conflicting retry or insufficient credits"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteSocialConversation",
+        "tags": [
+          "social"
+        ],
+        "security": [
+          {
+            "AccountSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialAction"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
+          },
+          "401": {
+            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
+          },
+          "403": {
+            "description": "Blocked or not permitted"
+          },
+          "409": {
+            "description": "Already claimed, conflicting retry or insufficient credits"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SocialPerson": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "identity": {
+            "$ref": "./openapi.yaml#/components/schemas/EmojiIdentity"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "interests": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "discoverable": {
+            "type": "boolean"
+          },
+          "favorite": {
+            "type": "boolean"
+          },
+          "blocked": {
+            "type": "boolean"
+          },
+          "receivedCredits": {
+            "type": "integer"
+          },
+          "badgeId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "username",
+          "identity",
+          "bio",
+          "country",
+          "interests",
+          "discoverable",
+          "favorite",
+          "blocked",
+          "receivedCredits",
+          "badgeId"
+        ]
+      },
+      "SocialProfileInput": {
+        "type": "object",
+        "properties": {
+          "bio": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Z]{2}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "interests": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 24
+            }
+          },
+          "discoverable": {
+            "type": "boolean"
+          },
+          "badgeId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "bio",
+          "country",
+          "interests",
+          "discoverable",
+          "badgeId"
+        ]
+      },
+      "SocialWallet": {
+        "type": "object",
+        "properties": {
+          "balance": {
+            "type": "integer"
+          },
+          "earned": {
+            "type": "integer"
+          },
+          "received": {
+            "type": "integer"
+          },
+          "sent": {
+            "type": "integer"
+          },
+          "canClaimDaily": {
+            "type": "boolean"
+          },
+          "dailyReward": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "balance",
+          "earned",
+          "received",
+          "sent",
+          "canClaimDaily",
+          "dailyReward"
+        ]
+      },
+      "SocialProduct": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "cost": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "cost"
+        ]
+      },
+      "SocialGift": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "cost": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "cost"
+        ]
+      },
+      "SocialMe": {
+        "type": "object",
+        "properties": {
+          "profile": {
+            "$ref": "#/components/schemas/SocialPerson"
+          },
+          "wallet": {
+            "$ref": "#/components/schemas/SocialWallet"
+          },
+          "inventory": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SocialProduct"
+            }
+          },
+          "gifts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SocialGift"
+            }
+          },
+          "countries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "name"
+              ]
+            }
+          }
+        },
+        "required": [
+          "profile",
+          "wallet",
+          "inventory",
+          "products",
+          "gifts",
+          "countries"
+        ]
+      },
+      "SocialPeople": {
+        "type": "object",
+        "properties": {
+          "people": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SocialPerson"
+            }
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "people",
+          "total"
+        ]
+      },
+      "SocialRelationshipInput": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "favorite",
+              "block"
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "kind",
+          "active"
+        ]
+      },
+      "SocialAction": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "SocialGiftInput": {
+        "type": "object",
+        "properties": {
+          "recipient": {
+            "type": "string"
+          },
+          "giftId": {
+            "type": "string"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "recipient",
+          "giftId",
+          "idempotencyKey"
+        ]
+      },
+      "SocialPurchaseInput": {
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "itemId",
+          "idempotencyKey"
+        ]
+      },
+      "SocialTransaction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "delta": {
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "peer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "delta",
+          "kind",
+          "description",
+          "peer"
+        ]
+      },
+      "SocialLedger": {
+        "type": "object",
+        "properties": {
+          "transactions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SocialTransaction"
+            }
+          }
+        },
+        "required": [
+          "transactions"
+        ]
+      },
+      "SocialMessage": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sender": {
+            "type": "string"
+          },
+          "recipient": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "readAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "sender",
+          "recipient",
+          "body",
+          "createdAt",
+          "readAt"
+        ]
+      },
+      "SocialMessageInput": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "body",
+          "idempotencyKey"
+        ]
+      },
+      "SocialConversation": {
+        "type": "object",
+        "properties": {
+          "person": {
+            "$ref": "#/components/schemas/SocialPerson"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SocialMessage"
+            }
+          },
+          "nextCursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "blocked": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "person",
+          "messages",
+          "nextCursor",
+          "blocked"
+        ]
+      },
+      "SocialInbox": {
+        "type": "object",
+        "properties": {
+          "conversations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "username": {
+                  "type": "string"
+                },
+                "identity": {
+                  "$ref": "./openapi.yaml#/components/schemas/EmojiIdentity"
+                },
+                "lastMessage": {
+                  "type": "string"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "unreadCount": {
+                  "type": "integer"
+                },
+                "blocked": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "username",
+                "identity",
+                "lastMessage",
+                "updatedAt",
+                "unreadCount",
+                "blocked"
+              ]
+            }
+          }
+        },
+        "required": [
+          "conversations"
+        ]
+      }
+    }
+  }
+}

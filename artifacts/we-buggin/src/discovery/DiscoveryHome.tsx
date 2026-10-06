@@ -100,7 +100,11 @@ export default function DiscoveryHome({ userId }: { userId: string }) {
               </>
             )}
           </div>
-          <Link href="/beams/join" className="bm-btn bm-btn-sm dh-join" data-testid="link-join-code"><Hash size={16} /> Join by code</Link>
+          <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Link href="/community" className="bm-btn bm-btn-sm" data-testid="link-people">People</Link>
+            <Link href="/community/rewards" className="bm-btn bm-btn-sm" data-testid="link-rewards">Rewards</Link>
+            <Link href="/beams/join" className="bm-btn bm-btn-sm dh-join" data-testid="link-join-code"><Hash size={16} /> Join by code</Link>
+          </span>
         </div>
 
         {profileQ.isLoading && <div className="dh-skel" data-testid="status-loading" />}

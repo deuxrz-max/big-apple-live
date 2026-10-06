@@ -4,11 +4,13 @@ import healthRouter from "./health";
 import roomsRouter from "./rooms";
 import audioRouter from "./audio";
 import identityRouter from "./identity";
+import socialRouter from "./social";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(identityRouter);
+router.use(socialRouter);
 router.use(chatRouter);
 router.use(roomsRouter);
 router.use(audioRouter);

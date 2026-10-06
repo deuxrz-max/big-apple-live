@@ -230,6 +230,378 @@ export interface ErrorResponse {
   error: string;
 }
 
+export type MicrophoneAction4b96100Action = typeof MicrophoneAction4b96100Action[keyof typeof MicrophoneAction4b96100Action];
+
+
+export const MicrophoneAction4b96100Action = {
+  mute: 'mute',
+  unmute: 'unmute',
+  'request-unmute': 'request-unmute',
+} as const;
+
+export interface MicrophoneAction4b96100 {
+  action: MicrophoneAction4b96100Action;
+}
+
+export type AccountRoomInput4b96100Capacity = typeof AccountRoomInput4b96100Capacity[keyof typeof AccountRoomInput4b96100Capacity];
+
+
+export const AccountRoomInput4b96100Capacity = {
+  NUMBER_2: 2,
+  NUMBER_4: 4,
+  NUMBER_9: 9,
+  NUMBER_12: 12,
+} as const;
+
+export interface AccountRoomInput4b96100 {
+  /**
+     * @minLength 2
+     * @maxLength 32
+     */
+  name: string;
+  capacity: AccountRoomInput4b96100Capacity;
+}
+
+export type ChatInput4b96100Kind = typeof ChatInput4b96100Kind[keyof typeof ChatInput4b96100Kind];
+
+
+export const ChatInput4b96100Kind = {
+  text: 'text',
+  reaction: 'reaction',
+} as const;
+
+export interface ChatInput4b96100 {
+  /**
+     * @minLength 1
+     * @maxLength 280
+     */
+  text: string;
+  kind: ChatInput4b96100Kind;
+}
+
+export type ChatMessage4b96100Kind = typeof ChatMessage4b96100Kind[keyof typeof ChatMessage4b96100Kind];
+
+
+export const ChatMessage4b96100Kind = {
+  text: 'text',
+  reaction: 'reaction',
+} as const;
+
+export type EmojiIdentity4b96100Gender = typeof EmojiIdentity4b96100Gender[keyof typeof EmojiIdentity4b96100Gender];
+
+
+export const EmojiIdentity4b96100Gender = {
+  Male: 'Male',
+  Female: 'Female',
+} as const;
+
+/**
+ * @nullable
+ */
+export type EmojiIdentity4b96100CurrentMood = typeof EmojiIdentity4b96100CurrentMood[keyof typeof EmojiIdentity4b96100CurrentMood] | null;
+
+
+export const EmojiIdentity4b96100CurrentMood = {
+  laughing: 'laughing',
+  tears_of_joy: 'tears_of_joy',
+  crying: 'crying',
+  rofl: 'rofl',
+  heart_eyes: 'heart_eyes',
+  affectionate: 'affectionate',
+  melting: 'melting',
+  grateful: 'grateful',
+  thinking: 'thinking',
+  winking: 'winking',
+  neutral: 'neutral',
+  smiling_eyes: 'smiling_eyes',
+  delighted: 'delighted',
+  grinning: 'grinning',
+  smiling: 'smiling',
+  kissing: 'kissing',
+  playful_wink: 'playful_wink',
+  skeptical: 'skeptical',
+} as const;
+
+export interface EmojiIdentity4b96100 {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  emojiId: string;
+  gender: EmojiIdentity4b96100Gender;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  color: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  hairColor: string;
+  /**
+     * Omitted preserves old artwork; null clears it on explicit manual identity edits
+     * @nullable
+     */
+  portraitId?: string | null;
+  /** @nullable */
+  currentMood?: EmojiIdentity4b96100CurrentMood;
+}
+
+export interface ChatMessage4b96100 {
+  id: string;
+  roomId: string;
+  authorId: string;
+  username: string;
+  identity: EmojiIdentity4b96100;
+  kind: ChatMessage4b96100Kind;
+  text: string;
+  createdAt: string;
+}
+
+export interface AccountProfile4b96100 {
+  username: string;
+  identity: EmojiIdentity4b96100;
+  updatedAt: string;
+}
+
+export interface ChatAccepted4b96100 {
+  message: ChatMessage4b96100;
+  profile: AccountProfile4b96100;
+}
+
+export interface EmojiOption4b96100 {
+  id: string;
+  name: string;
+  group: string;
+  unicode: string;
+}
+
+export interface ProfileInput4b96100 {
+  /** @pattern ^[A-Za-z0-9_]{3,24}$ */
+  username: string;
+  identity: EmojiIdentity4b96100;
+}
+
+export interface ProfileEnvelope4b96100 {
+  profile: AccountProfile4b96100 | null;
+}
+
+export type AudioDescription4b96100Type = typeof AudioDescription4b96100Type[keyof typeof AudioDescription4b96100Type];
+
+
+export const AudioDescription4b96100Type = {
+  offer: 'offer',
+  answer: 'answer',
+} as const;
+
+export interface AudioDescription4b96100 {
+  type: AudioDescription4b96100Type;
+  /**
+     * @minLength 1
+     * @maxLength 12000
+     */
+  sdp: string;
+}
+
+export interface AudioSignalInput4b96100 {
+  sourceConnectionId: string;
+  targetParticipantId: string;
+  targetConnectionId: string;
+  description: AudioDescription4b96100;
+}
+
+export interface HealthStatus4b96100 {
+  status: string;
+}
+
+export interface RoomCreateInput4b96100 {
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  displayName: string;
+}
+
+export interface RoomJoinInput4b96100 {
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  displayName: string;
+}
+
+export interface Participant4b96100 {
+  micEnabled: boolean;
+  hostMuted: boolean;
+  unmuteRequested: boolean;
+  participantId: string;
+  displayName: string;
+  joinedAt: string;
+  identity: EmojiIdentity4b96100 | null;
+  isRegistered: boolean;
+}
+
+export interface RoomState4b96100 {
+  hostParticipantId: string;
+  name: string;
+  capacity: number;
+  roomId: string;
+  createdAt: string;
+  participants: Participant4b96100[];
+}
+
+export interface RoomSession4b96100 {
+  participantSessionId: string;
+  participantId: string;
+  room: RoomState4b96100;
+}
+
+export interface ErrorResponse4b96100 {
+  error: string;
+}
+
+export interface SocialPerson {
+  username: string;
+  identity: EmojiIdentity4b96100;
+  bio: string;
+  country: string | null;
+  interests: string[];
+  discoverable: boolean;
+  favorite: boolean;
+  blocked: boolean;
+  receivedCredits: number;
+  badgeId: string | null;
+}
+
+export interface SocialProfileInput {
+  /** @maxLength 200 */
+  bio: string;
+  country: string | null;
+  /**
+     * @maxItems 8
+     * @items.minLength 1
+     * @items.maxLength 24
+     */
+  interests: string[];
+  discoverable: boolean;
+  badgeId: string | null;
+}
+
+export interface SocialWallet {
+  balance: number;
+  earned: number;
+  received: number;
+  sent: number;
+  canClaimDaily: boolean;
+  dailyReward: number;
+}
+
+export interface SocialProduct {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+}
+
+export interface SocialGift {
+  id: string;
+  name: string;
+  cost: number;
+}
+
+export type SocialMeCountriesItem = {
+  code: string;
+  name: string;
+};
+
+export interface SocialMe {
+  profile: SocialPerson;
+  wallet: SocialWallet;
+  inventory: string[];
+  products: SocialProduct[];
+  gifts: SocialGift[];
+  countries: SocialMeCountriesItem[];
+}
+
+export interface SocialPeople {
+  people: SocialPerson[];
+  total: number;
+}
+
+export type SocialRelationshipInputKind = typeof SocialRelationshipInputKind[keyof typeof SocialRelationshipInputKind];
+
+
+export const SocialRelationshipInputKind = {
+  favorite: 'favorite',
+  block: 'block',
+} as const;
+
+export interface SocialRelationshipInput {
+  kind: SocialRelationshipInputKind;
+  active: boolean;
+}
+
+export interface SocialAction {
+  ok: boolean;
+}
+
+export interface SocialGiftInput {
+  recipient: string;
+  giftId: string;
+  idempotencyKey: string;
+}
+
+export interface SocialPurchaseInput {
+  itemId: string;
+  idempotencyKey: string;
+}
+
+export interface SocialTransaction {
+  id: string;
+  createdAt: string;
+  delta: number;
+  kind: string;
+  description: string;
+  peer: string | null;
+}
+
+export interface SocialLedger {
+  transactions: SocialTransaction[];
+}
+
+export interface SocialMessage {
+  id: string;
+  sender: string;
+  recipient: string;
+  body: string;
+  createdAt: string;
+  readAt: string | null;
+}
+
+export interface SocialMessageInput {
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  body: string;
+  idempotencyKey: string;
+}
+
+export interface SocialConversation {
+  person: SocialPerson;
+  messages: SocialMessage[];
+  nextCursor: string | null;
+  blocked: boolean;
+}
+
+export type SocialInboxConversationsItem = {
+  username: string;
+  identity: EmojiIdentity4b96100;
+  lastMessage: string;
+  updatedAt: string;
+  unreadCount: number;
+  blocked: boolean;
+};
+
+export interface SocialInbox {
+  conversations: SocialInboxConversationsItem[];
+}
+
 /**
  * Missing, invalid, expired, or wrong-room private participant session credential
  */
@@ -249,4 +621,27 @@ export type CapacityErrorResponse = ErrorResponse;
  * Private participant session; must belong to the authenticated account in this room
  */
 export type RoomSessionHeaderParameter = string;
+
+export type GetSocialPeopleParams = {
+search?: string;
+gender?: GetSocialPeopleGender;
+country?: string;
+favorites?: boolean;
+/**
+ * @minimum 0
+ */
+offset?: number;
+};
+
+export type GetSocialPeopleGender = typeof GetSocialPeopleGender[keyof typeof GetSocialPeopleGender];
+
+
+export const GetSocialPeopleGender = {
+  Male: 'Male',
+  Female: 'Female',
+} as const;
+
+export type GetSocialConversationParams = {
+cursor?: string;
+};
 

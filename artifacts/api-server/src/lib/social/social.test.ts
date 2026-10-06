@@ -1,0 +1,109 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { randomUUID } from "node:crypto";
+import { db, accountProfiles, socialWallets, socialLedger } from "@workspace/db";
+import { eq, inArray } from "drizzle-orm";
+import { getMe, getPerson, listPeople, relationship, saveSocialProfile, blocks } from "./people";
+import { claimDaily, gift, purchase, ledger } from "./rewards";
+import { sendMessage, thread, inbox, clearThread } from "./messages";
+import { GetSocialMeResponse, GetSocialPeopleResponse, GetSocialConversationResponse } from "@workspace/api-zod";
+
+test("persistent social privacy, messages, credits and atomic rewards", async t => {
+  const token = randomUUID().replaceAll("-", "").slice(0, 8);
+  const ids = ["a", "b", "c"].map(s => `social-fixture-${token}-${s}`);
+  const names = ["a", "b", "c"].map(s => `Social_${token}_${s}`);
+  t.after(async () => {
+    await db.delete(accountProfiles).where(inArray(accountProfiles.accountId, ids));
+    await db.$client.end();
+  });
+  await db.insert(accountProfiles).values(ids.map((id, i) => ({ accountId: id, username: names[i]!, nameKey: names[i]!.toLowerCase(),
+    emojiId: "1F600", gender: i === 1 ? "Female" as const : "Male" as const, color: "#ffffff", hairColor: "#000000" })));
+  const a = ids[0]!, b = ids[1]!, c = ids[2]!;
+  const prefs = { bio: "A real community member", country: "US", interests: ["music"], discoverable: true, badgeId: null };
+
+  await t.test("new community accounts are private until they opt in; filters and profile clears persist", async () => {
+    GetSocialMeResponse.parse(await getMe(a));
+    await getMe(b); await getMe(c);
+    assert.equal((await listPeople(a, { search: token })).total, 0);
+    await saveSocialProfile(a, prefs);
+    await saveSocialProfile(b, { ...prefs, country: "CA", bio: "Canada fixture", interests: ["art"] });
+    const people = GetSocialPeopleResponse.parse(await listPeople(a, { search: token, country: "CA", gender: "Female" }));
+    assert.equal(people.total, 1);
+    assert.equal(people.people[0]!.username, names[1]);
+    await saveSocialProfile(a, { ...prefs, country: null, bio: "", interests: [] });
+    assert.equal((await getMe(a)).profile.country, null);
+    assert.equal((await getMe(a)).profile.bio, "");
+    await assert.rejects(saveSocialProfile(a, { ...prefs, badgeId: "beam-champion" }), /owned/);
+    await assert.rejects(saveSocialProfile(a, { ...prefs, country: "XX" }), /country/);
+  });
+  await t.test("a concurrent daily claim pays exactly once per UTC day", async () => {
+    const results = await Promise.allSettled(Array.from({ length: 6 }, () => claimDaily(a)));
+    assert.equal(results.filter(r => r.status === "fulfilled").length, 1);
+    assert.equal((await getMe(a)).wallet.balance, 25);
+    assert.equal((await ledger(a)).transactions.length, 1);
+    await claimDaily(b);
+  });
+  await t.test("private messages are idempotent, isolated and survive reload-style reads", async () => {
+    const key = randomUUID();
+    await sendMessage(a, names[1]!, "Hello privately", key);
+    await sendMessage(a, names[1]!, "Hello privately", key);
+    await assert.rejects(sendMessage(a, names[1]!, "different message", key), /retry key/);
+    assert.equal((await inbox(b)).conversations[0]!.unreadCount, 1);
+    const received = GetSocialConversationResponse.parse(await thread(b, names[0]!));
+    assert.equal(received.messages.length, 1);
+    assert.equal(received.messages[0]!.body, "Hello privately");
+    assert.equal((await inbox(b)).conversations[0]!.unreadCount, 0);
+    assert.equal((await thread(c, names[1]!)).messages.length, 0);
+    await clearThread(a, names[1]!);
+    assert.equal((await thread(a, names[1]!)).messages.length, 0);
+    assert.equal((await thread(b, names[0]!)).messages.length, 1);
+  });
+  await t.test("concurrent gifts cannot overdraw; transfers and store purchases are exact-once", async () => {
+    const results = await Promise.allSettled(Array.from({ length: 8 }, () => gift(a, names[1]!, "good-vibes", randomUUID())));
+    assert.equal(results.filter(r => r.status === "fulfilled").length, 5);
+    assert.equal((await getMe(a)).wallet.balance, 0);
+    assert.equal((await getMe(b)).wallet.balance, 50);
+    const key = randomUUID();
+    await purchase(b, "good-neighbor", key);
+    await purchase(b, "good-neighbor", key);
+    const me = await getMe(b);
+    assert.equal(me.wallet.balance, 10);
+    assert.deepEqual(me.inventory, ["good-neighbor"]);
+    assert.equal(me.profile.badgeId, "good-neighbor");
+    await assert.rejects(purchase(b, "night-owl", randomUUID()), /Not enough/);
+    await assert.rejects(purchase(b, "good-neighbor", randomUUID()), /already own/);
+    const giftKey = randomUUID();
+    await gift(b, names[0]!, "good-vibes", giftKey);
+    await gift(b, names[0]!, "good-vibes", giftKey);
+    assert.equal((await getMe(a)).wallet.balance, 5);
+    assert.equal((await getMe(b)).wallet.balance, 5);
+    await assert.rejects(gift(b, names[0]!, "big-love", giftKey), /retry key/);
+    const [row] = await db.select().from(socialWallets).where(eq(socialWallets.accountId, b));
+    assert.equal(row!.received, 25);
+    assert.equal(row!.sent, 5);
+    const leader = await listPeople(b, { search: token }, true);
+    assert.equal(leader.people[0]!.username, names[1]);
+    assert.equal((await ledger(b)).transactions.filter(r => r.kind === "purchase").length, 1);
+  });
+  await t.test("blocking is bilateral and stops discovery, favorites, gifts and new messages without deleting other history", async () => {
+    await relationship(a, names[1]!, "favorite", true);
+    assert.equal((await listPeople(a, { search: token, favorites: true })).total, 1);
+    await relationship(b, names[0]!, "block", true);
+    assert.equal((await blocks(b)).people[0]!.username, names[0]);
+    assert.equal((await listPeople(a, { search: token })).total, 0);
+    await assert.rejects(getPerson(a, names[1]!), /blocked/);
+    await assert.rejects(gift(a, names[1]!, "good-vibes", randomUUID()), /blocked/);
+    await assert.rejects(sendMessage(a, names[1]!, "not allowed", randomUUID()), /blocked/);
+    await assert.rejects(relationship(a, names[1]!, "favorite", true), /blocked/);
+    assert.equal((await thread(b, names[0]!)).blocked, true);
+    assert.equal((await thread(b, names[0]!)).messages.length, 1);
+    await relationship(b, names[0]!, "block", false);
+    assert.equal((await listPeople(a, { search: token })).total, 1);
+  });
+  await t.test("credit ledger reconciles to balances and only fixture data was touched", async () => {
+    const entries = await db.select().from(socialLedger).where(inArray(socialLedger.accountId, ids));
+    const wallets = await db.select().from(socialWallets).where(inArray(socialWallets.accountId, ids));
+    assert.equal(entries.reduce((sum, e) => sum + e.delta, 0), wallets.reduce((sum, w) => sum + w.balance, 0));
+    assert.ok(wallets.every(w => w.balance >= 0));
+  });
+});

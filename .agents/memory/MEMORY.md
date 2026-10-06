@@ -7,3 +7,4 @@
 - [Semantic merge checks](semantic-merge-checks.md) — unmarked automatic merges can drop completed safety fixes; regenerate contracts and verify behavior.
 - [Room mood visuals](room-mood-visuals.md) — effects are a separate read-only Socket.io transport; preserve existing SSE chat, avatar changes, and voice sessions.
 - [TalkCity reference](talkcity-reference.md) — selected features belong alongside Beams; retain We Buggin's branding and theme rather than duplicate TalkCity.
+- [OpenAPI generation](openapi-generation.md) — modular refs need an allowlist before codegen; combined path/query schemas can collide in Zod barrel exports.
