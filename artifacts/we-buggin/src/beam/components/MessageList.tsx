@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import type { BeamMessage, Participant } from '../types';
 import { ParticipantEmojiBadge } from './ParticipantEmojiBadge';
 
@@ -12,10 +12,12 @@ interface Props {
 
 export function MessageList({ messages, participants, selfId }: Props) {
   const ref = useRef<HTMLOListElement>(null);
-  useEffect(() => {
+  const following = useRef(true);
+  const lastMessageId = messages.at(-1)?.id;
+  useLayoutEffect(() => {
     const el = ref.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [messages.length]);
+    if (el && following.current) el.scrollTop = el.scrollHeight;
+  }, [lastMessageId]);
 
   if (messages.length === 0) {
     return (
@@ -26,7 +28,12 @@ export function MessageList({ messages, participants, selfId }: Props) {
     );
   }
   return (
-    <ol className="bm-msgs" ref={ref} role="log" aria-live="polite" aria-label="Beam messages" data-testid="list-messages">
+    <ol className="bm-msgs" ref={ref} role="log" aria-live="polite" aria-label="Beam messages" tabIndex={0}
+      onScroll={event => {
+        const el = event.currentTarget;
+        following.current = el.scrollHeight - el.clientHeight - el.scrollTop <= 32;
+      }}
+      data-testid="list-messages">
       {messages.map((m) => {
         if (m.kind === 'system') {
           return (
