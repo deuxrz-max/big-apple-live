@@ -1,0 +1,23 @@
+Here’s the account and profile setup prompt for Replit—not the Super Live room prompt. Copy and paste:
+
+Update my existing We Buggin app to give new users a standard account creation and profile setup flow before entering the existing Directory.
+
+1. Inspect and reuse the existing authentication, user database, profile model, session handling, and routes. Do not build a second account or profile system. Preserve all existing users, passwords, profile data, rooms, and messages. Make only minimal additive changes; do not reset the database.
+
+2. Show signed-out users clear Create Account and Sign In options. Use the existing authentication method. If email/password authentication is used, include password confirmation, appropriate validation, clear error messages, and secure password handling. Never store plaintext passwords or expose credentials in client code.
+
+3. After a new user creates an account, take them to a regular profile setup form with a required display name or handle, optional profile picture, and optional short bio. Reuse existing profile fields and avatar controls rather than introducing a separate avatar system. Keep email and other private account information out of public profiles.
+
+4. Save their profile to the existing user record. Mark setup complete only after the required profile details save successfully, then open the current Directory. If setup is interrupted, resume it at the next sign-in. Do not mark existing valid profiles incomplete just because this feature is new.
+
+5. Returning users with completed profiles should go directly to the Directory when already signed in, or immediately after signing in. Do not make them repeat signup or profile setup. Protect room access using the existing authentication and completed-profile checks, including direct links—not only UI redirects.
+
+6. Add a clearly accessible Edit Profile option within the signed-in interface. Load the user's current details, allow them to update their display name, picture, and bio, and save changes to the same existing profile. Enforce on the server that users can edit only their own profiles. Preserve existing avatar identity and mood-sync behavior.
+
+7. Match the current mobile-friendly black-and-white styling, bold typography, buttons, and spacing. Keep the Directory's current platform labels, order, Open buttons, non-affiliation disclaimer, and room behavior unchanged. Do not add or remove rooms as part of this task.
+
+8. Include loading states, field-level validation, and useful errors. Prevent duplicate submissions. Use the project's existing security and image-upload validation patterns, and ensure a failed save does not incorrectly advance the user into the Directory.
+
+9. Test: new account creation → profile setup → Directory; returning-user sign-in → Directory; interrupted setup recovery; Edit Profile persistence after refresh; existing accounts still working; unauthorized profile edits rejected; and existing room isolation, chat, and mood behavior unaffected.
+
+Implement this in the existing project, not as a standalone mockup. Explain which files changed, any additive migrations, and which tests actually passed. Do not claim unrun tests passed.
