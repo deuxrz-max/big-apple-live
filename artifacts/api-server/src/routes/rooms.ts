@@ -8,11 +8,22 @@ import {
 } from "@workspace/api-zod";
 import { roomStore, RoomError } from "../lib/room-store";
 import { ensureGuestNameAvailable } from "../lib/account-profiles";
+import { accountId } from "./identity";
+import { requireAdult } from "../lib/community";
 
 const router: IRouter = Router();
 
 router.use((_req, res, next) => {
   res.set("Cache-Control", "no-store");
+  next();
+});
+router.use(async (req, _res, next) => {
+  const match = /^\/rooms\/([^/]+)(?:\/participants\/([^/]+))?/.exec(req.path);
+  if (match && roomStore.isCommunity(match[1]!)) {
+    const id = accountId(req);
+    await requireAdult(id);
+    roomStore.requireAccountMember(match[1]!, match[2] ?? req.get("X-Room-Session") ?? "", id);
+  }
   next();
 });
 

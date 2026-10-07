@@ -1,9 +1,27 @@
 # We Buggin
 
-Voice-first rooms with persistent named accounts, customizable static emoji
-identities, live presence, and WebRTC audio.
+Adults-only text-chat communities with existing named accounts, branded avatar
+expressions, persisted messages, live presence and independent room atmosphere.
 
-## Beam frontend
+## Current product: text chat
+
+The main experience is the five independent communities labeled LiveMe, Bigo
+Live, Tango Live, TikTok and Instagram Live. They are not broadcast integrations
+and must not be presented as affiliated/endorsed. Preserve users, Clerk login,
+existing identities, messages and profile logic. Do not reactivate broadcasting
+seats, camera/microphone prompts or the old twelve-seat cap in active routes.
+
+Personal facial-emoji expression sync is separate from room atmosphere.
+Tone-based scenes stay disabled without an approved classifier; activity is not
+hostility. Final video assets are not supplied. Existing financial data requires
+a separate policy decision and must never be erased or silently redesigned.
+See `artifacts/api-server/CHAT-PIVOT.md` for retention limitations, migration,
+configuration, safety and rollback details.
+
+The historical sections below describe archived features retained for rollback;
+they do not override the current text-chat product scope.
+
+## Archived Beam frontend (rollback reference)
 
 The default entry now hosts a frontend-only beam demo: React/TypeScript, a dynamic
 black background with subtle slow ambient motion, high-contrast white chrome and

@@ -63,6 +63,8 @@ export async function person(viewer: string, profile: ProfileRow, settings?: Set
   return {
     username: profile.username, identity: publicProfile(profile).identity,
     bio: blocked ? "" : prefs?.bio ?? "", country: blocked ? null : prefs?.country ?? null,
+    externalPlatform: blocked ? null : prefs?.externalPlatform ?? null,
+    externalHandle: blocked ? null : prefs?.externalHandle ?? null,
     interests: blocked ? [] : prefs?.interests ?? [], discoverable: prefs?.discoverable ?? false,
     favorite: !!favorite, blocked, receivedCredits: wallet?.received ?? 0, badgeId: prefs?.badgeId ?? null,
   };

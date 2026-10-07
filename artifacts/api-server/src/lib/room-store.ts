@@ -2,6 +2,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import type { Participant, RoomSession, RoomState, EmojiIdentity, ChatAccepted, AccountRoomInput } from "@workspace/api-zod";
 import { ENABLE_ROOM_MOOD_VISUALS, type EmojiParticleEvent, type RoomMoodUpdate } from "@workspace/beam-identity";
 import { RoomMoodTracker } from "./room-mood";
+import { CommunityAtmosphereTracker } from "./community-atmosphere";
 
 export const SESSION_TIMEOUT_MS = 90_000;
 export const EMPTY_ROOM_TIMEOUT_MS = 60 * 60 * 1000;
@@ -15,7 +16,8 @@ export class RoomError extends Error {
 type RoomEvent =
   | { type: "emoji_particle"; data: EmojiParticleEvent }
   | { type: "room_mood_update"; data: RoomMoodUpdate }
-  | { type: "chat.accepted"; data: ChatAccepted }
+  | { type: "chat.accepted"; data: ChatAccepted; senderAccountId?: string }
+  | { type: "chat.refresh"; data: { roomId: string } }
   | { type: "room.snapshot"; data: RoomState }
   | { type: "room.expired"; data: { roomId: string } };
 type Listener = (event: RoomEvent) => void;
@@ -39,6 +41,7 @@ type Room = {
   listeners: Set<Listener>;
   emptySince: number | null;
   mood: RoomMoodTracker;
+  community?: CommunityAtmosphereTracker;
 };
 
 /** Single-process, ephemeral presence store. Session credentials are never in snapshots. */
@@ -48,6 +51,22 @@ export class RoomStore {
     private readonly now: () => number = Date.now,
     private readonly allocateCode: (short: boolean) => string = short => randomBytes(short ? 3 : 6).toString("hex").toUpperCase(),
   ) {}
+
+  registerCommunity(input: { roomId: string; historyId: string; label: string; createdAt: Date;
+    atmosphere: { scene: "city" | "calm" | "volcano"; since: number } | null }) {
+    if (this.rooms.has(input.roomId)) return;
+    this.rooms.set(input.roomId, { roomId: input.roomId, historyId: input.historyId,
+      name: input.label, capacity: 0, createdAt: input.createdAt, hostParticipantId: randomUUID(),
+      sessions: new Map(), listeners: new Set(), emptySince: null, mood: new RoomMoodTracker(this.now),
+      community: new CommunityAtmosphereTracker(this.now, undefined, input.atmosphere) });
+  }
+  isCommunity(roomId: string) { return !!this.rooms.get(roomId.toUpperCase())?.community; }
+  communityAtmosphere(roomId: string) { return this.requireRoom(roomId).community; }
+  refreshChatVisibility() {
+    for (const room of this.rooms.values()) if (room.community)
+      this.emit(room, { type: "chat.refresh", data: { roomId: room.roomId } });
+  }
+  publishCommunityAtmosphere(roomId: string) { this.broadcast(this.requireRoom(roomId)); }
 
   create(displayName: string, account?: AccountIdentity, beam?: AccountRoomInput): RoomSession {
     this.sweep();
@@ -86,10 +105,18 @@ export class RoomStore {
         return { participantSessionId, participantId: session.participant.participantId, room: this.snapshot(room) };
       }
     }
-    if (room.sessions.size >= room.capacity) {
+    if (room.capacity > 0 && room.sessions.size >= room.capacity) {
       throw new RoomError(409, "Room participant capacity reached");
     }
     return this.addSession(room, displayName, account);
+  }
+
+  restoreParticipantId(roomId: string, accountId: string, participantId: string) {
+    const room = this.requireRoom(roomId);
+    for (const session of room.sessions.values()) {
+      if (session.accountId === accountId) session.participant.participantId = participantId;
+    }
+    this.broadcast(room);
   }
 
   get(roomId: string): RoomState {
@@ -153,7 +180,7 @@ export class RoomStore {
 
   subscribe(roomId: string, listener: Listener): () => void {
     const room = this.requireRoom(roomId);
-    if (room.listeners.size >= 100) {
+    if (room.listeners.size >= (room.community ? 2000 : 100)) {
       throw new RoomError(503, "Room event subscriber capacity reached");
     }
     room.listeners.add(listener);
@@ -211,7 +238,7 @@ export class RoomStore {
     });
     room.emptySince = null;
     this.broadcast(room);
-    if (ENABLE_ROOM_MOOD_VISUALS && account) {
+    if (ENABLE_ROOM_MOOD_VISUALS && account && !room.community) {
       room.mood.recordActivity(2);
       this.emit(room, { type: "room_mood_update", data: room.mood.current(room.roomId) });
     }
@@ -231,7 +258,7 @@ export class RoomStore {
       if (room.sessions.size === 0) room.emptySince = now;
       this.broadcast(room);
     }
-    if (room.emptySince !== null && now - room.emptySince >= EMPTY_ROOM_TIMEOUT_MS) {
+    if (!room.community && room.emptySince !== null && now - room.emptySince >= EMPTY_ROOM_TIMEOUT_MS) {
       this.rooms.delete(room.roomId);
       this.emit(room, { type: "room.expired", data: { roomId: room.roomId } });
       room.listeners.clear();
@@ -246,6 +273,7 @@ export class RoomStore {
       createdAt: new Date(room.createdAt),
       hostParticipantId: room.hostParticipantId,
       participants: Array.from(room.sessions.values(), ({ participant }) => copyParticipant(participant)),
+      ...(room.community ? { communityAtmosphere: room.community.current() } : {}),
     };
   }
 
@@ -265,11 +293,17 @@ export class RoomStore {
     return copyParticipant(session.participant);
   }
 
-  publishChat(roomId: string, historyId: string, accepted: ChatAccepted): void {
+  sessionAccountId(roomId: string, participantId: string): string | undefined {
+    for (const session of this.requireRoom(roomId).sessions.values())
+      if (session.participant.participantId === participantId) return session.accountId;
+    return undefined;
+  }
+
+  publishChat(roomId: string, historyId: string, accepted: ChatAccepted, senderAccountId?: string): void {
     const room = this.rooms.get(roomId.toUpperCase());
     if (room?.historyId !== historyId) return;
-    this.emit(room, { type: "chat.accepted", data: accepted });
-    if (ENABLE_ROOM_MOOD_VISUALS) {
+    this.emit(room, { type: "chat.accepted", data: accepted, senderAccountId });
+    if (ENABLE_ROOM_MOOD_VISUALS && !room.community) {
       for (const data of room.mood.record(room.roomId, accepted.message.id, accepted.message.text)) {
         this.emit(room, { type: "emoji_particle", data });
       }
@@ -287,6 +321,7 @@ export class RoomStore {
     if (!ENABLE_ROOM_MOOD_VISUALS) return;
     this.sweep();
     for (const room of this.rooms.values()) {
+      if (room.community) continue;
       this.emit(room, { type: "room_mood_update", data: room.mood.compute(room.roomId) });
     }
   }
@@ -296,6 +331,7 @@ export class RoomStore {
     if (!ENABLE_ROOM_MOOD_VISUALS) return;
     this.sweep();
     for (const room of this.rooms.values()) {
+      if (room.community) continue;
       if (!room.sessions.size) continue;
       this.emit(room, { type: "room_mood_update", data: room.mood.current(room.roomId) });
     }

@@ -5,6 +5,97 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface ChatDirectoryRoom {
+  roomId: string;
+  label: string;
+}
+
+export type CommunityAtmosphereScene = typeof CommunityAtmosphereScene[keyof typeof CommunityAtmosphereScene];
+
+
+export const CommunityAtmosphereScene = {
+  city: 'city',
+  calm: 'calm',
+  volcano: 'volcano',
+} as const;
+
+export interface CommunityAtmosphere {
+  scene: CommunityAtmosphereScene;
+  since: number;
+  activity: number;
+  windowMs: number;
+  sentimentEnabled: boolean;
+}
+
+export interface ChatAccess {
+  adultConfirmed: boolean;
+  moderator: boolean;
+  sentimentEnabled: boolean;
+  suspended: boolean;
+}
+
+export interface AdultAttestationInput {
+  adult: true;
+}
+
+export type ChatReportInputReason = typeof ChatReportInputReason[keyof typeof ChatReportInputReason];
+
+
+export const ChatReportInputReason = {
+  harassment: 'harassment',
+  minor: 'minor',
+  spam: 'spam',
+  other: 'other',
+} as const;
+
+export interface ChatReportInput {
+  roomId: string;
+  messageId: string;
+  reason: ChatReportInputReason;
+  /** @maxLength 500 */
+  details?: string;
+}
+
+export type ChatReportReceiptStatus = typeof ChatReportReceiptStatus[keyof typeof ChatReportReceiptStatus];
+
+
+export const ChatReportReceiptStatus = {
+  pending: 'pending',
+  dismissed: 'dismissed',
+  hidden: 'hidden',
+  muted: 'muted',
+  restricted: 'restricted',
+} as const;
+
+export interface ChatReportReceipt {
+  id: string;
+  status: ChatReportReceiptStatus;
+}
+
+export type ChatReportRecord = ChatReportReceipt & {
+  roomId: string;
+  messageId: string;
+  reason: string;
+  details: string;
+  text: string;
+  username: string;
+  createdAt: string;
+};
+
+export type ChatReportReviewInputAction = typeof ChatReportReviewInputAction[keyof typeof ChatReportReviewInputAction];
+
+
+export const ChatReportReviewInputAction = {
+  dismiss: 'dismiss',
+  hide: 'hide',
+  mute: 'mute',
+  restrict: 'restrict',
+} as const;
+
+export interface ChatReportReviewInput {
+  action: ChatReportReviewInputAction;
+}
+
 export type MicrophoneActionAction = typeof MicrophoneActionAction[keyof typeof MicrophoneActionAction];
 
 
@@ -212,6 +303,7 @@ export interface Participant {
 }
 
 export interface RoomState {
+  communityAtmosphere?: CommunityAtmosphere;
   hostParticipantId: string;
   name: string;
   capacity: number;
@@ -228,6 +320,97 @@ export interface RoomSession {
 
 export interface ErrorResponse {
   error: string;
+}
+
+export interface ChatDirectoryRoom4b96100 {
+  roomId: string;
+  label: string;
+}
+
+export type CommunityAtmosphere4b96100Scene = typeof CommunityAtmosphere4b96100Scene[keyof typeof CommunityAtmosphere4b96100Scene];
+
+
+export const CommunityAtmosphere4b96100Scene = {
+  city: 'city',
+  calm: 'calm',
+  volcano: 'volcano',
+} as const;
+
+export interface CommunityAtmosphere4b96100 {
+  scene: CommunityAtmosphere4b96100Scene;
+  since: number;
+  activity: number;
+  windowMs: number;
+  sentimentEnabled: boolean;
+}
+
+export interface ChatAccess4b96100 {
+  adultConfirmed: boolean;
+  moderator: boolean;
+  sentimentEnabled: boolean;
+  suspended: boolean;
+}
+
+export interface AdultAttestationInput4b96100 {
+  adult: true;
+}
+
+export type ChatReportInput4b96100Reason = typeof ChatReportInput4b96100Reason[keyof typeof ChatReportInput4b96100Reason];
+
+
+export const ChatReportInput4b96100Reason = {
+  harassment: 'harassment',
+  minor: 'minor',
+  spam: 'spam',
+  other: 'other',
+} as const;
+
+export interface ChatReportInput4b96100 {
+  roomId: string;
+  messageId: string;
+  reason: ChatReportInput4b96100Reason;
+  /** @maxLength 500 */
+  details?: string;
+}
+
+export type ChatReportReceipt4b96100Status = typeof ChatReportReceipt4b96100Status[keyof typeof ChatReportReceipt4b96100Status];
+
+
+export const ChatReportReceipt4b96100Status = {
+  pending: 'pending',
+  dismissed: 'dismissed',
+  hidden: 'hidden',
+  muted: 'muted',
+  restricted: 'restricted',
+} as const;
+
+export interface ChatReportReceipt4b96100 {
+  id: string;
+  status: ChatReportReceipt4b96100Status;
+}
+
+export type ChatReportRecord4b96100 = ChatReportReceipt4b96100 & {
+  roomId: string;
+  messageId: string;
+  reason: string;
+  details: string;
+  text: string;
+  username: string;
+  createdAt: string;
+};
+
+export type ChatReportReviewInput4b96100Action = typeof ChatReportReviewInput4b96100Action[keyof typeof ChatReportReviewInput4b96100Action];
+
+
+export const ChatReportReviewInput4b96100Action = {
+  dismiss: 'dismiss',
+  hide: 'hide',
+  mute: 'mute',
+  restrict: 'restrict',
+} as const;
+
+export interface ChatReportReviewInput4b96100 {
+  action: ChatReportReviewInput4b96100Action;
 }
 
 export type MicrophoneAction4b96100Action = typeof MicrophoneAction4b96100Action[keyof typeof MicrophoneAction4b96100Action];
@@ -437,6 +620,7 @@ export interface Participant4b96100 {
 }
 
 export interface RoomState4b96100 {
+  communityAtmosphere?: CommunityAtmosphere4b96100;
   hostParticipantId: string;
   name: string;
   capacity: number;
@@ -455,7 +639,28 @@ export interface ErrorResponse4b96100 {
   error: string;
 }
 
+/**
+ * @nullable
+ */
+export type SocialPersonExternalPlatform = typeof SocialPersonExternalPlatform[keyof typeof SocialPersonExternalPlatform] | null;
+
+
+export const SocialPersonExternalPlatform = {
+  LiveMe: 'LiveMe',
+  Bigo_Live: 'Bigo Live',
+  Tango_Live: 'Tango Live',
+  TikTok: 'TikTok',
+  Instagram_Live: 'Instagram Live',
+} as const;
+
 export interface SocialPerson {
+  /** @nullable */
+  externalPlatform?: SocialPersonExternalPlatform;
+  /**
+     * @maxLength 64
+     * @nullable
+     */
+  externalHandle?: string | null;
   username: string;
   identity: EmojiIdentity4b96100;
   bio: string;
@@ -468,7 +673,28 @@ export interface SocialPerson {
   badgeId: string | null;
 }
 
+/**
+ * @nullable
+ */
+export type SocialProfileInputExternalPlatform = typeof SocialProfileInputExternalPlatform[keyof typeof SocialProfileInputExternalPlatform] | null;
+
+
+export const SocialProfileInputExternalPlatform = {
+  LiveMe: 'LiveMe',
+  Bigo_Live: 'Bigo Live',
+  Tango_Live: 'Tango Live',
+  TikTok: 'TikTok',
+  Instagram_Live: 'Instagram Live',
+} as const;
+
 export interface SocialProfileInput {
+  /** @nullable */
+  externalPlatform?: SocialProfileInputExternalPlatform;
+  /**
+     * @maxLength 64
+     * @nullable
+     */
+  externalHandle?: string | null;
   /** @maxLength 200 */
   bio: string;
   country: string | null;

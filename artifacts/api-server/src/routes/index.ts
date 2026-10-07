@@ -2,17 +2,31 @@ import chatRouter from "./chat";
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import roomsRouter from "./rooms";
-import audioRouter from "./audio";
 import identityRouter from "./identity";
 import socialRouter from "./social";
+import communityRouter from "./community";
+import { accountId } from "./identity";
+import { requireAdult } from "../lib/community";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(communityRouter);
+router.use(["/account/rooms", "/social"], async (req, _res, next) => {
+  await requireAdult(accountId(req));
+  next();
+});
 router.use(identityRouter);
 router.use(socialRouter);
 router.use(chatRouter);
+// Leave shared audio modules in place for rollback, but never mount signaling.
+router.use((req, res, next) => {
+  if (req.path.includes("/audio") || req.path.endsWith("/microphone")
+    || (req.method === "POST" && (req.path === "/rooms" || /^\/rooms\/[^/]+\/join$/.test(req.path)))) {
+    res.status(410).json({ error: "Broadcasting is disabled. Choose a text-chat room." }); return;
+  }
+  next();
+});
 router.use(roomsRouter);
-router.use(audioRouter);
 
 export default router;

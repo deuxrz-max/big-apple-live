@@ -5,9 +5,11 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { CommunityAtmosphere } from './communityAtmosphere';
 import type { Participant } from './participant';
 
 export interface RoomState {
+  communityAtmosphere?: CommunityAtmosphere;
   hostParticipantId: string;
   name: string;
   capacity: number;

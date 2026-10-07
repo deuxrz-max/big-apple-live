@@ -40,7 +40,7 @@ app.use(express.urlencoded({ extended: true }));
 // Scope account auth: the audio routes use private room capabilities in their
 // Authorization header, NOT Clerk JWTs, and must continue to work unchanged.
 app.use(
-  ["/api/me", "/api/account", "/api/social"],
+  ["/api/me", "/api/account", "/api/social", "/api/rooms"],
   clerkMiddleware((req) => ({
     publishableKey: publishableKeyFromHost(
       getClerkProxyHost(req) ?? "",

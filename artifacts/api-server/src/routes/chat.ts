@@ -2,18 +2,29 @@ import { Router, type IRouter } from "express";
 import {
   GetRoomMessagesParams, GetRoomMessagesResponse, SendRoomMessageBody, SendRoomMessageResponse,
   StreamAccountRoomEventsParams, GetRoomResponse,
+  GetOlderRoomMessagesParams,
 } from "@workspace/api-zod";
 import { accountId, sameOrigin } from "./identity";
 import { roomStore, RoomError } from "../lib/room-store";
 import { acceptMessage, getMessages } from "../lib/room-chat";
+import { pairBlocked } from "../lib/social/core";
+import { requireAdult } from "../lib/community";
 
 const router: IRouter = Router();
+router.get("/account/rooms/:roomId/history/:beforeId", async (req, res) => {
+  const params = GetOlderRoomMessagesParams.safeParse(req.params);
+  if (!params.success) throw new RoomError(400, "Invalid history cursor");
+  const id = accountId(req);
+  roomStore.requireAccountMember(params.data.roomId, req.get("X-Room-Session") ?? "", id);
+  res.set("Cache-Control", "no-store");
+  res.json(GetRoomMessagesResponse.parse(await getMessages(params.data.roomId, roomStore, id, params.data.beforeId)));
+});
 router.get("/account/rooms/:roomId/messages", async (req, res): Promise<void> => {
   const params = GetRoomMessagesParams.safeParse(req.params);
   if (!params.success) throw new RoomError(400, "Invalid room code");
   roomStore.requireAccountMember(params.data.roomId, req.get("X-Room-Session") ?? "", accountId(req));
   res.set("Cache-Control", "no-store");
-  res.json(GetRoomMessagesResponse.parse(await getMessages(params.data.roomId)));
+  res.json(GetRoomMessagesResponse.parse(await getMessages(params.data.roomId, roomStore, accountId(req))));
 });
 router.post("/account/rooms/:roomId/messages", async (req, res): Promise<void> => {
   sameOrigin(req);
@@ -35,13 +46,21 @@ router.get("/account/rooms/:roomId/events", (req, res): void => {
   const id = accountId(req);
   roomStore.requireAccountMember(roomId, sessionId, id);
   const unsubscribe = roomStore.subscribe(roomId, (event) => {
+    void (async () => {
     if (res.destroyed || res.writableEnded) return;
     // Removed/expired sessions cannot continue receiving private chat.
+    try { roomStore.requireAccountMember(roomId, sessionId, id); }
+    catch { res.end(); return; }
+    try { await requireAdult(id); } catch { res.end(); return; }
+    if (event.type === "chat.accepted" && event.senderAccountId
+      && await pairBlocked(id, event.senderAccountId)) return;
+    if (res.destroyed || res.writableEnded) return;
     try { roomStore.requireAccountMember(roomId, sessionId, id); }
     catch { res.end(); return; }
     const data = event.type === "room.snapshot" ? GetRoomResponse.parse(event.data)
       : event.type === "chat.accepted" ? SendRoomMessageResponse.parse(event.data) : event.data;
     if (!res.write(`event: ${event.type}\ndata: ${JSON.stringify(data)}\n\n`)) res.destroy();
+    })().catch(error => { req.log.error({ error }, "Room event delivery failed"); res.destroy(); });
   });
   res.set({
     "Content-Type": "text/event-stream", "Cache-Control": "no-cache, no-transform",
@@ -50,6 +69,7 @@ router.get("/account/rooms/:roomId/events", (req, res): void => {
   res.flushHeaders();
   res.write(`event: room.snapshot\ndata: ${JSON.stringify(GetRoomResponse.parse(roomStore.get(roomId)))}\n\n`);
   const keepalive = setInterval(() => {
+    void requireAdult(id).catch(() => res.end());
     try { roomStore.requireAccountMember(roomId, sessionId, id); }
     catch { res.end(); return; }
     if (!res.write(": keepalive\n\n")) res.destroy();

@@ -5,8 +5,16 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { SocialProfileInputExternalPlatform } from './socialProfileInputExternalPlatform';
 
 export interface SocialProfileInput {
+  /** @nullable */
+  externalPlatform?: SocialProfileInputExternalPlatform;
+  /**
+     * @maxLength 64
+     * @nullable
+     */
+  externalHandle?: string | null;
   /** @maxLength 200 */
   bio: string;
   country: string | null;

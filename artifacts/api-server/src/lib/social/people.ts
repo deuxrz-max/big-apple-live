@@ -4,6 +4,7 @@ import type { SocialProfileInput } from "@workspace/api-zod";
 import { RoomError } from "../room-store";
 import { assertContact, ensureSocial, lockAccounts, lockPair, pairBlocked, person, requireAccount, targetAccount, wallet } from "./core";
 import { COUNTRIES, COUNTRY_CODES, GIFTS, PRODUCTS } from "./catalog";
+import { roomStore } from "../room-store";
 
 export async function getMe(id: string) {
   const profile = await requireAccount(id);
@@ -23,6 +24,8 @@ export async function saveSocialProfile(id: string, input: SocialProfileInput) {
       if (!owned) throw new RoomError(403, "Only owned badges can be displayed");
     }
     await tx.update(socialSettings).set({ bio: input.bio.trim(), country: input.country, interests,
+      ...(input.externalPlatform !== undefined ? { externalPlatform: input.externalPlatform } : {}),
+      ...(input.externalHandle !== undefined ? { externalHandle: input.externalHandle?.trim() || null } : {}),
       discoverable: input.discoverable, badgeId: input.badgeId, updatedAt: new Date() }).where(eq(socialSettings.accountId, id));
   });
   return person(id, profile);
@@ -68,6 +71,7 @@ export async function relationship(id: string, username: string, kind: "favorite
       and(eq(socialRelations.ownerId, target.accountId), eq(socialRelations.targetId, id)),
     )));
   });
+  if (kind === "block") roomStore.refreshChatVisibility();
   return { ok: true };
 }
 export async function blocks(id: string) {

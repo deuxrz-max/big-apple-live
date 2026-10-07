@@ -9,6 +9,7 @@ import { getProfile, saveProfile } from "../lib/account-profiles";
 import { emojiCatalog, coloredEmoji } from "../lib/emoji-library";
 import { roomStore, RoomError } from "../lib/room-store";
 import { getClerkProxyHost } from "../middlewares/clerkProxyMiddleware";
+import { communityMembership } from "../lib/community";
 
 const router: IRouter = Router();
 export function accountId(req: Request): string {
@@ -53,6 +54,8 @@ router.get("/emojis/:emojiId/:color/image", (req, res) => {
   res.send(coloredEmoji(params.data.emojiId, params.data.color));
 });
 router.post("/account/rooms", async (req, res) => {
+  throw new RoomError(410, "Live rooms are disabled. Choose a text-chat room from the directory.");
+  /* Retained legacy creation logic for rollback, not exposed in active UX.
   sameOrigin(req);
   const id = accountId(req);
   const profile = await getProfile(id);
@@ -62,16 +65,20 @@ router.post("/account/rooms", async (req, res) => {
   res.status(201).json(CreateAccountRoomResponse.parse(
     roomStore.create(profile.username, { accountId: id, identity: profile.identity }, beam?.success ? beam.data : undefined),
   ));
+  */
 });
 router.post("/account/rooms/:roomId/join", async (req, res) => {
   sameOrigin(req);
   const id = accountId(req);
   const params = JoinAccountRoomParams.safeParse(req.params);
   if (!params.success) throw new RoomError(400, "Invalid room ID");
+  if (!roomStore.isCommunity(params.data.roomId)) throw new RoomError(410, "This legacy Beam is archived. Choose a text room from the directory.");
   const profile = await getProfile(id);
   if (!profile) throw new RoomError(409, "Choose your dedicated name and emoji first");
-  res.status(201).json(JoinAccountRoomResponse.parse(
-    roomStore.join(params.data.roomId, profile.username, { accountId: id, identity: profile.identity }),
-  ));
+  const member = await communityMembership(params.data.roomId, id);
+  const session = roomStore.join(params.data.roomId, profile.username, { accountId: id, identity: profile.identity });
+  roomStore.restoreParticipantId(params.data.roomId, id, member.participantId);
+  res.status(201).json(JoinAccountRoomResponse.parse({ ...session,
+    participantId: member.participantId, room: roomStore.get(params.data.roomId) }));
 });
 export default router;

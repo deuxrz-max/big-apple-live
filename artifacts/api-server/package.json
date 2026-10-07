@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:community": "esbuild src/lib/community.test.ts --bundle --platform=node --format=esm --banner:js=\"import { createRequire as cr } from 'node:module'; const require=cr(import.meta.url);\" --outfile=.tests/community.test.mjs && node --test .tests/community.test.mjs",
     "test:social": "esbuild src/lib/social/social.test.ts --bundle --platform=node --format=esm --banner:js=\"import { createRequire as createTestRequire } from 'node:module'; const require = createTestRequire(import.meta.url);\" --outfile=.tests/social.test.mjs && node --test .tests/social.test.mjs",
     "dev": "export NODE_ENV=development && pnpm run build && pnpm run start",
     "build": "node ./build.mjs",

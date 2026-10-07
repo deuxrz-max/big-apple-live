@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Heart, Ban, Gift, MessageCircle, Search } from 'lucide-react';
 import {
   useGetSocialMe, useGetSocialPeople, useGetSocialPerson, useSetSocialRelationship, useGetSocialBlocks,
-  useSaveSocialProfile, useSendSocialGift, getGetSocialPeopleQueryKey, getGetSocialPersonQueryKey,
+  useSaveSocialProfile, SocialProfileInputExternalPlatform, useSendSocialGift, getGetSocialPeopleQueryKey, getGetSocialPersonQueryKey,
   type GetSocialPeopleParams,
 } from '@workspace/api-client-react';
 import { Avatar, BadgeMark, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, refreshSocial, useIdemKey, iconFor } from './common';
@@ -104,6 +104,7 @@ export function PersonPage({ username }: { username: string }) {
           <p className="sc-sub" data-testid="text-received">{p.receivedCredits} credits received in gifts</p>
         </div>
       </div>
+      {p.externalPlatform && p.externalHandle && <p className="sc-sub">{p.externalPlatform}: {p.externalHandle} <small>Self-listed, not verified</small></p>}
       {p.bio ? <p className="sc-bio-lg">{p.bio}</p> : <p className="bm-lede">No bio yet.</p>}
       {p.interests.length > 0 && <p className="sc-tags">{p.interests.map((i) => <i key={i}>{i}</i>)}</p>}
       {msg && <Msg ok={msg.ok}>{msg.t}</Msg>}
@@ -155,12 +156,14 @@ export function MyProfilePage() {
   const [interests, setInterests] = useState('');
   const [discoverable, setDiscoverable] = useState(false);
   const [badgeId, setBadgeId] = useState<string | null>(null);
+  const [platform, setPlatform] = useState('');
+  const [handle, setHandle] = useState('');
   const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null);
   useEffect(() => {
     const p = me.data?.profile;
     if (p && !init.current) {
       init.current = true;
-      setBio(p.bio); setCountry(p.country ?? ''); setInterests(p.interests.join(', ')); setDiscoverable(p.discoverable); setBadgeId(p.badgeId);
+      setBio(p.bio); setCountry(p.country ?? ''); setInterests(p.interests.join(', ')); setDiscoverable(p.discoverable); setBadgeId(p.badgeId); setPlatform(p.externalPlatform ?? ''); setHandle(p.externalHandle ?? '');
     }
   }, [me.data]);
   if (me.isLoading) return <Loading />;
@@ -171,7 +174,7 @@ export function MyProfilePage() {
   const submit = (e: FormEvent) => {
     e.preventDefault(); setMsg(null);
     if (bad) { setMsg({ ok: false, t: 'Use up to 8 interests, 24 characters each.' }); return; }
-    save.mutate({ data: { bio: bio.trim(), country: country || null, interests: list, discoverable, badgeId } }, {
+    save.mutate({ data: { bio: bio.trim(), country: country || null, interests: list, discoverable, badgeId, externalPlatform: (platform || null) as SocialProfileInputExternalPlatform, externalHandle: platform && handle.trim() ? handle.trim() : null } }, {
       onSuccess: () => { setMsg({ ok: true, t: 'Profile saved.' }); refreshSocial(qc); },
       onError: (er) => setMsg({ ok: false, t: errMsg(er) }),
     });
@@ -189,6 +192,12 @@ export function MyProfilePage() {
             <option value="">Prefer not to say</option>{d.countries.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}</select></label>
         <label className="sc-field"><span className="bm-label">Interests, comma separated (max 8)</span>
           <input className="bm-input" value={interests} onChange={(e) => setInterests(e.target.value)} data-testid="input-interests" /></label>
+        <label className="sc-field"><span className="bm-label">Other platform (optional, self-listed)</span>
+          <select className="sc-select" value={platform} onChange={(e) => setPlatform(e.target.value)} data-testid="select-platform">
+            <option value="">None</option>{Object.values(SocialProfileInputExternalPlatform).map((x) => <option key={x} value={x}>{x}</option>)}</select></label>
+        <label className="sc-field"><span className="bm-label">Handle on that platform</span>
+          <input className="bm-input" maxLength={64} value={handle} disabled={!platform} onChange={(e) => setHandle(e.target.value)} data-testid="input-handle" />
+          <small>Self-listed. Not ownership checked or officially verified.</small></label>
         <fieldset className="sc-field sc-fs"><legend className="bm-label">Badge (cosmetic, not identity verification)</legend>
           <div className="sc-gifts">
             <button type="button" aria-pressed={badgeId === null} className={`sc-gift${badgeId === null ? ' is-on' : ''}`} onClick={() => setBadgeId(null)}><b>None</b></button>

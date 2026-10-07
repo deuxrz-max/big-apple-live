@@ -51,3 +51,16 @@ even though supported fixture-based sign-in could verify the protected app.
 **How to apply:** Use the supported fixture to check signed-in pages and account
 profile creation. Verify redirect configuration separately and clearly report
 that real signup/email verification was not exercised by the fixture.
+
+Confirm backend authentication immediately after a programmatic login; a
+signed-in-looking page is not enough.
+
+**Why:** Synthetic Clerk sessions sometimes showed `/home` or a signed-in UI
+while protected API calls returned 401, and could lose the profile route.
+An isolated fresh context did not reliably resolve that runner condition.
+
+**How to apply:** Check both the UI session and an authenticated API response
+before starting a long protected-flow pass. Try an isolated fixture rather than
+changing the app's auth provider or real users. If it still fails, stop auth
+retries, report the unexecuted checks, and verify independent components without
+claiming full end-to-end success.

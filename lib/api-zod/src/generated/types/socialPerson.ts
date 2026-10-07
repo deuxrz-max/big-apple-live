@@ -6,8 +6,16 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { EmojiIdentity4b96100 } from './emojiIdentity4b96100';
+import type { SocialPersonExternalPlatform } from './socialPersonExternalPlatform';
 
 export interface SocialPerson {
+  /** @nullable */
+  externalPlatform?: SocialPersonExternalPlatform;
+  /**
+     * @maxLength 64
+     * @nullable
+     */
+  externalHandle?: string | null;
   username: string;
   identity: EmojiIdentity4b96100;
   bio: string;

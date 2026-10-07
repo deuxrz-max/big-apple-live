@@ -2,11 +2,13 @@
 - [Browser runner limits](browser-runner-limits.md) — clipboard and auth-fixture limits; distinguish blocked signup checks from signed-in app verification.
 - [Mood Sync rules](mood-sync-rules.md) — Spiky means Male, Ponytail means Female; unsupported faces must not change hair or reset the current mood.
 - [Portrait cutout checks](portrait-cutouts.md) — inspect detached decorations after background removal; callbacks require workspace-relative image paths.
-- [Microphone permissions](microphone-permissions.md) — both room experiences need creator/visitor controls; remote unmute requires the visitor's consent.
+- [Microphone permissions](microphone-permissions.md) — archived voice consent rules; active text communities require no camera or microphone.
 - [Room history isolation](room-history-isolation.md) — never recover unbound historical messages by reusable share code; preserve incarnation identity.
 - [Semantic merge checks](semantic-merge-checks.md) — unmarked automatic merges can drop completed safety fixes; regenerate contracts and verify behavior.
-- [Room mood visuals](room-mood-visuals.md) — effects are a separate read-only Socket.io transport; preserve existing SSE chat, avatar changes, and voice sessions.
-- [TalkCity reference](talkcity-reference.md) — selected features belong alongside Beams; retain We Buggin's branding and theme rather than duplicate TalkCity.
+- [Room mood visuals](room-mood-visuals.md) — archived Beam-effects transport constraints; see replit.md for the active text-chat scope.
+- [TalkCity reference](talkcity-reference.md) — retain We Buggin branding; the earlier alongside-Beams scope is superseded by the text-chat pivot.
 - [OpenAPI generation](openapi-generation.md) — modular refs need an allowlist before codegen; combined path/query schemas can collide in Zod barrel exports.
 - [Beam screen layout](beam-screen-layout.md) — participant boxes stay anchored; chat is borderless below them and older messages require chat-only scrolling.
-- [Living Beam rooms](living-beam-goal.md) — every Beam should feel like a living organism; the initial automatic events are visual moods only.
+- [Living Beam rooms](living-beam-goal.md) — archived Beam goal; superseded for active routes by the text-chat pivot.
+- [Text-chat follow-ons](text-chat-pivot.md) — optional ownership checks require a unique bio code and reviewer, never an official platform verification claim.
+- [Artifact command environment](artifact-command-environment.md) — one-off shell checks do not necessarily inherit managed service routing variables.

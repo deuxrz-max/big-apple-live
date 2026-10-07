@@ -8,6 +8,8 @@ export const roomMessages = pgTable("room_messages", {
   // Unbound historical rows must never be backfilled by reused share code.
   historyId: uuid("history_id"),
   authorId: uuid("author_id").notNull(),
+  authorAccountId: text("author_account_id"),
+  hidden: text("hidden").notNull().default("false"),
   username: text("username").notNull(),
   identity: jsonb("identity").$type<{
     emojiId: string; gender: "Male" | "Female"; color: string; hairColor: string;

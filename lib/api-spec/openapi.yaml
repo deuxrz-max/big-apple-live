@@ -15,6 +15,93 @@ tags:
   - name: audio
     description: Authenticated room-scoped WebRTC signaling; media travels peer-to-peer
 paths:
+  /account/rooms/{roomId}/history/{beforeId}:
+    get:
+      operationId: getOlderRoomMessages
+      parameters:
+        - $ref: "#/components/parameters/RoomId"
+        - name: beforeId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Older persisted messages from this membership's exact history
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/ChatMessage" } }
+  /account/chat/rooms:
+    get:
+      operationId: getChatDirectory
+      responses:
+        "200":
+          description: Independent text-chat communities, not broadcast integrations
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/ChatDirectoryRoom" } }
+  /account/chat/access:
+    get:
+      operationId: getChatAccess
+      responses:
+        "200":
+          description: Server-side adult attestation and moderation access
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChatAccess" }
+    post:
+      operationId: confirmChatAdult
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdultAttestationInput" }
+      responses:
+        "200":
+          description: Adult attestation saved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChatAccess" }
+  /account/chat/reports:
+    post:
+      operationId: reportChatMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChatReportInput" }
+      responses:
+        "201":
+          description: Report queued for a We Buggin moderator
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChatReportReceipt" }
+    get:
+      operationId: getChatReports
+      responses:
+        "200":
+          description: Restricted moderator queue
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/ChatReportRecord" } }
+  /account/chat/reports/{reportId}:
+    patch:
+      operationId: reviewChatReport
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChatReportReviewInput" }
+      responses:
+        "200":
+          description: Report reviewed without deleting the underlying message
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChatReportReceipt" }
   /social/me:
     $ref: './social.openapi.json#/paths/~1social~1me'
   /social/people:
@@ -578,6 +665,66 @@ components:
         type: string
         format: uuid
   schemas:
+    ChatDirectoryRoom:
+      type: object
+      required: [roomId, label]
+      properties:
+        roomId: { type: string }
+        label: { type: string }
+    CommunityAtmosphere:
+      type: object
+      required: [scene, since, activity, windowMs, sentimentEnabled]
+      properties:
+        scene: { type: string, enum: [city, calm, volcano] }
+        since: { type: number }
+        activity: { type: integer }
+        windowMs: { type: integer }
+        sentimentEnabled: { type: boolean }
+    ChatAccess:
+      type: object
+      required: [adultConfirmed, moderator, sentimentEnabled, suspended]
+      properties:
+        adultConfirmed: { type: boolean }
+        moderator: { type: boolean }
+        sentimentEnabled: { type: boolean }
+        suspended: { type: boolean }
+    AdultAttestationInput:
+      type: object
+      required: [adult]
+      properties:
+        adult: { type: boolean, enum: [true] }
+    ChatReportInput:
+      type: object
+      required: [roomId, messageId, reason]
+      properties:
+        roomId: { type: string }
+        messageId: { type: string, format: uuid }
+        reason: { type: string, enum: [harassment, minor, spam, other] }
+        details: { type: string, maxLength: 500 }
+    ChatReportReceipt:
+      type: object
+      required: [id, status]
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [pending, dismissed, hidden, muted, restricted] }
+    ChatReportRecord:
+      allOf:
+        - $ref: "#/components/schemas/ChatReportReceipt"
+        - type: object
+          required: [roomId, messageId, reason, details, text, username, createdAt]
+          properties:
+            roomId: { type: string }
+            messageId: { type: string, format: uuid }
+            reason: { type: string }
+            details: { type: string }
+            text: { type: string }
+            username: { type: string }
+            createdAt: { type: string, format: date-time }
+    ChatReportReviewInput:
+      type: object
+      required: [action]
+      properties:
+        action: { type: string, enum: [dismiss, hide, mute, restrict] }
     MicrophoneAction:
       type: object
       additionalProperties: false
@@ -732,6 +879,7 @@ components:
     RoomState:
       type: object
       properties:
+        communityAtmosphere: { $ref: "#/components/schemas/CommunityAtmosphere" }
         hostParticipantId: { type: string, format: uuid }
         name: { type: string }
         capacity: { type: integer }

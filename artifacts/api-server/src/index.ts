@@ -3,6 +3,7 @@ import { logger } from "./lib/logger";
 import { roomStore } from "./lib/room-store";
 import { createServer } from "node:http";
 import { attachRoomMoodSocket } from "./lib/room-mood-socket";
+import { initializeCommunities, tickCommunities } from "./lib/community";
 
 const rawPort = process.env["PORT"];
 
@@ -23,6 +24,11 @@ presenceSweep.unref();
 
 const server = createServer(app);
 attachRoomMoodSocket(server);
+await initializeCommunities();
+const communityTick = setInterval(() => {
+  void tickCommunities().catch(err => logger.error({ err }, "Community atmosphere update failed"));
+}, 5000);
+communityTick.unref();
 server.listen(port, () => {
   logger.info({ port }, "Server listening");
 });

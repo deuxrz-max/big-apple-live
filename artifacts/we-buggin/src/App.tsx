@@ -7,12 +7,9 @@ import { Redirect, Route, Switch, useLocation, useParams, Router as WouterRouter
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Wordmark } from '@/components/brand';
 import NotFound from '@/pages/not-found';
-import UserPortal from '@/pages/user-portal';
-import RoomPage from '@/pages/room';
-import { clearAllCreds, loadCreds } from '@/lib/room-creds';
-import BeamApp from '@/beam/BeamApp';
+import { clearAllCreds } from '@/lib/room-creds';
+import { AdultGate, ChatDirectory, ChatProfile, PublicChatLanding, TextChatRoom } from '@/chat/ChatApp';
 import { configureBeamAccount } from '@/beam/services/beamService';
-import DiscoveryHome from '@/discovery/DiscoveryHome';
 import SocialApp from '@/social/SocialApp';
 
 const queryClient = new QueryClient();
@@ -124,7 +121,7 @@ function HomeRedirect() {
   return (
     <>
       <Show when="signed-in"><Redirect to="/home" /></Show>
-      <Show when="signed-out"><BeamApp /></Show>
+      <Show when="signed-out"><PublicChatLanding /></Show>
     </>
   );
 }
@@ -133,7 +130,7 @@ function Portal() {
   const { user } = useUser();
   return (
     <>
-      <Show when="signed-in">{user && <UserPortal key={user.id} userId={user.id} />}</Show>
+      <Show when="signed-in">{user && <AdultGate><ChatProfile key={user.id} /></AdultGate>}</Show>
       <Show when="signed-out"><Redirect to="/" /></Show>
     </>
   );
@@ -143,7 +140,7 @@ function DiscoveryRoute() {
   const { user } = useUser();
   return (
     <>
-      <Show when="signed-in">{user && <DiscoveryHome key={user.id} userId={user.id} />}</Show>
+      <Show when="signed-in">{user && <AdultGate><ChatDirectory key={user.id} /></AdultGate>}</Show>
       <Show when="signed-out"><Redirect to="/sign-in" /></Show>
     </>
   );
@@ -153,7 +150,7 @@ function CommunityRoute() {
   const { user } = useUser();
   return (
     <>
-      <Show when="signed-in">{user && <SocialApp key={user.id} userId={user.id} />}</Show>
+      <Show when="signed-in">{user && <AdultGate><SocialApp key={user.id} userId={user.id} /></AdultGate>}</Show>
       <Show when="signed-out"><Redirect to="/sign-in" /></Show>
     </>
   );
@@ -165,7 +162,7 @@ function RoomRoute() {
   return (
     <>
       <Show when="signed-in">
-        {user && <RoomPage key={`${user.id}:${roomId}`} roomId={roomId} userId={user.id} hasCreds={!!loadCreds(user.id, roomId)} />}
+        {user && <AdultGate><TextChatRoom key={`${user.id}:${roomId}`} roomId={roomId} userId={user.id} /></AdultGate>}
       </Show>
       <Show when="signed-out"><Redirect to="/" /></Show>
     </>
@@ -206,8 +203,8 @@ function ClerkProviderWithRoutes() {
         <RoutedErrorBoundary>
           <Switch>
             <Route path="/" component={HomeRedirect} />
-            <Route path="/beams" component={BeamApp} />
-            <Route path="/beams/*?" component={BeamApp} />
+            <Route path="/beams">{() => <Redirect to="/home" />}</Route>
+            <Route path="/beams/*?">{() => <Redirect to="/home" />}</Route>
             <Route path="/legacy" component={HomeRedirect} />
             <Route path="/sign-in/*?" component={SignInPage} />
             <Route path="/sign-up/*?" component={SignUpPage} />
