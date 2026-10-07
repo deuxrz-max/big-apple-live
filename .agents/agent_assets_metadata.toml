@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "dXAEuPLnZzf9L0VLlOqcn"
+uri = "file://exports/we-buggin-beam-visual-guide.jpg"
+type = "image"
+title = "How your Beam rooms work"
+description = "A visual guide to the fixed participant layout, scrolling chat, activity-driven energy, and shared Drift → Bloom → Aurora mood cycle. The layout is a schematic, not a live room screenshot."
+logical_id = "6643187a-b6d1-4a93-aa59-42e17e2237d4"
+content_hash = "sha256:60d8acbc4785535b298afac38631b5125c4b63cc0d4bfcbc92f15d81cb92df09"
+size = 146316
+mtime_ms = 1791394725250
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/6643187a-b6d1-4a93-aa59-42e17e2237d4/8c7858f5-59dd-42cb-8c24-2dbb43fc98c9"
+storage_version_token = "1791394759970800"
+content_type = "image/jpeg"
