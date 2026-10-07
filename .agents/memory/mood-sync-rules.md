@@ -3,6 +3,10 @@ name: Mood Sync rules
 description: Required hair identities and handling unavailable expression variants.
 ---
 
+Archived: the user's uploaded-photo university update supersedes these rules on
+active routes. See replit.md for the current scope. Retain this only for archived
+Beam compatibility; do not reintroduce branded characters or facial-emoji photo sync.
+
 The user defines Spiky as Male and Ponytail as Female for Mood Sync. Facial
 messages must never change that hair identity. Non-face emojis must not reset
 the active mood.

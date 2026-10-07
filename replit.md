@@ -1,17 +1,27 @@
 # We Buggin
 
-Adults-only text-chat communities with existing named accounts, branded avatar
-expressions, persisted messages, live presence and independent room atmosphere.
+Adults-only social chat universities with existing named accounts, users' uploaded
+profile photos, persisted messages, live presence and independent university atmosphere.
 
 ## Current product: text chat
 
-The main experience is the five independent communities labeled LiveMe, Bigo
-Live, Tango Live, TikTok and Instagram Live. They are not broadcast integrations
+The main experience is six independent universities labeled LiveMe, Bigo
+Live, Tango Live, TikTok, Instagram Live and Super Live, in that order. They are not broadcast integrations
 and must not be presented as affiliated/endorsed. Preserve users, Clerk login,
-existing identities, messages and profile logic. Do not reactivate broadcasting
+existing accounts, messages and profile logic. Do not reactivate broadcasting
 seats, camera/microphone prompts or the old twelve-seat cap in active routes.
 
-Personal facial-emoji expression sync is separate from room atmosphere.
+Use "university/universities" in user-facing text; preserve internal room IDs/routes/events.
+These are social spaces for optional sharing/learning broadcasting techniques, not
+mandatory lessons, courses or enrollment.
+Users upload their own profile photos; missing photos use neutral initials.
+Chat message authors use clickable names linking to their existing profiles, with
+no profile photo beside the message author. Preserve profile privacy/block rules.
+No branded characters, hair/portrait pickers or profile-image facial-emoji sync
+in active routes. Chat emojis never change photos. Leave obsolete database
+identity fields unused for compatibility; never overwrite genuine uploaded photos.
+Existing valid profiles are complete; setup resumes only when no saved profile exists.
+University atmosphere is separate from profile photos.
 Tone-based scenes stay disabled without an approved classifier; activity is not
 hostility. Final video assets are not supplied. Existing financial data requires
 a separate policy decision and must never be erased or silently redesigned.

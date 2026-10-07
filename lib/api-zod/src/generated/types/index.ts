@@ -79,6 +79,8 @@ export * from './profileEnvelope';
 export * from './profileEnvelope4b96100';
 export * from './profileInput';
 export * from './profileInput4b96100';
+export * from './profilePhotoResult';
+export * from './profilePhotoResult4b96100';
 export * from './roomCreateInput';
 export * from './roomCreateInput4b96100';
 export * from './roomJoinInput';

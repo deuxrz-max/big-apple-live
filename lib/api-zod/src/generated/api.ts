@@ -8,6 +8,21 @@
 import * as zod from 'zod';
 
 
+/**
+ * @summary Validate and stage an account-owned profile photo
+ */
+export const UploadProfilePhotoResponse = zod.object({
+  "photoUrl": zod.string()
+})
+
+
+export const GetProfilePhotoParams = zod.object({
+  "photoId": zod.coerce.string().uuid()
+})
+
+export const GetProfilePhotoResponse = zod.unknown()
+
+
 export const getOlderRoomMessagesPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
 
 
@@ -27,6 +42,7 @@ export const GetOlderRoomMessagesResponseItem = zod.object({
   "roomId": zod.string(),
   "authorId": zod.string().uuid(),
   "username": zod.string(),
+  "photoUrl": zod.string().nullish(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getOlderRoomMessagesResponseIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -125,9 +141,11 @@ export const getSocialMeResponseProfileIdentityHairColorRegExp = new RegExp('^#[
 
 export const GetSocialMeResponse = zod.object({
   "profile": zod.object({
-  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal(null)]).nullish(),
+  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
   "externalHandle": zod.string().max(getSocialMeResponseProfileExternalHandleMax).nullish(),
   "username": zod.string(),
+  "displayName": zod.string().optional(),
+  "photoUrl": zod.string().nullish(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getSocialMeResponseProfileIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -184,7 +202,7 @@ export const saveSocialProfileBodyInterestsMax = 8;
 
 
 export const SaveSocialProfileBody = zod.object({
-  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal(null)]).nullish(),
+  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
   "externalHandle": zod.string().max(saveSocialProfileBodyExternalHandleMax).nullish(),
   "bio": zod.string().max(saveSocialProfileBodyBioMax),
   "country": zod.union([zod.string().regex(saveSocialProfileBodyCountryOneRegExp),zod.null()]),
@@ -202,9 +220,11 @@ export const saveSocialProfileResponseIdentityHairColorRegExp = new RegExp('^#[0
 
 
 export const SaveSocialProfileResponse = zod.object({
-  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal(null)]).nullish(),
+  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
   "externalHandle": zod.string().max(saveSocialProfileResponseExternalHandleMax).nullish(),
   "username": zod.string(),
+  "displayName": zod.string().optional(),
+  "photoUrl": zod.string().nullish(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(saveSocialProfileResponseIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -246,9 +266,11 @@ export const getSocialPeopleResponsePeopleItemIdentityHairColorRegExp = new RegE
 
 export const GetSocialPeopleResponse = zod.object({
   "people": zod.array(zod.object({
-  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal(null)]).nullish(),
+  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
   "externalHandle": zod.string().max(getSocialPeopleResponsePeopleItemExternalHandleMax).nullish(),
   "username": zod.string(),
+  "displayName": zod.string().optional(),
+  "photoUrl": zod.string().nullish(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getSocialPeopleResponsePeopleItemIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -283,9 +305,11 @@ export const getSocialPersonResponseIdentityHairColorRegExp = new RegExp('^#[0-9
 
 
 export const GetSocialPersonResponse = zod.object({
-  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal(null)]).nullish(),
+  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
   "externalHandle": zod.string().max(getSocialPersonResponseExternalHandleMax).nullish(),
   "username": zod.string(),
+  "displayName": zod.string().optional(),
+  "photoUrl": zod.string().nullish(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getSocialPersonResponseIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -329,9 +353,11 @@ export const getSocialBlocksResponsePeopleItemIdentityHairColorRegExp = new RegE
 
 export const GetSocialBlocksResponse = zod.object({
   "people": zod.array(zod.object({
-  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal(null)]).nullish(),
+  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
   "externalHandle": zod.string().max(getSocialBlocksResponsePeopleItemExternalHandleMax).nullish(),
   "username": zod.string(),
+  "displayName": zod.string().optional(),
+  "photoUrl": zod.string().nullish(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getSocialBlocksResponsePeopleItemIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -416,9 +442,11 @@ export const getSocialLeaderboardResponsePeopleItemIdentityHairColorRegExp = new
 
 export const GetSocialLeaderboardResponse = zod.object({
   "people": zod.array(zod.object({
-  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal(null)]).nullish(),
+  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
   "externalHandle": zod.string().max(getSocialLeaderboardResponsePeopleItemExternalHandleMax).nullish(),
   "username": zod.string(),
+  "displayName": zod.string().optional(),
+  "photoUrl": zod.string().nullish(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getSocialLeaderboardResponsePeopleItemIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -483,9 +511,11 @@ export const getSocialConversationResponsePersonIdentityHairColorRegExp = new Re
 
 export const GetSocialConversationResponse = zod.object({
   "person": zod.object({
-  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal(null)]).nullish(),
+  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
   "externalHandle": zod.string().max(getSocialConversationResponsePersonExternalHandleMax).nullish(),
   "username": zod.string(),
+  "displayName": zod.string().optional(),
+  "photoUrl": zod.string().nullish(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getSocialConversationResponsePersonIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -557,6 +587,9 @@ export const getMyProfileResponseProfileOneIdentityHairColorRegExp = new RegExp(
 export const GetMyProfileResponse = zod.object({
   "profile": zod.union([zod.object({
   "username": zod.string(),
+  "displayName": zod.string().optional(),
+  "bio": zod.string().optional(),
+  "photoUrl": zod.string().nullish(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getMyProfileResponseProfileOneIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -575,6 +608,12 @@ export const saveMyProfileBodyIdentityEmojiIdMax = 100;
 
 export const saveMyProfileBodyIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const saveMyProfileBodyIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const saveMyProfileBodyDisplayNameMax = 40;
+
+export const saveMyProfileBodyBioMax = 280;
+
+export const saveMyProfileBodyPhotoUrlMax = 200;
+
 
 
 export const SaveMyProfileBody = zod.object({
@@ -586,7 +625,10 @@ export const SaveMyProfileBody = zod.object({
   "hairColor": zod.string().regex(saveMyProfileBodyIdentityHairColorRegExp),
   "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
   "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
-})
+}).optional(),
+  "displayName": zod.string().min(1).max(saveMyProfileBodyDisplayNameMax).optional(),
+  "bio": zod.string().max(saveMyProfileBodyBioMax).optional(),
+  "photoUrl": zod.string().max(saveMyProfileBodyPhotoUrlMax).nullish()
 })
 
 export const saveMyProfileResponseIdentityEmojiIdMax = 100;
@@ -597,6 +639,9 @@ export const saveMyProfileResponseIdentityHairColorRegExp = new RegExp('^#[0-9a-
 
 export const SaveMyProfileResponse = zod.object({
   "username": zod.string(),
+  "displayName": zod.string().optional(),
+  "bio": zod.string().optional(),
+  "photoUrl": zod.string().nullish(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(saveMyProfileResponseIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -667,6 +712,7 @@ export const CreateAccountRoomResponse = zod.object({
   "unmuteRequested": zod.boolean(),
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
+  "photoUrl": zod.string().nullish(),
   "joinedAt": zod.coerce.date(),
   "identity": zod.union([zod.object({
   "emojiId": zod.string().min(1).max(createAccountRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax),
@@ -717,6 +763,7 @@ export const JoinAccountRoomResponse = zod.object({
   "unmuteRequested": zod.boolean(),
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
+  "photoUrl": zod.string().nullish(),
   "joinedAt": zod.coerce.date(),
   "identity": zod.union([zod.object({
   "emojiId": zod.string().min(1).max(joinAccountRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax),
@@ -763,6 +810,7 @@ export const GetRoomMessagesResponseItem = zod.object({
   "roomId": zod.string(),
   "authorId": zod.string().uuid(),
   "username": zod.string(),
+  "photoUrl": zod.string().nullish(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getRoomMessagesResponseIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -814,6 +862,7 @@ export const SendRoomMessageResponse = zod.object({
   "roomId": zod.string(),
   "authorId": zod.string().uuid(),
   "username": zod.string(),
+  "photoUrl": zod.string().nullish(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(sendRoomMessageResponseMessageIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -828,6 +877,9 @@ export const SendRoomMessageResponse = zod.object({
 }),
   "profile": zod.object({
   "username": zod.string(),
+  "displayName": zod.string().optional(),
+  "bio": zod.string().optional(),
+  "photoUrl": zod.string().nullish(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(sendRoomMessageResponseProfileIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -894,6 +946,7 @@ export const CreateRoomResponse = zod.object({
   "unmuteRequested": zod.boolean(),
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
+  "photoUrl": zod.string().nullish(),
   "joinedAt": zod.coerce.date(),
   "identity": zod.union([zod.object({
   "emojiId": zod.string().min(1).max(createRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax),
@@ -944,6 +997,7 @@ export const GetRoomResponse = zod.object({
   "unmuteRequested": zod.boolean(),
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
+  "photoUrl": zod.string().nullish(),
   "joinedAt": zod.coerce.date(),
   "identity": zod.union([zod.object({
   "emojiId": zod.string().min(1).max(getRoomResponseParticipantsItemIdentityOneEmojiIdMax),
@@ -1004,6 +1058,7 @@ export const JoinRoomResponse = zod.object({
   "unmuteRequested": zod.boolean(),
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
+  "photoUrl": zod.string().nullish(),
   "joinedAt": zod.coerce.date(),
   "identity": zod.union([zod.object({
   "emojiId": zod.string().min(1).max(joinRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax),
@@ -1043,6 +1098,7 @@ export const HeartbeatParticipantResponse = zod.object({
   "unmuteRequested": zod.boolean(),
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
+  "photoUrl": zod.string().nullish(),
   "joinedAt": zod.coerce.date(),
   "identity": zod.union([zod.object({
   "emojiId": zod.string().min(1).max(heartbeatParticipantResponseIdentityOneEmojiIdMax),
@@ -1180,6 +1236,7 @@ export const ControlRoomMicrophoneResponse = zod.object({
   "unmuteRequested": zod.boolean(),
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
+  "photoUrl": zod.string().nullish(),
   "joinedAt": zod.coerce.date(),
   "identity": zod.union([zod.object({
   "emojiId": zod.string().min(1).max(controlRoomMicrophoneResponseParticipantsItemIdentityOneEmojiIdMax),

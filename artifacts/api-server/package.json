@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:photos": "esbuild src/lib/profile-photos.test.ts --bundle --platform=node --format=esm --external:sharp --banner:js=\"import { createRequire as cr } from 'node:module'; const require=cr(import.meta.url);\" --outfile=.tests/profile-photos.test.mjs && node --test .tests/profile-photos.test.mjs",
+    "test:profiles": "esbuild src/lib/profile-setup.test.ts --bundle --platform=node --format=esm --banner:js=\"import { createRequire as cr } from 'node:module'; const require=cr(import.meta.url);\" --outfile=.tests/profile-setup.test.mjs && node --test .tests/profile-setup.test.mjs",
     "test:community": "esbuild src/lib/community.test.ts --bundle --platform=node --format=esm --banner:js=\"import { createRequire as cr } from 'node:module'; const require=cr(import.meta.url);\" --outfile=.tests/community.test.mjs && node --test .tests/community.test.mjs",
     "test:social": "esbuild src/lib/social/social.test.ts --bundle --platform=node --format=esm --banner:js=\"import { createRequire as createTestRequire } from 'node:module'; const require = createTestRequire(import.meta.url);\" --outfile=.tests/social.test.mjs && node --test .tests/social.test.mjs",
     "dev": "export NODE_ENV=development && pnpm run build && pnpm run start",
@@ -17,6 +19,7 @@
   "dependencies": {
     "@clerk/express": "^2.1.74",
     "@clerk/shared": "^4.37.1",
+    "@google-cloud/storage": "^8.2.0",
     "@workspace/api-zod": "workspace:*",
     "@workspace/beam-identity": "workspace:*",
     "@workspace/db": "workspace:*",
@@ -25,10 +28,12 @@
     "cors": "^2.8.6",
     "drizzle-orm": "catalog:",
     "express": "^5.2.1",
+    "google-auth-library": "^11.1.0",
     "http-proxy-middleware": "^4.2.0",
     "openmoji": "^17.0.0",
     "pino": "^9.14.0",
     "pino-http": "^10.5.0",
+    "sharp": "^0.35.5",
     "socket.io": "^4.8.4"
   },
   "devDependencies": {

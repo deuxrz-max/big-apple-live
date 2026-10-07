@@ -20,6 +20,7 @@ export * from "./chat-community";
 //   export type Post = typeof postsTable.$inferSelect;
 
 export * from "./account-profiles";
+export * from "./profile-photos";
 export * from "./social-settings";
 export * from "./social-wallets";
 export * from "./social-relations";

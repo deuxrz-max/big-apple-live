@@ -1,7 +1,6 @@
-import { db, accountProfiles, roomMessages, socialRelations, chatMemberships, type RoomMessageRow } from "@workspace/db";
+import { db, accountProfiles, roomMessages, socialRelations, socialSettings, chatMemberships, type RoomMessageRow } from "@workspace/db";
 import { eq, desc, sql, and, or, gte, notInArray, isNull, lt } from "drizzle-orm";
 import { GetRoomMessagesResponse, type ChatInput, type ChatAccepted } from "@workspace/api-zod";
-import { messageMood } from "@workspace/beam-identity";
 import { publicProfile } from "./account-profiles";
 import { roomStore, RoomError, type RoomStore } from "./room-store";
 
@@ -13,7 +12,7 @@ export async function getMessages(roomId: string, store: RoomStore = roomStore, 
   if (beforeId) {
     const [cursor] = await db.select().from(roomMessages).where(and(
       eq(roomMessages.id, beforeId), eq(roomMessages.historyId, store.getHistoryId(roomId))));
-    if (!cursor) throw new RoomError(404, "History cursor not found in this room");
+    if (!cursor) throw new RoomError(404, "History cursor not found in this university");
     conditions.push(or(lt(roomMessages.createdAt, cursor.createdAt),
       and(eq(roomMessages.createdAt, cursor.createdAt), lt(roomMessages.id, cursor.id)))!);
   }
@@ -23,9 +22,10 @@ export async function getMessages(roomId: string, store: RoomStore = roomStore, 
     const blocked = relations.map(r => r.ownerId === viewerId ? r.targetId : r.ownerId);
     if (blocked.length) conditions.push(or(isNull(roomMessages.authorAccountId), notInArray(roomMessages.authorAccountId, blocked))!);
   }
-  const rows = await db.select().from(roomMessages).where(and(...conditions))
+  const rows = await db.select({ message: roomMessages, photoUrl: accountProfiles.photoUrl }).from(roomMessages)
+    .leftJoin(accountProfiles, eq(accountProfiles.accountId, roomMessages.authorAccountId)).where(and(...conditions))
     .orderBy(desc(roomMessages.createdAt), desc(roomMessages.id)).limit(60);
-  return rows.reverse().map(publicMessage);
+  return rows.reverse().map(row => ({ ...publicMessage(row.message), photoUrl: row.photoUrl ?? null }));
 }
 export async function acceptMessage(
   roomId: string, sessionId: string, accountId: string, input: ChatInput,
@@ -44,30 +44,27 @@ export async function acceptMessage(
     if (store.isCommunity(roomId)) {
       const [membership] = await tx.select().from(chatMemberships).where(and(
         eq(chatMemberships.historyId, historyId), eq(chatMemberships.accountId, accountId)));
-      if (!membership || membership.muted) throw new RoomError(403, "You cannot send messages in this room");
+      if (!membership || membership.muted) throw new RoomError(403, "You cannot send messages in this university");
       const [recent] = await tx.select({ count: sql<number>`count(*)::int` }).from(roomMessages)
         .where(and(eq(roomMessages.authorAccountId, accountId),
           gte(roomMessages.createdAt, new Date(Date.now() - 10_000))));
       if ((recent?.count ?? 0) >= 5) throw new RoomError(429, "Slow down: up to five messages every ten seconds");
     }
-    const mood = messageMood(row.gender === "Male" ? "spiked" : "ponytails", text);
+    // Emoji text never mutates a saved photo or obsolete avatar fields.
     let profile = publicProfile(row);
-    if (mood) {
-      const [updated] = await tx.update(accountProfiles).set({
-        currentMood: mood.currentMood, portraitId: mood.portraitId, updatedAt: new Date(),
-      }).where(eq(accountProfiles.accountId, accountId)).returning();
-      profile = publicProfile(updated!);
-    }
+    const [settings] = await tx.select({ bio: socialSettings.bio }).from(socialSettings)
+      .where(eq(socialSettings.accountId, accountId));
+    profile = { ...profile, bio: settings?.bio ?? "" };
     const [message] = await tx.insert(roomMessages).values({
       roomId: roomId.toUpperCase(), historyId, authorId: sender.participantId, authorAccountId: accountId,
       username: profile.username, identity: profile.identity, kind: input.kind, text,
     }).returning();
     // A leave/expiry while the database was busy rolls back message AND mood.
     store.requireAccountMember(roomId, sessionId, accountId);
-    return { message: publicMessage(message!), profile };
+    return { message: { ...publicMessage(message!), photoUrl: profile.photoUrl ?? null }, profile };
   });
   // No events or in-memory avatar changes occur before the transaction commits.
-  store.updateAccountIdentity(accountId, accepted.profile.username, accepted.profile.identity);
+  store.updateAccountIdentity(accountId, accepted.profile.displayName ?? accepted.profile.username, accepted.profile.identity, accepted.profile.photoUrl ?? null);
   store.publishChat(roomId, historyId, accepted, accountId);
   return accepted;
 }

@@ -45,7 +45,7 @@ async function requestHandler(
 }
 
 // Development DB integration: creates synthetic profiles, deletes only its own rows.
-test("accepted chat persists sender-only mood atomically; rejects impersonation, leaves and bad text", async () => {
+test("accepted chat leaves photos and obsolete avatar fields unchanged; rejects impersonation, leaves and bad text", async () => {
   const suffix = randomUUID().replaceAll("-", "").slice(0, 12);
   const aId = `chat-test-a-${suffix}`;
   const bId = `chat-test-b-${suffix}`;
@@ -90,21 +90,21 @@ test("accepted chat persists sender-only mood atomically; rejects impersonation,
       assert.equal(event.data.message.authorId, a.participantId);
     });
     const result = await acceptMessage(roomId, a.participantSessionId, aId, { kind: "text", text: "hello 😂" });
-    assert.equal(result.profile.identity.currentMood, "tears_of_joy");
-    assert.equal(result.profile.identity.portraitId, "spiked-tears-of-joy");
-    assert.equal(result.message.identity.portraitId, "spiked-tears-of-joy");
+    assert.deepEqual(result.profile.identity, aProfile.identity);
+    assert.deepEqual(result.message.identity, aProfile.identity);
+    assert.equal(result.profile.photoUrl, aProfile.photoUrl);
     assert.equal(result.message.authorId, a.participantId);
-    assert.equal((await getProfile(aId))!.identity.portraitId, "spiked-tears-of-joy");
-    assert.equal((await getProfile(bId))!.identity.portraitId, "ponytail-smile");
+    assert.deepEqual((await getProfile(aId))!.identity, aProfile.identity);
+    assert.deepEqual((await getProfile(bId))!.identity, bProfile.identity);
     assert.equal((await getMessages(roomId))[0]!.id, result.message.id);
     assert.equal(acceptedEvents, 1);
     await acceptMessage(roomId, a.participantSessionId, aId, { kind: "text", text: "🥹🔥" });
-    assert.equal((await getProfile(aId))!.identity.portraitId, "spiked-tears-of-joy");
+    assert.deepEqual((await getProfile(aId))!.identity, aProfile.identity);
     const saved = (await getProfile(aId))!;
     // Older clients may omit mood/artwork without resetting them.
     const { portraitId: _portrait, currentMood: _mood, ...legacy } = saved.identity;
     await saveProfile(aId, { username: saved.username, identity: legacy });
-    assert.equal((await getProfile(aId))!.identity.currentMood, "tears_of_joy");
+    assert.deepEqual((await getProfile(aId))!.identity, aProfile.identity);
     const count = (await getMessages(roomId)).length;
     for (const forged of ["authorId", "accountId", "identity", "currentMood", "portraitId"]) {
       const response = await requestHandler(chatRouter, "post", "/account/rooms/:roomId/messages", roomId, aId,
@@ -130,8 +130,8 @@ test("accepted chat persists sender-only mood atomically; rejects impersonation,
     await assert.rejects(acceptMessage(roomId, a.participantSessionId, aId, { kind: "text", text: " " }));
     await assert.rejects(acceptMessage(roomId, a.participantSessionId, aId, { kind: "text", text: "😭".repeat(141) }));
     assert.equal((await getMessages(roomId)).length, count);
-    assert.equal((await getProfile(aId))!.identity.portraitId, "spiked-tears-of-joy");
-    assert.equal((await getProfile(bId))!.identity.portraitId, "ponytail-smile");
+    assert.deepEqual((await getProfile(aId))!.identity, aProfile.identity);
+    assert.deepEqual((await getProfile(bId))!.identity, bProfile.identity);
     roomStore.leave(roomId, a.participantSessionId);
     await assert.rejects(acceptMessage(roomId, a.participantSessionId, aId, { kind: "reaction", text: "😭" }));
     assert.equal((await getMessages(roomId)).length, count);

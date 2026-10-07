@@ -10,5 +10,17 @@ import type { EmojiIdentity } from './emojiIdentity';
 export interface ProfileInput {
   /** @pattern ^[A-Za-z0-9_]{3,24}$ */
   username: string;
-  identity: EmojiIdentity;
+  identity?: EmojiIdentity;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  displayName?: string;
+  /** @maxLength 280 */
+  bio?: string;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  photoUrl?: string | null;
 }

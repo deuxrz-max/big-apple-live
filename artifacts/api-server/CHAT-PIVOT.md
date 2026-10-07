@@ -1,3 +1,10 @@
+# Historical pivot report
+
+The uploaded-photo/university update supersedes this report's active avatar,
+facial-mood and five-room wording. See `PROFILE-UNIVERSITIES.md` for the current
+account/profile flow. Retention, financial-data and private legacy-history
+constraints below still apply.
+
 # We Buggin text-chat pivot
 
 ## Implemented flow

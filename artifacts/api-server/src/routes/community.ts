@@ -33,12 +33,12 @@ router.post("/account/chat/reports", async (req, res) => {
   const input = ReportChatMessageBody.safeParse(req.body);
   if (!input.success) throw new RoomError(400, "Choose a message and report reason");
   const roomId = input.data.roomId.toUpperCase();
-  if (!roomStore.isCommunity(roomId)) throw new RoomError(404, "Text room not found");
+  if (!roomStore.isCommunity(roomId)) throw new RoomError(404, "University not found");
   roomStore.requireAccountMember(roomId, req.get("X-Room-Session") ?? "", id);
   const historyId = roomStore.getHistoryId(roomId);
   const [message] = await db.select().from(roomMessages)
     .where(and(eq(roomMessages.id, input.data.messageId), eq(roomMessages.historyId, historyId)));
-  if (!message) throw new RoomError(404, "Message not found in this room");
+  if (!message) throw new RoomError(404, "Message not found in this university");
   const [duplicate] = await db.select().from(chatReports).where(and(
     eq(chatReports.messageId, message.id), eq(chatReports.reporterId, id), eq(chatReports.status, "pending")));
   if (duplicate) { res.status(201).json({ id: duplicate.id, status: duplicate.status }); return; }

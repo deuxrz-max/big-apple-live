@@ -8,7 +8,7 @@ import { acceptMessage, getMessages } from "./room-chat";
 import { CommunityAtmosphereTracker, atmosphereConfig } from "./community-atmosphere";
 import { getProfile } from "./account-profiles";
 
-test("real PostgreSQL text-room persistence, isolation, mood sync, blocking, pagination and rate limiting", async t => {
+test("real PostgreSQL university persistence, isolation, emojis leave photos unchanged, blocking, pagination and rate limiting", async t => {
   const suffix = randomUUID().replaceAll("-", "").slice(0, 6);
   const ids = ["a", "b", "c"].map(x => `pivot-test-${suffix}-${x}`);
   const codes = [`Z${suffix.slice(0, 5)}`, `Y${suffix.slice(0, 5)}`].map(x => x.toUpperCase());
@@ -37,13 +37,17 @@ test("real PostgreSQL text-room persistence, isolation, mood sync, blocking, pag
   })));
   const a = sessions[0]!;
   const accepted = await acceptMessage(codes[0]!, a.participantSessionId, ids[0]!, { text: "hello 😊 then 😂 and music 🎵", kind: "text" }, store);
-  assert.equal(accepted.profile.identity.portraitId, "spiked-tears-of-joy");
+  assert.equal(accepted.profile.identity.portraitId, "spiked-smile");
+  assert.equal(accepted.profile.photoUrl, null);
   const ignored = await acceptMessage(codes[0]!, a.participantSessionId, ids[0]!, { text: "non-face ❤️ 🎤", kind: "text" }, store);
-  assert.equal(ignored.profile.identity.portraitId, "spiked-tears-of-joy");
+  assert.equal(ignored.profile.identity.portraitId, "spiked-smile");
   assert.equal((await getProfile(ids[1]!))!.identity.portraitId, "ponytail-smile");
+  // All facial emojis are plain text, not profile-image controls.
+  await acceptMessage(codes[0]!, a.participantSessionId, ids[0]!, { text: "😡", kind: "text" }, store);
+  assert.equal((await getProfile(ids[0]!))!.identity.portraitId, "spiked-smile");
   assert.equal((await getMessages(codes[1]!, store)).length, 0);
-  assert.equal((await getMessages(codes[0]!, store)).length, 2);
-  for (let i = 0; i < 3; i++) await acceptMessage(codes[0]!, a.participantSessionId, ids[0]!, { text: `rate test ${i}`, kind: "text" }, store);
+  assert.equal((await getMessages(codes[0]!, store)).length, 3);
+  for (let i = 0; i < 2; i++) await acceptMessage(codes[0]!, a.participantSessionId, ids[0]!, { text: `rate test ${i}`, kind: "text" }, store);
   await assert.rejects(acceptMessage(codes[0]!, a.participantSessionId, ids[0]!, { text: "too fast", kind: "text" }, store), /Slow down/);
   await db.insert(socialRelations).values({ ownerId: ids[1]!, targetId: ids[0]!, kind: "block" });
   assert.equal((await getMessages(codes[0]!, store, ids[1]!)).length, 0);
@@ -66,7 +70,7 @@ test("real PostgreSQL text-room persistence, isolation, mood sync, blocking, pag
   const older = await getMessages(codes[0]!, fresh, undefined, latest[0]!.id);
   assert.equal(older.length, 10);
   assert.equal(new Set([...latest, ...older].map(m => m.id)).size, 70);
-  await assert.rejects(getMessages(codes[1]!, fresh, undefined, latest[0]!.id), /not found in this room/);
+  await assert.rejects(getMessages(codes[1]!, fresh, undefined, latest[0]!.id), /not found in this university/);
   // Text presence has no inherited 12-seat ceiling.
   for (let i = 0; i < 20; i++) fresh.join(codes[1]!, `Synthetic${i}`, { accountId: `capacity-fixture-${i}`, identity: profiles[0]!.identity });
   assert.equal(fresh.get(codes[1]!).participants.length, 20);

@@ -5,6 +5,8 @@ import { z } from "zod/v4";
 export const accountProfiles = pgTable("account_profiles", {
   accountId: text("account_id").primaryKey(),
   username: text("username").notNull(),
+  displayName: text("display_name"),
+  photoUrl: text("photo_url"),
   nameKey: text("name_key").notNull().unique(),
   emojiId: text("emoji_id").notNull(),
   gender: text("gender", { enum: ["Male", "Female"] }).notNull(),

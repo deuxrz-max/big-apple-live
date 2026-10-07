@@ -9,6 +9,10 @@ import type { EmojiIdentity4b96100 } from './emojiIdentity4b96100';
 
 export interface AccountProfile4b96100 {
   username: string;
+  displayName?: string;
+  bio?: string;
+  /** @nullable */
+  photoUrl?: string | null;
   identity: EmojiIdentity4b96100;
   updatedAt: Date;
 }

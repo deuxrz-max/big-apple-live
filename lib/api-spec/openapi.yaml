@@ -15,6 +15,41 @@ tags:
   - name: audio
     description: Authenticated room-scoped WebRTC signaling; media travels peer-to-peer
 paths:
+  /me/photo:
+    post:
+      operationId: uploadProfilePhoto
+      summary: Validate and stage an account-owned profile photo
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema: { type: string, format: binary }
+      responses:
+        "201":
+          description: Persistent photo ready to save with the profile
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProfilePhotoResult" }
+        "400": { description: Invalid or undecodable image }
+        "401": { description: Sign in required }
+        "413": { description: File exceeds five MiB }
+        "429": { description: Upload rate exceeded }
+  /photos/{photoId}:
+    get:
+      operationId: getProfilePhoto
+      parameters:
+        - name: photoId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Validated metadata-free WebP image
+          content:
+            image/webp:
+              schema: { type: string, format: binary }
+        "401": { description: Sign in required }
+        "404": { description: Photo not available }
   /account/rooms/{roomId}/history/{beforeId}:
     get:
       operationId: getOlderRoomMessages
@@ -751,6 +786,7 @@ components:
         roomId: { type: string }
         authorId: { type: string, format: uuid }
         username: { type: string }
+        photoUrl: { type: [string, "null"] }
         identity: { $ref: "#/components/schemas/EmojiIdentity" }
         kind: { type: string, enum: [text, reaction] }
         text: { type: string }
@@ -786,19 +822,31 @@ components:
       required: [id, name, group, unicode]
     ProfileInput:
       type: object
+      additionalProperties: false
       properties:
         username:
           type: string
           pattern: "^[A-Za-z0-9_]{3,24}$"
         identity: { $ref: "#/components/schemas/EmojiIdentity" }
-      required: [username, identity]
+        displayName: { type: string, minLength: 1, maxLength: 40 }
+        bio: { type: string, maxLength: 280 }
+        photoUrl: { type: [string, "null"], maxLength: 200 }
+      required: [username]
     AccountProfile:
       type: object
       properties:
         username: { type: string }
+        displayName: { type: string }
+        bio: { type: string }
+        photoUrl: { type: [string, "null"] }
         identity: { $ref: "#/components/schemas/EmojiIdentity" }
         updatedAt: { type: string, format: date-time }
       required: [username, identity, updatedAt]
+    ProfilePhotoResult:
+      type: object
+      properties:
+        photoUrl: { type: string }
+      required: [photoUrl]
     ProfileEnvelope:
       type: object
       properties:
@@ -867,6 +915,7 @@ components:
           format: uuid
         displayName:
           type: string
+        photoUrl: { type: [string, "null"] }
         joinedAt:
           type: string
           format: date-time

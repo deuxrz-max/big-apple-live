@@ -213,6 +213,8 @@ export interface ChatMessage {
   roomId: string;
   authorId: string;
   username: string;
+  /** @nullable */
+  photoUrl?: string | null;
   identity: EmojiIdentity;
   kind: ChatMessageKind;
   text: string;
@@ -221,6 +223,10 @@ export interface ChatMessage {
 
 export interface AccountProfile {
   username: string;
+  displayName?: string;
+  bio?: string;
+  /** @nullable */
+  photoUrl?: string | null;
   identity: EmojiIdentity;
   updatedAt: string;
 }
@@ -240,7 +246,23 @@ export interface EmojiOption {
 export interface ProfileInput {
   /** @pattern ^[A-Za-z0-9_]{3,24}$ */
   username: string;
-  identity: EmojiIdentity;
+  identity?: EmojiIdentity;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  displayName?: string;
+  /** @maxLength 280 */
+  bio?: string;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  photoUrl?: string | null;
+}
+
+export interface ProfilePhotoResult {
+  photoUrl: string;
 }
 
 export interface ProfileEnvelope {
@@ -297,6 +319,8 @@ export interface Participant {
   unmuteRequested: boolean;
   participantId: string;
   displayName: string;
+  /** @nullable */
+  photoUrl?: string | null;
   joinedAt: string;
   identity: EmojiIdentity | null;
   isRegistered: boolean;
@@ -530,6 +554,8 @@ export interface ChatMessage4b96100 {
   roomId: string;
   authorId: string;
   username: string;
+  /** @nullable */
+  photoUrl?: string | null;
   identity: EmojiIdentity4b96100;
   kind: ChatMessage4b96100Kind;
   text: string;
@@ -538,6 +564,10 @@ export interface ChatMessage4b96100 {
 
 export interface AccountProfile4b96100 {
   username: string;
+  displayName?: string;
+  bio?: string;
+  /** @nullable */
+  photoUrl?: string | null;
   identity: EmojiIdentity4b96100;
   updatedAt: string;
 }
@@ -557,7 +587,23 @@ export interface EmojiOption4b96100 {
 export interface ProfileInput4b96100 {
   /** @pattern ^[A-Za-z0-9_]{3,24}$ */
   username: string;
-  identity: EmojiIdentity4b96100;
+  identity?: EmojiIdentity4b96100;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  displayName?: string;
+  /** @maxLength 280 */
+  bio?: string;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  photoUrl?: string | null;
+}
+
+export interface ProfilePhotoResult4b96100 {
+  photoUrl: string;
 }
 
 export interface ProfileEnvelope4b96100 {
@@ -614,6 +660,8 @@ export interface Participant4b96100 {
   unmuteRequested: boolean;
   participantId: string;
   displayName: string;
+  /** @nullable */
+  photoUrl?: string | null;
   joinedAt: string;
   identity: EmojiIdentity4b96100 | null;
   isRegistered: boolean;
@@ -651,6 +699,7 @@ export const SocialPersonExternalPlatform = {
   Tango_Live: 'Tango Live',
   TikTok: 'TikTok',
   Instagram_Live: 'Instagram Live',
+  Super_Live: 'Super Live',
 } as const;
 
 export interface SocialPerson {
@@ -662,6 +711,9 @@ export interface SocialPerson {
      */
   externalHandle?: string | null;
   username: string;
+  displayName?: string;
+  /** @nullable */
+  photoUrl?: string | null;
   identity: EmojiIdentity4b96100;
   bio: string;
   country: string | null;
@@ -685,6 +737,7 @@ export const SocialProfileInputExternalPlatform = {
   Tango_Live: 'Tango Live',
   TikTok: 'TikTok',
   Instagram_Live: 'Instagram Live',
+  Super_Live: 'Super Live',
 } as const;
 
 export interface SocialProfileInput {

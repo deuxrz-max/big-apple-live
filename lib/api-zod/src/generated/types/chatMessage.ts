@@ -13,6 +13,8 @@ export interface ChatMessage {
   roomId: string;
   authorId: string;
   username: string;
+  /** @nullable */
+  photoUrl?: string | null;
   identity: EmojiIdentity;
   kind: ChatMessageKind;
   text: string;

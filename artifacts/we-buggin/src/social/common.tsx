@@ -3,8 +3,7 @@ import { Link } from 'wouter';
 import type { QueryClient } from '@tanstack/react-query';
 import { Award, Crown, Flame, Gem, Gift, Heart, Rocket, Sparkles, Star, Zap, Coins, type LucideIcon } from 'lucide-react';
 import type { SocialPerson } from '@workspace/api-client-react';
-import { IdentityGlyph } from '@/beam/components/IdentityGlyph';
-import { beamIdentity } from '@/beam/services/beamService';
+import { UserPhoto } from '@/components/user-photo';
 
 export function errMsg(e: unknown): string {
   const x = e as { data?: { error?: string } | null; message?: string };
@@ -44,8 +43,9 @@ export function useIdemKey() {
   };
 }
 
-export const Avatar = ({ p, size = 56 }: { p: Pick<SocialPerson, 'identity'>; size?: number }) => (
-  <IdentityGlyph identity={beamIdentity(p.identity)} size={size} />
+type PhotoPerson = { username: string; photoUrl?: string | null; displayName?: string | null };
+export const Avatar = ({ p, size = 56 }: { p: PhotoPerson; size?: number }) => (
+  <UserPhoto username={p.username} displayName={p.displayName} photoUrl={p.photoUrl} size={size} />
 );
 
 export function PersonCard({ p, extra }: { p: SocialPerson; extra?: ReactNode }) {
@@ -54,8 +54,8 @@ export function PersonCard({ p, extra }: { p: SocialPerson; extra?: ReactNode })
       <Link href={`/community/people/${p.username}`} className="sc-card-main">
         <Avatar p={p} size={64} />
         <span className="sc-card-text">
-          <span className="sc-name">{p.username}<BadgeMark id={p.badgeId} /></span>
-          <span className="sc-sub">{p.identity.gender}{p.country ? ` / ${p.country}` : ''}</span>
+          <span className="sc-name">{(p as PhotoPerson).displayName || p.username}<BadgeMark id={p.badgeId} /></span>
+          <span className="sc-sub">@{p.username}{p.country ? ` / ${p.country}` : ''}</span>
           {p.bio && <span className="sc-bio">{p.bio}</span>}
           {p.interests.length > 0 && <span className="sc-tags">{p.interests.slice(0, 4).map((i) => <i key={i}>{i}</i>)}</span>}
         </span>

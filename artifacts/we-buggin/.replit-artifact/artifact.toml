@@ -1,7 +1,7 @@
 kind = "web"
 previewPath = "/"
 title = "We Buggin"
-description = "Persistent named emoji identities and static room presence for the existing voice chat system."
+description = "Adults-only social chat universities with uploaded profile photos, saved messages and independent atmosphere."
 version = "1.0.0"
 id = "artifacts/we-buggin"
 router = "path"

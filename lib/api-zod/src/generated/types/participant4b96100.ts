@@ -13,6 +13,8 @@ export interface Participant4b96100 {
   unmuteRequested: boolean;
   participantId: string;
   displayName: string;
+  /** @nullable */
+  photoUrl?: string | null;
   joinedAt: Date;
   identity: EmojiIdentity4b96100 | null;
   isRegistered: boolean;

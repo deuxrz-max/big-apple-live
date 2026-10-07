@@ -48,7 +48,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
         </nav>
         <main className="sc-main">
           {me.isLoading ? <Loading /> : needsIdentity ? (
-            <div className="sc-empty"><h2>Claim your name first</h2><p>Community needs your account identity.</p><Link href="/user-portal" className="bm-btn bm-btn-primary">Set up identity</Link></div>
+            <div className="sc-empty"><h2>Claim your name first</h2><p>Community needs your account identity.</p><Link href="/user-portal" className="bm-btn bm-btn-primary">Set up profile</Link></div>
           ) : me.isError ? <ErrorBox error={me.error} retry={() => me.refetch()} /> : (
             <Switch>
               <Route path="/community" component={CommunityPage} />

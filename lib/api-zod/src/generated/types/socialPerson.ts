@@ -17,6 +17,9 @@ export interface SocialPerson {
      */
   externalHandle?: string | null;
   username: string;
+  displayName?: string;
+  /** @nullable */
+  photoUrl?: string | null;
   identity: EmojiIdentity4b96100;
   bio: string;
   country: string | null;

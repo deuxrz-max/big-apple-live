@@ -9,7 +9,7 @@ export type ProfileRow = typeof accountProfiles.$inferSelect;
 export type SettingsRow = typeof socialSettings.$inferSelect;
 export async function requireAccount(id: string) {
   const [profile] = await db.select().from(accountProfiles).where(eq(accountProfiles.accountId, id));
-  if (!profile) throw new RoomError(409, "Set up your dedicated name and avatar in My account first");
+  if (!profile) throw new RoomError(409, "Set up your profile in Edit profile first");
   return profile;
 }
 export async function targetAccount(username: string) {
@@ -61,7 +61,8 @@ export async function person(viewer: string, profile: ProfileRow, settings?: Set
   const [favorite] = await db.select().from(socialRelations).where(and(eq(socialRelations.ownerId, viewer), eq(socialRelations.targetId, id), eq(socialRelations.kind, "favorite")));
   const blocked = id !== viewer && await pairBlocked(viewer, id);
   return {
-    username: profile.username, identity: publicProfile(profile).identity,
+    username: profile.username, displayName: profile.displayName ?? profile.username,
+    photoUrl: profile.photoUrl ?? null, identity: publicProfile(profile).identity,
     bio: blocked ? "" : prefs?.bio ?? "", country: blocked ? null : prefs?.country ?? null,
     externalPlatform: blocked ? null : prefs?.externalPlatform ?? null,
     externalHandle: blocked ? null : prefs?.externalHandle ?? null,

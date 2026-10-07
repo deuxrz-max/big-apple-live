@@ -18,4 +18,5 @@ export const SocialProfileInputExternalPlatform = {
   Tango_Live: 'Tango Live',
   TikTok: 'TikTok',
   Instagram_Live: 'Instagram Live',
+  Super_Live: 'Super Live',
 } as const;

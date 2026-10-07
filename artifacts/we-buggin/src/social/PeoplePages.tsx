@@ -12,11 +12,10 @@ import { Avatar, BadgeMark, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard,
 export function CommunityPage() {
   const me = useGetSocialMe();
   const [search, setSearch] = useState('');
-  const [gender, setGender] = useState<'' | 'Male' | 'Female'>('');
   const [country, setCountry] = useState('');
   const [stack, setStack] = useState<number[]>([0]);
   const offset = stack[stack.length - 1];
-  const params: GetSocialPeopleParams = { ...(search ? { search } : {}), ...(gender ? { gender } : {}), ...(country ? { country } : {}), ...(offset ? { offset } : {}) };
+  const params: GetSocialPeopleParams = { ...(search ? { search } : {}), ...(country ? { country } : {}), ...(offset ? { offset } : {}) };
   const q = useGetSocialPeople(params, { query: { queryKey: getGetSocialPeopleQueryKey(params), refetchInterval: 15000 } });
   const [draft, setDraft] = useState('');
   const reset = () => setStack([0]);
@@ -31,9 +30,6 @@ export function CommunityPage() {
       <form className="sc-filters" onSubmit={submit} role="search">
         <label className="sc-field sc-grow"><span className="bm-label">Search</span>
           <input className="bm-input" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Username" maxLength={24} data-testid="input-search" /></label>
-        <label className="sc-field"><span className="bm-label">Gender</span>
-          <select className="sc-select" value={gender} onChange={(e) => { setGender(e.target.value as '' | 'Male' | 'Female'); reset(); }} data-testid="select-gender">
-            <option value="">Any</option><option value="Male">Male</option><option value="Female">Female</option></select></label>
         <label className="sc-field"><span className="bm-label">Country</span>
           <select className="sc-select" value={country} onChange={(e) => { setCountry(e.target.value); reset(); }} data-testid="select-country">
             <option value="">Anywhere</option>{me.data?.countries.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}</select></label>
@@ -99,7 +95,7 @@ export function PersonPage({ username }: { username: string }) {
         <Avatar p={p} size={140} />
         <div>
           <h1 className="bm-h1 sc-h1">{p.username}</h1>
-          <p className="sc-sub">{p.identity.gender}{p.country ? ` / ${me.data?.countries.find((c) => c.code === p.country)?.name ?? p.country}` : ''}</p>
+          <p className="sc-sub">@{p.username}{p.country ? ` / ${me.data?.countries.find((c) => c.code === p.country)?.name ?? p.country}` : ''}</p>
           {p.badgeId && <p className="sc-badge-line"><BadgeMark id={p.badgeId} /> {badgeName ?? 'Badge'} <small>Cosmetic only, not verification</small></p>}
           <p className="sc-sub" data-testid="text-received">{p.receivedCredits} credits received in gifts</p>
         </div>
@@ -183,7 +179,7 @@ export function MyProfilePage() {
     <section>
       <h1 className="bm-h1 sc-h1">My profile</h1>
       <div className="sc-hero"><Avatar p={d.profile} size={110} /><div><p className="sc-name">{d.profile.username}<BadgeMark id={badgeId} /></p>
-        <p className="sc-sub">Username, hair, portrait and mood are set in <Link href="/user-portal" className="bm-link">your account</Link>.</p></div></div>
+        <p className="sc-sub">Change your display name, photo and bio in <Link href="/user-portal" className="bm-link">Edit profile</Link>.</p></div></div>
       <form className="sc-form" onSubmit={submit}>
         <label className="sc-field"><span className="bm-label">Bio ({bio.length}/200)</span>
           <textarea className="sc-text" value={bio} maxLength={200} rows={3} onChange={(e) => setBio(e.target.value)} data-testid="input-bio" /></label>

@@ -10,5 +10,17 @@ import type { EmojiIdentity4b96100 } from './emojiIdentity4b96100';
 export interface ProfileInput4b96100 {
   /** @pattern ^[A-Za-z0-9_]{3,24}$ */
   username: string;
-  identity: EmojiIdentity4b96100;
+  identity?: EmojiIdentity4b96100;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  displayName?: string;
+  /** @maxLength 280 */
+  bio?: string;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  photoUrl?: string | null;
 }

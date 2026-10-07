@@ -22,7 +22,7 @@ type RoomEvent =
   | { type: "room.expired"; data: { roomId: string } };
 type Listener = (event: RoomEvent) => void;
 type ActiveSession = { participant: Participant; lastSeenAt: number; accountId?: string };
-type AccountIdentity = { accountId: string; identity: EmojiIdentity };
+type AccountIdentity = { accountId: string; identity: EmojiIdentity; photoUrl?: string | null };
 function copyParticipant(participant: Participant): Participant {
   return {
     ...participant, joinedAt: new Date(participant.joinedAt),
@@ -71,7 +71,7 @@ export class RoomStore {
   create(displayName: string, account?: AccountIdentity, beam?: AccountRoomInput): RoomSession {
     this.sweep();
     if (this.rooms.size >= 10_000) {
-      throw new RoomError(503, "Room capacity reached");
+      throw new RoomError(503, "University service capacity reached");
     }
     let roomId: string;
     do {
@@ -106,7 +106,7 @@ export class RoomStore {
       }
     }
     if (room.capacity > 0 && room.sessions.size >= room.capacity) {
-      throw new RoomError(409, "Room participant capacity reached");
+      throw new RoomError(409, "University participant capacity reached");
     }
     return this.addSession(room, displayName, account);
   }
@@ -181,7 +181,7 @@ export class RoomStore {
   subscribe(roomId: string, listener: Listener): () => void {
     const room = this.requireRoom(roomId);
     if (room.listeners.size >= (room.community ? 2000 : 100)) {
-      throw new RoomError(503, "Room event subscriber capacity reached");
+      throw new RoomError(503, "University event subscriber capacity reached");
     }
     room.listeners.add(listener);
     return () => room.listeners.delete(listener);
@@ -192,7 +192,7 @@ export class RoomStore {
   }
   /** Profile edits affect only sessions owned by that authenticated account.
    * Presence leases and public participant IDs remain unchanged. */
-  updateAccountIdentity(accountId: string, displayName: string, identity: EmojiIdentity): void {
+  updateAccountIdentity(accountId: string, displayName: string, identity: EmojiIdentity, photoUrl?: string | null): void {
     for (const room of this.rooms.values()) {
       this.expire(room);
       let changed = false;
@@ -200,6 +200,7 @@ export class RoomStore {
         if (session.accountId !== accountId) continue;
         session.participant.displayName = displayName;
         session.participant.identity = { ...identity };
+        if (photoUrl !== undefined) session.participant.photoUrl = photoUrl;
         changed = true;
       }
       if (changed) this.broadcast(room);
@@ -211,7 +212,7 @@ export class RoomStore {
     const room = this.rooms.get(id);
     if (room) this.expire(room);
     if (!room || !this.rooms.has(id)) {
-      throw new RoomError(404, "Room not found or expired");
+      throw new RoomError(404, "University not found or expired");
     }
     return room;
   }
@@ -226,6 +227,7 @@ export class RoomStore {
       participant: {
         participantId,
         displayName,
+        photoUrl: account?.photoUrl ?? null,
         joinedAt: new Date(this.now()),
         identity: account ? { ...account.identity } : null,
         isRegistered: !!account,
@@ -288,7 +290,7 @@ export class RoomStore {
   requireAccountMember(roomId: string, sessionId: string, accountId: string): Participant {
     const session = this.requireRoom(roomId).sessions.get(sessionId);
     if (!session || session.accountId !== accountId) {
-      throw new RoomError(401, "This room session does not belong to your account");
+      throw new RoomError(401, "This university session does not belong to your account");
     }
     return copyParticipant(session.participant);
   }

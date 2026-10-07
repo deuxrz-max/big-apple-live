@@ -7,10 +7,8 @@ import {
   useGetChatReports, useGetMyProfile, useReportChatMessage, useReviewChatReport, useSaveMyProfile, useSetSocialRelationship,
   getGetChatReportsQueryKey, ChatReportInputReason, ChatReportReviewInputAction, type ChatMessage,
 } from '@workspace/api-client-react';
-import { IdentityGlyph } from '@/beam/components/IdentityGlyph';
-import { beamIdentity } from '@/beam/services/beamService';
-import { IdentityEditor } from '@/components/identity-editor';
-import { errMessage, errStatus, type Identity } from '@/lib/identity';
+import { UserPhoto } from '@/components/user-photo';
+import { errMessage, errStatus } from '@/lib/errors';
 import { useTextRoom } from './useTextRoom';
 import { RoomAtmosphere } from './RoomAtmosphere';
 import { roomVideoMapping } from './video-config';
@@ -18,8 +16,6 @@ import './chat.css';
 
 const DISCLAIMER = 'We Buggin is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
 const FACES = ['\u{1F600}', '\u{1F602}', '\u{1F60D}', '\u{1F62D}', '\u{1F914}', '\u{1F609}', '\u{1F610}', '\u{1F620}'];
-const START: Identity = { emojiId: '1F600', gender: 'Female', color: '#F7C531', hairColor: '#E8187F' };
-const Face = ({ identity, size = 36 }: { identity: Identity; size?: number }) => <IdentityGlyph identity={beamIdentity(identity)} size={size} />;
 
 function Shell({ children }: { children: ReactNode }) {
   return <div className="ch"><div className="ch-in">{children}</div></div>;
@@ -48,7 +44,7 @@ export function PublicChatLanding() {
   return (
     <Shell>
       <h1>We Buggin</h1>
-      <p>Text chat rooms. One account works in any room. Rooms are listed by platform label.</p>
+      <p>Text chat universities. One account works in any university. Universities are listed by platform label.</p>
       <List preview />
       <p className="ch-note">{DISCLAIMER}</p>
       <p><Link href="/sign-in" className="bm-btn bm-btn-primary">Sign in</Link> <Link href="/sign-up" className="bm-btn">Create account</Link></p>
@@ -84,48 +80,140 @@ export function ChatDirectory() {
     <Shell>
       <div className="ch-top">
         <Link href="/home" className="bm-btn bm-btn-sm">We Buggin</Link>
-        <span><Link href="/user-portal" className="bm-btn bm-btn-sm">Profile</Link> <Link href="/community" className="bm-btn bm-btn-sm">Community</Link>{' '}
+        <span><Link href="/user-portal" className="bm-btn bm-btn-sm">Edit profile</Link> <Link href="/community" className="bm-btn bm-btn-sm">Community</Link>{' '}
           <button type="button" className="bm-btn bm-btn-sm" onClick={() => signOut({ redirectUrl: import.meta.env.BASE_URL || '/' })}>Sign out</button></span>
       </div>
       <h1>Directory</h1>
-      <p className="ch-note">Open any room with one account. No seats, no capacity limits.</p>
+      <p className="ch-note">Open any university with one account. No seats, no capacity limits.</p>
       <List />
       <p className="ch-note">{DISCLAIMER}</p>
     </Shell>
   );
 }
 
-export function ChatProfile() {
+const invalidateSocial = (qc: ReturnType<typeof useQueryClient>) =>
+  qc.invalidateQueries({ predicate: (q) => typeof q.queryKey[0] === 'string' && (q.queryKey[0] as string).startsWith('/api/social') });
+
+export function ProfileGate({ children }: { children: ReactNode }) {
+  return (
+    <AdultGate>
+      <ProfileGateInner>{children}</ProfileGateInner>
+    </AdultGate>
+  );
+}
+
+function ProfileGateInner({ children }: { children: ReactNode }) {
+  const q = useGetMyProfile();
+  if (q.isLoading) return <Shell><p role="status">Loading your profile...</p></Shell>;
+  if (q.isError) return <Shell><div className="ch-err" role="alert">Could not load your account. <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button></div></Shell>;
+  if (!q.data?.profile) return <ChatProfile setup />;
+  return <>{children}</>;
+}
+
+export function ChatProfile({ setup = false }: { setup?: boolean }) {
   const qc = useQueryClient();
   const [, nav] = useLocation();
   const q = useGetMyProfile();
   const save = useSaveMyProfile();
   const profile = q.data?.profile ?? null;
   const [username, setUsername] = useState('');
-  const [identity, setIdentity] = useState<Identity>(START);
+  const [displayName, setDisplayName] = useState('');
+  const [nameTouched, setNameTouched] = useState(false);
+  const [bio, setBio] = useState('');
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [upErr, setUpErr] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+  const pickPhoto = async (file: File | undefined) => {
+    if (!file) return;
+    setUpErr(null);
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { setUpErr('Choose a JPEG, PNG or WebP image.'); return; }
+    if (file.size > 5 * 1024 * 1024) { setUpErr('Photo must be 5 MiB or smaller.'); return; }
+    setPreview(URL.createObjectURL(file));
+    setUploading(true);
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/me/photo`, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/octet-stream' }, body: file });
+      if (!res.ok) { let m = 'Photo upload failed.'; try { m = (await res.json()).error ?? m; } catch { /* ignore */ } throw new Error(m); }
+      const j = (await res.json()) as { photoUrl: string };
+      setPhotoUrl(j.photoUrl); setPreview(null);
+    } catch (e) { setUpErr(e instanceof Error ? e.message : 'Photo upload failed.'); setPreview(null); }
+    finally { setUploading(false); if (fileRef.current) fileRef.current.value = ''; }
+  };
   const [saved, setSaved] = useState(false);
-  useEffect(() => { if (profile) setIdentity(profile.identity); }, [profile?.updatedAt]); // eslint-disable-line react-hooks/exhaustive-deps
-  const nameOk = profile ? true : /^[A-Za-z0-9_]{3,24}$/.test(username);
-  return (
-    <Shell>
-      <div className="ch-top"><Link href="/home" className="bm-btn bm-btn-sm">Directory</Link><Link href="/community/profile" className="bm-btn bm-btn-sm">Platform and bio</Link></div>
-      <h1>{profile ? profile.username : 'Your profile'}</h1>
+  const [tried, setTried] = useState(false);
+  const loadedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (profile && loadedFor.current !== profile.updatedAt) {
+      loadedFor.current = profile.updatedAt;
+      setPhotoUrl(profile.photoUrl ?? null);
+      setDisplayName(profile.displayName ?? profile.username);
+      setBio(profile.bio ?? '');
+    }
+  }, [profile?.updatedAt]); // eslint-disable-line react-hooks/exhaustive-deps
+  const shownDisplay = profile || nameTouched ? displayName : username;
+  const nameOk = !!profile || /^[A-Za-z0-9_]{3,24}$/.test(username);
+  const dn = shownDisplay.trim();
+  const dnOk = dn.length >= 1 && dn.length <= 40;
+  const bioOk = bio.length <= 280;
+  const submit = () => {
+    setTried(true); setSaved(false);
+    if (!nameOk || !dnOk || !bioOk || save.isPending || uploading) return;
+    const data = { username: profile?.username ?? username, displayName: dn, bio: bio.trim(), photoUrl };
+    save.mutate({ data }, {
+      onSuccess: (p) => {
+        qc.setQueryData(getGetMyProfileQueryKey(), { profile: p });
+        qc.invalidateQueries({ queryKey: getGetMyProfileQueryKey() });
+        invalidateSocial(qc);
+        setSaved(true);
+        if (!profile) nav('/home');
+      },
+    });
+  };
+  const body = (
+    <>
+      {!setup && <div className="ch-top"><Link href="/home" className="bm-btn bm-btn-sm">Directory</Link><Link href="/community/profile" className="bm-btn bm-btn-sm">Platform and bio</Link></div>}
+      <h1>{profile ? 'Edit profile' : 'Set up your profile'}</h1>
+      {profile && <p className="ch-note">Username @{profile.username} is permanent.</p>}
       {q.isLoading && <p role="status">Loading...</p>}
       {q.isError && <div className="ch-err" role="alert">Could not load your account. <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button></div>}
       {q.data && (
-        <>
-          {!profile && <label>Username (permanent, 3-24 letters, digits, underscores)<br /><input type="text" value={username} maxLength={24} onChange={(e) => setUsername(e.target.value)} data-testid="input-username" /></label>}
-          <IdentityEditor value={identity} onChange={setIdentity} />
+        <form noValidate onSubmit={(e) => { e.preventDefault(); submit(); }} className="ch-form">
+          {!profile && (
+            <label>Username (permanent, 3-24 letters, digits, underscores)
+              <input type="text" value={username} maxLength={24} autoComplete="username" aria-invalid={tried && !nameOk} onChange={(e) => setUsername(e.target.value)} data-testid="input-username" />
+              {tried && !nameOk && <span className="ch-fe" role="alert">Use 3-24 letters, digits or underscores.</span>}
+            </label>
+          )}
+          <label>Display name (shown to others, 1-40 characters)
+            <input type="text" value={shownDisplay} maxLength={40} aria-invalid={tried && !dnOk} onChange={(e) => { setNameTouched(true); setDisplayName(e.target.value); }} data-testid="input-display-name" />
+            {tried && !dnOk && <span className="ch-fe" role="alert">Enter a display name.</span>}
+          </label>
+          <label>Bio (optional, up to 280)
+            <textarea value={bio} maxLength={280} rows={3} onChange={(e) => setBio(e.target.value)} data-testid="input-bio" />
+            <span className="ch-note">{bio.length}/280</span>
+          </label>
+          <div>
+            <p><b>Profile photo (optional)</b></p>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+              <UserPhoto username={profile?.username ?? username} displayName={dn} photoUrl={preview ?? photoUrl} size={96} />
+              <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" aria-label="Upload profile photo" disabled={uploading} onChange={(e) => pickPhoto(e.target.files?.[0])} data-testid="input-photo" />
+              {photoUrl && <button type="button" className="bm-btn bm-btn-sm" disabled={uploading} onClick={() => { setPhotoUrl(null); setUpErr(null); }} data-testid="button-remove-photo">Remove photo</button>}
+            </div>
+            <p className="ch-note">JPEG, PNG or WebP, up to 5 MiB.{uploading ? ' Uploading...' : ''}</p>
+            {upErr && <div className="ch-err" role="alert">{upErr}</div>}
+          </div>
           {save.isError && <div className="ch-err" role="alert">{errStatus(save.error) === 409 ? 'That username is taken, or cannot be changed.' : errMessage(save.error)}</div>}
           {saved && <p role="status">Saved.</p>}
-          <p><button type="button" className="bm-btn bm-btn-primary" disabled={!nameOk || save.isPending} data-testid="button-save-identity"
-            onClick={() => { setSaved(false); save.mutate({ data: { username: profile?.username ?? username, identity } }, { onSuccess: (p) => { qc.setQueryData(getGetMyProfileQueryKey(), { profile: p }); setSaved(true); if (!profile) nav('/home'); } }); }}>
-            {save.isPending ? 'Saving...' : profile ? 'Save changes' : 'Claim name and save'}</button></p>
-        </>
+          <p><button type="submit" className="bm-btn bm-btn-primary" disabled={save.isPending || uploading} data-testid="button-save-identity">
+            {save.isPending ? 'Saving...' : profile ? 'Save changes' : 'Create profile'}</button></p>
+        </form>
       )}
-      <p className="ch-note">Financial policy is pending a separate decision; existing community routes are unchanged.</p>
-    </Shell>
+      <p className="ch-note">{DISCLAIMER}</p>
+    </>
   );
+  return <Shell>{body}</Shell>;
 }
 
 const SCENE: Record<string, string> = { city: 'city', calm: 'calm', volcano: 'volcano' };
@@ -160,14 +248,14 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   };
   return (
     <div className="ch"><div className="ch-in">
-      <div className="ch-top"><Link href="/home" className="bm-btn bm-btn-sm">Directory</Link><strong>{r.room?.name ?? 'Room'}</strong>
+      <div className="ch-top"><Link href="/home" className="bm-btn bm-btn-sm">Directory</Link><strong>{r.room?.name ?? 'University'}</strong>
         <span className="ch-note" data-testid="status-connection">{r.connection}</span>
         <button type="button" className="bm-btn bm-btn-sm" onClick={() => r.refresh()}>Refresh</button></div>
       {r.error && <div className="ch-err" role="alert">{r.error} <Link href="/user-portal" className="bm-link">Profile</Link></div>}
       <div className="ch-room">
         <div className="ch-atm"><RoomAtmosphere atmosphere={atm} /></div>
-        <div className="ch-roster" aria-label="In the room">{people.map((p) => <span key={p.participantId}>{p.identity && <Face identity={p.identity} size={22} />}{p.displayName}</span>)}</div>
-        <div className="ch-msgs" ref={box} role="log" aria-live="polite" aria-label="Room messages" tabIndex={0} onScroll={(e) => { const el = e.currentTarget; near.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }} data-testid="list-messages">
+        <div className="ch-roster" aria-label="In the university">{people.map((p) => <span key={p.participantId}><UserPhoto username={p.displayName} displayName={p.displayName} photoUrl={p.photoUrl} size={22} />{p.displayName}</span>)}</div>
+        <div className="ch-msgs" ref={box} role="log" aria-live="polite" aria-label="University messages" tabIndex={0} onScroll={(e) => { const el = e.currentTarget; near.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }} data-testid="list-messages">
           {r.hasOlder && <button type="button" className="bm-btn bm-btn-sm" disabled={r.loadingOlder}
             onClick={async () => {
               const el = box.current; const height = el?.scrollHeight ?? 0; const top = el?.scrollTop ?? 0;
@@ -177,8 +265,8 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           {r.loading && <p role="status">Loading history...</p>}
           {!r.loading && msgs.length === 0 && <p className="ch-note">No messages yet.</p>}
           {msgs.map((m) => (
-            <div className="ch-msg" key={m.id}><Face identity={people.find(p => p.participantId === m.authorId)?.identity ?? m.identity} />
-              <div><b>{m.username}</b><p>{m.text}</p>
+            <div className="ch-msg" key={m.id}>
+              <div><Link className="ch-sender" href={`/community/people/${encodeURIComponent(m.username)}`} aria-label={`View ${m.username}'s profile`}>{people.find(p => p.participantId === m.authorId)?.displayName ?? m.username}</Link><p>{m.text}</p>
                 <div className="ch-acts"><button type="button" onClick={() => { setReporting(m); setNote(null); }}>Report</button>
                   <button type="button" disabled={block.isPending} onClick={() => block.mutate({ username: m.username, data: { kind: 'block', active: true } }, { onSuccess: () => { setNote(`Blocked ${m.username}.`); r.refresh(); }, onError: (e) => setNote(errMessage(e)) })}>Block</button></div></div></div>
           ))}

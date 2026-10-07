@@ -13,6 +13,8 @@ export interface ChatMessage4b96100 {
   roomId: string;
   authorId: string;
   username: string;
+  /** @nullable */
+  photoUrl?: string | null;
   identity: EmojiIdentity4b96100;
   kind: ChatMessage4b96100Kind;
   text: string;

@@ -725,11 +725,13 @@
       "SocialPerson": {
         "type": "object",
         "properties": {
-          "externalPlatform": { "type": ["string", "null"], "enum": ["LiveMe", "Bigo Live", "Tango Live", "TikTok", "Instagram Live", null] },
+          "externalPlatform": { "type": ["string", "null"], "enum": ["LiveMe", "Bigo Live", "Tango Live", "TikTok", "Instagram Live", "Super Live", null] },
           "externalHandle": { "type": ["string", "null"], "maxLength": 64 },
           "username": {
             "type": "string"
           },
+          "displayName": { "type": "string" },
+          "photoUrl": { "type": ["string", "null"] },
           "identity": {
             "$ref": "./openapi.yaml#/components/schemas/EmojiIdentity"
           },
@@ -791,7 +793,7 @@
       "SocialProfileInput": {
         "type": "object",
         "properties": {
-          "externalPlatform": { "type": ["string", "null"], "enum": ["LiveMe", "Bigo Live", "Tango Live", "TikTok", "Instagram Live", null] },
+          "externalPlatform": { "type": ["string", "null"], "enum": ["LiveMe", "Bigo Live", "Tango Live", "TikTok", "Instagram Live", "Super Live", null] },
           "externalHandle": { "type": ["string", "null"], "maxLength": 64 },
           "bio": {
             "type": "string",

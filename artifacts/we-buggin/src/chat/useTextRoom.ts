@@ -6,9 +6,9 @@ import {
   type RoomState, type ChatMessage, type ChatAccepted,
 } from "@workspace/api-client-react";
 import { saveCreds, type RoomCreds } from "@/lib/room-creds";
-import { errStatus } from "@/lib/identity";
+import { errStatus } from "@/lib/errors";
 
-const messageError = (error: unknown) => error instanceof Error ? error.message : "Room request failed";
+const messageError = (error: unknown) => error instanceof Error ? error.message : "University request failed";
 const ordered = (messages: ChatMessage[]) => [...new Map(messages.map(m => [m.id, m])).values()]
   .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() || a.id.localeCompare(b.id));
 
@@ -43,7 +43,7 @@ export function useTextRoom(roomId: string, userId: string) {
   }, [roomId, messages, loadingOlder]);
   const send = useCallback(async (text: string, kind: "text" | "reaction" = "text"): Promise<ChatAccepted> => {
     const c = credential.current;
-    if (!c || !alive.current) throw new Error("Wait for your room connection");
+    if (!c || !alive.current) throw new Error("Wait for your university connection");
     const accepted = await sendRoomMessage(roomId, { text, kind }, {
       headers: { "X-Room-Session": c.participantSessionId },
     });
@@ -95,7 +95,7 @@ export function useTextRoom(roomId: string, userId: string) {
         const response = await fetch(getStreamAccountRoomEventsUrl(roomId), {
           credentials: "same-origin", headers: headers(), signal: controller.signal,
         });
-        if (!response.ok || !response.body) throw new Error("Could not connect to room chat");
+        if (!response.ok || !response.body) throw new Error("Could not connect to university chat");
         // Subscribe before fetching history, then consume buffered events:
         // messages committed between those operations cannot be lost.
         await history();

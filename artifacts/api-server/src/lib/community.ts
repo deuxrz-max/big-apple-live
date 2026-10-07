@@ -8,6 +8,7 @@ export const COMMUNITY_ROOMS = [
   { roomId: "LIVEME", label: "LiveMe" }, { roomId: "BIGOLV", label: "Bigo Live" },
   { roomId: "TANGOL", label: "Tango Live" }, { roomId: "TIKTOK", label: "TikTok" },
   { roomId: "INSTAL", label: "Instagram Live" },
+  { roomId: "SUPRLV", label: "Super Live" },
 ];
 export async function initializeCommunities() {
   for (const entry of COMMUNITY_ROOMS) {

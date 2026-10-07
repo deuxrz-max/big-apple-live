@@ -9,6 +9,10 @@ import type { EmojiIdentity } from './emojiIdentity';
 
 export interface AccountProfile {
   username: string;
+  displayName?: string;
+  bio?: string;
+  /** @nullable */
+  photoUrl?: string | null;
   identity: EmojiIdentity;
   updatedAt: Date;
 }
