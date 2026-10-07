@@ -58,8 +58,62 @@ errors are explicit. Processing is bounded to four simultaneous uploads and
 This is file safety/ownership validation, not automated content moderation.
 Existing university message reports/moderator controls are preserved; a dedicated
 photo review/removal workflow is not claimed. Set a staff response policy before
-launch. Staged/replaced images are retained rather than silently deleted; a safe
-cleanup/retention policy is a separate maintenance decision.
+launch. The owner approved the following photo-retention policy on 2026-10-07.
+
+### Approved photo-retention policy
+
+- Abandoned staged uploads are kept for **30 days after upload**. Replaced or
+  removed photos are kept for **30 days after they stop being current**, even if
+  the original upload is much older. Selecting an unused photo again cancels its
+  expiry. Current profile photos never expire.
+- The additive migration gives every existing unused photo a fresh 30-day grace
+  period. It does not backdate expiry from the original upload time.
+- Cleanup rechecks every profile reference, not just the owner's, under the same
+  PostgreSQL account advisory lock as profile saves. In-flight saves win or the
+  cleanup skips that busy account. Recent uploads cannot qualify.
+- A committed deletion marker makes an expired photo unavailable for saves before
+  its file is deleted. If storage fails, the process stops, or the database commit
+  fails after file deletion, the record stays marked for an idempotent retry.
+  Missing files count as already deleted. An expired reference is explicitly
+  rejected with instructions to upload again.
+- Only tracked UUID WebP objects under the private `profile-photos/` namespace
+  are eligible. No bucket sweep, account reset, financial deletion, or message
+  deletion is performed. Untracked files and other namespaces are untouched.
+- The existing API service logs a dry-run report before each cleanup, at startup
+  and hourly while running. Each pass selects at most 25 objects, skips locked
+  accounts, works sequentially, and starts no more work after a 60-second budget.
+  Each storage deletion has a 10-second wait limit; a timed-out request may finish
+  later, but its committed marker still prevents unsafe saves. Passes never overlap
+  within a process; database locks and markers coordinate multiple instances.
+  Database statements have a five-second timeout.
+  Stopped/idle API instances do not run jobs; cleanup resumes at the next startup.
+- Permanent deletion cannot be reversed through a code rollback. To pause cleanup,
+  set `PROFILE_PHOTO_CLEANUP_MODE=dry-run` on the API service and restart it,
+  leaving schema and files intact. Reports continue, but deletion stops. Existing
+  markers must remain enforced until deletion is safely resolved.
+
+Read-only operator report (counts, bytes, and a sample of at most 25 IDs):
+
+    pnpm --filter @workspace/api-server run photos:retention-report
+
+There is no public cleanup endpoint. Reporting is safe without deletion approval;
+the scheduler's destructive mode uses the approved 30-day policy above.
+
+Apply the additive retention migration **before starting this API version** in
+each environment (development applied; production not applied by this task):
+
+    pnpm --filter @workspace/api-server exec esbuild src/scripts/profile-photo-retention-migrate.ts --bundle --platform=node --format=esm --banner:js="import { createRequire as cr } from 'node:module'; const require=cr(import.meta.url);" --outfile=.tests/profile-photo-retention-migrate.mjs
+    node artifacts/api-server/.tests/profile-photo-retention-migrate.mjs
+
+The existing post-merge schema push includes these additive columns/index.
+
+Retention verification uses real PostgreSQL and App Storage with destructive
+cleanup restricted to generated synthetic IDs: dry-run does not delete, current
+and recent photos survive, replacements/removals get a new clock, concurrent saves
+are protected, interrupted/missing-object retries are safe, invalid keys are
+rejected, empty scopes cannot delete anything, and each batch stops at 25.
+Original profile rows, message/ledger counts, and current photo bytes are compared
+before and after. Run `pnpm --filter @workspace/api-server run test:photo-retention`.
 
 App Storage billing covers stored bytes, transfer and operations. No external AI
 classifier or photo-analysis service is enabled. University atmosphere remains

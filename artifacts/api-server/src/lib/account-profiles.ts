@@ -53,6 +53,7 @@ export async function saveProfile(accountId: string, input: ProfileInput): Promi
         const [owned] = await tx.select().from(profilePhotos).where(and(
           eq(profilePhotos.id, match[1]!), eq(profilePhotos.accountId, accountId)));
         if (!owned) throw new RoomError(403, "You can save only your own uploaded photo");
+        if (owned.deletionStartedAt) throw new RoomError(409, "This uploaded photo has expired; upload it again");
       }
       const values = {
         updatedAt: new Date(),
@@ -65,6 +66,18 @@ export async function saveProfile(accountId: string, input: ProfileInput): Promi
           // Compatibility-only NOT NULL columns; never selected/rendered or mood-synced.
           emojiId: "1F600", gender: "Female", color: "#FFFFFF", hairColor: "#000000",
         }).returning();
+      if (existing?.photoUrl && existing.photoUrl !== row!.photoUrl) {
+        await tx.update(profilePhotos).set({ unusedSince: new Date() }).where(and(
+          eq(profilePhotos.accountId, accountId),
+          sql`'/api/photos/' || ${profilePhotos.id}::text = ${existing.photoUrl}`,
+        ));
+      }
+      if (row!.photoUrl) {
+        await tx.update(profilePhotos).set({ unusedSince: null }).where(and(
+          eq(profilePhotos.accountId, accountId),
+          sql`'/api/photos/' || ${profilePhotos.id}::text = ${row!.photoUrl}`,
+        ));
+      }
       // Setup is one transaction: a failed bio save cannot leave a completed profile.
       if (input.bio !== undefined) await tx.insert(socialSettings)
         .values({ accountId, bio: input.bio.trim() })

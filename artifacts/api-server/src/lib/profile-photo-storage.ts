@@ -20,6 +20,22 @@ function objectFile(key: string) {
   if (!match) throw new RoomError(503, "Photo storage is not configured");
   return client.bucket(match[1]!).file(`${match[2]!.replace(/\/$/, "")}/profile-photos/${key}`);
 }
+export async function removeRetiredPhotoObject(id: string, key: string) {
+  // Cleanup only owns this exact generated namespace, never arbitrary paths.
+  if (key !== `${id}.webp` || !/^[a-f0-9-]{36}$/.test(id))
+    throw new Error("Refusing to delete a non-generated profile photo key");
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      objectFile(key).delete({ ignoreNotFound: true }),
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(() => reject(new Error("Photo deletion timed out")), 10_000);
+      }),
+    ]);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}
 export async function normalizePhoto(bytes: Buffer): Promise<Buffer> {
   if (!bytes.length) throw new RoomError(400, "Choose a JPEG, PNG or WebP photo");
   if (bytes.length > PHOTO_LIMIT) throw new RoomError(413, "Photo must be 5 MiB or smaller");
@@ -68,7 +84,7 @@ export async function stageProfilePhoto(accountId: string, bytes: Buffer) {
 }
 export async function readablePhoto(photoId: string, viewerId: string) {
   const [photo] = await db.select().from(profilePhotos).where(eq(profilePhotos.id, photoId));
-  if (!photo) throw new RoomError(404, "Photo not available");
+  if (!photo || photo.deletionStartedAt) throw new RoomError(404, "Photo not available");
   if (photo.accountId !== viewerId) {
     const [active] = await db.select({ id: accountProfiles.accountId }).from(accountProfiles).where(and(
       eq(accountProfiles.accountId, photo.accountId), eq(accountProfiles.photoUrl, `/api/photos/${photoId}`)));

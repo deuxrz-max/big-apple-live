@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:photo-retention": "esbuild src/lib/profile-photo-retention.test.ts --bundle --platform=node --format=esm --external:sharp --external:pino --banner:js=\"import { createRequire as cr } from 'node:module'; const require=cr(import.meta.url);\" --outfile=.tests/profile-photo-retention.test.mjs && node --test .tests/profile-photo-retention.test.mjs",
+    "photos:retention-report": "esbuild src/scripts/profile-photo-retention-report.ts --bundle --platform=node --format=esm --external:sharp --external:pino --banner:js=\"import { createRequire as cr } from 'node:module'; const require=cr(import.meta.url);\" --outfile=.tests/profile-photo-retention-report.mjs && node .tests/profile-photo-retention-report.mjs",
     "test:photos": "esbuild src/lib/profile-photos.test.ts --bundle --platform=node --format=esm --external:sharp --banner:js=\"import { createRequire as cr } from 'node:module'; const require=cr(import.meta.url);\" --outfile=.tests/profile-photos.test.mjs && node --test .tests/profile-photos.test.mjs",
     "test:profiles": "esbuild src/lib/profile-setup.test.ts --bundle --platform=node --format=esm --banner:js=\"import { createRequire as cr } from 'node:module'; const require=cr(import.meta.url);\" --outfile=.tests/profile-setup.test.mjs && node --test .tests/profile-setup.test.mjs",
     "test:community": "esbuild src/lib/community.test.ts --bundle --platform=node --format=esm --banner:js=\"import { createRequire as cr } from 'node:module'; const require=cr(import.meta.url);\" --outfile=.tests/community.test.mjs && node --test .tests/community.test.mjs",

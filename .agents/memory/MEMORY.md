@@ -12,3 +12,4 @@
 - [Living Beam rooms](living-beam-goal.md) — archived Beam goal; superseded for active routes by the text-chat pivot.
 - [Text-chat follow-ons](text-chat-pivot.md) — optional ownership checks require a unique bio code and reviewer, never an official platform verification claim.
 - [Artifact command environment](artifact-command-environment.md) — one-off shell checks do not necessarily inherit managed service routing variables.
+- [Photo retention approval](profile-photo-retention.md) — user approved 30 days unused; protect current images and saves, and never expand to other data.
