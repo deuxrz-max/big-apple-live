@@ -1,3 +1,7 @@
+.ch-photos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.ch-photo-card{min-width:0;display:flex;flex-direction:column;align-items:center;gap:8px;border:1px solid #555;padding:10px 4px}
+.ch-photo-card .bm-btn{max-width:100%;white-space:normal}
+.ch-photo-card [aria-pressed=true]{border-color:#f2f2ee;background:#222}
 .ch{--bm-ink:#f2f2ee;--bm-mute:#9b9b96;--bm-line:#333;--bm-acc:#3b5bff;--bm-display:'Barlow Condensed','Arial Narrow',sans-serif;min-height:100dvh;background:#050505;color:#f2f2ee;font-family:'Barlow',system-ui,sans-serif;padding:0 clamp(14px,4vw,40px) 40px}
 .ch-in{max-width:960px;margin:0 auto}
 .ch-top{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:16px 0;flex-wrap:wrap}

@@ -121,6 +121,8 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
   const [nameTouched, setNameTouched] = useState(false);
   const [bio, setBio] = useState('');
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const replaceTarget = useRef<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [upErr, setUpErr] = useState<string | null>(null);
@@ -128,7 +130,10 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   const pickPhoto = async (file: File | undefined) => {
     if (!file) return;
+    const replacing = replaceTarget.current;
     setUpErr(null);
+    if (uploading || save.isPending) return;
+    if (!replacing && photoUrls.length >= 3) { setUpErr('Keep up to 3 photos. Remove or replace one first.'); return; }
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { setUpErr('Choose a JPEG, PNG or WebP image.'); return; }
     if (file.size > 5 * 1024 * 1024) { setUpErr('Photo must be 5 MiB or smaller.'); return; }
     setPreview(URL.createObjectURL(file));
@@ -137,9 +142,11 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
       const res = await fetch(`${import.meta.env.BASE_URL}api/me/photo`, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/octet-stream' }, body: file });
       if (!res.ok) { let m = 'Photo upload failed.'; try { m = (await res.json()).error ?? m; } catch { /* ignore */ } throw new Error(m); }
       const j = (await res.json()) as { photoUrl: string };
-      setPhotoUrl(j.photoUrl); setPreview(null);
+      setPhotoUrls(previous => replacing ? previous.map(url => url === replacing ? j.photoUrl : url) : [...previous, j.photoUrl]);
+      setPhotoUrl(current => !current || current === replacing ? j.photoUrl : current);
+      setPreview(null); setSaved(false);
     } catch (e) { setUpErr(e instanceof Error ? e.message : 'Photo upload failed.'); setPreview(null); }
-    finally { setUploading(false); if (fileRef.current) fileRef.current.value = ''; }
+    finally { setUploading(false); replaceTarget.current = null; if (fileRef.current) fileRef.current.value = ''; }
   };
   const [saved, setSaved] = useState(false);
   const [tried, setTried] = useState(false);
@@ -148,6 +155,7 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
     if (profile && loadedFor.current !== profile.updatedAt) {
       loadedFor.current = profile.updatedAt;
       setPhotoUrl(profile.photoUrl ?? null);
+      setPhotoUrls(profile.photoUrls?.length ? [...profile.photoUrls] : profile.photoUrl ? [profile.photoUrl] : []);
       setDisplayName(profile.displayName ?? profile.username);
       setBio(profile.bio ?? '');
     }
@@ -160,7 +168,7 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
   const submit = () => {
     setTried(true); setSaved(false);
     if (!nameOk || !dnOk || !bioOk || save.isPending || uploading) return;
-    const data = { username: profile?.username ?? username, displayName: dn, bio: bio.trim(), photoUrl };
+    const data = { username: profile?.username ?? username, displayName: dn, bio: bio.trim(), photoUrl, photoUrls };
     save.mutate({ data }, {
       onSuccess: (p) => {
         qc.setQueryData(getGetMyProfileQueryKey(), { profile: p });
@@ -195,16 +203,29 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
             <span className="ch-note">{bio.length}/280</span>
           </label>
           <div>
-            <p><b>Profile photo (optional)</b></p>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-              <UserPhoto username={profile?.username ?? username} displayName={dn} photoUrl={preview ?? photoUrl} size={96} />
-              <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" aria-label="Upload profile photo" disabled={uploading} onChange={(e) => pickPhoto(e.target.files?.[0])} data-testid="input-photo" />
-              {photoUrl && <button type="button" className="bm-btn bm-btn-sm" disabled={uploading} onClick={() => { setPhotoUrl(null); setUpErr(null); }} data-testid="button-remove-photo">Remove photo</button>}
+            <p><b>Profile photos (optional, {photoUrls.length}/3)</b></p>
+            <div className="ch-photos" aria-label="Saved profile photos">
+              {photoUrls.map((url, i) => (
+                <div className="ch-photo-card" key={url}>
+                  <UserPhoto username={profile?.username ?? username} displayName={dn} photoUrl={url} size={72} />
+                  <button type="button" className="bm-btn bm-btn-sm" aria-pressed={photoUrl === url} aria-label={`Use photo ${i + 1} as main photo`} disabled={uploading || save.isPending}
+                    onClick={() => { setPhotoUrl(url); setSaved(false); }} data-testid={`button-main-photo-${i}`}>{photoUrl === url ? 'Main' : 'Make main'}</button>
+                  <button type="button" className="bm-btn bm-btn-sm" aria-label={`Replace photo ${i + 1}`} disabled={uploading || save.isPending}
+                    onClick={() => { replaceTarget.current = url; fileRef.current?.click(); }} data-testid={`button-replace-photo-${i}`}>Replace</button>
+                  <button type="button" className="bm-btn bm-btn-sm" aria-label={`Remove photo ${i + 1}`} disabled={uploading || save.isPending}
+                    onClick={() => { const remaining = photoUrls.filter(item => item !== url); setPhotoUrls(remaining); if (photoUrl === url) setPhotoUrl(remaining[0] ?? null); setUpErr(null); setSaved(false); }} data-testid={`button-remove-photo-${i}`}>Remove</button>
+                </div>
+              ))}
             </div>
-            <p className="ch-note">JPEG, PNG or WebP, up to 5 MiB.{uploading ? ' Uploading...' : ''}</p>
+            {!photoUrls.length && <UserPhoto username={profile?.username ?? username} displayName={dn} photoUrl={null} size={72} />}
+            {preview && <div role="status"><UserPhoto displayName={dn} photoUrl={preview} size={72} /> Uploading...</div>}
+            <input ref={fileRef} type="file" hidden accept="image/jpeg,image/png,image/webp" aria-label="Upload profile photo" disabled={uploading || save.isPending} onChange={(e) => pickPhoto(e.target.files?.[0])} data-testid="input-photo" />
+            <p><button type="button" className="bm-btn bm-btn-sm" disabled={photoUrls.length >= 3 || uploading || save.isPending}
+              onClick={() => { replaceTarget.current = null; fileRef.current?.click(); }} data-testid="button-add-photo">Add photo</button></p>
+            <p className="ch-note">Keep up to 3 photos and choose one main photo. JPEG, PNG or WebP, up to 5 MiB each. Save changes to apply.{photoUrls.length >= 3 ? ' At the limit: replace or remove a photo to change your collection.' : ''}</p>
             {upErr && <div className="ch-err" role="alert">{upErr}</div>}
           </div>
-          {save.isError && <div className="ch-err" role="alert">{errStatus(save.error) === 409 ? 'That username is taken, or cannot be changed.' : errMessage(save.error)}</div>}
+          {save.isError && <div className="ch-err" role="alert">{errMessage(save.error)}</div>}
           {saved && <p role="status">Saved.</p>}
           <p><button type="submit" className="bm-btn bm-btn-primary" disabled={save.isPending || uploading} data-testid="button-save-identity">
             {save.isPending ? 'Saving...' : profile ? 'Save changes' : 'Create profile'}</button></p>

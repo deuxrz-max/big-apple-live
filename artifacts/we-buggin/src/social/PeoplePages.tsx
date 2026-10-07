@@ -8,6 +8,7 @@ import {
   type GetSocialPeopleParams,
 } from '@workspace/api-client-react';
 import { Avatar, BadgeMark, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, refreshSocial, useIdemKey, iconFor } from './common';
+import { UserPhoto } from '@/components/user-photo';
 
 export function CommunityPage() {
   const me = useGetSocialMe();
@@ -100,6 +101,9 @@ export function PersonPage({ username }: { username: string }) {
           <p className="sc-sub" data-testid="text-received">{p.receivedCredits} credits received in gifts</p>
         </div>
       </div>
+      {!!p.photoUrls?.filter(url => url !== p.photoUrl).length && <div className="sc-photos" aria-label="Additional profile photos" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', margin: '16px 0' }}>
+        {p.photoUrls.filter(url => url !== p.photoUrl).map(url => <UserPhoto key={url} username={p.username} displayName={p.displayName} photoUrl={url} size={96} />)}
+      </div>}
       {p.externalPlatform && p.externalHandle && <p className="sc-sub">{p.externalPlatform}: {p.externalHandle} <small>Self-listed, not verified</small></p>}
       {p.bio ? <p className="sc-bio-lg">{p.bio}</p> : <p className="bm-lede">No bio yet.</p>}
       {p.interests.length > 0 && <p className="sc-tags">{p.interests.map((i) => <i key={i}>{i}</i>)}</p>}

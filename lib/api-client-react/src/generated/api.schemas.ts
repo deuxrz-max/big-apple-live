@@ -227,6 +227,8 @@ export interface AccountProfile {
   bio?: string;
   /** @nullable */
   photoUrl?: string | null;
+  /** @maxItems 3 */
+  photoUrls?: string[];
   identity: EmojiIdentity;
   updatedAt: string;
 }
@@ -259,6 +261,11 @@ export interface ProfileInput {
      * @nullable
      */
   photoUrl?: string | null;
+  /**
+     * @maxItems 3
+     * @items.maxLength 200
+     */
+  photoUrls?: string[];
 }
 
 export interface ProfilePhotoResult {
@@ -568,6 +575,8 @@ export interface AccountProfile4b96100 {
   bio?: string;
   /** @nullable */
   photoUrl?: string | null;
+  /** @maxItems 3 */
+  photoUrls?: string[];
   identity: EmojiIdentity4b96100;
   updatedAt: string;
 }
@@ -600,6 +609,11 @@ export interface ProfileInput4b96100 {
      * @nullable
      */
   photoUrl?: string | null;
+  /**
+     * @maxItems 3
+     * @items.maxLength 200
+     */
+  photoUrls?: string[];
 }
 
 export interface ProfilePhotoResult4b96100 {
@@ -714,6 +728,8 @@ export interface SocialPerson {
   displayName?: string;
   /** @nullable */
   photoUrl?: string | null;
+  /** @maxItems 3 */
+  photoUrls?: string[];
   identity: EmojiIdentity4b96100;
   bio: string;
   country: string | null;

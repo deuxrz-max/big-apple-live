@@ -15,6 +15,13 @@ Use "university/universities" in user-facing text; preserve internal room IDs/ro
 These are social spaces for optional sharing/learning broadcasting techniques, not
 mandatory lessons, courses or enrollment.
 Users upload their own profile photos; missing photos use neutral initials.
+Each profile may keep up to three saved photos and select one main photo.
+Every app screen has fixed bottom navigation: Home, Follow, Message and Me,
+without a video button. Use existing Directory, favorites, inbox and Edit Profile
+routes; signed-out visitors can sign in to use the protected destinations.
+The cap applies to selected profile photos, not lifetime uploads. Preserve all
+selected photos during retention cleanup; removed photos keep the approved
+30-day unused grace period.
 Chat message authors use clickable names linking to their existing profiles, with
 no profile photo beside the message author. Preserve profile privacy/block rules.
 No branded characters, hair/portrait pickers or profile-image facial-emoji sync

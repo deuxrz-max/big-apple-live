@@ -831,6 +831,11 @@ components:
         displayName: { type: string, minLength: 1, maxLength: 40 }
         bio: { type: string, maxLength: 280 }
         photoUrl: { type: [string, "null"], maxLength: 200 }
+        photoUrls:
+          type: array
+          maxItems: 3
+          uniqueItems: true
+          items: { type: string, maxLength: 200 }
       required: [username]
     AccountProfile:
       type: object
@@ -839,6 +844,10 @@ components:
         displayName: { type: string }
         bio: { type: string }
         photoUrl: { type: [string, "null"] }
+        photoUrls:
+          type: array
+          maxItems: 3
+          items: { type: string }
         identity: { $ref: "#/components/schemas/EmojiIdentity" }
         updatedAt: { type: string, format: date-time }
       required: [username, identity, updatedAt]

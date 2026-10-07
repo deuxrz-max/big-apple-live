@@ -13,6 +13,8 @@ export interface AccountProfile4b96100 {
   bio?: string;
   /** @nullable */
   photoUrl?: string | null;
+  /** @maxItems 3 */
+  photoUrls?: string[];
   identity: EmojiIdentity4b96100;
   updatedAt: Date;
 }

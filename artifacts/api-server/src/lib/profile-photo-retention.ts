@@ -10,6 +10,7 @@ const INTERVAL_MS = 60 * 60 * 1000;
 const unreferenced = sql`NOT EXISTS (
   SELECT 1 FROM account_profiles p
   WHERE p.photo_url = '/api/photos/' || ${profilePhotos.id}::text
+     OR '/api/photos/' || ${profilePhotos.id}::text = ANY(p.photo_urls)
 )`;
 const eligible = (now: Date) => and(unreferenced, sql`
   (${profilePhotos.deletionStartedAt} IS NOT NULL OR

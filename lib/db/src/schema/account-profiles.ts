@@ -1,4 +1,5 @@
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -7,6 +8,7 @@ export const accountProfiles = pgTable("account_profiles", {
   username: text("username").notNull(),
   displayName: text("display_name"),
   photoUrl: text("photo_url"),
+  photoUrls: text("photo_urls").array().notNull().default([]),
   nameKey: text("name_key").notNull().unique(),
   emojiId: text("emoji_id").notNull(),
   gender: text("gender", { enum: ["Male", "Female"] }).notNull(),
@@ -15,7 +17,9 @@ export const accountProfiles = pgTable("account_profiles", {
   portraitId: text("portrait_id"),
   currentMood: text("current_mood"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, table => [
+  check("account_profiles_three_photos", sql`cardinality(${table.photoUrls}) <= 3`),
+]);
 export const insertAccountProfileSchema = createInsertSchema(accountProfiles);
 export type InsertAccountProfile = z.infer<typeof insertAccountProfileSchema>;
 export type AccountProfileRow = typeof accountProfiles.$inferSelect;

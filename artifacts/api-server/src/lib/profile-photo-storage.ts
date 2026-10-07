@@ -87,7 +87,8 @@ export async function readablePhoto(photoId: string, viewerId: string) {
   if (!photo || photo.deletionStartedAt) throw new RoomError(404, "Photo not available");
   if (photo.accountId !== viewerId) {
     const [active] = await db.select({ id: accountProfiles.accountId }).from(accountProfiles).where(and(
-      eq(accountProfiles.accountId, photo.accountId), eq(accountProfiles.photoUrl, `/api/photos/${photoId}`)));
+      eq(accountProfiles.accountId, photo.accountId),
+      sql`(${accountProfiles.photoUrl} = ${`/api/photos/${photoId}`} OR ${`/api/photos/${photoId}`} = ANY(${accountProfiles.photoUrls}))`));
     if (!active) throw new RoomError(404, "Photo not available");
   }
   return { file: objectFile(photo.objectKey), ownerId: photo.accountId };

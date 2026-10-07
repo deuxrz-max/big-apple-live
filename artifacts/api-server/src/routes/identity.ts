@@ -32,8 +32,10 @@ router.get("/me", async (req, res) => {
 router.put("/me", async (req, res) => {
   sameOrigin(req);
   const id = accountId(req);
+  if (Array.isArray(req.body?.photoUrls) && req.body.photoUrls.length > 3)
+    throw new RoomError(400, "Keep up to 3 profile photos. Remove or replace a photo first");
   const body = SaveMyProfileBody.safeParse(req.body);
-  if (!body.success || Object.keys(req.body ?? {}).some(key => !["username", "displayName", "bio", "photoUrl"].includes(key)))
+  if (!body.success || Object.keys(req.body ?? {}).some(key => !["username", "displayName", "bio", "photoUrl", "photoUrls"].includes(key)))
     throw new RoomError(400, "Use a valid username, display name, photo and short bio; account ownership is set by the server");
   res.set("Cache-Control", "no-store");
   res.json(SaveMyProfileResponse.parse(await saveProfile(id, body.data)));

@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import { Redirect, Route, Switch, useLocation, useParams, Router as WouterRouter } from 'wouter';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Wordmark } from '@/components/brand';
+import { BottomNavigation } from '@/components/bottom-navigation';
 import NotFound from '@/pages/not-found';
 import { clearAllCreds } from '@/lib/room-creds';
 import { AdultGate, ChatDirectory, ChatProfile, ProfileGate, PublicChatLanding, TextChatRoom } from '@/chat/ChatApp';
@@ -212,7 +213,7 @@ function ClerkProviderWithRoutes() {
     >
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
-        <RoutedErrorBoundary>
+        <div className="app-page"><RoutedErrorBoundary>
           <Switch>
             <Route path="/" component={HomeRedirect} />
             <Route path="/beams">{() => <Redirect to="/home" />}</Route>
@@ -227,7 +228,8 @@ function ClerkProviderWithRoutes() {
             <Route path="/rooms/:roomId" component={RoomRoute} />
             <Route component={NotFound} />
           </Switch>
-        </RoutedErrorBoundary>
+        </RoutedErrorBoundary></div>
+        <BottomNavigation />
       </QueryClientProvider>
     </ClerkProvider>
   );

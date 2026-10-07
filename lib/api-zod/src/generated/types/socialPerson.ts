@@ -20,6 +20,8 @@ export interface SocialPerson {
   displayName?: string;
   /** @nullable */
   photoUrl?: string | null;
+  /** @maxItems 3 */
+  photoUrls?: string[];
   identity: EmojiIdentity4b96100;
   bio: string;
   country: string | null;

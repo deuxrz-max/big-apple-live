@@ -3,13 +3,14 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import sharp from "sharp";
 import express, { type Request, type ErrorRequestHandler } from "express";
-import { db, accountProfiles, chatAdmissions, chatRooms, chatMemberships, roomMessages } from "@workspace/db";
-import { inArray } from "drizzle-orm";
+import { db, accountProfiles, profilePhotos, chatAdmissions, chatRooms, chatMemberships, roomMessages } from "@workspace/db";
+import { inArray, eq } from "drizzle-orm";
 import { normalizePhoto, PHOTO_LIMIT, deleteFixturePhoto } from "./profile-photo-storage";
 import { saveProfile, getProfile } from "./account-profiles";
 import { RoomStore } from "./room-store";
 import { acceptMessage, getMessages } from "./room-chat";
 import photoRouter from "../routes/profile-photos";
+import { cleanupProfilePhotos, PHOTO_GRACE_MS } from "./profile-photo-retention";
 
 test("photo decoding rejects invalid formats/size and strips metadata", async () => {
   for (const invalid of [Buffer.from("<svg></svg>"), Buffer.from("not an image"), Buffer.from([0xff, 0xd8, 0xff, 0x01])])
@@ -119,7 +120,39 @@ test("real HTTP, PostgreSQL and App Storage upload, replacement, privacy and emo
   assert.equal((await getMessages(codes[0]!, store))[0]!.photoUrl, replacement.photoUrl);
   actor = ids[1]!;
   assert.equal((await fetch(`${base}${urlPath}`)).status, 404);
-  await saveProfile(ids[0]!, { username: names[0]!, photoUrl: null });
+  actor = ids[0]!;
+  const gallery = [replacement.photoUrl];
+  for (let i = 0; i < 2; i++) {
+    const response = await upload(png);
+    const photo = await response.json() as { photoUrl: string; error?: string };
+    assert.equal(response.status, 201, photo.error);
+    gallery.push(photo.photoUrl);
+    uploaded.push(photo.photoUrl.split("/").at(-1)!);
+  }
+  const three = await saveProfile(ids[0]!, { username: names[0]!, photoUrls: gallery, photoUrl: gallery[1]! });
+  assert.deepEqual(three.photoUrls, gallery);
+  assert.equal((await getProfile(ids[0]!))!.photoUrl, gallery[1]);
+  assert.deepEqual((await getProfile(ids[0]!))!.photoUrls, gallery);
+  await assert.rejects(saveProfile(ids[0]!, { username: names[0]!, photoUrls: [...gallery, result.photoUrl] }), /up to 3/);
+  await assert.rejects(saveProfile(ids[0]!, { username: names[0]!, photoUrls: [gallery[0]!, gallery[0]!] }), /different/);
+  await assert.rejects(saveProfile(ids[0]!, { username: names[0]!, photoUrls: gallery, photoUrl: result.photoUrl }), /main photo/);
+  await assert.rejects(saveProfile(ids[1]!, { username: names[1]!, photoUrls: [gallery[2]!] }), /only your own/);
+  assert.deepEqual((await getProfile(ids[0]!))!.photoUrls, gallery);
+  // Secondary saved images remain readable and cannot be deleted by retention.
+  const secondaryId = gallery[2]!.split("/").at(-1)!;
+  await db.update(profilePhotos).set({ unusedSince: new Date(Date.now() - PHOTO_GRACE_MS - 60_000) }).where(eq(profilePhotos.id, secondaryId));
+  assert.equal((await cleanupProfilePhotos({ dryRun: false, onlyIds: [secondaryId] })).deleted, 0);
+  actor = ids[1]!;
+  assert.equal((await fetch(`${base}${gallery[2]!.replace("/api", "")}`)).status, 200);
+  // A main-only compatibility edit must retain the other saved photos.
+  await saveProfile(ids[0]!, { username: names[0]!, bio: "Three photos retained" });
+  assert.deepEqual((await getProfile(ids[0]!))!.photoUrls, gallery);
+  await saveProfile(ids[0]!, { username: names[0]!, photoUrls: [gallery[0]!, result.photoUrl, gallery[2]!], photoUrl: result.photoUrl });
+  const [removed] = await db.select().from(profilePhotos).where(eq(profilePhotos.id, gallery[1]!.split("/").at(-1)!));
+  assert.ok(removed!.unusedSince);
+  assert.ok(removed!.unusedSince!.getTime() > Date.now() - 60_000);
+  await saveProfile(ids[0]!, { username: names[0]!, photoUrls: [], photoUrl: null });
   assert.equal((await getProfile(ids[0]!))!.photoUrl, null);
+  assert.deepEqual((await getProfile(ids[0]!))!.photoUrls, []);
   assert.equal((await getMessages(codes[0]!, store))[0]!.photoUrl, null);
 });

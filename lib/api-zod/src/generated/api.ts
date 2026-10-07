@@ -133,6 +133,8 @@ export const ReviewChatReportResponse = zod.object({
 
 export const getSocialMeResponseProfileExternalHandleMax = 64;
 
+export const getSocialMeResponseProfilePhotoUrlsMax = 3;
+
 export const getSocialMeResponseProfileIdentityEmojiIdMax = 100;
 
 export const getSocialMeResponseProfileIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -146,6 +148,7 @@ export const GetSocialMeResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
+  "photoUrls": zod.array(zod.string()).max(getSocialMeResponseProfilePhotoUrlsMax).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getSocialMeResponseProfileIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -213,6 +216,8 @@ export const SaveSocialProfileBody = zod.object({
 
 export const saveSocialProfileResponseExternalHandleMax = 64;
 
+export const saveSocialProfileResponsePhotoUrlsMax = 3;
+
 export const saveSocialProfileResponseIdentityEmojiIdMax = 100;
 
 export const saveSocialProfileResponseIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -225,6 +230,7 @@ export const SaveSocialProfileResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
+  "photoUrls": zod.array(zod.string()).max(saveSocialProfileResponsePhotoUrlsMax).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(saveSocialProfileResponseIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -258,6 +264,8 @@ export const GetSocialPeopleQueryParams = zod.object({
 
 export const getSocialPeopleResponsePeopleItemExternalHandleMax = 64;
 
+export const getSocialPeopleResponsePeopleItemPhotoUrlsMax = 3;
+
 export const getSocialPeopleResponsePeopleItemIdentityEmojiIdMax = 100;
 
 export const getSocialPeopleResponsePeopleItemIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -271,6 +279,7 @@ export const GetSocialPeopleResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
+  "photoUrls": zod.array(zod.string()).max(getSocialPeopleResponsePeopleItemPhotoUrlsMax).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getSocialPeopleResponsePeopleItemIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -298,6 +307,8 @@ export const GetSocialPersonParams = zod.object({
 
 export const getSocialPersonResponseExternalHandleMax = 64;
 
+export const getSocialPersonResponsePhotoUrlsMax = 3;
+
 export const getSocialPersonResponseIdentityEmojiIdMax = 100;
 
 export const getSocialPersonResponseIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -310,6 +321,7 @@ export const GetSocialPersonResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
+  "photoUrls": zod.array(zod.string()).max(getSocialPersonResponsePhotoUrlsMax).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getSocialPersonResponseIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -345,6 +357,8 @@ export const SetSocialRelationshipResponse = zod.object({
 
 export const getSocialBlocksResponsePeopleItemExternalHandleMax = 64;
 
+export const getSocialBlocksResponsePeopleItemPhotoUrlsMax = 3;
+
 export const getSocialBlocksResponsePeopleItemIdentityEmojiIdMax = 100;
 
 export const getSocialBlocksResponsePeopleItemIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -358,6 +372,7 @@ export const GetSocialBlocksResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
+  "photoUrls": zod.array(zod.string()).max(getSocialBlocksResponsePeopleItemPhotoUrlsMax).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getSocialBlocksResponsePeopleItemIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -434,6 +449,8 @@ export const GetSocialLedgerResponse = zod.object({
 
 export const getSocialLeaderboardResponsePeopleItemExternalHandleMax = 64;
 
+export const getSocialLeaderboardResponsePeopleItemPhotoUrlsMax = 3;
+
 export const getSocialLeaderboardResponsePeopleItemIdentityEmojiIdMax = 100;
 
 export const getSocialLeaderboardResponsePeopleItemIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -447,6 +464,7 @@ export const GetSocialLeaderboardResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
+  "photoUrls": zod.array(zod.string()).max(getSocialLeaderboardResponsePeopleItemPhotoUrlsMax).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getSocialLeaderboardResponsePeopleItemIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -503,6 +521,8 @@ export const GetSocialConversationQueryParams = zod.object({
 
 export const getSocialConversationResponsePersonExternalHandleMax = 64;
 
+export const getSocialConversationResponsePersonPhotoUrlsMax = 3;
+
 export const getSocialConversationResponsePersonIdentityEmojiIdMax = 100;
 
 export const getSocialConversationResponsePersonIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -516,6 +536,7 @@ export const GetSocialConversationResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
+  "photoUrls": zod.array(zod.string()).max(getSocialConversationResponsePersonPhotoUrlsMax).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getSocialConversationResponsePersonIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -578,6 +599,8 @@ export const DeleteSocialConversationResponse = zod.object({
 })
 
 
+export const getMyProfileResponseProfileOnePhotoUrlsMax = 3;
+
 export const getMyProfileResponseProfileOneIdentityEmojiIdMax = 100;
 
 export const getMyProfileResponseProfileOneIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -590,6 +613,7 @@ export const GetMyProfileResponse = zod.object({
   "displayName": zod.string().optional(),
   "bio": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
+  "photoUrls": zod.array(zod.string()).max(getMyProfileResponseProfileOnePhotoUrlsMax).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getMyProfileResponseProfileOneIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -614,6 +638,10 @@ export const saveMyProfileBodyBioMax = 280;
 
 export const saveMyProfileBodyPhotoUrlMax = 200;
 
+export const saveMyProfileBodyPhotoUrlsItemMax = 200;
+
+export const saveMyProfileBodyPhotoUrlsMax = 3;
+
 
 
 export const SaveMyProfileBody = zod.object({
@@ -628,8 +656,11 @@ export const SaveMyProfileBody = zod.object({
 }).optional(),
   "displayName": zod.string().min(1).max(saveMyProfileBodyDisplayNameMax).optional(),
   "bio": zod.string().max(saveMyProfileBodyBioMax).optional(),
-  "photoUrl": zod.string().max(saveMyProfileBodyPhotoUrlMax).nullish()
+  "photoUrl": zod.string().max(saveMyProfileBodyPhotoUrlMax).nullish(),
+  "photoUrls": zod.array(zod.string().max(saveMyProfileBodyPhotoUrlsItemMax)).max(saveMyProfileBodyPhotoUrlsMax).optional()
 })
+
+export const saveMyProfileResponsePhotoUrlsMax = 3;
 
 export const saveMyProfileResponseIdentityEmojiIdMax = 100;
 
@@ -642,6 +673,7 @@ export const SaveMyProfileResponse = zod.object({
   "displayName": zod.string().optional(),
   "bio": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
+  "photoUrls": zod.array(zod.string()).max(saveMyProfileResponsePhotoUrlsMax).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(saveMyProfileResponseIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -850,6 +882,8 @@ export const sendRoomMessageResponseMessageIdentityEmojiIdMax = 100;
 
 export const sendRoomMessageResponseMessageIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const sendRoomMessageResponseMessageIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const sendRoomMessageResponseProfilePhotoUrlsMax = 3;
+
 export const sendRoomMessageResponseProfileIdentityEmojiIdMax = 100;
 
 export const sendRoomMessageResponseProfileIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -880,6 +914,7 @@ export const SendRoomMessageResponse = zod.object({
   "displayName": zod.string().optional(),
   "bio": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
+  "photoUrls": zod.array(zod.string()).max(sendRoomMessageResponseProfilePhotoUrlsMax).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(sendRoomMessageResponseProfileIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
