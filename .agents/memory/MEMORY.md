@@ -9,4 +9,4 @@
 - [TalkCity reference](talkcity-reference.md) — selected features belong alongside Beams; retain We Buggin's branding and theme rather than duplicate TalkCity.
 - [OpenAPI generation](openapi-generation.md) — modular refs need an allowlist before codegen; combined path/query schemas can collide in Zod barrel exports.
 - [Beam screen layout](beam-screen-layout.md) — participant boxes stay anchored; chat is borderless below them and older messages require chat-only scrolling.
-- [Living Beam rooms](living-beam-goal.md) — every Beam should feel like a living organism, with events starting automatically; specific events remain to be chosen.
+- [Living Beam rooms](living-beam-goal.md) — every Beam should feel like a living organism; the initial automatic events are visual moods only.

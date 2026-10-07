@@ -1,5 +1,5 @@
 .bm-mood-backdrop{position:fixed;inset:0;z-index:-1;pointer-events:none;transition:background-color 1100ms ease;overflow:hidden}
 .bm-mood-glow{position:absolute;left:10%;right:10%;bottom:-20vh;height:60vh;border-radius:50%;filter:blur(64px);opacity:.28;transition:background-color 1100ms ease}
-.bm-mood-canvas{position:fixed;inset:0;width:100vw;height:100dvh;z-index:-1;pointer-events:none}
+.bm-mood-canvas{position:fixed;left:0;top:0;width:100vw;height:100dvh;z-index:-1;pointer-events:none}
 .bm-mood-dark{position:fixed;inset:0;z-index:-1;pointer-events:none;background:rgba(5,5,5,.45)}
 @media(prefers-reduced-motion:reduce){.bm-mood-backdrop,.bm-mood-glow{transition:none}}

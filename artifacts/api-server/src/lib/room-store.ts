@@ -211,6 +211,10 @@ export class RoomStore {
     });
     room.emptySince = null;
     this.broadcast(room);
+    if (ENABLE_ROOM_MOOD_VISUALS && account) {
+      room.mood.recordActivity(2);
+      this.emit(room, { type: "room_mood_update", data: room.mood.current(room.roomId) });
+    }
     return { participantSessionId, participantId, room: this.snapshot(room) };
   }
 
@@ -269,6 +273,7 @@ export class RoomStore {
       for (const data of room.mood.record(room.roomId, accepted.message.id, accepted.message.text)) {
         this.emit(room, { type: "emoji_particle", data });
       }
+      this.emit(room, { type: "room_mood_update", data: room.mood.current(room.roomId) });
     }
   }
 
@@ -283,6 +288,16 @@ export class RoomStore {
     this.sweep();
     for (const room of this.rooms.values()) {
       this.emit(room, { type: "room_mood_update", data: room.mood.compute(room.roomId) });
+    }
+  }
+
+  /** Autonomous scenes and decaying energy; the emoji mood keeps its own cadence. */
+  tickRoomAtmospheres(): void {
+    if (!ENABLE_ROOM_MOOD_VISUALS) return;
+    this.sweep();
+    for (const room of this.rooms.values()) {
+      if (!room.sessions.size) continue;
+      this.emit(room, { type: "room_mood_update", data: room.mood.current(room.roomId) });
     }
   }
 }

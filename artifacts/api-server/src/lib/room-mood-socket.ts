@@ -1,6 +1,6 @@
 import type { Server as HttpServer } from 'node:http';
 import { Server } from 'socket.io';
-import { ENABLE_ROOM_MOOD_VISUALS, ROOM_MOOD_WINDOW_MS, ROOM_VISUALS_SOCKET_PATH } from '@workspace/beam-identity';
+import { ENABLE_ROOM_MOOD_VISUALS, ROOM_MOOD_WINDOW_MS, ROOM_ATMOSPHERE_TICK_MS, ROOM_VISUALS_SOCKET_PATH } from '@workspace/beam-identity';
 import { roomStore, type RoomStore } from './room-store';
 
 /** Read-only effects transport. Chat still uses its original authenticated API. */
@@ -56,7 +56,11 @@ export function attachRoomMoodSocket(server: HttpServer, store: RoomStore = room
     // Deliberately no inbound effect handlers: clients cannot spoof broadcasts.
   });
   const interval = setInterval(() => store.tickRoomMoods(), ROOM_MOOD_WINDOW_MS);
+  const atmosphereInterval = setInterval(() => store.tickRoomAtmospheres(), ROOM_ATMOSPHERE_TICK_MS);
   interval.unref();
-  server.once('close', () => { clearInterval(interval); void io.close(); });
+  atmosphereInterval.unref();
+  const cleanup = () => { clearInterval(interval); clearInterval(atmosphereInterval); };
+  io.engine.once('close', cleanup);
+  server.once('close', () => { cleanup(); void io.close(); });
   return io;
 }

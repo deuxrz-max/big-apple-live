@@ -1,6 +1,8 @@
 /** One flag disables the additional transport, server events, and visual layer. */
 export const ENABLE_ROOM_MOOD_VISUALS = true;
 export const ROOM_MOOD_WINDOW_MS = 3 * 60 * 1000;
+export const ROOM_ATMOSPHERE_TICK_MS = 5_000;
+export const ROOM_ATMOSPHERE_SCENE_MS = 45_000;
 export const ROOM_VISUALS_SOCKET_PATH = '/api/room-visuals/socket.io';
 export const PARTICLE_EMOJIS = ['❤️', '💖', '💜', '😊', '😄', '😂', '🎤', '🎵', '🎶'] as const;
 export type ParticleEmoji = typeof PARTICLE_EMOJIS[number];
@@ -17,6 +19,17 @@ export interface RoomMoodUpdate {
   emoji: ParticleEmoji | null;
   moodColor: string;
   glowColor: string;
+  atmosphere?: RoomAtmosphere;
+}
+/** Server-owned, shared visual scene. It never changes avatars or room controls. */
+export interface RoomAtmosphere {
+  phase: 'drift' | 'bloom' | 'aurora';
+  energy: number;
+  cycleId: number;
+  seed: number;
+  startedAt: number;
+  durationMs: number;
+  serverTime: number;
 }
 const styles: Record<ParticleEmoji, [string, string]> = {
   '❤️': ['#ff4b8b', 'rgba(255,75,139,0.7)'],

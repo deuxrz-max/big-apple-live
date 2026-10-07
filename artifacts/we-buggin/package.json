@@ -9,6 +9,7 @@
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:beams": "esbuild tests/beamService.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-beam-tests.mjs && node --test /tmp/we-buggin-beam-tests.mjs",
+    "test:atmosphere": "esbuild tests/roomAtmosphere.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-atmosphere-tests.mjs && node --test /tmp/we-buggin-atmosphere-tests.mjs",
     "test:live": "node --test tests/liveBeam.test.mjs"
   },
   "devDependencies": {
