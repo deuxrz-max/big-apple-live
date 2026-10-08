@@ -13,6 +13,7 @@ import { AdultGate, ChatDirectory, ChatProfile, ProfileGate, PublicChatLanding, 
 import { EmailSignUp } from '@/components/email-signup';
 import '@/chat/chat.css';
 import SocialApp from '@/social/SocialApp';
+import { SignInArtwork } from '@/components/sign-in-artwork';
 
 const queryClient = new QueryClient();
 
@@ -85,9 +86,9 @@ function AuthShell({ children }: { children: ReactNode }) {
 
 function SignInPage() {
   return (
-    <AuthShell>
+    <SignInArtwork>
       <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} />
-    </AuthShell>
+    </SignInArtwork>
   );
 }
 
