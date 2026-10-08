@@ -12,7 +12,6 @@ import { useTextRoom } from './useTextRoom';
 import { PromoBackground } from './PromoBackground';
 import './university-room.css';
 
-const DISCLAIMER = 'Streamtalk is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
 const FACES = ['\u{1F600}', '\u{1F602}', '\u{1F60D}', '\u{1F62D}', '\u{1F914}', '\u{1F609}', '\u{1F610}', '\u{1F620}'];
 const RULES = "Stick to the room's topic. Be kind — no harassment or hate. Nothing sexual or explicit, in chat, names or photos. Don't share real names, phone numbers, addresses or other contact details. Don't hog the screen, no ALL CAPS, no ads or spam. Use Ignore on anyone bothering you, or Block and Report for anything serious.";
 
@@ -280,6 +279,8 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                 <button type="button" className="bm-btn bm-btn-sm" onClick={() => setReporting(null)}>Cancel</button>
               </div>
             )}
+            {sendErr && <div className="ch-err" role="alert">{sendErr}</div>}
+            {note && <p role="status">{note} <Link href="/community/blocks" className="bm-link">Blocked list</Link></p>}
             {whisperTo && (
               <div className="ur-chip" role="status">
                 <span>Whispering to {whisperTo.displayName} · private</span>
@@ -295,10 +296,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
             </form>
           </div>
         </div>
-        {sendErr && <div className="ch-err" role="alert">{sendErr}</div>}
-        {note && <p role="status">{note} <Link href="/community/blocks" className="bm-link">Blocked list</Link></p>}
-        <p className="ch-note">Promo videos play in order. Sound starts off; reduced motion or unavailable playback shows a plain dark background.</p>
-        <p className="ch-note">{DISCLAIMER}</p>
       </div>
 
       {menu && (
