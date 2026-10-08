@@ -79,8 +79,8 @@ export default function DiscoveryHome({ userId }: { userId: string }) {
   const profile = profileQ.data?.profile ?? null;
 
   useEffect(() => {
-    document.title = 'Home — We Buggin';
-    return () => { document.title = 'We Buggin'; };
+    document.title = 'Home — Streamtalk';
+    return () => { document.title = 'Streamtalk'; };
   }, []);
 
   const navBtn = (t: Tab, label: string, icon: ReactNode) => (

@@ -1,4 +1,8 @@
-# We Buggin
+# Streamtalk
+
+The owner renamed We Buggin to Streamtalk and selected the uploaded neon shield/
+Wi-Fi logo. Use Streamtalk in user-facing branding. Preserve existing artifact paths,
+package names, storage keys, account identifiers and data; this is the same app.
 
 Adults-only social chat universities with existing named accounts, users' uploaded
 profile photos, persisted messages, live presence and independent university atmosphere.

@@ -8,6 +8,7 @@ import './social.css';
 import { ErrorBox, Loading, errStatus, refreshSocial } from './common';
 import { BlocksPage, CommunityPage, FavoritesPage, MyProfilePage, PersonPage } from './PeoplePages';
 import { ModerationQueue } from '@/chat/ChatApp';
+import { AppLogo } from '@/components/brand';
 import { InboxPage, LeaderboardPage, RewardsPage, ThreadPage } from './MoneyPages';
 
 const NAV = [
@@ -28,14 +29,14 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
   const qc = useQueryClient();
   const me = useGetSocialMe();
   useEffect(() => { refreshSocial(qc); }, [path, qc]);
-  useEffect(() => { document.title = 'People — We Buggin'; return () => { document.title = 'We Buggin'; }; }, []);
+  useEffect(() => { document.title = 'People — Streamtalk'; return () => { document.title = 'Streamtalk'; }; }, []);
   const access = useGetChatAccess();
   const needsIdentity = errStatus(me.error) === 409;
   return (
     <div className="beam-app sc">
       <div className="bm-bg" aria-hidden="true"><i /><i /><i /></div>
       <nav className="bm-nav">
-        <Link href="/home" className="bm-logo"><span aria-hidden>🐞</span> WE BUGGIN</Link>
+        <Link href="/home" className="bm-logo"><AppLogo size={32} /> STREAMTALK</Link>
         <Link href="/home" className="bm-tag"><House size={12} /> Home</Link>
       </nav>
       <div className="sc-shell">

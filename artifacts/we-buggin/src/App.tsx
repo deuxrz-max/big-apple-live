@@ -31,7 +31,7 @@ const clerkAppearance = {
   options: {
     logoPlacement: 'inside' as const,
     logoLinkUrl: basePath || '/',
-    logoImageUrl: `${window.location.origin}${basePath}/logo.svg`,
+    logoImageUrl: `${window.location.origin}${basePath}/streamtalk-logo.webp`,
   },
   variables: {
     colorPrimary: 'hsl(60 10% 95%)',
@@ -205,7 +205,7 @@ function ClerkProviderWithRoutes() {
       signUpFallbackRedirectUrl={`${basePath}/home`}
       signUpForceRedirectUrl={`${basePath}/home`}
       localization={{
-        signIn: { start: { title: 'Welcome back', subtitle: 'Sign in to your We Buggin account' } },
+        signIn: { start: { title: 'Welcome back', subtitle: 'Sign in to your Streamtalk account' } },
         signUp: { start: { title: 'Get your name', subtitle: 'One account, one dedicated username' } },
       }}
       routerPush={(to) => setLocation(stripBase(to))}

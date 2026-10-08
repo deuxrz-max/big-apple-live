@@ -8,13 +8,14 @@ import {
   getGetChatReportsQueryKey, getGetChatDirectoryQueryKey, ChatReportInputReason, ChatReportReviewInputAction, type ChatMessage,
 } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
+import { AppLogo } from '@/components/brand';
 import { errMessage, errStatus } from '@/lib/errors';
 import { useTextRoom } from './useTextRoom';
 import { RoomAtmosphere } from './RoomAtmosphere';
 import { PhotoReviewQueue } from './PhotoReviewQueue';
 import './chat.css';
 
-const DISCLAIMER = 'We Buggin is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
+const DISCLAIMER = 'Streamtalk is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
 const FACES = ['\u{1F600}', '\u{1F602}', '\u{1F60D}', '\u{1F62D}', '\u{1F914}', '\u{1F609}', '\u{1F610}', '\u{1F620}'];
 
 function Shell({ children }: { children: ReactNode }) {
@@ -43,7 +44,8 @@ function List({ preview }: { preview?: boolean }) {
 export function PublicChatLanding() {
   return (
     <Shell>
-      <h1>We Buggin</h1>
+      <AppLogo size={104} />
+      <h1>Streamtalk</h1>
       <p>Text chat universities. One account works in any university. Universities are listed by platform label.</p>
       <List preview />
       <p className="ch-note">{DISCLAIMER}</p>
@@ -59,7 +61,7 @@ export function AdultGate({ children }: { children: ReactNode }) {
   const [ok, setOk] = useState(false);
   if (q.isLoading) return <Shell><p role="status">Checking access...</p></Shell>;
   if (q.isError || !q.data) return <Shell><div className="ch-err" role="alert">Could not check access. <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button></div></Shell>;
-  if (q.data.suspended) return <Shell><h1>Chat access restricted</h1><p>Your access requires review by a We Buggin moderator. A new age confirmation cannot remove this restriction.</p><Link href="/" className="bm-btn">Home</Link></Shell>;
+  if (q.data.suspended) return <Shell><h1>Chat access restricted</h1><p>Your access requires review by a Streamtalk moderator. A new age confirmation cannot remove this restriction.</p><Link href="/" className="bm-btn">Home</Link></Shell>;
   if (q.data.adultConfirmed) return <>{children}</>;
   return (
     <Shell>
@@ -79,7 +81,7 @@ export function ChatDirectory() {
   return (
     <Shell>
       <div className="ch-top">
-        <Link href="/home" className="bm-btn bm-btn-sm">We Buggin</Link>
+        <Link href="/home" className="bm-btn bm-btn-sm"><AppLogo size={24} /> Streamtalk</Link>
         <span><Link href="/user-portal" className="bm-btn bm-btn-sm">Edit profile</Link> <Link href="/community" className="bm-btn bm-btn-sm">Community</Link>{' '}
           <button type="button" className="bm-btn bm-btn-sm" onClick={() => signOut({ redirectUrl: import.meta.env.BASE_URL || '/' })}>Sign out</button></span>
       </div>

@@ -61,8 +61,8 @@ function BeamApp() {
   const roomName = rooms[path.split('/')[2]?.toUpperCase()]?.name;
   const title = path === '/beams/new' ? 'Start a beam' : path === '/beams/join' ? 'Join a beam' : roomName;
   useEffect(() => {
-    document.title = title ? `${title} — We Buggin` : 'We Buggin — Your beam. Your people.';
-    return () => { document.title = 'We Buggin'; };
+    document.title = title ? `${title} — Streamtalk` : 'Streamtalk — Your beam. Your people.';
+    return () => { document.title = 'Streamtalk'; };
   }, [title]);
   const storageNotice = getPersistenceNotice();
   return (
@@ -70,7 +70,7 @@ function BeamApp() {
       <div className="bm-bg" aria-hidden="true"><i /><i /><i /></div>
       <nav className="bm-nav">
         <Link href="/beams" className="bm-logo" data-testid="link-logo">
-          <span aria-hidden>🐞</span> WE BUGGIN
+          <span aria-hidden>🐞</span> STREAMTALK
         </Link>
         <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end', minWidth: 0 }}>
           <Link href="/community" className="bm-tag">People</Link>
