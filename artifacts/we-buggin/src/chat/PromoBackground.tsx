@@ -2,6 +2,8 @@ import { useEffect, useReducer, useRef, useState } from 'react';
 import { PROMO_VIDEOS, advancePlaylist, initialPlaylistState } from './promo-playlist';
 
 const BUFFER_TIMEOUT_MS = 20_000;
+// Preview readability test: set this back to 0.4 to restore the former dark tint.
+const BACKGROUND_TINT_OPACITY = 0;
 
 export function PromoBackground({ soundOn, onUnavailableChange }: {
   soundOn: boolean; onUnavailableChange: (unavailable: boolean) => void;
@@ -74,7 +76,7 @@ export function PromoBackground({ soundOn, onUnavailableChange }: {
     <style>{`
       .promo-background{position:absolute;inset:0;overflow:hidden;pointer-events:none;isolation:isolate;background:#050505}
       .promo-background video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;z-index:1;pointer-events:none}
-      .promo-background:after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.40);z-index:2;pointer-events:none}
+      .promo-background:after{content:"";position:absolute;inset:0;background:rgba(0,0,0,${BACKGROUND_TINT_OPACITY});z-index:2;pointer-events:none}
     `}</style>
     {/* Keep the same media element so a user's sound permission survives clip changes on phones. */}
     {!reduced && !state.stopped && active && <video ref={video}

@@ -22,7 +22,7 @@ Retain the existing square logo/icon and cleaned full-shield sign-in artwork;
 the original tall uploads contain the removed verification claim.
 This is visual-only scope, not authorization for later phases. Preserve accounts,
 moderation, university capacity/isolation and financial behavior. The university
-promo-video background keeps the single 40% black tint. Preview only;
+promo-video background currently has no tint for the owner's preview readability test. Preview only;
 do not publish. The public Directory may show aggregate presence counts, never
 participant identities or messages.
 
@@ -88,7 +88,9 @@ Existing valid profiles are complete; setup resumes only when no saved profile e
 University backgrounds use the owner's uploaded promo playlist in upload order,
 including overflow universities. Play one video at a time, then advance and repeat;
 sound starts off on every entry and is enabled only by the user's sound button.
-Keep full-screen cover rendering and the single 40% black overlay. Reduced motion
+Keep full-screen cover rendering. The owner is testing full-brightness playback:
+BACKGROUND_TINT_OPACITY is 0 in PromoBackground.tsx; restore it to 0.4 if requested.
+Keep the existing dark message backings unchanged. Reduced motion
 or an entirely unplayable playlist shows only a plain dark color, never a poster.
 The owner approved removal of the forest/seasonal clips and the entire background
 mood system: no chat/activity/sentiment/keyword/weather-driven scene selection,
