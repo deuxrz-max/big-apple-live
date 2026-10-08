@@ -102,7 +102,8 @@ export function PersonPage({ username }: { username: string }) {
         </div>
       </div>
       {!!p.photoUrls?.filter(url => url !== p.photoUrl).length && <div className="sc-photos" aria-label="Additional profile photos" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', margin: '16px 0' }}>
-        {p.photoUrls.filter(url => url !== p.photoUrl).map(url => <UserPhoto key={url} username={p.username} displayName={p.displayName} photoUrl={url} size={96} />)}
+        {p.photoUrls.filter(url => url !== p.photoUrl).map(url => <UserPhoto key={url} username={p.username} displayName={p.displayName} photoUrl={url} size={96}
+          reviewStatus={p.photoReviews?.find(photo => photo.photoUrl === url)?.status} />)}
       </div>}
       {p.externalPlatform && p.externalHandle && <p className="sc-sub">{p.externalPlatform}: {p.externalHandle} <small>Self-listed, not verified</small></p>}
       {p.bio ? <p className="sc-bio-lg">{p.bio}</p> : <p className="bm-lede">No bio yet.</p>}

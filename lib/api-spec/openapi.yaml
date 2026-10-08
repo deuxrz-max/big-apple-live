@@ -15,6 +15,43 @@ tags:
   - name: audio
     description: Authenticated room-scoped WebRTC signaling; media travels peer-to-peer
 paths:
+  /account/chat/photo-reviews:
+    get:
+      operationId: getPhotoReviewQueue
+      responses:
+        "200":
+          description: Pending photos, accessible only to adult moderators
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/PhotoReviewEntry" } }
+  /account/chat/photo-reviews/{photoId}:
+    patch:
+      operationId: reviewProfilePhoto
+      parameters:
+        - name: photoId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action: { type: string, enum: [approve, reject] }
+      responses:
+        "200":
+          description: Human review recorded without deleting the image or account
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, status]
+                properties:
+                  id: { type: string }
+                  status: { type: string, enum: [approved, rejected] }
   /me/photo:
     post:
       operationId: uploadProfilePhoto
@@ -700,6 +737,22 @@ components:
         type: string
         format: uuid
   schemas:
+    PhotoReviewEntry:
+      type: object
+      required: [id, photoUrl, status, createdAt]
+      properties:
+        id: { type: string }
+        photoUrl: { type: string }
+        status: { type: string, enum: [pending, approved, rejected, flagged] }
+        username: { type: [string, "null"] }
+        displayName: { type: [string, "null"] }
+        createdAt: { type: string, format: date-time }
+    PhotoReviewStatus:
+      type: object
+      required: [photoUrl, status]
+      properties:
+        photoUrl: { type: string }
+        status: { type: string, enum: [pending, approved, rejected, flagged] }
     ChatDirectoryRoom:
       type: object
       required: [roomId, label]
@@ -844,6 +897,9 @@ components:
         displayName: { type: string }
         bio: { type: string }
         photoUrl: { type: [string, "null"] }
+        photoReviews:
+          type: array
+          items: { $ref: "#/components/schemas/PhotoReviewStatus" }
         photoUrls:
           type: array
           maxItems: 4

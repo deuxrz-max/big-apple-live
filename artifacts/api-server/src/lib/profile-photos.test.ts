@@ -92,8 +92,8 @@ test("real HTTP, PostgreSQL and App Storage upload, replacement, privacy and emo
   const profile = await saveProfile(ids[0]!, { username: names[0]!, displayName: "Photo tester", bio: "Persistent", photoUrl: result.photoUrl });
   assert.equal((await getProfile(ids[0]!))!.photoUrl, result.photoUrl);
   actor = ids[1]!;
-  assert.equal((await fetch(`${base}${urlPath}`)).status, 200);
-  // Same profile photo everywhere: presence, persisted history, accepted events.
+  assert.equal((await fetch(`${base}${urlPath}`)).status, 404, "Saving does not bypass human review");
+  // Owners retain their photos; chat/presence never disclose pending image URLs.
   await db.insert(chatRooms).values(codes.map((roomId, i) => ({ roomId, historyId: histories[i]!, label: "Synthetic university" })));
   const store = new RoomStore();
   codes.forEach((roomId, i) => store.registerCommunity({ roomId, historyId: histories[i]!, label: "Synthetic university", createdAt: new Date(), atmosphere: null }));
@@ -101,13 +101,14 @@ test("real HTTP, PostgreSQL and App Storage upload, replacement, privacy and emo
   await db.insert(chatMemberships).values({ accountId: ids[0]!, historyId: histories[0]!, participantId: joined.participantId });
   for (const text of ["😂", "😡", "😭", "😂 😡"]) {
     const accepted = await acceptMessage(codes[0]!, joined.participantSessionId, ids[0]!, { text, kind: "text" }, store);
-    assert.equal(accepted.profile.photoUrl, result.photoUrl);
-    assert.equal(accepted.message.photoUrl, result.photoUrl);
+    assert.equal(accepted.profile.photoUrl, null, "Chat events never disclose pending profile photos");
+    assert.equal(accepted.message.photoUrl, null);
+    assert.equal((await getProfile(ids[0]!))!.photoUrl, result.photoUrl, "Owner keeps their uploaded photo");
     assert.deepEqual(accepted.profile.identity, profile.identity);
   }
-  assert.equal(store.get(codes[0]!).participants[0]!.photoUrl, result.photoUrl);
+  assert.equal(store.get(codes[0]!).participants[0]!.photoUrl, null);
   assert.equal((await getMessages(codes[1]!, store)).length, 0);
-  assert.equal((await getMessages(codes[0]!, store))[0]!.photoUrl, result.photoUrl);
+  assert.equal((await getMessages(codes[0]!, store))[0]!.photoUrl, null);
   actor = ids[0]!;
   const second = await upload(png);
   const replacement = await second.json() as { photoUrl: string; error?: string };
@@ -117,7 +118,7 @@ test("real HTTP, PostgreSQL and App Storage upload, replacement, privacy and emo
   await saveProfile(ids[0]!, { username: names[0]!, photoUrl: replacement.photoUrl });
   assert.equal((await getProfile(ids[0]!))!.photoUrl, replacement.photoUrl);
   assert.equal((await getProfile(ids[0]!))!.bio, "Persistent");
-  assert.equal((await getMessages(codes[0]!, store))[0]!.photoUrl, replacement.photoUrl);
+  assert.equal((await getMessages(codes[0]!, store))[0]!.photoUrl, null);
   actor = ids[1]!;
   assert.equal((await fetch(`${base}${urlPath}`)).status, 404);
   actor = ids[0]!;
@@ -138,11 +139,13 @@ test("real HTTP, PostgreSQL and App Storage upload, replacement, privacy and emo
   await assert.rejects(saveProfile(ids[0]!, { username: names[0]!, photoUrls: gallery, photoUrl: result.photoUrl }), /main photo/);
   await assert.rejects(saveProfile(ids[1]!, { username: names[1]!, photoUrls: [gallery[2]!] }), /only your own/);
   assert.deepEqual((await getProfile(ids[0]!))!.photoUrls, gallery);
-  // Secondary saved images remain readable and cannot be deleted by retention.
+  // Secondary pending images are owner-readable and cannot be deleted by retention.
   const secondaryId = gallery[3]!.split("/").at(-1)!;
   await db.update(profilePhotos).set({ unusedSince: new Date(Date.now() - PHOTO_GRACE_MS - 60_000) }).where(eq(profilePhotos.id, secondaryId));
   assert.equal((await cleanupProfilePhotos({ dryRun: false, onlyIds: [secondaryId] })).deleted, 0);
   actor = ids[1]!;
+  assert.equal((await fetch(`${base}${gallery[2]!.replace("/api", "")}`)).status, 404);
+  actor = ids[0]!;
   assert.equal((await fetch(`${base}${gallery[2]!.replace("/api", "")}`)).status, 200);
   // A main-only compatibility edit must retain the other saved photos.
   await saveProfile(ids[0]!, { username: names[0]!, bio: "Three photos retained" });

@@ -43,9 +43,10 @@ export function useIdemKey() {
   };
 }
 
-type PhotoPerson = { username: string; photoUrl?: string | null; displayName?: string | null };
+type PhotoPerson = { username: string; photoUrl?: string | null; displayName?: string | null; photoReviews?: { photoUrl: string; status: string }[] };
 export const Avatar = ({ p, size = 56 }: { p: PhotoPerson; size?: number }) => (
-  <UserPhoto username={p.username} displayName={p.displayName} photoUrl={p.photoUrl} size={size} />
+  <UserPhoto username={p.username} displayName={p.displayName} photoUrl={p.photoUrl} size={size}
+    reviewStatus={p.photoReviews?.find(photo => photo.photoUrl === p.photoUrl)?.status} />
 );
 
 export function PersonCard({ p, extra }: { p: SocialPerson; extra?: ReactNode }) {

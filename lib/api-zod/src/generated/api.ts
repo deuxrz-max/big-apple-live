@@ -8,6 +8,31 @@
 import * as zod from 'zod';
 
 
+export const GetPhotoReviewQueueResponseItem = zod.object({
+  "id": zod.string(),
+  "photoUrl": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected', 'flagged']),
+  "username": zod.string().nullish(),
+  "displayName": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const GetPhotoReviewQueueResponse = zod.array(GetPhotoReviewQueueResponseItem)
+
+
+export const ReviewProfilePhotoParams = zod.object({
+  "photoId": zod.coerce.string().uuid()
+})
+
+export const ReviewProfilePhotoBody = zod.object({
+  "action": zod.enum(['approve', 'reject'])
+})
+
+export const ReviewProfilePhotoResponse = zod.object({
+  "id": zod.string(),
+  "status": zod.enum(['approved', 'rejected'])
+})
+
+
 /**
  * @summary Validate and stage an account-owned profile photo
  */
@@ -149,6 +174,10 @@ export const GetSocialMeResponse = zod.object({
   "displayName": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).max(getSocialMeResponseProfilePhotoUrlsMax).optional(),
+  "photoReviews": zod.array(zod.object({
+  "photoUrl": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected', 'flagged'])
+})).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getSocialMeResponseProfileIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -231,6 +260,10 @@ export const SaveSocialProfileResponse = zod.object({
   "displayName": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).max(saveSocialProfileResponsePhotoUrlsMax).optional(),
+  "photoReviews": zod.array(zod.object({
+  "photoUrl": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected', 'flagged'])
+})).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(saveSocialProfileResponseIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -280,6 +313,10 @@ export const GetSocialPeopleResponse = zod.object({
   "displayName": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).max(getSocialPeopleResponsePeopleItemPhotoUrlsMax).optional(),
+  "photoReviews": zod.array(zod.object({
+  "photoUrl": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected', 'flagged'])
+})).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getSocialPeopleResponsePeopleItemIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -322,6 +359,10 @@ export const GetSocialPersonResponse = zod.object({
   "displayName": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).max(getSocialPersonResponsePhotoUrlsMax).optional(),
+  "photoReviews": zod.array(zod.object({
+  "photoUrl": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected', 'flagged'])
+})).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getSocialPersonResponseIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -373,6 +414,10 @@ export const GetSocialBlocksResponse = zod.object({
   "displayName": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).max(getSocialBlocksResponsePeopleItemPhotoUrlsMax).optional(),
+  "photoReviews": zod.array(zod.object({
+  "photoUrl": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected', 'flagged'])
+})).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getSocialBlocksResponsePeopleItemIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -465,6 +510,10 @@ export const GetSocialLeaderboardResponse = zod.object({
   "displayName": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).max(getSocialLeaderboardResponsePeopleItemPhotoUrlsMax).optional(),
+  "photoReviews": zod.array(zod.object({
+  "photoUrl": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected', 'flagged'])
+})).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getSocialLeaderboardResponsePeopleItemIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -537,6 +586,10 @@ export const GetSocialConversationResponse = zod.object({
   "displayName": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).max(getSocialConversationResponsePersonPhotoUrlsMax).optional(),
+  "photoReviews": zod.array(zod.object({
+  "photoUrl": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected', 'flagged'])
+})).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getSocialConversationResponsePersonIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -613,6 +666,10 @@ export const GetMyProfileResponse = zod.object({
   "displayName": zod.string().optional(),
   "bio": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
+  "photoReviews": zod.array(zod.object({
+  "photoUrl": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected', 'flagged'])
+})).optional(),
   "photoUrls": zod.array(zod.string()).max(getMyProfileResponseProfileOnePhotoUrlsMax).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getMyProfileResponseProfileOneIdentityEmojiIdMax),
@@ -673,6 +730,10 @@ export const SaveMyProfileResponse = zod.object({
   "displayName": zod.string().optional(),
   "bio": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
+  "photoReviews": zod.array(zod.object({
+  "photoUrl": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected', 'flagged'])
+})).optional(),
   "photoUrls": zod.array(zod.string()).max(saveMyProfileResponsePhotoUrlsMax).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(saveMyProfileResponseIdentityEmojiIdMax),
@@ -914,6 +975,10 @@ export const SendRoomMessageResponse = zod.object({
   "displayName": zod.string().optional(),
   "bio": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
+  "photoReviews": zod.array(zod.object({
+  "photoUrl": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected', 'flagged'])
+})).optional(),
   "photoUrls": zod.array(zod.string()).max(sendRoomMessageResponseProfilePhotoUrlsMax).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(sendRoomMessageResponseProfileIdentityEmojiIdMax),

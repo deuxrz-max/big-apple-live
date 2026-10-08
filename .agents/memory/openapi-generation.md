@@ -9,8 +9,8 @@ Configure a narrow local-file external-reference allowlist before generating a m
 
 **How to apply:** Allow only the trusted contract files needed by both client and Zod generation. Regenerate successfully before building artifacts; do not use a wildcard allowlist.
 
-Operations combining path and query inputs can give a runtime path validator and a generated query interface the same Params export name.
+Operations combining path and query inputs, or using inline request bodies, can give a runtime validator and a generated interface the same Params/Body export name.
 
 **Why:** Star-exporting both generated namespaces then raises TS2308 even though generation itself succeeded.
 
-**How to apply:** Explicitly prefer the runtime validator in the backend Zod barrel; keep query interfaces available in the React client. Do not hand-edit generated files to resolve the collision.
+**How to apply:** Explicitly prefer the runtime validator in the backend Zod barrel; keep generated interfaces available in the React client. Do not hand-edit generated files to resolve the collision.

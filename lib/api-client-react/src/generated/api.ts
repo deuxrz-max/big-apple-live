@@ -43,9 +43,12 @@ import type {
   InvalidInputResponse,
   MicrophoneAction,
   Participant,
+  PhotoReviewEntry,
   ProfileEnvelope,
   ProfileInput,
   ProfilePhotoResult,
+  ReviewProfilePhoto200,
+  ReviewProfilePhotoBody,
   RoomCreateInput,
   RoomJoinInput,
   RoomSession,
@@ -93,6 +96,160 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetPhotoReviewQueueUrl = () => {
+
+
+
+
+  return `/api/account/chat/photo-reviews`
+}
+
+export const getPhotoReviewQueue = async ( options?: Parameters<typeof customFetch>[1]): Promise<PhotoReviewEntry[]> => {
+
+  return customFetch<PhotoReviewEntry[]>(getGetPhotoReviewQueueUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPhotoReviewQueueQueryKey = () => {
+    return [
+    `/api/account/chat/photo-reviews`
+    ] as const;
+    }
+
+
+export const getGetPhotoReviewQueueQueryOptions = <TData = Awaited<ReturnType<typeof getPhotoReviewQueue>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPhotoReviewQueue>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPhotoReviewQueueQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPhotoReviewQueue>>> = ({ signal }) => getPhotoReviewQueue({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPhotoReviewQueue>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPhotoReviewQueueQueryResult = NonNullable<Awaited<ReturnType<typeof getPhotoReviewQueue>>>
+export type GetPhotoReviewQueueQueryError = ErrorType<unknown>
+
+
+
+export function useGetPhotoReviewQueue<TData = Awaited<ReturnType<typeof getPhotoReviewQueue>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPhotoReviewQueue>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPhotoReviewQueueQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getReviewProfilePhotoUrl = (photoId: string,) => {
+
+
+
+
+  return `/api/account/chat/photo-reviews/${photoId}`
+}
+
+export const reviewProfilePhoto = async (photoId: string,
+    reviewProfilePhotoBody: ReviewProfilePhotoBody, options?: Parameters<typeof customFetch>[1]): Promise<ReviewProfilePhoto200> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ReviewProfilePhoto200>(getReviewProfilePhotoUrl(photoId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(reviewProfilePhotoBody)
+  }
+);}
+
+
+
+
+
+export const getReviewProfilePhotoMutationKey = () => ['reviewProfilePhoto'] as const;
+
+export const getReviewProfilePhotoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewProfilePhoto>>, TError,ReviewProfilePhotoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reviewProfilePhoto>>, TError,ReviewProfilePhotoMutationVariables, TContext> => {
+
+const mutationKey = getReviewProfilePhotoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviewProfilePhoto>>, ReviewProfilePhotoMutationVariables> = (props) => {
+          const {photoId,data} = props ?? {};
+
+          return  reviewProfilePhoto(photoId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReviewProfilePhotoMutationResult = NonNullable<Awaited<ReturnType<typeof reviewProfilePhoto>>>
+    export type ReviewProfilePhotoMutationBody = BodyType<ReviewProfilePhotoBody>
+    export type ReviewProfilePhotoMutationError = ErrorType<unknown>
+    export type ReviewProfilePhotoMutationVariables = {photoId: string;data: BodyType<ReviewProfilePhotoBody>}
+
+    export const useReviewProfilePhoto = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewProfilePhoto>>, TError,ReviewProfilePhotoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reviewProfilePhoto>>,
+        TError,
+        ReviewProfilePhotoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReviewProfilePhotoMutationOptions(options));
+    }
 
 export const getUploadProfilePhotoUrl = () => {
 

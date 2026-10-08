@@ -6,7 +6,7 @@ import {
   GetChatDirectoryResponse, GetChatAccessResponse, GetChatReportsResponse,
 } from "@workspace/api-zod";
 import { accountId, sameOrigin } from "./identity";
-import { COMMUNITY_ROOMS, accessFor, requireAdult, requireModerator } from "../lib/community";
+import { communityDirectory, accessFor, requireAdult, requireModerator } from "../lib/community";
 import { roomStore, RoomError } from "../lib/room-store";
 
 const router = Router();
@@ -24,7 +24,7 @@ router.post("/account/chat/access", async (req, res) => {
 });
 router.get("/account/chat/rooms", async (_req, res) => {
   // Public platform labels contain no participants, chat, or activity statistics.
-  res.json(GetChatDirectoryResponse.parse(COMMUNITY_ROOMS));
+  res.json(GetChatDirectoryResponse.parse(await communityDirectory()));
 });
 router.post("/account/chat/reports", async (req, res) => {
   sameOrigin(req);

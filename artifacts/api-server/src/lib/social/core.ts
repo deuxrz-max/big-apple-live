@@ -3,6 +3,7 @@ import { and, eq, or, sql } from "drizzle-orm";
 import { RoomError } from "../room-store";
 import { publicProfile } from "../account-profiles";
 import { DAILY_REWARD } from "./catalog";
+import { visibleProfilePhotos } from "../photo-visibility";
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type ProfileRow = typeof accountProfiles.$inferSelect;
@@ -60,10 +61,10 @@ export async function person(viewer: string, profile: ProfileRow, settings?: Set
   const [wallet] = await db.select().from(socialWallets).where(eq(socialWallets.accountId, id));
   const [favorite] = await db.select().from(socialRelations).where(and(eq(socialRelations.ownerId, viewer), eq(socialRelations.targetId, id), eq(socialRelations.kind, "favorite")));
   const blocked = id !== viewer && await pairBlocked(viewer, id);
+  const photos = blocked ? { photoUrl: null, photoUrls: [] } : await visibleProfilePhotos(id, viewer, profile);
   return {
     username: profile.username, displayName: profile.displayName ?? profile.username,
-    photoUrl: profile.photoUrl ?? null, identity: publicProfile(profile).identity,
-    photoUrls: blocked ? [] : publicProfile(profile).photoUrls,
+    ...photos, identity: publicProfile(profile).identity,
     bio: blocked ? "" : prefs?.bio ?? "", country: blocked ? null : prefs?.country ?? null,
     externalPlatform: blocked ? null : prefs?.externalPlatform ?? null,
     externalHandle: blocked ? null : prefs?.externalHandle ?? null,

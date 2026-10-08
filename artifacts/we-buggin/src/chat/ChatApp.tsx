@@ -5,12 +5,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   getGetChatAccessQueryKey, getGetMyProfileQueryKey, useConfirmChatAdult, useGetChatAccess, useGetChatDirectory,
   useGetChatReports, useGetMyProfile, useReportChatMessage, useReviewChatReport, useSaveMyProfile, useSetSocialRelationship,
-  getGetChatReportsQueryKey, ChatReportInputReason, ChatReportReviewInputAction, type ChatMessage,
+  getGetChatReportsQueryKey, getGetChatDirectoryQueryKey, ChatReportInputReason, ChatReportReviewInputAction, type ChatMessage,
 } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
 import { errMessage, errStatus } from '@/lib/errors';
 import { useTextRoom } from './useTextRoom';
 import { RoomAtmosphere } from './RoomAtmosphere';
+import { PhotoReviewQueue } from './PhotoReviewQueue';
 import './chat.css';
 
 const DISCLAIMER = 'We Buggin is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
@@ -21,7 +22,7 @@ function Shell({ children }: { children: ReactNode }) {
 }
 
 function List({ preview }: { preview?: boolean }) {
-  const q = useGetChatDirectory();
+  const q = useGetChatDirectory({ query: { queryKey: getGetChatDirectoryQueryKey(), refetchInterval: 15_000 } });
   return (
     <>
       {q.isLoading && <p role="status">Loading directory...</p>}
@@ -102,7 +103,7 @@ export function ProfileGate({ children }: { children: ReactNode }) {
 }
 
 function ProfileGateInner({ children }: { children: ReactNode }) {
-  const q = useGetMyProfile();
+  const q = useGetMyProfile({ query: { queryKey: getGetMyProfileQueryKey(), refetchInterval: 15_000 } });
   if (q.isLoading) return <Shell><p role="status">Loading your profile...</p></Shell>;
   if (q.isError) return <Shell><div className="ch-err" role="alert">Could not load your account. <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button></div></Shell>;
   if (!q.data?.profile) return <ChatProfile setup />;
@@ -207,6 +208,10 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
               {photoUrls.map((url, i) => (
                 <div className="ch-photo-card" key={url}>
                   <UserPhoto username={profile?.username ?? username} displayName={dn} photoUrl={url} size={72} />
+                  <span role="status">{(() => {
+                    const status = profile?.photoReviews?.find(p => p.photoUrl === url)?.status ?? 'pending';
+                    return status === 'approved' ? 'Approved' : status === 'pending' ? 'Pending review' : 'Not approved — upload another photo';
+                  })()}</span>
                   <button type="button" className="bm-btn bm-btn-sm" aria-pressed={photoUrl === url} aria-label={`Use photo ${i + 1} as main photo`} disabled={uploading || save.isPending}
                     onClick={() => { setPhotoUrl(url); setSaved(false); }} data-testid={`button-main-photo-${i}`}>{photoUrl === url ? 'Main' : 'Make main'}</button>
                   <button type="button" className="bm-btn bm-btn-sm" aria-label={`Replace photo ${i + 1}`} disabled={uploading || save.isPending}
@@ -221,7 +226,7 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
             <input ref={fileRef} type="file" hidden accept="image/jpeg,image/png,image/webp" aria-label="Upload profile photo" disabled={uploading || save.isPending} onChange={(e) => pickPhoto(e.target.files?.[0])} data-testid="input-photo" />
             <p><button type="button" className="bm-btn bm-btn-sm ch-add-photo" disabled={photoUrls.length >= 4 || uploading || save.isPending}
               onClick={() => { replaceTarget.current = null; fileRef.current?.click(); }} data-testid="button-add-photo"><span aria-hidden="true">+</span> Click to add</button></p>
-            <p className="ch-note">Add up to 4 photos and choose one main photo. All saved photos appear on your profile. JPEG, PNG or WebP, up to 5 MiB each. Save changes to apply.{photoUrls.length >= 4 ? ' At the limit: replace or remove a photo to change your collection.' : ''}</p>
+            <p className="ch-note">Add up to 4 photos and choose one main photo. Only approved photos are visible to others. No sexual or explicit photos; keep your profile professional. JPEG, PNG or WebP, up to 5 MiB each. Save changes to apply.{photoUrls.length >= 4 ? ' At the limit: replace or remove a photo to change your collection.' : ''}</p>
             {upErr && <div className="ch-err" role="alert">{upErr}</div>}
           </div>
           {save.isError && <div className="ch-err" role="alert">{errMessage(save.error)}</div>}
@@ -276,6 +281,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
         ))}
       </h1>
       {r.error && <div className="ch-err" role="alert">{r.error} <Link href="/user-portal" className="bm-link">Profile</Link></div>}
+      {r.overflow && <p><Link className="bm-btn bm-btn-primary" href={`/rooms/${encodeURIComponent(r.overflow.roomId)}`}>Enter {r.overflow.label}</Link></p>}
       <div className="ch-room">
         <div className="ch-roster" aria-label="People who have joined the chat">{people.map((p) => <span key={p.participantId}>{p.displayName} has joined the chat</span>)}</div>
         <div className="ch-msgs" ref={box} role="log" aria-live="polite" aria-label="University messages" tabIndex={0} onScroll={(e) => { const el = e.currentTarget; near.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }} data-testid="list-messages">
@@ -327,6 +333,7 @@ export function ModerationQueue() {
   return (
     <section className="ch">
       <h1 className="bm-h1 sc-h1">Moderation</h1>
+      <PhotoReviewQueue />
       {q.isLoading && <p role="status">Loading reports...</p>}
       {q.isError && <div className="ch-err" role="alert">Could not load. <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button></div>}
       {review.isError && <div className="ch-err" role="alert">{errMessage(review.error)}</div>}

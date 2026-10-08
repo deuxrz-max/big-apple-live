@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { EmojiIdentity4b96100 } from './emojiIdentity4b96100';
+import type { PhotoReviewStatus4b96100 } from './photoReviewStatus4b96100';
 
 export interface AccountProfile4b96100 {
   username: string;
@@ -13,6 +14,7 @@ export interface AccountProfile4b96100 {
   bio?: string;
   /** @nullable */
   photoUrl?: string | null;
+  photoReviews?: PhotoReviewStatus4b96100[];
   /** @maxItems 4 */
   photoUrls?: string[];
   identity: EmojiIdentity4b96100;

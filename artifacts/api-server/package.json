@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:safety": "esbuild src/lib/safety-phase-one.test.ts --bundle --platform=node --format=esm --external:sharp --external:pino --banner:js=\"import { createRequire as cr } from 'node:module'; const require=cr(import.meta.url);\" --outfile=.tests/safety-phase-one.test.mjs && node --test .tests/safety-phase-one.test.mjs",
     "test:photo-retention": "esbuild src/lib/profile-photo-retention.test.ts --bundle --platform=node --format=esm --external:sharp --external:pino --banner:js=\"import { createRequire as cr } from 'node:module'; const require=cr(import.meta.url);\" --outfile=.tests/profile-photo-retention.test.mjs && node --test .tests/profile-photo-retention.test.mjs",
     "photos:retention-report": "esbuild src/scripts/profile-photo-retention-report.ts --bundle --platform=node --format=esm --external:sharp --external:pino --banner:js=\"import { createRequire as cr } from 'node:module'; const require=cr(import.meta.url);\" --outfile=.tests/profile-photo-retention-report.mjs && node .tests/profile-photo-retention-report.mjs",
     "test:photos": "esbuild src/lib/profile-photos.test.ts --bundle --platform=node --format=esm --external:sharp --external:pino --banner:js=\"import { createRequire as cr } from 'node:module'; const require=cr(import.meta.url);\" --outfile=.tests/profile-photos.test.mjs && node --test .tests/profile-photos.test.mjs",
@@ -15,7 +16,6 @@
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:rooms": "esbuild src/lib/room-store.test.ts src/lib/audio-signaling.test.ts src/lib/room-identity.test.ts src/lib/beam-membership.test.ts src/lib/room-mood.test.ts src/lib/room-mood-socket.test.ts --bundle --platform=node --format=esm --banner:js=\"import { createRequire as createTestRequire } from 'node:module'; const require = createTestRequire(import.meta.url);\" --outdir=/tmp/room-backend-tests --out-extension:.js=.mjs && node --test /tmp/room-backend-tests/*.test.mjs",
-    "test:audio": "playwright test --config=playwright.config.ts",
     "test:chat": "esbuild src/lib/room-chat.test.ts --bundle --platform=node --format=esm --banner:js=\"import { createRequire as createTestRequire } from 'node:module'; const require = createTestRequire(import.meta.url);\" --outfile=.tests/room-chat.test.mjs && node --test .tests/room-chat.test.mjs"
   },
   "dependencies": {

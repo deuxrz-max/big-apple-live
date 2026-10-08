@@ -733,6 +733,7 @@
           "displayName": { "type": "string" },
           "photoUrl": { "type": ["string", "null"] },
           "photoUrls": { "type": "array", "maxItems": 4, "items": { "type": "string" } },
+          "photoReviews": { "type": "array", "items": { "$ref": "./openapi.yaml#/components/schemas/PhotoReviewStatus" } },
           "identity": {
             "$ref": "./openapi.yaml#/components/schemas/EmojiIdentity"
           },

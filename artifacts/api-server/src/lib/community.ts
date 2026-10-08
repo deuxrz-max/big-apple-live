@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import { and, eq, gte, sql } from "drizzle-orm";
 import { db, chatRooms, chatAdmissions, chatModerators, chatMemberships, roomMessages } from "@workspace/db";
 import { RoomError, roomStore } from "./room-store";
@@ -16,7 +16,38 @@ export async function initializeCommunities() {
     const [saved] = await db.select().from(chatRooms).where(eq(chatRooms.roomId, entry.roomId));
     roomStore.registerCommunity(saved!);
   }
+  for (const saved of await db.select().from(chatRooms)) roomStore.registerCommunity(saved);
   await tickCommunities();
+}
+export async function communityDirectory() {
+  const overflow = (await db.select().from(chatRooms)).filter(r =>
+    r.parentRoomId && roomStore.isCommunity(r.roomId) && roomStore.get(r.roomId).participants.length > 0);
+  return COMMUNITY_ROOMS.flatMap(base => [
+    base, ...overflow.filter(r => r.parentRoomId === base.roomId)
+      .sort((a, b) => Number(a.overflowNumber) - Number(b.overflowNumber))
+      .map(r => ({ roomId: r.roomId, label: r.label })),
+  ]);
+}
+/** Stable identifiers and history rows survive empty rooms/restarts. No history is reused. */
+export async function offerOverflow(roomId: string, accountId: string) {
+  const [current] = await db.select().from(chatRooms).where(eq(chatRooms.roomId, roomId.toUpperCase()));
+  if (!current) throw new RoomError(404, "University not found");
+  const parent = current.parentRoomId ?? current.roomId;
+  const base = COMMUNITY_ROOMS.find(r => r.roomId === parent);
+  if (!base) throw new RoomError(404, "University not found");
+  let number = Number(current.overflowNumber ?? 1) + 1;
+  for (;;) {
+    const id = createHash("sha256").update(`university:${parent}:${number}`).digest("hex").slice(0, 12).toUpperCase();
+    const [existing] = await db.select().from(chatRooms).where(eq(chatRooms.roomId, id));
+    if (!existing) await db.insert(chatRooms).values({
+      roomId: id, label: `${base.label} ${number}`, parentRoomId: parent,
+      overflowNumber: String(number), historyId: randomUUID(),
+    }).onConflictDoNothing();
+    const [saved] = await db.select().from(chatRooms).where(eq(chatRooms.roomId, id));
+    roomStore.registerCommunity(saved!);
+    if (roomStore.hasUniversitySeat(id, accountId)) return { roomId: id, label: saved!.label };
+    number++;
+  }
 }
 export async function accessFor(accountId: string) {
   const [admission] = await db.select().from(chatAdmissions).where(eq(chatAdmissions.accountId, accountId));
@@ -44,7 +75,7 @@ export async function tickCommunities() {
   if (ticking) return;
   ticking = true;
   try {
-    for (const entry of COMMUNITY_ROOMS) {
+    for (const entry of await db.select().from(chatRooms)) {
       const tracker = roomStore.communityAtmosphere(entry.roomId);
       if (!tracker) continue;
       const [activity] = await db.select({

@@ -8,7 +8,7 @@ import {
 import { getProfile, saveProfile, requireCompletedProfile } from "../lib/account-profiles";
 import { roomStore, RoomError } from "../lib/room-store";
 import { getClerkProxyHost } from "../middlewares/clerkProxyMiddleware";
-import { communityMembership } from "../lib/community";
+import { communityMembership, accessFor, offerOverflow } from "../lib/community";
 
 const router: IRouter = Router();
 export function accountId(req: Request): string {
@@ -60,8 +60,20 @@ router.post("/account/rooms/:roomId/join", async (req, res) => {
   if (!params.success) throw new RoomError(400, "Invalid university ID");
   if (!roomStore.isCommunity(params.data.roomId)) throw new RoomError(410, "This legacy Beam is archived. Choose a university from the Directory.");
   const profile = await requireCompletedProfile(id);
+  const access = await accessFor(id);
+  if (!roomStore.hasUniversitySeat(params.data.roomId, id, access.moderator)) {
+    const overflow = await offerOverflow(params.data.roomId, id);
+    res.status(409).json({ error: `${roomStore.get(params.data.roomId).name} is full — try ${overflow.label}`, overflow });
+    return;
+  }
   const member = await communityMembership(params.data.roomId, id);
-  const session = roomStore.join(params.data.roomId, profile.displayName ?? profile.username, { accountId: id, identity: profile.identity, photoUrl: profile.photoUrl ?? null });
+  // No await between the final seat check and join; competing joins cannot oversubscribe.
+  if (!roomStore.hasUniversitySeat(params.data.roomId, id, access.moderator)) {
+    const overflow = await offerOverflow(params.data.roomId, id);
+    res.status(409).json({ error: `${roomStore.get(params.data.roomId).name} is full — try ${overflow.label}`, overflow });
+    return;
+  }
+  const session = roomStore.join(params.data.roomId, profile.displayName ?? profile.username, { accountId: id, identity: profile.identity, capExempt: access.moderator });
   roomStore.restoreParticipantId(params.data.roomId, id, member.participantId);
   res.status(201).json(JoinAccountRoomResponse.parse({ ...session,
     participantId: member.participantId, room: roomStore.get(params.data.roomId) }));

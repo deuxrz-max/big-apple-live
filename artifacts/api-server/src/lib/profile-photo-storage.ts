@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { and, eq, gte, sql } from "drizzle-orm";
 import { db, profilePhotos, accountProfiles } from "@workspace/db";
 import { RoomError } from "./room-store";
+import { canReviewPhotos } from "./photo-visibility";
 
 export const PHOTO_LIMIT = 5 * 1024 * 1024;
 const client = new Storage({
@@ -85,7 +86,8 @@ export async function stageProfilePhoto(accountId: string, bytes: Buffer) {
 export async function readablePhoto(photoId: string, viewerId: string) {
   const [photo] = await db.select().from(profilePhotos).where(eq(profilePhotos.id, photoId));
   if (!photo || photo.deletionStartedAt) throw new RoomError(404, "Photo not available");
-  if (photo.accountId !== viewerId) {
+  if (photo.accountId !== viewerId && !(await canReviewPhotos(viewerId))) {
+    if (photo.status !== "approved") throw new RoomError(404, "Photo not available");
     const [active] = await db.select({ id: accountProfiles.accountId }).from(accountProfiles).where(and(
       eq(accountProfiles.accountId, photo.accountId),
       sql`(${accountProfiles.photoUrl} = ${`/api/photos/${photoId}`} OR ${`/api/photos/${photoId}`} = ANY(${accountProfiles.photoUrls}))`));

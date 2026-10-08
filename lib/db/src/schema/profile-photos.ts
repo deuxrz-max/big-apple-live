@@ -9,6 +9,9 @@ export const profilePhotos = pgTable("profile_photos", {
   objectKey: text("object_key").notNull().unique(),
   size: integer("size").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  status: text("status", { enum: ["pending", "approved", "rejected", "flagged"] }).notNull().default("pending"),
+  reviewedBy: text("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
   // Null while current; a new 30-day clock starts on replacement/removal.
   unusedSince: timestamp("unused_since", { withTimezone: true }).defaultNow(),
   // Durable tombstone: saves must reject it even if object deletion is interrupted.

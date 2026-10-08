@@ -25,7 +25,7 @@ export async function getMessages(roomId: string, store: RoomStore = roomStore, 
   const rows = await db.select({ message: roomMessages, photoUrl: accountProfiles.photoUrl }).from(roomMessages)
     .leftJoin(accountProfiles, eq(accountProfiles.accountId, roomMessages.authorAccountId)).where(and(...conditions))
     .orderBy(desc(roomMessages.createdAt), desc(roomMessages.id)).limit(60);
-  return rows.reverse().map(row => ({ ...publicMessage(row.message), photoUrl: row.photoUrl ?? null }));
+  return rows.reverse().map(row => ({ ...publicMessage(row.message), photoUrl: null }));
 }
 export async function acceptMessage(
   roomId: string, sessionId: string, accountId: string, input: ChatInput,
@@ -51,7 +51,7 @@ export async function acceptMessage(
       if ((recent?.count ?? 0) >= 5) throw new RoomError(429, "Slow down: up to five messages every ten seconds");
     }
     // Emoji text never mutates a saved photo or obsolete avatar fields.
-    let profile = publicProfile(row);
+    let profile = { ...publicProfile(row), photoUrl: null, photoUrls: [] };
     const [settings] = await tx.select({ bio: socialSettings.bio }).from(socialSettings)
       .where(eq(socialSettings.accountId, accountId));
     profile = { ...profile, bio: settings?.bio ?? "" };
@@ -64,7 +64,7 @@ export async function acceptMessage(
     return { message: { ...publicMessage(message!), photoUrl: profile.photoUrl ?? null }, profile };
   });
   // No events or in-memory avatar changes occur before the transaction commits.
-  store.updateAccountIdentity(accountId, accepted.profile.displayName ?? accepted.profile.username, accepted.profile.identity, accepted.profile.photoUrl ?? null);
+  store.updateAccountIdentity(accountId, accepted.profile.displayName ?? accepted.profile.username, accepted.profile.identity, null);
   store.publishChat(roomId, historyId, accepted, accountId);
   return accepted;
 }

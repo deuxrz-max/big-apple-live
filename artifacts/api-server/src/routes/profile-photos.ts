@@ -23,7 +23,7 @@ router.get("/photos/:photoId", async (req, res) => {
   if (!params.success) throw new RoomError(404, "Photo not available");
   const { file, ownerId } = await readablePhoto(params.data.photoId, id);
   if (id !== ownerId && await pairBlocked(id, ownerId)) throw new RoomError(404, "Photo not available");
-  res.set({ "Content-Type": "image/webp", "Cache-Control": "private, max-age=3600",
+  res.set({ "Content-Type": "image/webp", "Cache-Control": "private, no-store",
     "X-Content-Type-Options": "nosniff", "Content-Security-Policy": "default-src 'none'" });
   file.createReadStream().on("error", () => {
     if (!res.headersSent) res.status(404).end(); else res.destroy();

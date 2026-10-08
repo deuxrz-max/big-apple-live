@@ -6,9 +6,9 @@ import {
   type RoomState, type ChatMessage, type ChatAccepted,
 } from "@workspace/api-client-react";
 import { saveCreds, type RoomCreds } from "@/lib/room-creds";
-import { errStatus } from "@/lib/errors";
+import { errStatus, errMessage } from "@/lib/errors";
 
-const messageError = (error: unknown) => error instanceof Error ? error.message : "University request failed";
+const messageError = (error: unknown) => errMessage(error, "University request failed");
 const ordered = (messages: ChatMessage[]) => [...new Map(messages.map(m => [m.id, m])).values()]
   .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() || a.id.localeCompare(b.id));
 
@@ -24,6 +24,7 @@ export function useTextRoom(roomId: string, userId: string) {
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [connection, setConnection] = useState("Connecting…");
   const [error, setError] = useState<string | null>(null);
+  const [overflow, setOverflow] = useState<{ roomId: string; label: string } | null>(null);
   const refreshAction = useRef<() => Promise<void>>(async () => {});
   const alive = useRef(false);
 
@@ -49,7 +50,7 @@ export function useTextRoom(roomId: string, userId: string) {
     });
     if (alive.current) {
       setMessages(previous => ordered([...previous, accepted.message]));
-      qc.setQueryData(getGetMyProfileQueryKey(), { profile: accepted.profile });
+      void qc.invalidateQueries({ queryKey: getGetMyProfileQueryKey() });
     }
     return accepted;
   }, [roomId, qc]);
@@ -62,7 +63,7 @@ export function useTextRoom(roomId: string, userId: string) {
     let heartbeat: ReturnType<typeof setInterval> | undefined;
     let joining = false;
     const headers = () => ({ "X-Room-Session": credential.current!.participantSessionId });
-    setRoom(null); setMessages([]); setLoading(true); setError(null);
+    setRoom(null); setMessages([]); setLoading(true); setError(null); setOverflow(null);
     credential.current = null; setCreds(null);
 
     async function history(replace = true) {
@@ -126,6 +127,8 @@ export function useTextRoom(roomId: string, userId: string) {
       } catch (e) {
         if (!active) return;
         const status = errStatus(e);
+        const offer = (e as { data?: { overflow?: { roomId: string; label: string } } })?.data?.overflow;
+        if (offer) setOverflow(offer);
         setError(messageError(e)); setLoading(false);
         if (status === 403) void qc.invalidateQueries({ queryKey: getGetChatAccessQueryKey() });
         if (status && status >= 400 && status < 500 && status !== 429) {
@@ -148,5 +151,5 @@ export function useTextRoom(roomId: string, userId: string) {
       // via the existing heartbeat lease; persisted history/membership remains.
     };
   }, [roomId, userId]);
-  return { room, messages, creds, loading, connection, error, send, refresh, loadOlder, loadingOlder, hasOlder };
+  return { room, messages, creds, loading, connection, error, overflow, send, refresh, loadOlder, loadingOlder, hasOlder };
 }

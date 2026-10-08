@@ -2,6 +2,7 @@ import { db, accountProfiles, socialSettings, profilePhotos, type AccountProfile
 import { eq, and, sql } from "drizzle-orm";
 import type { AccountProfile, ProfileInput } from "@workspace/api-zod";
 import { RoomError, roomStore } from "./room-store";
+import { visibleProfilePhotos } from "./photo-visibility";
 
 export function publicProfile(row: AccountProfileRow): AccountProfile {
   return {
@@ -25,7 +26,7 @@ export async function getProfile(accountId: string): Promise<AccountProfile | nu
   if (!row) return null;
   const [settings] = await db.select({ bio: socialSettings.bio }).from(socialSettings)
     .where(eq(socialSettings.accountId, accountId));
-  return { ...publicProfile(row), bio: settings?.bio ?? "" };
+  return { ...publicProfile(row), ...await visibleProfilePhotos(accountId, accountId, row), bio: settings?.bio ?? "" };
 }
 export async function requireCompletedProfile(accountId: string): Promise<AccountProfile> {
   const profile = await getProfile(accountId);
@@ -112,8 +113,8 @@ export async function saveProfile(accountId: string, input: ProfileInput): Promi
         .where(eq(socialSettings.accountId, accountId));
       return { ...publicProfile(row!), bio: settings?.bio ?? "" };
     });
-    roomStore.updateAccountIdentity(accountId, profile.displayName ?? profile.username, profile.identity, profile.photoUrl ?? null);
-    return profile;
+    roomStore.updateAccountIdentity(accountId, profile.displayName ?? profile.username, profile.identity, null);
+    return { ...profile, ...await visibleProfilePhotos(accountId, accountId, { photoUrl: profile.photoUrl ?? null, photoUrls: profile.photoUrls }) };
   } catch (error) {
     const cause = (error as { cause?: { code?: string }; code?: string });
     if (cause.code === "23505" || cause.cause?.code === "23505") {

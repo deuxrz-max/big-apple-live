@@ -5,6 +5,42 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type PhotoReviewEntryStatus = typeof PhotoReviewEntryStatus[keyof typeof PhotoReviewEntryStatus];
+
+
+export const PhotoReviewEntryStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+  flagged: 'flagged',
+} as const;
+
+export interface PhotoReviewEntry {
+  id: string;
+  photoUrl: string;
+  status: PhotoReviewEntryStatus;
+  /** @nullable */
+  username?: string | null;
+  /** @nullable */
+  displayName?: string | null;
+  createdAt: string;
+}
+
+export type PhotoReviewStatusStatus = typeof PhotoReviewStatusStatus[keyof typeof PhotoReviewStatusStatus];
+
+
+export const PhotoReviewStatusStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+  flagged: 'flagged',
+} as const;
+
+export interface PhotoReviewStatus {
+  photoUrl: string;
+  status: PhotoReviewStatusStatus;
+}
+
 export interface ChatDirectoryRoom {
   roomId: string;
   label: string;
@@ -227,6 +263,7 @@ export interface AccountProfile {
   bio?: string;
   /** @nullable */
   photoUrl?: string | null;
+  photoReviews?: PhotoReviewStatus[];
   /** @maxItems 4 */
   photoUrls?: string[];
   identity: EmojiIdentity;
@@ -351,6 +388,42 @@ export interface RoomSession {
 
 export interface ErrorResponse {
   error: string;
+}
+
+export type PhotoReviewEntry4b96100Status = typeof PhotoReviewEntry4b96100Status[keyof typeof PhotoReviewEntry4b96100Status];
+
+
+export const PhotoReviewEntry4b96100Status = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+  flagged: 'flagged',
+} as const;
+
+export interface PhotoReviewEntry4b96100 {
+  id: string;
+  photoUrl: string;
+  status: PhotoReviewEntry4b96100Status;
+  /** @nullable */
+  username?: string | null;
+  /** @nullable */
+  displayName?: string | null;
+  createdAt: string;
+}
+
+export type PhotoReviewStatus4b96100Status = typeof PhotoReviewStatus4b96100Status[keyof typeof PhotoReviewStatus4b96100Status];
+
+
+export const PhotoReviewStatus4b96100Status = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+  flagged: 'flagged',
+} as const;
+
+export interface PhotoReviewStatus4b96100 {
+  photoUrl: string;
+  status: PhotoReviewStatus4b96100Status;
 }
 
 export interface ChatDirectoryRoom4b96100 {
@@ -575,6 +648,7 @@ export interface AccountProfile4b96100 {
   bio?: string;
   /** @nullable */
   photoUrl?: string | null;
+  photoReviews?: PhotoReviewStatus4b96100[];
   /** @maxItems 4 */
   photoUrls?: string[];
   identity: EmojiIdentity4b96100;
@@ -730,6 +804,7 @@ export interface SocialPerson {
   photoUrl?: string | null;
   /** @maxItems 4 */
   photoUrls?: string[];
+  photoReviews?: PhotoReviewStatus4b96100[];
   identity: EmojiIdentity4b96100;
   bio: string;
   country: string | null;
@@ -916,6 +991,31 @@ export type CapacityErrorResponse = ErrorResponse;
  * Private participant session; must belong to the authenticated account in this room
  */
 export type RoomSessionHeaderParameter = string;
+
+export type ReviewProfilePhotoBodyAction = typeof ReviewProfilePhotoBodyAction[keyof typeof ReviewProfilePhotoBodyAction];
+
+
+export const ReviewProfilePhotoBodyAction = {
+  approve: 'approve',
+  reject: 'reject',
+} as const;
+
+export type ReviewProfilePhotoBody = {
+  action: ReviewProfilePhotoBodyAction;
+};
+
+export type ReviewProfilePhoto200Status = typeof ReviewProfilePhoto200Status[keyof typeof ReviewProfilePhoto200Status];
+
+
+export const ReviewProfilePhoto200Status = {
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
+export type ReviewProfilePhoto200 = {
+  id: string;
+  status: ReviewProfilePhoto200Status;
+};
 
 export type GetSocialPeopleParams = {
 search?: string;

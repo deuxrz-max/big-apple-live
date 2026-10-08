@@ -8,6 +8,7 @@
 - [Room mood visuals](room-mood-visuals.md) — archived Beam-effects transport constraints; see replit.md for the active text-chat scope.
 - [TalkCity reference](talkcity-reference.md) — retain We Buggin branding; the earlier alongside-Beams scope is superseded by the text-chat pivot.
 - [OpenAPI generation](openapi-generation.md) — modular refs need an allowlist before codegen; combined path/query schemas can collide in Zod barrel exports.
+- [Additive schema guards](additive-schema-guards.md) — stop unrelated truncation prompts; apply only approved development additions without deleting histories.
 - [Beam screen layout](beam-screen-layout.md) — participant boxes stay anchored; chat is borderless below them and older messages require chat-only scrolling.
 - [Living Beam rooms](living-beam-goal.md) — archived Beam goal; superseded for active routes by the text-chat pivot.
 - [Text-chat follow-ons](text-chat-pivot.md) — optional ownership checks require a unique bio code and reviewer, never an official platform verification claim.

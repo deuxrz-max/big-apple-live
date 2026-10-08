@@ -6,6 +6,7 @@ import identityRouter from "./identity";
 import socialRouter from "./social";
 import communityRouter from "./community";
 import profilePhotosRouter from "./profile-photos";
+import photoReviewRouter from "./photo-review";
 import { accountId } from "./identity";
 import { requireAdult } from "../lib/community";
 import { requireCompletedProfile } from "../lib/account-profiles";
@@ -15,6 +16,7 @@ const router: IRouter = Router();
 router.use(healthRouter);
 router.use(communityRouter);
 router.use(profilePhotosRouter);
+router.use(photoReviewRouter);
 router.use(["/account/rooms", "/social"], async (req, _res, next) => {
   await requireAdult(accountId(req));
   await requireCompletedProfile(accountId(req));

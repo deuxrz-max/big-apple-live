@@ -3,6 +3,7 @@ import type { Participant, RoomSession, RoomState, EmojiIdentity, ChatAccepted, 
 import { ENABLE_ROOM_MOOD_VISUALS, type EmojiParticleEvent, type RoomMoodUpdate } from "@workspace/beam-identity";
 import { RoomMoodTracker } from "./room-mood";
 import { CommunityAtmosphereTracker } from "./community-atmosphere";
+import { UNIVERSITY_MEMBER_CAP } from "./university-config";
 
 export const SESSION_TIMEOUT_MS = 90_000;
 export const EMPTY_ROOM_TIMEOUT_MS = 60 * 60 * 1000;
@@ -21,8 +22,8 @@ type RoomEvent =
   | { type: "room.snapshot"; data: RoomState }
   | { type: "room.expired"; data: { roomId: string } };
 type Listener = (event: RoomEvent) => void;
-type ActiveSession = { participant: Participant; lastSeenAt: number; accountId?: string };
-type AccountIdentity = { accountId: string; identity: EmojiIdentity; photoUrl?: string | null };
+type ActiveSession = { participant: Participant; lastSeenAt: number; accountId?: string; capExempt?: boolean };
+type AccountIdentity = { accountId: string; identity: EmojiIdentity; photoUrl?: string | null; capExempt?: boolean };
 function copyParticipant(participant: Participant): Participant {
   return {
     ...participant, joinedAt: new Date(participant.joinedAt),
@@ -56,7 +57,7 @@ export class RoomStore {
     atmosphere: { scene: "city" | "calm" | "volcano"; since: number } | null }) {
     if (this.rooms.has(input.roomId)) return;
     this.rooms.set(input.roomId, { roomId: input.roomId, historyId: input.historyId,
-      name: input.label, capacity: 0, createdAt: input.createdAt, hostParticipantId: randomUUID(),
+      name: input.label, capacity: UNIVERSITY_MEMBER_CAP, createdAt: input.createdAt, hostParticipantId: randomUUID(),
       sessions: new Map(), listeners: new Set(), emptySince: null, mood: new RoomMoodTracker(this.now),
       community: new CommunityAtmosphereTracker(this.now, undefined, input.atmosphere) });
   }
@@ -67,6 +68,11 @@ export class RoomStore {
       this.emit(room, { type: "chat.refresh", data: { roomId: room.roomId } });
   }
   publishCommunityAtmosphere(roomId: string) { this.broadcast(this.requireRoom(roomId)); }
+  hasUniversitySeat(roomId: string, accountId: string, exempt = false) {
+    const room = this.requireRoom(roomId);
+    return exempt || [...room.sessions.values()].some(s => s.accountId === accountId)
+      || [...room.sessions.values()].filter(s => !s.capExempt).length < UNIVERSITY_MEMBER_CAP;
+  }
 
   create(displayName: string, account?: AccountIdentity, beam?: AccountRoomInput): RoomSession {
     this.sweep();
@@ -102,10 +108,12 @@ export class RoomStore {
       for (const [participantSessionId, session] of room.sessions) {
         if (session.accountId !== account.accountId) continue;
         session.lastSeenAt = this.now();
+        if (room.community) session.capExempt = !!account.capExempt;
         return { participantSessionId, participantId: session.participant.participantId, room: this.snapshot(room) };
       }
     }
-    if (room.capacity > 0 && room.sessions.size >= room.capacity) {
+    if (room.community ? !this.hasUniversitySeat(roomId, account?.accountId ?? "", account?.capExempt)
+      : room.capacity > 0 && room.sessions.size >= room.capacity) {
       throw new RoomError(409, "University participant capacity reached");
     }
     return this.addSession(room, displayName, account);
@@ -200,7 +208,7 @@ export class RoomStore {
         if (session.accountId !== accountId) continue;
         session.participant.displayName = displayName;
         session.participant.identity = { ...identity };
-        if (photoUrl !== undefined) session.participant.photoUrl = photoUrl;
+        if (photoUrl !== undefined) session.participant.photoUrl = room.community ? null : photoUrl;
         changed = true;
       }
       if (changed) this.broadcast(room);
@@ -227,7 +235,7 @@ export class RoomStore {
       participant: {
         participantId,
         displayName,
-        photoUrl: account?.photoUrl ?? null,
+        photoUrl: room.community ? null : account?.photoUrl ?? null,
         joinedAt: new Date(this.now()),
         identity: account ? { ...account.identity } : null,
         isRegistered: !!account,
@@ -237,6 +245,7 @@ export class RoomStore {
       },
       lastSeenAt: this.now(),
       accountId: account?.accountId,
+      capExempt: !!account?.capExempt,
     });
     room.emptySince = null;
     this.broadcast(room);

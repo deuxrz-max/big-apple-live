@@ -5,6 +5,8 @@ export const chatRooms = pgTable("chat_rooms", {
   roomId: text("room_id").primaryKey(),
   historyId: uuid("history_id").notNull().unique(),
   label: text("label").notNull(),
+  parentRoomId: text("parent_room_id"),
+  overflowNumber: text("overflow_number"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   atmosphere: jsonb("atmosphere").$type<{ scene: "city" | "calm" | "volcano"; since: number }>(),
 });

@@ -9,12 +9,23 @@ The main experience is six independent universities labeled LiveMe, Bigo
 Live, Tango Live, TikTok, Instagram Live and Super Live, in that order. They are not broadcast integrations
 and must not be presented as affiliated/endorsed. Preserve users, Clerk login,
 existing accounts, messages and profile logic. Do not reactivate broadcasting
-seats, camera/microphone prompts or the old twelve-seat cap in active routes.
+seats or camera/microphone prompts in active routes. The owner approved a new
+24-member university cap (not the archived twelve-seat Beam limit).
+`UNIVERSITY_MEMBER_CAP` in `src/lib/university-config.ts` is the single setting.
+Moderators may enter full universities and do not consume member seats.
+Full universities offer numbered overflow universities with independent persistent
+histories; empty overflow universities are hidden from the Directory.
 
 Use "university/universities" in user-facing text; preserve internal room IDs/routes/events.
 These are social spaces for optional sharing/learning broadcasting techniques, not
 mandatory lessons, courses or enrollment.
 Users upload their own profile photos; missing photos use neutral initials.
+All new and pre-existing uploaded photos require human moderator review. Pending,
+rejected and flagged photos are private to the uploader and moderator review;
+other members see initials unless the selected photo is approved. No sexual or
+explicit photos: the owner wants a professional university environment.
+Moderator access remains operator-managed through `chat_moderators`; never grant
+it automatically. See `artifacts/api-server/SAFETY-PHASE-1.md` for instructions.
 Each profile may keep up to four saved photos and select one main photo. The
 “+ Click to add” control uploads photos; all saved photos appear on the profile.
 Every app screen has fixed bottom navigation: Home, Follow, Message and Me,
@@ -95,8 +106,8 @@ the public demo or redirecting the signed-in user to discovery.
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Room presence remains in memory. Account names/emoji profiles persist in PostgreSQL; Clerk owns account authentication.
 - `pnpm --filter @workspace/we-buggin run dev` — web app, using its managed workflow
-- `pnpm --filter @workspace/api-server run test:rooms` — room and signaling unit tests
-- `pnpm --filter @workspace/api-server run test:audio` — two-browser WebRTC/audio lifecycle test (running API and Playwright Chromium required)
+- `pnpm --filter @workspace/api-server run test:rooms` — room and retained compatibility unit tests
+- `pnpm --filter @workspace/api-server run test:safety` — private photo review and overflow integration tests
 
 ## Stack
 
