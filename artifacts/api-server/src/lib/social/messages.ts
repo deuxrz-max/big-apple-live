@@ -5,7 +5,7 @@ import { assertContact, lockPair, pairBlocked, person, requireAccount, targetAcc
 
 const pair = (a: string, b: string) => or(and(eq(socialMessages.senderId, a), eq(socialMessages.recipientId, b)), and(eq(socialMessages.senderId, b), eq(socialMessages.recipientId, a)));
 const visible = (id: string) => or(and(eq(socialMessages.senderId, id), eq(socialMessages.senderHidden, false)), and(eq(socialMessages.recipientId, id), eq(socialMessages.recipientHidden, false)));
-export async function sendMessage(id: string, username: string, text: string, key: string) {
+export async function sendMessage(id: string, username: string, text: string, key: string, whisperHistoryId?: string, checkSession?: () => void) {
   const sender = await requireAccount(id);
   const target = await targetAccount(username);
   const body = text.trim();
@@ -14,15 +14,18 @@ export async function sendMessage(id: string, username: string, text: string, ke
     await lockPair(tx, id, target.accountId);
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${"social-message:" + id}, 0))`);
     await assertContact(tx, id, target.accountId);
+    checkSession?.();
     const [existing] = await tx.select().from(socialMessages).where(eq(socialMessages.id, key));
     if (existing) {
-      if (existing.senderId !== id || existing.recipientId !== target.accountId || existing.body !== body) throw new RoomError(409, "This retry key belongs to another message");
+      if (existing.senderId !== id || existing.recipientId !== target.accountId || existing.body !== body
+        || existing.whisperHistoryId !== (whisperHistoryId ?? null)) throw new RoomError(409, "This retry key belongs to another message");
       return existing;
     }
     const [rate] = await tx.select({ count: sql<number>`count(*)::int` }).from(socialMessages)
       .where(and(eq(socialMessages.senderId, id), sql`${socialMessages.createdAt} > now() - interval '1 minute'`));
     if ((rate?.count ?? 0) >= 30) throw new RoomError(429, "Please slow down; you can send 30 messages per minute");
-    const [saved] = await tx.insert(socialMessages).values({ id: key, senderId: id, recipientId: target.accountId, body }).returning();
+    const [saved] = await tx.insert(socialMessages).values({ id: key, senderId: id, recipientId: target.accountId, body, whisperHistoryId }).returning();
+    checkSession?.();
     return saved!;
   });
   return { id: row.id, sender: sender.username, recipient: target.username, body: row.body, createdAt: row.createdAt, readAt: row.readAt };

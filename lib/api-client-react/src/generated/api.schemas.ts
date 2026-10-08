@@ -5,6 +5,54 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface UniversityActionResult {
+  ok: boolean;
+}
+
+export interface UniversityIgnoreInput {
+  active: boolean;
+}
+
+export interface UniversityWhisperInput {
+  username: string;
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  body: string;
+  idempotencyKey: string;
+}
+
+export interface UniversityPerson {
+  participantId: string;
+  username: string;
+  displayName: string;
+  /** @nullable */
+  photoUrl: string | null;
+  /** @nullable */
+  photoStatus: string | null;
+  self: boolean;
+  moderator: boolean;
+  ignored: boolean;
+}
+
+export interface UniversityWhisper {
+  id: string;
+  username: string;
+  displayName: string;
+  outgoing: boolean;
+  body: string;
+  createdAt: string;
+}
+
+export interface UniversitySession {
+  people: UniversityPerson[];
+  ignoredUsernames: string[];
+  topic: string;
+  rulesSeen: boolean;
+  whispers: UniversityWhisper[];
+}
+
 export type PhotoReviewEntryStatus = typeof PhotoReviewEntryStatus[keyof typeof PhotoReviewEntryStatus];
 
 
@@ -393,6 +441,54 @@ export interface RoomSession {
 
 export interface ErrorResponse {
   error: string;
+}
+
+export interface UniversityActionResult4b96100 {
+  ok: boolean;
+}
+
+export interface UniversityIgnoreInput4b96100 {
+  active: boolean;
+}
+
+export interface UniversityWhisperInput4b96100 {
+  username: string;
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  body: string;
+  idempotencyKey: string;
+}
+
+export interface UniversityPerson4b96100 {
+  participantId: string;
+  username: string;
+  displayName: string;
+  /** @nullable */
+  photoUrl: string | null;
+  /** @nullable */
+  photoStatus: string | null;
+  self: boolean;
+  moderator: boolean;
+  ignored: boolean;
+}
+
+export interface UniversityWhisper4b96100 {
+  id: string;
+  username: string;
+  displayName: string;
+  outgoing: boolean;
+  body: string;
+  createdAt: string;
+}
+
+export interface UniversitySession4b96100 {
+  people: UniversityPerson4b96100[];
+  ignoredUsernames: string[];
+  topic: string;
+  rulesSeen: boolean;
+  whispers: UniversityWhisper4b96100[];
 }
 
 export type PhotoReviewEntry4b96100Status = typeof PhotoReviewEntry4b96100Status[keyof typeof PhotoReviewEntry4b96100Status];

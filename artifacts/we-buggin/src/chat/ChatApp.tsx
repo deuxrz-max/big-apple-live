@@ -1,22 +1,19 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useClerk } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getGetChatAccessQueryKey, getGetMyProfileQueryKey, useConfirmChatAdult, useGetChatAccess, useGetChatDirectory,
-  useGetChatReports, useGetMyProfile, useGetSocialMe, useReportChatMessage, useReviewChatReport, useSaveMyProfile, useSetSocialRelationship,
-  getGetChatReportsQueryKey, getGetChatDirectoryQueryKey, ChatReportInputReason, ChatReportReviewInputAction, type ChatMessage,
+  useGetChatReports, useGetMyProfile, useGetSocialMe, useReviewChatReport, useSaveMyProfile,
+  getGetChatReportsQueryKey, getGetChatDirectoryQueryKey, ChatReportReviewInputAction,
 } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
 import { AppLogo } from '@/components/brand';
-import { errMessage, errStatus } from '@/lib/errors';
-import { useTextRoom } from './useTextRoom';
-import { RoomAtmosphere } from './RoomAtmosphere';
+import { errMessage } from '@/lib/errors';
 import { PhotoReviewQueue } from './PhotoReviewQueue';
 import './chat.css';
 
 const DISCLAIMER = 'Streamtalk is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
-const FACES = ['\u{1F600}', '\u{1F602}', '\u{1F60D}', '\u{1F62D}', '\u{1F914}', '\u{1F609}', '\u{1F610}', '\u{1F620}'];
 
 function Shell({ children }: { children: ReactNode }) {
   return <div className="ch"><div className="ch-in">{children}</div></div>;
@@ -288,87 +285,7 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
   return <Shell>{body}</Shell>;
 }
 
-const SCENE: Record<string, string> = { city: 'city', calm: 'calm', volcano: 'volcano' };
-
-export function TextChatRoom({ roomId, userId }: { roomId: string; userId: string }) {
-  const qc = useQueryClient();
-  const r = useTextRoom(roomId, userId);
-  const [text, setText] = useState('');
-  const [pending, setPending] = useState(false);
-  const [sendErr, setSendErr] = useState<string | null>(null);
-  const [note, setNote] = useState<string | null>(null);
-  const [reporting, setReporting] = useState<ChatMessage | null>(null);
-  const [reason, setReason] = useState<string>(ChatReportInputReason.harassment);
-  const [details, setDetails] = useState('');
-  const report = useReportChatMessage({
-    request: { headers: { "X-Room-Session": r.creds?.participantSessionId ?? "" } },
-  });
-  const block = useSetSocialRelationship();
-  const box = useRef<HTMLDivElement>(null);
-  const near = useRef(true);
-  const msgs = r.messages;
-  useEffect(() => { const el = box.current; if (el && near.current) el.scrollTop = el.scrollHeight; }, [msgs.length]);
-  const atm = r.room?.communityAtmosphere;
-  const people = useMemo(() => r.room?.participants ?? [], [r.room]);
-  const doSend = async (t: string, kind: 'text' | 'reaction' = 'text') => {
-    const v = t.trim();
-    if (!v || v.length > 280) return;
-    setPending(true); setSendErr(null);
-    try { await r.send(v, kind); if (kind === 'text') setText(''); qc.invalidateQueries({ queryKey: getGetMyProfileQueryKey() }); }
-    catch (e) { setSendErr(errStatus(e) === 409 ? 'Create your profile first.' : errMessage(e)); }
-    finally { setPending(false); }
-  };
-  return (
-    <div className="ch ch-university">
-      <div className="ch-atm"><RoomAtmosphere atmosphere={atm} /></div>
-      <div className="ch-in">
-      <h1 className="ch-title" aria-label={r.room?.name ?? 'University'} data-testid="text-university-name">
-        {(r.room?.name ?? 'University').split(/\s+/).map((w, i) => (
-          <span className="ch-word" key={`${w}-${i}`} style={{ animationDelay: `${i * 140}ms` }}>{w}</span>
-        ))}
-      </h1>
-      {r.error && <div className="ch-err" role="alert">{r.error} <Link href="/user-portal" className="bm-link">Profile</Link></div>}
-      {r.overflow && <p><Link className="bm-btn bm-btn-primary" href={`/rooms/${encodeURIComponent(r.overflow.roomId)}`}>Enter {r.overflow.label}</Link></p>}
-      <div className="ch-room">
-        <div className="ch-roster" aria-label="People who have joined the chat">{people.map((p) => <span key={p.participantId}>{p.displayName} has joined the chat</span>)}</div>
-        <div className="ch-msgs" ref={box} role="log" aria-live="polite" aria-label="University messages" tabIndex={0} onScroll={(e) => { const el = e.currentTarget; near.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }} data-testid="list-messages">
-          {r.hasOlder && <button type="button" className="bm-btn bm-btn-sm" disabled={r.loadingOlder}
-            onClick={async () => {
-              const el = box.current; const height = el?.scrollHeight ?? 0; const top = el?.scrollTop ?? 0;
-              near.current = false; await r.loadOlder();
-              requestAnimationFrame(() => { if (el) el.scrollTop = top + el.scrollHeight - height; });
-            }}>{r.loadingOlder ? 'Loading older messages…' : 'Load older messages'}</button>}
-          {r.loading && <p role="status">Loading history...</p>}
-          {!r.loading && msgs.length === 0 && <p className="ch-note">No messages yet.</p>}
-          {msgs.map((m) => (
-            <div className="ch-msg" key={m.id}>
-              <div><Link className="ch-sender" href={`/community/people/${encodeURIComponent(m.username)}`} aria-label={`View ${m.username}'s profile`}>{people.find(p => p.participantId === m.authorId)?.displayName ?? m.username}</Link><p>{m.text}</p>
-                <div className="ch-acts"><button type="button" onClick={() => { setReporting(m); setNote(null); }}>Report</button>
-                  <button type="button" disabled={block.isPending} onClick={() => block.mutate({ username: m.username, data: { kind: 'block', active: true } }, { onSuccess: () => { setNote(`Blocked ${m.username}.`); r.refresh(); }, onError: (e) => setNote(errMessage(e)) })}>Block</button></div></div></div>
-          ))}
-        </div>
-        {reporting && (
-          <div className="ch-comp" role="dialog" aria-label="Report message">
-            <span>Report {reporting.username}</span>
-            <select value={reason} onChange={(e) => setReason(e.target.value)}>{Object.values(ChatReportInputReason).map((x) => <option key={x}>{x}</option>)}</select>
-            <input type="text" maxLength={500} placeholder="Details (optional)" value={details} onChange={(e) => setDetails(e.target.value)} />
-            <button type="button" className="bm-btn bm-btn-sm bm-btn-primary" disabled={report.isPending} onClick={() => report.mutate({ data: { roomId, messageId: reporting.id, reason: reason as ChatReportInputReason, ...(details ? { details } : {}) } }, { onSuccess: (x) => { setNote(`Report queued (${x.status}).`); setReporting(null); setDetails(''); }, onError: (e) => setNote(errMessage(e)) })}>Send report</button>
-            <button type="button" className="bm-btn bm-btn-sm" onClick={() => setReporting(null)}>Cancel</button>
-          </div>
-        )}
-        <form className="ch-comp" onSubmit={(e) => { e.preventDefault(); doSend(text); }}>
-          <input type="text" value={text} maxLength={280} onChange={(e) => setText(e.target.value)} placeholder="Say something (1-280)" aria-label="Message" data-testid="input-message" />
-          <button type="submit" className="bm-btn bm-btn-primary" disabled={pending || !text.trim()} data-testid="button-send">{pending ? 'Sending...' : 'Send'}</button>
-          <div className="ch-faces">{FACES.map((f) => <button key={f} type="button" disabled={pending} aria-label={`Send ${f}`} onClick={() => doSend(f, 'reaction')}>{f}</button>)}</div>
-        </form>
-      </div>
-      {sendErr && <div className="ch-err" role="alert">{sendErr}</div>}
-      {note && <p role="status">{note} <Link href="/community/blocks" className="bm-link">Blocked list</Link></p>}
-      <p className="ch-note">{atm ? `Activity-based scene: ${SCENE[atm.scene]}, ${atm.activity} messages in the last ${Math.round(atm.windowMs / 60000)} minutes. ` : ''}Tone switching is off. Muted summer video; plain dark background when playback is unavailable or reduced motion is enabled.</p>
-      <p className="ch-note">{DISCLAIMER}</p>
-    </div></div>
-  );
-}
+export { TextChatRoom } from './UniversityRoom';
 
 export function ModerationQueue() {
   const qc = useQueryClient();

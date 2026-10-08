@@ -3,6 +3,7 @@ import { eq, desc, sql, and, or, gte, notInArray, isNull, lt } from "drizzle-orm
 import { GetRoomMessagesResponse, type ChatInput, type ChatAccepted } from "@workspace/api-zod";
 import { publicProfile } from "./account-profiles";
 import { roomStore, RoomError, type RoomStore } from "./room-store";
+import { ignoredAccounts } from "./university-chat";
 
 function publicMessage(row: RoomMessageRow) {
   return GetRoomMessagesResponse.element.parse(row);
@@ -17,6 +18,8 @@ export async function getMessages(roomId: string, store: RoomStore = roomStore, 
       and(eq(roomMessages.createdAt, cursor.createdAt), lt(roomMessages.id, cursor.id)))!);
   }
   if (viewerId) {
+    const ignored = await ignoredAccounts(viewerId);
+    if (ignored.length) conditions.push(or(isNull(roomMessages.authorAccountId), notInArray(roomMessages.authorAccountId, ignored))!);
     const relations = await db.select().from(socialRelations).where(and(eq(socialRelations.kind, "block"),
       or(eq(socialRelations.ownerId, viewerId), eq(socialRelations.targetId, viewerId))));
     const blocked = relations.map(r => r.ownerId === viewerId ? r.targetId : r.ownerId);

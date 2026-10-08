@@ -15,6 +15,58 @@ tags:
   - name: audio
     description: Authenticated room-scoped WebRTC signaling; media travels peer-to-peer
 paths:
+  /account/rooms/{roomId}/university-session:
+    get:
+      operationId: getUniversitySession
+      parameters:
+        - { name: roomId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Viewer-specific people and whispers; requires X-Room-Session
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UniversitySession" }
+  /account/rooms/{roomId}/whispers:
+    post:
+      operationId: sendUniversityWhisper
+      parameters:
+        - { name: roomId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UniversityWhisperInput" }
+      responses:
+        "201":
+          description: Saved in the existing private conversation
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UniversityActionResult" }
+  /account/chat/ignores/{username}:
+    put:
+      operationId: setUniversityIgnore
+      parameters:
+        - { name: username, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UniversityIgnoreInput" }
+      responses:
+        "200":
+          description: Account-wide ignore saved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UniversityActionResult" }
+  /account/chat/rules/seen:
+    post:
+      operationId: acknowledgeUniversityRules
+      responses:
+        "200":
+          description: Rules acknowledged for this account
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UniversityActionResult" }
   /account/chat/photo-reviews:
     get:
       operationId: getPhotoReviewQueue
@@ -737,6 +789,54 @@ components:
         type: string
         format: uuid
   schemas:
+    UniversityActionResult:
+      type: object
+      required: [ok]
+      properties:
+        ok: { type: boolean }
+    UniversityIgnoreInput:
+      type: object
+      required: [active]
+      properties:
+        active: { type: boolean }
+    UniversityWhisperInput:
+      type: object
+      required: [username, body, idempotencyKey]
+      properties:
+        username: { type: string }
+        body: { type: string, minLength: 1, maxLength: 1000 }
+        idempotencyKey: { type: string, format: uuid }
+    UniversityPerson:
+      type: object
+      required: [participantId, username, displayName, photoUrl, photoStatus, self, moderator, ignored]
+      properties:
+        participantId: { type: string }
+        username: { type: string }
+        displayName: { type: string }
+        photoUrl: { type: [string, "null"] }
+        photoStatus: { type: [string, "null"] }
+        self: { type: boolean }
+        moderator: { type: boolean }
+        ignored: { type: boolean }
+    UniversityWhisper:
+      type: object
+      required: [id, username, displayName, outgoing, body, createdAt]
+      properties:
+        id: { type: string }
+        username: { type: string }
+        displayName: { type: string }
+        outgoing: { type: boolean }
+        body: { type: string }
+        createdAt: { type: string, format: date-time }
+    UniversitySession:
+      type: object
+      required: [people, ignoredUsernames, topic, rulesSeen, whispers]
+      properties:
+        people: { type: array, items: { $ref: "#/components/schemas/UniversityPerson" } }
+        ignoredUsernames: { type: array, items: { type: string } }
+        topic: { type: string }
+        rulesSeen: { type: boolean }
+        whispers: { type: array, items: { $ref: "#/components/schemas/UniversityWhisper" } }
     PhotoReviewEntry:
       type: object
       required: [id, photoUrl, status, createdAt]

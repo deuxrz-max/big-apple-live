@@ -29,6 +29,22 @@ participant identities or messages.
 Adults-only social chat universities with existing named accounts, users' uploaded
 profile photos, persisted messages, live presence and independent university atmosphere.
 
+## Approved Phase 3 university interactions
+
+Universities now have a desktop People column and a mobile People drawer, with
+approved photos (initials for unapproved photos), display names and badges only
+for the existing moderator role. The uploader can see their own pending photo
+with its review label. There is no host appointment system.
+Click another person's row or message name for Whisper, View profile and
+Ignore/Unignore. Whispers reuse private messages and their existing contact,
+block, length and rate rules; inline whispers are never room broadcasts.
+Ignore is account-wide and server-persisted, hides university messages/whispers
+only for that viewer, and does not affect the normal Messages page or replace Block.
+Keep the compact university name, parent-inherited topic and Rules button.
+House rules are acknowledged once per account on the server and can be reopened.
+The migration is additive and development-only; existing messages/accounts/photos
+must never be reset. This is not authorization for later phases or publishing.
+
 ## Current product: text chat
 
 The main experience is six independent universities labeled LiveMe, Bigo
@@ -60,10 +76,11 @@ routes; signed-out visitors can sign in to use the protected destinations.
 The cap applies to selected profile photos, not lifetime uploads. Preserve all
 selected photos during retention cleanup; removed photos keep the approved
 30-day unused grace period.
-Chat message authors use clickable names linking to their existing profiles.
-Do not show profile photos beside names anywhere in chat, including university
-participant strips, private chat headers or inbox conversation rows. Keep photos
-on profile pages and preserve profile privacy/block rules.
+Chat message author names open the person-action menu; View profile retains the
+existing profile destination. Do not put photos beside message author names,
+private chat headers or inbox conversation rows. The approved Phase 3 People list
+is the exception: it shows review-filtered photos, as do existing profile pages.
+Preserve profile privacy/block rules.
 No branded characters, hair/portrait pickers or profile-image facial-emoji sync
 in active routes. Chat emojis never change photos. Leave obsolete database
 identity fields unused for compatibility; never overwrite genuine uploaded photos.

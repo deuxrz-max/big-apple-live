@@ -5,6 +5,7 @@
 - [Image review tooling](image-tooling.md) — ImageMagick montage's default font can be empty; distinguish review-sheet errors from invalid source images.
 - [Microphone permissions](microphone-permissions.md) — archived voice consent rules; active text communities require no camera or microphone.
 - [Room history isolation](room-history-isolation.md) — never recover unbound historical messages by reusable share code; preserve incarnation identity.
+- [University topic defaults](university-topic-defaults.md) — default topics avoid backfilling old records; overflow topics resolve from the parent.
 - [Semantic merge checks](semantic-merge-checks.md) — unmarked automatic merges can drop completed safety fixes; regenerate contracts and verify behavior.
 - [Room mood visuals](room-mood-visuals.md) — archived Beam-effects transport constraints; see replit.md for the active text-chat scope.
 - [TalkCity reference](talkcity-reference.md) — retain Streamtalk branding; the earlier alongside-Beams scope is superseded by the text-chat pivot.

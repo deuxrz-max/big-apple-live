@@ -67,7 +67,11 @@ import type {
   SocialProfileInput,
   SocialPurchaseInput,
   SocialRelationshipInput,
-  SocialWallet
+  SocialWallet,
+  UniversityActionResult,
+  UniversityIgnoreInput,
+  UniversitySession,
+  UniversityWhisperInput
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -96,6 +100,311 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetUniversitySessionUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/account/rooms/${roomId}/university-session`
+}
+
+export const getUniversitySession = async (roomId: string, options?: Parameters<typeof customFetch>[1]): Promise<UniversitySession> => {
+
+  return customFetch<UniversitySession>(getGetUniversitySessionUrl(roomId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetUniversitySessionQueryKey = (roomId: string,) => {
+    return [
+    `/api/account/rooms/${roomId}/university-session`
+    ] as const;
+    }
+
+
+export const getGetUniversitySessionQueryOptions = <TData = Awaited<ReturnType<typeof getUniversitySession>>, TError = ErrorType<unknown>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUniversitySession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUniversitySessionQueryKey(roomId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUniversitySession>>> = ({ signal }) => getUniversitySession(roomId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUniversitySession>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetUniversitySessionQueryResult = NonNullable<Awaited<ReturnType<typeof getUniversitySession>>>
+export type GetUniversitySessionQueryError = ErrorType<unknown>
+
+
+
+export function useGetUniversitySession<TData = Awaited<ReturnType<typeof getUniversitySession>>, TError = ErrorType<unknown>>(
+ roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUniversitySession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetUniversitySessionQueryOptions(roomId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSendUniversityWhisperUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/account/rooms/${roomId}/whispers`
+}
+
+export const sendUniversityWhisper = async (roomId: string,
+    universityWhisperInput: UniversityWhisperInput, options?: Parameters<typeof customFetch>[1]): Promise<UniversityActionResult> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<UniversityActionResult>(getSendUniversityWhisperUrl(roomId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(universityWhisperInput)
+  }
+);}
+
+
+
+
+
+export const getSendUniversityWhisperMutationKey = () => ['sendUniversityWhisper'] as const;
+
+export const getSendUniversityWhisperMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendUniversityWhisper>>, TError,SendUniversityWhisperMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendUniversityWhisper>>, TError,SendUniversityWhisperMutationVariables, TContext> => {
+
+const mutationKey = getSendUniversityWhisperMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendUniversityWhisper>>, SendUniversityWhisperMutationVariables> = (props) => {
+          const {roomId,data} = props ?? {};
+
+          return  sendUniversityWhisper(roomId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendUniversityWhisperMutationResult = NonNullable<Awaited<ReturnType<typeof sendUniversityWhisper>>>
+    export type SendUniversityWhisperMutationBody = BodyType<UniversityWhisperInput>
+    export type SendUniversityWhisperMutationError = ErrorType<unknown>
+    export type SendUniversityWhisperMutationVariables = {roomId: string;data: BodyType<UniversityWhisperInput>}
+
+    export const useSendUniversityWhisper = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendUniversityWhisper>>, TError,SendUniversityWhisperMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendUniversityWhisper>>,
+        TError,
+        SendUniversityWhisperMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSendUniversityWhisperMutationOptions(options));
+    }
+
+export const getSetUniversityIgnoreUrl = (username: string,) => {
+
+
+
+
+  return `/api/account/chat/ignores/${username}`
+}
+
+export const setUniversityIgnore = async (username: string,
+    universityIgnoreInput: UniversityIgnoreInput, options?: Parameters<typeof customFetch>[1]): Promise<UniversityActionResult> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<UniversityActionResult>(getSetUniversityIgnoreUrl(username),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(universityIgnoreInput)
+  }
+);}
+
+
+
+
+
+export const getSetUniversityIgnoreMutationKey = () => ['setUniversityIgnore'] as const;
+
+export const getSetUniversityIgnoreMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setUniversityIgnore>>, TError,SetUniversityIgnoreMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setUniversityIgnore>>, TError,SetUniversityIgnoreMutationVariables, TContext> => {
+
+const mutationKey = getSetUniversityIgnoreMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setUniversityIgnore>>, SetUniversityIgnoreMutationVariables> = (props) => {
+          const {username,data} = props ?? {};
+
+          return  setUniversityIgnore(username,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetUniversityIgnoreMutationResult = NonNullable<Awaited<ReturnType<typeof setUniversityIgnore>>>
+    export type SetUniversityIgnoreMutationBody = BodyType<UniversityIgnoreInput>
+    export type SetUniversityIgnoreMutationError = ErrorType<unknown>
+    export type SetUniversityIgnoreMutationVariables = {username: string;data: BodyType<UniversityIgnoreInput>}
+
+    export const useSetUniversityIgnore = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setUniversityIgnore>>, TError,SetUniversityIgnoreMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setUniversityIgnore>>,
+        TError,
+        SetUniversityIgnoreMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetUniversityIgnoreMutationOptions(options));
+    }
+
+export const getAcknowledgeUniversityRulesUrl = () => {
+
+
+
+
+  return `/api/account/chat/rules/seen`
+}
+
+export const acknowledgeUniversityRules = async ( options?: Parameters<typeof customFetch>[1]): Promise<UniversityActionResult> => {
+
+  return customFetch<UniversityActionResult>(getAcknowledgeUniversityRulesUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getAcknowledgeUniversityRulesMutationKey = () => ['acknowledgeUniversityRules'] as const;
+
+export const getAcknowledgeUniversityRulesMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acknowledgeUniversityRules>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof acknowledgeUniversityRules>>, TError,void, TContext> => {
+
+const mutationKey = getAcknowledgeUniversityRulesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof acknowledgeUniversityRules>>, void> = () => {
+
+
+          return  acknowledgeUniversityRules(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AcknowledgeUniversityRulesMutationResult = NonNullable<Awaited<ReturnType<typeof acknowledgeUniversityRules>>>
+
+    export type AcknowledgeUniversityRulesMutationError = ErrorType<unknown>
+
+
+    export const useAcknowledgeUniversityRules = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acknowledgeUniversityRules>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof acknowledgeUniversityRules>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getAcknowledgeUniversityRulesMutationOptions(options));
+    }
 
 export const getGetPhotoReviewQueueUrl = () => {
 

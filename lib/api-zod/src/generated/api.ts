@@ -8,6 +8,72 @@
 import * as zod from 'zod';
 
 
+export const GetUniversitySessionParams = zod.object({
+  "roomId": zod.coerce.string()
+})
+
+export const GetUniversitySessionResponse = zod.object({
+  "people": zod.array(zod.object({
+  "participantId": zod.string(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "photoUrl": zod.string().nullable(),
+  "photoStatus": zod.string().nullable(),
+  "self": zod.boolean(),
+  "moderator": zod.boolean(),
+  "ignored": zod.boolean()
+})),
+  "ignoredUsernames": zod.array(zod.string()),
+  "topic": zod.string(),
+  "rulesSeen": zod.boolean(),
+  "whispers": zod.array(zod.object({
+  "id": zod.string(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "outgoing": zod.boolean(),
+  "body": zod.string(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+export const SendUniversityWhisperParams = zod.object({
+  "roomId": zod.coerce.string()
+})
+
+export const sendUniversityWhisperBodyBodyMax = 1000;
+
+
+
+export const SendUniversityWhisperBody = zod.object({
+  "username": zod.string(),
+  "body": zod.string().min(1).max(sendUniversityWhisperBodyBodyMax),
+  "idempotencyKey": zod.string().uuid()
+})
+
+export const SendUniversityWhisperResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+export const SetUniversityIgnoreParams = zod.object({
+  "username": zod.coerce.string()
+})
+
+export const SetUniversityIgnoreBody = zod.object({
+  "active": zod.boolean()
+})
+
+export const SetUniversityIgnoreResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+export const AcknowledgeUniversityRulesResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
 export const GetPhotoReviewQueueResponseItem = zod.object({
   "id": zod.string(),
   "photoUrl": zod.string(),

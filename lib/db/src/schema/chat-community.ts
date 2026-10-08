@@ -1,10 +1,12 @@
-import { pgTable, text, uuid, timestamp, boolean, jsonb, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, uuid, timestamp, boolean, jsonb, primaryKey, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { accountProfiles } from "./account-profiles";
 
 export const chatRooms = pgTable("chat_rooms", {
   roomId: text("room_id").primaryKey(),
   historyId: uuid("history_id").notNull().unique(),
   label: text("label").notNull(),
+  topic: text("topic"),
   parentRoomId: text("parent_room_id"),
   overflowNumber: text("overflow_number"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -16,6 +18,15 @@ export const chatAdmissions = pgTable("chat_admissions", {
   suspended: boolean("suspended").notNull().default(false),
 });
 export const chatModerators = pgTable("chat_moderators", { accountId: text("account_id").primaryKey() });
+export const universityPreferences = pgTable("university_preferences", {
+  accountId: text("account_id").primaryKey().references(() => accountProfiles.accountId, { onDelete: "cascade" }),
+  rulesSeenAt: timestamp("rules_seen_at", { withTimezone: true }),
+});
+export const universityIgnores = pgTable("university_ignores", {
+  accountId: text("account_id").notNull().references(() => accountProfiles.accountId, { onDelete: "cascade" }),
+  targetId: text("target_id").notNull().references(() => accountProfiles.accountId, { onDelete: "cascade" }),
+}, t => [primaryKey({ columns: [t.accountId, t.targetId] }),
+  check("university_ignores_check", sql`${t.accountId} <> ${t.targetId}`)]);
 export const chatMemberships = pgTable("chat_memberships", {
   historyId: uuid("history_id").notNull().references(() => chatRooms.historyId),
   accountId: text("account_id").notNull().references(() => accountProfiles.accountId),

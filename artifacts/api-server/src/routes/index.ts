@@ -1,4 +1,5 @@
 import chatRouter from "./chat";
+import universityChatRouter from "./university-chat";
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import roomsRouter from "./rooms";
@@ -25,6 +26,7 @@ router.use(["/account/rooms", "/social"], async (req, _res, next) => {
 router.use(identityRouter);
 router.use(socialRouter);
 router.use(chatRouter);
+router.use(universityChatRouter);
 // Leave shared audio modules in place for rollback, but never mount signaling.
 router.use((req, res, next) => {
   if (req.path.includes("/audio") || req.path.endsWith("/microphone")
