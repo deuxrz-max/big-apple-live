@@ -55,7 +55,7 @@ export function RoomAtmosphere({ atmosphere }: { atmosphere?: CommunityAtmospher
       .room-scene{position:absolute;inset:0;pointer-events:none;animation:room-scene-in 1.8s ease both}
       .room-scene.is-outgoing{z-index:1;animation:room-scene-out 1.8s ease forwards}
       .room-scene video{position:absolute;inset:0;z-index:1;display:block;width:100%;height:100%;object-fit:cover;object-position:center;pointer-events:none}
-      .room-atmosphere:after{content:"";position:absolute;inset:0;background:rgba(4,5,10,.78);z-index:2;pointer-events:none}
+      .room-atmosphere:after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.40);z-index:2;pointer-events:none}
       @keyframes room-scene-in{from{opacity:0}to{opacity:1}}
       @keyframes room-scene-out{from{opacity:1}to{opacity:0}}
       @media(prefers-reduced-motion:reduce){.room-scene{animation:none!important}.room-scene.is-outgoing{display:none}}
