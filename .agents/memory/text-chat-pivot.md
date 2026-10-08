@@ -14,5 +14,5 @@ official platform verification.
 proof and required no badges without a completed check.
 
 **How to apply:** Screenshots/links alone are insufficient. Label completed
-checks “ownership checked by We Buggin,” not official verification. Do not award
+checks “ownership checked by Streamtalk,” not official verification. Do not award
 an ownership badge before the check is completed or invent platform APIs.

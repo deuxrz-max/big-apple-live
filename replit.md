@@ -92,7 +92,7 @@ service boundary. Existing account and voice rooms remain at `/user-portal` and
 
 After account creation, greet users on a protected discovery home at `/home`,
 inspired by the user's two-column LiveMe reference with bottom navigation.
-Keep the dynamic black We Buggin theme and transparent, static portraits.
+Keep the dynamic black Streamtalk theme and transparent, static portraits.
 First-time profile/name claims also return to this home; profile editing stays
 in the existing account portal. The discovery home must label browser-local beam
 examples as demos, never invent live streams, viewer counts, notifications or

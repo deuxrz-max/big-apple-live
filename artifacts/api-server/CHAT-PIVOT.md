@@ -5,7 +5,7 @@ facial-mood and five-room wording. See `PROFILE-UNIVERSITIES.md` for the current
 account/profile flow. Retention, financial-data and private legacy-history
 constraints below still apply.
 
-# We Buggin text-chat pivot
+# Streamtalk text-chat pivot
 
 ## Implemented flow
 

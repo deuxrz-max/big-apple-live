@@ -1,10 +1,10 @@
 ---
 name: Sesame MCP handoff
-description: Relay ideas to Replit Agent without publishing We Buggin.
+description: Relay ideas to Replit Agent without publishing Streamtalk.
 ---
 
 Prefer Replit's official MCP server for Sesame-to-Agent recommendations rather
-than building an app-hosted MCP server. Do not publish We Buggin to enable this
+than building an app-hosted MCP server. Do not publish Streamtalk to enable this
 handoff.
 
 **Why:** The user wants Sesame AI to send their ideas for Agent review and said,

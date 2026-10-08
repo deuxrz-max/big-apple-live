@@ -6,7 +6,7 @@
 - [Room history isolation](room-history-isolation.md) — never recover unbound historical messages by reusable share code; preserve incarnation identity.
 - [Semantic merge checks](semantic-merge-checks.md) — unmarked automatic merges can drop completed safety fixes; regenerate contracts and verify behavior.
 - [Room mood visuals](room-mood-visuals.md) — archived Beam-effects transport constraints; see replit.md for the active text-chat scope.
-- [TalkCity reference](talkcity-reference.md) — retain We Buggin branding; the earlier alongside-Beams scope is superseded by the text-chat pivot.
+- [TalkCity reference](talkcity-reference.md) — retain Streamtalk branding; the earlier alongside-Beams scope is superseded by the text-chat pivot.
 - [OpenAPI generation](openapi-generation.md) — modular refs need an allowlist before codegen; combined path/query schemas can collide in Zod barrel exports.
 - [Additive schema guards](additive-schema-guards.md) — stop unrelated truncation prompts; apply only approved development additions without deleting histories.
 - [Beam screen layout](beam-screen-layout.md) — participant boxes stay anchored; chat is borderless below them and older messages require chat-only scrolling.
@@ -14,4 +14,4 @@
 - [Text-chat follow-ons](text-chat-pivot.md) — optional ownership checks require a unique bio code and reviewer, never an official platform verification claim.
 - [Artifact command environment](artifact-command-environment.md) — one-off shell checks do not necessarily inherit managed service routing variables.
 - [Photo retention approval](profile-photo-retention.md) — user approved 30 days unused; protect current images and saves, and never expand to other data.
-- [Sesame MCP handoff](sesame-mcp-handoff.md) — use official Replit MCP for Agent recommendations; do not publish We Buggin to enable access.
+- [Sesame MCP handoff](sesame-mcp-handoff.md) — use official Replit MCP for Agent recommendations; do not publish Streamtalk to enable access.

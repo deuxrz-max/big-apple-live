@@ -2,7 +2,7 @@
 
 This backend manages room state and authenticated WebRTC signaling. A headless
 browser SDK captures and plays peer audio. The server does not carry or record
-audio or send chat messages. The We Buggin web app now uses persistent Clerk
+audio or send chat messages. The Streamtalk web app now uses persistent Clerk
 accounts and emoji identity profiles alongside this session framework.
 
 ## Lifecycle

@@ -232,7 +232,7 @@ export function BeamVisualGuide() {
         </section>
 
         <footer className="bg-footer">
-          <span><strong>WE BUGGIN / BEAM</strong> &nbsp; A quick visual guide to what’s here now.</span>
+          <span><strong>Streamtalk / BEAM</strong> &nbsp; A quick visual guide to what’s here now.</span>
           <span>LAYOUT · ACTIVITY · SHARED SCENES</span>
         </footer>
       </div>
