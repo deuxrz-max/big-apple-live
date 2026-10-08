@@ -19,8 +19,11 @@ function SceneLayer({ scene, outgoing, reduced }: { scene: Scene; outgoing: bool
   }, [source, reduced, outgoing]);
   return <div className={`room-scene room-scene-${scene}${outgoing ? " is-outgoing" : ""}`}
     data-testid="atmosphere-layer" data-scene={scene}>
-    <div className="room-static-scene" />
+    <div className="room-static-scene" style={roomVideoMapping[scene].poster
+      ? { backgroundImage: `url("${roomVideoMapping[scene].poster}")`, backgroundSize: "cover", backgroundPosition: "center" }
+      : undefined} />
     {source && !reduced && !failed && <video ref={video} src={source} autoPlay muted playsInline loop
+      poster={roomVideoMapping[scene].poster}
       preload="metadata" tabIndex={-1} aria-hidden="true" onError={() => setFailed(true)} />}
   </div>;
 }

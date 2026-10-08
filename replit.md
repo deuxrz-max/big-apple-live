@@ -33,7 +33,8 @@ identity fields unused for compatibility; never overwrite genuine uploaded photo
 Existing valid profiles are complete; setup resumes only when no saved profile exists.
 University atmosphere is separate from profile photos.
 Tone-based scenes stay disabled without an approved classifier; activity is not
-hostility. Final video assets are not supplied. Existing financial data requires
+hostility. The user-supplied forest clip is the calm background for all universities;
+city and volcano videos remain placeholders. Existing financial data requires
 a separate policy decision and must never be erased or silently redesigned.
 See `artifacts/api-server/CHAT-PIVOT.md` for retention limitations, migration,
 configuration, safety and rollback details.
