@@ -40,3 +40,10 @@
 .ch-auth{display:flex;min-height:100dvh;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:32px 16px}
 .ch-auth .ch-card{width:440px;max-width:100%;border:2px solid #f2f2ee;padding:22px;background:#0b0b0b}
 .ch-auth h2{font-family:var(--bm-display);text-transform:uppercase;font-size:30px;font-weight:800;margin:0 0 10px}
+
+.ch .ch-title{display:flex;flex-wrap:wrap;gap:0 .3em;justify-content:center;text-align:center;margin:0;padding:clamp(14px,3vh,28px) 0 8px;font-size:clamp(40px,10vw,104px);line-height:.95;font-weight:800;letter-spacing:.04em;color:#fff;text-shadow:0 2px 24px #000a}
+.ch-word{display:inline-block;opacity:0;animation:ch-rise .9s cubic-bezier(.2,.8,.2,1) forwards,ch-drift 7s ease-in-out 1s infinite alternate}
+@keyframes ch-rise{from{opacity:0;transform:translateY(24px);letter-spacing:.3em}to{opacity:1;transform:none;letter-spacing:inherit}}
+@keyframes ch-drift{from{transform:translateY(0)}to{transform:translateY(-5px)}}
+.ch-university .ch-room{height:calc(100dvh - 150px)}
+@media (prefers-reduced-motion:reduce){.ch-word{animation:none;opacity:1;transform:none}}

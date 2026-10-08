@@ -270,9 +270,11 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
     <div className="ch ch-university">
       <div className="ch-atm"><RoomAtmosphere atmosphere={atm} /></div>
       <div className="ch-in">
-      <div className="ch-top"><Link href="/home" className="bm-btn bm-btn-sm">Directory</Link><strong>{r.room?.name ?? 'University'}</strong>
-        <span className="ch-note" data-testid="status-connection">{r.connection}</span>
-        <button type="button" className="bm-btn bm-btn-sm" onClick={() => r.refresh()}>Refresh</button></div>
+      <h1 className="ch-title" aria-label={r.room?.name ?? 'University'} data-testid="text-university-name">
+        {(r.room?.name ?? 'University').split(/\s+/).map((w, i) => (
+          <span className="ch-word" key={`${w}-${i}`} style={{ animationDelay: `${i * 140}ms` }}>{w}</span>
+        ))}
+      </h1>
       {r.error && <div className="ch-err" role="alert">{r.error} <Link href="/user-portal" className="bm-link">Profile</Link></div>}
       <div className="ch-room">
         <div className="ch-roster" aria-label="In the university">{people.map((p) => <span key={p.participantId}>{p.displayName}</span>)}</div>
