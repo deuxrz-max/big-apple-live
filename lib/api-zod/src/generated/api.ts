@@ -164,7 +164,6 @@ export const GetChatDirectoryResponse = zod.array(GetChatDirectoryResponseItem)
 export const GetChatAccessResponse = zod.object({
   "adultConfirmed": zod.boolean(),
   "moderator": zod.boolean(),
-  "sentimentEnabled": zod.boolean(),
   "suspended": zod.boolean()
 })
 
@@ -176,7 +175,6 @@ export const ConfirmChatAdultBody = zod.object({
 export const ConfirmChatAdultResponse = zod.object({
   "adultConfirmed": zod.boolean(),
   "moderator": zod.boolean(),
-  "sentimentEnabled": zod.boolean(),
   "suspended": zod.boolean()
 })
 
@@ -858,13 +856,6 @@ export const CreateAccountRoomResponse = zod.object({
   "participantSessionId": zod.string().uuid(),
   "participantId": zod.string().uuid(),
   "room": zod.object({
-  "communityAtmosphere": zod.object({
-  "scene": zod.enum(['city', 'calm', 'volcano']),
-  "since": zod.number(),
-  "activity": zod.number().int(),
-  "windowMs": zod.number().int(),
-  "sentimentEnabled": zod.boolean()
-}).optional(),
   "hostParticipantId": zod.string().uuid(),
   "name": zod.string(),
   "capacity": zod.number().int(),
@@ -909,13 +900,6 @@ export const JoinAccountRoomResponse = zod.object({
   "participantSessionId": zod.string().uuid(),
   "participantId": zod.string().uuid(),
   "room": zod.object({
-  "communityAtmosphere": zod.object({
-  "scene": zod.enum(['city', 'calm', 'volcano']),
-  "since": zod.number(),
-  "activity": zod.number().int(),
-  "windowMs": zod.number().int(),
-  "sentimentEnabled": zod.boolean()
-}).optional(),
   "hostParticipantId": zod.string().uuid(),
   "name": zod.string(),
   "capacity": zod.number().int(),
@@ -1099,13 +1083,6 @@ export const CreateRoomResponse = zod.object({
   "participantSessionId": zod.string().uuid(),
   "participantId": zod.string().uuid(),
   "room": zod.object({
-  "communityAtmosphere": zod.object({
-  "scene": zod.enum(['city', 'calm', 'volcano']),
-  "since": zod.number(),
-  "activity": zod.number().int(),
-  "windowMs": zod.number().int(),
-  "sentimentEnabled": zod.boolean()
-}).optional(),
   "hostParticipantId": zod.string().uuid(),
   "name": zod.string(),
   "capacity": zod.number().int(),
@@ -1150,13 +1127,6 @@ export const getRoomResponseParticipantsItemIdentityOneHairColorRegExp = new Reg
 
 
 export const GetRoomResponse = zod.object({
-  "communityAtmosphere": zod.object({
-  "scene": zod.enum(['city', 'calm', 'volcano']),
-  "since": zod.number(),
-  "activity": zod.number().int(),
-  "windowMs": zod.number().int(),
-  "sentimentEnabled": zod.boolean()
-}).optional(),
   "hostParticipantId": zod.string().uuid(),
   "name": zod.string(),
   "capacity": zod.number().int(),
@@ -1211,13 +1181,6 @@ export const JoinRoomResponse = zod.object({
   "participantSessionId": zod.string().uuid(),
   "participantId": zod.string().uuid(),
   "room": zod.object({
-  "communityAtmosphere": zod.object({
-  "scene": zod.enum(['city', 'calm', 'volcano']),
-  "since": zod.number(),
-  "activity": zod.number().int(),
-  "windowMs": zod.number().int(),
-  "sentimentEnabled": zod.boolean()
-}).optional(),
   "hostParticipantId": zod.string().uuid(),
   "name": zod.string(),
   "capacity": zod.number().int(),
@@ -1389,13 +1352,6 @@ export const controlRoomMicrophoneResponseParticipantsItemIdentityOneHairColorRe
 
 
 export const ControlRoomMicrophoneResponse = zod.object({
-  "communityAtmosphere": zod.object({
-  "scene": zod.enum(['city', 'calm', 'volcano']),
-  "since": zod.number(),
-  "activity": zod.number().int(),
-  "windowMs": zod.number().int(),
-  "sentimentEnabled": zod.boolean()
-}).optional(),
   "hostParticipantId": zod.string().uuid(),
   "name": zod.string(),
   "capacity": zod.number().int(),

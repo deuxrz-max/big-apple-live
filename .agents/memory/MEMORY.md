@@ -7,7 +7,6 @@
 - [Room history isolation](room-history-isolation.md) — never recover unbound historical messages by reusable share code; preserve incarnation identity.
 - [University topic defaults](university-topic-defaults.md) — default topics avoid backfilling old records; overflow topics resolve from the parent.
 - [Semantic merge checks](semantic-merge-checks.md) — unmarked automatic merges can drop completed safety fixes; regenerate contracts and verify behavior.
-- [Room mood visuals](room-mood-visuals.md) — archived Beam-effects transport constraints; see replit.md for the active text-chat scope.
 - [TalkCity reference](talkcity-reference.md) — retain Streamtalk branding; the earlier alongside-Beams scope is superseded by the text-chat pivot.
 - [OpenAPI generation](openapi-generation.md) — modular refs need an allowlist before codegen; combined path/query schemas can collide in Zod barrel exports.
 - [Additive schema guards](additive-schema-guards.md) — stop unrelated truncation prompts; apply only approved development additions without deleting histories.

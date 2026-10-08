@@ -48,7 +48,7 @@ test("audio streams receive authoritative microphone changes without reconnectin
   assert.equal(b.closed, false);
 });
 
-test("chat, emoji bursts and mood ticks never disconnect audio peers", () => {
+test("chat, emoji text and presence sweeps never disconnect audio peers", () => {
   const store = new RoomStore();
   const relay = new AudioSignaling(store);
   const host = store.create("Host");
@@ -59,7 +59,7 @@ test("chat, emoji bursts and mood ticks never disconnect audio peers", () => {
   const before = [a.events.length, b.events.length];
   store.publishChat(host.room.roomId, store.getHistoryId(host.room.roomId),
     { message: { id: 'audio-safe-message', text: '❤️ 🎶' } } as ChatAccepted);
-  store.tickRoomMoods();
+  store.sweep();
   assert.equal(a.closed, false);
   assert.equal(b.closed, false);
   assert.deepEqual([a.events.length, b.events.length], before);

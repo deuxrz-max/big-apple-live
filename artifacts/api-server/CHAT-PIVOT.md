@@ -42,7 +42,8 @@ silently join one of the public rooms.
 New text rooms have stable PostgreSQL history IDs and memberships. Restarting
 creates fresh presence credentials but reuses the same history and per-account
 participant ID. The existing SSE chat transport is retained; server snapshots
-publish the selected room atmosphere to current members and new arrivals.
+publish presence and chat state to current members and new arrivals. Background
+playback is now a client-side ordered promo playlist, not a room mood statistic.
 Archived broadcasting UI/signaling modules remain on disk for code rollback;
 signaling is not mounted and old broadcast actions return 410.
 
@@ -68,38 +69,21 @@ Development migration counts before/after: profiles 16/16, room messages 30/30,
 ledger entries 5/5. Test-created rows are distinct from these original rows.
 This is a DEVELOPMENT migration; it was not applied to a published database.
 
-## Independent atmosphere
+## Promo playlist (replaces the background mood system)
 
-Configuration: `src/lib/community-atmosphere.ts`. Default window three minutes,
-busy threshold 12 messages from at least three distinct authors, quiet threshold
-five, sustained candidate 20 seconds and minimum dwell 60 seconds. Counts use
-only committed, non-hidden messages in that exact room history; joins/heartbeats
-do not count. Hysteresis keeps intermediate activity from flickering.
+The owner approved removal of background mood detection, scene mappings, effects,
+timers, old forest media and seasonal clips. No background selection examines chat.
+The unused database atmosphere column is retained without reading or writing it;
+there are no schema migrations or account/message data changes for this replacement.
 
-The server owns scene and transition timestamp. City/calm selection is currently
-activity-based. Calm means quiet, NOT classified friendly sentiment.
-No classifier or external sentiment service is configured or called.
-Volcano/semantic-friendly decisions remain disabled; there is no keyword
-fallback. The classification interface requires multi-message/multi-author
-evidence and confidence; its uncertain branch is not hostility.
-
-Inspected app dependencies/configuration and integration availability. No
-connected suitable classifier was available. A feedback connector requiring
-setup is not treated as a configured sentiment model. Before adding a provider,
-obtain approval for message-content transfer and provider-specific usage costs,
-retention, data processing terms, region and whether data can train models.
-Batch only necessary recent text and omit account identifiers where possible.
-Current added external sentiment API cost: none.
-
-Video mapping: `artifacts/we-buggin/src/chat/video-config.ts`. All three `src`
-values are intentionally null; **final city/cafe/volcano clips are NOT supplied**.
-Current backdrops are static gradients, clearly identified as placeholders.
-When licensed optimized clips are configured, videos are muted, autoplay,
-inline, input-transparent and loop independently of scene selection, with a
-dark overlay, 1.8-second crossfade, hidden-page pause, error fallback and static
-reduced-motion rendering. Do not switch on an `ended` event. The six-second
-blue WebM under `tests/fixtures` is a synthetic playback TEST fixture only,
-not a production background.
+`artifacts/we-buggin/src/chat/promo-playlist.ts` defines upload order. The four
+validated, unique MP4s live in `artifacts/we-buggin/public/promo-videos/`.
+`PromoBackground.tsx` mounts one muted, inline video at a time and advances on
+completion; the last clip returns to the first. Sound is opt-in for each entry.
+Playback pauses on hidden pages, respects reduced motion, skips failed/stalled
+clips, and becomes plain dark if none play. No still poster, shuffle, simultaneous
+players, sentiment service, advertiser portal, payment or expiration system.
+The single 40% black tint and existing chat controls are preserved.
 
 ## Trust, safety and financial decisions
 

@@ -99,27 +99,9 @@ export interface ChatDirectoryRoom {
   headcount: number;
 }
 
-export type CommunityAtmosphereScene = typeof CommunityAtmosphereScene[keyof typeof CommunityAtmosphereScene];
-
-
-export const CommunityAtmosphereScene = {
-  city: 'city',
-  calm: 'calm',
-  volcano: 'volcano',
-} as const;
-
-export interface CommunityAtmosphere {
-  scene: CommunityAtmosphereScene;
-  since: number;
-  activity: number;
-  windowMs: number;
-  sentimentEnabled: boolean;
-}
-
 export interface ChatAccess {
   adultConfirmed: boolean;
   moderator: boolean;
-  sentimentEnabled: boolean;
   suspended: boolean;
 }
 
@@ -424,7 +406,6 @@ export interface Participant {
 }
 
 export interface RoomState {
-  communityAtmosphere?: CommunityAtmosphere;
   hostParticipantId: string;
   name: string;
   capacity: number;
@@ -537,27 +518,9 @@ export interface ChatDirectoryRoom4b96100 {
   headcount: number;
 }
 
-export type CommunityAtmosphere4b96100Scene = typeof CommunityAtmosphere4b96100Scene[keyof typeof CommunityAtmosphere4b96100Scene];
-
-
-export const CommunityAtmosphere4b96100Scene = {
-  city: 'city',
-  calm: 'calm',
-  volcano: 'volcano',
-} as const;
-
-export interface CommunityAtmosphere4b96100 {
-  scene: CommunityAtmosphere4b96100Scene;
-  since: number;
-  activity: number;
-  windowMs: number;
-  sentimentEnabled: boolean;
-}
-
 export interface ChatAccess4b96100 {
   adultConfirmed: boolean;
   moderator: boolean;
-  sentimentEnabled: boolean;
   suspended: boolean;
 }
 
@@ -862,7 +825,6 @@ export interface Participant4b96100 {
 }
 
 export interface RoomState4b96100 {
-  communityAtmosphere?: CommunityAtmosphere4b96100;
   hostParticipantId: string;
   name: string;
   capacity: number;

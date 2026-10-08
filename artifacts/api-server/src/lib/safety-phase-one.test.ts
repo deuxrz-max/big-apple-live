@@ -16,7 +16,7 @@ import { GetMyProfileResponse, GetPhotoReviewQueueResponse, JoinAccountRoomRespo
 test("24-seat setting, moderator exemption, reconnect and expired seats", () => {
   let now = 0;
   const store = new RoomStore(() => now);
-  store.registerCommunity({ roomId: "LIVEME", label: "LiveMe", historyId: randomUUID(), createdAt: new Date(), atmosphere: null });
+  store.registerCommunity({ roomId: "LIVEME", label: "LiveMe", historyId: randomUUID(), createdAt: new Date() });
   const identity = { emojiId: "1F600", gender: "Female" as const, color: "#FFFFFF", hairColor: "#000000" };
   const sessions = Array.from({ length: UNIVERSITY_MEMBER_CAP }, (_, i) =>
     store.join("LIVEME", `Member ${i}`, { accountId: `member-${i}`, identity }));

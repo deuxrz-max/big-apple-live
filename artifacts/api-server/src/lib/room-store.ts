@@ -1,8 +1,5 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import type { Participant, RoomSession, RoomState, EmojiIdentity, ChatAccepted, AccountRoomInput } from "@workspace/api-zod";
-import { ENABLE_ROOM_MOOD_VISUALS, type EmojiParticleEvent, type RoomMoodUpdate } from "@workspace/beam-identity";
-import { RoomMoodTracker } from "./room-mood";
-import { CommunityAtmosphereTracker } from "./community-atmosphere";
 import { UNIVERSITY_MEMBER_CAP } from "./university-config";
 
 export const SESSION_TIMEOUT_MS = 90_000;
@@ -15,8 +12,6 @@ export class RoomError extends Error {
 }
 
 type RoomEvent =
-  | { type: "emoji_particle"; data: EmojiParticleEvent }
-  | { type: "room_mood_update"; data: RoomMoodUpdate }
   | { type: "chat.accepted"; data: ChatAccepted; senderAccountId?: string }
   | { type: "chat.refresh"; data: { roomId: string } }
   | { type: "room.snapshot"; data: RoomState }
@@ -41,8 +36,7 @@ type Room = {
   sessions: Map<string, ActiveSession>;
   listeners: Set<Listener>;
   emptySince: number | null;
-  mood: RoomMoodTracker;
-  community?: CommunityAtmosphereTracker;
+  community?: boolean;
 };
 
 /** Single-process, ephemeral presence store. Session credentials are never in snapshots. */
@@ -53,21 +47,17 @@ export class RoomStore {
     private readonly allocateCode: (short: boolean) => string = short => randomBytes(short ? 3 : 6).toString("hex").toUpperCase(),
   ) {}
 
-  registerCommunity(input: { roomId: string; historyId: string; label: string; createdAt: Date;
-    atmosphere: { scene: "city" | "calm" | "volcano"; since: number } | null }) {
+  registerCommunity(input: { roomId: string; historyId: string; label: string; createdAt: Date }) {
     if (this.rooms.has(input.roomId)) return;
     this.rooms.set(input.roomId, { roomId: input.roomId, historyId: input.historyId,
       name: input.label, capacity: UNIVERSITY_MEMBER_CAP, createdAt: input.createdAt, hostParticipantId: randomUUID(),
-      sessions: new Map(), listeners: new Set(), emptySince: null, mood: new RoomMoodTracker(this.now),
-      community: new CommunityAtmosphereTracker(this.now, undefined, input.atmosphere) });
+      sessions: new Map(), listeners: new Set(), emptySince: null, community: true });
   }
   isCommunity(roomId: string) { return !!this.rooms.get(roomId.toUpperCase())?.community; }
-  communityAtmosphere(roomId: string) { return this.requireRoom(roomId).community; }
   refreshChatVisibility() {
     for (const room of this.rooms.values()) if (room.community)
       this.emit(room, { type: "chat.refresh", data: { roomId: room.roomId } });
   }
-  publishCommunityAtmosphere(roomId: string) { this.broadcast(this.requireRoom(roomId)); }
   hasUniversitySeat(roomId: string, accountId: string, exempt = false) {
     const room = this.requireRoom(roomId);
     return exempt || [...room.sessions.values()].some(s => s.accountId === accountId)
@@ -94,7 +84,6 @@ export class RoomStore {
       sessions: new Map(),
       listeners: new Set(),
       emptySince: null,
-      mood: new RoomMoodTracker(this.now),
     };
     this.rooms.set(roomId, room);
     return this.addSession(room, displayName, account);
@@ -249,10 +238,6 @@ export class RoomStore {
     });
     room.emptySince = null;
     this.broadcast(room);
-    if (ENABLE_ROOM_MOOD_VISUALS && account && !room.community) {
-      room.mood.recordActivity(2);
-      this.emit(room, { type: "room_mood_update", data: room.mood.current(room.roomId) });
-    }
     return { participantSessionId, participantId, room: this.snapshot(room) };
   }
 
@@ -284,7 +269,6 @@ export class RoomStore {
       createdAt: new Date(room.createdAt),
       hostParticipantId: room.hostParticipantId,
       participants: Array.from(room.sessions.values(), ({ participant }) => copyParticipant(participant)),
-      ...(room.community ? { communityAtmosphere: room.community.current() } : {}),
     };
   }
 
@@ -314,38 +298,6 @@ export class RoomStore {
     const room = this.rooms.get(roomId.toUpperCase());
     if (room?.historyId !== historyId) return;
     this.emit(room, { type: "chat.accepted", data: accepted, senderAccountId });
-    if (ENABLE_ROOM_MOOD_VISUALS && !room.community) {
-      for (const data of room.mood.record(room.roomId, accepted.message.id, accepted.message.text)) {
-        this.emit(room, { type: "emoji_particle", data });
-      }
-      this.emit(room, { type: "room_mood_update", data: room.mood.current(room.roomId) });
-    }
-  }
-
-  getRoomMood(roomId: string): RoomMoodUpdate {
-    const room = this.requireRoom(roomId);
-    return room.mood.current(room.roomId);
-  }
-
-  /** Called by the server's three-minute timer, including quiet rooms. */
-  tickRoomMoods(): void {
-    if (!ENABLE_ROOM_MOOD_VISUALS) return;
-    this.sweep();
-    for (const room of this.rooms.values()) {
-      if (room.community) continue;
-      this.emit(room, { type: "room_mood_update", data: room.mood.compute(room.roomId) });
-    }
-  }
-
-  /** Autonomous scenes and decaying energy; the emoji mood keeps its own cadence. */
-  tickRoomAtmospheres(): void {
-    if (!ENABLE_ROOM_MOOD_VISUALS) return;
-    this.sweep();
-    for (const room of this.rooms.values()) {
-      if (room.community) continue;
-      if (!room.sessions.size) continue;
-      this.emit(room, { type: "room_mood_update", data: room.mood.current(room.roomId) });
-    }
   }
 }
 

@@ -1,6 +1,6 @@
 ---
 name: Browser runner limits
-description: Managed browser snapshots, clipboard resets, and Clerk auth-fixture limits.
+description: Managed browser snapshots, media codecs, clipboard resets, and Clerk auth-fixture limits.
 ---
 
 Do not let OS clipboard reads block a critical account or room test. A runner
@@ -14,6 +14,18 @@ identity checks had passed, but audio/cleanup checks could not be completed.
 depending on clipboard.readText. Keep synthetic-account recovery information
 through runner-supported mechanisms, rather than only notebook variables.
 Never put login claims, credentials, or personal identifiers in project memory.
+
+Do not infer broken MP4 assets from a managed browser that lacks their codecs.
+The managed browser and workspace Chromium can have different decoder support.
+
+**Why:** Valid H.264/AAC uploads decoded fully with FFmpeg and served correctly,
+but the managed browser reported no AVC support. Workspace Chromium played the
+same files and completed their natural playlist cycle.
+
+**How to apply:** Check `canPlayType` before diagnosing playback. If the managed
+runner lacks the codec, try the workspace browser with the installed Playwright
+dependency. Report real media playback separately from mocked room/account data
+and physical-device checks; never substitute a test video and call it the upload.
 
 When a reset loses synthetic fixture emails and contexts, create fresh synthetic identities through the supported Clerk testing helper rather than asking the user to recover agent-generated accounts.
 

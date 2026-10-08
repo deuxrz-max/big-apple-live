@@ -22,12 +22,12 @@ Retain the existing square logo/icon and cleaned full-shield sign-in artwork;
 the original tall uploads contain the removed verification claim.
 This is visual-only scope, not authorization for later phases. Preserve accounts,
 moderation, university capacity/isolation and financial behavior. The university
-forest video and its single 40% black tint must remain unchanged. Preview only;
+promo-video background keeps the single 40% black tint. Preview only;
 do not publish. The public Directory may show aggregate presence counts, never
 participant identities or messages.
 
 Adults-only social chat universities with existing named accounts, users' uploaded
-profile photos, persisted messages, live presence and independent university atmosphere.
+profile photos, persisted messages, live presence and an ordered promo-video background.
 
 ## Approved Phase 3 university interactions
 
@@ -85,12 +85,16 @@ No branded characters, hair/portrait pickers or profile-image facial-emoji sync
 in active routes. Chat emojis never change photos. Leave obsolete database
 identity fields unused for compatibility; never overwrite genuine uploaded photos.
 Existing valid profiles are complete; setup resumes only when no saved profile exists.
-University atmosphere is separate from profile photos.
-Tone-based scenes stay disabled without an approved classifier; activity is not
-hostility. All universities use the user-supplied summer forest video as a full-screen
-background, regardless of activity state. Reduced motion or playback failure shows
-only a plain dark color: no background photo or video poster. Autumn and winter
-clips remain unused. Existing financial data requires
+University backgrounds use the owner's uploaded promo playlist in upload order,
+including overflow universities. Play one video at a time, then advance and repeat;
+sound starts off on every entry and is enabled only by the user's sound button.
+Keep full-screen cover rendering and the single 40% black overlay. Reduced motion
+or an entirely unplayable playlist shows only a plain dark color, never a poster.
+The owner approved removal of the forest/seasonal clips and the entire background
+mood system: no chat/activity/sentiment/keyword/weather-driven scene selection,
+effects transport or mood timers. Legacy database fields remain unused, not dropped.
+The byte-identical later Project_08-20 upload was removed; the original is retained.
+Existing financial data requires
 a separate policy decision and must never be erased or silently redesigned.
 See `artifacts/api-server/CHAT-PIVOT.md` for retention limitations, migration,
 configuration, safety and rollback details.

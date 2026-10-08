@@ -9,18 +9,21 @@ import {
 import { UserPhoto } from '@/components/user-photo';
 import { errMessage, errStatus } from '@/lib/errors';
 import { useTextRoom } from './useTextRoom';
-import { RoomAtmosphere } from './RoomAtmosphere';
+import { PromoBackground } from './PromoBackground';
 import './university-room.css';
 
 const DISCLAIMER = 'Streamtalk is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
 const FACES = ['\u{1F600}', '\u{1F602}', '\u{1F60D}', '\u{1F62D}', '\u{1F914}', '\u{1F609}', '\u{1F610}', '\u{1F620}'];
-const SCENE: Record<string, string> = { city: 'city', calm: 'calm', volcano: 'volcano' };
 const RULES = "Stick to the room's topic. Be kind — no harassment or hate. Nothing sexual or explicit, in chat, names or photos. Don't share real names, phone numbers, addresses or other contact details. Don't hog the screen, no ALL CAPS, no ads or spam. Use Ignore on anyone bothering you, or Block and Report for anything serious.";
 
 type Target = { username: string; displayName: string };
 type Item = { kind: 'room'; at: number; id: string; m: ChatMessage } | { kind: 'whisper'; at: number; id: string; w: { id: string; username: string; displayName: string; outgoing: boolean; body: string } };
 
 export function TextChatRoom({ roomId, userId }: { roomId: string; userId: string }) {
+  const soundScope = `${roomId}:${userId}`;
+  const [sound, setSound] = useState({ scope: soundScope, on: false });
+  const soundOn = sound.scope === soundScope && sound.on;
+  const [backgroundUnavailable, setBackgroundUnavailable] = useState(false);
   const qc = useQueryClient();
   const [, nav] = useLocation();
   const r = useTextRoom(roomId, userId);
@@ -63,6 +66,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
 
   const session = uni.data;
   useEffect(() => {
+    setSound({ scope: soundScope, on: false });
     setText(''); setWhisperTo(null); setMenu(null); setDrawer(false); setRulesOpen(false);
     setIgnored(new Set()); setSendErr(null); setNote(null);
     autoRules.current = false; ignoreVersion.current = null; idem.current = null;
@@ -121,7 +125,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   }, [r.messages, session?.whispers, ignored]);
   useEffect(() => { const el = box.current; if (el && near.current) el.scrollTop = el.scrollHeight; }, [items.length]);
 
-  const atm = r.room?.communityAtmosphere;
   const toggleIgnore = (t: Target) => {
     const next = !ignored.has(t.username);
     ignoreBusy.current++;
@@ -203,7 +206,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
 
   return (
     <div className="ch ch-university ur">
-      <div className="ch-atm"><RoomAtmosphere atmosphere={atm} /></div>
+      <div className="ch-atm"><PromoBackground key={`${roomId}:${userId}`} soundOn={soundOn} onUnavailableChange={setBackgroundUnavailable} /></div>
       <div className="ch-in ur-in">
         <div className="ur-head">
           <button type="button" ref={peopleBtn} className="bm-btn bm-btn-sm ur-people-btn" aria-haspopup="dialog" aria-expanded={drawer} onClick={() => setDrawer(true)} data-testid="button-people">People · {people.length}</button>
@@ -219,6 +222,14 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
         </div>
         {r.error && <div className="ch-err" role="alert">{r.error} <Link href="/user-portal" className="bm-link">Profile</Link></div>}
         {r.overflow && <p><Link className="bm-btn bm-btn-primary" href={`/rooms/${encodeURIComponent(r.overflow.roomId)}`}>Enter {r.overflow.label}</Link></p>}
+        <div className="ur-sound-row">
+          <button type="button" className="bm-btn bm-btn-sm" aria-pressed={soundOn}
+            aria-label={soundOn ? 'Turn background sound off' : 'Turn background sound on'}
+            disabled={backgroundUnavailable} data-testid="button-background-sound"
+            onClick={() => setSound({ scope: soundScope, on: !soundOn })}>
+            {backgroundUnavailable ? 'Sound unavailable' : soundOn ? 'Sound on' : 'Sound off'}
+          </button>
+        </div>
         <div className="ur-body">
           <aside ref={drawerBox} className={`ur-side${drawer ? ' is-open' : ''}`} role={drawer ? 'dialog' : undefined} aria-modal={drawer ? true : undefined} aria-labelledby="ur-people-title">
             {peopleList}
@@ -286,7 +297,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
         </div>
         {sendErr && <div className="ch-err" role="alert">{sendErr}</div>}
         {note && <p role="status">{note} <Link href="/community/blocks" className="bm-link">Blocked list</Link></p>}
-        <p className="ch-note">{atm ? `Activity-based scene: ${SCENE[atm.scene]}, ${atm.activity} messages in the last ${Math.round(atm.windowMs / 60000)} minutes. ` : ''}Tone switching is off. Muted summer video; plain dark background when playback is unavailable or reduced motion is enabled.</p>
+        <p className="ch-note">Promo videos play in order. Sound starts off; reduced motion or unavailable playback shows a plain dark background.</p>
         <p className="ch-note">{DISCLAIMER}</p>
       </div>
 

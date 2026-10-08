@@ -16,7 +16,7 @@
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test:rooms": "esbuild src/lib/room-store.test.ts src/lib/audio-signaling.test.ts src/lib/room-identity.test.ts src/lib/beam-membership.test.ts src/lib/room-mood.test.ts src/lib/room-mood-socket.test.ts --bundle --platform=node --format=esm --banner:js=\"import { createRequire as createTestRequire } from 'node:module'; const require = createTestRequire(import.meta.url);\" --outdir=/tmp/room-backend-tests --out-extension:.js=.mjs && node --test /tmp/room-backend-tests/*.test.mjs",
+    "test:rooms": "esbuild src/lib/room-store.test.ts src/lib/audio-signaling.test.ts src/lib/room-identity.test.ts src/lib/beam-membership.test.ts --bundle --platform=node --format=esm --banner:js=\"import { createRequire as createTestRequire } from 'node:module'; const require = createTestRequire(import.meta.url);\" --outdir=.tests/room-regression --out-extension:.js=.mjs && node --test .tests/room-regression/room-store.test.mjs .tests/room-regression/audio-signaling.test.mjs .tests/room-regression/room-identity.test.mjs .tests/room-regression/beam-membership.test.mjs",
     "test:chat": "esbuild src/lib/room-chat.test.ts --bundle --platform=node --format=esm --banner:js=\"import { createRequire as createTestRequire } from 'node:module'; const require = createTestRequire(import.meta.url);\" --outfile=.tests/room-chat.test.mjs && node --test .tests/room-chat.test.mjs"
   },
   "dependencies": {

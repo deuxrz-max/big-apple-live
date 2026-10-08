@@ -863,22 +863,12 @@ components:
           type: integer
           minimum: 0
           description: Current heartbeat-based presence count; no participant identities are exposed.
-    CommunityAtmosphere:
-      type: object
-      required: [scene, since, activity, windowMs, sentimentEnabled]
-      properties:
-        scene: { type: string, enum: [city, calm, volcano] }
-        since: { type: number }
-        activity: { type: integer }
-        windowMs: { type: integer }
-        sentimentEnabled: { type: boolean }
     ChatAccess:
       type: object
-      required: [adultConfirmed, moderator, sentimentEnabled, suspended]
+      required: [adultConfirmed, moderator, suspended]
       properties:
         adultConfirmed: { type: boolean }
         moderator: { type: boolean }
-        sentimentEnabled: { type: boolean }
         suspended: { type: boolean }
     AdultAttestationInput:
       type: object
@@ -1097,7 +1087,6 @@ components:
     RoomState:
       type: object
       properties:
-        communityAtmosphere: { $ref: "#/components/schemas/CommunityAtmosphere" }
         hostParticipantId: { type: string, format: uuid }
         name: { type: string }
         capacity: { type: integer }

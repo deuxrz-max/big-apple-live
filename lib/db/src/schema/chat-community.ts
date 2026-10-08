@@ -10,7 +10,8 @@ export const chatRooms = pgTable("chat_rooms", {
   parentRoomId: text("parent_room_id"),
   overflowNumber: text("overflow_number"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  atmosphere: jsonb("atmosphere").$type<{ scene: "city" | "calm" | "volcano"; since: number }>(),
+  // Retained unused for data compatibility; no background system reads or writes it.
+  atmosphere: jsonb("atmosphere").$type<Record<string, unknown>>(),
 });
 export const chatAdmissions = pgTable("chat_admissions", {
   accountId: text("account_id").primaryKey(),

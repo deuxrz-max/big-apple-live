@@ -5,7 +5,6 @@ import { eq, inArray } from "drizzle-orm";
 import { db, accountProfiles, chatRooms, chatMemberships, roomMessages, socialRelations } from "@workspace/db";
 import { RoomStore } from "./room-store";
 import { acceptMessage, getMessages } from "./room-chat";
-import { CommunityAtmosphereTracker, atmosphereConfig } from "./community-atmosphere";
 import { getProfile } from "./account-profiles";
 
 test("real PostgreSQL university persistence, isolation, emojis leave photos unchanged, blocking, pagination and rate limiting", async t => {
@@ -76,27 +75,16 @@ test("real PostgreSQL university persistence, isolation, emojis leave photos unc
   assert.equal(fresh.get(codes[1]!).participants.length, 20);
 });
 
-test("activity is not hostility; scenes sustain and dwell instead of switching per loop", () => {
-  let now = 0;
-  const roomA = new CommunityAtmosphereTracker(() => now);
-  const roomB = new CommunityAtmosphereTracker(() => now);
-  assert.equal(roomA.evaluate({ count: 15, authors: 1 }).scene, "calm");
-  roomA.evaluate({ count: 15, authors: 3 });
-  now = 19_000; assert.equal(roomA.evaluate({ count: 15, authors: 3 }).scene, "calm");
-  now = 60_000; assert.equal(roomA.evaluate({ count: 15, authors: 3 }).scene, "city");
-  assert.equal(roomA.current().sentimentEnabled, false);
-  assert.equal(roomB.current().scene, "calm");
-  now += 6000; assert.equal(roomA.evaluate({ count: 15, authors: 3 }).scene, "city");
-  roomA.evaluate({ count: 0, authors: 0 });
-  now = 110_000; assert.equal(roomA.evaluate({ count: 0, authors: 0 }).scene, "city");
-  now = 120_000; assert.equal(roomA.evaluate({ count: 0, authors: 0 }).scene, "calm");
-  assert.equal(roomA.current().windowMs, atmosphereConfig.windowMs);
-});
-
-test("disabled sentiment cannot invent a volcano; uncertain assessment does not classify hostility", () => {
-  let now = 0;
-  const room = new CommunityAtmosphereTracker(() => now);
-  for (let i = 0; i < 10; i++) { now += 30_000; assert.notEqual(room.evaluate({ count: 100, authors: 10 }).scene, "volcano"); }
-  const uncertain = { samples: 20, authors: 10, hostileShare: .9, hostileConfidence: .4, friendlyConfidence: .2 };
-  now += 60_000; assert.notEqual(room.evaluate({ count: 100, authors: 10 }, uncertain).scene, "volcano");
+test("university snapshots and accepted chat no longer carry mood-background events", () => {
+  const store = new RoomStore();
+  const roomId = "NOPROMOMOOD";
+  store.registerCommunity({ roomId, historyId: randomUUID(), label: "Background-free state", createdAt: new Date() });
+  const events: string[] = [];
+  const unsubscribe = store.subscribe(roomId, event => events.push(event.type));
+  store.join(roomId, "Synthetic");
+  assert.equal('communityAtmosphere' in store.get(roomId), false);
+  store.publishChat(roomId, store.getHistoryId(roomId),
+    { message: { id: 'synthetic-background-regression', text: 'busy city angry volcano 😡' } } as Parameters<RoomStore['publishChat']>[2]);
+  assert.deepEqual(events, ['room.snapshot', 'chat.accepted']);
+  unsubscribe();
 });

@@ -96,7 +96,7 @@ test("real HTTP, PostgreSQL and App Storage upload, replacement, privacy and emo
   // Owners retain their photos; chat/presence never disclose pending image URLs.
   await db.insert(chatRooms).values(codes.map((roomId, i) => ({ roomId, historyId: histories[i]!, label: "Synthetic university" })));
   const store = new RoomStore();
-  codes.forEach((roomId, i) => store.registerCommunity({ roomId, historyId: histories[i]!, label: "Synthetic university", createdAt: new Date(), atmosphere: null }));
+  codes.forEach((roomId, i) => store.registerCommunity({ roomId, historyId: histories[i]!, label: "Synthetic university", createdAt: new Date() }));
   const joined = store.join(codes[0]!, profile.displayName!, { accountId: ids[0]!, identity: profile.identity, photoUrl: profile.photoUrl });
   await db.insert(chatMemberships).values({ accountId: ids[0]!, historyId: histories[0]!, participantId: joined.participantId });
   for (const text of ["😂", "😡", "😭", "😂 😡"]) {
