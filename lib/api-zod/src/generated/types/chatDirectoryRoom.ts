@@ -9,4 +9,9 @@
 export interface ChatDirectoryRoom {
   roomId: string;
   label: string;
+  /**
+     * Current heartbeat-based presence count; no participant identities are exposed.
+     * @minimum 0
+     */
+  headcount: number;
 }

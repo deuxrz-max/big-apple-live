@@ -7,6 +7,20 @@ The owner selected the separate neon shield/microphone artwork for sign-in and
 approved removing its “Verified Broadcaster” wording; do not present that artwork
 as an account-verification badge. Keep the existing Clerk sign-in flow.
 
+## Approved Phase 2 visual direction
+
+Use the LiveMe-inspired Streamtalk theme: #151518 backgrounds, #1D1D23 panels,
+purple #9D1DFF to #5E00FF primary actions, pink #FF268F to #E222FF highlights,
+Montserrat in normal case, rounded cards and circular profile photos. The
+Directory uses portrait gradient covers until the owner supplies cover images.
+Retain the existing square logo/icon and cleaned full-shield sign-in artwork;
+the original tall uploads contain the removed verification claim.
+This is visual-only scope, not authorization for later phases. Preserve accounts,
+moderation, university capacity/isolation and financial behavior. The university
+forest video and its single 40% black tint must remain unchanged. Preview only;
+do not publish. The public Directory may show aggregate presence counts, never
+participant identities or messages.
+
 Adults-only social chat universities with existing named accounts, users' uploaded
 profile photos, persisted messages, live presence and independent university atmosphere.
 

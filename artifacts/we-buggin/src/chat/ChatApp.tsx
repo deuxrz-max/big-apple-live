@@ -4,7 +4,7 @@ import { useClerk } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getGetChatAccessQueryKey, getGetMyProfileQueryKey, useConfirmChatAdult, useGetChatAccess, useGetChatDirectory,
-  useGetChatReports, useGetMyProfile, useReportChatMessage, useReviewChatReport, useSaveMyProfile, useSetSocialRelationship,
+  useGetChatReports, useGetMyProfile, useGetSocialMe, useReportChatMessage, useReviewChatReport, useSaveMyProfile, useSetSocialRelationship,
   getGetChatReportsQueryKey, getGetChatDirectoryQueryKey, ChatReportInputReason, ChatReportReviewInputAction, type ChatMessage,
 } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
@@ -22,32 +22,79 @@ function Shell({ children }: { children: ReactNode }) {
   return <div className="ch"><div className="ch-in">{children}</div></div>;
 }
 
-function List({ preview }: { preview?: boolean }) {
+const TAGLINE = 'Adults-only text chat';
+
+function Cover({ roomId, i }: { roomId: string; i: number }) {
+  const [bad, setBad] = useState(false);
+  return (
+    <div className={`st-cover st-cover-${i % 6}`}>
+      {!bad && <img src={`${import.meta.env.BASE_URL}university-covers/${encodeURIComponent(roomId)}.webp`} alt="" loading="lazy" onError={() => setBad(true)} />}
+    </div>
+  );
+}
+
+function UniCard({ roomId, label, headcount, i, preview }: { roomId: string; label: string; headcount: number; i: number; preview?: boolean }) {
+  const count = typeof headcount === 'number' ? headcount : null;
+  const inner = (
+    <>
+      <Cover roomId={roomId} i={i} />
+      <span className="st-live">Live</span>
+      <span className="st-count" role="status">{count !== null ? `${count} here` : 'Loading…'}</span>
+      <div className="st-card-body">
+        <strong title={label}>{label}</strong>
+        <span>{TAGLINE}</span>
+        <span className="st-enter">Enter</span>
+      </div>
+    </>
+  );
+  return (
+    <li key={roomId} className="st-card" data-testid={`row-room-${roomId}`}>
+      <Link href={preview ? '/sign-in' : `/rooms/${encodeURIComponent(roomId)}`} className="st-card-link" aria-label={`Enter ${label}`}>{inner}</Link>
+    </li>
+  );
+}
+
+function List({ preview, query = '' }: { preview?: boolean; query?: string }) {
   const q = useGetChatDirectory({ query: { queryKey: getGetChatDirectoryQueryKey(), refetchInterval: 15_000 } });
+  const needle = query.trim().toLowerCase();
+  const rows = (q.data ?? []).filter((r) => !needle || r.label.toLowerCase().includes(needle));
   return (
     <>
       {q.isLoading && <p role="status">Loading directory...</p>}
       {q.isError && <div className="ch-err" role="alert">{preview ? 'Sign in to see the directory.' : 'Could not load the directory.'} {!preview && <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button>}</div>}
       {q.data && q.data.length === 0 && <p>No entries.</p>}
-      <ul className="ch-list">
-        {q.data?.map((r) => (
-          <li key={r.roomId} data-testid={`row-room-${r.roomId}`}>
-            <span>{r.label}</span>
-            {!preview && <Link href={`/rooms/${encodeURIComponent(r.roomId)}`} className="bm-btn bm-btn-sm">Open</Link>}
-          </li>
-        ))}
+      {q.data && q.data.length > 0 && rows.length === 0 && <p>No university matches your search.</p>}
+      <ul className="ch-list st-grid">
+        {rows.map((r) => <UniCard key={r.roomId} roomId={r.roomId} label={r.label} headcount={r.headcount} i={(q.data ?? []).findIndex((entry) => entry.roomId === r.roomId)} preview={preview} />)}
       </ul>
     </>
   );
 }
 
+function CreditsChip() {
+  const me = useGetSocialMe();
+  if (!me.data) return null;
+  return <Link href="/community/rewards" className="st-credits" data-testid="text-credits">{me.data.wallet.balance.toLocaleString()} credits</Link>;
+}
+
+function TopBar({ signedIn, query, setQuery }: { signedIn: boolean; query: string; setQuery: (v: string) => void }) {
+  return (
+    <div className="st-topbar">
+      <Link href={signedIn ? '/home' : '/'} className="st-brand" aria-label="Streamtalk home"><AppLogo size={36} /></Link>
+      <input type="search" className="st-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search universities" aria-label="Search universities" />
+      {signedIn ? <CreditsChip /> : <Link href="/sign-in" className="bm-btn bm-btn-sm bm-btn-primary">Sign in</Link>}
+    </div>
+  );
+}
+
 export function PublicChatLanding() {
+  const [query, setQuery] = useState('');
   return (
     <Shell>
-      <AppLogo size={104} />
+      <TopBar signedIn={false} query={query} setQuery={setQuery} />
       <h1>Streamtalk</h1>
       <p>Text chat universities. One account works in any university. Universities are listed by platform label.</p>
-      <List preview />
+      <List preview query={query} />
       <p className="ch-note">{DISCLAIMER}</p>
       <p><Link href="/sign-in" className="bm-btn bm-btn-primary">Sign in</Link> <Link href="/sign-up" className="bm-btn">Create account</Link></p>
     </Shell>
@@ -78,16 +125,18 @@ export function AdultGate({ children }: { children: ReactNode }) {
 
 export function ChatDirectory() {
   const { signOut } = useClerk();
+  const [query, setQuery] = useState('');
   return (
     <Shell>
+      <TopBar signedIn query={query} setQuery={setQuery} />
       <div className="ch-top">
-        <Link href="/home" className="bm-btn bm-btn-sm"><AppLogo size={24} /> Streamtalk</Link>
+        <span />
         <span><Link href="/user-portal" className="bm-btn bm-btn-sm">Edit profile</Link> <Link href="/community" className="bm-btn bm-btn-sm">Community</Link>{' '}
           <button type="button" className="bm-btn bm-btn-sm" onClick={() => signOut({ redirectUrl: import.meta.env.BASE_URL || '/' })}>Sign out</button></span>
       </div>
       <h1>Directory</h1>
-      <p className="ch-note">Open any university with one account. No seats, no capacity limits.</p>
-      <List />
+      <p className="ch-note">Open any university with one account. Each university is for adults aged 18 or over; chat is text only.</p>
+      <List query={query} />
       <p className="ch-note">{DISCLAIMER}</p>
     </Shell>
   );

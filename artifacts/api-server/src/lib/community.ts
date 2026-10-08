@@ -26,7 +26,7 @@ export async function communityDirectory() {
     base, ...overflow.filter(r => r.parentRoomId === base.roomId)
       .sort((a, b) => Number(a.overflowNumber) - Number(b.overflowNumber))
       .map(r => ({ roomId: r.roomId, label: r.label })),
-  ]);
+  ]).map(r => ({ ...r, headcount: roomStore.get(r.roomId).participants.length }));
 }
 /** Stable identifiers and history rows survive empty rooms/restarts. No history is reused. */
 export async function offerOverflow(roomId: string, accountId: string) {

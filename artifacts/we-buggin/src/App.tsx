@@ -14,6 +14,7 @@ import { EmailSignUp } from '@/components/email-signup';
 import '@/chat/chat.css';
 import SocialApp from '@/social/SocialApp';
 import { SignInArtwork } from '@/components/sign-in-artwork';
+import '@/theme.css';
 
 const queryClient = new QueryClient();
 
@@ -25,7 +26,7 @@ function stripBase(path: string): string {
 }
 
 
-const INK = 'hsl(60 10% 95%)';
+const INK = '#F4F1F8';
 const clerkAppearance = {
   theme: shadcn,
   cssLayerName: 'clerk',
@@ -35,27 +36,27 @@ const clerkAppearance = {
     logoImageUrl: `${window.location.origin}${basePath}/streamtalk-logo.webp`,
   },
   variables: {
-    colorPrimary: 'hsl(60 10% 95%)',
+    colorPrimary: '#9D1DFF',
     colorForeground: INK,
     colorMutedForeground: 'hsl(60 3% 62%)',
     colorDanger: 'hsl(0 85% 66%)',
-    colorBackground: 'hsl(0 0% 4%)',
-    colorInput: 'hsl(0 0% 8%)',
+    colorBackground: '#1D1D23',
+    colorInput: '#151518',
     colorInputForeground: INK,
     colorNeutral: INK,
-    fontFamily: "'Barlow', system-ui, sans-serif",
-    borderRadius: '0rem',
+    fontFamily: "'Montserrat', system-ui, sans-serif",
+    borderRadius: '12px',
   },
   elements: {
     rootBox: 'w-full flex justify-center',
-    cardBox: 'bg-[hsl(0_0%_4%)] w-[440px] max-w-full overflow-hidden border-2 border-[hsl(60_10%_95%)]',
-    card: '!shadow-none !border-0 !bg-transparent !rounded-none',
-    footer: '!shadow-none !border-0 !bg-transparent !rounded-none',
-    headerTitle: { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, textTransform: 'uppercase', color: INK },
+    cardBox: 'bg-[#1D1D23] w-[440px] max-w-full overflow-hidden border border-white/15',
+    card: '!shadow-none !border-0 !bg-transparent !rounded-[16px]',
+    footer: '!shadow-none !border-0 !bg-transparent !rounded-[16px]',
+    headerTitle: { fontFamily: "'Montserrat', sans-serif", fontWeight: 800, color: INK },
     headerSubtitle: { color: 'hsl(60 3% 62%)' },
     socialButtonsBlockButtonText: { color: INK, fontWeight: 700 },
     formFieldLabel: { color: INK, fontWeight: 700 },
-    footerActionLink: { color: INK, fontWeight: 800, textDecoration: 'underline' },
+    footerActionLink: { fontWeight: 800, color: '#FF268F', textDecoration: 'none' },
     footerActionText: { color: 'hsl(60 3% 62%)' },
     dividerText: { color: 'hsl(60 3% 62%)' },
     identityPreviewEditButton: { color: INK },
@@ -63,13 +64,13 @@ const clerkAppearance = {
     alertText: { color: 'hsl(0 85% 72%)' },
     logoBox: 'h-14 justify-center',
     logoImage: 'h-14 w-14',
-    socialButtonsBlockButton: 'border-2 border-[hsl(60_10%_95%)] bg-transparent rounded-none',
-    formButtonPrimary: 'border-2 border-[hsl(60_10%_95%)] bg-[hsl(60_10%_95%)] text-[hsl(0_0%_4%)] rounded-none font-extrabold uppercase',
-    formFieldInput: 'border-2 border-[hsl(60_10%_95%)] rounded-none',
+    socialButtonsBlockButton: 'border border-white/15 bg-transparent rounded-[12px]',
+    formButtonPrimary: 'border border-white/15 bg-gradient-to-r from-[#9D1DFF] to-[#5E00FF] text-white rounded-[12px] font-bold',
+    formFieldInput: 'border border-white/15 rounded-[12px]',
     footerAction: '',
-    dividerLine: 'bg-[hsl(60_10%_95%)]/30',
-    alert: 'border-2 border-[hsl(0_85%_66%)] rounded-none',
-    otpCodeFieldInput: 'border-2 border-[hsl(60_10%_95%)] rounded-none',
+    dividerLine: 'bg-[#9D1DFF]/30',
+    alert: 'border-2 border-[hsl(0_85%_66%)] rounded-[12px]',
+    otpCodeFieldInput: 'border border-white/15 rounded-[12px]',
     formFieldRow: '',
     main: '',
   },

@@ -144,6 +144,12 @@ test("real HTTP/DB/storage photo moderation and university overflow; synthetic C
     assert.match(offer.error, /is full/);
     const emptyDirectory = GetChatDirectoryResponse.parse(await (await request(owner, "/account/chat/rooms")).json());
     assert.ok(!emptyDirectory.some((r: { roomId: string }) => r.roomId === offer.overflow.roomId));
+    assert.equal(emptyDirectory.find(r => r.roomId === "LIVEME")?.headcount, UNIVERSITY_MEMBER_CAP);
+    const publicDirectoryResponse = await fetch(`${base}/account/chat/rooms`);
+    assert.equal(publicDirectoryResponse.status, 200);
+    const publicDirectory = await publicDirectoryResponse.json() as Record<string, unknown>[];
+    assert.ok(publicDirectory.every(r => Object.keys(r).sort().join(",") === "headcount,label,roomId"),
+      "Public headcounts must not disclose participants or chat");
     const joined = await request(ids[UNIVERSITY_MEMBER_CAP]!, `/account/rooms/${offer.overflow.roomId}/join`, { method: "POST" });
     assert.equal(joined.status, 201);
     const overflowSession = JoinAccountRoomResponse.parse(await joined.json());
@@ -161,6 +167,9 @@ test("real HTTP/DB/storage photo moderation and university overflow; synthetic C
     assert.ok(!history.some((m: { text: string }) => m.text === `Base ${suffix}`));
     const visibleDirectory = GetChatDirectoryResponse.parse(await (await request(owner, "/account/chat/rooms")).json());
     assert.ok(visibleDirectory.some((r: { roomId: string }) => r.roomId === offer.overflow.roomId));
+    assert.equal(visibleDirectory.find(r => r.roomId === offer.overflow.roomId)?.headcount, 1);
+    assert.equal(visibleDirectory.find(r => r.roomId === "LIVEME")?.headcount, UNIVERSITY_MEMBER_CAP + 1,
+      "Presence includes the exempt moderator without changing the member cap");
     const overflowMessage = history.find(m => m.text === `Overflow ${suffix}`)!;
     const report = await request(ids[UNIVERSITY_MEMBER_CAP]!, "/account/chat/reports", {
       method: "POST", headers: { "Content-Type": "application/json", "X-Room-Session": overflowSession.participantSessionId },

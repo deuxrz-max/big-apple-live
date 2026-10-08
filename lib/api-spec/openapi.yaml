@@ -755,10 +755,14 @@ components:
         status: { type: string, enum: [pending, approved, rejected, flagged] }
     ChatDirectoryRoom:
       type: object
-      required: [roomId, label]
+      required: [roomId, label, headcount]
       properties:
         roomId: { type: string }
         label: { type: string }
+        headcount:
+          type: integer
+          minimum: 0
+          description: Current heartbeat-based presence count; no participant identities are exposed.
     CommunityAtmosphere:
       type: object
       required: [scene, since, activity, windowMs, sentimentEnabled]

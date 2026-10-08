@@ -23,7 +23,7 @@ router.post("/account/chat/access", async (req, res) => {
   res.json(GetChatAccessResponse.parse(await accessFor(id)));
 });
 router.get("/account/chat/rooms", async (_req, res) => {
-  // Public platform labels contain no participants, chat, or activity statistics.
+  // Public directory exposes labels and aggregate headcounts, never participant identities or chat.
   res.json(GetChatDirectoryResponse.parse(await communityDirectory()));
 });
 router.post("/account/chat/reports", async (req, res) => {

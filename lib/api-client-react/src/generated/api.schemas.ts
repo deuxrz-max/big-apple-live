@@ -44,6 +44,11 @@ export interface PhotoReviewStatus {
 export interface ChatDirectoryRoom {
   roomId: string;
   label: string;
+  /**
+     * Current heartbeat-based presence count; no participant identities are exposed.
+     * @minimum 0
+     */
+  headcount: number;
 }
 
 export type CommunityAtmosphereScene = typeof CommunityAtmosphereScene[keyof typeof CommunityAtmosphereScene];
@@ -429,6 +434,11 @@ export interface PhotoReviewStatus4b96100 {
 export interface ChatDirectoryRoom4b96100 {
   roomId: string;
   label: string;
+  /**
+     * Current heartbeat-based presence count; no participant identities are exposed.
+     * @minimum 0
+     */
+  headcount: number;
 }
 
 export type CommunityAtmosphere4b96100Scene = typeof CommunityAtmosphere4b96100Scene[keyof typeof CommunityAtmosphere4b96100Scene];

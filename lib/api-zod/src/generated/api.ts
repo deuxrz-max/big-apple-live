@@ -83,9 +83,14 @@ export const GetOlderRoomMessagesResponseItem = zod.object({
 export const GetOlderRoomMessagesResponse = zod.array(GetOlderRoomMessagesResponseItem)
 
 
+export const getChatDirectoryResponseHeadcountMin = 0;
+
+
+
 export const GetChatDirectoryResponseItem = zod.object({
   "roomId": zod.string(),
-  "label": zod.string()
+  "label": zod.string(),
+  "headcount": zod.number().int().min(getChatDirectoryResponseHeadcountMin).describe('Current heartbeat-based presence count; no participant identities are exposed.')
 })
 export const GetChatDirectoryResponse = zod.array(GetChatDirectoryResponseItem)
 
