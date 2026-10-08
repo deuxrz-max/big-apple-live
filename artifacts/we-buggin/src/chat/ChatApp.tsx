@@ -127,8 +127,7 @@ export function ChatDirectory() {
         <span />
         <span><button type="button" className="bm-btn bm-btn-sm" onClick={() => signOut({ redirectUrl: import.meta.env.BASE_URL || '/' })}>Sign out</button></span>
       </div>
-      <h1>Directory</h1>
-      <p className="ch-note">Open any university with one account. Each university is for adults aged 18 or over; chat is text only.</p>
+      <h1 aria-label="Streamtalk directory" style={{ color: '#A6FF00', fontWeight: 800, fontFamily: "'Montserrat', sans-serif" }}>STREAMTALK</h1>
       <List query={query} />
       <p className="ch-note">{DISCLAIMER}</p>
     </Shell>
