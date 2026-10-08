@@ -2,6 +2,7 @@
 - [Browser runner limits](browser-runner-limits.md) — clipboard and auth-fixture limits; distinguish blocked signup checks from signed-in app verification.
 - [Mood Sync rules](mood-sync-rules.md) — archived branded-avatar rules; active universities use uploaded photos and no profile-image emoji sync.
 - [Portrait cutout checks](portrait-cutouts.md) — inspect detached decorations after background removal; callbacks require workspace-relative image paths.
+- [Image review tooling](image-tooling.md) — ImageMagick montage's default font can be empty; distinguish review-sheet errors from invalid source images.
 - [Microphone permissions](microphone-permissions.md) — archived voice consent rules; active text communities require no camera or microphone.
 - [Room history isolation](room-history-isolation.md) — never recover unbound historical messages by reusable share code; preserve incarnation identity.
 - [Semantic merge checks](semantic-merge-checks.md) — unmarked automatic merges can drop completed safety fixes; regenerate contracts and verify behavior.

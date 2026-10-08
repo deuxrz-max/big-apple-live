@@ -1,6 +1,7 @@
-Optional university cover art. Drop a portrait 4:5 image (e.g. 800x1000) named `{roomId}.webp`
+Six generated, unbranded streaming-themed covers are included at 800x1000 (4:5), compressed WebP.
+To replace a cover, add a portrait 4:5 image (e.g. 800x1000) named `{roomId}.webp`
 (the roomId is the university id returned by the existing directory API). If the file is missing the
-directory shows a gradient placeholder.
+directory shows a gradient fallback only if the image cannot load. Refresh after replacing a file.
 
 The six primary filenames are `LIVEME.webp`, `BIGOLV.webp`, `TANGOL.webp`,
 `TIKTOK.webp`, `INSTAL.webp`, and `SUPRLV.webp`. Match the actual directory

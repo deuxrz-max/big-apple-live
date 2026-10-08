@@ -12,7 +12,12 @@ as an account-verification badge. Keep the existing Clerk sign-in flow.
 Use the LiveMe-inspired Streamtalk theme: #151518 backgrounds, #1D1D23 panels,
 purple #9D1DFF to #5E00FF primary actions, pink #FF268F to #E222FF highlights,
 Montserrat in normal case, rounded cards and circular profile photos. The
-Directory uses portrait gradient covers until the owner supplies cover images.
+Directory uses six generated, unbranded portrait streaming-equipment covers,
+with purple/pink gradients retained only as image-load fallbacks. Covers contain
+no people, text or platform logos. Card headcounts display numbers only with
+accessible people-count labels; card taglines are removed and the search
+placeholder is “Search.” Me opens profile editing and includes a Community link;
+the Directory action row retains only Sign out.
 Retain the existing square logo/icon and cleaned full-shield sign-in artwork;
 the original tall uploads contain the removed verification claim.
 This is visual-only scope, not authorization for later phases. Preserve accounts,

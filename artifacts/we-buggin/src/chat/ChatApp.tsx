@@ -22,8 +22,6 @@ function Shell({ children }: { children: ReactNode }) {
   return <div className="ch"><div className="ch-in">{children}</div></div>;
 }
 
-const TAGLINE = 'Adults-only text chat';
-
 function Cover({ roomId, i }: { roomId: string; i: number }) {
   const [bad, setBad] = useState(false);
   return (
@@ -39,10 +37,9 @@ function UniCard({ roomId, label, headcount, i, preview }: { roomId: string; lab
     <>
       <Cover roomId={roomId} i={i} />
       <span className="st-live">Live</span>
-      <span className="st-count" role="status">{count !== null ? `${count} here` : 'Loading…'}</span>
+      <span className="st-count" role="status" aria-label={count !== null ? `${count} people here` : 'Loading headcount'}>{count !== null ? count : 'Loading…'}</span>
       <div className="st-card-body">
         <strong title={label}>{label}</strong>
-        <span>{TAGLINE}</span>
         <span className="st-enter">Enter</span>
       </div>
     </>
@@ -81,7 +78,7 @@ function TopBar({ signedIn, query, setQuery }: { signedIn: boolean; query: strin
   return (
     <div className="st-topbar">
       <Link href={signedIn ? '/home' : '/'} className="st-brand" aria-label="Streamtalk home"><AppLogo size={36} /></Link>
-      <input type="search" className="st-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search universities" aria-label="Search universities" />
+      <input type="search" className="st-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search" aria-label="Search universities" />
       {signedIn ? <CreditsChip /> : <Link href="/sign-in" className="bm-btn bm-btn-sm bm-btn-primary">Sign in</Link>}
     </div>
   );
@@ -131,8 +128,7 @@ export function ChatDirectory() {
       <TopBar signedIn query={query} setQuery={setQuery} />
       <div className="ch-top">
         <span />
-        <span><Link href="/user-portal" className="bm-btn bm-btn-sm">Edit profile</Link> <Link href="/community" className="bm-btn bm-btn-sm">Community</Link>{' '}
-          <button type="button" className="bm-btn bm-btn-sm" onClick={() => signOut({ redirectUrl: import.meta.env.BASE_URL || '/' })}>Sign out</button></span>
+        <span><button type="button" className="bm-btn bm-btn-sm" onClick={() => signOut({ redirectUrl: import.meta.env.BASE_URL || '/' })}>Sign out</button></span>
       </div>
       <h1>Directory</h1>
       <p className="ch-note">Open any university with one account. Each university is for adults aged 18 or over; chat is text only.</p>
@@ -232,7 +228,7 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
   };
   const body = (
     <>
-      {!setup && <div className="ch-top"><Link href="/home" className="bm-btn bm-btn-sm">Directory</Link><Link href="/community/profile" className="bm-btn bm-btn-sm">Platform and bio</Link></div>}
+      {!setup && <div className="ch-top"><Link href="/home" className="bm-btn bm-btn-sm">Directory</Link><Link href="/community/profile" className="bm-btn bm-btn-sm">Platform and bio</Link><Link href="/community" className="bm-btn bm-btn-sm">Community</Link></div>}
       <h1>{profile ? 'Edit profile' : 'Set up your profile'}</h1>
       {profile && <p className="ch-note">Username @{profile.username} is permanent.</p>}
       {q.isLoading && <p role="status">Loading...</p>}
