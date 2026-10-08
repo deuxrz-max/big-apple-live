@@ -7,7 +7,7 @@ import {
   useClaimSocialDailyReward, usePurchaseSocialProduct, useGetSocialLedger, useGetSocialLeaderboard,
   getGetSocialMeQueryKey, getGetSocialInboxQueryKey, getGetSocialConversationQueryKey,
 } from '@workspace/api-client-react';
-import { Avatar, BadgeMark, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, fmt, iconFor, refreshSocial, useIdemKey } from './common';
+import { BadgeMark, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, fmt, iconFor, refreshSocial, useIdemKey } from './common';
 
 export function InboxPage() {
   const q = useGetSocialInbox({ query: { queryKey: getGetSocialInboxQueryKey(), refetchInterval: 4000 } });
@@ -22,7 +22,6 @@ export function InboxPage() {
         : <ul className="sc-list">{q.data.conversations.map((c) => (
           <li key={c.username}>
             <Link href={`/community/messages/${c.username}`} className="sc-row" data-testid={`row-conversation-${c.username}`}>
-              <Avatar p={c} size={48} />
               <span className="sc-card-text"><span className="sc-name">{c.username}{c.blocked && <em className="sc-chip">Blocked</em>}</span>
                 <span className="sc-bio">{c.lastMessage}</span></span>
               <span className="sc-meta">{fmt(c.updatedAt)}{c.unreadCount > 0 && <b className="sc-unread">{c.unreadCount}</b>}</span>
@@ -71,7 +70,7 @@ export function ThreadPage({ username }: { username: string }) {
     <section className="sc-thread">
       <Link href="/community/messages" className="bm-back">All messages</Link>
       <header className="sc-thread-head">
-        <Link href={`/community/people/${username}`} className="sc-row"><Avatar p={d.person} size={48} /><span className="sc-name">{d.person.username}<BadgeMark id={d.person.badgeId} /></span></Link>
+        <Link href={`/community/people/${username}`} className="sc-row"><span className="sc-name">{d.person.username}<BadgeMark id={d.person.badgeId} /></span></Link>
         <div className="sc-actions">
           <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()} disabled={q.isFetching} data-testid="button-refresh"><RefreshCw size={14} /> Refresh</button>
           {confirmDel ? (

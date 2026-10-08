@@ -23,8 +23,10 @@ routes; signed-out visitors can sign in to use the protected destinations.
 The cap applies to selected profile photos, not lifetime uploads. Preserve all
 selected photos during retention cleanup; removed photos keep the approved
 30-day unused grace period.
-Chat message authors use clickable names linking to their existing profiles, with
-no profile photo beside the message author. Preserve profile privacy/block rules.
+Chat message authors use clickable names linking to their existing profiles.
+Do not show profile photos beside names anywhere in chat, including university
+participant strips, private chat headers or inbox conversation rows. Keep photos
+on profile pages and preserve profile privacy/block rules.
 No branded characters, hair/portrait pickers or profile-image facial-emoji sync
 in active routes. Chat emojis never change photos. Leave obsolete database
 identity fields unused for compatibility; never overwrite genuine uploaded photos.

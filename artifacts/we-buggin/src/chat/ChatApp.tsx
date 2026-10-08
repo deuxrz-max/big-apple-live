@@ -275,7 +275,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
       {r.error && <div className="ch-err" role="alert">{r.error} <Link href="/user-portal" className="bm-link">Profile</Link></div>}
       <div className="ch-room">
         <div className="ch-atm"><RoomAtmosphere atmosphere={atm} /></div>
-        <div className="ch-roster" aria-label="In the university">{people.map((p) => <span key={p.participantId}><UserPhoto username={p.displayName} displayName={p.displayName} photoUrl={p.photoUrl} size={22} />{p.displayName}</span>)}</div>
+        <div className="ch-roster" aria-label="In the university">{people.map((p) => <span key={p.participantId}>{p.displayName}</span>)}</div>
         <div className="ch-msgs" ref={box} role="log" aria-live="polite" aria-label="University messages" tabIndex={0} onScroll={(e) => { const el = e.currentTarget; near.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }} data-testid="list-messages">
           {r.hasOlder && <button type="button" className="bm-btn bm-btn-sm" disabled={r.loadingOlder}
             onClick={async () => {
