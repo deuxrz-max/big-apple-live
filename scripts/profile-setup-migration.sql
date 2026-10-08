@@ -7,8 +7,9 @@ UPDATE account_profiles SET photo_urls = ARRAY[photo_url]
 WHERE photo_url IS NOT NULL AND cardinality(photo_urls) = 0;
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'account_profiles_three_photos' AND conrelid = 'account_profiles'::regclass) THEN
-    ALTER TABLE account_profiles ADD CONSTRAINT account_profiles_three_photos CHECK (cardinality(photo_urls) <= 3);
+  ALTER TABLE account_profiles DROP CONSTRAINT IF EXISTS account_profiles_three_photos;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'account_profiles_four_photos' AND conrelid = 'account_profiles'::regclass) THEN
+    ALTER TABLE account_profiles ADD CONSTRAINT account_profiles_four_photos CHECK (cardinality(photo_urls) <= 4);
   END IF;
 END $$;
 CREATE TABLE IF NOT EXISTS profile_photos (

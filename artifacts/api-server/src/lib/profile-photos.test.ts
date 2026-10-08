@@ -122,24 +122,24 @@ test("real HTTP, PostgreSQL and App Storage upload, replacement, privacy and emo
   assert.equal((await fetch(`${base}${urlPath}`)).status, 404);
   actor = ids[0]!;
   const gallery = [replacement.photoUrl];
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < 3; i++) {
     const response = await upload(png);
     const photo = await response.json() as { photoUrl: string; error?: string };
     assert.equal(response.status, 201, photo.error);
     gallery.push(photo.photoUrl);
     uploaded.push(photo.photoUrl.split("/").at(-1)!);
   }
-  const three = await saveProfile(ids[0]!, { username: names[0]!, photoUrls: gallery, photoUrl: gallery[1]! });
-  assert.deepEqual(three.photoUrls, gallery);
+  const four = await saveProfile(ids[0]!, { username: names[0]!, photoUrls: gallery, photoUrl: gallery[1]! });
+  assert.deepEqual(four.photoUrls, gallery);
   assert.equal((await getProfile(ids[0]!))!.photoUrl, gallery[1]);
   assert.deepEqual((await getProfile(ids[0]!))!.photoUrls, gallery);
-  await assert.rejects(saveProfile(ids[0]!, { username: names[0]!, photoUrls: [...gallery, result.photoUrl] }), /up to 3/);
+  await assert.rejects(saveProfile(ids[0]!, { username: names[0]!, photoUrls: [...gallery, result.photoUrl] }), /up to 4/);
   await assert.rejects(saveProfile(ids[0]!, { username: names[0]!, photoUrls: [gallery[0]!, gallery[0]!] }), /different/);
   await assert.rejects(saveProfile(ids[0]!, { username: names[0]!, photoUrls: gallery, photoUrl: result.photoUrl }), /main photo/);
   await assert.rejects(saveProfile(ids[1]!, { username: names[1]!, photoUrls: [gallery[2]!] }), /only your own/);
   assert.deepEqual((await getProfile(ids[0]!))!.photoUrls, gallery);
   // Secondary saved images remain readable and cannot be deleted by retention.
-  const secondaryId = gallery[2]!.split("/").at(-1)!;
+  const secondaryId = gallery[3]!.split("/").at(-1)!;
   await db.update(profilePhotos).set({ unusedSince: new Date(Date.now() - PHOTO_GRACE_MS - 60_000) }).where(eq(profilePhotos.id, secondaryId));
   assert.equal((await cleanupProfilePhotos({ dryRun: false, onlyIds: [secondaryId] })).deleted, 0);
   actor = ids[1]!;

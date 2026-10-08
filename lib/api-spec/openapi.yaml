@@ -833,7 +833,7 @@ components:
         photoUrl: { type: [string, "null"], maxLength: 200 }
         photoUrls:
           type: array
-          maxItems: 3
+          maxItems: 4
           uniqueItems: true
           items: { type: string, maxLength: 200 }
       required: [username]
@@ -846,7 +846,7 @@ components:
         photoUrl: { type: [string, "null"] }
         photoUrls:
           type: array
-          maxItems: 3
+          maxItems: 4
           items: { type: string }
         identity: { $ref: "#/components/schemas/EmojiIdentity" }
         updatedAt: { type: string, format: date-time }

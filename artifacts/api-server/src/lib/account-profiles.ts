@@ -58,7 +58,7 @@ export async function saveProfile(accountId: string, input: ProfileInput): Promi
         selected = selected.filter(url => url !== existing?.photoUrl);
         if (input.photoUrl && !selected.includes(input.photoUrl)) selected.unshift(input.photoUrl);
       }
-      if (selected.length > 3) throw new RoomError(400, "Keep up to 3 profile photos. Remove or replace a photo first");
+      if (selected.length > 4) throw new RoomError(400, "Keep up to 4 profile photos. Remove or replace a photo first");
       if (new Set(selected).size !== selected.length) throw new RoomError(400, "Each profile photo must be different");
       let main = input.photoUrl !== undefined ? input.photoUrl : existing?.photoUrl ?? null;
       if (!selected.length) {

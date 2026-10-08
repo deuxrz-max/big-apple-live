@@ -15,7 +15,8 @@ Use "university/universities" in user-facing text; preserve internal room IDs/ro
 These are social spaces for optional sharing/learning broadcasting techniques, not
 mandatory lessons, courses or enrollment.
 Users upload their own profile photos; missing photos use neutral initials.
-Each profile may keep up to three saved photos and select one main photo.
+Each profile may keep up to four saved photos and select one main photo. The
+“+ Click to add” control uploads photos; all saved photos appear on the profile.
 Every app screen has fixed bottom navigation: Home, Follow, Message and Me,
 without a video button. Use existing Directory, favorites, inbox and Edit Profile
 routes; signed-out visitors can sign in to use the protected destinations.

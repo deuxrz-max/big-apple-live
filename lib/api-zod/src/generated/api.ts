@@ -133,7 +133,7 @@ export const ReviewChatReportResponse = zod.object({
 
 export const getSocialMeResponseProfileExternalHandleMax = 64;
 
-export const getSocialMeResponseProfilePhotoUrlsMax = 3;
+export const getSocialMeResponseProfilePhotoUrlsMax = 4;
 
 export const getSocialMeResponseProfileIdentityEmojiIdMax = 100;
 
@@ -216,7 +216,7 @@ export const SaveSocialProfileBody = zod.object({
 
 export const saveSocialProfileResponseExternalHandleMax = 64;
 
-export const saveSocialProfileResponsePhotoUrlsMax = 3;
+export const saveSocialProfileResponsePhotoUrlsMax = 4;
 
 export const saveSocialProfileResponseIdentityEmojiIdMax = 100;
 
@@ -264,7 +264,7 @@ export const GetSocialPeopleQueryParams = zod.object({
 
 export const getSocialPeopleResponsePeopleItemExternalHandleMax = 64;
 
-export const getSocialPeopleResponsePeopleItemPhotoUrlsMax = 3;
+export const getSocialPeopleResponsePeopleItemPhotoUrlsMax = 4;
 
 export const getSocialPeopleResponsePeopleItemIdentityEmojiIdMax = 100;
 
@@ -307,7 +307,7 @@ export const GetSocialPersonParams = zod.object({
 
 export const getSocialPersonResponseExternalHandleMax = 64;
 
-export const getSocialPersonResponsePhotoUrlsMax = 3;
+export const getSocialPersonResponsePhotoUrlsMax = 4;
 
 export const getSocialPersonResponseIdentityEmojiIdMax = 100;
 
@@ -357,7 +357,7 @@ export const SetSocialRelationshipResponse = zod.object({
 
 export const getSocialBlocksResponsePeopleItemExternalHandleMax = 64;
 
-export const getSocialBlocksResponsePeopleItemPhotoUrlsMax = 3;
+export const getSocialBlocksResponsePeopleItemPhotoUrlsMax = 4;
 
 export const getSocialBlocksResponsePeopleItemIdentityEmojiIdMax = 100;
 
@@ -449,7 +449,7 @@ export const GetSocialLedgerResponse = zod.object({
 
 export const getSocialLeaderboardResponsePeopleItemExternalHandleMax = 64;
 
-export const getSocialLeaderboardResponsePeopleItemPhotoUrlsMax = 3;
+export const getSocialLeaderboardResponsePeopleItemPhotoUrlsMax = 4;
 
 export const getSocialLeaderboardResponsePeopleItemIdentityEmojiIdMax = 100;
 
@@ -521,7 +521,7 @@ export const GetSocialConversationQueryParams = zod.object({
 
 export const getSocialConversationResponsePersonExternalHandleMax = 64;
 
-export const getSocialConversationResponsePersonPhotoUrlsMax = 3;
+export const getSocialConversationResponsePersonPhotoUrlsMax = 4;
 
 export const getSocialConversationResponsePersonIdentityEmojiIdMax = 100;
 
@@ -599,7 +599,7 @@ export const DeleteSocialConversationResponse = zod.object({
 })
 
 
-export const getMyProfileResponseProfileOnePhotoUrlsMax = 3;
+export const getMyProfileResponseProfileOnePhotoUrlsMax = 4;
 
 export const getMyProfileResponseProfileOneIdentityEmojiIdMax = 100;
 
@@ -640,7 +640,7 @@ export const saveMyProfileBodyPhotoUrlMax = 200;
 
 export const saveMyProfileBodyPhotoUrlsItemMax = 200;
 
-export const saveMyProfileBodyPhotoUrlsMax = 3;
+export const saveMyProfileBodyPhotoUrlsMax = 4;
 
 
 
@@ -660,7 +660,7 @@ export const SaveMyProfileBody = zod.object({
   "photoUrls": zod.array(zod.string().max(saveMyProfileBodyPhotoUrlsItemMax)).max(saveMyProfileBodyPhotoUrlsMax).optional()
 })
 
-export const saveMyProfileResponsePhotoUrlsMax = 3;
+export const saveMyProfileResponsePhotoUrlsMax = 4;
 
 export const saveMyProfileResponseIdentityEmojiIdMax = 100;
 
@@ -882,7 +882,7 @@ export const sendRoomMessageResponseMessageIdentityEmojiIdMax = 100;
 
 export const sendRoomMessageResponseMessageIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const sendRoomMessageResponseMessageIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
-export const sendRoomMessageResponseProfilePhotoUrlsMax = 3;
+export const sendRoomMessageResponseProfilePhotoUrlsMax = 4;
 
 export const sendRoomMessageResponseProfileIdentityEmojiIdMax = 100;
 

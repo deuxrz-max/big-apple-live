@@ -87,7 +87,7 @@ test("real PostgreSQL profile setup, interruption, edit persistence and request 
     assert.equal((await putProfile(ids[2]!, { username: names[1] })).status, 409);
     assert.equal(await getProfile(ids[2]!), null);
     assert.equal((await putProfile(ids[0]!, { username: names[0] }, "https://attacker.invalid")).status, 403);
-    assert.equal((await putProfile(ids[0]!, { username: names[0], photoUrls: ["one", "two", "three", "four"] })).status, 400);
+    assert.equal((await putProfile(ids[0]!, { username: names[0], photoUrls: ["one", "two", "three", "four", "five"] })).status, 400);
     assert.deepEqual(await getProfile(ids[1]!), before);
   });
 });

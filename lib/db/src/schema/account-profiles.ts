@@ -18,7 +18,7 @@ export const accountProfiles = pgTable("account_profiles", {
   currentMood: text("current_mood"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, table => [
-  check("account_profiles_three_photos", sql`cardinality(${table.photoUrls}) <= 3`),
+  check("account_profiles_four_photos", sql`cardinality(${table.photoUrls}) <= 4`),
 ]);
 export const insertAccountProfileSchema = createInsertSchema(accountProfiles);
 export type InsertAccountProfile = z.infer<typeof insertAccountProfileSchema>;

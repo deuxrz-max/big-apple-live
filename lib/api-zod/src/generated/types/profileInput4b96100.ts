@@ -24,7 +24,7 @@ export interface ProfileInput4b96100 {
      */
   photoUrl?: string | null;
   /**
-     * @maxItems 3
+     * @maxItems 4
      * @items.maxLength 200
      */
   photoUrls?: string[];

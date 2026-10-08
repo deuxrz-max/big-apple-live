@@ -732,7 +732,7 @@
           },
           "displayName": { "type": "string" },
           "photoUrl": { "type": ["string", "null"] },
-          "photoUrls": { "type": "array", "maxItems": 3, "items": { "type": "string" } },
+          "photoUrls": { "type": "array", "maxItems": 4, "items": { "type": "string" } },
           "identity": {
             "$ref": "./openapi.yaml#/components/schemas/EmojiIdentity"
           },

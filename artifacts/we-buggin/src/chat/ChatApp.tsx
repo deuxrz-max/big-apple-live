@@ -133,7 +133,7 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
     const replacing = replaceTarget.current;
     setUpErr(null);
     if (uploading || save.isPending) return;
-    if (!replacing && photoUrls.length >= 3) { setUpErr('Keep up to 3 photos. Remove or replace one first.'); return; }
+    if (!replacing && photoUrls.length >= 4) { setUpErr('Keep up to 4 photos. Remove or replace one first.'); return; }
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { setUpErr('Choose a JPEG, PNG or WebP image.'); return; }
     if (file.size > 5 * 1024 * 1024) { setUpErr('Photo must be 5 MiB or smaller.'); return; }
     setPreview(URL.createObjectURL(file));
@@ -203,7 +203,7 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
             <span className="ch-note">{bio.length}/280</span>
           </label>
           <div>
-            <p><b>Profile photos (optional, {photoUrls.length}/3)</b></p>
+            <p><b>Profile photos (optional, {photoUrls.length}/4)</b></p>
             <div className="ch-photos" aria-label="Saved profile photos">
               {photoUrls.map((url, i) => (
                 <div className="ch-photo-card" key={url}>
@@ -220,9 +220,9 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
             {!photoUrls.length && <UserPhoto username={profile?.username ?? username} displayName={dn} photoUrl={null} size={72} />}
             {preview && <div role="status"><UserPhoto displayName={dn} photoUrl={preview} size={72} /> Uploading...</div>}
             <input ref={fileRef} type="file" hidden accept="image/jpeg,image/png,image/webp" aria-label="Upload profile photo" disabled={uploading || save.isPending} onChange={(e) => pickPhoto(e.target.files?.[0])} data-testid="input-photo" />
-            <p><button type="button" className="bm-btn bm-btn-sm" disabled={photoUrls.length >= 3 || uploading || save.isPending}
-              onClick={() => { replaceTarget.current = null; fileRef.current?.click(); }} data-testid="button-add-photo">Add photo</button></p>
-            <p className="ch-note">Keep up to 3 photos and choose one main photo. JPEG, PNG or WebP, up to 5 MiB each. Save changes to apply.{photoUrls.length >= 3 ? ' At the limit: replace or remove a photo to change your collection.' : ''}</p>
+            <p><button type="button" className="bm-btn bm-btn-sm ch-add-photo" disabled={photoUrls.length >= 4 || uploading || save.isPending}
+              onClick={() => { replaceTarget.current = null; fileRef.current?.click(); }} data-testid="button-add-photo"><span aria-hidden="true">+</span> Click to add</button></p>
+            <p className="ch-note">Add up to 4 photos and choose one main photo. All saved photos appear on your profile. JPEG, PNG or WebP, up to 5 MiB each. Save changes to apply.{photoUrls.length >= 4 ? ' At the limit: replace or remove a photo to change your collection.' : ''}</p>
             {upErr && <div className="ch-err" role="alert">{upErr}</div>}
           </div>
           {save.isError && <div className="ch-err" role="alert">{errMessage(save.error)}</div>}
