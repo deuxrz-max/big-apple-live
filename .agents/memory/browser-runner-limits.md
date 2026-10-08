@@ -77,3 +77,15 @@ Chromium decoded it and showed changing rendered frames.
 reload in the test browser. Use the capable browser for moving-pixel evidence
 and the signed-in runner for layout, controls and fallback checks. Report these
 as separate checks rather than claiming the signed-in runner played the video.
+
+For looping MP4s, measure displayed-frame timing at restart separately from
+last-to-first image difference. Muted audio can still extend the media timeline.
+
+**Why:** A summer clip had ordinary endpoint image differences but a near-held
+final frame, audio extending beyond the video, and measurable browser restart
+pauses. Removing audio and re-encoding improved timing without player changes.
+
+**How to apply:** Inspect both stream durations and requestVideoFrameCallback
+timing before adding player code. When disabling MP4 edit lists, verify the
+first presentation timestamp: B-frame reordering can shift it away from zero.
+Do not call native browser looping perfectly gapless solely because loop=true.

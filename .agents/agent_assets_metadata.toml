@@ -14,3 +14,31 @@ mtime_ms = 1791394725250
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/6643187a-b6d1-4a93-aa59-42e17e2237d4/8c7858f5-59dd-42cb-8c24-2dbb43fc98c9"
 storage_version_token = "1791394759970800"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "GTpWIxFCJAkI8XSo_ZQ6W"
+uri = "file://reports/summer-loop-verification.txt"
+type = "text"
+title = "Summer loop measurements and verification"
+description = "Original and final video metadata, frame differences, timestamps, browser restart timing, backup listing, and unchanged autumn/winter checksums."
+logical_id = "3e496ad2-c81d-47c6-948c-a70097558934"
+content_hash = "sha256:6abacf62c656bddb02b3fc7bbdf1249aed9b9233a7eb9df6b1cd472dcd22b652"
+size = 5929
+mtime_ms = 1791456410912
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/3e496ad2-c81d-47c6-948c-a70097558934/89cd6029-ab2d-4285-a7f5-0670655a0874"
+storage_version_token = "1791456434371470"
+content_type = "text/plain"
+
+[[outputs]]
+id = "4h1FAN5A8uDmUFVttCziw"
+uri = "file://artifacts/we-buggin/public/atmospheres/summer.mp4"
+type = "video"
+title = "Smoothed summer background"
+description = "The background now served in development: H.264, 400×736, 24 FPS, audio-free, with a tail-to-head crossfade."
+logical_id = "56c024e5-9816-43cb-975e-71feb7e7a827"
+content_hash = "sha256:76c509d955aa59e85e38fb95c30bd643b4c733be16066f984515b78d6eaff29a"
+size = 5709636
+mtime_ms = 1791456175669
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/56c024e5-9816-43cb-975e-71feb7e7a827/367ba6ce-22b5-4f95-8130-f182e2ed7e2d"
+storage_version_token = "1791456435087591"
+content_type = "video/mp4"

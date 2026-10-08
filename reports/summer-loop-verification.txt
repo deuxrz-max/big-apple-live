@@ -1,0 +1,132 @@
+SUMMER BACKGROUND LOOP — DIAGNOSIS AND VERIFICATION
+
+Only the summer media files were replaced. Application source code, the
+40% black tint, full-screen coverage, and dark-only fallback were unchanged.
+Nothing was published or deployed.
+
+METHOD
+ffprobe stream/frame inspection; ffmpeg decoded-frame comparison.
+Image metric: mean absolute difference (MAD), 0–255 grayscale levels.
+For comparable framing, images were center-cropped/scaled to 400x736,
+then measured at 200x368. Neighbor measurements use each clip's native FPS.
+Browser timings use requestVideoFrameCallback in workspace Chromium.
+These are real decoded/displayed frame measurements, not mocked playback.
+
+ORIGINAL SUMMER — BOTH COPIES
+attached_assets/summer_original.mp4
+artifacts/we-buggin/public/atmospheres/summer_original.mp4
+Both originals are byte-identical:
+26a44c35660741aa8aed710c6c5b6ad2a42c3835f8019e596319015473fc9e2f
+
+Container: MP4
+Video: H.264 High, yuv420p, 1080x1920, constant 30 FPS
+Video frames: 363
+Video duration: 12.100000 seconds
+Container duration: 12.181333 seconds
+Audio: AAC LC, 48000 Hz, 12.181333 seconds
+File size: 18,893,538 bytes
+Edit lists: none
+Faststart: no; moov offset 18,888,221, after mdat
+
+Final ten video presentation timestamps (seconds):
+11.766667, 11.800000, 11.833333, 11.866667, 11.900000,
+11.933333, 11.966667, 12.000000, 12.033333, 12.066667
+Every frame duration, including the last, is 0.033333 seconds.
+There is no oddly long final video sample.
+
+Normal neighbor MAD: median 1.252575; mean 1.144447; maximum 2.387649.
+Last-to-first MAD: 1.270625 (1.0144x neighbor median).
+First/last mean brightness: 74.311318 / 74.730014.
+No exact consecutive duplicate frames at the analysis resolution.
+The final pair is nearly unchanged: MAD 0.071875.
+
+First-ten-frame neighbor MADs:
+2.251277, 1.595666, 1.454660, 0.330435, 0.953261,
+1.983886, 1.456902, 1.259361, 0.245747
+Last-ten-frame neighbor MADs:
+1.566658, 0.250666, 1.765639, 1.203682, 1.286916,
+1.776128, 0.835679, 2.159334, 0.071875
+Aligned last-ten-versus-first-ten MADs:
+7.281603, 5.412500, 4.279429, 2.132772, 1.318030,
+2.166005, 4.262486, 5.386671, 6.960584, 7.004348
+
+Browser original playback:
+Two restart frame-display gaps: 200.1 ms and 216.6 ms.
+Median normal display interval: 33.3 ms.
+Seeking/waiting events occurred at each restart; no media error.
+The image seam itself is not a large brightness/picture cut. Evidence points
+to a visible temporal hold: a near-held ending, audio lasting 81.333 ms past
+the video, and browser seek/decode delay. These observations do not isolate
+the exact contribution of each factor.
+
+FILE FIX
+Removed the nearly repeated final source frame.
+Normalized to 400x736, square pixels, constant 24 FPS.
+Overlapped the closing/opening segments for 18 frames (about 0.75 seconds),
+crossfaded tail into head, and rotated/dropped the overlapping opening part.
+Encoded using libx264, CRF 19, yuv420p, no audio, faststart.
+No B-frames or edit-list timing offset; first presentation timestamp is zero.
+App references continue to use atmospheres/summer.mp4, never the backup.
+
+FINAL SUMMER — MATCHING ATTACHED, PUBLIC, AND BUILD COPIES
+Video: H.264 High, yuv420p, 400x736
+FPS: 24/1 average and nominal
+Frames: 271
+Duration: 11.291667 seconds (video and container)
+Audio streams: none
+File size: 5,709,636 bytes
+Edit lists: none
+Faststart: yes; moov offset 32, mdat offset 2034
+SHA256:
+76c509d955aa59e85e38fb95c30bd643b4c733be16066f984515b78d6eaff29a
+
+Final ten video timestamps (seconds):
+10.875000, 10.916667, 10.958333, 11.000000, 11.041667,
+11.083333, 11.125000, 11.166667, 11.208333, 11.250000
+Every frame duration, including the last, is 0.041667 seconds.
+
+Normal neighbor MAD: median 1.344334; mean 1.393390; maximum 3.731576.
+Last-to-first MAD: 1.968546 (1.4643x neighbor median).
+First-ten-frame neighbor MADs:
+1.238098, 1.018655, 2.250883, 0.121318, 1.904633,
+0.762663, 2.017948, 0.068125, 1.076902
+Last-ten-frame neighbor MADs:
+0.713288, 0.716209, 1.728886, 0.680380, 2.094361,
+0.466780, 1.779674, 1.409484, 2.626372
+The endpoint MAD did not decrease; it remains within the range of ordinary
+internal frame differences. The measured improvement is in restart timing,
+not a claimed reduction of this endpoint pixel metric.
+
+Browser final playback:
+Two loops observed. Restart gaps: 66.6 ms and 66.7 ms.
+Median normal display interval: 50 ms on this display/browser.
+No gaps above 120 ms and no media errors.
+This is much shorter than before, but native HTML video looping is not
+promised perfectly gapless on every device. No player-code change was made.
+Used actual RoomAtmosphere in a browser harness on the running dev server.
+Did not verify a signed-in university session.
+Computed tint remained rgba(0, 0, 0, 0.4).
+
+HTTP/BUILD CHECKS
+Dev server /atmospheres/summer.mp4: 200, video/mp4, 5,709,636 bytes.
+Downloaded served file checksum matches the final asset.
+Range bytes=0-1023: 206, 1024 bytes,
+Content-Range bytes 0-1023/5709636.
+Web app local build passed; refreshed build asset matches public asset.
+A local build is not a publication/deployment.
+
+FILE LISTING
+attached_assets/summer.mp4                         5,709,636 bytes
+attached_assets/summer_original.mp4               18,893,538 bytes
+artifacts/we-buggin/public/atmospheres/summer.mp4   5,709,636 bytes
+artifacts/we-buggin/public/atmospheres/summer_original.mp4 18,893,538 bytes
+The regenerated dist/public/atmospheres folder also contains matching copies.
+
+AUTUMN/WINTER — MEASURED ONLY, UNMODIFIED
+Autumn: seam MAD 20.826590; neighbor median 1.339280; ratio 15.5506x.
+Winter: seam MAD 27.256304; neighbor median 1.072575; ratio 25.4120x.
+Their endpoint cuts are substantially larger than summer's original cut.
+Checksums before and after remained identical:
+Autumn: 3dac036512e8612ce54379f44c0ac822a8aa6c903f0c6e9c70e4e33206aa1f19
+Winter: 7074763b8a1f856b6c00fd27ed9449e9b4580f411cf1ff02187eac69313489c7
+Neither clip was connected to the app.
