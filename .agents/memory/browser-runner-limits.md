@@ -64,3 +64,16 @@ before starting a long protected-flow pass. Try an isolated fixture rather than
 changing the app's auth provider or real users. If it still fails, stop auth
 retries, report the unexecuted checks, and verify independent components without
 claiming full end-to-end success.
+
+The managed test browser may lack H.264 decoding even when the workspace's
+`/repl/tools/bin/chromium` supports it. Do not diagnose a missing video element
+after fallback as an app rendering failure without checking codec support.
+
+**Why:** The managed runner rejected a valid H.264 asset with
+`NotSupportedError` and `DEMUXER_ERROR_NO_SUPPORTED_STREAMS`, while workspace
+Chromium decoded it and showed changing rendered frames.
+
+**How to apply:** Check `canPlayType` and capture playback/media errors before
+reload in the test browser. Use the capable browser for moving-pixel evidence
+and the signed-in runner for layout, controls and fallback checks. Report these
+as separate checks rather than claiming the signed-in runner played the video.

@@ -13,7 +13,8 @@
 .ch-list{list-style:none;padding:0;display:grid;gap:8px}
 .ch-list li{border:1px solid #333;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .ch-room{position:relative;display:flex;flex-direction:column;height:calc(100dvh - 130px);min-height:260px;overflow:hidden}
-.ch-atm{position:absolute;inset:0;z-index:0;pointer-events:none}
+.ch-university{position:relative;isolation:isolate;background:transparent}
+.ch-atm{position:fixed;inset:0;width:100vw;height:100dvh;z-index:-1;pointer-events:none}
 .ch-roster{position:relative;z-index:1;display:flex;gap:8px;overflow-x:auto;padding:8px;background:#0008}
 .ch-roster span{display:flex;gap:4px;align-items:center;font-size:12px;white-space:nowrap}
 .ch-msgs{position:relative;z-index:1;flex:1;min-height:0;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:10px;background:transparent}

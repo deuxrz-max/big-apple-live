@@ -11,7 +11,6 @@ import { UserPhoto } from '@/components/user-photo';
 import { errMessage, errStatus } from '@/lib/errors';
 import { useTextRoom } from './useTextRoom';
 import { RoomAtmosphere } from './RoomAtmosphere';
-import { roomVideoMapping } from './video-config';
 import './chat.css';
 
 const DISCLAIMER = 'We Buggin is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
@@ -268,13 +267,14 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
     finally { setPending(false); }
   };
   return (
-    <div className="ch"><div className="ch-in">
+    <div className="ch ch-university">
+      <div className="ch-atm"><RoomAtmosphere atmosphere={atm} /></div>
+      <div className="ch-in">
       <div className="ch-top"><Link href="/home" className="bm-btn bm-btn-sm">Directory</Link><strong>{r.room?.name ?? 'University'}</strong>
         <span className="ch-note" data-testid="status-connection">{r.connection}</span>
         <button type="button" className="bm-btn bm-btn-sm" onClick={() => r.refresh()}>Refresh</button></div>
       {r.error && <div className="ch-err" role="alert">{r.error} <Link href="/user-portal" className="bm-link">Profile</Link></div>}
       <div className="ch-room">
-        <div className="ch-atm"><RoomAtmosphere atmosphere={atm} /></div>
         <div className="ch-roster" aria-label="In the university">{people.map((p) => <span key={p.participantId}>{p.displayName}</span>)}</div>
         <div className="ch-msgs" ref={box} role="log" aria-live="polite" aria-label="University messages" tabIndex={0} onScroll={(e) => { const el = e.currentTarget; near.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }} data-testid="list-messages">
           {r.hasOlder && <button type="button" className="bm-btn bm-btn-sm" disabled={r.loadingOlder}
@@ -309,7 +309,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
       </div>
       {sendErr && <div className="ch-err" role="alert">{sendErr}</div>}
       {note && <p role="status">{note} <Link href="/community/blocks" className="bm-link">Blocked list</Link></p>}
-      <p className="ch-note">{atm ? `Activity-based scene: ${SCENE[atm.scene]}, ${atm.activity} messages in the last ${Math.round(atm.windowMs / 60000)} minutes. ` : ''}Tone switching is off. {roomVideoMapping[atm?.scene ?? 'calm'].src ? 'Muted video configured; static fallback available.' : 'Backdrop is a static placeholder; final videos have not been supplied.'}</p>
+      <p className="ch-note">{atm ? `Activity-based scene: ${SCENE[atm.scene]}, ${atm.activity} messages in the last ${Math.round(atm.windowMs / 60000)} minutes. ` : ''}Tone switching is off. Muted summer video; plain dark background when playback is unavailable or reduced motion is enabled.</p>
       <p className="ch-note">{DISCLAIMER}</p>
     </div></div>
   );
