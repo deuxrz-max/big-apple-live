@@ -5,7 +5,7 @@ export type Scene = "city" | "calm" | "volcano";
 export const roomVideoMapping: Record<Scene, { src: string | null; label: string; poster?: string }> = {
   city: { src: null, label: "Busy city street" },
   calm: {
-    src: `${import.meta.env.BASE_URL}atmospheres/calm-forest.mp4`,
+    src: `${import.meta.env.BASE_URL}atmospheres/summer.mp4`,
     poster: `${import.meta.env.BASE_URL}atmospheres/calm-forest.jpg`,
     label: "Sunlit forest",
   },
