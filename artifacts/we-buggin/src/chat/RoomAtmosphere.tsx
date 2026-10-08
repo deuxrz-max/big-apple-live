@@ -38,6 +38,11 @@ export function RoomAtmosphere({ atmosphere }: { atmosphere?: CommunityAtmospher
   useEffect(() => {
     if (previous.current === scene) return;
     const last = previous.current; previous.current = scene;
+    // Activity updates must not restart or crossfade the same looping asset.
+    if (roomVideoMapping[last].src === roomVideoMapping[scene].src) {
+      setOutgoing(null);
+      return;
+    }
     if (reduced) { setOutgoing(null); return; }
     setOutgoing(last);
     const timer = setTimeout(() => setOutgoing(null), 1800);
@@ -55,7 +60,7 @@ export function RoomAtmosphere({ atmosphere }: { atmosphere?: CommunityAtmospher
       @keyframes room-scene-out{from{opacity:1}to{opacity:0}}
       @media(prefers-reduced-motion:reduce){.room-scene{animation:none!important}.room-scene.is-outgoing{display:none}}
     `}</style>
-    <SceneLayer key={scene} scene={scene} outgoing={false} reduced={reduced} />
+    <SceneLayer key={roomVideoMapping[scene].src} scene={scene} outgoing={false} reduced={reduced} />
     {outgoing && outgoing !== scene && <SceneLayer key={outgoing} scene={outgoing} outgoing reduced={reduced} />}
   </div>;
 }
