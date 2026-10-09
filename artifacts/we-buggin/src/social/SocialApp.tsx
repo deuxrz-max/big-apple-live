@@ -41,7 +41,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
       <div className="bm-bg" aria-hidden="true"><i /><i /><i /></div>
       {!bare && <nav className="bm-nav">
         <Link href="/home" className="bm-logo"><AppLogo size={32} /> STREAMTALK</Link>
-        <Link href="/home" className="bm-tag"><House size={12} /> Home</Link>
+        <Link href="/home" className="bm-tag st-home-pill"><House size={12} /> Home</Link>
       </nav>}
       <div className={`sc-shell${path === '/community/messages' || path === '/community/favorites' ? ' is-inbox' : ''}`}>
         {!bare && path !== '/community/messages' && path !== '/community/favorites' && <nav className="sc-nav" aria-label="Community">

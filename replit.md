@@ -91,6 +91,13 @@ rarity and active emoji avatars are not tracked and must not be invented.
 Bot profiles show only their existing name, avatar and official Streamtalk shield.
 The human profile Report menu explains and links the existing public-message
 reporting flow; there is no direct profile-report endpoint.
+
+Current color rule: page and section headings, the HTML Streamtalk wordmark,
+navigation labels and navigation icons use lime #A6FF00. The Home pill uses lime
+text, icon and outline; the active bottom tab retains a slightly lighter charcoal
+background. Keep typography, layout, body copy, room senders, message previews,
+timestamps, pink unread counts, pink action buttons, badges and logo artwork
+unchanged. This is a color-only owner-approved update, not a new theme or feature.
 Keep the compact university name, parent-inherited topic and Rules button.
 House rules are acknowledged once per account on the server and can be reopened.
 The migration is additive and development-only; existing messages/accounts/photos

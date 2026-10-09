@@ -10,7 +10,7 @@ export function Wordmark({ href = '/' }: { href?: string }) {
   return (
     <Link href={href} className="inline-flex items-center gap-2" data-testid="link-home">
       <AppLogo />
-      <span className="font-display text-xl font-extrabold">Streamtalk</span>
+      <span className="st-wordmark font-display text-xl font-extrabold">Streamtalk</span>
     </Link>
   );
 }
