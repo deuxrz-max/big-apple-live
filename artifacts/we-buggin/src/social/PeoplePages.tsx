@@ -233,6 +233,7 @@ export function FavoritesPage() {
     document.addEventListener('visibilitychange', refresh);
     return () => document.removeEventListener('visibilitychange', refresh);
   }, [q.refetch]);
+  const present = q.data?.filter(entry => entry.room !== null && !entry.person.blocked);
   async function select(entry: FavoriteEntry) {
     if (busy.current) return;
     if (!entry.room) {
@@ -260,14 +261,14 @@ export function FavoritesPage() {
     }
   }
   return (
-    <section>
-      <h1 className="bm-h1 sc-h1">Favorites</h1>
+    <section className="fg-page">
+      <h1 className="fg-title">Following</h1>
       {notice && <p className="sc-note" role="status">{notice}</p>}
       {q.isLoading && <Loading />}
       {q.isError && <ErrorBox error={q.error} retry={() => q.refetch()} />}
-      {q.data && (q.data.length === 0
-        ? <Empty title="No favorites yet"><p>Favorite someone from their profile to keep them close.</p><Link href="/community" className="bm-btn">Find people</Link></Empty>
-        : <FavoritesGallery entries={q.data} busyUsername={busyUsername} onSelect={entry => { void select(entry); }} />)}
+      {present && (present.length === 0
+        ? <p className="fg-empty">No one you follow is in a university right now. Check back soon.</p>
+        : <FavoritesGallery entries={present} busyUsername={busyUsername} onSelect={entry => { void select(entry); }} />)}
     </section>
   );
 }

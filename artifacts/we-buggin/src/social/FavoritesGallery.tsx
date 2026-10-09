@@ -23,15 +23,15 @@ export function FavoritesGallery({ entries, onSelect, busyUsername }: {
             <button
               type="button"
               className="fg-tile"
-              aria-label={name}
+              aria-label={room ? `${name}, ${room.label}. Join university` : name}
               aria-busy={busy || undefined}
               disabled={busy}
               onClick={() => onSelect(entry)}
             >
               <span className="fg-photo">
                 <UserPhoto username={person.username} displayName={person.displayName} photoUrl={person.photoUrl} size={160} />
+                {room && <span className="fg-room">{room.label}</span>}
               </span>
-              {room && <span className="fg-room">{room.label}</span>}
             </button>
           </li>
         );

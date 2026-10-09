@@ -30,11 +30,11 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
   const qc = useQueryClient();
   const me = useGetSocialMe();
   useEffect(() => { refreshSocial(qc); }, [path, qc]);
-    useEffect(() => { document.title = path === '/community/messages' ? 'Messages — Streamtalk' : 'People — Streamtalk'; return () => { document.title = 'Streamtalk'; }; }, [path]);
+    useEffect(() => { document.title = path === '/community/messages' ? 'Messages — Streamtalk' : path === '/community/favorites' ? 'Following — Streamtalk' : 'People — Streamtalk'; return () => { document.title = 'Streamtalk'; }; }, [path]);
   const access = useGetChatAccess();
   const needsIdentity = errStatus(me.error) === 409;
   return (
-    <div className={`beam-app sc${path === '/community/messages' ? ' sc-inbox-screen' : ''}`}>
+    <div className={`beam-app sc${path === '/community/messages' ? ' sc-inbox-screen' : path === '/community/favorites' ? ' sc-following-screen' : ''}`}>
       <div className="bm-bg" aria-hidden="true"><i /><i /><i /></div>
       <nav className="bm-nav">
         <Link href="/home" className="bm-logo"><AppLogo size={32} /> STREAMTALK</Link>
