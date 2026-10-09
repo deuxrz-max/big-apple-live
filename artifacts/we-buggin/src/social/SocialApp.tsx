@@ -14,7 +14,7 @@ import { LeaderboardPage, RewardsPage, ThreadPage } from './MoneyPages';
 
 const NAV = [
   { to: '/community', label: 'People', icon: Users, exact: true },
-  { to: '/community/favorites', label: 'Favorites', icon: Heart },
+  { to: '/community/favorites', label: 'Following', icon: Heart },
   { to: '/community/messages', label: 'Messages', icon: MessageCircle },
   { to: '/community/rewards', label: 'Rewards', icon: Coins },
   { to: '/community/leaderboard', label: 'Leaderboard', icon: Trophy },
