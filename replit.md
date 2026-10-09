@@ -40,6 +40,13 @@ Ignore/Unignore. Whispers reuse private messages and their existing contact,
 block, length and rate rules; inline whispers are never room broadcasts.
 Ignore is account-wide and server-persisted, hides university messages/whispers
 only for that viewer, and does not affect the normal Messages page or replace Block.
+Favorites now uses a Directory-themed photo-only gallery. Only unblocked saved
+favorites expose live university names; choose the account's most recent unexpired
+heartbeat if multiple universities are open. Refresh every 15 seconds and on
+visibility/focus. Recheck location on tap; do not redirect to a changed or empty
+location. Enter through the existing university route, access gates and cap/overflow
+checks. Offline favorites still link to their profiles. No presence leases are renewed
+by gallery reads, and pending/rejected photos continue to show neutral initials.
 Keep the compact university name, parent-inherited topic and Rules button.
 House rules are acknowledged once per account on the server and can be reopened.
 The migration is additive and development-only; existing messages/accounts/photos

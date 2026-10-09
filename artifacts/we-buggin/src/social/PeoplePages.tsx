@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { Heart, Ban, Gift, MessageCircle, Search } from 'lucide-react';
 import {
   useGetSocialMe, useGetSocialPeople, useGetSocialPerson, useSetSocialRelationship, useGetSocialBlocks,
   useSaveSocialProfile, SocialProfileInputExternalPlatform, useSendSocialGift, getGetSocialPeopleQueryKey, getGetSocialPersonQueryKey,
   type GetSocialPeopleParams,
+  useGetFavoritesGallery, getGetFavoritesGalleryQueryKey, getFavoriteRoom,
 } from '@workspace/api-client-react';
 import { Avatar, BadgeMark, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, refreshSocial, useIdemKey, iconFor } from './common';
 import { UserPhoto } from '@/components/user-photo';
+import { FavoritesGallery, type FavoriteEntry } from './FavoritesGallery';
 
 export function CommunityPage() {
   const me = useGetSocialMe();
@@ -218,15 +220,54 @@ export function MyProfilePage() {
 }
 
 export function FavoritesPage() {
-  const q = useGetSocialPeople({ favorites: true }, { query: { queryKey: getGetSocialPeopleQueryKey({ favorites: true }), refetchInterval: 15000 } });
+  const [, navigate] = useLocation();
+  const [busyUsername, setBusyUsername] = useState<string | null>(null);
+  const busy = useRef(false);
+  const [notice, setNotice] = useState('');
+  const q = useGetFavoritesGallery({ query: {
+    queryKey: getGetFavoritesGalleryQueryKey(), refetchInterval: 15000,
+    staleTime: 0, refetchOnWindowFocus: 'always',
+  } });
+  useEffect(() => {
+    const refresh = () => { if (!document.hidden) void q.refetch(); };
+    document.addEventListener('visibilitychange', refresh);
+    return () => document.removeEventListener('visibilitychange', refresh);
+  }, [q.refetch]);
+  async function select(entry: FavoriteEntry) {
+    if (busy.current) return;
+    if (!entry.room) {
+      navigate(`/community/people/${encodeURIComponent(entry.person.username)}`);
+      return;
+    }
+    busy.current = true;
+    setBusyUsername(entry.person.username);
+    setNotice('');
+    try {
+      const fresh = await getFavoriteRoom(entry.person.username);
+      if (!fresh.room || fresh.room.roomId !== entry.room.roomId) {
+        setNotice(!fresh.room ? "They're not in a university anymore." : "They're no longer in that university.");
+        await q.refetch();
+        return;
+      }
+      // This route uses the existing profile/access gates and server capacity/overflow checks.
+      navigate(`/rooms/${encodeURIComponent(fresh.room.roomId)}`);
+    } catch (error) {
+      setNotice(errMsg(error));
+      void q.refetch();
+    } finally {
+      busy.current = false;
+      setBusyUsername(null);
+    }
+  }
   return (
     <section>
       <h1 className="bm-h1 sc-h1">Favorites</h1>
+      {notice && <p className="sc-note" role="status">{notice}</p>}
       {q.isLoading && <Loading />}
       {q.isError && <ErrorBox error={q.error} retry={() => q.refetch()} />}
-      {q.data && (q.data.people.length === 0
+      {q.data && (q.data.length === 0
         ? <Empty title="No favorites yet"><p>Favorite someone from their profile to keep them close.</p><Link href="/community" className="bm-btn">Find people</Link></Empty>
-        : <div className="sc-grid">{q.data.people.map((p) => <PersonCard key={p.username} p={p} />)}</div>)}
+        : <FavoritesGallery entries={q.data} busyUsername={busyUsername} onSelect={entry => { void select(entry); }} />)}
     </section>
   );
 }

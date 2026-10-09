@@ -4,6 +4,7 @@ import {
   GetSocialPersonResponse, SetSocialRelationshipBody, SendSocialGiftBody, PurchaseSocialProductBody,
   SendSocialMessageBody, SendSocialMessageResponse, GetSocialConversationResponse, GetSocialInboxResponse,
   GetSocialLedgerResponse, GetSocialPeopleQueryParams, GetSocialConversationQueryParams,
+  GetFavoritesGalleryResponse, GetFavoriteRoomResponse,
 } from "@workspace/api-zod";
 import { accountId, sameOrigin } from "./identity";
 import { RoomError } from "../lib/room-store";
@@ -11,6 +12,7 @@ import { requireAccount } from "../lib/social/core";
 import { blocks, getMe, getPerson, listPeople, relationship, saveSocialProfile } from "../lib/social/people";
 import { claimDaily, gift, ledger, purchase } from "../lib/social/rewards";
 import { clearThread, inbox, sendMessage, thread } from "../lib/social/messages";
+import { favoritesGallery, favoriteRoom } from "../lib/social/favorites";
 
 const router: IRouter = Router();
 router.use("/social", async (req, res, next) => {
@@ -25,6 +27,12 @@ const name = (raw: string | string[] | undefined) => {
   if (!/^[A-Za-z0-9_]{3,24}$/.test(value)) throw new RoomError(400, "Invalid dedicated name");
   return value;
 };
+router.get("/social/favorites/gallery", async (req, res): Promise<void> => {
+  res.json(GetFavoritesGalleryResponse.parse(await favoritesGallery(accountId(req))));
+});
+router.get("/social/favorites/:username/room", async (req, res): Promise<void> => {
+  res.json(GetFavoriteRoomResponse.parse(await favoriteRoom(accountId(req), name(req.params.username))));
+});
 router.get("/social/me", async (req, res): Promise<void> => { res.json(GetSocialMeResponse.parse(await getMe(accountId(req)))); });
 router.put("/social/me", async (req, res): Promise<void> => {
   const input = SaveSocialProfileBody.safeParse(req.body);

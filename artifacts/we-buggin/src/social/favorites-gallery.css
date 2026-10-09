@@ -1,0 +1,13 @@
+.fg-grid { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(3, minmax(0, 1fr)); font-family: 'Montserrat', system-ui, sans-serif; }
+@media (min-width: 700px) { .fg-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; } }
+@media (min-width: 960px) { .fg-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.fg-item { margin: 0; padding: 0; min-width: 0; }
+.fg-tile { display: flex; flex-direction: column; width: 100%; min-height: 44px; padding: 0; margin: 0; border: 1px solid rgba(255,255,255,.1); border-radius: 14px; background: #1D1D23; color: #F4F1F8; font: inherit; cursor: pointer; overflow: hidden; text-align: left; }
+.fg-tile:hover:not(:disabled) { border-color: #FF268F; }
+.fg-tile:focus-visible { outline: 3px solid #FF8AC2; outline-offset: 2px; }
+.fg-tile:disabled { cursor: progress; opacity: .6; }
+.fg-photo { display: block; position: relative; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; background: #1D1D23; }
+.fg-photo > span, .fg-photo > span > span { display: flex !important; align-items: center; justify-content: center; width: 100% !important; height: 100% !important; min-width: 0 !important; border: 0 !important; border-radius: 0 !important; }
+.fg-photo > span > span { position: absolute; inset: 0; font-size: clamp(22px, 8vw, 44px) !important; }
+.fg-photo img { display: block; width: 100% !important; height: 100% !important; object-fit: cover; }
+.fg-room { display: block; width: 100%; padding: 6px 8px 7px; font-size: 12px; font-weight: 700; line-height: 1.25; color: #F4F1F8; background: #1D1D23; white-space: normal; overflow-wrap: anywhere; }

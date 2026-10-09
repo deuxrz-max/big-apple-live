@@ -37,6 +37,8 @@ import type {
   EmojiOption,
   ErrorResponse,
   ErrorResponse4b96100,
+  FavoriteGalleryEntry,
+  FavoriteRoomResult,
   GetSocialConversationParams,
   GetSocialPeopleParams,
   HealthStatus,
@@ -100,6 +102,148 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetFavoritesGalleryUrl = () => {
+
+
+
+
+  return `/api/social/favorites/gallery`
+}
+
+export const getFavoritesGallery = async ( options?: Parameters<typeof customFetch>[1]): Promise<FavoriteGalleryEntry[]> => {
+
+  return customFetch<FavoriteGalleryEntry[]>(getGetFavoritesGalleryUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFavoritesGalleryQueryKey = () => {
+    return [
+    `/api/social/favorites/gallery`
+    ] as const;
+    }
+
+
+export const getGetFavoritesGalleryQueryOptions = <TData = Awaited<ReturnType<typeof getFavoritesGallery>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFavoritesGallery>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFavoritesGalleryQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFavoritesGallery>>> = ({ signal }) => getFavoritesGallery({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFavoritesGallery>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFavoritesGalleryQueryResult = NonNullable<Awaited<ReturnType<typeof getFavoritesGallery>>>
+export type GetFavoritesGalleryQueryError = ErrorType<unknown>
+
+
+
+export function useGetFavoritesGallery<TData = Awaited<ReturnType<typeof getFavoritesGallery>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFavoritesGallery>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFavoritesGalleryQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetFavoriteRoomUrl = (username: string,) => {
+
+
+
+
+  return `/api/social/favorites/${username}/room`
+}
+
+export const getFavoriteRoom = async (username: string, options?: Parameters<typeof customFetch>[1]): Promise<FavoriteRoomResult> => {
+
+  return customFetch<FavoriteRoomResult>(getGetFavoriteRoomUrl(username),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFavoriteRoomQueryKey = (username: string,) => {
+    return [
+    `/api/social/favorites/${username}/room`
+    ] as const;
+    }
+
+
+export const getGetFavoriteRoomQueryOptions = <TData = Awaited<ReturnType<typeof getFavoriteRoom>>, TError = ErrorType<unknown>>(username: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFavoriteRoom>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFavoriteRoomQueryKey(username);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFavoriteRoom>>> = ({ signal }) => getFavoriteRoom(username, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: username !== null && username !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFavoriteRoom>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFavoriteRoomQueryResult = NonNullable<Awaited<ReturnType<typeof getFavoriteRoom>>>
+export type GetFavoriteRoomQueryError = ErrorType<unknown>
+
+
+
+export function useGetFavoriteRoom<TData = Awaited<ReturnType<typeof getFavoriteRoom>>, TError = ErrorType<unknown>>(
+ username: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFavoriteRoom>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFavoriteRoomQueryOptions(username,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetUniversitySessionUrl = (roomId: string,) => {
 

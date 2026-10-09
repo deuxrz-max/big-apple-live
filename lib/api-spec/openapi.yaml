@@ -15,6 +15,28 @@ tags:
   - name: audio
     description: Authenticated room-scoped WebRTC signaling; media travels peer-to-peer
 paths:
+  /social/favorites/gallery:
+    get:
+      operationId: getFavoritesGallery
+      responses:
+        "200":
+          description: All favorites visible to this account, with live university presence
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/FavoriteGalleryEntry" }
+  /social/favorites/{username}/room:
+    get:
+      operationId: getFavoriteRoom
+      parameters:
+        - { name: username, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Fresh live presence, only for an unblocked favorite
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FavoriteRoomResult" }
   /account/rooms/{roomId}/university-session:
     get:
       operationId: getUniversitySession
@@ -789,6 +811,29 @@ components:
         type: string
         format: uuid
   schemas:
+    FavoriteRoom:
+      type: object
+      required: [roomId, label]
+      properties:
+        roomId: { type: string }
+        label: { type: string }
+    FavoriteRoomResult:
+      type: object
+      required: [room]
+      properties:
+        room:
+          anyOf:
+            - { $ref: "#/components/schemas/FavoriteRoom" }
+            - { type: "null" }
+    FavoriteGalleryEntry:
+      type: object
+      required: [person, room]
+      properties:
+        person: { $ref: "./social.openapi.json#/components/schemas/SocialPerson" }
+        room:
+          anyOf:
+            - { $ref: "#/components/schemas/FavoriteRoom" }
+            - { type: "null" }
     UniversityActionResult:
       type: object
       required: [ok]

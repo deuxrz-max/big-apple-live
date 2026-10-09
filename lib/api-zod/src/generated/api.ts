@@ -8,6 +8,65 @@
 import * as zod from 'zod';
 
 
+export const getFavoritesGalleryResponsePersonExternalHandleMax = 64;
+
+export const getFavoritesGalleryResponsePersonPhotoUrlsMax = 4;
+
+export const getFavoritesGalleryResponsePersonIdentityEmojiIdMax = 100;
+
+export const getFavoritesGalleryResponsePersonIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getFavoritesGalleryResponsePersonIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
+export const GetFavoritesGalleryResponseItem = zod.object({
+  "person": zod.object({
+  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
+  "externalHandle": zod.string().max(getFavoritesGalleryResponsePersonExternalHandleMax).nullish(),
+  "username": zod.string(),
+  "displayName": zod.string().optional(),
+  "photoUrl": zod.string().nullish(),
+  "photoUrls": zod.array(zod.string()).max(getFavoritesGalleryResponsePersonPhotoUrlsMax).optional(),
+  "photoReviews": zod.array(zod.object({
+  "photoUrl": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'rejected', 'flagged'])
+})).optional(),
+  "identity": zod.object({
+  "emojiId": zod.string().min(1).max(getFavoritesGalleryResponsePersonIdentityEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(getFavoritesGalleryResponsePersonIdentityColorRegExp),
+  "hairColor": zod.string().regex(getFavoritesGalleryResponsePersonIdentityHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
+}),
+  "bio": zod.string(),
+  "country": zod.union([zod.string(),zod.null()]),
+  "interests": zod.array(zod.string()),
+  "discoverable": zod.boolean(),
+  "favorite": zod.boolean(),
+  "blocked": zod.boolean(),
+  "receivedCredits": zod.number().int(),
+  "badgeId": zod.union([zod.string(),zod.null()])
+}),
+  "room": zod.union([zod.object({
+  "roomId": zod.string(),
+  "label": zod.string()
+}),zod.null()])
+})
+export const GetFavoritesGalleryResponse = zod.array(GetFavoritesGalleryResponseItem)
+
+
+export const GetFavoriteRoomParams = zod.object({
+  "username": zod.coerce.string()
+})
+
+export const GetFavoriteRoomResponse = zod.object({
+  "room": zod.union([zod.object({
+  "roomId": zod.string(),
+  "label": zod.string()
+}),zod.null()])
+})
+
+
 export const GetUniversitySessionParams = zod.object({
   "roomId": zod.coerce.string()
 })

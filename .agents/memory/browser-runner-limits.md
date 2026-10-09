@@ -101,3 +101,14 @@ pauses. Removing audio and re-encoding improved timing without player changes.
 timing before adding player code. When disabling MP4 edit lists, verify the
 first presentation timestamp: B-frame reordering can shift it away from zero.
 Do not call native browser looping perfectly gapless solely because loop=true.
+
+When mounting original components in a temporary Vite browser harness, use the
+same optimized dependency URLs, including their version query, as the served
+source. CommonJS-prebundled React and ReactDOM may expose their APIs on `default`.
+
+**Why:** Bare dynamic dependency imports did not expose ReactDOM's createRoot;
+mixing hashed and unhashed imports can also create separate React module instances.
+
+**How to apply:** Inspect the served component's import URLs, match them in the
+harness, and use the appropriate default export. Keep synthetic API responses
+clearly separated from real authenticated end-to-end evidence.

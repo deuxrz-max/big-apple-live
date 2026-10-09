@@ -5,6 +5,131 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface FavoriteRoom {
+  roomId: string;
+  label: string;
+}
+
+export interface FavoriteRoomResult {
+  room: FavoriteRoom | null;
+}
+
+/**
+ * @nullable
+ */
+export type SocialPersonExternalPlatform = typeof SocialPersonExternalPlatform[keyof typeof SocialPersonExternalPlatform] | null;
+
+
+export const SocialPersonExternalPlatform = {
+  LiveMe: 'LiveMe',
+  Bigo_Live: 'Bigo Live',
+  Tango_Live: 'Tango Live',
+  TikTok: 'TikTok',
+  Instagram_Live: 'Instagram Live',
+  Super_Live: 'Super Live',
+} as const;
+
+export type PhotoReviewStatus4b96100Status = typeof PhotoReviewStatus4b96100Status[keyof typeof PhotoReviewStatus4b96100Status];
+
+
+export const PhotoReviewStatus4b96100Status = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+  flagged: 'flagged',
+} as const;
+
+export interface PhotoReviewStatus4b96100 {
+  photoUrl: string;
+  status: PhotoReviewStatus4b96100Status;
+}
+
+export type EmojiIdentity4b96100Gender = typeof EmojiIdentity4b96100Gender[keyof typeof EmojiIdentity4b96100Gender];
+
+
+export const EmojiIdentity4b96100Gender = {
+  Male: 'Male',
+  Female: 'Female',
+} as const;
+
+/**
+ * @nullable
+ */
+export type EmojiIdentity4b96100CurrentMood = typeof EmojiIdentity4b96100CurrentMood[keyof typeof EmojiIdentity4b96100CurrentMood] | null;
+
+
+export const EmojiIdentity4b96100CurrentMood = {
+  laughing: 'laughing',
+  tears_of_joy: 'tears_of_joy',
+  crying: 'crying',
+  rofl: 'rofl',
+  heart_eyes: 'heart_eyes',
+  affectionate: 'affectionate',
+  melting: 'melting',
+  grateful: 'grateful',
+  thinking: 'thinking',
+  winking: 'winking',
+  neutral: 'neutral',
+  smiling_eyes: 'smiling_eyes',
+  delighted: 'delighted',
+  grinning: 'grinning',
+  smiling: 'smiling',
+  kissing: 'kissing',
+  playful_wink: 'playful_wink',
+  skeptical: 'skeptical',
+} as const;
+
+export interface EmojiIdentity4b96100 {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  emojiId: string;
+  gender: EmojiIdentity4b96100Gender;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  color: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  hairColor: string;
+  /**
+     * Omitted preserves old artwork; null clears it on explicit manual identity edits
+     * @nullable
+     */
+  portraitId?: string | null;
+  /** @nullable */
+  currentMood?: EmojiIdentity4b96100CurrentMood;
+}
+
+export interface SocialPerson {
+  /** @nullable */
+  externalPlatform?: SocialPersonExternalPlatform;
+  /**
+     * @maxLength 64
+     * @nullable
+     */
+  externalHandle?: string | null;
+  username: string;
+  displayName?: string;
+  /** @nullable */
+  photoUrl?: string | null;
+  /** @maxItems 4 */
+  photoUrls?: string[];
+  photoReviews?: PhotoReviewStatus4b96100[];
+  identity: EmojiIdentity4b96100;
+  bio: string;
+  country: string | null;
+  interests: string[];
+  discoverable: boolean;
+  favorite: boolean;
+  blocked: boolean;
+  receivedCredits: number;
+  badgeId: string | null;
+}
+
+export interface FavoriteGalleryEntry {
+  person: SocialPerson;
+  room: FavoriteRoom | null;
+}
+
 export interface UniversityActionResult {
   ok: boolean;
 }
@@ -424,6 +549,20 @@ export interface ErrorResponse {
   error: string;
 }
 
+export interface FavoriteRoom4b96100 {
+  roomId: string;
+  label: string;
+}
+
+export interface FavoriteRoomResult4b96100 {
+  room: FavoriteRoom4b96100 | null;
+}
+
+export interface FavoriteGalleryEntry4b96100 {
+  person: SocialPerson;
+  room: FavoriteRoom4b96100 | null;
+}
+
 export interface UniversityActionResult4b96100 {
   ok: boolean;
 }
@@ -491,21 +630,6 @@ export interface PhotoReviewEntry4b96100 {
   /** @nullable */
   displayName?: string | null;
   createdAt: string;
-}
-
-export type PhotoReviewStatus4b96100Status = typeof PhotoReviewStatus4b96100Status[keyof typeof PhotoReviewStatus4b96100Status];
-
-
-export const PhotoReviewStatus4b96100Status = {
-  pending: 'pending',
-  approved: 'approved',
-  rejected: 'rejected',
-  flagged: 'flagged',
-} as const;
-
-export interface PhotoReviewStatus4b96100 {
-  photoUrl: string;
-  status: PhotoReviewStatus4b96100Status;
 }
 
 export interface ChatDirectoryRoom4b96100 {
@@ -642,61 +766,6 @@ export const ChatMessage4b96100Kind = {
   text: 'text',
   reaction: 'reaction',
 } as const;
-
-export type EmojiIdentity4b96100Gender = typeof EmojiIdentity4b96100Gender[keyof typeof EmojiIdentity4b96100Gender];
-
-
-export const EmojiIdentity4b96100Gender = {
-  Male: 'Male',
-  Female: 'Female',
-} as const;
-
-/**
- * @nullable
- */
-export type EmojiIdentity4b96100CurrentMood = typeof EmojiIdentity4b96100CurrentMood[keyof typeof EmojiIdentity4b96100CurrentMood] | null;
-
-
-export const EmojiIdentity4b96100CurrentMood = {
-  laughing: 'laughing',
-  tears_of_joy: 'tears_of_joy',
-  crying: 'crying',
-  rofl: 'rofl',
-  heart_eyes: 'heart_eyes',
-  affectionate: 'affectionate',
-  melting: 'melting',
-  grateful: 'grateful',
-  thinking: 'thinking',
-  winking: 'winking',
-  neutral: 'neutral',
-  smiling_eyes: 'smiling_eyes',
-  delighted: 'delighted',
-  grinning: 'grinning',
-  smiling: 'smiling',
-  kissing: 'kissing',
-  playful_wink: 'playful_wink',
-  skeptical: 'skeptical',
-} as const;
-
-export interface EmojiIdentity4b96100 {
-  /**
-     * @minLength 1
-     * @maxLength 100
-     */
-  emojiId: string;
-  gender: EmojiIdentity4b96100Gender;
-  /** @pattern ^#[0-9a-fA-F]{6}$ */
-  color: string;
-  /** @pattern ^#[0-9a-fA-F]{6}$ */
-  hairColor: string;
-  /**
-     * Omitted preserves old artwork; null clears it on explicit manual identity edits
-     * @nullable
-     */
-  portraitId?: string | null;
-  /** @nullable */
-  currentMood?: EmojiIdentity4b96100CurrentMood;
-}
 
 export interface ChatMessage4b96100 {
   id: string;
@@ -841,47 +910,6 @@ export interface RoomSession4b96100 {
 
 export interface ErrorResponse4b96100 {
   error: string;
-}
-
-/**
- * @nullable
- */
-export type SocialPersonExternalPlatform = typeof SocialPersonExternalPlatform[keyof typeof SocialPersonExternalPlatform] | null;
-
-
-export const SocialPersonExternalPlatform = {
-  LiveMe: 'LiveMe',
-  Bigo_Live: 'Bigo Live',
-  Tango_Live: 'Tango Live',
-  TikTok: 'TikTok',
-  Instagram_Live: 'Instagram Live',
-  Super_Live: 'Super Live',
-} as const;
-
-export interface SocialPerson {
-  /** @nullable */
-  externalPlatform?: SocialPersonExternalPlatform;
-  /**
-     * @maxLength 64
-     * @nullable
-     */
-  externalHandle?: string | null;
-  username: string;
-  displayName?: string;
-  /** @nullable */
-  photoUrl?: string | null;
-  /** @maxItems 4 */
-  photoUrls?: string[];
-  photoReviews?: PhotoReviewStatus4b96100[];
-  identity: EmojiIdentity4b96100;
-  bio: string;
-  country: string | null;
-  interests: string[];
-  discoverable: boolean;
-  favorite: boolean;
-  blocked: boolean;
-  receivedCredits: number;
-  badgeId: string | null;
 }
 
 /**
