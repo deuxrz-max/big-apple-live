@@ -95,7 +95,9 @@ reporting flow; there is no direct profile-report endpoint.
 Current color rule: page and section headings, the HTML Streamtalk wordmark,
 navigation labels and navigation icons use lime #A6FF00. The Home pill uses lime
 text, icon and outline; the active bottom tab retains a slightly lighter charcoal
-background. Keep typography, layout, body copy, room senders, message previews,
+background. Personal display names stay plain white everywhere, including profile
+name headings, People lists, room senders and conversations; lime is for branding,
+page titles and navigation, not people's names. Keep typography, layout, body copy, message previews,
 timestamps, pink unread counts, pink action buttons, badges and logo artwork
 unchanged. This is a color-only owner-approved update, not a new theme or feature.
 Keep the compact university name, parent-inherited topic and Rules button.

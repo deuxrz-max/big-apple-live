@@ -109,3 +109,11 @@ body { background-color: #151518; background-image: none; font-family: 'Montserr
   color: #A6FF00;
   border-color: #A6FF00;
 }
+
+/* Personal names are content, not lime page titles or branding. */
+#root :is(.pf-name, .sc-name, .ib-name, .ib-live-name, .ch-sender, .ur-name, .ur-pname),
+#root .ur-wlabel,
+#root .ur-menu > strong,
+#root [data-testid="text-username"] {
+  color: #fff;
+}
