@@ -10,10 +10,12 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:beams": "esbuild tests/beamService.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-beam-tests.mjs && node --test /tmp/we-buggin-beam-tests.mjs",
     "test:playlist": "esbuild tests/promoPlaylist.test.ts --bundle --platform=node --format=esm --outfile=/tmp/streamtalk-promo-tests.mjs && node --test /tmp/streamtalk-promo-tests.mjs",
+    "test:promo-browser": "tsc -p tests/browser/tsconfig.json --noEmit && node tests/browser/run.mjs",
     "test:live": "node --test tests/liveBeam.test.mjs"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",
+    "@playwright/test": "1.63.0",
     "@radix-ui/react-accordion": "^1.2.4",
     "@radix-ui/react-alert-dialog": "^1.1.7",
     "@radix-ui/react-aspect-ratio": "^1.1.3",

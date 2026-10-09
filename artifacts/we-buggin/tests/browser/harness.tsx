@@ -1,0 +1,39 @@
+import { useState } from 'react';
+import { createRoot } from 'react-dom/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { PromoBackground } from '../../src/chat/PromoBackground';
+import { TextChatRoom } from '../../src/chat/UniversityRoom';
+import '../../src/index.css';
+import '../../src/chat/chat.css';
+import '../../src/theme.css';
+import '../../src/components/bottom-navigation.css';
+
+declare const __PROMO_REGRESSION__: boolean;
+if (typeof __PROMO_REGRESSION__ === 'undefined' || !__PROMO_REGRESSION__)
+  throw new Error('This harness may only run on the isolated promo regression server');
+
+function PlayerFixture() {
+  const [unavailable, setUnavailable] = useState(false);
+  return <>
+    <PromoBackground soundOn={false} onUnavailableChange={setUnavailable} />
+    <output data-testid="fixture-unavailable">{String(unavailable)}</output>
+  </>;
+}
+
+// No Clerk, auth overrides or replaced hooks/components. Original room mounts
+// against response-only fixtures on a private, loopback-only test server.
+createRoot(document.getElementById('root')!).render(
+  new URLSearchParams(location.search).get('view') === 'player' ? <PlayerFixture /> :
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      <main className="app-page">
+        <TextChatRoom roomId="promo-regression-room" userId="synthetic-browser-user" />
+      </main>
+      {/* Layout-only nav shell uses the original app's navigation stylesheet. */}
+      <nav className="app-bottom-nav" aria-label="Fixture bottom navigation">
+        <div className="app-bottom-nav-inner">
+          {['Home', 'Follow', 'Message', 'Me'].map(label =>
+            <span key={label} className="app-bottom-link">{label}</span>)}
+        </div>
+      </nav>
+    </QueryClientProvider>,
+);

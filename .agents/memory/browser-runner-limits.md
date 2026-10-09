@@ -112,6 +112,20 @@ timing before adding player code. When disabling MP4 edit lists, verify the
 first presentation timestamp: B-frame reordering can shift it away from zero.
 Do not call native browser looping perfectly gapless solely because loop=true.
 
+Do not infer a broken visibility handler from a normal Playwright page that
+never becomes hidden. Its forced focus/visibility can mask real tab behavior
+even in headed Chromium.
+
+**Why:** Opening actual sibling tabs under Xvfb still reported visible; disabling
+focus emulation through an additional CDP session did not remove Playwright's
+original session override. Native Chromium attached without default overrides
+did emit the real hidden/visible transitions and pause/resume correctly.
+
+**How to apply:** For real visibility regression checks, use a native browser
+default context attached with the supported CDP no-default-overrides option.
+Keep this distinct from normal isolated contexts and never patch document.hidden
+or fabricate visibility events and then claim real background-tab verification.
+
 When mounting original components in a temporary Vite browser harness, use the
 same optimized dependency URLs, including their version query, as the served
 source. CommonJS-prebundled React and ReactDOM may expose their APIs on `default`.
