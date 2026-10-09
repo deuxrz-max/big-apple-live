@@ -90,7 +90,11 @@ including overflow universities. Play one video at a time, then advance and repe
 sound starts off on every entry and is enabled only by the user's sound button.
 Keep full-screen cover rendering. The owner is testing full-brightness playback:
 BACKGROUND_TINT_OPACITY is 0 in PromoBackground.tsx; restore it to 0.4 if requested.
-Keep the existing dark message backings unchanged. Reduced motion
+The owner removed university message backings, including purple whisper boxes,
+and the translucent desktop People-panel background. Messages now use white text,
+pink sender names and tight letter shadows directly over the full-brightness video;
+People names have the same shadow. Keep the solid mobile People drawer and
+the message input/Send bar unchanged. Reduced motion
 or an entirely unplayable playlist shows only a plain dark color, never a poster.
 The owner approved removal of the forest/seasonal clips and the entire background
 mood system: no chat/activity/sentiment/keyword/weather-driven scene selection,

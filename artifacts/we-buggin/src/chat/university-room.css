@@ -12,20 +12,22 @@
 .ch.ur .ur-people-btn{display:none}
 .ur-in{max-width:1100px}
 .ur-body{display:grid;grid-template-columns:250px minmax(0,1fr);gap:12px;position:relative;z-index:1}
-.ur-side{background:rgba(29,29,35,.88);border-radius:14px;padding:10px;overflow-y:auto;height:calc(100dvh - 150px);min-height:260px}
+.ur-side{background:transparent;border-radius:14px;padding:10px;overflow-y:auto;height:calc(100dvh - 150px);min-height:260px}
 .ur-people-head{display:flex;justify-content:space-between;align-items:center}
 .ur-people-head h2{font-size:15px;margin:0}
 .ch.ur .ur-close{display:none}
 .ur-people{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:4px}
 .ur-prow{display:flex;align-items:center;gap:8px;width:100%;padding:6px;border-radius:10px;text-align:left;color:inherit;background:none}
 button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:none}
-.ur-pname{flex:1;min-width:0;overflow-wrap:anywhere;font-size:13px;font-weight:600}
+.ur-pname{flex:1;min-width:0;overflow-wrap:anywhere;font-size:13px;font-weight:600;text-shadow:0 1px 2px #000,0 0 3px #000b}
 .ur-pname em{font-style:normal;opacity:.6;font-weight:400}
 .ur-badge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;background:linear-gradient(135deg,#9D1DFF,#5E00FF)}
 .ur-ign{font-size:10px;color:#A9A6B5;border:1px solid rgba(255,255,255,.2);padding:1px 7px;border-radius:999px}
 .ur-name{background:none;padding:0;text-align:left;cursor:pointer}
-.ur-whisper{background:rgba(94,0,255,.28)!important;font-style:italic}
-.ur-wlabel{font-size:12px;font-weight:700;color:#D9B8FF}
+.ch.ur .ch-msg{background:transparent!important;border-radius:0;color:#fff;text-shadow:0 1px 2px #000,0 0 3px #000b}
+.ch.ur .ch-sender{color:#FF8AC2}
+.ur-whisper{font-style:italic}
+.ur-wlabel{font-size:12px;font-weight:700;color:#FF8AC2}
 .ur-chip{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 10px;border-radius:12px 12px 0 0;background:rgba(94,0,255,.5);font-size:13px;font-weight:600}
 .ur-wmode{border:1px solid #9D1DFF}
 .ur-modal{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px}
@@ -37,6 +39,10 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 .ur-menu button{padding:10px 12px;border-radius:10px;text-align:left;font-weight:600;background:#25252d;color:#F4F1F8}
 .ur-menu button:hover,.ur-menu button:focus-visible{background:#33333d;outline:2px solid #FF268F}
 .ur-backdrop{display:none}
+@media (min-width:761px){
+  button.ur-prow:hover,button.ur-prow:focus-visible{background:transparent}
+  button.ur-prow:focus-visible{outline:2px solid #FF268F;outline-offset:-2px}
+}
 @media (max-width:760px){
   .ch.ur .ur-people-btn{display:inline-flex}
   .ur-body{grid-template-columns:minmax(0,1fr)}
