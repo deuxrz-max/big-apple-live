@@ -103,6 +103,8 @@ pink sender names and tight letter shadows directly over the full-brightness vid
 People names have the same shadow. Keep the solid mobile People drawer and
 the message input/Send bar unchanged. Reduced motion
 or an entirely unplayable playlist shows only a plain dark color, never a poster.
+The owner approved mobile-optimized serving copies of the four promo uploads;
+preserve the original uploads and regenerate from them, not from lossy public copies.
 The owner approved removal of the forest/seasonal clips and the entire background
 mood system: no chat/activity/sentiment/keyword/weather-driven scene selection,
 effects transport or mood timers. Legacy database fields remain unused, not dropped.

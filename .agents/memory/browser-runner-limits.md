@@ -123,3 +123,15 @@ response exposed the configured minimum. The policy is remote and not in app cod
 **How to apply:** Request a strong secret of at least 16 characters for these
 accounts. If validation still fails, inspect sanitized provider error messages
 instead of repeatedly guessing or bypassing the password checks.
+
+Stream-copying AAC can slightly change the reported MP4 duration without
+changing the audio content. Do not treat a sub-millisecond mux rounding
+difference alone as evidence that a clip was trimmed.
+
+**Why:** A mobile serving conversion preserved identical compressed AAC packet
+hashes and every video frame, while one reported duration moved by 0.045 ms.
+
+**How to apply:** Check frame counts, video timing and audio packet identity
+alongside reported durations when verifying that full uploaded clips survive
+optimization. Investigate material timing differences rather than requiring
+decimal-string equality across different muxes.
