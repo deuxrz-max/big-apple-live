@@ -112,3 +112,14 @@ mixing hashed and unhashed imports can also create separate React module instanc
 **How to apply:** Inspect the served component's import URLs, match them in the
 harness, and use the appropriate default export. Keep synthetic API responses
 clearly separated from real authenticated end-to-end evidence.
+
+Use the tenant's actual password policy for persistent preview test accounts,
+not the Clerk SDK's documented default minimum. This tenant reported a
+15-character minimum when creating development users.
+
+**Why:** A 12-character recommendation was insufficient; the backend validation
+response exposed the configured minimum. The policy is remote and not in app code.
+
+**How to apply:** Request a strong secret of at least 16 characters for these
+accounts. If validation still fails, inspect sanitized provider error messages
+instead of repeatedly guessing or bypassing the password checks.
