@@ -15,6 +15,53 @@ tags:
   - name: audio
     description: Authenticated room-scoped WebRTC signaling; media travels peer-to-peer
 paths:
+  /account/chat/bots/settings:
+    get:
+      operationId: getModeratorBotSettings
+      responses:
+        "200":
+          description: Moderator-only filter and rotation settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModeratorBotSettings" }
+    put:
+      operationId: saveModeratorBotSettings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ModeratorBotSettings" }
+      responses:
+        "200":
+          description: Saved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModeratorBotSettings" }
+  /account/chat/bots/flags:
+    get:
+      operationId: getModeratorBotFlags
+      responses:
+        "200":
+          description: Moderator-only hidden public messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ModeratorBotFlag" }
+  /account/chat/bots/flags/{flagId}/review:
+    post:
+      operationId: acknowledgeModeratorBotFlag
+      parameters:
+        - in: path
+          name: flagId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Reviewed; message stays hidden
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModeratorBotFlag" }
   /social/favorites/gallery:
     get:
       operationId: getFavoritesGallery
@@ -855,6 +902,7 @@ components:
       type: object
       required: [participantId, username, displayName, photoUrl, photoStatus, self, moderator, ignored]
       properties:
+        botId: { type: [string, "null"], enum: [ghost, vampire, wolf, zombie, null] }
         participantId: { type: string }
         username: { type: string }
         displayName: { type: string }
@@ -974,6 +1022,7 @@ components:
     ChatMessage:
       type: object
       properties:
+        botId: { type: [string, "null"], enum: [ghost, vampire, wolf, zombie, null] }
         id: { type: string, format: uuid }
         roomId: { type: string }
         authorId: { type: string, format: uuid }
@@ -990,6 +1039,29 @@ components:
         message: { $ref: "#/components/schemas/ChatMessage" }
         profile: { $ref: "#/components/schemas/AccountProfile" }
       required: [message, profile]
+    ModeratorBotSettings:
+      type: object
+      required: [bannedWords, breakSeconds]
+      properties:
+        bannedWords:
+          type: array
+          maxItems: 200
+          items: { type: string, minLength: 2, maxLength: 80 }
+        breakSeconds: { type: integer, minimum: 15, maximum: 600 }
+    ModeratorBotFlag:
+      type: object
+      required: [id, messageId, roomId, roomLabel, username, displayName, text, reason, createdAt, reviewedAt]
+      properties:
+        id: { type: string, format: uuid }
+        messageId: { type: string, format: uuid }
+        roomId: { type: string }
+        roomLabel: { type: string }
+        username: { type: string }
+        displayName: { type: string }
+        text: { type: string }
+        reason: { type: string }
+        createdAt: { type: string, format: date-time }
+        reviewedAt: { type: [string, "null"], format: date-time }
     EmojiIdentity:
       type: object
       properties:

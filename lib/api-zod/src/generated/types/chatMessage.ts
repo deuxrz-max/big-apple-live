@@ -5,10 +5,13 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ChatMessageBotId } from './chatMessageBotId';
 import type { ChatMessageKind } from './chatMessageKind';
 import type { EmojiIdentity } from './emojiIdentity';
 
 export interface ChatMessage {
+  /** @nullable */
+  botId?: ChatMessageBotId;
   id: string;
   roomId: string;
   authorId: string;

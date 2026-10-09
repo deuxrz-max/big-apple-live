@@ -9,6 +9,8 @@ export const roomMessages = pgTable("room_messages", {
   historyId: uuid("history_id"),
   authorId: uuid("author_id").notNull(),
   authorAccountId: text("author_account_id"),
+  // Only the server can author system messages; never derived from a user's name.
+  botId: text("bot_id"),
   hidden: text("hidden").notNull().default("false"),
   username: text("username").notNull(),
   identity: jsonb("identity").$type<{

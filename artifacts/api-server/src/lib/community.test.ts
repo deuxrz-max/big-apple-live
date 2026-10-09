@@ -49,14 +49,17 @@ test("real PostgreSQL university persistence, isolation, emojis leave photos unc
   for (let i = 0; i < 2; i++) await acceptMessage(codes[0]!, a.participantSessionId, ids[0]!, { text: `rate test ${i}`, kind: "text" }, store);
   await assert.rejects(acceptMessage(codes[0]!, a.participantSessionId, ids[0]!, { text: "too fast", kind: "text" }, store), /Slow down/);
   await db.insert(socialRelations).values({ ownerId: ids[1]!, targetId: ids[0]!, kind: "block" });
-  assert.equal((await getMessages(codes[0]!, store, ids[1]!)).length, 0);
-  assert.equal((await getMessages(codes[0]!, store, ids[2]!)).length, 5);
+  const blockedView = await getMessages(codes[0]!, store, ids[1]!);
+  assert.equal(blockedView.filter(m => !m.botId).length, 0);
+  assert.equal(blockedView.filter(m => m.botId).length, 1, "Block cannot suppress the new flooding warning");
+  assert.equal((await getMessages(codes[0]!, store, ids[2]!)).filter(m => !m.botId).length, 5);
   await db.update(chatMemberships).set({ muted: true }).where(eq(chatMemberships.accountId, ids[2]!));
   await assert.rejects(acceptMessage(codes[0]!, sessions[2]!.participantSessionId, ids[2]!, { text: "muted", kind: "text" }, store), /cannot send/);
   const fresh = new RoomStore();
   savedRooms.forEach(row => fresh.registerCommunity(row));
   assert.equal(fresh.getHistoryId(codes[0]!), histories[0]);
-  assert.equal((await getMessages(codes[0]!, fresh)).length, 5);
+  assert.equal((await getMessages(codes[0]!, fresh)).filter(m => !m.botId).length, 5);
+  assert.equal((await getMessages(codes[0]!, fresh)).filter(m => m.botId).length, 1);
   assert.notEqual(fresh.getHistoryId(codes[0]!), fresh.getHistoryId(codes[1]!));
   // Insert test-owned history with old timestamps, not fictitious production chat.
   await db.insert(roomMessages).values(Array.from({ length: 65 }, (_, i) => ({
@@ -67,8 +70,9 @@ test("real PostgreSQL university persistence, isolation, emojis leave photos unc
   const latest = await getMessages(codes[0]!, fresh);
   assert.equal(latest.length, 60);
   const older = await getMessages(codes[0]!, fresh, undefined, latest[0]!.id);
-  assert.equal(older.length, 10);
-  assert.equal(new Set([...latest, ...older].map(m => m.id)).size, 70);
+  assert.equal(older.length, 11, "pagination includes the committed bot warning, never the hidden flood");
+  assert.equal(new Set([...latest, ...older].map(m => m.id)).size, 71);
+  assert.equal([...latest, ...older].filter(m => !m.botId).length, 70);
   await assert.rejects(getMessages(codes[1]!, fresh, undefined, latest[0]!.id), /not found in this university/);
   // Text presence has no inherited 12-seat ceiling.
   for (let i = 0; i < 20; i++) fresh.join(codes[1]!, `Synthetic${i}`, { accountId: `capacity-fixture-${i}`, identity: profiles[0]!.identity });

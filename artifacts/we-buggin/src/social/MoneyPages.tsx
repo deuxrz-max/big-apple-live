@@ -80,7 +80,7 @@ export function ThreadPage({ username }: { username: string }) {
   );
 }
 
-export function RewardsPage() {
+export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
   const qc = useQueryClient();
   const me = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), refetchInterval: 10000 } });
   const ledger = useGetSocialLedger({ query: { queryKey: ['/api/social/wallet/transactions'], refetchInterval: 10000 } });
@@ -99,7 +99,7 @@ export function RewardsPage() {
     onError: (e) => setMsg({ ok: false, t: errMsg(e) }) }); };
   return (
     <section>
-      <h1 className="bm-h1 sc-h1">Rewards</h1>
+      {embedded ? <h2 className="bm-h1 sc-h1">Rewards</h2> : <h1 className="bm-h1 sc-h1">Rewards</h1>}
       <p className="bm-lede">Credits are earned, never bought, and have no cash value.</p>
       <div className="sc-wallet">
         <div className="sc-balance"><Coins size={28} /><b data-testid="text-balance">{w.balance}</b><span>credits</span></div>

@@ -148,7 +148,22 @@ export interface UniversityWhisperInput {
   idempotencyKey: string;
 }
 
+/**
+ * @nullable
+ */
+export type UniversityPersonBotId = typeof UniversityPersonBotId[keyof typeof UniversityPersonBotId] | null;
+
+
+export const UniversityPersonBotId = {
+  ghost: 'ghost',
+  vampire: 'vampire',
+  wolf: 'wolf',
+  zombie: 'zombie',
+} as const;
+
 export interface UniversityPerson {
+  /** @nullable */
+  botId?: UniversityPersonBotId;
   participantId: string;
   username: string;
   displayName: string;
@@ -341,6 +356,19 @@ export interface ChatInput {
   kind: ChatInputKind;
 }
 
+/**
+ * @nullable
+ */
+export type ChatMessageBotId = typeof ChatMessageBotId[keyof typeof ChatMessageBotId] | null;
+
+
+export const ChatMessageBotId = {
+  ghost: 'ghost',
+  vampire: 'vampire',
+  wolf: 'wolf',
+  zombie: 'zombie',
+} as const;
+
 export type ChatMessageKind = typeof ChatMessageKind[keyof typeof ChatMessageKind];
 
 
@@ -405,6 +433,8 @@ export interface EmojiIdentity {
 }
 
 export interface ChatMessage {
+  /** @nullable */
+  botId?: ChatMessageBotId;
   id: string;
   roomId: string;
   authorId: string;
@@ -433,6 +463,34 @@ export interface AccountProfile {
 export interface ChatAccepted {
   message: ChatMessage;
   profile: AccountProfile;
+}
+
+export interface ModeratorBotSettings {
+  /**
+     * @maxItems 200
+     * @items.minLength 2
+     * @items.maxLength 80
+     */
+  bannedWords: string[];
+  /**
+     * @minimum 15
+     * @maximum 600
+     */
+  breakSeconds: number;
+}
+
+export interface ModeratorBotFlag {
+  id: string;
+  messageId: string;
+  roomId: string;
+  roomLabel: string;
+  username: string;
+  displayName: string;
+  text: string;
+  reason: string;
+  createdAt: string;
+  /** @nullable */
+  reviewedAt: string | null;
 }
 
 export interface EmojiOption {
@@ -581,7 +639,22 @@ export interface UniversityWhisperInput4b96100 {
   idempotencyKey: string;
 }
 
+/**
+ * @nullable
+ */
+export type UniversityPerson4b96100BotId = typeof UniversityPerson4b96100BotId[keyof typeof UniversityPerson4b96100BotId] | null;
+
+
+export const UniversityPerson4b96100BotId = {
+  ghost: 'ghost',
+  vampire: 'vampire',
+  wolf: 'wolf',
+  zombie: 'zombie',
+} as const;
+
 export interface UniversityPerson4b96100 {
+  /** @nullable */
+  botId?: UniversityPerson4b96100BotId;
   participantId: string;
   username: string;
   displayName: string;
@@ -759,6 +832,19 @@ export interface ChatInput4b96100 {
   kind: ChatInput4b96100Kind;
 }
 
+/**
+ * @nullable
+ */
+export type ChatMessage4b96100BotId = typeof ChatMessage4b96100BotId[keyof typeof ChatMessage4b96100BotId] | null;
+
+
+export const ChatMessage4b96100BotId = {
+  ghost: 'ghost',
+  vampire: 'vampire',
+  wolf: 'wolf',
+  zombie: 'zombie',
+} as const;
+
 export type ChatMessage4b96100Kind = typeof ChatMessage4b96100Kind[keyof typeof ChatMessage4b96100Kind];
 
 
@@ -768,6 +854,8 @@ export const ChatMessage4b96100Kind = {
 } as const;
 
 export interface ChatMessage4b96100 {
+  /** @nullable */
+  botId?: ChatMessage4b96100BotId;
   id: string;
   roomId: string;
   authorId: string;
@@ -796,6 +884,34 @@ export interface AccountProfile4b96100 {
 export interface ChatAccepted4b96100 {
   message: ChatMessage4b96100;
   profile: AccountProfile4b96100;
+}
+
+export interface ModeratorBotSettings4b96100 {
+  /**
+     * @maxItems 200
+     * @items.minLength 2
+     * @items.maxLength 80
+     */
+  bannedWords: string[];
+  /**
+     * @minimum 15
+     * @maximum 600
+     */
+  breakSeconds: number;
+}
+
+export interface ModeratorBotFlag4b96100 {
+  id: string;
+  messageId: string;
+  roomId: string;
+  roomLabel: string;
+  username: string;
+  displayName: string;
+  text: string;
+  reason: string;
+  createdAt: string;
+  /** @nullable */
+  reviewedAt: string | null;
 }
 
 export interface EmojiOption4b96100 {

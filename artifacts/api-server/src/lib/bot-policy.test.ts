@@ -1,0 +1,69 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
+import { BOT_ACCOUNTS, BOT_VISIT_MS, BotRotation, publicViolation } from "./bot-policy";
+import { RoomStore } from "./room-store";
+import { UNIVERSITY_MEMBER_CAP } from "./university-config";
+
+test("four distinct system identities; one minute visits, 45-second breaks and no simultaneous visits", () => {
+  assert.equal(new Set(BOT_ACCOUNTS.map(b => b.id)).size, 4);
+  const rotation = new BotRotation(0, () => 0);
+  const first = rotation.tick(["LIVEME", "BIGOLV", "BIGOLV2", "TIKTOK", "SUPRLV"], 0);
+  assert.equal(first[0]!.type, "join");
+  assert.equal(first[0]!.roomId, "LIVEME");
+  rotation.tick(["LIVEME", "BIGOLV", "BIGOLV2", "TIKTOK", "SUPRLV"], 15_000);
+  rotation.tick(["LIVEME", "BIGOLV", "BIGOLV2", "TIKTOK", "SUPRLV"], 30_000);
+  rotation.tick(["LIVEME", "BIGOLV", "BIGOLV2", "TIKTOK", "SUPRLV"], 45_000);
+  const leave = rotation.tick(["LIVEME", "BIGOLV", "BIGOLV2", "TIKTOK", "SUPRLV"], BOT_VISIT_MS);
+  assert.ok(leave.some(e => e.type === "leave" && e.bot.id === "ghost"));
+  assert.equal(rotation.people("LIVEME").length, 0);
+  assert.equal(rotation.tick(["LIVEME", "BIGOLV", "BIGOLV2", "TIKTOK", "SUPRLV"], 104_999)
+    .some(e => e.bot.id === "ghost"), false);
+  const returned = rotation.tick(["LIVEME", "BIGOLV", "BIGOLV2", "TIKTOK", "SUPRLV"], 105_000)
+    .find(e => e.bot.id === "ghost" && e.type === "join");
+  assert.ok(returned);
+  assert.notEqual(returned.roomId, "LIVEME");
+  for (let now = 106_000; now < 600_000; now += 1000) {
+    rotation.tick(["LIVEME", "BIGOLV", "BIGOLV2", "TIKTOK", "SUPRLV"], now);
+    for (const room of ["LIVEME", "BIGOLV", "BIGOLV2", "TIKTOK", "SUPRLV"])
+      assert.ok(rotation.people(room).length <= 1);
+  }
+});
+test("no empty-room visits; numbered overflow rooms are eligible; random selection is used", () => {
+  const rotation = new BotRotation(0, () => .99);
+  assert.deepEqual(rotation.tick([], 0), []);
+  const joined = rotation.tick(["LIVEME", "BIGOLV2"], 5000);
+  assert.equal(joined[0]!.roomId, "BIGOLV2");
+});
+test("a bot never consumes a seat or creates overflow even with 24 real participants", () => {
+  const store = new RoomStore(() => 0);
+  store.registerCommunity({ roomId: "FULL", historyId: randomUUID(), label: "Bigo Live 2", createdAt: new Date() });
+  const identity = { emojiId: "neutral", gender: "Male" as const, color: "#000000", hairColor: "#000000" };
+  for (let n = 0; n < UNIVERSITY_MEMBER_CAP; n++)
+    store.join("FULL", `Member ${n}`, { accountId: `member-${n}`, identity });
+  const rotation = new BotRotation(0, () => 0);
+  rotation.tick(store.occupiedUniversities(), 0);
+  assert.equal(rotation.people("FULL").length, 1);
+  assert.equal(store.get("FULL").participants.length, UNIVERSITY_MEMBER_CAP);
+  assert.equal(store.hasUniversitySeat("FULL", "member-25"), false);
+  assert.equal(store.hasUniversitySeat("FULL", "member-0"), true);
+  assert.throws(() => store.join("FULL", "Extra", { accountId: "member-25", identity }));
+  assert.equal(store.latestUniversityForAccount("ghost"), null);
+});
+test("editable words/phrases use normalized word boundaries, not innocent substrings", () => {
+  const words = ["ass", "kill yourself", "badword"];
+  assert.equal(publicViolation("a classic class assignment", words, [], 0), null);
+  assert.equal(publicViolation("KILL...YOURSELF", words, [], 0), "Banned word or phrase");
+  assert.equal(publicViolation("ＢＡＤＷＯＲＤ", words, [], 0), "Banned word or phrase");
+  assert.equal(publicViolation("bad\u200Bword", words, [], 0), "Banned word or phrase");
+  assert.equal(publicViolation("friendly chat", words, [], 0), null);
+  assert.equal(publicViolation("badword", [], [], 0), null);
+});
+test("obvious link repetition and flooding are filtered; old messages expire", () => {
+  const now = 100_000;
+  assert.equal(publicViolation("https://x.test https://x.test https://x.test", [], [], now), "Repeated links");
+  const recent = Array.from({ length: 2 }, () => ({ text: "https://x.test", createdAt: new Date(now - 1000) }));
+  assert.equal(publicViolation("https://x.test", [], recent, now), "Repeated links");
+  assert.equal(publicViolation("hello", [], Array.from({ length: 5 }, () => ({ text: "hi", createdAt: new Date(now - 1000) })), now), "Flooding");
+  assert.equal(publicViolation("hello", [], Array.from({ length: 5 }, () => ({ text: "hi", createdAt: new Date(now - 40_000) })), now), null);
+});

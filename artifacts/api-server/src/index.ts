@@ -4,6 +4,7 @@ import { roomStore } from "./lib/room-store";
 import { createServer } from "node:http";
 import { initializeCommunities } from "./lib/community";
 import { startPhotoRetentionScheduler } from "./lib/profile-photo-retention";
+import { initializeModeratorBots, startModeratorBotRotation } from "./lib/moderator-bots";
 
 const rawPort = process.env["PORT"];
 
@@ -24,6 +25,8 @@ presenceSweep.unref();
 
 const server = createServer(app);
 await initializeCommunities();
+await initializeModeratorBots();
+startModeratorBotRotation((err, context) => logger.error({ err, ...context }, "Bot rotation failed"));
 startPhotoRetentionScheduler();
 server.listen(port, () => {
   logger.info({ port }, "Server listening");

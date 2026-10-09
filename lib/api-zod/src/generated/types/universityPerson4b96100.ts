@@ -5,8 +5,11 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { UniversityPerson4b96100BotId } from './universityPerson4b96100BotId';
 
 export interface UniversityPerson4b96100 {
+  /** @nullable */
+  botId?: UniversityPerson4b96100BotId;
   participantId: string;
   username: string;
   displayName: string;

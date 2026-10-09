@@ -1,5 +1,6 @@
 import chatRouter from "./chat";
 import universityChatRouter from "./university-chat";
+import moderatorBotRouter from "./moderator-bots";
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import roomsRouter from "./rooms";
@@ -16,6 +17,7 @@ const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(communityRouter);
+router.use(moderatorBotRouter);
 router.use(profilePhotosRouter);
 router.use(photoReviewRouter);
 router.use(["/account/rooms", "/social"], async (req, _res, next) => {

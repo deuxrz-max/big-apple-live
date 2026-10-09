@@ -1,4 +1,5 @@
 export * from "./room-messages";
+export * from "./moderator-bots";
 export * from "./chat-community";
 // Export your models here. Add one export per file
 // export * from "./posts";

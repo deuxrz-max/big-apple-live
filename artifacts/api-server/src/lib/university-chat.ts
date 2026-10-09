@@ -4,6 +4,8 @@ import { RoomError, roomStore } from "./room-store";
 import { targetAccount, pairBlocked } from "./social/core";
 import { sendMessage } from "./social/messages";
 import { visibleProfilePhotos } from "./photo-visibility";
+import { botRotation } from "./moderator-bots";
+import type { UniversityPerson } from "@workspace/api-zod";
 
 export const UNIVERSITY_TOPICS: Record<string, string> = {
   LIVEME: "Beam tips, camera presence and keeping viewers",
@@ -64,7 +66,7 @@ export async function universitySession(id: string, roomId: string, sessionId: s
   const snapshot = roomStore.get(roomId);
   const ignored = await ignoredAccounts(id);
   const moderators = new Set((await db.select().from(chatModerators)).map(r => r.accountId));
-  const people = [];
+  const people: UniversityPerson[] = [];
   const seen = new Set<string>();
   for (const participant of snapshot.participants) {
     const ownerId = roomStore.sessionAccountId(roomId, participant.participantId);
@@ -77,8 +79,12 @@ export async function universitySession(id: string, roomId: string, sessionId: s
     people.push({ participantId: participant.participantId, username: profile.username,
       displayName: profile.displayName ?? profile.username, photoUrl: photos.photoUrl,
       photoStatus: photos.photoReviews?.find(r => r.photoUrl === photos.photoUrl)?.status ?? null,
-      self: ownerId === id, moderator: moderators.has(ownerId), ignored: ignored.includes(ownerId) });
+      self: ownerId === id, moderator: moderators.has(ownerId), ignored: ignored.includes(ownerId), botId: null });
   }
+  for (const bot of botRotation.people(roomId.toUpperCase())) people.push({
+    participantId: bot.participantId, username: bot.name, displayName: bot.name, photoUrl: bot.avatarUrl,
+    photoStatus: "approved", self: false, moderator: true, ignored: false, botId: bot.id,
+  });
   const [prefs] = await db.select().from(universityPreferences).where(eq(universityPreferences.accountId, id));
   const ignoredNames = ignored.length
     ? (await db.select({ username: accountProfiles.username }).from(accountProfiles).where(inArray(accountProfiles.accountId, ignored))).map(r => r.username) : [];

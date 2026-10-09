@@ -1,3 +1,6 @@
+import '@/beam/beam.css';
+import '@/social/social.css';
+import { RewardsPage } from '@/social/MoneyPages';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useClerk } from '@clerk/react';
@@ -11,6 +14,7 @@ import { UserPhoto } from '@/components/user-photo';
 import { AppLogo } from '@/components/brand';
 import { errMessage } from '@/lib/errors';
 import { PhotoReviewQueue } from './PhotoReviewQueue';
+import { BotModerationPanel } from './BotModerationPanel';
 import './chat.css';
 
 const DISCLAIMER = 'Streamtalk is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
@@ -281,7 +285,7 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
       <p className="ch-note">{DISCLAIMER}</p>
     </>
   );
-  return <Shell>{body}</Shell>;
+  return <Shell>{body}{profile && !setup && <div className="sc sc-embedded-rewards"><RewardsPage embedded /></div>}</Shell>;
 }
 
 export { TextChatRoom } from './UniversityRoom';
@@ -297,6 +301,7 @@ export function ModerationQueue() {
     <section className="ch">
       <h1 className="bm-h1 sc-h1">Moderation</h1>
       <PhotoReviewQueue />
+      <BotModerationPanel />
       {q.isLoading && <p role="status">Loading reports...</p>}
       {q.isError && <div className="ch-err" role="alert">Could not load. <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button></div>}
       {review.isError && <div className="ch-err" role="alert">{errMessage(review.error)}</div>}

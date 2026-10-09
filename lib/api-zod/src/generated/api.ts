@@ -8,6 +8,86 @@
 import * as zod from 'zod';
 
 
+export const getModeratorBotSettingsResponseBannedWordsItemMin = 2;
+export const getModeratorBotSettingsResponseBannedWordsItemMax = 80;
+
+export const getModeratorBotSettingsResponseBannedWordsMax = 200;
+
+export const getModeratorBotSettingsResponseBreakSecondsMin = 15;
+export const getModeratorBotSettingsResponseBreakSecondsMax = 600;
+
+
+
+export const GetModeratorBotSettingsResponse = zod.object({
+  "bannedWords": zod.array(zod.string().min(getModeratorBotSettingsResponseBannedWordsItemMin).max(getModeratorBotSettingsResponseBannedWordsItemMax)).max(getModeratorBotSettingsResponseBannedWordsMax),
+  "breakSeconds": zod.number().int().min(getModeratorBotSettingsResponseBreakSecondsMin).max(getModeratorBotSettingsResponseBreakSecondsMax)
+})
+
+
+export const saveModeratorBotSettingsBodyBannedWordsItemMin = 2;
+export const saveModeratorBotSettingsBodyBannedWordsItemMax = 80;
+
+export const saveModeratorBotSettingsBodyBannedWordsMax = 200;
+
+export const saveModeratorBotSettingsBodyBreakSecondsMin = 15;
+export const saveModeratorBotSettingsBodyBreakSecondsMax = 600;
+
+
+
+export const SaveModeratorBotSettingsBody = zod.object({
+  "bannedWords": zod.array(zod.string().min(saveModeratorBotSettingsBodyBannedWordsItemMin).max(saveModeratorBotSettingsBodyBannedWordsItemMax)).max(saveModeratorBotSettingsBodyBannedWordsMax),
+  "breakSeconds": zod.number().int().min(saveModeratorBotSettingsBodyBreakSecondsMin).max(saveModeratorBotSettingsBodyBreakSecondsMax)
+})
+
+export const saveModeratorBotSettingsResponseBannedWordsItemMin = 2;
+export const saveModeratorBotSettingsResponseBannedWordsItemMax = 80;
+
+export const saveModeratorBotSettingsResponseBannedWordsMax = 200;
+
+export const saveModeratorBotSettingsResponseBreakSecondsMin = 15;
+export const saveModeratorBotSettingsResponseBreakSecondsMax = 600;
+
+
+
+export const SaveModeratorBotSettingsResponse = zod.object({
+  "bannedWords": zod.array(zod.string().min(saveModeratorBotSettingsResponseBannedWordsItemMin).max(saveModeratorBotSettingsResponseBannedWordsItemMax)).max(saveModeratorBotSettingsResponseBannedWordsMax),
+  "breakSeconds": zod.number().int().min(saveModeratorBotSettingsResponseBreakSecondsMin).max(saveModeratorBotSettingsResponseBreakSecondsMax)
+})
+
+
+export const GetModeratorBotFlagsResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "messageId": zod.string().uuid(),
+  "roomId": zod.string(),
+  "roomLabel": zod.string(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "text": zod.string(),
+  "reason": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "reviewedAt": zod.coerce.date().nullable()
+})
+export const GetModeratorBotFlagsResponse = zod.array(GetModeratorBotFlagsResponseItem)
+
+
+export const AcknowledgeModeratorBotFlagParams = zod.object({
+  "flagId": zod.coerce.string().uuid()
+})
+
+export const AcknowledgeModeratorBotFlagResponse = zod.object({
+  "id": zod.string().uuid(),
+  "messageId": zod.string().uuid(),
+  "roomId": zod.string(),
+  "roomLabel": zod.string(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "text": zod.string(),
+  "reason": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "reviewedAt": zod.coerce.date().nullable()
+})
+
+
 export const getFavoritesGalleryResponsePersonExternalHandleMax = 64;
 
 export const getFavoritesGalleryResponsePersonPhotoUrlsMax = 4;
@@ -73,6 +153,7 @@ export const GetUniversitySessionParams = zod.object({
 
 export const GetUniversitySessionResponse = zod.object({
   "people": zod.array(zod.object({
+  "botId": zod.union([zod.literal('ghost'),zod.literal('vampire'),zod.literal('wolf'),zod.literal('zombie'),zod.literal(null)]).nullish(),
   "participantId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
@@ -188,6 +269,7 @@ export const getOlderRoomMessagesResponseIdentityHairColorRegExp = new RegExp('^
 
 
 export const GetOlderRoomMessagesResponseItem = zod.object({
+  "botId": zod.union([zod.literal('ghost'),zod.literal('vampire'),zod.literal('wolf'),zod.literal('zombie'),zod.literal(null)]).nullish(),
   "id": zod.string().uuid(),
   "roomId": zod.string(),
   "authorId": zod.string().uuid(),
@@ -1017,6 +1099,7 @@ export const getRoomMessagesResponseIdentityHairColorRegExp = new RegExp('^#[0-9
 
 
 export const GetRoomMessagesResponseItem = zod.object({
+  "botId": zod.union([zod.literal('ghost'),zod.literal('vampire'),zod.literal('wolf'),zod.literal('zombie'),zod.literal(null)]).nullish(),
   "id": zod.string().uuid(),
   "roomId": zod.string(),
   "authorId": zod.string().uuid(),
@@ -1071,6 +1154,7 @@ export const sendRoomMessageResponseProfileIdentityHairColorRegExp = new RegExp(
 
 export const SendRoomMessageResponse = zod.object({
   "message": zod.object({
+  "botId": zod.union([zod.literal('ghost'),zod.literal('vampire'),zod.literal('wolf'),zod.literal('zombie'),zod.literal(null)]).nullish(),
   "id": zod.string().uuid(),
   "roomId": zod.string(),
   "authorId": zod.string().uuid(),

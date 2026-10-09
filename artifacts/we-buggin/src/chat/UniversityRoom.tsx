@@ -10,10 +10,12 @@ import { UserPhoto } from '@/components/user-photo';
 import { errMessage, errStatus } from '@/lib/errors';
 import { useTextRoom } from './useTextRoom';
 import { PromoBackground } from './PromoBackground';
+import { BotShield } from './BotShield';
 import './university-room.css';
+import './bot-moderation.css';
 
 const FACES = ['\u{1F600}', '\u{1F602}', '\u{1F60D}', '\u{1F62D}', '\u{1F914}', '\u{1F609}', '\u{1F610}', '\u{1F620}'];
-const RULES = "Stick to the room's topic. Be kind — no harassment or hate. Nothing sexual or explicit, in chat, names or photos. Don't share real names, phone numbers, addresses or other contact details. Don't hog the screen, no ALL CAPS, no ads or spam. Use Ignore on anyone bothering you, or Block and Report for anything serious.";
+const RULES = "Stick to the room's topic. Be kind — no harassment or hate. Nothing sexual or explicit, in chat, names or photos. Don't share real names, phone numbers, addresses or other contact details. Don't hog the screen, no ALL CAPS, no ads or spam. Use Ignore on anyone bothering you, or Block and Report for anything serious. Public university chat is moderated by Streamtalk bots. Whispers and direct messages are private and are not scanned by these bots.";
 
 type Target = { username: string; displayName: string };
 type Item = { kind: 'room'; at: number; id: string; m: ChatMessage } | { kind: 'whisper'; at: number; id: string; w: { id: string; username: string; displayName: string; outgoing: boolean; body: string } };
@@ -118,7 +120,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const nameOf = (username: string, fallback?: string) => people.find((p) => p.username === username)?.displayName ?? fallback ?? username;
 
   const items = useMemo<Item[]>(() => {
-    const a: Item[] = r.messages.filter((m) => !ignored.has(m.username)).map((m) => ({ kind: 'room' as const, at: new Date(m.createdAt).getTime(), id: m.id, m }));
+    const a: Item[] = r.messages.filter((m) => m.botId || !ignored.has(m.username)).map((m) => ({ kind: 'room' as const, at: new Date(m.createdAt).getTime(), id: m.id, m }));
     const b: Item[] = (session?.whispers ?? []).filter((w) => !ignored.has(w.username)).map((w) => ({ kind: 'whisper' as const, at: new Date(w.createdAt).getTime(), id: `w-${w.id}`, w }));
     return [...a, ...b].sort((x, y) => x.at - y.at || x.id.localeCompare(y.id));
   }, [r.messages, session?.whispers, ignored]);
@@ -183,6 +185,12 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
       {session && people.length === 0 && <p className="ch-note">Nobody else is here yet.</p>}
       <ul className="ur-people">
         {people.map((p) => {
+          if (p.botId) return (
+            <li key={p.participantId}><div className="ur-prow" data-testid={`row-bot-${p.botId}`}>
+              <UserPhoto username={p.username} displayName={p.displayName} photoUrl={p.photoUrl} size={36} />
+              <span className="ur-pname ur-bot-name"><span>{p.displayName}</span><BotShield botId={p.botId} /></span>
+            </div></li>
+          );
           const ign = ignored.has(p.username);
           const inner = (
             <>
@@ -255,7 +263,16 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                     </div>
                   );
                 }
-                const m = it.m; const nm = nameOf(m.username);
+                const m = it.m; const nm = m.botId ? m.username : nameOf(m.username);
+                if (m.botId) {
+                  let body = m.text.trim();
+                  for (const n of [nm, m.username]) if (n && body.toLowerCase().startsWith(n.toLowerCase())) { body = body.slice(n.length).replace(/^[\s:,\-–—]+/, ''); break; }
+                  return (
+                    <div className="ch-msg" key={m.id} data-testid={`bot-message-${m.id}`}>
+                      <div><span className="ch-sender">{nm}<BotShield botId={m.botId} /></span><p>{body}</p></div>
+                    </div>
+                  );
+                }
                 const self = isSelf(m.username, m.authorId);
                 return (
                   <div className="ch-msg" key={m.id}>

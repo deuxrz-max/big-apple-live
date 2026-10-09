@@ -39,6 +39,7 @@ router.post("/account/chat/reports", async (req, res) => {
   const [message] = await db.select().from(roomMessages)
     .where(and(eq(roomMessages.id, input.data.messageId), eq(roomMessages.historyId, historyId)));
   if (!message) throw new RoomError(404, "Message not found in this university");
+  if (message.botId) throw new RoomError(400, "Streamtalk bot notices cannot be reported");
   const [duplicate] = await db.select().from(chatReports).where(and(
     eq(chatReports.messageId, message.id), eq(chatReports.reporterId, id), eq(chatReports.status, "pending")));
   if (duplicate) { res.status(201).json({ id: duplicate.id, status: duplicate.status }); return; }

@@ -5,7 +5,7 @@
 .sc-nav-item:hover { color: var(--bm-ink); }
 .sc-nav-item.is-on { color: var(--bm-ink); border-color: var(--bm-acc); background: #0d0d0d; }
 .sc-main { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
-.sc-main section { display: flex; flex-direction: column; gap: 14px; align-items: stretch; }
+.sc-main section, .sc-embedded-rewards > section { display: flex; flex-direction: column; gap: 14px; align-items: stretch; }
 .sc-h1 { font-size: clamp(44px, 8vw, 72px); display: flex; align-items: center; gap: 12px; }
 .sc-h2 { font-size: 28px; margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--bm-line); }
 .sc-sub, .sc-count { font-size: 13px; color: var(--bm-mute); }

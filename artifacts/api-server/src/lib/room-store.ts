@@ -54,6 +54,16 @@ export class RoomStore {
       sessions: new Map(), listeners: new Set(), emptySince: null, community: true });
   }
   isCommunity(roomId: string) { return !!this.rooms.get(roomId.toUpperCase())?.community; }
+  /** Bots use this read-only list, never a participant session or a real seat. */
+  occupiedUniversities() {
+    const now = this.now();
+    return [...this.rooms.values()].filter(room => room.community
+      && [...room.sessions.values()].some(s => now - s.lastSeenAt < SESSION_TIMEOUT_MS)).map(room => room.roomId);
+  }
+  refreshRoomChat(roomId: string) {
+    const room = this.rooms.get(roomId);
+    if (room) this.emit(room, { type: "chat.refresh", data: { roomId } });
+  }
   /** Read-only presence view: never renew a lease or disclose it without caller authorization. */
   latestUniversityForAccount(accountId: string): { roomId: string; label: string } | null {
     let latest: { roomId: string; label: string; at: number } | null = null;

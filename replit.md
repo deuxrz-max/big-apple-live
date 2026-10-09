@@ -30,6 +30,35 @@ Adults-only social chat universities with existing named accounts, users' upload
 profile photos, persisted messages, live presence and an ordered promo-video background.
 
 ## Approved Phase 3 university interactions
+### Approved Streamtalk moderator bots (development preview)
+Ghost Bot, Vampire Bot, Wolf Bot and Zombie Bot are separate system bot accounts,
+not Clerk users, real/test profiles or members of `chat_moderators`. Only their
+server-issued bot identity earns the official Streamtalk shield. They have no
+social, messaging, gifting, reporting or account-login surface.
+
+They visit random occupied universities (including overflow) for 60 seconds,
+with a default 45-second break and staggered arrivals; never two visitors in the
+same university. Their presence is separate from real heartbeat sessions, so
+they never consume the 24 real-member seats, change Directory headcounts, create
+overflow or appear in Messages/Following. Join/leave lines and warnings cannot
+be hidden by Ignore/Block.
+
+Every public university message is checked server-side before publication,
+even without a visiting bot. Editable literal words/phrases plus repeated-link
+and flooding checks hide violations atomically, preserve their originals in a
+moderator-only flagged queue and emit a bot warning addressed to the sender.
+Warnings are deduplicated per sender/university for 15 seconds to avoid bot spam.
+The existing moderation page has the banned-list, bot-break settings and flags;
+marking a flag reviewed never restores its text, mutes or bans its author.
+There is no paid AI, semantic classifier or external content transfer. Literal
+rules can flag quotations and miss disguised abuse; human moderation remains
+necessary. Whispers/direct messages are never passed through this filter.
+
+Schema additions only: nullable `room_messages.bot_id`, `moderator_bot_accounts`,
+`moderator_bot_settings` and `moderator_bot_flags`. Existing user records,
+messages, financial data and media are not rewritten or deleted. These changes
+are approved for development preview only, not published/production databases.
+
 
 Universities now have a desktop People column and a mobile People drawer, with
 approved photos (initials for unapproved photos), display names and badges only
@@ -40,13 +69,18 @@ Ignore/Unignore. Whispers reuse private messages and their existing contact,
 block, length and rate rules; inline whispers are never room broadcasts.
 Ignore is account-wide and server-persisted, hides university messages/whispers
 only for that viewer, and does not affect the normal Messages page or replace Block.
-Favorites now uses a Directory-themed photo-only gallery. Only unblocked saved
+Following uses a Directory-themed photo-only gallery. Only unblocked saved
 favorites expose live university names; choose the account's most recent unexpired
 heartbeat if multiple universities are open. Refresh every 15 seconds and on
 visibility/focus. Recheck location on tap; do not redirect to a changed or empty
 location. Enter through the existing university route, access gates and cap/overflow
-checks. Offline favorites still link to their profiles. No presence leases are renewed
+checks. Only favorites currently in a university appear. No presence leases are renewed
 by gallery reads, and pending/rejected photos continue to show neutral initials.
+Following matches the clean Messages header, title spacing and single-column
+layout, with no Community navigation slider. Private rewards, wallet, badge store,
+inventory and ledger now also appear below the saved profile on Me, never on
+someone else's public profile. Reuse the existing rewards logic; keep the old
+private Rewards route working for existing links.
 Keep the compact university name, parent-inherited topic and Rules button.
 House rules are acknowledged once per account on the server and can be reopened.
 The migration is additive and development-only; existing messages/accounts/photos
@@ -77,7 +111,7 @@ Moderator access remains operator-managed through `chat_moderators`; never grant
 it automatically. See `artifacts/api-server/SAFETY-PHASE-1.md` for instructions.
 Each profile may keep up to four saved photos and select one main photo. The
 “+ Click to add” control uploads photos; all saved photos appear on the profile.
-Every app screen has fixed bottom navigation: Home, Follow, Message and Me,
+Every app screen has fixed bottom navigation: Home, Following, Message and Me,
 without a video button. Use existing Directory, favorites, inbox and Edit Profile
 routes; signed-out visitors can sign in to use the protected destinations.
 The cap applies to selected profile photos, not lifetime uploads. Preserve all

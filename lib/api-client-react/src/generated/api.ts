@@ -44,6 +44,8 @@ import type {
   HealthStatus,
   InvalidInputResponse,
   MicrophoneAction,
+  ModeratorBotFlag,
+  ModeratorBotSettings,
   Participant,
   PhotoReviewEntry,
   ProfileEnvelope,
@@ -102,6 +104,298 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetModeratorBotSettingsUrl = () => {
+
+
+
+
+  return `/api/account/chat/bots/settings`
+}
+
+export const getModeratorBotSettings = async ( options?: Parameters<typeof customFetch>[1]): Promise<ModeratorBotSettings> => {
+
+  return customFetch<ModeratorBotSettings>(getGetModeratorBotSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetModeratorBotSettingsQueryKey = () => {
+    return [
+    `/api/account/chat/bots/settings`
+    ] as const;
+    }
+
+
+export const getGetModeratorBotSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getModeratorBotSettings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetModeratorBotSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getModeratorBotSettings>>> = ({ signal }) => getModeratorBotSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotSettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetModeratorBotSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getModeratorBotSettings>>>
+export type GetModeratorBotSettingsQueryError = ErrorType<unknown>
+
+
+
+export function useGetModeratorBotSettings<TData = Awaited<ReturnType<typeof getModeratorBotSettings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetModeratorBotSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSaveModeratorBotSettingsUrl = () => {
+
+
+
+
+  return `/api/account/chat/bots/settings`
+}
+
+export const saveModeratorBotSettings = async (moderatorBotSettings: ModeratorBotSettings, options?: Parameters<typeof customFetch>[1]): Promise<ModeratorBotSettings> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ModeratorBotSettings>(getSaveModeratorBotSettingsUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(moderatorBotSettings)
+  }
+);}
+
+
+
+
+
+export const getSaveModeratorBotSettingsMutationKey = () => ['saveModeratorBotSettings'] as const;
+
+export const getSaveModeratorBotSettingsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveModeratorBotSettings>>, TError,SaveModeratorBotSettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveModeratorBotSettings>>, TError,SaveModeratorBotSettingsMutationVariables, TContext> => {
+
+const mutationKey = getSaveModeratorBotSettingsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveModeratorBotSettings>>, SaveModeratorBotSettingsMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  saveModeratorBotSettings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveModeratorBotSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof saveModeratorBotSettings>>>
+    export type SaveModeratorBotSettingsMutationBody = BodyType<ModeratorBotSettings>
+    export type SaveModeratorBotSettingsMutationError = ErrorType<unknown>
+    export type SaveModeratorBotSettingsMutationVariables = {data: BodyType<ModeratorBotSettings>}
+
+    export const useSaveModeratorBotSettings = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveModeratorBotSettings>>, TError,SaveModeratorBotSettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveModeratorBotSettings>>,
+        TError,
+        SaveModeratorBotSettingsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSaveModeratorBotSettingsMutationOptions(options));
+    }
+
+export const getGetModeratorBotFlagsUrl = () => {
+
+
+
+
+  return `/api/account/chat/bots/flags`
+}
+
+export const getModeratorBotFlags = async ( options?: Parameters<typeof customFetch>[1]): Promise<ModeratorBotFlag[]> => {
+
+  return customFetch<ModeratorBotFlag[]>(getGetModeratorBotFlagsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetModeratorBotFlagsQueryKey = () => {
+    return [
+    `/api/account/chat/bots/flags`
+    ] as const;
+    }
+
+
+export const getGetModeratorBotFlagsQueryOptions = <TData = Awaited<ReturnType<typeof getModeratorBotFlags>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotFlags>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetModeratorBotFlagsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getModeratorBotFlags>>> = ({ signal }) => getModeratorBotFlags({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotFlags>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetModeratorBotFlagsQueryResult = NonNullable<Awaited<ReturnType<typeof getModeratorBotFlags>>>
+export type GetModeratorBotFlagsQueryError = ErrorType<unknown>
+
+
+
+export function useGetModeratorBotFlags<TData = Awaited<ReturnType<typeof getModeratorBotFlags>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotFlags>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetModeratorBotFlagsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getAcknowledgeModeratorBotFlagUrl = (flagId: string,) => {
+
+
+
+
+  return `/api/account/chat/bots/flags/${flagId}/review`
+}
+
+export const acknowledgeModeratorBotFlag = async (flagId: string, options?: Parameters<typeof customFetch>[1]): Promise<ModeratorBotFlag> => {
+
+  return customFetch<ModeratorBotFlag>(getAcknowledgeModeratorBotFlagUrl(flagId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getAcknowledgeModeratorBotFlagMutationKey = () => ['acknowledgeModeratorBotFlag'] as const;
+
+export const getAcknowledgeModeratorBotFlagMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acknowledgeModeratorBotFlag>>, TError,AcknowledgeModeratorBotFlagMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof acknowledgeModeratorBotFlag>>, TError,AcknowledgeModeratorBotFlagMutationVariables, TContext> => {
+
+const mutationKey = getAcknowledgeModeratorBotFlagMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof acknowledgeModeratorBotFlag>>, AcknowledgeModeratorBotFlagMutationVariables> = (props) => {
+          const {flagId} = props ?? {};
+
+          return  acknowledgeModeratorBotFlag(flagId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AcknowledgeModeratorBotFlagMutationResult = NonNullable<Awaited<ReturnType<typeof acknowledgeModeratorBotFlag>>>
+
+    export type AcknowledgeModeratorBotFlagMutationError = ErrorType<unknown>
+    export type AcknowledgeModeratorBotFlagMutationVariables = {flagId: string}
+
+    export const useAcknowledgeModeratorBotFlag = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acknowledgeModeratorBotFlag>>, TError,AcknowledgeModeratorBotFlagMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof acknowledgeModeratorBotFlag>>,
+        TError,
+        AcknowledgeModeratorBotFlagMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAcknowledgeModeratorBotFlagMutationOptions(options));
+    }
 
 export const getGetFavoritesGalleryUrl = () => {
 

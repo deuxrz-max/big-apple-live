@@ -40,8 +40,8 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
         <Link href="/home" className="bm-logo"><AppLogo size={32} /> STREAMTALK</Link>
         <Link href="/home" className="bm-tag"><House size={12} /> Home</Link>
       </nav>
-      <div className={`sc-shell${path === '/community/messages' ? ' is-inbox' : ''}`}>
-        {path !== '/community/messages' && <nav className="sc-nav" aria-label="Community">
+      <div className={`sc-shell${path === '/community/messages' || path === '/community/favorites' ? ' is-inbox' : ''}`}>
+        {path !== '/community/messages' && path !== '/community/favorites' && <nav className="sc-nav" aria-label="Community">
           {NAV.map(({ to, label, icon: I, exact }) => {
             const on = exact ? path === to : path === to || path.startsWith(to + '/');
             return <Link key={to} href={to} className={`sc-nav-item${on ? ' is-on' : ''}`} aria-current={on ? 'page' : undefined} data-testid={`nav-${label.toLowerCase().replace(/\s/g, '-')}`}><I size={18} /><span>{label}</span></Link>;
@@ -61,7 +61,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
               <Route path="/community/messages" component={InboxPage} />
               <Route path="/community/messages/:username" component={ThreadRoute} />
               <Route path="/community/moderation" component={ModerationQueue} />
-              <Route path="/community/rewards" component={RewardsPage} />
+              <Route path="/community/rewards"><RewardsPage /></Route>
               <Route path="/community/leaderboard" component={LeaderboardPage} />
               <Route><div className="sc-empty"><h2>Not found</h2><Link href="/community" className="bm-btn">People</Link></div></Route>
             </Switch>

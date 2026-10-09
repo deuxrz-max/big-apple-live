@@ -3,6 +3,16 @@ name: Browser runner limits
 description: Managed browser snapshots, media codecs, clipboard resets, and Clerk auth-fixture limits.
 ---
 
+Protected-handler tests need Clerk's complete session-token auth shape, not just
+a user ID, as well as the trusted middleware brand.
+
+**Why:** The SDK's accepted-token check treated a user-ID/session-ID-only fixture
+as signed out, producing false 401 failures even with correct database roles.
+
+**How to apply:** Reuse an existing current auth fixture rather than inventing
+a minimal user-ID mock. Distinguish fixture authentication failures from missing
+moderator permissions; do not grant real roles to work around a broken fixture.
+
 Do not let OS clipboard reads block a critical account or room test. A runner
 reset is not evidence that the app failed, and unexecuted checks are not passes.
 
