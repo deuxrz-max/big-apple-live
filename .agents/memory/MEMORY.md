@@ -1,4 +1,5 @@
 - [Headless WebRTC verification](webrtc-testing.md) — browser capture and shell Chromium support differ; verify real RTP/playback with synthetic input and report runner limits.
+- [Preview fixture boundaries](preview-fixture-boundaries.md) — owner-requested inspection accounts persist; keep regression cleanup separate and never auto-seed production.
 - [Browser runner limits](browser-runner-limits.md) — clipboard and auth-fixture limits; distinguish blocked signup checks from signed-in app verification.
 - [Mood Sync rules](mood-sync-rules.md) — archived branded-avatar rules; active universities use uploaded photos and no profile-image emoji sync.
 - [Portrait cutout checks](portrait-cutouts.md) — inspect detached decorations after background removal; callbacks require workspace-relative image paths.
