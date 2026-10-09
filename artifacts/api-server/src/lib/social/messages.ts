@@ -56,19 +56,25 @@ export async function thread(id: string, username: string, cursor?: string) {
 }
 export async function inbox(id: string) {
   const rows = await db.select().from(socialMessages).where(visible(id)).orderBy(desc(socialMessages.createdAt), desc(socialMessages.id)).limit(5000);
-  const grouped = new Map<string, { message: typeof rows[number]; unread: number }>();
+  const grouped = new Map<string, { message: typeof rows[number]; unread: number; lastUnreadAt: Date | null }>();
   for (const row of rows) {
     const other = row.senderId === id ? row.recipientId : row.senderId;
     const entry = grouped.get(other);
-    if (!entry) grouped.set(other, { message: row, unread: row.recipientId === id && !row.readAt ? 1 : 0 });
-    else if (row.recipientId === id && !row.readAt) entry.unread++;
+    const unread = row.recipientId === id && !row.readAt;
+    if (!entry) grouped.set(other, { message: row, unread: unread ? 1 : 0, lastUnreadAt: unread ? row.createdAt : null });
+    else if (unread) {
+      entry.unread++;
+      entry.lastUnreadAt ??= row.createdAt;
+    }
   }
   const conversations = [];
   for (const [other, entry] of [...grouped].slice(0, 100)) {
     const [profile] = await db.select().from(accountProfiles).where(eq(accountProfiles.accountId, other));
     if (!profile) continue;
     const p = await person(id, profile);
-    conversations.push({ username: p.username, identity: p.identity, lastMessage: entry.message.body,
+    conversations.push({ username: p.username, displayName: p.displayName, photoUrl: p.photoUrl,
+      lastMessageFromMe: entry.message.senderId === id, lastUnreadAt: entry.lastUnreadAt,
+      identity: p.identity, lastMessage: entry.message.body,
       updatedAt: entry.message.createdAt, unreadCount: entry.unread, blocked: p.blocked });
   }
   return { conversations };

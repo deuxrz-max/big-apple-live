@@ -1057,6 +1057,12 @@ export interface SocialConversation {
 
 export type SocialInboxConversationsItem = {
   username: string;
+  displayName: string;
+  /** @nullable */
+  photoUrl: string | null;
+  lastMessageFromMe: boolean;
+  /** @nullable */
+  lastUnreadAt: string | null;
   identity: EmojiIdentity4b96100;
   lastMessage: string;
   updatedAt: string;

@@ -3,33 +3,11 @@ import { Link, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { Coins, Send, RefreshCw, Trash2, Trophy } from 'lucide-react';
 import {
-  useGetSocialMe, useGetSocialInbox, useGetSocialConversation, useSendSocialMessage, useDeleteSocialConversation,
+  useGetSocialMe, useGetSocialConversation, useSendSocialMessage, useDeleteSocialConversation,
   useClaimSocialDailyReward, usePurchaseSocialProduct, useGetSocialLedger, useGetSocialLeaderboard,
-  getGetSocialMeQueryKey, getGetSocialInboxQueryKey, getGetSocialConversationQueryKey,
+  getGetSocialMeQueryKey, getGetSocialConversationQueryKey,
 } from '@workspace/api-client-react';
 import { BadgeMark, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, fmt, iconFor, refreshSocial, useIdemKey } from './common';
-
-export function InboxPage() {
-  const q = useGetSocialInbox({ query: { queryKey: getGetSocialInboxQueryKey(), refetchInterval: 4000 } });
-  return (
-    <section>
-      <h1 className="bm-h1 sc-h1">Messages</h1>
-      <p className="bm-lede">Private, one to one. Text only.</p>
-      {q.isLoading && <Loading />}
-      {q.isError && <ErrorBox error={q.error} retry={() => q.refetch()} />}
-      {q.data && (q.data.conversations.length === 0
-        ? <Empty title="No conversations"><p>Open someone's profile to say hello.</p><Link href="/community" className="bm-btn">Find people</Link></Empty>
-        : <ul className="sc-list">{q.data.conversations.map((c) => (
-          <li key={c.username}>
-            <Link href={`/community/messages/${c.username}`} className="sc-row" data-testid={`row-conversation-${c.username}`}>
-              <span className="sc-card-text"><span className="sc-name">{c.username}{c.blocked && <em className="sc-chip">Blocked</em>}</span>
-                <span className="sc-bio">{c.lastMessage}</span></span>
-              <span className="sc-meta">{fmt(c.updatedAt)}{c.unreadCount > 0 && <b className="sc-unread">{c.unreadCount}</b>}</span>
-            </Link>
-          </li>))}</ul>)}
-    </section>
-  );
-}
 
 export function ThreadPage({ username }: { username: string }) {
   const qc = useQueryClient();

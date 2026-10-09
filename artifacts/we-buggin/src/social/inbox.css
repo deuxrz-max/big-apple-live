@@ -1,0 +1,26 @@
+.sc-shell.is-inbox { grid-template-columns: minmax(0, 1fr); max-width: 760px; }
+.sc-inbox-screen { background: #151518; }
+.sc-inbox-screen > .bm-bg { display: none; }
+.ib { --ib-pink: #FF268F; font-family: 'Montserrat', system-ui, sans-serif; background: #151518; color: #fff; gap: 14px; padding: 4px 0; }
+.ib-title { font-family: 'Montserrat', system-ui, sans-serif; font-weight: 800; font-size: clamp(30px, 6vw, 40px); text-transform: none; letter-spacing: -.01em; color: #fff; margin: 0; text-align: left; }
+.ib-live { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 16px 14px; }
+.ib-live-item { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 76px; color: #fff; }
+.ib-ph { position: relative; display: block; width: 64px; height: 64px; }
+.ib-ph img, .ib-ph > :first-child { border-radius: 50%; }
+.ib-dot { position: absolute; right: 2px; bottom: 2px; width: 13px; height: 13px; border-radius: 50%; background: var(--ib-pink); border: 2px solid #151518; }
+.ib-live-name { max-width: 100%; font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ib-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--ib-pink); color: #fff; font-size: 11px; font-weight: 700; }
+.ib-ph .ib-count { position: absolute; top: -4px; right: -4px; border: 2px solid #151518; box-sizing: content-box; }
+.ib-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ib-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: #1D1D23; border-radius: 14px; color: #fff; min-width: 0; }
+.ib-row:hover, .ib-row:focus-visible { background: #25252d; }
+.ib-row > :first-child { flex: none; border-radius: 50%; }
+.ib-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ib-name { font-weight: 700; font-size: 16px; color: #e6e6ea; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.ib-prev { font-size: 14px; color: #8d8d96; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.is-unread .ib-name { color: #fff; }
+.is-unread .ib-prev { color: #c4c4cc; }
+.ib-blocked { margin-left: 8px; font-style: normal; font-size: 11px; font-weight: 600; color: #8d8d96; }
+.ib-side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 44px; }
+.ib-time { font-size: 12px; color: #8d8d96; white-space: nowrap; }
+.ib-count-row { height: 22px; min-width: 22px; }

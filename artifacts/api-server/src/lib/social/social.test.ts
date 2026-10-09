@@ -1,18 +1,19 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { randomUUID } from "node:crypto";
-import { db, accountProfiles, socialWallets, socialLedger } from "@workspace/db";
+import { db, accountProfiles, socialWallets, socialLedger, profilePhotos } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
 import { getMe, getPerson, listPeople, relationship, saveSocialProfile, blocks } from "./people";
 import { claimDaily, gift, purchase, ledger } from "./rewards";
 import { sendMessage, thread, inbox, clearThread } from "./messages";
-import { GetSocialMeResponse, GetSocialPeopleResponse, GetSocialConversationResponse } from "@workspace/api-zod";
+import { GetSocialMeResponse, GetSocialPeopleResponse, GetSocialConversationResponse, GetSocialInboxResponse } from "@workspace/api-zod";
 
 test("persistent social privacy, messages, credits and atomic rewards", async t => {
   const token = randomUUID().replaceAll("-", "").slice(0, 8);
   const ids = ["a", "b", "c"].map(s => `social-fixture-${token}-${s}`);
   const names = ["a", "b", "c"].map(s => `Social_${token}_${s}`);
   t.after(async () => {
+    await db.delete(profilePhotos).where(inArray(profilePhotos.accountId, ids));
     await db.delete(accountProfiles).where(inArray(accountProfiles.accountId, ids));
     await db.$client.end();
   });
@@ -48,11 +49,28 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     await sendMessage(a, names[1]!, "Hello privately", key);
     await sendMessage(a, names[1]!, "Hello privately", key);
     await assert.rejects(sendMessage(a, names[1]!, "different message", key), /retry key/);
-    assert.equal((await inbox(b)).conversations[0]!.unreadCount, 1);
+    const pendingPhoto = randomUUID();
+    const displayName = "ᥬ😱᭄ Fixture Q̶";
+    await db.insert(profilePhotos).values({ id: pendingPhoto, accountId: a, objectKey: `${pendingPhoto}.webp`, size: 100, status: "pending" });
+    await db.update(accountProfiles).set({ displayName, photoUrl: `/api/photos/${pendingPhoto}`, photoUrls: [`/api/photos/${pendingPhoto}`] }).where(eq(accountProfiles.accountId, a));
+    const incoming = GetSocialInboxResponse.parse(await inbox(b)).conversations[0]!;
+    assert.equal(incoming.unreadCount, 1);
+    assert.equal(incoming.displayName, displayName);
+    assert.equal(incoming.photoUrl, null, "Pending photos are not disclosed in the inbox");
+    assert.equal(incoming.lastMessageFromMe, false);
+    assert.ok(incoming.lastUnreadAt);
+    await db.update(profilePhotos).set({ status: "approved" }).where(eq(profilePhotos.id, pendingPhoto));
+    assert.equal((await inbox(b)).conversations[0]!.photoUrl, `/api/photos/${pendingPhoto}`);
+    await db.update(profilePhotos).set({ status: "rejected" }).where(eq(profilePhotos.id, pendingPhoto));
+    assert.equal((await inbox(b)).conversations[0]!.photoUrl, null);
+    const outgoing = (await inbox(a)).conversations[0]!;
+    assert.equal(outgoing.lastMessageFromMe, true);
+    assert.equal(outgoing.lastUnreadAt, null);
     const received = GetSocialConversationResponse.parse(await thread(b, names[0]!));
     assert.equal(received.messages.length, 1);
     assert.equal(received.messages[0]!.body, "Hello privately");
     assert.equal((await inbox(b)).conversations[0]!.unreadCount, 0);
+    assert.equal((await inbox(b)).conversations[0]!.lastUnreadAt, null);
     assert.equal((await thread(c, names[1]!)).messages.length, 0);
     await clearThread(a, names[1]!);
     assert.equal((await thread(a, names[1]!)).messages.length, 0);

@@ -16,4 +16,5 @@
 - [Text-chat follow-ons](text-chat-pivot.md) — optional ownership checks require a unique bio code and reviewer, never an official platform verification claim.
 - [Artifact command environment](artifact-command-environment.md) — one-off shell checks do not necessarily inherit managed service routing variables.
 - [Photo retention approval](profile-photo-retention.md) — user approved 30 days unused; protect current images and saves, and never expand to other data.
+- [Photo visibility cache precedence](photo-visibility-cache-precedence.md) — never replace a fresh hidden-photo response with an older cached image.
 - [Sesame MCP handoff](sesame-mcp-handoff.md) — use official Replit MCP for Agent recommendations; do not publish Streamtalk to enable access.

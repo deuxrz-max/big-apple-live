@@ -672,6 +672,10 @@ export const getSocialInboxResponseConversationsItemIdentityHairColorRegExp = ne
 export const GetSocialInboxResponse = zod.object({
   "conversations": zod.array(zod.object({
   "username": zod.string(),
+  "displayName": zod.string(),
+  "photoUrl": zod.string().nullable(),
+  "lastMessageFromMe": zod.boolean(),
+  "lastUnreadAt": zod.coerce.date().nullable(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getSocialInboxResponseConversationsItemIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),

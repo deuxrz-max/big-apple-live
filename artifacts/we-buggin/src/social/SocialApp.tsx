@@ -9,7 +9,8 @@ import { ErrorBox, Loading, errStatus, refreshSocial } from './common';
 import { BlocksPage, CommunityPage, FavoritesPage, MyProfilePage, PersonPage } from './PeoplePages';
 import { ModerationQueue } from '@/chat/ChatApp';
 import { AppLogo } from '@/components/brand';
-import { InboxPage, LeaderboardPage, RewardsPage, ThreadPage } from './MoneyPages';
+import { InboxPage } from './InboxPage';
+import { LeaderboardPage, RewardsPage, ThreadPage } from './MoneyPages';
 
 const NAV = [
   { to: '/community', label: 'People', icon: Users, exact: true },
@@ -29,24 +30,24 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
   const qc = useQueryClient();
   const me = useGetSocialMe();
   useEffect(() => { refreshSocial(qc); }, [path, qc]);
-  useEffect(() => { document.title = 'People — Streamtalk'; return () => { document.title = 'Streamtalk'; }; }, []);
+    useEffect(() => { document.title = path === '/community/messages' ? 'Messages — Streamtalk' : 'People — Streamtalk'; return () => { document.title = 'Streamtalk'; }; }, [path]);
   const access = useGetChatAccess();
   const needsIdentity = errStatus(me.error) === 409;
   return (
-    <div className="beam-app sc">
+    <div className={`beam-app sc${path === '/community/messages' ? ' sc-inbox-screen' : ''}`}>
       <div className="bm-bg" aria-hidden="true"><i /><i /><i /></div>
       <nav className="bm-nav">
         <Link href="/home" className="bm-logo"><AppLogo size={32} /> STREAMTALK</Link>
         <Link href="/home" className="bm-tag"><House size={12} /> Home</Link>
       </nav>
-      <div className="sc-shell">
-        <nav className="sc-nav" aria-label="Community">
+      <div className={`sc-shell${path === '/community/messages' ? ' is-inbox' : ''}`}>
+        {path !== '/community/messages' && <nav className="sc-nav" aria-label="Community">
           {NAV.map(({ to, label, icon: I, exact }) => {
             const on = exact ? path === to : path === to || path.startsWith(to + '/');
             return <Link key={to} href={to} className={`sc-nav-item${on ? ' is-on' : ''}`} aria-current={on ? 'page' : undefined} data-testid={`nav-${label.toLowerCase().replace(/\s/g, '-')}`}><I size={18} /><span>{label}</span></Link>;
           })}
           {access.data?.moderator && <Link href="/community/moderation" className={`sc-nav-item${path === '/community/moderation' ? ' is-on' : ''}`} data-testid="nav-moderation"><Ban size={18} /><span>Moderation</span></Link>}
-        </nav>
+        </nav>}
         <main className="sc-main">
           {me.isLoading ? <Loading /> : needsIdentity ? (
             <div className="sc-empty"><h2>Claim your name first</h2><p>Community needs your account identity.</p><Link href="/user-portal" className="bm-btn bm-btn-primary">Set up profile</Link></div>

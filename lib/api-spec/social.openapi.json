@@ -1210,6 +1210,19 @@
                 "username": {
                   "type": "string"
                 },
+                "displayName": {
+                  "type": "string"
+                },
+                "photoUrl": {
+                  "type": ["string", "null"]
+                },
+                "lastMessageFromMe": {
+                  "type": "boolean"
+                },
+                "lastUnreadAt": {
+                  "type": ["string", "null"],
+                  "format": "date-time"
+                },
                 "identity": {
                   "$ref": "./openapi.yaml#/components/schemas/EmojiIdentity"
                 },
@@ -1229,6 +1242,10 @@
               },
               "required": [
                 "username",
+                "displayName",
+                "photoUrl",
+                "lastMessageFromMe",
+                "lastUnreadAt",
                 "identity",
                 "lastMessage",
                 "updatedAt",

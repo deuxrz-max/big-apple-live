@@ -9,6 +9,12 @@ import type { EmojiIdentity4b96100 } from './emojiIdentity4b96100';
 
 export type SocialInboxConversationsItem = {
   username: string;
+  displayName: string;
+  /** @nullable */
+  photoUrl: string | null;
+  lastMessageFromMe: boolean;
+  /** @nullable */
+  lastUnreadAt: Date | null;
   identity: EmojiIdentity4b96100;
   lastMessage: string;
   updatedAt: Date;
