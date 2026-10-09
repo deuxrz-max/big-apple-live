@@ -90,6 +90,12 @@ export const AcknowledgeModeratorBotFlagResponse = zod.object({
 
 export const getFavoritesGalleryResponsePersonExternalHandleMax = 64;
 
+export const getFavoritesGalleryResponsePersonFollowerCountMin = 0;
+
+export const getFavoritesGalleryResponsePersonFollowingCountMin = 0;
+
+export const getFavoritesGalleryResponsePersonSentCreditsMin = 0;
+
 export const getFavoritesGalleryResponsePersonPhotoUrlsMax = 4;
 
 export const getFavoritesGalleryResponsePersonIdentityEmojiIdMax = 100;
@@ -104,6 +110,13 @@ export const GetFavoritesGalleryResponseItem = zod.object({
   "externalHandle": zod.string().max(getFavoritesGalleryResponsePersonExternalHandleMax).nullish(),
   "username": zod.string(),
   "displayName": zod.string().optional(),
+  "followerCount": zod.number().int().min(getFavoritesGalleryResponsePersonFollowerCountMin).optional(),
+  "followingCount": zod.number().int().min(getFavoritesGalleryResponsePersonFollowingCountMin).optional(),
+  "sentCredits": zod.number().int().min(getFavoritesGalleryResponsePersonSentCreditsMin).optional(),
+  "badges": zod.array(zod.object({
+  "id": zod.string(),
+  "earnedAt": zod.coerce.date()
+})).optional(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).max(getFavoritesGalleryResponsePersonPhotoUrlsMax).optional(),
   "photoReviews": zod.array(zod.object({
@@ -368,6 +381,12 @@ export const ReviewChatReportResponse = zod.object({
 
 export const getSocialMeResponseProfileExternalHandleMax = 64;
 
+export const getSocialMeResponseProfileFollowerCountMin = 0;
+
+export const getSocialMeResponseProfileFollowingCountMin = 0;
+
+export const getSocialMeResponseProfileSentCreditsMin = 0;
+
 export const getSocialMeResponseProfilePhotoUrlsMax = 4;
 
 export const getSocialMeResponseProfileIdentityEmojiIdMax = 100;
@@ -382,6 +401,13 @@ export const GetSocialMeResponse = zod.object({
   "externalHandle": zod.string().max(getSocialMeResponseProfileExternalHandleMax).nullish(),
   "username": zod.string(),
   "displayName": zod.string().optional(),
+  "followerCount": zod.number().int().min(getSocialMeResponseProfileFollowerCountMin).optional(),
+  "followingCount": zod.number().int().min(getSocialMeResponseProfileFollowingCountMin).optional(),
+  "sentCredits": zod.number().int().min(getSocialMeResponseProfileSentCreditsMin).optional(),
+  "badges": zod.array(zod.object({
+  "id": zod.string(),
+  "earnedAt": zod.coerce.date()
+})).optional(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).max(getSocialMeResponseProfilePhotoUrlsMax).optional(),
   "photoReviews": zod.array(zod.object({
@@ -455,6 +481,12 @@ export const SaveSocialProfileBody = zod.object({
 
 export const saveSocialProfileResponseExternalHandleMax = 64;
 
+export const saveSocialProfileResponseFollowerCountMin = 0;
+
+export const saveSocialProfileResponseFollowingCountMin = 0;
+
+export const saveSocialProfileResponseSentCreditsMin = 0;
+
 export const saveSocialProfileResponsePhotoUrlsMax = 4;
 
 export const saveSocialProfileResponseIdentityEmojiIdMax = 100;
@@ -468,6 +500,13 @@ export const SaveSocialProfileResponse = zod.object({
   "externalHandle": zod.string().max(saveSocialProfileResponseExternalHandleMax).nullish(),
   "username": zod.string(),
   "displayName": zod.string().optional(),
+  "followerCount": zod.number().int().min(saveSocialProfileResponseFollowerCountMin).optional(),
+  "followingCount": zod.number().int().min(saveSocialProfileResponseFollowingCountMin).optional(),
+  "sentCredits": zod.number().int().min(saveSocialProfileResponseSentCreditsMin).optional(),
+  "badges": zod.array(zod.object({
+  "id": zod.string(),
+  "earnedAt": zod.coerce.date()
+})).optional(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).max(saveSocialProfileResponsePhotoUrlsMax).optional(),
   "photoReviews": zod.array(zod.object({
@@ -507,6 +546,12 @@ export const GetSocialPeopleQueryParams = zod.object({
 
 export const getSocialPeopleResponsePeopleItemExternalHandleMax = 64;
 
+export const getSocialPeopleResponsePeopleItemFollowerCountMin = 0;
+
+export const getSocialPeopleResponsePeopleItemFollowingCountMin = 0;
+
+export const getSocialPeopleResponsePeopleItemSentCreditsMin = 0;
+
 export const getSocialPeopleResponsePeopleItemPhotoUrlsMax = 4;
 
 export const getSocialPeopleResponsePeopleItemIdentityEmojiIdMax = 100;
@@ -521,6 +566,13 @@ export const GetSocialPeopleResponse = zod.object({
   "externalHandle": zod.string().max(getSocialPeopleResponsePeopleItemExternalHandleMax).nullish(),
   "username": zod.string(),
   "displayName": zod.string().optional(),
+  "followerCount": zod.number().int().min(getSocialPeopleResponsePeopleItemFollowerCountMin).optional(),
+  "followingCount": zod.number().int().min(getSocialPeopleResponsePeopleItemFollowingCountMin).optional(),
+  "sentCredits": zod.number().int().min(getSocialPeopleResponsePeopleItemSentCreditsMin).optional(),
+  "badges": zod.array(zod.object({
+  "id": zod.string(),
+  "earnedAt": zod.coerce.date()
+})).optional(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).max(getSocialPeopleResponsePeopleItemPhotoUrlsMax).optional(),
   "photoReviews": zod.array(zod.object({
@@ -554,6 +606,12 @@ export const GetSocialPersonParams = zod.object({
 
 export const getSocialPersonResponseExternalHandleMax = 64;
 
+export const getSocialPersonResponseFollowerCountMin = 0;
+
+export const getSocialPersonResponseFollowingCountMin = 0;
+
+export const getSocialPersonResponseSentCreditsMin = 0;
+
 export const getSocialPersonResponsePhotoUrlsMax = 4;
 
 export const getSocialPersonResponseIdentityEmojiIdMax = 100;
@@ -567,6 +625,13 @@ export const GetSocialPersonResponse = zod.object({
   "externalHandle": zod.string().max(getSocialPersonResponseExternalHandleMax).nullish(),
   "username": zod.string(),
   "displayName": zod.string().optional(),
+  "followerCount": zod.number().int().min(getSocialPersonResponseFollowerCountMin).optional(),
+  "followingCount": zod.number().int().min(getSocialPersonResponseFollowingCountMin).optional(),
+  "sentCredits": zod.number().int().min(getSocialPersonResponseSentCreditsMin).optional(),
+  "badges": zod.array(zod.object({
+  "id": zod.string(),
+  "earnedAt": zod.coerce.date()
+})).optional(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).max(getSocialPersonResponsePhotoUrlsMax).optional(),
   "photoReviews": zod.array(zod.object({
@@ -608,6 +673,12 @@ export const SetSocialRelationshipResponse = zod.object({
 
 export const getSocialBlocksResponsePeopleItemExternalHandleMax = 64;
 
+export const getSocialBlocksResponsePeopleItemFollowerCountMin = 0;
+
+export const getSocialBlocksResponsePeopleItemFollowingCountMin = 0;
+
+export const getSocialBlocksResponsePeopleItemSentCreditsMin = 0;
+
 export const getSocialBlocksResponsePeopleItemPhotoUrlsMax = 4;
 
 export const getSocialBlocksResponsePeopleItemIdentityEmojiIdMax = 100;
@@ -622,6 +693,13 @@ export const GetSocialBlocksResponse = zod.object({
   "externalHandle": zod.string().max(getSocialBlocksResponsePeopleItemExternalHandleMax).nullish(),
   "username": zod.string(),
   "displayName": zod.string().optional(),
+  "followerCount": zod.number().int().min(getSocialBlocksResponsePeopleItemFollowerCountMin).optional(),
+  "followingCount": zod.number().int().min(getSocialBlocksResponsePeopleItemFollowingCountMin).optional(),
+  "sentCredits": zod.number().int().min(getSocialBlocksResponsePeopleItemSentCreditsMin).optional(),
+  "badges": zod.array(zod.object({
+  "id": zod.string(),
+  "earnedAt": zod.coerce.date()
+})).optional(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).max(getSocialBlocksResponsePeopleItemPhotoUrlsMax).optional(),
   "photoReviews": zod.array(zod.object({
@@ -704,6 +782,12 @@ export const GetSocialLedgerResponse = zod.object({
 
 export const getSocialLeaderboardResponsePeopleItemExternalHandleMax = 64;
 
+export const getSocialLeaderboardResponsePeopleItemFollowerCountMin = 0;
+
+export const getSocialLeaderboardResponsePeopleItemFollowingCountMin = 0;
+
+export const getSocialLeaderboardResponsePeopleItemSentCreditsMin = 0;
+
 export const getSocialLeaderboardResponsePeopleItemPhotoUrlsMax = 4;
 
 export const getSocialLeaderboardResponsePeopleItemIdentityEmojiIdMax = 100;
@@ -718,6 +802,13 @@ export const GetSocialLeaderboardResponse = zod.object({
   "externalHandle": zod.string().max(getSocialLeaderboardResponsePeopleItemExternalHandleMax).nullish(),
   "username": zod.string(),
   "displayName": zod.string().optional(),
+  "followerCount": zod.number().int().min(getSocialLeaderboardResponsePeopleItemFollowerCountMin).optional(),
+  "followingCount": zod.number().int().min(getSocialLeaderboardResponsePeopleItemFollowingCountMin).optional(),
+  "sentCredits": zod.number().int().min(getSocialLeaderboardResponsePeopleItemSentCreditsMin).optional(),
+  "badges": zod.array(zod.object({
+  "id": zod.string(),
+  "earnedAt": zod.coerce.date()
+})).optional(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).max(getSocialLeaderboardResponsePeopleItemPhotoUrlsMax).optional(),
   "photoReviews": zod.array(zod.object({
@@ -784,6 +875,12 @@ export const GetSocialConversationQueryParams = zod.object({
 
 export const getSocialConversationResponsePersonExternalHandleMax = 64;
 
+export const getSocialConversationResponsePersonFollowerCountMin = 0;
+
+export const getSocialConversationResponsePersonFollowingCountMin = 0;
+
+export const getSocialConversationResponsePersonSentCreditsMin = 0;
+
 export const getSocialConversationResponsePersonPhotoUrlsMax = 4;
 
 export const getSocialConversationResponsePersonIdentityEmojiIdMax = 100;
@@ -798,6 +895,13 @@ export const GetSocialConversationResponse = zod.object({
   "externalHandle": zod.string().max(getSocialConversationResponsePersonExternalHandleMax).nullish(),
   "username": zod.string(),
   "displayName": zod.string().optional(),
+  "followerCount": zod.number().int().min(getSocialConversationResponsePersonFollowerCountMin).optional(),
+  "followingCount": zod.number().int().min(getSocialConversationResponsePersonFollowingCountMin).optional(),
+  "sentCredits": zod.number().int().min(getSocialConversationResponsePersonSentCreditsMin).optional(),
+  "badges": zod.array(zod.object({
+  "id": zod.string(),
+  "earnedAt": zod.coerce.date()
+})).optional(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).max(getSocialConversationResponsePersonPhotoUrlsMax).optional(),
   "photoReviews": zod.array(zod.object({

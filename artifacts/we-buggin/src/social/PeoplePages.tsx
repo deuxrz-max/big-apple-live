@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
-import { Heart, Ban, Gift, MessageCircle, Search } from 'lucide-react';
+import { Gift, MessageCircle, Search } from 'lucide-react';
 import {
   useGetSocialMe, useGetSocialPeople, useGetSocialPerson, useSetSocialRelationship, useGetSocialBlocks,
   useSaveSocialProfile, SocialProfileInputExternalPlatform, useSendSocialGift, getGetSocialPeopleQueryKey, getGetSocialPersonQueryKey,
@@ -9,7 +9,7 @@ import {
   useGetFavoritesGallery, getGetFavoritesGalleryQueryKey, getFavoriteRoom,
 } from '@workspace/api-client-react';
 import { Avatar, BadgeMark, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, refreshSocial, useIdemKey, iconFor } from './common';
-import { UserPhoto } from '@/components/user-photo';
+import { ProfileView, ProfileMenu } from '@/profile/ProfileView';
 import { FavoritesGallery, type FavoriteEntry } from './FavoritesGallery';
 
 export function CommunityPage() {
@@ -68,14 +68,13 @@ export function PersonPage({ username }: { username: string }) {
   const idem = useIdemKey();
   const [giftId, setGiftId] = useState('');
   const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null);
-  const [confirmBlock, setConfirmBlock] = useState(false);
-  useEffect(() => { setMsg(null); setConfirmBlock(false); }, [username]);
+  useEffect(() => { setMsg(null); }, [username]);
   const p = q.data;
   const own = me.data?.profile.username === username;
   const setRel = (kind: 'favorite' | 'block', active: boolean) => {
     setMsg(null);
     rel.mutate({ username, data: { kind, active } }, {
-      onSuccess: () => { setConfirmBlock(false); setMsg({ ok: true, t: kind === 'block' ? (active ? 'Blocked.' : 'Unblocked.') : (active ? 'Added to favorites.' : 'Removed from favorites.') }); refreshSocial(qc); },
+      onSuccess: () => { setMsg({ ok: true, t: kind === 'block' ? (active ? 'Blocked.' : 'Unblocked.') : (active ? 'Added to favorites.' : 'Removed from favorites.') }); refreshSocial(qc); },
       onError: (e) => setMsg({ ok: false, t: errMsg(e) }),
     });
   };
@@ -90,62 +89,35 @@ export function PersonPage({ username }: { username: string }) {
   };
   if (q.isLoading) return <Loading />;
   if (q.isError || !p) return <ErrorBox error={q.error ?? 'Not found'} retry={() => q.refetch()} />;
-  const badgeName = me.data?.products.find((x) => x.id === p.badgeId)?.name;
+  const countryName = p.country ? (me.data?.countries.find((c) => c.code === p.country)?.name ?? p.country) : undefined;
   return (
-    <section className="sc-profile">
-      <Link href="/community" className="bm-back">Back to people</Link>
-      <div className="sc-hero">
-        <Avatar p={p} size={140} />
-        <div>
-          <h1 className="bm-h1 sc-h1">{p.username}</h1>
-          <p className="sc-sub">@{p.username}{p.country ? ` / ${me.data?.countries.find((c) => c.code === p.country)?.name ?? p.country}` : ''}</p>
-          {p.badgeId && <p className="sc-badge-line"><BadgeMark id={p.badgeId} /> {badgeName ?? 'Badge'} <small>Cosmetic only, not verification</small></p>}
-          <p className="sc-sub" data-testid="text-received">{p.receivedCredits} credits received in gifts</p>
+    <ProfileView person={p} own={own} countryName={countryName} products={me.data?.products} backHref="/community"
+      menu={own ? null : <ProfileMenu name={p.displayName || p.username} blocked={p.blocked} pending={rel.isPending} onBlock={(a) => setRel('block', a)} />}
+      actions={own ? null : (
+        <div className="pf-actions">
+          <button type="button" className="pf-btn pf-btn-fill" aria-pressed={p.favorite} disabled={rel.isPending || p.blocked} onClick={() => setRel('favorite', !p.favorite)} data-testid="button-favorite">{p.favorite ? 'Following' : 'Follow'}</button>
+          {p.blocked
+            ? <Link href={`/community/messages/${p.username}`} className="pf-btn" data-testid="link-history">Read history</Link>
+            : <Link href={`/community/messages/${p.username}`} className="pf-btn" data-testid="link-message"><MessageCircle size={16} aria-hidden /> Message</Link>}
         </div>
-      </div>
-      {!!p.photoUrls?.filter(url => url !== p.photoUrl).length && <div className="sc-photos" aria-label="Additional profile photos" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', margin: '16px 0' }}>
-        {p.photoUrls.filter(url => url !== p.photoUrl).map(url => <UserPhoto key={url} username={p.username} displayName={p.displayName} photoUrl={url} size={96}
-          reviewStatus={p.photoReviews?.find(photo => photo.photoUrl === url)?.status} />)}
-      </div>}
-      {p.externalPlatform && p.externalHandle && <p className="sc-sub">{p.externalPlatform}: {p.externalHandle} <small>Self-listed, not verified</small></p>}
-      {p.bio ? <p className="sc-bio-lg">{p.bio}</p> : <p className="bm-lede">No bio yet.</p>}
-      {p.interests.length > 0 && <p className="sc-tags">{p.interests.map((i) => <i key={i}>{i}</i>)}</p>}
+      )}>
       {msg && <Msg ok={msg.ok}>{msg.t}</Msg>}
-      {own ? <Link href="/community/profile" className="bm-btn">Edit my profile</Link> : (
-        <>
-          <div className="sc-actions">
-            <button type="button" className="bm-btn" aria-pressed={p.favorite} disabled={rel.isPending || p.blocked} onClick={() => setRel('favorite', !p.favorite)} data-testid="button-favorite">
-              <Heart size={16} fill={p.favorite ? 'currentColor' : 'none'} /> {p.favorite ? 'Favorited' : 'Favorite'}</button>
-            {p.blocked && <Link href={`/community/messages/${p.username}`} className="bm-btn" data-testid="link-history"><MessageCircle size={16} /> Read history</Link>}
-            {!p.blocked && <Link href={`/community/messages/${p.username}`} className="bm-btn" data-testid="link-message"><MessageCircle size={16} /> Message</Link>}
-            {p.blocked ? (
-              <button type="button" className="bm-btn" disabled={rel.isPending} onClick={() => setRel('block', false)} data-testid="button-unblock"><Ban size={16} /> Unblock</button>
-            ) : confirmBlock ? (
-              <span className="sc-confirm">Block {p.username}?
-                <button type="button" className="bm-btn bm-btn-sm bm-btn-primary" disabled={rel.isPending} onClick={() => setRel('block', true)} data-testid="button-confirm-block">Yes, block</button>
-                <button type="button" className="bm-btn bm-btn-sm" onClick={() => setConfirmBlock(false)}>Cancel</button></span>
-            ) : (
-              <button type="button" className="bm-btn" onClick={() => setConfirmBlock(true)} data-testid="button-block"><Ban size={16} /> Block</button>
-            )}
+      {!own && (p.blocked ? <p className="sc-sub">Blocked in either direction: no new gifts, messages or follows. Past messages stay readable.</p> : (
+        <div className="sc-panel">
+          <h2>Send a gift</h2>
+          <p className="sc-sub">Credits have no cash value. Balance: {me.data?.wallet.balance ?? '...'}</p>
+          <div className="sc-gifts" role="radiogroup" aria-label="Gift">
+            {me.data?.gifts.map((g) => (
+              <button key={g.id} type="button" role="radio" aria-checked={giftId === g.id} className={`sc-gift${giftId === g.id ? ' is-on' : ''}`}
+                disabled={gift.isPending || (me.data?.wallet.balance ?? 0) < g.cost} onClick={() => setGiftId(g.id)} data-testid={`button-gift-${g.id}`}>
+                <GiftIcon id={g.id} size={26} /><b>{g.name}</b><span>{g.cost} credits</span></button>
+            ))}
           </div>
-          {p.blocked ? <p className="sc-sub">Blocked in either direction: no new gifts, messages or favorites. Past messages stay readable.</p> : (
-            <div className="sc-panel">
-              <h2>Send a gift</h2>
-              <p className="sc-sub">Credits have no cash value. Balance: {me.data?.wallet.balance ?? '...'}</p>
-              <div className="sc-gifts" role="radiogroup" aria-label="Gift">
-                {me.data?.gifts.map((g) => (
-                  <button key={g.id} type="button" role="radio" aria-checked={giftId === g.id} className={`sc-gift${giftId === g.id ? ' is-on' : ''}`}
-                    disabled={gift.isPending || (me.data?.wallet.balance ?? 0) < g.cost} onClick={() => setGiftId(g.id)} data-testid={`button-gift-${g.id}`}>
-                    <GiftIcon id={g.id} size={26} /><b>{g.name}</b><span>{g.cost} credits</span></button>
-                ))}
-              </div>
-              <button type="button" className="bm-btn bm-btn-primary" disabled={!giftId || gift.isPending} onClick={send} data-testid="button-send-gift">
-                <Gift size={16} /> {gift.isPending ? 'Sending...' : 'Send gift'}</button>
-            </div>
-          )}
-        </>
-      )}
-    </section>
+          <button type="button" className="bm-btn bm-btn-primary" disabled={!giftId || gift.isPending} onClick={send} data-testid="button-send-gift">
+            <Gift size={16} /> {gift.isPending ? 'Sending...' : 'Send gift'}</button>
+        </div>
+      ))}
+    </ProfileView>
   );
 }
 
@@ -186,7 +158,7 @@ export function MyProfilePage() {
     <section>
       <h1 className="bm-h1 sc-h1">My profile</h1>
       <div className="sc-hero"><Avatar p={d.profile} size={110} /><div><p className="sc-name">{d.profile.username}<BadgeMark id={badgeId} /></p>
-        <p className="sc-sub">Change your display name, photo and bio in <Link href="/user-portal" className="bm-link">Edit profile</Link>.</p></div></div>
+        <p className="sc-sub">Change your display name, photo and bio in <Link href="/user-portal/edit" className="bm-link">Edit profile</Link>.</p></div></div>
       <form className="sc-form" onSubmit={submit}>
         <label className="sc-field"><span className="bm-label">Bio ({bio.length}/200)</span>
           <textarea className="sc-text" value={bio} maxLength={200} rows={3} onChange={(e) => setBio(e.target.value)} data-testid="input-bio" /></label>

@@ -99,6 +99,11 @@ export interface EmojiIdentity4b96100 {
   currentMood?: EmojiIdentity4b96100CurrentMood;
 }
 
+export type SocialPersonBadgesItem = {
+  id: string;
+  earnedAt: string;
+};
+
 export interface SocialPerson {
   /** @nullable */
   externalPlatform?: SocialPersonExternalPlatform;
@@ -109,6 +114,13 @@ export interface SocialPerson {
   externalHandle?: string | null;
   username: string;
   displayName?: string;
+  /** @minimum 0 */
+  followerCount?: number;
+  /** @minimum 0 */
+  followingCount?: number;
+  /** @minimum 0 */
+  sentCredits?: number;
+  badges?: SocialPersonBadgesItem[];
   /** @nullable */
   photoUrl?: string | null;
   /** @maxItems 4 */

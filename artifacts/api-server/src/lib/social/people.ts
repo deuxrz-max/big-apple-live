@@ -10,7 +10,7 @@ export async function getMe(id: string) {
   const profile = await requireAccount(id);
   await ensureSocial(id);
   const items = await db.select().from(socialInventory).where(eq(socialInventory.accountId, id));
-  return { profile: await person(id, profile), wallet: await wallet(id), inventory: items.map(i => i.itemId),
+  return { profile: await person(id, profile, undefined, true), wallet: await wallet(id), inventory: items.map(i => i.itemId),
     products: PRODUCTS, gifts: GIFTS, countries: COUNTRIES };
 }
 export async function saveSocialProfile(id: string, input: SocialProfileInput) {
@@ -33,7 +33,7 @@ export async function saveSocialProfile(id: string, input: SocialProfileInput) {
 export async function getPerson(id: string, username: string) {
   const target = await targetAccount(username);
   if (target.accountId !== id) await assertContact(db, id, target.accountId);
-  return person(id, target);
+  return person(id, target, undefined, true);
 }
 export type PeopleQuery = { search?: string; gender?: string; country?: string; favorites?: boolean; offset?: number };
 export async function listPeople(id: string, input: PeopleQuery = {}, leaderboard = false) {

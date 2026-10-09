@@ -188,7 +188,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           if (p.botId) return (
             <li key={p.participantId}><div className="ur-prow" data-testid={`row-bot-${p.botId}`}>
               <UserPhoto username={p.username} displayName={p.displayName} photoUrl={p.photoUrl} size={36} />
-              <span className="ur-pname ur-bot-name"><span>{p.displayName}</span><BotShield botId={p.botId} /></span>
+              <Link href={`/community/bots/${p.botId}`} className="ur-pname ur-bot-name" data-testid={`link-bot-${p.botId}`}><span>{p.displayName}</span><BotShield botId={p.botId} /></Link>
             </div></li>
           );
           const ign = ignored.has(p.username);

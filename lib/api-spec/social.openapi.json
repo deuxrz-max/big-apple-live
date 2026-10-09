@@ -731,6 +731,10 @@
             "type": "string"
           },
           "displayName": { "type": "string" },
+          "followerCount": { "type": "integer", "minimum": 0 },
+          "followingCount": { "type": "integer", "minimum": 0 },
+          "sentCredits": { "type": "integer", "minimum": 0 },
+          "badges": { "type": "array", "items": { "type": "object", "required": ["id", "earnedAt"], "properties": { "id": { "type": "string" }, "earnedAt": { "type": "string", "format": "date-time" } } } },
           "photoUrl": { "type": ["string", "null"] },
           "photoUrls": { "type": "array", "maxItems": 4, "items": { "type": "string" } },
           "photoReviews": { "type": "array", "items": { "$ref": "./openapi.yaml#/components/schemas/PhotoReviewStatus" } },

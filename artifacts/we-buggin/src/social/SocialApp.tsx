@@ -9,6 +9,7 @@ import { ErrorBox, Loading, errStatus, refreshSocial } from './common';
 import { BlocksPage, CommunityPage, FavoritesPage, MyProfilePage, PersonPage } from './PeoplePages';
 import { ModerationQueue } from '@/chat/ChatApp';
 import { AppLogo } from '@/components/brand';
+import { BotProfile } from '@/profile/ProfileView';
 import { InboxPage } from './InboxPage';
 import { LeaderboardPage, RewardsPage, ThreadPage } from './MoneyPages';
 
@@ -22,6 +23,7 @@ const NAV = [
   { to: '/community/blocks', label: 'Blocked', icon: Ban },
 ];
 
+function BotRoute() { const { botId = '' } = useParams<{ botId: string }>(); return <BotProfile botId={botId} />; }
 function PersonRoute() { const { username = '' } = useParams<{ username: string }>(); return <PersonPage key={username} username={username} />; }
 function ThreadRoute() { const { username = '' } = useParams<{ username: string }>(); return <ThreadPage key={username} username={username} />; }
 
@@ -32,16 +34,17 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
   useEffect(() => { refreshSocial(qc); }, [path, qc]);
     useEffect(() => { document.title = path === '/community/messages' ? 'Messages — Streamtalk' : path === '/community/favorites' ? 'Following — Streamtalk' : 'People — Streamtalk'; return () => { document.title = 'Streamtalk'; }; }, [path]);
   const access = useGetChatAccess();
+  const bare = path.startsWith('/community/people/') || path.startsWith('/community/bots/');
   const needsIdentity = errStatus(me.error) === 409;
   return (
-    <div className={`beam-app sc${path === '/community/messages' ? ' sc-inbox-screen' : path === '/community/favorites' ? ' sc-following-screen' : ''}`}>
+    <div className={`beam-app sc${bare ? ' sc-profile-screen' : ''}${path === '/community/messages' ? ' sc-inbox-screen' : path === '/community/favorites' ? ' sc-following-screen' : ''}`}>
       <div className="bm-bg" aria-hidden="true"><i /><i /><i /></div>
-      <nav className="bm-nav">
+      {!bare && <nav className="bm-nav">
         <Link href="/home" className="bm-logo"><AppLogo size={32} /> STREAMTALK</Link>
         <Link href="/home" className="bm-tag"><House size={12} /> Home</Link>
-      </nav>
+      </nav>}
       <div className={`sc-shell${path === '/community/messages' || path === '/community/favorites' ? ' is-inbox' : ''}`}>
-        {path !== '/community/messages' && path !== '/community/favorites' && <nav className="sc-nav" aria-label="Community">
+        {!bare && path !== '/community/messages' && path !== '/community/favorites' && <nav className="sc-nav" aria-label="Community">
           {NAV.map(({ to, label, icon: I, exact }) => {
             const on = exact ? path === to : path === to || path.startsWith(to + '/');
             return <Link key={to} href={to} className={`sc-nav-item${on ? ' is-on' : ''}`} aria-current={on ? 'page' : undefined} data-testid={`nav-${label.toLowerCase().replace(/\s/g, '-')}`}><I size={18} /><span>{label}</span></Link>;
@@ -55,6 +58,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
             <Switch>
               <Route path="/community" component={CommunityPage} />
               <Route path="/community/people/:username" component={PersonRoute} />
+              <Route path="/community/bots/:botId" component={BotRoute} />
               <Route path="/community/profile" component={MyProfilePage} />
               <Route path="/community/favorites" component={FavoritesPage} />
               <Route path="/community/blocks" component={BlocksPage} />

@@ -1,6 +1,5 @@
 import '@/beam/beam.css';
 import '@/social/social.css';
-import { RewardsPage } from '@/social/MoneyPages';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useClerk } from '@clerk/react';
@@ -228,7 +227,7 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
   };
   const body = (
     <>
-      {!setup && <div className="ch-top"><Link href="/home" className="bm-btn bm-btn-sm">Directory</Link><Link href="/community/profile" className="bm-btn bm-btn-sm">Platform and bio</Link><Link href="/community" className="bm-btn bm-btn-sm">Community</Link></div>}
+      {!setup && <div className="ch-top"><Link href="/user-portal" className="bm-btn bm-btn-sm">Back to profile</Link><Link href="/home" className="bm-btn bm-btn-sm">Directory</Link><Link href="/community/profile" className="bm-btn bm-btn-sm">Platform and bio</Link><Link href="/community" className="bm-btn bm-btn-sm">Community</Link></div>}
       <h1>{profile ? 'Edit profile' : 'Set up your profile'}</h1>
       {profile && <p className="ch-note">Username @{profile.username} is permanent.</p>}
       {q.isLoading && <p role="status">Loading...</p>}
@@ -285,7 +284,7 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
       <p className="ch-note">{DISCLAIMER}</p>
     </>
   );
-  return <Shell>{body}{profile && !setup && <div className="sc sc-embedded-rewards"><RewardsPage embedded /></div>}</Shell>;
+  return <Shell>{body}</Shell>;
 }
 
 export { TextChatRoom } from './UniversityRoom';

@@ -88,6 +88,8 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     assert.equal(me.wallet.balance, 10);
     assert.deepEqual(me.inventory, ["good-neighbor"]);
     assert.equal(me.profile.badgeId, "good-neighbor");
+    assert.equal(me.profile.badges?.[0]?.id, "good-neighbor");
+    assert.ok(!Number.isNaN(Date.parse(me.profile.badges![0]!.earnedAt)));
     await assert.rejects(purchase(b, "night-owl", randomUUID()), /Not enough/);
     await assert.rejects(purchase(b, "good-neighbor", randomUUID()), /already own/);
     const giftKey = randomUUID();
@@ -99,12 +101,17 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     const [row] = await db.select().from(socialWallets).where(eq(socialWallets.accountId, b));
     assert.equal(row!.received, 25);
     assert.equal(row!.sent, 5);
+    const publicStats = await getPerson(a, names[1]!);
+    assert.equal(publicStats.receivedCredits, 25);
+    assert.equal(publicStats.sentCredits, 5);
     const leader = await listPeople(b, { search: token }, true);
     assert.equal(leader.people[0]!.username, names[1]);
     assert.equal((await ledger(b)).transactions.filter(r => r.kind === "purchase").length, 1);
   });
   await t.test("blocking is bilateral and stops discovery, favorites, gifts and new messages without deleting other history", async () => {
     await relationship(a, names[1]!, "favorite", true);
+    assert.equal((await getMe(a)).profile.followingCount, 1);
+    assert.equal((await getPerson(a, names[1]!)).followerCount, 1);
     assert.equal((await listPeople(a, { search: token, favorites: true })).total, 1);
     await relationship(b, names[0]!, "block", true);
     assert.equal((await blocks(b)).people[0]!.username, names[0]);

@@ -77,10 +77,20 @@ location. Enter through the existing university route, access gates and cap/over
 checks. Only favorites currently in a university appear. No presence leases are renewed
 by gallery reads, and pending/rejected photos continue to show neutral initials.
 Following matches the clean Messages header, title spacing and single-column
-layout, with no Community navigation slider. Private rewards, wallet, badge store,
-inventory and ledger now also appear below the saved profile on Me, never on
-someone else's public profile. Reuse the existing rewards logic; keep the old
-private Rewards route working for existing links.
+layout, with no Community navigation slider. Me opens a profile display, not the
+editor. Own and public profiles share the dark photo-header layout; only approved
+photos appear in that header, with swiping and initials fallback. Pending photos
+remain available to their uploader in the existing edit form. Profile edit and
+its back button return to Me; Community and platform/bio access remain available.
+Private rewards, wallet, badge store, inventory and ledger appear below the stats
+on Me, never on someone else's public profile. Reuse existing rewards logic and
+keep the old private Rewards route working for existing links.
+Profile stats use actual follow relationships and gift-credit totals, not invented
+gift counts. Cosmetic badges are sorted equipped first, then acquisition date;
+rarity and active emoji avatars are not tracked and must not be invented.
+Bot profiles show only their existing name, avatar and official Streamtalk shield.
+The human profile Report menu explains and links the existing public-message
+reporting flow; there is no direct profile-report endpoint.
 Keep the compact university name, parent-inherited topic and Rules button.
 House rules are acknowledged once per account on the server and can be reopened.
 The migration is additive and development-only; existing messages/accounts/photos

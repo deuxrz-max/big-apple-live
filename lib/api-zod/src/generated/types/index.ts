@@ -124,6 +124,7 @@ export * from './socialMessage';
 export * from './socialMessageInput';
 export * from './socialPeople';
 export * from './socialPerson';
+export * from './socialPersonBadgesItem';
 export * from './socialPersonExternalPlatform';
 export * from './socialProduct';
 export * from './socialProfileInput';

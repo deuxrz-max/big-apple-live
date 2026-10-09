@@ -7,6 +7,7 @@
  */
 import type { EmojiIdentity4b96100 } from './emojiIdentity4b96100';
 import type { PhotoReviewStatus4b96100 } from './photoReviewStatus4b96100';
+import type { SocialPersonBadgesItem } from './socialPersonBadgesItem';
 import type { SocialPersonExternalPlatform } from './socialPersonExternalPlatform';
 
 export interface SocialPerson {
@@ -19,6 +20,13 @@ export interface SocialPerson {
   externalHandle?: string | null;
   username: string;
   displayName?: string;
+  /** @minimum 0 */
+  followerCount?: number;
+  /** @minimum 0 */
+  followingCount?: number;
+  /** @minimum 0 */
+  sentCredits?: number;
+  badges?: SocialPersonBadgesItem[];
   /** @nullable */
   photoUrl?: string | null;
   /** @maxItems 4 */

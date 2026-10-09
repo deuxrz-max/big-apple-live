@@ -55,13 +55,23 @@ export async function assertContact(tx: Tx | typeof db, actor: string, target: s
     if (!conversation && !favorite) throw new RoomError(404, "This person is not available in discovery");
   }
 }
-export async function person(viewer: string, profile: ProfileRow, settings?: SettingsRow | null) {
+export async function person(viewer: string, profile: ProfileRow, settings?: SettingsRow | null, includeStats = false) {
   const id = profile.accountId;
   const [prefs] = settings ? [settings] : await db.select().from(socialSettings).where(eq(socialSettings.accountId, id));
   const [wallet] = await db.select().from(socialWallets).where(eq(socialWallets.accountId, id));
   const [favorite] = await db.select().from(socialRelations).where(and(eq(socialRelations.ownerId, viewer), eq(socialRelations.targetId, id), eq(socialRelations.kind, "favorite")));
   const blocked = id !== viewer && await pairBlocked(viewer, id);
   const photos = blocked ? { photoUrl: null, photoUrls: [] } : await visibleProfilePhotos(id, viewer, profile);
+  // Detail pages only: do not add per-person aggregate queries to discovery lists.
+  const [counts] = includeStats ? await db.select({
+    followerCount: sql<number>`count(*) filter (where ${socialRelations.targetId} = ${id})::int`,
+    followingCount: sql<number>`count(*) filter (where ${socialRelations.ownerId} = ${id})::int`,
+  }).from(socialRelations).where(and(eq(socialRelations.kind, "favorite"), or(
+    eq(socialRelations.ownerId, id), eq(socialRelations.targetId, id),
+  ))) : [];
+  const badges = includeStats && !blocked ? await db.select({
+    id: socialInventory.itemId, acquired: socialInventory.purchasedAt,
+  }).from(socialInventory).where(eq(socialInventory.accountId, id)) : [];
   return {
     username: profile.username, displayName: profile.displayName ?? profile.username,
     ...photos, identity: publicProfile(profile).identity,
@@ -70,6 +80,11 @@ export async function person(viewer: string, profile: ProfileRow, settings?: Set
     externalHandle: blocked ? null : prefs?.externalHandle ?? null,
     interests: blocked ? [] : prefs?.interests ?? [], discoverable: prefs?.discoverable ?? false,
     favorite: !!favorite, blocked, receivedCredits: wallet?.received ?? 0, badgeId: prefs?.badgeId ?? null,
+    ...(includeStats ? {
+      followerCount: counts?.followerCount ?? 0, followingCount: counts?.followingCount ?? 0,
+      sentCredits: wallet?.sent ?? 0,
+      badges: badges.map(b => ({ id: b.id, earnedAt: b.acquired.toISOString() })),
+    } : {}),
   };
 }
 export async function wallet(id: string, tx: Tx | typeof db = db) {
