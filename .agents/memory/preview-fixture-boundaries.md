@@ -16,3 +16,16 @@ fixtures, not bulk-delete accounts based on a test-like display name. Confirm th
 provider's private test marker and the profile's explicit test-account bio before
 any later cleanup. Do not sign in as the owner or open the owner's sample
 conversations merely to verify delivery; use read-only counts instead.
+
+For Replit-managed Clerk, existing passwords cannot be read back for comparison.
+For explicitly authorized development test accounts, set the password through
+Clerk's development user-update API rather than trying to inspect it. A correct
+password in a fresh browser may still stop at the new-device email check; that
+is not a completed sign-in. Never bypass or inspect the verification code.
+
+**Why:** The preview's first browser was treated as a new device, and Clerk
+required email verification after the password was accepted.
+
+**How to apply:** Verify account identity from the development profile records,
+update only the requested test users, and treat the email-check screen as
+partially authenticated rather than signed in.
