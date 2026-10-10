@@ -1,6 +1,6 @@
 export const DAILY_REWARD = 25;
 export const PRODUCTS = [
-  { id: "good-neighbor", name: "Good neighbor", description: "A cosmetic badge for your social profile. No verification claims or cash value.", cost: 40 },
+  { id: "good-neighbor", name: "Peak Presenter", description: "A cosmetic badge for your social profile. No verification claims or cash value.", cost: 40 },
   { id: "night-owl", name: "Night owl", description: "A midnight-blue cosmetic profile badge. Yours to keep.", cost: 75 },
   { id: "beam-champion", name: "Beam champion", description: "A gold cosmetic profile badge. Stand out without changing your avatar.", cost: 100 },
 ] as const;

@@ -112,7 +112,9 @@ export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
       <p className="sc-sub">Badges are permanent and cosmetic. They do not verify who you are. Pick one in <Link href="/community/profile" className="bm-link">your profile</Link>.</p>
       <div className="sc-gifts sc-store">{products.map((p) => { const own = inventory.includes(p.id); const I = iconFor(p.id); return (
         <div key={p.id} className="sc-gift sc-product" data-testid={`card-product-${p.id}`}>
-          <I size={30} /><b>{p.name}</b><span>{p.description}</span><span>{p.cost} credits</span>
+          {p.id === 'good-neighbor'
+            ? <span className="sc-badge-art-pending" role="img" aria-label="Peak Presenter artwork pending upload">Artwork pending</span>
+            : <I size={30} />}<b>{p.name}</b><span>{p.description}</span><span>{p.cost} credits</span>
           <button type="button" className="bm-btn bm-btn-sm" disabled={own || buy.isPending || w.balance < p.cost} onClick={() => doBuy(p.id, p.name)} data-testid={`button-buy-${p.id}`}>
             {own ? 'Owned' : w.balance < p.cost ? 'Not enough credits' : buy.isPending ? 'Buying...' : 'Buy'}</button></div>); })}</div>
       <h2 className="sc-h2">Gifts</h2>
