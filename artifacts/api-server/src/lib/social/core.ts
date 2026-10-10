@@ -4,6 +4,7 @@ import { RoomError } from "../room-store";
 import { publicProfile } from "../account-profiles";
 import { DAILY_REWARD } from "./catalog";
 import { visibleProfilePhotos } from "../photo-visibility";
+import { TIMED_BADGES } from './marathon-policy';
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type ProfileRow = typeof accountProfiles.$inferSelect;
@@ -73,7 +74,8 @@ export async function person(viewer: string, profile: ProfileRow, settings?: Set
     id: socialInventory.itemId, acquired: socialInventory.purchasedAt,
   }).from(socialInventory).where(and(eq(socialInventory.accountId, id),
     sql`(${socialInventory.expiresAt} IS NULL OR ${socialInventory.expiresAt} > CURRENT_TIMESTAMP)`)) : [];
-  const [activeSelected] = prefs?.badgeId === 'marathon-master' ? await db.select({ id: socialInventory.itemId })
+  const timedSelected = TIMED_BADGES.some(b => b.id === prefs?.badgeId);
+  const [activeSelected] = timedSelected && prefs?.badgeId ? await db.select({ id: socialInventory.itemId })
     .from(socialInventory).where(and(eq(socialInventory.accountId, id), eq(socialInventory.itemId, prefs.badgeId),
       sql`(${socialInventory.expiresAt} IS NULL OR ${socialInventory.expiresAt} > CURRENT_TIMESTAMP)`)) : [];
   return {
@@ -83,7 +85,7 @@ export async function person(viewer: string, profile: ProfileRow, settings?: Set
     externalPlatform: blocked ? null : prefs?.externalPlatform ?? null,
     externalHandle: blocked ? null : prefs?.externalHandle ?? null,
     interests: blocked ? [] : prefs?.interests ?? [], discoverable: prefs?.discoverable ?? false,
-    favorite: !!favorite, blocked, receivedCredits: wallet?.received ?? 0, badgeId: prefs?.badgeId === 'marathon-master' && !activeSelected ? null : prefs?.badgeId ?? null,
+    favorite: !!favorite, blocked, receivedCredits: wallet?.received ?? 0, badgeId: timedSelected && !activeSelected ? null : prefs?.badgeId ?? null,
     ...(includeStats ? {
       followerCount: counts?.followerCount ?? 0, followingCount: counts?.followingCount ?? 0,
       sentCredits: wallet?.sent ?? 0,

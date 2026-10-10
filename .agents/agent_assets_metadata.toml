@@ -42,3 +42,45 @@ mtime_ms = 1791456175669
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/56c024e5-9816-43cb-975e-71feb7e7a827/367ba6ce-22b5-4f95-8130-f182e2ed7e2d"
 storage_version_token = "1791456435087591"
 content_type = "video/mp4"
+
+[[outputs]]
+id = "oUp_cK0aN2DhHA9wUQHHG"
+uri = "file://artifacts/we-buggin/public/badges/peak-presenter.png"
+type = "image"
+title = "Peak Presenter — transparent artwork"
+description = "512 × 512 transparent PNG from your exact uploaded artwork, with green background, ground shadow and reflection removed."
+logical_id = "74bdf440-b5ef-437f-9e13-8f35fd5c7c16"
+content_hash = "sha256:9495fb9db01e2f78f25301cbf3304b856246d92783728004062ecf39768d2eb6"
+size = 588397
+mtime_ms = 1791600041921
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/74bdf440-b5ef-437f-9e13-8f35fd5c7c16/8a2a42a1-6ff6-4112-95c8-56a34a494718"
+storage_version_token = "1791600258308542"
+content_type = "image/png"
+
+[[outputs]]
+id = "dNx4TgYTTRbBYJNuf_ZaQ"
+uri = "file://artifacts/we-buggin/public/badges/marathon-master.png"
+type = "image"
+title = "Marathon Master — transparent artwork"
+description = "512 × 512 transparent PNG from your exact uploaded artwork, with green background, ground shadow and reflection removed."
+logical_id = "7cfb3257-34ed-4ed8-9b4d-331a20d40d89"
+content_hash = "sha256:f5c0dbebe307b85b34a3222954394787e2cffde45d0cd9a7def6b3132d013ff2"
+size = 585416
+mtime_ms = 1791600042246
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/7cfb3257-34ed-4ed8-9b4d-331a20d40d89/b339fc1b-7480-4a46-a4ef-3293da1815ff"
+storage_version_token = "1791600258966065"
+content_type = "image/png"
+
+[[outputs]]
+id = "BO_WXGMDqdAA1Og7q1E8B"
+uri = "file://artifacts/we-buggin/public/badges/night-owl.png"
+type = "image"
+title = "Night Owl — transparent artwork"
+description = "512 × 512 transparent PNG from your exact uploaded artwork, with green background, ground shadow and reflection removed."
+logical_id = "b833f076-d038-43a6-b223-4a5538fa28de"
+content_hash = "sha256:0372c32f885deffce50adef0b730ad36614c22d05aefaa65c4cc6c38a902a4e8"
+size = 558650
+mtime_ms = 1791600042557
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/b833f076-d038-43a6-b223-4a5538fa28de/58cbab1d-4ac1-4c15-b098-fbad69ec71ac"
+storage_version_token = "1791600259611428"
+content_type = "image/png"

@@ -8,6 +8,7 @@ import {
   getGetSocialMeQueryKey, getGetSocialConversationQueryKey,
 } from '@workspace/api-client-react';
 import { BadgeMark, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, fmt, iconFor, refreshSocial, useIdemKey } from './common';
+import { BadgeArt, BADGE_ART } from './BadgeArt';
 
 export function ThreadPage({ username }: { username: string }) {
   const qc = useQueryClient();
@@ -114,26 +115,30 @@ export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
       </div>
       {msg && <Msg ok={msg.ok}>{msg.t}</Msg>}
       <h2 className="sc-h2">Badge store</h2>
-      <p className="sc-sub">Badges are cosmetic and do not verify who you are. Marathon Master is time-limited; other badges remain permanent. Pick one in <Link href="/community/profile" className="bm-link">your profile</Link>.</p>
+      <p className="sc-sub">Badges are cosmetic and do not verify who you are. New Marathon Master and Night Owl grants are time-limited; previous permanent purchases remain permanent. Pick one in <Link href="/community/profile" className="bm-link">your profile</Link>.</p>
       <div className="sc-gifts sc-store">{products.map((p) => {
         const marathon = p.id === 'marathon-master';
+        const nightOwl = p.id === 'night-owl';
+        const timed = marathon || nightOwl;
         const expiry = me.data.badgeExpirations?.[p.id];
         const remaining = expiry ? Math.max(0, new Date(expiry).getTime() - now) : 0;
         const own = inventory.includes(p.id) && (!expiry || remaining > 0);
+        const permanent = nightOwl && own && !expiry;
         const I = iconFor(p.id);
         return (
         <div key={p.id} className="sc-gift sc-product" data-testid={`card-product-${p.id}`}>
-          {p.id === 'good-neighbor' || marathon
-            ? <span className="sc-badge-art-pending" role="img" aria-label={`${p.name} artwork pending upload`}>Artwork pending</span>
-            : <I size={30} />}<b>{p.name}</b>{marathon && <strong>How to Earn</strong>}<span>{p.description}</span><span>{p.cost} credits</span>
-          {marathon && <>
-            <span data-testid="marathon-streak">{me.data.loginStreak ?? 0} consecutive login days</span>
-            {own && expiry && <span data-testid="marathon-time">Active · {Math.floor(remaining / 86400000)}d {Math.floor(remaining / 3600000) % 24}h {Math.floor(remaining / 60000) % 60}m {Math.floor(remaining / 1000) % 60}s remaining</span>}
-            <span>Each 7-day streak milestone adds 7 days. Buying adds 3 days to any time remaining; expired badges restart from now.</span>
+          {BADGE_ART[p.id]
+            ? <BadgeArt id={p.id} name={p.name} />
+            : <I size={30} />}<b>{p.name}</b>{timed && <strong>How to Earn</strong>}<span>{p.description}</span><span>{p.cost} credits</span>
+          {timed && <>
+            <span data-testid={marathon ? 'marathon-streak' : 'night-owl-streak'}>{me.data.loginStreak ?? 0} consecutive login days</span>
+            {own && expiry && <span data-testid={marathon ? 'marathon-time' : 'night-owl-time'}>Active · {Math.floor(remaining / 86400000)}d {Math.floor(remaining / 3600000) % 24}h {Math.floor(remaining / 60000) % 60}m {Math.floor(remaining / 1000) % 60}s remaining</span>}
+            {permanent ? <span>Owned permanently from an earlier purchase. No renewal needed.</span>
+              : <span>Each {marathon ? '7' : '30'}-day streak milestone adds {marathon ? '7' : '30'} days. Buying adds 3 days to any time remaining; expired badges restart from now.</span>}
           </>}
-          <button type="button" className="bm-btn bm-btn-sm" disabled={(!marathon && own) || buy.isPending || w.balance < p.cost} onClick={() => doBuy(p.id, p.name)} data-testid={`button-buy-${p.id}`}>
-            {buy.isPending ? 'Buying...' : marathon ? w.balance < p.cost ? 'Need more credits' : 'Buy for 200 credits' : own ? 'Owned' : w.balance < p.cost ? 'Not enough credits' : 'Buy'}</button>
-          {marathon && w.balance < p.cost && <Link href="/community/credits" className="bm-link">Buy credits</Link>}
+          <button type="button" className="bm-btn bm-btn-sm" disabled={(!timed && own) || permanent || buy.isPending || w.balance < p.cost} onClick={() => doBuy(p.id, p.name)} data-testid={`button-buy-${p.id}`}>
+            {permanent ? 'Owned permanently' : buy.isPending ? 'Buying...' : timed ? w.balance < p.cost ? 'Need more credits' : `Buy for ${p.cost} credits` : own ? 'Owned' : w.balance < p.cost ? 'Not enough credits' : 'Buy'}</button>
+          {timed && !permanent && w.balance < p.cost && <Link href="/community/credits" className="bm-link">Buy credits</Link>}
           </div>); })}</div>
       <h2 className="sc-h2">Gifts</h2>
       <p className="sc-sub">Send these from anyone's profile.</p>

@@ -43,7 +43,8 @@
 .sc-gifts { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; width: 100%; }
 .sc-gift { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 14px 10px; background: transparent; border: 1.5px solid #444; color: var(--bm-ink); font-size: 13px; }
 .sc-gift b { font-family: var(--bm-display); font-size: 20px; text-transform: uppercase; }
-.sc-store .sc-badge-art-pending { display: flex; align-items: center; justify-content: center; height: 30px; font-size: 11px; color: #fff; }
+.sc-store .sc-badge-art-slot { display: flex; align-items: center; justify-content: center; width: 80px; height: 80px; font-size: 11px; color: #fff; }
+.sc-store .sc-badge-art { display: block; width: 80px; height: 80px; object-fit: contain; }
 .sc-gift:hover:not(:disabled) { border-color: var(--bm-ink); }
 .sc-gift.is-on { border-color: var(--bm-acc); box-shadow: inset 0 0 0 1px var(--bm-acc); color: #8da1ff; }
 .sc-gift:disabled { opacity: .4; cursor: not-allowed; }

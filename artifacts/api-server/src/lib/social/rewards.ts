@@ -3,8 +3,8 @@ import { desc, eq, sql } from "drizzle-orm";
 import { RoomError } from "../room-store";
 import { DAILY_REWARD, GIFTS, PRODUCTS } from "./catalog";
 import { assertContact, lockAccounts, lockPair, replay, requireAccount, targetAccount, wallet } from "./core";
-import { grantMarathon } from './marathon';
-import { MARATHON } from './marathon-policy';
+import { grantTimedBadge } from './marathon';
+import { TIMED_BADGES, NIGHT_OWL } from './marathon-policy';
 
 export async function claimDaily(id: string) {
   await requireAccount(id);
@@ -49,10 +49,14 @@ export async function purchase(id: string, itemId: string, key: string) {
     await lockAccounts(tx, [id]);
     if (await replay(tx, id, key, `purchase:${itemId}`)) return wallet(id, tx);
     const owned = await tx.select().from(socialInventory).where(eq(socialInventory.accountId, id));
-    if (itemId !== MARATHON.id && owned.some(p => p.itemId === itemId)) throw new RoomError(409, "You already own this badge");
+    const timed = TIMED_BADGES.find(p => p.id === itemId);
+    const existing = owned.find(p => p.itemId === itemId);
+    if (itemId === NIGHT_OWL.id && existing && !existing.expiresAt)
+      throw new RoomError(409, "You already own Night Owl permanently. No renewal is needed.");
+    if (!timed && existing) throw new RoomError(409, "You already own this badge");
     if ((await wallet(id, tx)).balance < item.cost) throw new RoomError(409, "Not enough credits to buy this badge");
     await tx.update(socialWallets).set({ balance: sql`${socialWallets.balance} - ${item.cost}` }).where(eq(socialWallets.accountId, id));
-    if (itemId === MARATHON.id) await grantMarathon(tx, id, MARATHON.boughtDays, new Date());
+    if (timed) await grantTimedBadge(tx, id, timed, timed.boughtDays, new Date());
     else await tx.insert(socialInventory).values({ accountId: id, itemId });
     await tx.update(socialSettings).set({ badgeId: itemId }).where(eq(socialSettings.accountId, id));
     await tx.insert(socialLedger).values({ accountId: id, delta: -item.cost, kind: "purchase", description: `${item.name} badge`, requestKey: key, refKey: `purchase:${itemId}` });

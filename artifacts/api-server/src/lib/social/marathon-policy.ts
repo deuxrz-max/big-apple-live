@@ -1,4 +1,7 @@
 export const MARATHON = { id: 'marathon-master', cost: 200, streakDays: 7, earnedDays: 7, boughtDays: 3 } as const;
+export const NIGHT_OWL = { id: 'night-owl', cost: 1000, streakDays: 30, earnedDays: 30, boughtDays: 3 } as const;
+export const TIMED_BADGES = [MARATHON, NIGHT_OWL] as const;
+export type TimedBadgePolicy = typeof TIMED_BADGES[number];
 const DAY_MS = 86_400_000;
 
 export function nextLoginStreak(previous: { lastLoginDay: string; consecutiveDays: number } | undefined, now: Date) {

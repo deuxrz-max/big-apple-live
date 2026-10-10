@@ -130,8 +130,15 @@ grants three days, using the existing locked, idempotent wallet purchase flow.
 Repeat grants extend from the later of now or current expiry, preserving all
 remaining time. Expired items are excluded from inventory/profile responses and
 cannot be selected, but historical records remain. No real-money checkout.
-Peak Presenter and Marathon Master artwork is pending its exact owner upload;
-never generate substitute badge artwork.
+Night Owl updates the existing night-owl listing (no duplicate). New grants use
+the same streak and extension machinery: each 30-day milestone adds 30 days
+free (owner-requested default); each 1000-credit purchase adds three days.
+Existing permanent Night Owl inventory remains permanent and cannot be charged
+for a pointless renewal. No retroactive expiry or credit deductions.
+Peak Presenter, Marathon Master and Night Owl use the owner's uploaded artwork,
+with green backgrounds, ground shadows and reflections removed. The centered,
+transparent PNGs are in public/badges. Original uploads are preserved; never
+generate substitute badge artwork.
 Keep the compact university name, parent-inherited topic and Rules button.
 House rules are acknowledged once per account on the server and can be reopened.
 The migration is additive and development-only; existing messages/accounts/photos
