@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { Gift, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Link } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGetSocialMe, getGetSocialMeQueryKey, sendSocialGift, getGetRoomGiftEventsQueryKey } from '@workspace/api-client-react';
@@ -114,7 +114,6 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, onClose
               {giftIcon(g.id)}<span>{g.name}</span><span>{g.cost} credits</span>
             </button>
           </li>)}</ul>
-          {!recipient && <p>Choose someone above, or tap a person's name and choose Gift.</p>}
         </section>}
         {me.isLoading ? (
           <div role="status" aria-label="Loading gift bag" data-testid="gift-bag-loading" className="gift-grid">
@@ -126,10 +125,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, onClose
             <button type="button" className="gift-btn" onClick={() => me.refetch()} data-testid="gift-bag-retry">Retry</button>
           </div>
         ) : items.length === 0 ? (
-          <div data-testid="gift-bag-empty">
-            <Gift size={28} aria-hidden />
-            <p>Your gift bag is empty. You do not own any gifts yet.</p>
-          </div>
+          null
         ) : (
           <ul className="gift-grid" data-testid="gift-bag-list">
             {items.map((g) => (
@@ -151,10 +147,9 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, onClose
         {canSend && !enough && <p>Not enough credits. <Link href="/community/credits">Open credit store</Link></p>}
         {canSend ? <>
           <p>Send {selected?.name} to {name} for {price} credits. The recipient gets half; the house gets half. Your owned copies are collectibles.</p>
-          <button type="button" className="gift-btn gift-send" disabled={busy || !enough} onClick={send} data-testid="gift-bag-send">{busy ? 'Sending…' : `Send ${selected?.name} · ${price} credits`}</button>
+          <button type="button" className="gift-btn gift-send" disabled={busy || !enough} onClick={send} data-testid="gift-bag-send">{busy ? 'Sending…' : 'Send gift'}</button>
         </> : <>
-          <p role="status">{roomId ? 'Select a person and Spirit Pup or Moonfox to send. Other gifts are not available to send here yet.' : 'Open a university and choose a person to send a room gift.'}</p>
-          <button type="button" className="gift-btn gift-send" disabled data-testid="gift-bag-send">Send gift (select a room gift and a recipient in a university)</button>
+          <button type="button" className="gift-btn gift-send" disabled data-testid="gift-bag-send">Send gift</button>
         </>}
       </div>
     </div>,

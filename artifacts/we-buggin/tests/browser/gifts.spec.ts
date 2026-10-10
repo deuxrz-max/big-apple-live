@@ -59,6 +59,7 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 1000
     expect(calls).toBe(0);
     const send = page.getByTestId('gift-bag-send');
     await expect(send).toBeEnabled();
+    await expect(send).toHaveText('Send gift');
     expect(await send.evaluate(el => {
       const r = el.getBoundingClientRect();
       const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
@@ -98,7 +99,7 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 1000
   });
 }
 
-test('phone gift bag has recipient, honest empty state and no sending', async ({ page }) => {
+test('phone gift bag keeps recipient controls without explanatory empty-state copy', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const writes: string[] = [];
   page.on('request', r => { if (r.method() !== 'GET') writes.push(r.method()); });
@@ -106,9 +107,13 @@ test('phone gift bag has recipient, honest empty state and no sending', async ({
   await page.getByTestId('button-open-gift-bag').click();
   await expect(page.getByTestId('gift-bag-title')).toHaveText('Gift bag for Test Recipient');
   await expect(page.getByTestId('gift-bag-title')).toHaveCSS('color', 'rgb(255, 255, 255)');
-  await expect(page.getByTestId('gift-bag-empty')).toBeVisible();
+  await expect(page.getByTestId('gift-bag-empty')).toHaveCount(0);
   await expect(page.getByTestId('gift-bag-send')).toBeDisabled();
-  await expect(page.getByText('Open a university and choose a person to send a room gift.', { exact: true })).toBeVisible();
+  await expect(page.getByTestId('gift-bag-send')).toHaveText('Send gift');
+  await expect(page.getByText(/Choose someone above, or tap a person's name/)).toHaveCount(0);
+  await expect(page.getByText(/Your gift bag is empty/)).toHaveCount(0);
+  await expect(page.getByText(/Select a person and Spirit Pup or Moonfox/)).toHaveCount(0);
+  await expect(page.getByText(/Open a university and choose a person/)).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('gift-bag')).toHaveCount(0);
