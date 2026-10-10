@@ -108,12 +108,117 @@ test('phone gift bag has recipient, honest empty state and no sending', async ({
   await expect(page.getByTestId('gift-bag-title')).toHaveCSS('color', 'rgb(255, 255, 255)');
   await expect(page.getByTestId('gift-bag-empty')).toBeVisible();
   await expect(page.getByTestId('gift-bag-send')).toBeDisabled();
-  await expect(page.getByText('Open a university and choose a person to send Spirit Pup.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Open a university and choose a person to send a room gift.', { exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('gift-bag')).toHaveCount(0);
   await expect(page.getByTestId('button-open-gift-bag')).toBeFocused();
   expect(writes).toEqual([]);
+});
+
+test('Moonfox can be sent for 500 credits and its room animation keeps transparency and image fallbacks', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  let sent = false;
+  let sends = 0;
+  await page.route('**/api/social/me', async route => {
+    const response = await route.fetch();
+    const original = await response.json();
+    await route.fulfill({ response, json: {
+      ...original,
+      wallet: { ...original.wallet, balance: sent ? 500 : 1000 },
+      gifts: [
+        { id: 'spirit-pup', name: 'Spirit Pup', cost: 100 },
+        { id: 'moonfox', name: 'Moonfox', cost: 500 },
+      ],
+    } });
+  });
+  await page.route('**/api/account/rooms/*/messages**', route => route.fulfill({
+    json: [{ id: 'friend-message', roomId: 'promo-regression-room', authorId: 'friend-id',
+      username: 'friend', kind: 'text', text: 'Hello.', createdAt: new Date().toISOString() }],
+  }));
+  await page.route('**/api/social/gifts/rooms/*', route => route.fulfill({ json: { events: sent ? [{
+    id: 'moonfox-receipt-fixture', giftId: 'moonfox', senderUsername: 'fixture', recipientUsername: 'friend',
+    senderName: 'Fixture', recipientName: 'Friend', createdAt: new Date().toISOString(),
+  }] : [] } }));
+  await page.route('**/api/social/gifts', route => {
+    sends++;
+    expect(route.request().postDataJSON()).toMatchObject({
+      recipient: 'friend', giftId: 'moonfox', roomId: 'promo-regression-room',
+    });
+    sent = true;
+    return route.fulfill({ json: { balance: 500, earned: 0, received: 250, sent: 500, dailyClaimedAt: null } });
+  });
+  await page.route('**/api/gift-media/moonfox/v1/*', async route => {
+    const name = new URL(route.request().url()).pathname.split('/').at(-1)!;
+    const body = await readFile(new URL(`../../../../generated-artifacts/moonfox/${name}`, import.meta.url));
+    const contentType = name.endsWith('.webm') ? 'video/webm' : name.endsWith('.webp') ? 'image/webp' : 'image/png';
+    await route.fulfill({ body, contentType });
+  });
+  await page.goto('/tests/browser/harness.html', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: 'Actions for friend', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Gift', exact: true }).click();
+  const card = page.getByTestId('gift-catalog-moonfox');
+  await expect(card).toBeVisible();
+  await expect(card).toContainText('Moonfox');
+  await expect(card).toContainText('500 credits');
+  const icon = card.locator('img');
+  await expect(icon).toBeVisible();
+  const iconAlpha = await icon.evaluate(el => {
+    const c = document.createElement('canvas'); c.width = c.height = 1;
+    const ctx = c.getContext('2d')!; ctx.drawImage(el as HTMLImageElement, 0, 0, 1, 1, 0, 0, 1, 1);
+    return ctx.getImageData(0, 0, 1, 1).data[3];
+  });
+  expect(iconAlpha).toBeLessThan(8);
+  await page.getByTestId('gift-catalog-spirit-pup').waitFor({ state: 'visible' });
+  expect(sends).toBe(0);
+  await card.click();
+  await expect(page.getByTestId('gift-bag-selection')).toContainText('Moonfox for friend');
+  await page.getByTestId('gift-bag-send').click();
+  await expect(page.getByTestId('gift-bag')).toHaveCount(0);
+  await expect(page.getByTestId('gift-notice-moonfox-receipt-fixture')).toContainText('Fixture sent Friend a Moonfox.');
+  expect(sends).toBe(1);
+
+  const overlay = page.getByTestId('moonfox-animation');
+  await expect(overlay).toBeVisible();
+  const video = overlay.locator('video');
+  await expect(video).toBeVisible();
+  await expect.poll(() => video.evaluate(el => (el as HTMLVideoElement).currentTime)).toBeGreaterThan(0.2);
+  const firstVideoFrame = await video.screenshot();
+  await page.waitForTimeout(350);
+  expect(Buffer.compare(firstVideoFrame, await video.screenshot())).not.toBe(0);
+  const videoAlpha = await video.evaluate(el => {
+    const c = document.createElement('canvas'); c.width = c.height = 1;
+    const ctx = c.getContext('2d')!; ctx.drawImage(el as HTMLVideoElement, 0, 0, 1, 1, 0, 0, 1, 1);
+    return ctx.getImageData(0, 0, 1, 1).data[3];
+  });
+  expect(videoAlpha).toBeLessThan(8);
+  await video.dispatchEvent('error');
+  const webp = overlay.locator('img');
+  await expect(webp).toHaveAttribute('src', /animation\.webp$/);
+  await expect(webp).toBeVisible();
+  const webpAlpha = await webp.evaluate(el => {
+    const c = document.createElement('canvas'); c.width = c.height = 1;
+    const ctx = c.getContext('2d')!; ctx.drawImage(el as HTMLImageElement, 0, 0, 1, 1, 0, 0, 1, 1);
+    return ctx.getImageData(0, 0, 1, 1).data[3];
+  });
+  expect(webpAlpha).toBeLessThan(8);
+  const firstWebpFrame = await webp.screenshot();
+  await page.waitForTimeout(250);
+  expect(Buffer.compare(firstWebpFrame, await webp.screenshot())).not.toBe(0);
+  await webp.dispatchEvent('error');
+  const apng = overlay.locator('img');
+  await expect(apng).toHaveAttribute('src', /animation\.png$/);
+  await expect(apng).toBeVisible();
+  const apngAlpha = await apng.evaluate(el => {
+    const c = document.createElement('canvas'); c.width = c.height = 1;
+    const ctx = c.getContext('2d')!; ctx.drawImage(el as HTMLImageElement, 0, 0, 1, 1, 0, 0, 1, 1);
+    return ctx.getImageData(0, 0, 1, 1).data[3];
+  });
+  expect(apngAlpha).toBeLessThan(8);
+  const firstApngFrame = await apng.screenshot();
+  await page.waitForTimeout(300);
+  expect(Buffer.compare(firstApngFrame, await apng.screenshot())).not.toBe(0);
+  await expect(page.getByTestId('input-message')).toBeVisible();
 });
 
 test('real component reads saved inventory, selection cannot transfer or buy', async ({ page }) => {

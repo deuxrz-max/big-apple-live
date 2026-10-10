@@ -6,6 +6,7 @@ import { assertContact, lockAccounts, lockPair, replay, requireAccount, targetAc
 import { grantTimedBadge } from './marathon';
 import { TIMED_BADGES, NIGHT_OWL } from './marathon-policy';
 import { SPIRIT_PUP, spiritSplit } from './spirit-pup-policy';
+import { MOONFOX } from './moonfox-policy';
 import { validateGiftRoom } from './room-gifts';
 import { requireAdult } from '../community';
 
@@ -27,9 +28,9 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
   const target = await targetAccount(recipient);
   const item = GIFTS.find(g => g.id === giftId);
   if (!item) throw new RoomError(400, "Choose a gift from the catalog");
-  const spirit = item.id === SPIRIT_PUP.id;
-  if (spirit) {
-    if (!context) throw new RoomError(400, 'Send Spirit Pup from a university gift tab');
+  const roomGift = item.id === SPIRIT_PUP.id || item.id === MOONFOX.id;
+  if (roomGift) {
+    if (!context) throw new RoomError(400, `Send ${item.name} from a university gift tab`);
     await requireAdult(id);
     await requireAdult(target.accountId);
   }
@@ -37,21 +38,21 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
     await lockPair(tx, id, target.accountId);
     await assertContact(tx, id, target.accountId);
     await lockAccounts(tx, [id, target.accountId]);
-    const boundHistory = spirit ? roomStore.getHistoryId(context!.roomId.toUpperCase()) : null;
-    const ref = `gift:${giftId}:${target.accountId}${spirit ? ':' + boundHistory : ''}`;
+    const boundHistory = roomGift ? roomStore.getHistoryId(context!.roomId.toUpperCase()) : null;
+    const ref = `gift:${giftId}:${target.accountId}${roomGift ? ':' + boundHistory : ''}`;
     if (await replay(tx, id, key, ref)) return wallet(id, tx);
-    const historyId = spirit ? validateGiftRoom(context!.roomId.toUpperCase(), context!.sessionId, id, target.accountId) : null;
-    if (spirit && historyId !== boundHistory) throw new RoomError(409, 'This university changed. Re-enter before sending.');
+    const historyId = roomGift ? validateGiftRoom(context!.roomId.toUpperCase(), context!.sessionId, id, target.accountId) : null;
+    if (roomGift && historyId !== boundHistory) throw new RoomError(409, 'This university changed. Re-enter before sending.');
     const current = await wallet(id, tx);
-    if (current.balance < item.cost) throw new RoomError(409, spirit ? "Not enough credits. Open the credit store to get more." : "Not enough credits. Claim a daily reward first.");
-    const recipientCredits = spirit ? spiritSplit(item.cost).recipientCredits : item.cost;
+    if (current.balance < item.cost) throw new RoomError(409, roomGift ? "Not enough credits. Open the credit store to get more." : "Not enough credits. Claim a daily reward first.");
+    const recipientCredits = roomGift ? spiritSplit(item.cost).recipientCredits : item.cost;
     await tx.update(socialWallets).set({ balance: sql`${socialWallets.balance} - ${item.cost}`, sent: sql`${socialWallets.sent} + ${item.cost}` }).where(eq(socialWallets.accountId, id));
     await tx.update(socialWallets).set({ balance: sql`${socialWallets.balance} + ${recipientCredits}`, received: sql`${socialWallets.received} + ${recipientCredits}` }).where(eq(socialWallets.accountId, target.accountId));
     await tx.insert(socialLedger).values([
       { accountId: id, delta: -item.cost, kind: "gift_sent", description: `${item.name} sent to ${target.username}`, peer: target.username, requestKey: key, refKey: ref },
       { accountId: target.accountId, delta: recipientCredits, kind: "gift_received", description: `${item.name} from ${sender.username}`, peer: sender.username },
     ]);
-    if (spirit) {
+    if (roomGift) {
       await tx.insert(socialGiftEvents).values({
         historyId: historyId!, senderId: id, recipientId: target.accountId,
         senderUsername: sender.username, recipientUsername: target.username,

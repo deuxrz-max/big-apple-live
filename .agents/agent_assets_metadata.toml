@@ -98,3 +98,17 @@ mtime_ms = 1791648674426
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/c087b72a-e44e-46a9-b485-d899867f1003/5c84a298-7f60-48de-833f-b8db3bcd027d"
 storage_version_token = "1791652199099070"
 content_type = "image/png"
+
+[[outputs]]
+id = "Q_fzg648UYKIjIPDkb1qA"
+uri = "file://generated-artifacts/gift-demo/Spirit-Pup-room-gift-demo.webm"
+type = "video"
+title = "Spirit Pup gift sent in a university room"
+description = "12-second phone-sized recording of the existing gift flow: open a member’s action menu, choose Gift, select Spirit Pup, send it, then see the room chat notice and animation. This is an isolated preview test with synthetic room responses; no real account or credits were used."
+logical_id = "569403cc-7651-43f3-a4d2-55426de59644"
+content_hash = "sha256:8374a36cb55cb193d4d2e1b08fb63146bfd6abd9134223b86aee052f60aebc27"
+size = 1362519
+mtime_ms = 1791654584807
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/569403cc-7651-43f3-a4d2-55426de59644/f1108c82-74f6-4cd6-a9d4-2ca30047cdb2"
+storage_version_token = "1791654610950951"
+content_type = "video/webm"

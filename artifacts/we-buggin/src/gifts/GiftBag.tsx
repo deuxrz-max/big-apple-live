@@ -5,13 +5,18 @@ import { Link } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGetSocialMe, getGetSocialMeQueryKey, sendSocialGift, getGetRoomGiftEventsQueryKey } from '@workspace/api-client-react';
 import { GiftIcon, refreshSocial, errMsg } from '@/social/common';
-import { SpiritIcon } from './SpiritPup';
+import { RoomGiftIcon, type RoomGiftId } from './SpiritPup';
 import { ownedGiftItems } from './gift-items';
 import './gifts.css';
 
 type Recipient = { username: string; displayName: string } | null;
 
 const FOCUSABLE = 'button:not([disabled]),[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
+const ROOM_GIFT_IDS = new Set<RoomGiftId>(['spirit-pup', 'moonfox']);
+const isRoomGiftId = (id: string): id is RoomGiftId => ROOM_GIFT_IDS.has(id as RoomGiftId);
+function giftIcon(id: string) {
+  return isRoomGiftId(id) ? <RoomGiftIcon giftId={id} /> : <GiftIcon id={id} size={26} />;
+}
 
 export function GiftBag({ recipient, roomId, sessionId, onClose }: { recipient?: Recipient; roomId?: string; sessionId?: string; onClose: () => void }) {
   const me = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), staleTime: 0, refetchOnMount: 'always', refetchOnWindowFocus: 'always', refetchInterval: 10000 } });
@@ -26,10 +31,10 @@ export function GiftBag({ recipient, roomId, sessionId, onClose }: { recipient?:
   closeRef.current = onClose;
   const titleId = useId();
   const items = useMemo(() => (me.data ? ownedGiftItems(me.data) : []), [me.data]);
-  const catalog = roomId ? me.data?.gifts.filter(g => g.id === 'spirit-pup') ?? [] : [];
+  const catalog = roomId ? me.data?.gifts.filter(g => isRoomGiftId(g.id)) ?? [] : [];
   const selected = catalog.find(i => i.id === sel) ?? items.find((i) => i.id === sel) ?? null;
   const price = me.data?.gifts.find(g => g.id === sel)?.cost ?? 0;
-  const canSend = !!recipient && !!roomId && !!sessionId && sel === 'spirit-pup';
+  const canSend = !!recipient && !!roomId && !!sessionId && !!sel && isRoomGiftId(sel);
   const enough = (me.data?.wallet.balance ?? 0) >= price;
   const name = recipient ? (recipient.displayName || recipient.username) : null;
   async function send() {
@@ -81,7 +86,7 @@ export function GiftBag({ recipient, roomId, sessionId, onClose }: { recipient?:
           <h3>Gift catalog</h3>
           <ul className="gift-grid">{catalog.map(g => <li key={g.id}>
             <button type="button" className="gift-item" aria-pressed={sel === g.id} onClick={() => { setSel(g.id); setError(null); }} data-testid={`gift-catalog-${g.id}`}>
-              <SpiritIcon /><span>{g.name}</span><span>{g.cost} credits</span>
+              {giftIcon(g.id)}<span>{g.name}</span><span>{g.cost} credits</span>
             </button>
           </li>)}</ul>
           {!recipient && <p>Choose a person's name in chat, then Gift, to select the recipient.</p>}
@@ -105,7 +110,7 @@ export function GiftBag({ recipient, roomId, sessionId, onClose }: { recipient?:
             {items.map((g) => (
               <li key={g.id}>
                 <button type="button" className="gift-item" aria-pressed={sel === g.id} onClick={() => setSel(g.id)} data-testid={`gift-item-${g.id}`}>
-                  {g.id === 'spirit-pup' ? <SpiritIcon /> : <GiftIcon id={g.id} size={26} />}<span>{g.name}</span>
+                  {giftIcon(g.id)}<span>{g.name}</span>
                   {g.quantity && <span>Owned: {g.quantity}</span>}
                 </button>
               </li>
@@ -120,11 +125,11 @@ export function GiftBag({ recipient, roomId, sessionId, onClose }: { recipient?:
         {error && <p role="alert">{error}</p>}
         {canSend && !enough && <p>Not enough credits. <Link href="/community/credits">Open credit store</Link></p>}
         {canSend ? <>
-          <p>Send to {name} for {price} credits. The recipient gets half; the house gets half. Your owned copies are collectibles.</p>
-          <button type="button" className="gift-btn gift-send" disabled={busy || !enough} onClick={send} data-testid="gift-bag-send">{busy ? 'Sending…' : `Send Spirit Pup · ${price} credits`}</button>
+          <p>Send {selected?.name} to {name} for {price} credits. The recipient gets half; the house gets half. Your owned copies are collectibles.</p>
+          <button type="button" className="gift-btn gift-send" disabled={busy || !enough} onClick={send} data-testid="gift-bag-send">{busy ? 'Sending…' : `Send ${selected?.name} · ${price} credits`}</button>
         </> : <>
-          <p role="status">{roomId ? 'Select Spirit Pup and a recipient to send. Other gifts are not available to send here yet.' : 'Open a university and choose a person to send Spirit Pup.'}</p>
-          <button type="button" className="gift-btn gift-send" disabled data-testid="gift-bag-send">Send gift (select Spirit Pup and a recipient in a university)</button>
+          <p role="status">{roomId ? 'Select Spirit Pup or Moonfox and a recipient to send. Other gifts are not available to send here yet.' : 'Open a university and choose a person to send a room gift.'}</p>
+          <button type="button" className="gift-btn gift-send" disabled data-testid="gift-bag-send">Send gift (select a room gift and a recipient in a university)</button>
         </>}
       </div>
     </div>,

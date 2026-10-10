@@ -1,19 +1,35 @@
 import { useEffect, useRef, useState } from 'react';
 import { GiftIcon } from '@/social/common';
-export const SPIRIT_MEDIA = `${import.meta.env.BASE_URL}api/gift-media/spirit-pup/v1/`;
 
-export function SpiritIcon() {
+export type RoomGiftId = 'spirit-pup' | 'moonfox';
+const MEDIA: Record<RoomGiftId, string> = {
+  'spirit-pup': `${import.meta.env.BASE_URL}api/gift-media/spirit-pup/v1/`,
+  moonfox: `${import.meta.env.BASE_URL}api/gift-media/moonfox/v1/`,
+};
+const DURATION: Record<RoomGiftId, number> = {
+  'spirit-pup': 4000,
+  moonfox: 4000,
+};
+
+export function RoomGiftIcon({ giftId }: { giftId: RoomGiftId }) {
   const [failed, setFailed] = useState(false);
-  return failed ? <GiftIcon id="spirit-pup" /> : <img className="spirit-gift-icon" src={`${SPIRIT_MEDIA}icon-small.png`} width={64} height={64} alt="" aria-hidden="true" onError={() => setFailed(true)} />;
+  return failed
+    ? <GiftIcon id={giftId} />
+    : <img className="spirit-gift-icon" src={`${MEDIA[giftId]}icon-small.png`} width={64} height={64} alt="" aria-hidden="true" onError={() => setFailed(true)} />;
 }
+
+export function SpiritIcon() { return <RoomGiftIcon giftId="spirit-pup" />; }
+export function MoonfoxIcon() { return <RoomGiftIcon giftId="moonfox" />; }
 
 function preferImages() {
   return /iPhone|iPad|iPod/.test(navigator.userAgent)
     || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent))
     || (/Safari/.test(navigator.userAgent) && !/Chrome|Chromium|Android/.test(navigator.userAgent));
 }
-/** A checked alpha channel prevents a supported-but-opaque video from ever showing a box. */
-export function SpiritAnimation({ onFinish }: { onFinish: () => void }) {
+
+/** Check decoded video alpha before showing it; fall back through transparent image formats. */
+export function RoomGiftAnimation({ giftId, onFinish }: { giftId: RoomGiftId; onFinish: () => void }) {
+  const duration = DURATION[giftId];
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const [mode, setMode] = useState<'checking' | 'video' | 'webp' | 'apng' | 'still'>(reduced ? 'still' : preferImages() ? 'webp' : 'checking');
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -25,15 +41,15 @@ export function SpiritAnimation({ onFinish }: { onFinish: () => void }) {
   const start = () => {
     if (loadingTimer.current) clearTimeout(loadingTimer.current);
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(finish, 4000);
+    timer.current = setTimeout(finish, duration);
   };
   useEffect(() => {
     loadingTimer.current = setTimeout(finish, 10000);
     return () => { if (loadingTimer.current) clearTimeout(loadingTimer.current); if (timer.current) clearTimeout(timer.current); };
   }, []);
-  return <div className="spirit-overlay" aria-hidden="true" data-testid="spirit-animation">
+  return <div className="spirit-overlay" aria-hidden="true" data-testid={`${giftId}-animation`}>
     {(mode === 'checking' || mode === 'video') ? (
-      <video src={`${SPIRIT_MEDIA}animation.webm`} autoPlay muted playsInline preload="auto"
+      <video src={`${MEDIA[giftId]}animation.webm`} autoPlay muted playsInline preload="auto"
         style={{ visibility: mode === 'video' ? 'visible' : 'hidden' }}
         onLoadedData={async e => {
           const video = e.currentTarget;
@@ -46,7 +62,15 @@ export function SpiritAnimation({ onFinish }: { onFinish: () => void }) {
             setMode('video'); await video.play(); start();
           } catch { setMode('webp'); }
         }} onEnded={finish} onError={() => setMode('webp')} />
-    ) : <img src={`${SPIRIT_MEDIA}${mode === 'webp' ? 'animation.webp' : mode === 'apng' ? 'animation.png' : 'icon.png'}`}
+    ) : <img src={`${MEDIA[giftId]}${mode === 'webp' ? 'animation.webp' : mode === 'apng' ? 'animation.png' : 'icon.png'}`}
       alt="" onLoad={start} onError={() => { if (mode === 'webp') setMode('apng'); else if (mode === 'apng') setMode('still'); else finish(); }} />}
   </div>;
+}
+
+export function SpiritAnimation({ onFinish }: { onFinish: () => void }) {
+  return <RoomGiftAnimation giftId="spirit-pup" onFinish={onFinish} />;
+}
+
+export function MoonfoxAnimation({ onFinish }: { onFinish: () => void }) {
+  return <RoomGiftAnimation giftId="moonfox" onFinish={onFinish} />;
 }

@@ -14,7 +14,7 @@ import { PromoBackground } from './PromoBackground';
 import { BotShield } from './BotShield';
 import { GiftBag, GiftControl } from '@/gifts';
 import { useRoomGifts } from '@/gifts/useRoomGifts';
-import { SpiritAnimation } from '@/gifts/SpiritPup';
+import { MoonfoxAnimation, SpiritAnimation } from '@/gifts/SpiritPup';
 import './university-room.css';
 import './bot-moderation.css';
 
@@ -264,7 +264,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
               {items.map((it) => {
                 if (it.kind === 'gift') {
                   return <div className="ch-msg" key={it.id} data-testid={`gift-notice-${it.gift.id}`}>
-                    <div><p>{it.gift.senderName} sent {it.gift.recipientName} a Spirit Pup.</p></div>
+                    <div><p>{it.gift.senderName} sent {it.gift.recipientName} a {it.gift.giftId === 'moonfox' ? 'Moonfox' : 'Spirit Pup'}.</p></div>
                   </div>;
                 }
                 if (it.kind === 'whisper') {
@@ -362,7 +362,9 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
       )}
 
       {giftBag && <GiftBag recipient={giftBag.recipient} roomId={roomId} sessionId={sessionId} onClose={() => setGiftBag(null)} />}
-      {gifts.animation && <SpiritAnimation key={gifts.animation.id} onFinish={gifts.finish} />}
+      {gifts.animation && (gifts.animation.giftId === 'moonfox'
+        ? <MoonfoxAnimation key={gifts.animation.id} onFinish={gifts.finish} />
+        : <SpiritAnimation key={gifts.animation.id} onFinish={gifts.finish} />)}
 
       {rulesOpen && (
         <div className="ur-modal" onClick={dismissRules}>

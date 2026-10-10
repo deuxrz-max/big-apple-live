@@ -3,7 +3,7 @@
 - [Browser runner limits](browser-runner-limits.md) — clipboard and auth-fixture limits; distinguish blocked signup checks from signed-in app verification.
 - [Mood Sync rules](mood-sync-rules.md) — archived branded-avatar rules; active universities use uploaded photos and no profile-image emoji sync.
 - [Portrait cutout checks](portrait-cutouts.md) — inspect detached decorations after background removal; callbacks require workspace-relative image paths.
-- [Image review tooling](image-tooling.md) — montage fonts, Sharp composite order and VP9 alpha checks; distinguish tooling errors from invalid source assets.
+- [Image review tooling](image-tooling.md) — montage fonts, Sharp composite order and VP9 alpha checks; crop a source pixel for browser transparency probes.
 - [Microphone permissions](microphone-permissions.md) — archived voice consent rules; active text communities require no camera or microphone.
 - [Room history isolation](room-history-isolation.md) — never recover unbound historical messages by reusable share code; preserve incarnation identity.
 - [University topic defaults](university-topic-defaults.md) — default topics avoid backfilling old records; overflow topics resolve from the parent.
@@ -18,3 +18,4 @@
 - [Photo retention approval](profile-photo-retention.md) — user approved 30 days unused; protect current images and saves, and never expand to other data.
 - [Photo visibility cache precedence](photo-visibility-cache-precedence.md) — never replace a fresh hidden-photo response with an older cached image.
 - [Sesame MCP handoff](sesame-mcp-handoff.md) — use official Replit MCP for Agent recommendations; do not publish Streamtalk to enable access.
+- [Gift-flow demos](gift-flow-demos.md) — show existing gift UI in an isolated phone-sized browser recording and disclose synthetic responses.
