@@ -923,6 +923,11 @@
       "SocialMe": {
         "type": "object",
         "properties": {
+          "badgeExpirations": {
+            "type": "object",
+            "additionalProperties": { "type": "string", "format": "date-time" }
+          },
+          "loginStreak": { "type": "integer", "minimum": 0 },
           "profile": {
             "$ref": "#/components/schemas/SocialPerson"
           },

@@ -1098,12 +1098,17 @@ export interface SocialGift {
   cost: number;
 }
 
+export type SocialMeBadgeExpirations = {[key: string]: string};
+
 export type SocialMeCountriesItem = {
   code: string;
   name: string;
 };
 
 export interface SocialMe {
+  badgeExpirations?: SocialMeBadgeExpirations;
+  /** @minimum 0 */
+  loginStreak?: number;
   profile: SocialPerson;
   wallet: SocialWallet;
   inventory: string[];

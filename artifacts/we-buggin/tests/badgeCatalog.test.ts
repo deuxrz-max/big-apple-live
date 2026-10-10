@@ -9,6 +9,6 @@ test('Peak Presenter replaces the first listing without changing its saved owner
   assert.equal(PRODUCTS.some(p => String(p.name).toLowerCase() === 'good neighbor'), false);
   assert.deepEqual(PRODUCTS.slice(1).map(p => [p.id, p.name, p.cost]), [
     ['night-owl', 'Night owl', 75],
-    ['beam-champion', 'Beam champion', 100],
+    ['marathon-master', 'Marathon Master', 200],
   ]);
 });

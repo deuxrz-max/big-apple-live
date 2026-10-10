@@ -1,4 +1,4 @@
-import { db, accountProfiles, socialSettings, socialWallets, socialRelations, socialInventory } from "@workspace/db";
+import { db, accountProfiles, socialSettings, socialWallets, socialRelations, socialInventory, socialLoginStreaks } from "@workspace/db";
 import { and, eq, ne, or, ilike, desc, sql } from "drizzle-orm";
 import type { SocialProfileInput } from "@workspace/api-zod";
 import { RoomError } from "../room-store";
@@ -9,9 +9,12 @@ import { roomStore } from "../room-store";
 export async function getMe(id: string) {
   const profile = await requireAccount(id);
   await ensureSocial(id);
-  const items = await db.select().from(socialInventory).where(eq(socialInventory.accountId, id));
+  const items = await db.select().from(socialInventory).where(and(eq(socialInventory.accountId, id),
+    sql`(${socialInventory.expiresAt} IS NULL OR ${socialInventory.expiresAt} > CURRENT_TIMESTAMP)`));
+  const [streak] = await db.select().from(socialLoginStreaks).where(eq(socialLoginStreaks.accountId, id));
   return { profile: await person(id, profile, undefined, true), wallet: await wallet(id), inventory: items.map(i => i.itemId),
-    products: PRODUCTS, gifts: GIFTS, countries: COUNTRIES };
+    badgeExpirations: Object.fromEntries(items.filter(i => i.expiresAt).map(i => [i.itemId, i.expiresAt!.toISOString()])),
+    loginStreak: streak?.consecutiveDays ?? 0, products: PRODUCTS, gifts: GIFTS, countries: COUNTRIES };
 }
 export async function saveSocialProfile(id: string, input: SocialProfileInput) {
   const profile = await requireAccount(id);
@@ -20,7 +23,8 @@ export async function saveSocialProfile(id: string, input: SocialProfileInput) {
   await db.transaction(async tx => {
     await lockAccounts(tx, [id]);
     if (input.badgeId) {
-      const [owned] = await tx.select().from(socialInventory).where(and(eq(socialInventory.accountId, id), eq(socialInventory.itemId, input.badgeId)));
+      const [owned] = await tx.select().from(socialInventory).where(and(eq(socialInventory.accountId, id), eq(socialInventory.itemId, input.badgeId),
+        sql`(${socialInventory.expiresAt} IS NULL OR ${socialInventory.expiresAt} > CURRENT_TIMESTAMP)`));
       if (!owned) throw new RoomError(403, "Only owned badges can be displayed");
     }
     await tx.update(socialSettings).set({ bio: input.bio.trim(), country: input.country, interests,

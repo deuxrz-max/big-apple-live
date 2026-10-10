@@ -1,8 +1,10 @@
+import { MARATHON } from './marathon-policy';
+
 export const DAILY_REWARD = 25;
 export const PRODUCTS = [
   { id: "good-neighbor", name: "Peak Presenter", description: "A cosmetic badge for your social profile. No verification claims or cash value.", cost: 40 },
   { id: "night-owl", name: "Night owl", description: "A midnight-blue cosmetic profile badge. Yours to keep.", cost: 75 },
-  { id: "beam-champion", name: "Beam champion", description: "A gold cosmetic profile badge. Stand out without changing your avatar.", cost: 100 },
+  { id: MARATHON.id, name: "Marathon Master", description: "Log in 7 days in a row to earn it free for 1 week, or buy it for 200 credits for 3 days.", cost: MARATHON.cost },
 ] as const;
 export const GIFTS = [
   { id: "good-vibes", name: "Good vibes", cost: 5 },

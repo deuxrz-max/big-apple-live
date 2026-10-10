@@ -71,7 +71,11 @@ export async function person(viewer: string, profile: ProfileRow, settings?: Set
   ))) : [];
   const badges = includeStats && !blocked ? await db.select({
     id: socialInventory.itemId, acquired: socialInventory.purchasedAt,
-  }).from(socialInventory).where(eq(socialInventory.accountId, id)) : [];
+  }).from(socialInventory).where(and(eq(socialInventory.accountId, id),
+    sql`(${socialInventory.expiresAt} IS NULL OR ${socialInventory.expiresAt} > CURRENT_TIMESTAMP)`)) : [];
+  const [activeSelected] = prefs?.badgeId === 'marathon-master' ? await db.select({ id: socialInventory.itemId })
+    .from(socialInventory).where(and(eq(socialInventory.accountId, id), eq(socialInventory.itemId, prefs.badgeId),
+      sql`(${socialInventory.expiresAt} IS NULL OR ${socialInventory.expiresAt} > CURRENT_TIMESTAMP)`)) : [];
   return {
     username: profile.username, displayName: profile.displayName ?? profile.username,
     ...photos, identity: publicProfile(profile).identity,
@@ -79,7 +83,7 @@ export async function person(viewer: string, profile: ProfileRow, settings?: Set
     externalPlatform: blocked ? null : prefs?.externalPlatform ?? null,
     externalHandle: blocked ? null : prefs?.externalHandle ?? null,
     interests: blocked ? [] : prefs?.interests ?? [], discoverable: prefs?.discoverable ?? false,
-    favorite: !!favorite, blocked, receivedCredits: wallet?.received ?? 0, badgeId: prefs?.badgeId ?? null,
+    favorite: !!favorite, blocked, receivedCredits: wallet?.received ?? 0, badgeId: prefs?.badgeId === 'marathon-master' && !activeSelected ? null : prefs?.badgeId ?? null,
     ...(includeStats ? {
       followerCount: counts?.followerCount ?? 0, followingCount: counts?.followingCount ?? 0,
       sentCredits: wallet?.sent ?? 0,

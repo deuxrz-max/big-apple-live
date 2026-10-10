@@ -379,6 +379,8 @@ export const ReviewChatReportResponse = zod.object({
 })
 
 
+export const getSocialMeResponseLoginStreakMin = 0;
+
 export const getSocialMeResponseProfileExternalHandleMax = 64;
 
 export const getSocialMeResponseProfileFollowerCountMin = 0;
@@ -396,6 +398,8 @@ export const getSocialMeResponseProfileIdentityHairColorRegExp = new RegExp('^#[
 
 
 export const GetSocialMeResponse = zod.object({
+  "badgeExpirations": zod.record(zod.string(), zod.coerce.date()).optional(),
+  "loginStreak": zod.number().int().min(getSocialMeResponseLoginStreakMin).optional(),
   "profile": zod.object({
   "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
   "externalHandle": zod.string().max(getSocialMeResponseProfileExternalHandleMax).nullish(),

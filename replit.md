@@ -119,6 +119,19 @@ are not implemented by this framework. Whether received gifts enter a bag is
 undecided. Keep existing legacy gift actions outside this framework unchanged.
 Chat name menus reuse Messages, public-message reports and Block; no message
 available means explain the report limitation, never claim a report succeeded.
+
+Marathon Master replaces the Beam Champion store listing. Original Beam Champion
+ownership records remain untouched as legacy permanent items; do not silently
+convert old purchases into expiring grants. New Marathon Master uses its own ID.
+Count one authenticated own-profile/app visit per UTC calendar day, regardless
+of repeat refreshes/devices; missed days reset the streak. No historical backfill.
+Every seventh consecutive day grants seven days free. A 200-credit purchase
+grants three days, using the existing locked, idempotent wallet purchase flow.
+Repeat grants extend from the later of now or current expiry, preserving all
+remaining time. Expired items are excluded from inventory/profile responses and
+cannot be selected, but historical records remain. No real-money checkout.
+Peak Presenter and Marathon Master artwork is pending its exact owner upload;
+never generate substitute badge artwork.
 Keep the compact university name, parent-inherited topic and Rules button.
 House rules are acknowledged once per account on the server and can be reopened.
 The migration is additive and development-only; existing messages/accounts/photos

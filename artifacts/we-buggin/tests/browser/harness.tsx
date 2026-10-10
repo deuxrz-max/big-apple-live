@@ -5,6 +5,8 @@ import { PromoBackground } from '../../src/chat/PromoBackground';
 import { TextChatRoom } from '../../src/chat/UniversityRoom';
 import { BuyCreditsPage } from '../../src/social/BuyCreditsPage';
 import { GiftBag, GiftControl } from '../../src/gifts';
+import { RewardsPage } from '../../src/social/MoneyPages';
+import '../../src/social/social.css';
 import '../../src/index.css';
 import '../../src/chat/chat.css';
 import '../../src/theme.css';
@@ -37,6 +39,7 @@ createRoot(document.getElementById('root')!).render(
         {new URLSearchParams(location.search).get('view') === 'credits'
           ? <BuyCreditsPage />
           : new URLSearchParams(location.search).get('view') === 'gifts' ? <GiftFixture />
+          : new URLSearchParams(location.search).get('view') === 'badges' ? <RewardsPage />
           : <TextChatRoom roomId="promo-regression-room" userId="synthetic-browser-user" />}
       </main>
       {/* Layout-only nav shell uses the original app's navigation stylesheet. */}

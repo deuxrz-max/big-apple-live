@@ -3,7 +3,7 @@ import { chromiumPath } from './native-browser';
 
 export default defineConfig({
   testDir: '.',
-  testMatch: ['promo.spec.ts', 'credits.spec.ts', 'gifts.spec.ts'],
+  testMatch: ['promo.spec.ts', 'credits.spec.ts', 'gifts.spec.ts', 'badges.spec.ts'],
   fullyParallel: false,
   workers: 1,
   retries: 0,

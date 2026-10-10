@@ -6,6 +6,7 @@ import {
   CreateAccountRoomBody,
 } from "@workspace/api-zod";
 import { getProfile, saveProfile, requireCompletedProfile } from "../lib/account-profiles";
+import { recordDailyLogin } from '../lib/social/marathon';
 import { roomStore, RoomError } from "../lib/room-store";
 import { getClerkProxyHost } from "../middlewares/clerkProxyMiddleware";
 import { communityMembership, accessFor, offerOverflow } from "../lib/community";
@@ -27,7 +28,10 @@ export function sameOrigin(req: Request): void {
 }
 router.get("/me", async (req, res) => {
   res.set("Cache-Control", "no-store");
-  res.json(GetMyProfileResponse.parse({ profile: await getProfile(accountId(req)) }));
+  const id = accountId(req);
+  const profile = await getProfile(id);
+  if (profile) await recordDailyLogin(id);
+  res.json(GetMyProfileResponse.parse({ profile }));
 });
 router.put("/me", async (req, res) => {
   sameOrigin(req);

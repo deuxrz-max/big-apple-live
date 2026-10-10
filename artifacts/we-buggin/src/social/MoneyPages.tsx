@@ -81,6 +81,11 @@ export function ThreadPage({ username }: { username: string }) {
 }
 
 export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
   const qc = useQueryClient();
   const me = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), refetchInterval: 10000 } });
   const ledger = useGetSocialLedger({ query: { queryKey: ['/api/social/wallet/transactions'], refetchInterval: 10000 } });
@@ -109,19 +114,32 @@ export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
       </div>
       {msg && <Msg ok={msg.ok}>{msg.t}</Msg>}
       <h2 className="sc-h2">Badge store</h2>
-      <p className="sc-sub">Badges are permanent and cosmetic. They do not verify who you are. Pick one in <Link href="/community/profile" className="bm-link">your profile</Link>.</p>
-      <div className="sc-gifts sc-store">{products.map((p) => { const own = inventory.includes(p.id); const I = iconFor(p.id); return (
+      <p className="sc-sub">Badges are cosmetic and do not verify who you are. Marathon Master is time-limited; other badges remain permanent. Pick one in <Link href="/community/profile" className="bm-link">your profile</Link>.</p>
+      <div className="sc-gifts sc-store">{products.map((p) => {
+        const marathon = p.id === 'marathon-master';
+        const expiry = me.data.badgeExpirations?.[p.id];
+        const remaining = expiry ? Math.max(0, new Date(expiry).getTime() - now) : 0;
+        const own = inventory.includes(p.id) && (!expiry || remaining > 0);
+        const I = iconFor(p.id);
+        return (
         <div key={p.id} className="sc-gift sc-product" data-testid={`card-product-${p.id}`}>
-          {p.id === 'good-neighbor'
-            ? <span className="sc-badge-art-pending" role="img" aria-label="Peak Presenter artwork pending upload">Artwork pending</span>
-            : <I size={30} />}<b>{p.name}</b><span>{p.description}</span><span>{p.cost} credits</span>
-          <button type="button" className="bm-btn bm-btn-sm" disabled={own || buy.isPending || w.balance < p.cost} onClick={() => doBuy(p.id, p.name)} data-testid={`button-buy-${p.id}`}>
-            {own ? 'Owned' : w.balance < p.cost ? 'Not enough credits' : buy.isPending ? 'Buying...' : 'Buy'}</button></div>); })}</div>
+          {p.id === 'good-neighbor' || marathon
+            ? <span className="sc-badge-art-pending" role="img" aria-label={`${p.name} artwork pending upload`}>Artwork pending</span>
+            : <I size={30} />}<b>{p.name}</b>{marathon && <strong>How to Earn</strong>}<span>{p.description}</span><span>{p.cost} credits</span>
+          {marathon && <>
+            <span data-testid="marathon-streak">{me.data.loginStreak ?? 0} consecutive login days</span>
+            {own && expiry && <span data-testid="marathon-time">Active · {Math.floor(remaining / 86400000)}d {Math.floor(remaining / 3600000) % 24}h {Math.floor(remaining / 60000) % 60}m {Math.floor(remaining / 1000) % 60}s remaining</span>}
+            <span>Each 7-day streak milestone adds 7 days. Buying adds 3 days to any time remaining; expired badges restart from now.</span>
+          </>}
+          <button type="button" className="bm-btn bm-btn-sm" disabled={(!marathon && own) || buy.isPending || w.balance < p.cost} onClick={() => doBuy(p.id, p.name)} data-testid={`button-buy-${p.id}`}>
+            {buy.isPending ? 'Buying...' : marathon ? w.balance < p.cost ? 'Need more credits' : 'Buy for 200 credits' : own ? 'Owned' : w.balance < p.cost ? 'Not enough credits' : 'Buy'}</button>
+          {marathon && w.balance < p.cost && <Link href="/community/credits" className="bm-link">Buy credits</Link>}
+          </div>); })}</div>
       <h2 className="sc-h2">Gifts</h2>
       <p className="sc-sub">Send these from anyone's profile.</p>
       <div className="sc-gifts">{gifts.map((g) => <div key={g.id} className="sc-gift"><GiftIcon id={g.id} size={26} /><b>{g.name}</b><span>{g.cost} credits</span></div>)}</div>
       <h2 className="sc-h2">Inventory</h2>
-      {inventory.length === 0 ? <p className="sc-sub">Nothing owned yet.</p> : <p className="sc-tags">{inventory.map((id) => <i key={id}>{products.find((p) => p.id === id)?.name ?? id}</i>)}</p>}
+      {inventory.filter(id => !me.data.badgeExpirations?.[id] || new Date(me.data.badgeExpirations[id]).getTime() > now).length === 0 ? <p className="sc-sub">Nothing owned yet.</p> : <p className="sc-tags">{inventory.filter(id => !me.data.badgeExpirations?.[id] || new Date(me.data.badgeExpirations[id]).getTime() > now).map((id) => <i key={id}>{products.find((p) => p.id === id)?.name ?? id}</i>)}</p>}
       <h2 className="sc-h2">Ledger</h2>
       {ledger.isLoading && <Loading />}
       {ledger.isError && <ErrorBox error={ledger.error} retry={() => ledger.refetch()} />}

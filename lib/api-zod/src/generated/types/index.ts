@@ -119,6 +119,7 @@ export * from './socialInbox';
 export * from './socialInboxConversationsItem';
 export * from './socialLedger';
 export * from './socialMe';
+export * from './socialMeBadgeExpirations';
 export * from './socialMeCountriesItem';
 export * from './socialMessage';
 export * from './socialMessageInput';
