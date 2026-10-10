@@ -22,6 +22,7 @@ export function OwnProfile() {
           {access.data?.moderator && <Link href="/community/moderation" className="pf-btn" data-testid="link-moderation">Moderation</Link>}
         </nav>
       }>
+      <Link href="/community/credits" className="pf-btn" data-testid="link-buy-credits">Buy credits</Link>
       <div className="sc pf-rewards"><RewardsPage embedded /></div>
     </ProfileView>
   );

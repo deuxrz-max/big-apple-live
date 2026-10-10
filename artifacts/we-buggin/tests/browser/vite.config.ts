@@ -26,6 +26,8 @@ function isolatedRoomResponses(): Plugin {
         const json = (value: unknown) => {
           res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(value));
         };
+        if (pathname === '/api/social/me' && req.method === 'GET')
+          return json({ wallet: { balance: 1234 } });
         if (pathname === `${endpoint}/join` && req.method === 'POST')
           return json({ participantSessionId: sessionId, participantId: 'fixture-person', room });
         // This legacy endpoint authenticates by session in its URL, not a header.

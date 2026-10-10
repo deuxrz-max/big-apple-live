@@ -10,6 +10,7 @@ import { BlocksPage, CommunityPage, FavoritesPage, MyProfilePage, PersonPage } f
 import { ModerationQueue } from '@/chat/ChatApp';
 import { AppLogo } from '@/components/brand';
 import { BotProfile } from '@/profile/ProfileView';
+import { BuyCreditsPage } from './BuyCreditsPage';
 import { InboxPage } from './InboxPage';
 import { LeaderboardPage, RewardsPage, ThreadPage } from './MoneyPages';
 
@@ -66,6 +67,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
               <Route path="/community/messages/:username" component={ThreadRoute} />
               <Route path="/community/moderation" component={ModerationQueue} />
               <Route path="/community/rewards"><RewardsPage /></Route>
+              <Route path="/community/credits" component={BuyCreditsPage} />
               <Route path="/community/leaderboard" component={LeaderboardPage} />
               <Route><div className="sc-empty"><h2>Not found</h2><Link href="/community" className="bm-btn">People</Link></div></Route>
             </Switch>

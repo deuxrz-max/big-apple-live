@@ -1,0 +1,20 @@
+.bc { max-width: 520px; color: #fff; }
+.bc-bal, .bc-txt { color: #fff; margin: 8px 0 14px; display: flex; align-items: center; gap: 8px; }
+.bc-txt { display: block; }
+.bc-bal b { color: #A6FF00; }
+.bc-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.bc-card { width: 100%; min-height: 76px; text-align: left; display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 16px; border-radius: 16px; background: #1D1D23; border: 1px solid rgba(255,255,255,.15); color: #fff; font: inherit; cursor: pointer; }
+.bc-card:hover, .bc-card:focus-visible { border-color: #A6FF00; outline: none; }
+.bc-cr { font-weight: 800; font-size: 18px; color: #A6FF00; }
+.bc-price { font-weight: 700; font-size: 18px; text-align: right; }
+.bc-save { grid-column: 1 / -1; font-size: 13px; color: #fff; }
+.bc-review { display: grid; gap: 14px; background: #1D1D23; border: 1px solid rgba(255,255,255,.15); border-radius: 16px; padding: 18px; }
+.bc-review h2 { margin: 0; }
+.bc-dl { margin: 0; display: grid; gap: 8px; }
+.bc-dl div { display: flex; justify-content: space-between; gap: 12px; }
+.bc-dl dt, .bc-dl dd { margin: 0; color: #fff; }
+.bc-dl dd { font-weight: 700; }
+.bc-note { border: 1px solid #A6FF00; border-radius: 12px; padding: 12px; color: #fff; }
+.bc-note b { color: #A6FF00; }
+.bc-note p { margin: 4px 0 0; }
+.bc-pay:disabled { opacity: .5; cursor: not-allowed; }

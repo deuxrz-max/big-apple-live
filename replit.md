@@ -100,6 +100,14 @@ name headings, People lists, room senders and conversations; lime is for brandin
 page titles and navigation, not people's names. Keep typography, layout, body copy, message previews,
 timestamps, pink unread counts, pink action buttons, badges and logo artwork
 unchanged. This is a color-only owner-approved update, not a new theme or feature.
+
+Buy Credits is accessible from the owner's Me profile. Approved USD pricing is
+500 credits for $4.99, 1,000 for $8.99, and 2,500 for $17.99.
+The store reads the existing persistent wallet; choosing a bundle only opens a
+review step. Checkout is unavailable until a payment provider and server-verified,
+idempotent fulfillment are configured. Never simulate payment success or award
+credits from a client click. No live charges are enabled; gift, bonus and cashout
+rules are outside this change.
 Keep the compact university name, parent-inherited topic and Rules button.
 House rules are acknowledged once per account on the server and can be reopened.
 The migration is additive and development-only; existing messages/accounts/photos
