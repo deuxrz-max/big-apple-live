@@ -84,3 +84,17 @@ mtime_ms = 1791600042557
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/b833f076-d038-43a6-b223-4a5538fa28de/58cbab1d-4ac1-4c15-b098-fbad69ec71ac"
 storage_version_token = "1791600259611428"
 content_type = "image/png"
+
+[[outputs]]
+id = "mV72AkaTaqApboschrDXa"
+uri = "file://generated-artifacts/spirit-pup/icon.png"
+type = "image"
+title = "Spirit Pup — transparent catalog icon"
+description = "Your exact uploaded pup, with the green removed, trimmed and centered. 512 × 512 transparent PNG."
+logical_id = "c087b72a-e44e-46a9-b485-d899867f1003"
+content_hash = "sha256:0f8649ee224937ef0f4232b660fca2ef32da35f1510f3c5e6cfca5472f48aab5"
+size = 368776
+mtime_ms = 1791648674426
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/c087b72a-e44e-46a9-b485-d899867f1003/5c84a298-7f60-48de-833f-b8db3bcd027d"
+storage_version_token = "1791652199099070"
+content_type = "image/png"

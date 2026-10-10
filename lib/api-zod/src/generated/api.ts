@@ -397,6 +397,7 @@ export const getSocialMeResponseProfileIdentityColorRegExp = new RegExp('^#[0-9a
 export const getSocialMeResponseProfileIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 
 
+
 export const GetSocialMeResponse = zod.object({
   "badgeExpirations": zod.record(zod.string(), zod.coerce.date()).optional(),
   "loginStreak": zod.number().int().min(getSocialMeResponseLoginStreakMin).optional(),
@@ -455,6 +456,7 @@ export const GetSocialMeResponse = zod.object({
   "name": zod.string(),
   "cost": zod.number().int()
 })),
+  "giftQuantities": zod.record(zod.string(), zod.number().int().min(1)).optional(),
   "countries": zod.array(zod.object({
   "code": zod.string(),
   "name": zod.string()
@@ -744,6 +746,7 @@ export const ClaimSocialDailyRewardResponse = zod.object({
 export const SendSocialGiftBody = zod.object({
   "recipient": zod.string(),
   "giftId": zod.string(),
+  "roomId": zod.string().optional(),
   "idempotencyKey": zod.string().uuid()
 })
 
@@ -754,6 +757,23 @@ export const SendSocialGiftResponse = zod.object({
   "sent": zod.number().int(),
   "canClaimDaily": zod.boolean(),
   "dailyReward": zod.number().int()
+})
+
+
+export const GetRoomGiftEventsParams = zod.object({
+  "roomId": zod.coerce.string()
+})
+
+export const GetRoomGiftEventsResponse = zod.object({
+  "events": zod.array(zod.object({
+  "id": zod.string(),
+  "giftId": zod.string(),
+  "senderUsername": zod.string(),
+  "recipientUsername": zod.string(),
+  "senderName": zod.string(),
+  "recipientName": zod.string(),
+  "createdAt": zod.coerce.date()
+}))
 })
 
 

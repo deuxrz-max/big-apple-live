@@ -353,6 +353,14 @@
         }
       }
     },
+    "/social/gifts/rooms/{roomId}": {
+      "get": {
+        "operationId": "getRoomGiftEvents",
+        "tags": ["Social"],
+        "parameters": [{"name": "roomId", "in": "path", "required": true, "schema": {"type": "string"}}],
+        "responses": {"200": {"description": "Recent gift notices in the authorized university", "content": {"application/json": {"schema": {"type": "object", "properties": {"events": {"type": "array", "items": {"$ref": "#/components/schemas/RoomGiftEvent"}}}, "required": ["events"]}}}}}
+      }
+    },
     "/social/gifts": {
       "post": {
         "operationId": "sendSocialGift",
@@ -952,6 +960,7 @@
               "$ref": "#/components/schemas/SocialGift"
             }
           },
+          "giftQuantities": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 1}},
           "countries": {
             "type": "array",
             "items": {
@@ -1028,6 +1037,19 @@
           "ok"
         ]
       },
+      "RoomGiftEvent": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "giftId": {"type": "string"},
+          "senderUsername": {"type": "string"},
+          "recipientUsername": {"type": "string"},
+          "senderName": {"type": "string"},
+          "recipientName": {"type": "string"},
+          "createdAt": {"type": "string", "format": "date-time"}
+        },
+        "required": ["id", "giftId", "senderUsername", "recipientUsername", "senderName", "recipientName", "createdAt"]
+      },
       "SocialGiftInput": {
         "type": "object",
         "properties": {
@@ -1037,6 +1059,7 @@
           "giftId": {
             "type": "string"
           },
+          "roomId": {"type": "string"},
           "idempotencyKey": {
             "type": "string",
             "format": "uuid"

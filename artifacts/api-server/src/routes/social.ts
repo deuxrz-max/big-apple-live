@@ -11,10 +11,13 @@ import { RoomError } from "../lib/room-store";
 import { requireAccount } from "../lib/social/core";
 import { blocks, getMe, getPerson, listPeople, relationship, saveSocialProfile } from "../lib/social/people";
 import { claimDaily, gift, ledger, purchase } from "../lib/social/rewards";
+import { roomGiftEvents } from '../lib/social/room-gifts';
+import { serveGiftMedia } from '../lib/gift-media';
 import { clearThread, inbox, sendMessage, thread } from "../lib/social/messages";
 import { favoritesGallery, favoriteRoom } from "../lib/social/favorites";
 
 const router: IRouter = Router();
+router.get('/gift-media/spirit-pup/v1/:filename', serveGiftMedia);
 router.use("/social", async (req, res, next) => {
   const id = accountId(req);
   if (req.method !== "GET") sameOrigin(req);
@@ -54,10 +57,14 @@ router.put("/social/people/:username/relationship", async (req, res): Promise<vo
 });
 router.get("/social/blocks", async (req, res): Promise<void> => { res.json(GetSocialPeopleResponse.parse(await blocks(accountId(req)))); });
 router.post("/social/wallet/claim", async (req, res): Promise<void> => { res.json(await claimDaily(accountId(req))); });
+router.get("/social/gifts/rooms/:roomId", async (req, res) => {
+  res.json(await roomGiftEvents(accountId(req), String(req.params.roomId).toUpperCase(), req.get('X-Room-Session') ?? ''));
+});
 router.post("/social/gifts", async (req, res): Promise<void> => {
   const input = SendSocialGiftBody.safeParse(req.body);
   if (!input.success) throw new RoomError(400, "Choose a gift, recipient and valid retry key");
-  res.json(await gift(accountId(req), input.data.recipient, input.data.giftId, input.data.idempotencyKey));
+  res.json(await gift(accountId(req), input.data.recipient, input.data.giftId, input.data.idempotencyKey,
+    input.data.roomId ? { roomId: input.data.roomId, sessionId: req.get('X-Room-Session') ?? '' } : undefined));
 });
 router.post("/social/store/purchase", async (req, res): Promise<void> => {
   const input = PurchaseSocialProductBody.safeParse(req.body);

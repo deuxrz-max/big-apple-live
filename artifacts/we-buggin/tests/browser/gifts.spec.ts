@@ -1,4 +1,102 @@
 import { test, expect } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
+
+for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 1000 }]) {
+  test(`Spirit Pup explicit send clears navigation; transparent media and fallbacks ${viewport.width}`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    let sent = false;
+    let calls = 0;
+    await page.route('**/api/social/me', async route => {
+      const response = await route.fetch();
+      const original = await response.json();
+      await route.fulfill({ response, json: { ...original,
+        wallet: { ...original.wallet, balance: sent ? 100 : 200 },
+        gifts: [{ id: 'spirit-pup', name: 'Spirit Pup', cost: 100 }],
+      } });
+    });
+    await page.route('**/api/account/rooms/*/messages**', route => route.fulfill({
+      json: [{ id: 'friend-message', roomId: 'promo-regression-room', authorId: 'friend-id',
+        username: 'friend', kind: 'text', text: 'Hello.', createdAt: new Date().toISOString() }],
+    }));
+    await page.route('**/api/social/gifts/rooms/*', route => route.fulfill({ json: { events: sent ? [{
+      id: 'gift-receipt-fixture', giftId: 'spirit-pup', senderUsername: 'fixture',
+      recipientUsername: 'friend', senderName: 'Fixture', recipientName: 'Friend',
+      createdAt: new Date().toISOString(),
+    }] : [] } }));
+    await page.route('**/api/social/gifts', route => {
+      calls++;
+      const body = route.request().postDataJSON();
+      expect(body).toMatchObject({ recipient: 'friend', giftId: 'spirit-pup', roomId: 'promo-regression-room' });
+      expect(body.idempotencyKey).toMatch(/^[0-9a-f-]{36}$/);
+      expect(route.request().headers()['x-room-session']).toBe('synthetic-room-session');
+      sent = true;
+      return route.fulfill({ json: { balance: 100, earned: 0, received: 0, sent: 100, dailyClaimedAt: null } });
+    });
+    await page.route('**/api/gift-media/spirit-pup/v1/*', async route => {
+      const name = new URL(route.request().url()).pathname.split('/').at(-1)!;
+      const body = await readFile(new URL(`../../../../generated-artifacts/spirit-pup/${name}`, import.meta.url));
+      const contentType = name.endsWith('.webm') ? 'video/webm' : name.endsWith('.webp') ? 'image/webp' : 'image/png';
+      await route.fulfill({ body, contentType });
+    });
+    await page.goto('/tests/browser/harness.html');
+    await page.evaluate(() => {
+      Object.assign(document.getElementById('root')!.style, { position: 'relative', zIndex: '1', isolation: 'isolate' });
+      const nav = document.createElement('div');
+      nav.textContent = 'Home Following Message Me';
+      Object.assign(nav.style, { position: 'fixed', bottom: '0', left: '0', width: '100%', height: '68px', zIndex: '5000', background: '#222' });
+      document.body.appendChild(nav);
+    });
+    await page.getByRole('button', { name: 'Actions for friend', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Gift', exact: true }).click();
+    const catalogItem = page.getByTestId('gift-catalog-spirit-pup');
+    const giftImage = catalogItem.locator('img');
+    await expect(giftImage).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await expect(giftImage).toHaveCSS('border-width', '0px');
+    await expect(giftImage).toHaveCSS('box-shadow', 'none');
+    await expect(catalogItem).toHaveCSS('border-width', '0px');
+    await page.getByTestId('gift-catalog-spirit-pup').click();
+    await expect(catalogItem).toHaveCSS('background-color', 'rgba(138, 43, 255, 0.16)');
+    expect(calls).toBe(0);
+    const send = page.getByTestId('gift-bag-send');
+    await expect(send).toBeEnabled();
+    expect(await send.evaluate(el => {
+      const r = el.getBoundingClientRect();
+      const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+      return top === el || el.contains(top);
+    })).toBe(true);
+    await send.click(); // Normal click: no force and no bypass of fixed navigation.
+    await expect(page.getByTestId('gift-bag')).toHaveCount(0);
+    expect(calls).toBe(1);
+    const overlay = page.locator('.spirit-overlay');
+    await expect(overlay).toBeVisible();
+    const media = overlay.locator('video,img');
+    await expect(media).toBeVisible();
+    expect(await overlay.evaluate(el => getComputedStyle(el).pointerEvents)).toBe('none');
+    expect(await media.evaluate(el => {
+      const c = document.createElement('canvas'); c.width = c.height = 1;
+      c.getContext('2d')!.drawImage(el as HTMLVideoElement, 0, 0);
+      return c.getContext('2d')!.getImageData(0, 0, 1, 1).data[3];
+    })).toBeLessThan(8);
+    await page.evaluate(() => {
+      document.querySelectorAll('video').forEach(v => { if (!v.closest('.spirit-overlay')) v.pause(); });
+      document.getAnimations().forEach(a => a.pause());
+    });
+    const first = await media.screenshot();
+    await page.waitForTimeout(650);
+    expect(Buffer.compare(first, await media.screenshot())).not.toBe(0);
+    if (await overlay.locator('video').count()) {
+      await overlay.locator('video').evaluate(el => el.dispatchEvent(new Event('error')));
+    }
+    await expect(overlay.locator('img')).toHaveAttribute('src', /animation\.webp$/);
+    await overlay.locator('img').evaluate(el => el.dispatchEvent(new Event('error')));
+    await expect(overlay.locator('img')).toHaveAttribute('src', /animation\.png$/);
+    await expect(overlay.locator('img')).toBeVisible();
+    await page.getByTestId('input-message').fill('Unsent gift test draft');
+    await expect(page.getByTestId('input-message')).toHaveValue('Unsent gift test draft');
+    await page.getByTestId('input-message').fill('');
+    await expect(overlay).toHaveCount(0, { timeout: 7000 });
+  });
+}
 
 test('phone gift bag has recipient, honest empty state and no sending', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -10,7 +108,7 @@ test('phone gift bag has recipient, honest empty state and no sending', async ({
   await expect(page.getByTestId('gift-bag-title')).toHaveCSS('color', 'rgb(255, 255, 255)');
   await expect(page.getByTestId('gift-bag-empty')).toBeVisible();
   await expect(page.getByTestId('gift-bag-send')).toBeDisabled();
-  await expect(page.getByText('Gift sending is not yet available.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Open a university and choose a person to send Spirit Pup.', { exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('gift-bag')).toHaveCount(0);

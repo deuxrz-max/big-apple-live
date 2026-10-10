@@ -1100,6 +1100,8 @@ export interface SocialGift {
 
 export type SocialMeBadgeExpirations = {[key: string]: string};
 
+export type SocialMeGiftQuantities = {[key: string]: number};
+
 export type SocialMeCountriesItem = {
   code: string;
   name: string;
@@ -1114,6 +1116,7 @@ export interface SocialMe {
   inventory: string[];
   products: SocialProduct[];
   gifts: SocialGift[];
+  giftQuantities?: SocialMeGiftQuantities;
   countries: SocialMeCountriesItem[];
 }
 
@@ -1139,9 +1142,20 @@ export interface SocialAction {
   ok: boolean;
 }
 
+export interface RoomGiftEvent {
+  id: string;
+  giftId: string;
+  senderUsername: string;
+  recipientUsername: string;
+  senderName: string;
+  recipientName: string;
+  createdAt: string;
+}
+
 export interface SocialGiftInput {
   recipient: string;
   giftId: string;
+  roomId?: string;
   idempotencyKey: string;
 }
 
@@ -1270,6 +1284,10 @@ export const GetSocialPeopleGender = {
   Male: 'Male',
   Female: 'Female',
 } as const;
+
+export type GetRoomGiftEvents200 = {
+  events: RoomGiftEvent[];
+};
 
 export type GetSocialConversationParams = {
 cursor?: string;

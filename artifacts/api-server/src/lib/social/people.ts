@@ -1,4 +1,4 @@
-import { db, accountProfiles, socialSettings, socialWallets, socialRelations, socialInventory, socialLoginStreaks } from "@workspace/db";
+import { db, accountProfiles, socialSettings, socialWallets, socialRelations, socialInventory, socialLoginStreaks, socialGiftBag } from "@workspace/db";
 import { and, eq, ne, or, ilike, desc, sql } from "drizzle-orm";
 import type { SocialProfileInput } from "@workspace/api-zod";
 import { RoomError } from "../room-store";
@@ -12,7 +12,9 @@ export async function getMe(id: string) {
   const items = await db.select().from(socialInventory).where(and(eq(socialInventory.accountId, id),
     sql`(${socialInventory.expiresAt} IS NULL OR ${socialInventory.expiresAt} > CURRENT_TIMESTAMP)`));
   const [streak] = await db.select().from(socialLoginStreaks).where(eq(socialLoginStreaks.accountId, id));
-  return { profile: await person(id, profile, undefined, true), wallet: await wallet(id), inventory: items.map(i => i.itemId),
+  const giftsOwned = await db.select().from(socialGiftBag).where(eq(socialGiftBag.accountId, id));
+  return { profile: await person(id, profile, undefined, true), wallet: await wallet(id), inventory: [...new Set([...items.map(i => i.itemId), ...giftsOwned.map(g => g.giftId)])],
+    giftQuantities: Object.fromEntries(giftsOwned.map(g => [g.giftId, g.quantity])),
     badgeExpirations: Object.fromEntries(items.filter(i => i.expiresAt).map(i => [i.itemId, i.expiresAt!.toISOString()])),
     loginStreak: streak?.consecutiveDays ?? 0, products: PRODUCTS, gifts: GIFTS, countries: COUNTRIES };
 }

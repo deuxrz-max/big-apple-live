@@ -5,6 +5,7 @@ import {
   getGetMyProfileQueryKey, getGetUniversitySessionQueryKey, useAcknowledgeUniversityRules, useGetUniversitySession,
   useReportChatMessage, useSendUniversityWhisper, useSetSocialRelationship, useSetUniversityIgnore,
   ChatReportInputReason, type ChatMessage,
+  type RoomGiftEvent,
 } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
 import { errMessage, errStatus } from '@/lib/errors';
@@ -12,6 +13,8 @@ import { useTextRoom } from './useTextRoom';
 import { PromoBackground } from './PromoBackground';
 import { BotShield } from './BotShield';
 import { GiftBag, GiftControl } from '@/gifts';
+import { useRoomGifts } from '@/gifts/useRoomGifts';
+import { SpiritAnimation } from '@/gifts/SpiritPup';
 import './university-room.css';
 import './bot-moderation.css';
 
@@ -19,7 +22,7 @@ const FACES = ['\u{1F600}', '\u{1F602}', '\u{1F60D}', '\u{1F62D}', '\u{1F914}', 
 const RULES = "Stick to the room's topic. Be kind — no harassment or hate. Nothing sexual or explicit, in chat, names or photos. Don't share real names, phone numbers, addresses or other contact details. Don't hog the screen, no ALL CAPS, no ads or spam. Use Ignore on anyone bothering you, or Block and Report for anything serious. Public university chat is moderated by Streamtalk bots. Whispers and direct messages are private and are not scanned by these bots.";
 
 type Target = { username: string; displayName: string };
-type Item = { kind: 'room'; at: number; id: string; m: ChatMessage } | { kind: 'whisper'; at: number; id: string; w: { id: string; username: string; displayName: string; outgoing: boolean; body: string } };
+type Item = { kind: 'room'; at: number; id: string; m: ChatMessage } | { kind: 'gift'; at: number; id: string; gift: RoomGiftEvent } | { kind: 'whisper'; at: number; id: string; w: { id: string; username: string; displayName: string; outgoing: boolean; body: string } };
 
 export function TextChatRoom({ roomId, userId }: { roomId: string; userId: string }) {
   const soundScope = `${roomId}:${userId}`;
@@ -55,6 +58,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const [drawer, setDrawer] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [ignored, setIgnored] = useState<Set<string>>(new Set());
+  const gifts = useRoomGifts(roomId, userId, sessionId, ignored);
   const ignoreBusy = useRef(0);
   const idem = useRef<{ username: string; body: string; key: string } | null>(null);
   const autoRules = useRef(false);
@@ -125,8 +129,9 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const items = useMemo<Item[]>(() => {
     const a: Item[] = r.messages.filter((m) => m.botId || !ignored.has(m.username)).map((m) => ({ kind: 'room' as const, at: new Date(m.createdAt).getTime(), id: m.id, m }));
     const b: Item[] = (session?.whispers ?? []).filter((w) => !ignored.has(w.username)).map((w) => ({ kind: 'whisper' as const, at: new Date(w.createdAt).getTime(), id: `w-${w.id}`, w }));
-    return [...a, ...b].sort((x, y) => x.at - y.at || x.id.localeCompare(y.id));
-  }, [r.messages, session?.whispers, ignored]);
+    const c: Item[] = gifts.events.map(gift => ({ kind: 'gift', at: new Date(gift.createdAt).getTime(), id: `gift-${gift.id}`, gift }));
+    return [...a, ...b, ...c].sort((x, y) => x.at - y.at || x.id.localeCompare(y.id));
+  }, [r.messages, session?.whispers, ignored, gifts.events]);
   useEffect(() => { const el = box.current; if (el && near.current) el.scrollTop = el.scrollHeight; }, [items.length]);
 
   const toggleIgnore = (t: Target) => {
@@ -257,6 +262,11 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
               {r.loading && <p role="status">Loading history...</p>}
               {!r.loading && items.length === 0 && <p className="ch-note">No messages yet.</p>}
               {items.map((it) => {
+                if (it.kind === 'gift') {
+                  return <div className="ch-msg" key={it.id} data-testid={`gift-notice-${it.gift.id}`}>
+                    <div><p>{it.gift.senderName} sent {it.gift.recipientName} a Spirit Pup.</p></div>
+                  </div>;
+                }
                 if (it.kind === 'whisper') {
                   const w = it.w; const nm = nameOf(w.username, w.displayName);
                   return (
@@ -351,7 +361,8 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
         </div>
       )}
 
-      {giftBag && <GiftBag recipient={giftBag.recipient} onClose={() => setGiftBag(null)} />}
+      {giftBag && <GiftBag recipient={giftBag.recipient} roomId={roomId} sessionId={sessionId} onClose={() => setGiftBag(null)} />}
+      {gifts.animation && <SpiritAnimation key={gifts.animation.id} onFinish={gifts.finish} />}
 
       {rulesOpen && (
         <div className="ur-modal" onClick={dismissRules}>

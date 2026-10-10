@@ -1,6 +1,6 @@
 ---
 name: Image review tooling
-description: ImageMagick review-sheet fonts and Sharp resize/composite ordering.
+description: Review-sheet tooling, Sharp composite ordering and VP9 alpha verification.
 ---
 
 Do not rely on ImageMagick montage's default font when assembling image review sheets; use an explicitly installed font or an annotation-free image arrangement.
@@ -14,3 +14,9 @@ When composing onto a canvas with Sharp, materialize the composite before resizi
 **Why:** Sharp can perform resize before compositing even when chained afterward, so a large overlay fails against the newly smaller canvas.
 
 **How to apply:** Composite at the source canvas size into a buffer, then pass that buffer through a separate resize operation. Keep review-sheet failures separate from cutout quality.
+
+Do not infer that a VP9 WebM is opaque solely because ffprobe reports yuv420p.
+
+**Why:** WebM can carry alpha as a separate bitstream with alpha_mode=1; the default FFmpeg decoder may ignore it even when libvpx and the browser preserve transparency.
+
+**How to apply:** Check alpha_mode, decode with libvpx-vp9 explicitly and inspect RGBA values. Verify browser alpha before showing video, with a transparent animated-image fallback for unsupported decoders.

@@ -44,6 +44,7 @@ function isolatedRoomResponses(): Plugin {
           return;
         }
         if (pathname === `${endpoint}/messages` && req.method === 'GET') return json(messages);
+        if (pathname === `/api/social/gifts/rooms/${roomId}` && req.method === 'GET') return json({ events: [] });
         if (pathname === `${endpoint}/university-session` && req.method === 'GET')
           return json({
             people: [{

@@ -1,7 +1,11 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { Gift, X } from 'lucide-react';
-import { useGetSocialMe, getGetSocialMeQueryKey } from '@workspace/api-client-react';
-import { GiftIcon } from '@/social/common';
+import { Link } from 'wouter';
+import { useQueryClient } from '@tanstack/react-query';
+import { useGetSocialMe, getGetSocialMeQueryKey, sendSocialGift, getGetRoomGiftEventsQueryKey } from '@workspace/api-client-react';
+import { GiftIcon, refreshSocial, errMsg } from '@/social/common';
+import { SpiritIcon } from './SpiritPup';
 import { ownedGiftItems } from './gift-items';
 import './gifts.css';
 
@@ -9,8 +13,12 @@ type Recipient = { username: string; displayName: string } | null;
 
 const FOCUSABLE = 'button:not([disabled]),[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
 
-export function GiftBag({ recipient, onClose }: { recipient?: Recipient; onClose: () => void }) {
-  const me = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), staleTime: 0, refetchOnMount: 'always', refetchOnWindowFocus: 'always' } });
+export function GiftBag({ recipient, roomId, sessionId, onClose }: { recipient?: Recipient; roomId?: string; sessionId?: string; onClose: () => void }) {
+  const me = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), staleTime: 0, refetchOnMount: 'always', refetchOnWindowFocus: 'always', refetchInterval: 10000 } });
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const retry = useRef<{ recipient: string; giftId: string; roomId: string; key: string } | null>(null);
   const [sel, setSel] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const opener = useRef<Element | null>(document.activeElement);
@@ -18,8 +26,28 @@ export function GiftBag({ recipient, onClose }: { recipient?: Recipient; onClose
   closeRef.current = onClose;
   const titleId = useId();
   const items = useMemo(() => (me.data ? ownedGiftItems(me.data) : []), [me.data]);
-  const selected = items.find((i) => i.id === sel) ?? null;
+  const catalog = roomId ? me.data?.gifts.filter(g => g.id === 'spirit-pup') ?? [] : [];
+  const selected = catalog.find(i => i.id === sel) ?? items.find((i) => i.id === sel) ?? null;
+  const price = me.data?.gifts.find(g => g.id === sel)?.cost ?? 0;
+  const canSend = !!recipient && !!roomId && !!sessionId && sel === 'spirit-pup';
+  const enough = (me.data?.wallet.balance ?? 0) >= price;
   const name = recipient ? (recipient.displayName || recipient.username) : null;
+  async function send() {
+    if (!canSend || busy || !enough || !recipient || !roomId || !sessionId) return;
+    if (!retry.current || retry.current.recipient !== recipient.username || retry.current.giftId !== sel || retry.current.roomId !== roomId)
+      retry.current = { recipient: recipient.username, giftId: sel!, roomId, key: crypto.randomUUID() };
+    const attempt = retry.current;
+    setBusy(true); setError(null);
+    try {
+      await sendSocialGift({ recipient: attempt.recipient, giftId: attempt.giftId, roomId, idempotencyKey: attempt.key },
+        { headers: { 'X-Room-Session': sessionId } });
+      refreshSocial(qc);
+      void qc.invalidateQueries({ queryKey: getGetRoomGiftEventsQueryKey(roomId) });
+      retry.current = null;
+      onClose();
+    } catch (e) { setError(errMsg(e)); }
+    finally { setBusy(false); }
+  }
 
   useEffect(() => {
     const prev = opener.current as HTMLElement | null;
@@ -38,16 +66,26 @@ export function GiftBag({ recipient, onClose }: { recipient?: Recipient; onClose
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   };
 
-  return (
+  return createPortal(
     <div className="gift-framework-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }} data-testid="gift-bag-backdrop">
       <div ref={ref} className="gift-framework gift-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId} onKeyDown={onKey} data-testid="gift-bag">
         <div className="gift-head">
           <div>
             <h2 id={titleId} data-testid="gift-bag-title">{name ? `Gift bag for ${name}` : 'Your gift bag'}</h2>
-            <p className="gift-sub">{name ? `Choose from the gifts you own.` : 'Gifts you own.'}</p>
+            <p className="gift-sub">{name ? `Choose a gift. Sending costs credits.` : 'Gifts you own.'}</p>
           </div>
           <button type="button" className="gift-btn" onClick={onClose} aria-label="Close gift bag" data-testid="gift-bag-close"><X size={16} aria-hidden /></button>
         </div>
+        {me.data && <p>Balance: {me.data.wallet.balance} credits</p>}
+        {catalog.length > 0 && <section aria-label="Gift catalog">
+          <h3>Gift catalog</h3>
+          <ul className="gift-grid">{catalog.map(g => <li key={g.id}>
+            <button type="button" className="gift-item" aria-pressed={sel === g.id} onClick={() => { setSel(g.id); setError(null); }} data-testid={`gift-catalog-${g.id}`}>
+              <SpiritIcon /><span>{g.name}</span><span>{g.cost} credits</span>
+            </button>
+          </li>)}</ul>
+          {!recipient && <p>Choose a person's name in chat, then Gift, to select the recipient.</p>}
+        </section>}
         {me.isLoading ? (
           <div role="status" aria-label="Loading gift bag" data-testid="gift-bag-loading" className="gift-grid">
             <div className="gift-skel" /><div className="gift-skel" /><div className="gift-skel" />
@@ -67,7 +105,8 @@ export function GiftBag({ recipient, onClose }: { recipient?: Recipient; onClose
             {items.map((g) => (
               <li key={g.id}>
                 <button type="button" className="gift-item" aria-pressed={sel === g.id} onClick={() => setSel(g.id)} data-testid={`gift-item-${g.id}`}>
-                  <GiftIcon id={g.id} size={26} /><span>{g.name}</span>
+                  {g.id === 'spirit-pup' ? <SpiritIcon /> : <GiftIcon id={g.id} size={26} />}<span>{g.name}</span>
+                  {g.quantity && <span>Owned: {g.quantity}</span>}
                 </button>
               </li>
             ))}
@@ -78,9 +117,17 @@ export function GiftBag({ recipient, onClose }: { recipient?: Recipient; onClose
             Selected: {selected.name}{name ? ` for ${name}` : ''}
           </p>
         )}
-        <p role="status">Gift sending is not yet available.</p>
-        <button type="button" className="gift-btn gift-send" disabled aria-disabled="true" data-testid="gift-bag-send">Send gift (not available yet)</button>
+        {error && <p role="alert">{error}</p>}
+        {canSend && !enough && <p>Not enough credits. <Link href="/community/credits">Open credit store</Link></p>}
+        {canSend ? <>
+          <p>Send to {name} for {price} credits. The recipient gets half; the house gets half. Your owned copies are collectibles.</p>
+          <button type="button" className="gift-btn gift-send" disabled={busy || !enough} onClick={send} data-testid="gift-bag-send">{busy ? 'Sending…' : `Send Spirit Pup · ${price} credits`}</button>
+        </> : <>
+          <p role="status">{roomId ? 'Select Spirit Pup and a recipient to send. Other gifts are not available to send here yet.' : 'Open a university and choose a person to send Spirit Pup.'}</p>
+          <button type="button" className="gift-btn gift-send" disabled data-testid="gift-bag-send">Send gift (select Spirit Pup and a recipient in a university)</button>
+        </>}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

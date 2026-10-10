@@ -1,3 +1,4 @@
+export * from './social-gift-events';
 export * from "./room-messages";
 export * from "./moderator-bots";
 export * from "./chat-community";

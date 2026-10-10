@@ -39,6 +39,7 @@ import type {
   ErrorResponse4b96100,
   FavoriteGalleryEntry,
   FavoriteRoomResult,
+  GetRoomGiftEvents200,
   GetSocialConversationParams,
   GetSocialPeopleParams,
   HealthStatus,
@@ -2298,6 +2299,77 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getSendSocialGiftMutationOptions(options));
     }
+
+export const getGetRoomGiftEventsUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/social/gifts/rooms/${roomId}`
+}
+
+export const getRoomGiftEvents = async (roomId: string, options?: Parameters<typeof customFetch>[1]): Promise<GetRoomGiftEvents200> => {
+
+  return customFetch<GetRoomGiftEvents200>(getGetRoomGiftEventsUrl(roomId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetRoomGiftEventsQueryKey = (roomId: string,) => {
+    return [
+    `/api/social/gifts/rooms/${roomId}`
+    ] as const;
+    }
+
+
+export const getGetRoomGiftEventsQueryOptions = <TData = Awaited<ReturnType<typeof getRoomGiftEvents>>, TError = ErrorType<unknown>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRoomGiftEventsQueryKey(roomId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRoomGiftEvents>>> = ({ signal }) => getRoomGiftEvents(roomId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetRoomGiftEventsQueryResult = NonNullable<Awaited<ReturnType<typeof getRoomGiftEvents>>>
+export type GetRoomGiftEventsQueryError = ErrorType<unknown>
+
+
+
+export function useGetRoomGiftEvents<TData = Awaited<ReturnType<typeof getRoomGiftEvents>>, TError = ErrorType<unknown>>(
+ roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetRoomGiftEventsQueryOptions(roomId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getPurchaseSocialProductUrl = () => {
 

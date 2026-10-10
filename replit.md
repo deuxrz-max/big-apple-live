@@ -1,5 +1,24 @@
 # Streamtalk
 
+### Spirit Pup gifts
+- The owner's exact uploaded pup and gold sparkles are chroma-keyed, never regenerated.
+- Spirit Pup costs 100 credits in the single server policy setting. Sending is explicit
+  from a university to a currently present, eligible recipient. Existing gifts retain
+  their prices and transfer behavior.
+- One atomic transaction deducts 100, credits the recipient 50, records the house's
+  50-credit allocation in the immutable gift receipt, and increments the recipient's
+  collectible bag quantity. Retry keys prevent duplicate charges, payouts or copies.
+- Bag copies are collectibles, not free resends; sending Spirit Pup always costs credits.
+- Additive gift receipts and bag tables only; no old data is rewritten or removed.
+- Public notices are isolated by university history identity and filtered for bilateral
+  blocks; Ignore remains local to the viewer. Members poll gift events every two seconds.
+- Transparent, non-blocking four-second animations queue one at a time. WebM alpha is
+  checked before display; Safari/iOS use animated transparent WebP, with APNG fallback.
+  Reduced-motion users see the transparent still icon instead.
+- Gift media is stored in the existing App Storage under its own versioned namespace,
+  not in the profile-photo namespace. Generated local outputs are ignored by Git/publish.
+- Preview only. No real-money checkout, cashout or payment provider is enabled.
+
 The owner renamed We Buggin to Streamtalk and selected the uploaded neon shield/
 Wi-Fi logo. Use Streamtalk in user-facing branding. Preserve existing artifact paths,
 package names, storage keys, account identifiers and data; this is the same app.
@@ -110,13 +129,15 @@ credits from a client click. No live charges are enabled; gift, bonus and cashou
 rules are outside this change.
 
 Gift framework: each university (including overflow) and Me can open a personal
-gift bag. Recipient-directed Gift actions only select the recipient, never send.
-The bag is read-only: show only saved inventory IDs matching the gift catalog,
-exclude cosmetic products and unknown IDs, and show an honest empty state.
+gift bag. Recipient-directed Gift actions only select the recipient, never send
+automatically. Spirit Pup is the approved explicit-send exception described above.
+Show only saved inventory IDs matching the gift catalog, exclude cosmetic products
+and unknown IDs, and show an honest empty state.
 Purple/gold styling is restricted to the gift control and bag; names remain white.
-Sending, purchases, pricing, deductions, recipient rewards, splits and cashouts
-are not implemented by this framework. Whether received gifts enter a bag is
-undecided. Keep existing legacy gift actions outside this framework unchanged.
+Other framework gifts remain unavailable to send; their prices and received-bag
+rules are undecided. Spirit Pup uses its approved credit split and bag copies.
+Real-money purchases and cashouts are unavailable. Keep existing legacy gift
+actions outside this framework unchanged.
 Chat name menus reuse Messages, public-message reports and Block; no message
 available means explain the report limitation, never claim a report succeeded.
 
