@@ -26,4 +26,6 @@ packages = ["xorg.xorgserver"]
 [userenv]
 
 [userenv.development]
+
+[userenv.shared]
 STREAMTALK_TEST_LOGINS = "[{\"displayName\":\"Test Bigo 1\",\"email\":\"streamtalk.test.bigo1+clerk_test@example.com\",\"username\":\"TestBigo1\"},{\"displayName\":\"Test Bigo 2\",\"email\":\"streamtalk.test.bigo2+clerk_test@example.com\",\"username\":\"TestBigo2\"},{\"displayName\":\"Test Bigo 3\",\"email\":\"streamtalk.test.bigo3+clerk_test@example.com\",\"username\":\"TestBigo3\"},{\"displayName\":\"Test Bigo 4\",\"email\":\"streamtalk.test.bigo4+clerk_test@example.com\",\"username\":\"TestBigo4\"}]"
