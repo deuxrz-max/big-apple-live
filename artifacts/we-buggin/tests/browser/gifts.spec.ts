@@ -116,6 +116,36 @@ test('phone gift bag has recipient, honest empty state and no sending', async ({
   expect(writes).toEqual([]);
 });
 
+test('gift control is a silent accessible video and repeats on a 30-second cadence', async ({ page }) => {
+  await page.clock.install();
+  await page.addInitScript(() => {
+    const nativePlay = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function() {
+      this.dataset.testPlayCalls = String(Number(this.dataset.testPlayCalls || '0') + 1);
+      return nativePlay.call(this);
+    };
+  });
+  await page.goto('/tests/browser/harness.html');
+  const button = page.getByTestId('button-open-gift-bag');
+  await expect(button).toHaveAttribute('aria-label', 'Send a gift');
+  await expect(button).toHaveText('');
+  const video = button.locator('video');
+  await expect.poll(() => video.evaluate(element => element.readyState)).toBeGreaterThan(1);
+  await expect(video).toBeVisible();
+  const transparentCorner = await video.evaluate(element => {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 1;
+    const context = canvas.getContext('2d')!;
+    context.drawImage(element, 0, 0, 8, 8, 0, 0, 1, 1);
+    return context.getImageData(0, 0, 1, 1).data[3] <= 8;
+  });
+  expect(transparentCorner).toBe(true);
+  await expect.poll(() => video.evaluate(element => Number(element.dataset.testPlayCalls ?? '0'))).toBeGreaterThan(0);
+  const initialPlayCount = await video.evaluate(element => Number(element.dataset.testPlayCalls ?? '0'));
+  await page.clock.fastForward(30_000);
+  await expect.poll(() => video.evaluate(element => Number(element.dataset.testPlayCalls ?? '0'))).toBeGreaterThan(initialPlayCount);
+});
+
 test('Moonfox can be sent for 500 credits and its room animation keeps transparency and image fallbacks', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   let sent = false;
@@ -264,4 +294,52 @@ test('room name menu connects Gift, Message and supported public-message Report'
   await page.getByRole('button', { name: 'Actions for friend', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Message', exact: true }).click();
   await expect(page).toHaveURL(/\/community\/messages\/friend$/);
+});
+
+test('room Send Gift control lets you choose a person and send directly', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  let sent: Record<string, unknown> | null = null;
+  await page.route('**/api/social/me', async route => {
+    const response = await route.fetch();
+    const original = await response.json();
+    await route.fulfill({ response, json: {
+      ...original,
+      wallet: { ...original.wallet, balance: 5050 },
+      gifts: [
+        { id: 'spirit-pup', name: 'Spirit Pup', cost: 100 },
+        { id: 'moonfox', name: 'Moonfox', cost: 500 },
+      ],
+    } });
+  });
+  await page.route('**/api/account/rooms/*/university-session', route => route.fulfill({ json: {
+    people: [
+      { participantId: 'self', username: 'fixture', displayName: 'Fixture', photoUrl: null, photoStatus: null, self: true, moderator: false, ignored: false, botId: null },
+      { participantId: 'test-1', username: 'testbigo1', displayName: 'Test Bigo 1', photoUrl: null, photoStatus: null, self: false, moderator: false, ignored: false, botId: null },
+      { participantId: 'ghost', username: 'ghost-bot', displayName: 'Ghost Bot', photoUrl: null, photoStatus: 'approved', self: false, moderator: true, ignored: false, botId: 'ghost' },
+    ],
+    ignoredUsernames: [], topic: 'Test room topic', rulesSeen: true, whispers: [],
+  } }));
+  await page.route('**/api/social/gifts/rooms/*', route => route.fulfill({ json: { events: [] } }));
+  await page.route('**/api/social/gifts', route => {
+    sent = route.request().postDataJSON();
+    return route.fulfill({ json: { balance: 4550, earned: 0, received: 0, sent: 500, dailyClaimedAt: null } });
+  });
+
+  await page.goto('/tests/browser/harness.html');
+  await page.getByTestId('button-open-gift-bag').click();
+  await expect(page.getByTestId('gift-bag-title')).toHaveText('Send a gift');
+  const recipient = page.getByRole('combobox', { name: 'Gift recipient' });
+  await expect(recipient).toBeVisible();
+  await recipient.selectOption('testbigo1');
+  await expect(recipient.locator('option')).toHaveCount(2);
+  await page.getByTestId('gift-catalog-moonfox').click();
+  await expect(page.getByTestId('gift-bag-selection')).toHaveText('Selected: Moonfox for Test Bigo 1');
+  await expect(page.getByTestId('gift-bag-send')).toBeEnabled();
+  await page.getByTestId('gift-bag-send').click();
+  await expect(page.getByTestId('gift-bag')).toHaveCount(0);
+  expect(sent).toMatchObject({
+    recipient: 'testbigo1',
+    giftId: 'moonfox',
+    roomId: 'promo-regression-room',
+  });
 });

@@ -26,7 +26,7 @@ export function OwnProfile() {
         </nav>
       }>
       <Link href="/community/credits" className="pf-btn" data-testid="link-buy-credits">Buy credits</Link>
-      <GiftControl onClick={() => setBagOpen(true)} />
+      <GiftControl onClick={() => setBagOpen(true)} label="Open your gift bag" />
       {bagOpen && <GiftBag onClose={() => setBagOpen(false)} />}
       <div className="sc pf-rewards"><RewardsPage embedded /></div>
     </ProfileView>

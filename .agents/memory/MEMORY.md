@@ -19,3 +19,4 @@
 - [Photo visibility cache precedence](photo-visibility-cache-precedence.md) — never replace a fresh hidden-photo response with an older cached image.
 - [Sesame MCP handoff](sesame-mcp-handoff.md) — use official Replit MCP for Agent recommendations; do not publish Streamtalk to enable access.
 - [Gift-flow demos](gift-flow-demos.md) — show existing gift UI in an isolated phone-sized browser recording and disclose synthetic responses.
+- [Gift-media transparency](gift-media-transparency.md) — owner confirmed Moonfox stays transparent; keep alpha support and verify other gift assets separately.

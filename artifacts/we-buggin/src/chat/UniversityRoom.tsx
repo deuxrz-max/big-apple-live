@@ -122,6 +122,8 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   }
 
   const people = session?.people ?? [];
+  const giftRecipients = people.filter(person => !person.self && !person.botId)
+    .map(({ username, displayName }) => ({ username, displayName }));
   const me = people.find((p) => p.self);
   const isSelf = (username: string, authorId?: string) => (!!authorId && authorId === r.creds?.participantId) || me?.username === username;
   const nameOf = (username: string, fallback?: string) => people.find((p) => p.username === username)?.displayName ?? fallback ?? username;
@@ -361,7 +363,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
         </div>
       )}
 
-      {giftBag && <GiftBag recipient={giftBag.recipient} roomId={roomId} sessionId={sessionId} onClose={() => setGiftBag(null)} />}
+      {giftBag && <GiftBag recipient={giftBag.recipient} recipients={giftRecipients} roomId={roomId} sessionId={sessionId} onClose={() => setGiftBag(null)} />}
       {gifts.animation && (gifts.animation.giftId === 'moonfox'
         ? <MoonfoxAnimation key={gifts.animation.id} onFinish={gifts.finish} />
         : <SpiritAnimation key={gifts.animation.id} onFinish={gifts.finish} />)}
