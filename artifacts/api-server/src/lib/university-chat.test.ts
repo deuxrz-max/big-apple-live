@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import express, { type ErrorRequestHandler, type Request } from "express";
 import { eq, inArray } from "drizzle-orm";
 import { db, accountProfiles, chatRooms, chatAdmissions, chatMemberships, chatModerators,
-  profilePhotos, socialSettings, socialRelations, socialMessages, roomMessages, universityPreferences } from "@workspace/db";
+  profilePhotos, socialSettings, socialInventory, socialRelations, socialMessages, roomMessages, universityPreferences } from "@workspace/db";
 import router from "../routes";
 import { roomStore } from "./room-store";
 import { getProfile } from "./account-profiles";
@@ -129,6 +129,18 @@ test("Phase 3 real database and authenticated HTTP privacy safeguards (synthetic
     assert.equal((await feed(0)).people.find(p => p.username === names[2])!.moderator, true);
     await db.update(profilePhotos).set({ status: "approved" }).where(eq(profilePhotos.id, photoId));
     assert.equal((await feed(1)).people.find(p => p.username === names[0])!.photoUrl, `/api/photos/${photoId}`);
+  });
+  await t.test("the selected active cosmetic badge is included for room people, history, and newly sent messages", async () => {
+    await db.insert(socialInventory).values({
+      accountId: ids[0]!, itemId: "night-owl", expiresAt: new Date(Date.now() + 3 * 86400000),
+    });
+    await db.update(socialSettings).set({ badgeId: "night-owl" }).where(eq(socialSettings.accountId, ids[0]!));
+    assert.equal((await feed(1)).people.find(p => p.username === names[0])!.badgeId, "night-owl");
+    const accepted = await acceptMessage(codes[0]!, sessions[0]!.participantSessionId, ids[0]!,
+      { text: "Badge fixture message", kind: "text" });
+    assert.equal(accepted.message.badgeId, "night-owl");
+    const history = await getMessages(codes[0]!, roomStore, ids[1]!);
+    assert.equal(history.find(m => m.text === "Badge fixture message")!.badgeId, "night-owl");
   });
   await t.test("overflow topic inherits parent; all six initial topics are available", async () => {
     assert.equal((await feed(0)).topic, UNIVERSITY_TOPICS.LIVEME);

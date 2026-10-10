@@ -20,13 +20,15 @@
 .ur-people{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:4px}
 .ur-prow{display:flex;align-items:center;gap:8px;width:100%;padding:6px;border-radius:10px;text-align:left;color:inherit;background:none}
 button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:none}
-.ur-pname{flex:1;min-width:0;overflow-wrap:anywhere;font-size:13px;font-weight:600;text-shadow:0 1px 2px #000,0 0 3px #000b}
+.ur-pname{flex:1;min-width:0;display:flex;align-items:center;gap:5px;color:#fff;font-size:13px;font-weight:600;text-shadow:0 1px 2px #000,0 0 3px #000b}
+.ur-pname-text{flex:1;min-width:0;overflow-wrap:anywhere}
 .ur-pname em{font-style:normal;opacity:.6;font-weight:400}
+.ur .sc-badge-compact{display:inline-grid;place-items:center;width:16px;height:16px;flex:0 0 16px;background:transparent;color:#F6D987;border-radius:50%}
 .ur-badge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;background:linear-gradient(135deg,#9D1DFF,#5E00FF)}
 .ur-ign{font-size:10px;color:#A9A6B5;border:1px solid rgba(255,255,255,.2);padding:1px 7px;border-radius:999px}
 .ur-name{background:none;padding:0;text-align:left;cursor:pointer}
 .ch.ur .ch-msg{background:transparent!important;border-radius:0;color:#fff;text-shadow:0 1px 2px #000,0 0 3px #000b}
-.ch.ur .ch-sender{color:#FF8AC2}
+.ch.ur .ch-sender{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;color:#fff}
 .ur-whisper{font-style:italic}
 .ur-wlabel{font-size:12px;font-weight:700;color:#FF8AC2}
 .ur-chip{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 10px;border-radius:12px 12px 0 0;background:rgba(94,0,255,.5);font-size:13px;font-weight:600}

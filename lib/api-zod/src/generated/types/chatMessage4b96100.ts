@@ -12,6 +12,8 @@ import type { EmojiIdentity4b96100 } from './emojiIdentity4b96100';
 export interface ChatMessage4b96100 {
   /** @nullable */
   botId?: ChatMessage4b96100BotId;
+  /** @nullable */
+  badgeId?: string | null;
   id: string;
   roomId: string;
   authorId: string;

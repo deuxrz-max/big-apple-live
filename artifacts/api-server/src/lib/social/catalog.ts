@@ -1,4 +1,5 @@
 import { MARATHON, NIGHT_OWL } from './marathon-policy';
+import { HEART } from './heart-policy';
 import { MOONFOX } from './moonfox-policy';
 import { SPIRIT_PUP } from './spirit-pup-policy';
 
@@ -12,6 +13,7 @@ export const GIFTS = [
   { id: "good-vibes", name: "Good vibes", cost: 5 },
   { id: "big-love", name: "Big love", cost: 10 },
   { id: "standing-ovation", name: "Standing ovation", cost: 25 },
+  HEART,
   SPIRIT_PUP,
   MOONFOX,
 ] as const;

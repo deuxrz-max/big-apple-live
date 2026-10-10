@@ -905,6 +905,7 @@ components:
       required: [participantId, username, displayName, photoUrl, photoStatus, self, moderator, ignored]
       properties:
         botId: { type: [string, "null"], enum: [ghost, vampire, wolf, zombie, null] }
+        badgeId: { type: [string, "null"] }
         participantId: { type: string }
         username: { type: string }
         displayName: { type: string }
@@ -1025,6 +1026,7 @@ components:
       type: object
       properties:
         botId: { type: [string, "null"], enum: [ghost, vampire, wolf, zombie, null] }
+        badgeId: { type: [string, "null"] }
         id: { type: string, format: uuid }
         roomId: { type: string }
         authorId: { type: string, format: uuid }

@@ -10,6 +10,8 @@ import type { UniversityPerson4b96100BotId } from './universityPerson4b96100BotI
 export interface UniversityPerson4b96100 {
   /** @nullable */
   botId?: UniversityPerson4b96100BotId;
+  /** @nullable */
+  badgeId?: string | null;
   participantId: string;
   username: string;
   displayName: string;

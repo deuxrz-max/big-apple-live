@@ -1,5 +1,5 @@
-import { db, accountProfiles, roomMessages, socialRelations, socialSettings, chatMemberships, moderatorBotFlags, type RoomMessageRow } from "@workspace/db";
-import { eq, desc, sql, and, or, gte, notInArray, isNull, lt } from "drizzle-orm";
+import { db, accountProfiles, roomMessages, socialRelations, socialSettings, socialInventory, chatMemberships, moderatorBotFlags, type RoomMessageRow } from "@workspace/db";
+import { eq, desc, sql, and, or, gte, notInArray, isNull, lt, inArray } from "drizzle-orm";
 import { GetRoomMessagesResponse, type ChatInput, type ChatAccepted } from "@workspace/api-zod";
 import { publicProfile } from "./account-profiles";
 import { roomStore, RoomError, type RoomStore } from "./room-store";
@@ -37,7 +37,19 @@ export async function getMessages(roomId: string, store: RoomStore = roomStore, 
   const rows = await db.select({ message: roomMessages, photoUrl: accountProfiles.photoUrl }).from(roomMessages)
     .leftJoin(accountProfiles, eq(accountProfiles.accountId, roomMessages.authorAccountId)).where(and(...conditions))
     .orderBy(desc(roomMessages.createdAt), desc(roomMessages.id)).limit(60);
-  return rows.reverse().map(row => ({ ...publicMessage(row.message), photoUrl: null }));
+  const authorIds = [...new Set(rows.map(row => row.message.authorAccountId).filter((id): id is string => !!id))];
+  const selectedBadges = authorIds.length ? await db.select({
+    accountId: socialSettings.accountId, badgeId: socialSettings.badgeId,
+  }).from(socialSettings).innerJoin(socialInventory, and(
+    eq(socialInventory.accountId, socialSettings.accountId),
+    eq(socialInventory.itemId, socialSettings.badgeId),
+    sql`(${socialInventory.expiresAt} IS NULL OR ${socialInventory.expiresAt} > CURRENT_TIMESTAMP)`,
+  )).where(inArray(socialSettings.accountId, authorIds)) : [];
+  const badgeByAccount = new Map(selectedBadges.map(row => [row.accountId, row.badgeId]));
+  return rows.reverse().map(row => ({
+    ...publicMessage(row.message), photoUrl: null,
+    badgeId: row.message.authorAccountId ? badgeByAccount.get(row.message.authorAccountId) ?? null : null,
+  }));
 }
 export async function acceptMessage(
   roomId: string, sessionId: string, accountId: string, input: ChatInput,
@@ -68,8 +80,13 @@ export async function acceptMessage(
     }
     // Emoji text never mutates a saved photo or obsolete avatar fields.
     let profile = { ...publicProfile(row), photoUrl: null, photoUrls: [] };
-    const [settings] = await tx.select({ bio: socialSettings.bio }).from(socialSettings)
+    const [settings] = await tx.select({ bio: socialSettings.bio, badgeId: socialSettings.badgeId }).from(socialSettings)
       .where(eq(socialSettings.accountId, accountId));
+    const [activeBadge] = settings?.badgeId ? await tx.select({ itemId: socialInventory.itemId })
+      .from(socialInventory).where(and(eq(socialInventory.accountId, accountId),
+        eq(socialInventory.itemId, settings.badgeId),
+        sql`(${socialInventory.expiresAt} IS NULL OR ${socialInventory.expiresAt} > CURRENT_TIMESTAMP)`)).limit(1) : [];
+    const badgeId = activeBadge?.itemId ?? null;
     profile = { ...profile, bio: settings?.bio ?? "" };
     const [original] = await tx.insert(roomMessages).values({
       roomId: roomId.toUpperCase(), historyId, authorId: sender.participantId, authorAccountId: accountId,
@@ -99,7 +116,8 @@ export async function acceptMessage(
     }
     // A leave/expiry while the database was busy rolls back message, flag and warning.
     store.requireAccountMember(roomId, sessionId, accountId);
-    return { message: { ...publicMessage(message), photoUrl: null }, profile };
+    return { message: { ...publicMessage(message), photoUrl: null,
+      badgeId: message.authorAccountId === accountId ? badgeId : null }, profile };
   });
   // No events or in-memory avatar changes occur before the transaction commits.
   store.updateAccountIdentity(accountId, accepted.profile.displayName ?? accepted.profile.username, accepted.profile.identity, null);

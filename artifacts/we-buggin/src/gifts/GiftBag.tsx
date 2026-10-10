@@ -12,7 +12,7 @@ import './gifts.css';
 type Recipient = { username: string; displayName: string } | null;
 
 const FOCUSABLE = 'button:not([disabled]),[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
-const ROOM_GIFT_IDS = new Set<RoomGiftId>(['spirit-pup', 'moonfox']);
+const ROOM_GIFT_IDS = new Set<RoomGiftId>(['heart', 'spirit-pup', 'moonfox']);
 const isRoomGiftId = (id: string): id is RoomGiftId => ROOM_GIFT_IDS.has(id as RoomGiftId);
 function giftIcon(id: string) {
   return isRoomGiftId(id) ? <RoomGiftIcon giftId={id} /> : <GiftIcon id={id} size={26} />;

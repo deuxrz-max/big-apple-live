@@ -6,7 +6,7 @@ import { assertContact, lockAccounts, lockPair, replay, requireAccount, targetAc
 import { grantTimedBadge } from './marathon';
 import { TIMED_BADGES, NIGHT_OWL } from './marathon-policy';
 import { SPIRIT_PUP, spiritSplit } from './spirit-pup-policy';
-import { MOONFOX } from './moonfox-policy';
+import { isRoomGift } from './room-gift-policy';
 import { validateGiftRoom } from './room-gifts';
 import { requireAdult } from '../community';
 
@@ -28,7 +28,7 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
   const target = await targetAccount(recipient);
   const item = GIFTS.find(g => g.id === giftId);
   if (!item) throw new RoomError(400, "Choose a gift from the catalog");
-  const roomGift = item.id === SPIRIT_PUP.id || item.id === MOONFOX.id;
+  const roomGift = isRoomGift(item.id);
   if (roomGift) {
     if (!context) throw new RoomError(400, `Send ${item.name} from a university gift tab`);
     await requireAdult(id);

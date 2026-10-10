@@ -135,13 +135,13 @@ test('gift control is a silent accessible video and repeats on a 30-second caden
   await expect(button).toHaveAttribute('aria-label', 'Send a gift');
   await expect(button).toHaveText('');
   const video = button.locator('video');
-  await expect.poll(() => video.evaluate(element => element.readyState)).toBeGreaterThan(1);
+  await expect.poll(() => video.evaluate(element => (element as HTMLVideoElement).readyState)).toBeGreaterThan(1);
   await expect(video).toBeVisible();
   const transparentCorner = await video.evaluate(element => {
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 1;
     const context = canvas.getContext('2d')!;
-    context.drawImage(element, 0, 0, 8, 8, 0, 0, 1, 1);
+    context.drawImage(element as HTMLVideoElement, 0, 0, 8, 8, 0, 0, 1, 1);
     return context.getImageData(0, 0, 1, 1).data[3] <= 8;
   });
   expect(transparentCorner).toBe(true);
@@ -162,6 +162,7 @@ test('Moonfox can be sent for 500 credits and its room animation keeps transpare
       ...original,
       wallet: { ...original.wallet, balance: sent ? 500 : 1000 },
       gifts: [
+        { id: 'heart', name: 'Heart', cost: 50 },
         { id: 'spirit-pup', name: 'Spirit Pup', cost: 100 },
         { id: 'moonfox', name: 'Moonfox', cost: 500 },
       ],
@@ -193,6 +194,10 @@ test('Moonfox can be sent for 500 credits and its room animation keeps transpare
   await page.getByRole('button', { name: 'Actions for friend', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Gift', exact: true }).click();
   const card = page.getByTestId('gift-catalog-moonfox');
+  const giftIds = await page.locator('[data-testid^="gift-catalog-"]').evaluateAll(elements =>
+    elements.map(element => element.getAttribute('data-testid')));
+  expect(giftIds).toEqual(['gift-catalog-heart', 'gift-catalog-spirit-pup', 'gift-catalog-moonfox']);
+  await expect(page.getByTestId('gift-catalog-heart')).toContainText('50 credits');
   await expect(card).toBeVisible();
   await expect(card).toContainText('Moonfox');
   await expect(card).toContainText('500 credits');
@@ -254,6 +259,75 @@ test('Moonfox can be sent for 500 credits and its room animation keeps transpare
   await page.waitForTimeout(300);
   expect(Buffer.compare(firstApngFrame, await apng.screenshot())).not.toBe(0);
   await expect(page.getByTestId('input-message')).toBeVisible();
+});
+
+test('Heart is a 50-credit first gift and shows its lightweight room animation', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  let sent: Record<string, unknown> | null = null;
+  let posted = false;
+  await page.route('**/api/social/me', async route => {
+    const response = await route.fetch();
+    const original = await response.json();
+    await route.fulfill({ response, json: {
+      ...original,
+      wallet: { ...original.wallet, balance: posted ? 5000 : 5050 },
+      gifts: [
+        { id: 'heart', name: 'Heart', cost: 50 },
+        { id: 'spirit-pup', name: 'Spirit Pup', cost: 100 },
+        { id: 'moonfox', name: 'Moonfox', cost: 500 },
+      ],
+    } });
+  });
+  await page.route('**/api/account/rooms/*/university-session', route => route.fulfill({ json: {
+    people: [
+      { participantId: 'self', username: 'fixture', displayName: 'Fixture', photoUrl: null, photoStatus: null, self: true, moderator: false, ignored: false, botId: null },
+      { participantId: 'test-1', username: 'testbigo1', displayName: 'Test Bigo 1', photoUrl: null, photoStatus: null, self: false, moderator: false, ignored: false, botId: null },
+    ],
+    ignoredUsernames: [], topic: 'Test room topic', rulesSeen: true, whispers: [],
+  } }));
+  await page.route('**/api/social/gifts/rooms/*', route => route.fulfill({ json: { events: posted ? [{
+    id: 'heart-receipt-fixture', giftId: 'heart', senderUsername: 'fixture', recipientUsername: 'testbigo1',
+    senderName: 'Fixture', recipientName: 'Test Bigo 1', createdAt: new Date().toISOString(),
+  }] : [] } }));
+  await page.route('**/api/social/gifts', route => {
+    sent = route.request().postDataJSON();
+    posted = true;
+    return route.fulfill({ json: { balance: 5000, earned: 0, received: 0, sent: 50, dailyClaimedAt: null } });
+  });
+
+  await page.goto('/tests/browser/harness.html');
+  await page.getByTestId('button-open-gift-bag').click();
+  const send = page.getByTestId('gift-bag-send');
+  await expect(send).toBeDisabled();
+  await expect(page.getByTestId('gift-catalog-heart')).toContainText('Heart');
+  await expect(page.getByTestId('gift-catalog-heart')).toContainText('50 credits');
+  const heartIcon = page.getByTestId('gift-catalog-heart').locator('.heart-gift-catalog-icon');
+  await expect(heartIcon).toHaveText('❤️');
+  await expect(heartIcon).toHaveCSS('width', '64px');
+
+  await page.getByRole('combobox', { name: 'Gift recipient' }).selectOption('testbigo1');
+  await expect(send).toBeDisabled();
+  await page.getByTestId('gift-catalog-heart').click();
+  await expect(send).toBeEnabled();
+  await expect(send).toHaveText('Send gift');
+  await page.getByTestId('gift-bag-send').click();
+  expect(sent).toMatchObject({
+    recipient: 'testbigo1',
+    giftId: 'heart',
+    roomId: 'promo-regression-room',
+  });
+
+  await expect(page.getByTestId('gift-notice-heart-receipt-fixture')).toHaveText('Fixture sent Test Bigo 1 a Heart.');
+  const animation = page.getByTestId('heart-animation');
+  await expect(animation).toBeVisible();
+  expect(await animation.evaluate(element => getComputedStyle(element).pointerEvents)).toBe('none');
+  expect(await animation.locator('.heart-gift-animation').evaluate(element => ({
+    animationName: getComputedStyle(element).animationName,
+    animationDuration: getComputedStyle(element).animationDuration,
+    fontSize: parseFloat(getComputedStyle(element).fontSize),
+  }))).toMatchObject({ animationName: 'heart-gift-pop-float', animationDuration: '2s' });
+  await expect(animation.locator('video,img')).toHaveCount(0);
+  await expect(animation).toHaveCount(0, { timeout: 3000 });
 });
 
 test('real component reads saved inventory, selection cannot transfer or buy', async ({ page }) => {

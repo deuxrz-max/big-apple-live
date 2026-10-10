@@ -167,6 +167,7 @@ export const GetUniversitySessionParams = zod.object({
 export const GetUniversitySessionResponse = zod.object({
   "people": zod.array(zod.object({
   "botId": zod.union([zod.literal('ghost'),zod.literal('vampire'),zod.literal('wolf'),zod.literal('zombie'),zod.literal(null)]).nullish(),
+  "badgeId": zod.string().nullish(),
   "participantId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
@@ -283,6 +284,7 @@ export const getOlderRoomMessagesResponseIdentityHairColorRegExp = new RegExp('^
 
 export const GetOlderRoomMessagesResponseItem = zod.object({
   "botId": zod.union([zod.literal('ghost'),zod.literal('vampire'),zod.literal('wolf'),zod.literal('zombie'),zod.literal(null)]).nullish(),
+  "badgeId": zod.string().nullish(),
   "id": zod.string().uuid(),
   "roomId": zod.string(),
   "authorId": zod.string().uuid(),
@@ -1228,6 +1230,7 @@ export const getRoomMessagesResponseIdentityHairColorRegExp = new RegExp('^#[0-9
 
 export const GetRoomMessagesResponseItem = zod.object({
   "botId": zod.union([zod.literal('ghost'),zod.literal('vampire'),zod.literal('wolf'),zod.literal('zombie'),zod.literal(null)]).nullish(),
+  "badgeId": zod.string().nullish(),
   "id": zod.string().uuid(),
   "roomId": zod.string(),
   "authorId": zod.string().uuid(),
@@ -1283,6 +1286,7 @@ export const sendRoomMessageResponseProfileIdentityHairColorRegExp = new RegExp(
 export const SendRoomMessageResponse = zod.object({
   "message": zod.object({
   "botId": zod.union([zod.literal('ghost'),zod.literal('vampire'),zod.literal('wolf'),zod.literal('zombie'),zod.literal(null)]).nullish(),
+  "badgeId": zod.string().nullish(),
   "id": zod.string().uuid(),
   "roomId": zod.string(),
   "authorId": zod.string().uuid(),

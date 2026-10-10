@@ -27,3 +27,14 @@
 .gift-control-media{position:relative;display:block;width:38px;height:44px}
 .gift-control-animation{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
 .gift-framework .gift-skel{height:72px;border-radius:14px;background:#241a3d}
+.heart-gift-catalog-icon{display:grid;width:64px;height:64px;place-items:center;font-size:34px;line-height:1}
+.heart-gift-animation{display:block;font-size:clamp(48px,15vw,72px);line-height:1;filter:drop-shadow(0 4px 12px rgba(255,24,72,.38));animation:heart-gift-pop-float 2s ease-out both}
+.heart-gift-animation.is-reduced-motion{animation:none}
+@keyframes heart-gift-pop-float{
+  0%{opacity:0;transform:translateY(12px) scale(.45)}
+  18%{opacity:1;transform:translateY(0) scale(1.12)}
+  32%{transform:translateY(0) scale(.92)}
+  45%{transform:translateY(0) scale(1.08)}
+  62%{opacity:1;transform:translateY(-6px) scale(1)}
+  100%{opacity:0;transform:translateY(-42px) scale(.86)}
+}

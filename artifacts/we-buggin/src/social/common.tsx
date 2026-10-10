@@ -25,10 +25,12 @@ export function GiftIcon({ id, size = 22 }: { id: string; size?: number }) {
   const I = id.toLowerCase().includes('coin') ? Coins : iconFor(id + 'g') ?? Gift;
   return <I size={size} aria-hidden />;
 }
-export function BadgeMark({ id, label }: { id: string | null; label?: string }) {
+export function BadgeMark({ id, label, size = 14, compact = false }: { id: string | null; label?: string; size?: number; compact?: boolean }) {
   if (!id) return null;
   const I = iconFor(id);
-  return <span className="sc-badge" title={label ?? 'Cosmetic badge'}><I size={14} aria-hidden /><span className="sc-sr">Badge</span></span>;
+  return <span className={`sc-badge${compact ? ' sc-badge-compact' : ''}`} title={label ?? 'Cosmetic badge'}>
+    <I size={size} aria-hidden /><span className="sc-sr">{label ?? 'Badge'}</span>
+  </span>;
 }
 
 /** Keeps one idempotency key per identical operation until confirmed. */

@@ -9,11 +9,13 @@ import {
 } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
 import { errMessage, errStatus } from '@/lib/errors';
+import { BadgeMark } from '@/social/common';
 import { useTextRoom } from './useTextRoom';
 import { PromoBackground } from './PromoBackground';
 import { BotShield } from './BotShield';
 import { GiftBag, GiftControl } from '@/gifts';
 import { useRoomGifts } from '@/gifts/useRoomGifts';
+import { HeartAnimation } from '@/gifts/HeartAnimation';
 import { MoonfoxAnimation, SpiritAnimation } from '@/gifts/SpiritPup';
 import './university-room.css';
 import './bot-moderation.css';
@@ -205,7 +207,10 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           const inner = (
             <>
               <UserPhoto username={p.username} displayName={p.displayName} photoUrl={p.photoUrl} size={36} reviewStatus={p.self && p.photoStatus ? p.photoStatus : undefined} />
-              <span className="ur-pname">{p.displayName}{p.self && <em> (you)</em>}</span>
+              <span className="ur-pname">
+                <span className="ur-pname-text">{p.displayName}{p.self && <em> (you)</em>}</span>
+                <BadgeMark id={p.badgeId ?? null} label={p.badgeId ? `${p.badgeId === 'night-owl' ? 'Night Owl' : p.badgeId.replaceAll('-', ' ')} badge` : undefined} size={16} compact />
+              </span>
               {p.moderator && <span className="ur-badge">Moderator</span>}
               {ign && <span className="ur-ign">Ignored</span>}
             </>
@@ -266,7 +271,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
               {items.map((it) => {
                 if (it.kind === 'gift') {
                   return <div className="ch-msg" key={it.id} data-testid={`gift-notice-${it.gift.id}`}>
-                    <div><p>{it.gift.senderName} sent {it.gift.recipientName} a {it.gift.giftId === 'moonfox' ? 'Moonfox' : 'Spirit Pup'}.</p></div>
+                    <div><p>{it.gift.senderName} sent {it.gift.recipientName} a {it.gift.giftId === 'heart' ? 'Heart' : it.gift.giftId === 'moonfox' ? 'Moonfox' : 'Spirit Pup'}.</p></div>
                   </div>;
                 }
                 if (it.kind === 'whisper') {
@@ -290,11 +295,16 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                   );
                 }
                 const self = isSelf(m.username, m.authorId);
+                const currentPerson = session?.people.find((p) => p.username === m.username);
+                const badgeId = currentPerson?.badgeId !== undefined ? currentPerson.badgeId : m.badgeId ?? null;
+                const badge = <BadgeMark id={badgeId ?? null}
+                  label={badgeId ? `${badgeId === 'night-owl' ? 'Night Owl' : badgeId.replaceAll('-', ' ')} badge` : undefined}
+                  size={16} compact />;
                 return (
                   <div className="ch-msg" key={m.id}>
                     <div>
-                      {self ? <span className="ch-sender">{nm}</span>
-                        : <button type="button" className="ch-sender ur-name" aria-haspopup="menu" aria-label={`Actions for ${nm}`} onClick={() => openMenu(m.username, nm, m.authorId)}>{nm}</button>}
+                      {self ? <span className="ch-sender">{nm}{badge}</span>
+                        : <button type="button" className="ch-sender ur-name" aria-haspopup="menu" aria-label={`Actions for ${nm}`} onClick={() => openMenu(m.username, nm, m.authorId)}>{nm}{badge}</button>}
                       <p>{m.text}</p>
                       <div className="ch-acts"><button type="button" onClick={() => { setReporting(m); setNote(null); }}>Report</button>
                         <button type="button" disabled={block.isPending} onClick={() => block.mutate({ username: m.username, data: { kind: 'block', active: true } }, { onSuccess: () => { setNote(`Blocked ${m.username}.`); r.refresh(); }, onError: (e) => setNote(errMessage(e)) })}>Block</button></div>
@@ -364,9 +374,11 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
       )}
 
       {giftBag && <GiftBag recipient={giftBag.recipient} recipients={giftRecipients} roomId={roomId} sessionId={sessionId} onClose={() => setGiftBag(null)} />}
-      {gifts.animation && (gifts.animation.giftId === 'moonfox'
-        ? <MoonfoxAnimation key={gifts.animation.id} onFinish={gifts.finish} />
-        : <SpiritAnimation key={gifts.animation.id} onFinish={gifts.finish} />)}
+      {gifts.animation && (gifts.animation.giftId === 'heart'
+        ? <HeartAnimation key={gifts.animation.id} onFinish={gifts.finish} />
+        : gifts.animation.giftId === 'moonfox'
+          ? <MoonfoxAnimation key={gifts.animation.id} onFinish={gifts.finish} />
+          : <SpiritAnimation key={gifts.animation.id} onFinish={gifts.finish} />)}
 
       {rulesOpen && (
         <div className="ur-modal" onClick={dismissRules}>

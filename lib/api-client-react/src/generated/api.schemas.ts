@@ -176,6 +176,8 @@ export const UniversityPersonBotId = {
 export interface UniversityPerson {
   /** @nullable */
   botId?: UniversityPersonBotId;
+  /** @nullable */
+  badgeId?: string | null;
   participantId: string;
   username: string;
   displayName: string;
@@ -447,6 +449,8 @@ export interface EmojiIdentity {
 export interface ChatMessage {
   /** @nullable */
   botId?: ChatMessageBotId;
+  /** @nullable */
+  badgeId?: string | null;
   id: string;
   roomId: string;
   authorId: string;
@@ -667,6 +671,8 @@ export const UniversityPerson4b96100BotId = {
 export interface UniversityPerson4b96100 {
   /** @nullable */
   botId?: UniversityPerson4b96100BotId;
+  /** @nullable */
+  badgeId?: string | null;
   participantId: string;
   username: string;
   displayName: string;
@@ -868,6 +874,8 @@ export const ChatMessage4b96100Kind = {
 export interface ChatMessage4b96100 {
   /** @nullable */
   botId?: ChatMessage4b96100BotId;
+  /** @nullable */
+  badgeId?: string | null;
   id: string;
   roomId: string;
   authorId: string;

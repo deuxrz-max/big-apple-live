@@ -1,5 +1,5 @@
-import { db, accountProfiles, chatRooms, chatModerators, socialMessages, universityIgnores, universityPreferences } from "@workspace/db";
-import { and, eq, inArray, notInArray, or, desc } from "drizzle-orm";
+import { db, accountProfiles, chatRooms, chatModerators, socialMessages, socialInventory, socialSettings, universityIgnores, universityPreferences } from "@workspace/db";
+import { and, eq, inArray, notInArray, or, desc, sql } from "drizzle-orm";
 import { RoomError, roomStore } from "./room-store";
 import { targetAccount, pairBlocked } from "./social/core";
 import { sendMessage } from "./social/messages";
@@ -66,6 +66,17 @@ export async function universitySession(id: string, roomId: string, sessionId: s
   const snapshot = roomStore.get(roomId);
   const ignored = await ignoredAccounts(id);
   const moderators = new Set((await db.select().from(chatModerators)).map(r => r.accountId));
+  const presentAccountIds = [...new Set(snapshot.participants
+    .map(participant => roomStore.sessionAccountId(roomId, participant.participantId))
+    .filter((accountId): accountId is string => !!accountId))];
+  const selectedBadges = presentAccountIds.length ? await db.select({
+    accountId: socialSettings.accountId, badgeId: socialSettings.badgeId,
+  }).from(socialSettings).innerJoin(socialInventory, and(
+    eq(socialInventory.accountId, socialSettings.accountId),
+    eq(socialInventory.itemId, socialSettings.badgeId),
+    sql`(${socialInventory.expiresAt} IS NULL OR ${socialInventory.expiresAt} > CURRENT_TIMESTAMP)`,
+  )).where(inArray(socialSettings.accountId, presentAccountIds)) : [];
+  const badgeByAccount = new Map(selectedBadges.map(row => [row.accountId, row.badgeId]));
   const people: UniversityPerson[] = [];
   const seen = new Set<string>();
   for (const participant of snapshot.participants) {
@@ -79,11 +90,12 @@ export async function universitySession(id: string, roomId: string, sessionId: s
     people.push({ participantId: participant.participantId, username: profile.username,
       displayName: profile.displayName ?? profile.username, photoUrl: photos.photoUrl,
       photoStatus: photos.photoReviews?.find(r => r.photoUrl === photos.photoUrl)?.status ?? null,
-      self: ownerId === id, moderator: moderators.has(ownerId), ignored: ignored.includes(ownerId), botId: null });
+      self: ownerId === id, moderator: moderators.has(ownerId), ignored: ignored.includes(ownerId), botId: null,
+      badgeId: badgeByAccount.get(ownerId) ?? null });
   }
   for (const bot of botRotation.people(roomId.toUpperCase())) people.push({
     participantId: bot.participantId, username: bot.name, displayName: bot.name, photoUrl: bot.avatarUrl,
-    photoStatus: "approved", self: false, moderator: true, ignored: false, botId: bot.id,
+    photoStatus: "approved", self: false, moderator: true, ignored: false, botId: bot.id, badgeId: null,
   });
   const [prefs] = await db.select().from(universityPreferences).where(eq(universityPreferences.accountId, id));
   const ignoredNames = ignored.length

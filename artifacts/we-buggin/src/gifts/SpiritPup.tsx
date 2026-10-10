@@ -1,18 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import { GiftIcon } from '@/social/common';
 
-export type RoomGiftId = 'spirit-pup' | 'moonfox';
-const MEDIA: Record<RoomGiftId, string> = {
+export type RoomGiftId = 'heart' | 'spirit-pup' | 'moonfox';
+type AnimatedGiftId = Exclude<RoomGiftId, 'heart'>;
+const MEDIA: Record<AnimatedGiftId, string> = {
   'spirit-pup': `${import.meta.env.BASE_URL}api/gift-media/spirit-pup/v1/`,
   moonfox: `${import.meta.env.BASE_URL}api/gift-media/moonfox/v1/`,
 };
-const DURATION: Record<RoomGiftId, number> = {
+const DURATION: Record<AnimatedGiftId, number> = {
   'spirit-pup': 4000,
   moonfox: 4000,
 };
 
 export function RoomGiftIcon({ giftId }: { giftId: RoomGiftId }) {
   const [failed, setFailed] = useState(false);
+  if (giftId === 'heart') return <span className="heart-gift-catalog-icon" aria-hidden="true">❤️</span>;
   return failed
     ? <GiftIcon id={giftId} />
     : <img className="spirit-gift-icon" src={`${MEDIA[giftId]}icon-small.png`} width={64} height={64} alt="" aria-hidden="true" onError={() => setFailed(true)} />;
@@ -28,7 +30,7 @@ function preferImages() {
 }
 
 /** Check decoded video alpha before showing it; fall back through transparent image formats. */
-export function RoomGiftAnimation({ giftId, onFinish }: { giftId: RoomGiftId; onFinish: () => void }) {
+export function RoomGiftAnimation({ giftId, onFinish }: { giftId: AnimatedGiftId; onFinish: () => void }) {
   const duration = DURATION[giftId];
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const [mode, setMode] = useState<'checking' | 'video' | 'webp' | 'apng' | 'still'>(reduced ? 'still' : preferImages() ? 'webp' : 'checking');
