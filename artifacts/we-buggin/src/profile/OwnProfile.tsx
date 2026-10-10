@@ -1,12 +1,15 @@
 import { Link } from 'wouter';
+import { useState } from 'react';
 import { useGetChatAccess, useGetSocialMe, getGetSocialMeQueryKey } from '@workspace/api-client-react';
 import '@/beam/beam.css';
 import '@/social/social.css';
 import { ErrorBox, Loading } from '@/social/common';
 import { RewardsPage } from '@/social/MoneyPages';
 import { ProfileView } from './ProfileView';
+import { GiftBag, GiftControl } from '@/gifts';
 
 export function OwnProfile() {
+  const [bagOpen, setBagOpen] = useState(false);
   const me = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), refetchInterval: 15000 } });
   const access = useGetChatAccess();
   if (me.isLoading) return <div className="pf pf-panel pf-panel-solo"><Loading /></div>;
@@ -23,6 +26,8 @@ export function OwnProfile() {
         </nav>
       }>
       <Link href="/community/credits" className="pf-btn" data-testid="link-buy-credits">Buy credits</Link>
+      <GiftControl onClick={() => setBagOpen(true)} />
+      {bagOpen && <GiftBag onClose={() => setBagOpen(false)} />}
       <div className="sc pf-rewards"><RewardsPage embedded /></div>
     </ProfileView>
   );

@@ -11,6 +11,7 @@ import { errMessage, errStatus } from '@/lib/errors';
 import { useTextRoom } from './useTextRoom';
 import { PromoBackground } from './PromoBackground';
 import { BotShield } from './BotShield';
+import { GiftBag, GiftControl } from '@/gifts';
 import './university-room.css';
 import './bot-moderation.css';
 
@@ -50,6 +51,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const [details, setDetails] = useState('');
   const [whisperTo, setWhisperTo] = useState<Target | null>(null);
   const [menu, setMenu] = useState<Target | null>(null);
+  const [giftBag, setGiftBag] = useState<{ recipient: Target | null } | null>(null);
   const [drawer, setDrawer] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [ignored, setIgnored] = useState<Set<string>>(new Set());
@@ -69,6 +71,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   useEffect(() => {
     setSound({ scope: soundScope, on: false });
     setText(''); setWhisperTo(null); setMenu(null); setDrawer(false); setRulesOpen(false);
+    setGiftBag(null);
     setIgnored(new Set()); setSendErr(null); setNote(null);
     autoRules.current = false; ignoreVersion.current = null; idem.current = null;
   }, [roomId, userId]);
@@ -230,6 +233,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
         {r.error && <div className="ch-err" role="alert">{r.error} <Link href="/user-portal" className="bm-link">Profile</Link></div>}
         {r.overflow && <p><Link className="bm-btn bm-btn-primary" href={`/rooms/${encodeURIComponent(r.overflow.roomId)}`}>Enter {r.overflow.label}</Link></p>}
         <div className="ur-sound-row">
+          <GiftControl onClick={() => { setMenu(null); setDrawer(false); setGiftBag({ recipient: null }); }} />
           <button type="button" className="bm-btn bm-btn-sm" aria-pressed={soundOn}
             aria-label={soundOn ? 'Turn background sound off' : 'Turn background sound on'}
             disabled={backgroundUnavailable} data-testid="button-background-sound"
@@ -319,6 +323,26 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
         <div className="ur-modal" onClick={() => setMenu(null)}>
           <div ref={menuBox} className="ur-menu" role="menu" aria-label={`Actions for ${menu.displayName}`} onClick={(e) => e.stopPropagation()}>
             <strong>{menu.displayName}</strong>
+            <button type="button" role="menuitem" onClick={() => { setGiftBag({ recipient: menu }); setMenu(null); setDrawer(false); }}>Gift</button>
+            <button type="button" role="menuitem" onClick={() => { const u = menu.username; setMenu(null); nav(`/community/messages/${encodeURIComponent(u)}`); }}>Message</button>
+            <button type="button" role="menuitem" onClick={() => {
+              const message = [...r.messages].reverse().find(m => m.username === menu.username && !m.botId);
+              setMenu(null); setDrawer(false);
+              if (message) { setReporting(message); setDetails(''); }
+              else setNote('Reports need a public chat message. No reportable message from this person is loaded; nothing has been reported.');
+            }}>Report</button>
+            <button type="button" role="menuitem" disabled={block.isPending} onClick={() => {
+              const target = menu;
+              setMenu(null);
+              block.mutate({ username: target.username, data: { kind: 'block', active: true } }, {
+                onSuccess: () => {
+                  setNote(`Blocked ${target.displayName}.`);
+                  qc.invalidateQueries({ predicate: q => String(q.queryKey[0]).startsWith('/api/social') });
+                  r.refresh();
+                },
+                onError: e => setNote(errMessage(e)),
+              });
+            }}>Block</button>
             <button type="button" role="menuitem" autoFocus onClick={() => { setWhisperTo(menu); setMenu(null); setDrawer(false); setText(''); setSendErr(null); }}>Whisper</button>
             <button type="button" role="menuitem" onClick={() => { const u = menu.username; setMenu(null); nav(`/community/people/${encodeURIComponent(u)}`); }}>View profile</button>
             <button type="button" role="menuitem" disabled={ignoreMut.isPending} onClick={() => toggleIgnore(menu)}>{ignored.has(menu.username) ? 'Unignore' : 'Ignore'}</button>
@@ -326,6 +350,8 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           </div>
         </div>
       )}
+
+      {giftBag && <GiftBag recipient={giftBag.recipient} onClose={() => setGiftBag(null)} />}
 
       {rulesOpen && (
         <div className="ur-modal" onClick={dismissRules}>

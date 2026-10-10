@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PromoBackground } from '../../src/chat/PromoBackground';
 import { TextChatRoom } from '../../src/chat/UniversityRoom';
 import { BuyCreditsPage } from '../../src/social/BuyCreditsPage';
+import { GiftBag, GiftControl } from '../../src/gifts';
 import '../../src/index.css';
 import '../../src/chat/chat.css';
 import '../../src/theme.css';
@@ -21,6 +22,12 @@ function PlayerFixture() {
   </>;
 }
 
+function GiftFixture() {
+  const [open, setOpen] = useState(false);
+  return <><GiftControl onClick={() => setOpen(true)} />
+    {open && <GiftBag recipient={{ username: 'test-recipient', displayName: 'Test Recipient' }} onClose={() => setOpen(false)} />}</>;
+}
+
 // No Clerk, auth overrides or replaced hooks/components. Original room mounts
 // against response-only fixtures on a private, loopback-only test server.
 createRoot(document.getElementById('root')!).render(
@@ -29,6 +36,7 @@ createRoot(document.getElementById('root')!).render(
       <main className="app-page">
         {new URLSearchParams(location.search).get('view') === 'credits'
           ? <BuyCreditsPage />
+          : new URLSearchParams(location.search).get('view') === 'gifts' ? <GiftFixture />
           : <TextChatRoom roomId="promo-regression-room" userId="synthetic-browser-user" />}
       </main>
       {/* Layout-only nav shell uses the original app's navigation stylesheet. */}

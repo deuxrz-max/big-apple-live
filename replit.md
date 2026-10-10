@@ -108,6 +108,17 @@ review step. Checkout is unavailable until a payment provider and server-verifie
 idempotent fulfillment are configured. Never simulate payment success or award
 credits from a client click. No live charges are enabled; gift, bonus and cashout
 rules are outside this change.
+
+Gift framework: each university (including overflow) and Me can open a personal
+gift bag. Recipient-directed Gift actions only select the recipient, never send.
+The bag is read-only: show only saved inventory IDs matching the gift catalog,
+exclude cosmetic products and unknown IDs, and show an honest empty state.
+Purple/gold styling is restricted to the gift control and bag; names remain white.
+Sending, purchases, pricing, deductions, recipient rewards, splits and cashouts
+are not implemented by this framework. Whether received gifts enter a bag is
+undecided. Keep existing legacy gift actions outside this framework unchanged.
+Chat name menus reuse Messages, public-message reports and Block; no message
+available means explain the report limitation, never claim a report succeeded.
 Keep the compact university name, parent-inherited topic and Rules button.
 House rules are acknowledged once per account on the server and can be reopened.
 The migration is additive and development-only; existing messages/accounts/photos

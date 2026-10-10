@@ -1,5 +1,6 @@
 .ur-head{display:flex;align-items:center;justify-content:space-between;gap:10px;position:relative;z-index:1}
 .ur-sound-row{display:flex;justify-content:flex-end;flex-shrink:0;position:relative;z-index:1;margin:6px 0}
+.ur-sound-row{gap:8px;flex-wrap:wrap}
 .ch.ur{padding-bottom:0}
 .ch.ur .ur-in{display:flex;flex-direction:column;height:calc(100dvh - var(--app-bottom-nav-clearance,80px));min-height:0}
 .ch.ur .ur-head{flex-shrink:0}
