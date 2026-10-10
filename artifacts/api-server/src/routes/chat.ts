@@ -10,6 +10,7 @@ import { acceptMessage, getMessages } from "../lib/room-chat";
 import { pairBlocked } from "../lib/social/core";
 import { requireAdult } from "../lib/community";
 import { isIgnored } from "../lib/university-chat";
+import { isTestAccountId } from "../lib/account-profiles";
 
 const router: IRouter = Router();
 router.get("/account/rooms/:roomId/history/:beforeId", async (req, res) => {
@@ -55,6 +56,8 @@ router.get("/account/rooms/:roomId/events", (req, res): void => {
     try { await requireAdult(id); } catch { res.end(); return; }
     if (event.type === "chat.accepted" && event.senderAccountId
       && (await pairBlocked(id, event.senderAccountId) || await isIgnored(id, event.senderAccountId))) return;
+    if (event.type === "chat.accepted" && event.senderAccountId
+      && await isTestAccountId(event.senderAccountId)) return;
     if (res.destroyed || res.writableEnded) return;
     try { roomStore.requireAccountMember(roomId, sessionId, id); }
     catch { res.end(); return; }

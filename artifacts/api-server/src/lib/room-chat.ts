@@ -12,6 +12,13 @@ function publicMessage(row: RoomMessageRow) {
 }
 export async function getMessages(roomId: string, store: RoomStore = roomStore, viewerId?: string, beforeId?: string) {
   const conditions = [eq(roomMessages.historyId, store.getHistoryId(roomId)), eq(roomMessages.hidden, "false")];
+  if (process.env.NODE_ENV === "production") {
+    const tests = await db.select({ id: accountProfiles.accountId }).from(accountProfiles)
+      .where(eq(accountProfiles.isTestAccount, true));
+    if (tests.length) conditions.push(or(
+      isNull(roomMessages.authorAccountId), notInArray(roomMessages.authorAccountId, tests.map(row => row.id)),
+    )!);
+  }
   if (beforeId) {
     const [cursor] = await db.select().from(roomMessages).where(and(
       eq(roomMessages.id, beforeId), eq(roomMessages.historyId, store.getHistoryId(roomId))));

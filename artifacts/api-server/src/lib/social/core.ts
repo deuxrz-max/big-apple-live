@@ -11,13 +11,15 @@ export type ProfileRow = typeof accountProfiles.$inferSelect;
 export type SettingsRow = typeof socialSettings.$inferSelect;
 export async function requireAccount(id: string) {
   const [profile] = await db.select().from(accountProfiles).where(eq(accountProfiles.accountId, id));
-  if (!profile) throw new RoomError(409, "Set up your profile in Edit profile first");
+  if (!profile || (process.env.NODE_ENV === "production" && profile.isTestAccount))
+    throw new RoomError(409, "Set up your profile in Edit profile first");
   return profile;
 }
 export async function targetAccount(username: string) {
   if (!/^[A-Za-z0-9_]{3,24}$/.test(username)) throw new RoomError(400, "Invalid dedicated name");
   const [profile] = await db.select().from(accountProfiles).where(eq(accountProfiles.nameKey, username.toLowerCase()));
-  if (!profile) throw new RoomError(404, "This person is not available");
+  if (!profile || (process.env.NODE_ENV === "production" && profile.isTestAccount))
+    throw new RoomError(404, "This person is not available");
   return profile;
 }
 export async function ensureSocial(id: string, tx: Tx | typeof db = db) {

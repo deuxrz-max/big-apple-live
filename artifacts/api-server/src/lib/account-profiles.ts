@@ -21,9 +21,15 @@ export function publicProfile(row: AccountProfileRow): AccountProfile {
 export function profilePhotoUrls(row: { photoUrl: string | null; photoUrls?: string[] }): string[] {
   return row.photoUrls?.length ? [...row.photoUrls] : row.photoUrl ? [row.photoUrl] : [];
 }
+export async function isTestAccountId(accountId: string): Promise<boolean> {
+  if (process.env.NODE_ENV !== "production") return false;
+  const [row] = await db.select({ isTestAccount: accountProfiles.isTestAccount }).from(accountProfiles)
+    .where(eq(accountProfiles.accountId, accountId));
+  return !!row?.isTestAccount;
+}
 export async function getProfile(accountId: string): Promise<AccountProfile | null> {
   const [row] = await db.select().from(accountProfiles).where(eq(accountProfiles.accountId, accountId));
-  if (!row) return null;
+  if (!row || (process.env.NODE_ENV === "production" && row.isTestAccount)) return null;
   const [settings] = await db.select({ bio: socialSettings.bio }).from(socialSettings)
     .where(eq(socialSettings.accountId, accountId));
   return { ...publicProfile(row), ...await visibleProfilePhotos(accountId, accountId, row), bio: settings?.bio ?? "" };
@@ -39,6 +45,11 @@ export async function ensureGuestNameAvailable(name: string): Promise<void> {
   if (row) throw new RoomError(409, "This name is reserved by an account; sign in to use your dedicated name");
 }
 export async function saveProfile(accountId: string, input: ProfileInput): Promise<AccountProfile> {
+  if (process.env.NODE_ENV === "production") {
+    const [existing] = await db.select({ isTestAccount: accountProfiles.isTestAccount })
+      .from(accountProfiles).where(eq(accountProfiles.accountId, accountId));
+    if (existing?.isTestAccount) throw new RoomError(404, "Account profile not available");
+  }
   const displayName = input.displayName?.trim();
   if (displayName !== undefined && (!displayName || displayName.length > 40))
     throw new RoomError(400, "Display name must contain 1–40 characters");

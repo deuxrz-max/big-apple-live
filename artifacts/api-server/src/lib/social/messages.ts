@@ -70,7 +70,7 @@ export async function inbox(id: string) {
   const conversations = [];
   for (const [other, entry] of [...grouped].slice(0, 100)) {
     const [profile] = await db.select().from(accountProfiles).where(eq(accountProfiles.accountId, other));
-    if (!profile) continue;
+    if (!profile || (process.env.NODE_ENV === "production" && profile.isTestAccount)) continue;
     const p = await person(id, profile);
     conversations.push({ username: p.username, displayName: p.displayName, photoUrl: p.photoUrl,
       lastMessageFromMe: entry.message.senderId === id, lastUnreadAt: entry.lastUnreadAt,

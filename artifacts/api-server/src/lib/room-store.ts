@@ -318,6 +318,14 @@ export class RoomStore {
     return undefined;
   }
 
+  accountSession(roomId: string, accountId: string): { sessionId: string; participantId: string } | null {
+    for (const [sessionId, session] of this.requireRoom(roomId).sessions) {
+      if (session.accountId === accountId)
+        return { sessionId, participantId: session.participant.participantId };
+    }
+    return null;
+  }
+
   publishChat(roomId: string, historyId: string, accepted: ChatAccepted, senderAccountId?: string): void {
     const room = this.rooms.get(roomId.toUpperCase());
     if (room?.historyId !== historyId) return;

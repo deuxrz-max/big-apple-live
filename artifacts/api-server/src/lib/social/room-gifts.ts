@@ -1,4 +1,4 @@
-import { db, socialGiftEvents, socialRelations } from '@workspace/db';
+import { db, socialGiftEvents, socialRelations, accountProfiles } from '@workspace/db';
 import { and, desc, eq, or } from 'drizzle-orm';
 import { requireAdult } from '../community';
 import { roomStore, RoomError } from '../room-store';
@@ -22,7 +22,12 @@ export async function roomGiftEvents(id: string, roomId: string, sessionId: stri
   const rows = await db.select().from(socialGiftEvents)
     .where(eq(socialGiftEvents.historyId, roomStore.getHistoryId(roomId)))
     .orderBy(desc(socialGiftEvents.createdAt), desc(socialGiftEvents.id)).limit(60);
-  return { events: rows.filter(r => !hidden.has(r.senderId ?? '') && !hidden.has(r.recipientId ?? '')).reverse().map(r => ({
+  const testIds = process.env.NODE_ENV === "production"
+    ? new Set((await db.select({ id: accountProfiles.accountId }).from(accountProfiles)
+      .where(eq(accountProfiles.isTestAccount, true))).map(row => row.id))
+    : new Set<string>();
+  return { events: rows.filter(r => !hidden.has(r.senderId ?? '') && !hidden.has(r.recipientId ?? '')
+    && !testIds.has(r.senderId ?? '') && !testIds.has(r.recipientId ?? '')).reverse().map(r => ({
     id: r.id, giftId: r.giftId, senderUsername: r.senderUsername, recipientUsername: r.recipientUsername,
     senderName: r.senderName, recipientName: r.recipientName, createdAt: r.createdAt.toISOString(),
   })) };

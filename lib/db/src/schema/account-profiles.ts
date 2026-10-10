@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, check } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, check } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -16,6 +16,7 @@ export const accountProfiles = pgTable("account_profiles", {
   hairColor: text("hair_color").notNull(),
   portraitId: text("portrait_id"),
   currentMood: text("current_mood"),
+  isTestAccount: boolean("is_test_account").notNull().default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, table => [
   check("account_profiles_four_photos", sql`cardinality(${table.photoUrls}) <= 4`),

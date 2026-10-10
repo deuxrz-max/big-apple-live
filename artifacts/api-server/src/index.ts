@@ -5,6 +5,7 @@ import { createServer } from "node:http";
 import { initializeCommunities } from "./lib/community";
 import { startPhotoRetentionScheduler } from "./lib/profile-photo-retention";
 import { initializeModeratorBots, startModeratorBotRotation } from "./lib/moderator-bots";
+import { startTestActorControl } from "./lib/test-actor-control";
 
 const rawPort = process.env["PORT"];
 
@@ -28,6 +29,7 @@ await initializeCommunities();
 await initializeModeratorBots();
 startModeratorBotRotation((err, context) => logger.error({ err, ...context }, "Bot rotation failed"));
 startPhotoRetentionScheduler();
+await startTestActorControl();
 server.listen(port, () => {
   logger.info({ port }, "Server listening");
 });

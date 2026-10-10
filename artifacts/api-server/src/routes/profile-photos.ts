@@ -5,12 +5,16 @@ import { PHOTO_LIMIT, stageProfilePhoto, readablePhoto } from "../lib/profile-ph
 import { UploadProfilePhotoResponse, GetProfilePhotoParams } from "@workspace/api-zod";
 import { RoomError } from "../lib/room-store";
 import { pairBlocked } from "../lib/social/core";
+import { isTestAccountId } from "../lib/account-profiles";
 
 const router = Router();
 router.post("/me/photo", async (req, _res, next) => {
   accountId(req);
   sameOrigin(req);
-  await requireAdult(accountId(req));
+  const id = accountId(req);
+  if (process.env.NODE_ENV === "production" && await isTestAccountId(id))
+    throw new RoomError(404, "Account profile not available");
+  await requireAdult(id);
   next();
 }, raw({ type: "application/octet-stream", limit: PHOTO_LIMIT }), async (req, res) => {
   if (!Buffer.isBuffer(req.body)) throw new RoomError(400, "Send the selected photo as a binary file");
@@ -22,6 +26,7 @@ router.get("/photos/:photoId", async (req, res) => {
   const params = GetProfilePhotoParams.safeParse(req.params);
   if (!params.success) throw new RoomError(404, "Photo not available");
   const { file, ownerId } = await readablePhoto(params.data.photoId, id);
+  if (await isTestAccountId(ownerId)) throw new RoomError(404, "Photo not available");
   if (id !== ownerId && await pairBlocked(id, ownerId)) throw new RoomError(404, "Photo not available");
   res.set({ "Content-Type": "image/webp", "Cache-Control": "private, no-store",
     "X-Content-Type-Options": "nosniff", "Content-Security-Policy": "default-src 'none'" });

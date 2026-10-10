@@ -73,7 +73,7 @@ export async function universitySession(id: string, roomId: string, sessionId: s
     if (!ownerId || seen.has(ownerId)) continue;
     seen.add(ownerId);
     const [profile] = await db.select().from(accountProfiles).where(eq(accountProfiles.accountId, ownerId));
-    if (!profile) continue;
+    if (!profile || (process.env.NODE_ENV === "production" && profile.isTestAccount)) continue;
     const photos = ownerId !== id && await pairBlocked(id, ownerId)
       ? { photoUrl: null, photoReviews: undefined } : await visibleProfilePhotos(ownerId, id, profile);
     people.push({ participantId: participant.participantId, username: profile.username,

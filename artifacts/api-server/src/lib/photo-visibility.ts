@@ -10,6 +10,14 @@ export async function visibleProfilePhotos(
   ownerId: string, viewerId: string | undefined,
   profile: { photoUrl: string | null; photoUrls?: string[] },
 ) {
+  if (process.env.NODE_ENV === "production") {
+    const [owner] = await db.select({ isTestAccount: accountProfiles.isTestAccount }).from(accountProfiles)
+      .where(eq(accountProfiles.accountId, ownerId));
+    if (owner?.isTestAccount) return {
+      photoUrl: null, photoUrls: [],
+      ...(ownerId === viewerId ? { photoReviews: [] } : {}),
+    };
+  }
   const urls = profile.photoUrls?.length ? profile.photoUrls : profile.photoUrl ? [profile.photoUrl] : [];
   const ids = urls.map(photoIdFromUrl).filter((id): id is string => !!id);
   const photos = ids.length ? await db.select().from(profilePhotos).where(and(
@@ -34,6 +42,7 @@ export async function pendingPhotoQueue() {
     username: accountProfiles.username, displayName: accountProfiles.displayName,
     photoUrl: sql<string>`'/api/photos/' || ${profilePhotos.id}::text`,
   }).from(profilePhotos).leftJoin(accountProfiles, eq(accountProfiles.accountId, profilePhotos.accountId))
-    .where(and(eq(profilePhotos.status, "pending"), sql`${profilePhotos.deletionStartedAt} IS NULL`))
+    .where(and(eq(profilePhotos.status, "pending"), sql`${profilePhotos.deletionStartedAt} IS NULL`,
+      process.env.NODE_ENV === "production" ? eq(accountProfiles.isTestAccount, false) : undefined))
     .orderBy(profilePhotos.createdAt).limit(100);
 }

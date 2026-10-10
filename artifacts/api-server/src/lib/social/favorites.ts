@@ -7,6 +7,7 @@ import { getPerson } from "./people";
 async function allowedFavorites(viewerId: string, username?: string) {
   return db.select().from(accountProfiles).where(and(
     username ? eq(accountProfiles.username, username) : undefined,
+    process.env.NODE_ENV === "production" ? eq(accountProfiles.isTestAccount, false) : undefined,
     sql`EXISTS (SELECT 1 FROM social_relations f WHERE f.kind = 'favorite'
       AND f.owner_id = ${viewerId} AND f.target_id = ${accountProfiles.accountId})`,
     sql`NOT EXISTS (SELECT 1 FROM social_relations b WHERE b.kind = 'block' AND

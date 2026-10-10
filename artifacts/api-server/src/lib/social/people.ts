@@ -46,6 +46,7 @@ export async function listPeople(id: string, input: PeopleQuery = {}, leaderboar
   const search = input.search?.trim().slice(0, 80).replace(/[\\%_]/g, "\\$&");
   const conditions = [
     leaderboard ? undefined : ne(accountProfiles.accountId, id),
+    process.env.NODE_ENV === "production" ? eq(accountProfiles.isTestAccount, false) : undefined,
     input.favorites ? undefined : eq(socialSettings.discoverable, true),
     sql`NOT EXISTS (SELECT 1 FROM social_relations r WHERE r.kind = 'block' AND ((r.owner_id = ${id} AND r.target_id = ${accountProfiles.accountId}) OR (r.owner_id = ${accountProfiles.accountId} AND r.target_id = ${id})))`,
     search ? or(ilike(accountProfiles.username, `%${search}%`), ilike(socialSettings.bio, `%${search}%`)) : undefined,
@@ -83,6 +84,8 @@ export async function relationship(id: string, username: string, kind: "favorite
 export async function blocks(id: string) {
   const rows = await db.select({ profile: accountProfiles }).from(socialRelations)
     .innerJoin(accountProfiles, eq(accountProfiles.accountId, socialRelations.targetId))
-    .where(and(eq(socialRelations.ownerId, id), eq(socialRelations.kind, "block"))).orderBy(accountProfiles.nameKey);
+    .where(and(eq(socialRelations.ownerId, id), eq(socialRelations.kind, "block"),
+      process.env.NODE_ENV === "production" ? eq(accountProfiles.isTestAccount, false) : undefined))
+    .orderBy(accountProfiles.nameKey);
   return { people: await Promise.all(rows.map(r => person(id, r.profile))), total: rows.length };
 }
