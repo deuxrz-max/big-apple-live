@@ -3,12 +3,14 @@ import type { Request, Response } from 'express';
 import { RoomError } from './room-store';
 
 const types: Record<string, string> = {
-  'icon.png': 'image/png', 'icon-small.png': 'image/png',
+  'icon.png': 'image/png', 'icon-small.png': 'image/png', 'fallback.webp': 'image/webp',
   'animation.webm': 'video/webm', 'animation.webp': 'image/webp', 'animation.png': 'image/png',
+  'animation.mp4': 'video/mp4',
 };
 const productPaths = {
   'spirit-pup': 'gift-media/spirit-pup/v1',
   moonfox: 'gift-media/moonfox/v1',
+  'cosmic-encore': 'gift-media/cosmic-encore/v1',
 } as const;
 type GiftMediaProduct = keyof typeof productPaths;
 const storage = new Storage({
@@ -57,3 +59,4 @@ function giftMediaHandler(product: GiftMediaProduct) {
 }
 export const serveGiftMedia = giftMediaHandler('spirit-pup');
 export const serveMoonfoxGiftMedia = giftMediaHandler('moonfox');
+export const serveCosmicEncoreGiftMedia = giftMediaHandler('cosmic-encore');

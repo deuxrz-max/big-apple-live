@@ -16,7 +16,7 @@ import { BotShield } from './BotShield';
 import { GiftBag, GiftControl } from '@/gifts';
 import { useRoomGifts } from '@/gifts/useRoomGifts';
 import { HeartAnimation } from '@/gifts/HeartAnimation';
-import { MoonfoxAnimation, SpiritAnimation } from '@/gifts/SpiritPup';
+import { CosmicEncoreAnimation, MoonfoxAnimation, SpiritAnimation } from '@/gifts/SpiritPup';
 import './university-room.css';
 import './bot-moderation.css';
 
@@ -271,7 +271,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
               {items.map((it) => {
                 if (it.kind === 'gift') {
                   return <div className="ch-msg" key={it.id} data-testid={`gift-notice-${it.gift.id}`}>
-                    <div><p>{it.gift.senderName} sent {it.gift.recipientName} a {it.gift.giftId === 'heart' ? 'Heart' : it.gift.giftId === 'moonfox' ? 'Moonfox' : 'Spirit Pup'}.</p></div>
+                    <div><p>{it.gift.senderName} sent {it.gift.recipientName} a {it.gift.giftId === 'heart' ? 'Heart' : it.gift.giftId === 'moonfox' ? 'Moonfox' : it.gift.giftId === 'cosmic-encore' ? 'Cosmic Encore' : 'Spirit Pup'}.</p></div>
                   </div>;
                 }
                 if (it.kind === 'whisper') {
@@ -376,6 +376,8 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
       {giftBag && <GiftBag recipient={giftBag.recipient} recipients={giftRecipients} roomId={roomId} sessionId={sessionId} onClose={() => setGiftBag(null)} />}
       {gifts.animation && (gifts.animation.giftId === 'heart'
         ? <HeartAnimation key={gifts.animation.id} onFinish={gifts.finish} />
+        : gifts.animation.giftId === 'cosmic-encore'
+          ? <CosmicEncoreAnimation key={gifts.animation.id} onFinish={gifts.finish} />
         : gifts.animation.giftId === 'moonfox'
           ? <MoonfoxAnimation key={gifts.animation.id} onFinish={gifts.finish} />
           : <SpiritAnimation key={gifts.animation.id} onFinish={gifts.finish} />)}

@@ -5,14 +5,14 @@ import { Link } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGetSocialMe, getGetSocialMeQueryKey, sendSocialGift, getGetRoomGiftEventsQueryKey } from '@workspace/api-client-react';
 import { GiftIcon, refreshSocial, errMsg } from '@/social/common';
-import { RoomGiftIcon, type RoomGiftId } from './SpiritPup';
+import { RoomGiftIcon, cosmicEncoreMedia, type RoomGiftId } from './SpiritPup';
 import { ownedGiftItems } from './gift-items';
 import './gifts.css';
 
 type Recipient = { username: string; displayName: string } | null;
 
 const FOCUSABLE = 'button:not([disabled]),[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
-const ROOM_GIFT_IDS = new Set<RoomGiftId>(['heart', 'spirit-pup', 'moonfox']);
+const ROOM_GIFT_IDS = new Set<RoomGiftId>(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore']);
 const isRoomGiftId = (id: string): id is RoomGiftId => ROOM_GIFT_IDS.has(id as RoomGiftId);
 function giftIcon(id: string) {
   return isRoomGiftId(id) ? <RoomGiftIcon giftId={id} /> : <GiftIcon id={id} size={26} />;
@@ -37,6 +37,22 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, onClose
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
   const titleId = useId();
+  useEffect(() => {
+    if (!roomId) return;
+    const video = document.createElement('video');
+    video.preload = 'auto';
+    video.muted = true;
+    video.playsInline = true;
+    video.src = cosmicEncoreMedia.animation;
+    video.load();
+    const still = new Image();
+    still.src = cosmicEncoreMedia.fallback;
+    return () => {
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
+    };
+  }, [roomId]);
   const items = useMemo(() => (me.data ? ownedGiftItems(me.data) : []), [me.data]);
   const catalog = roomId ? me.data?.gifts.filter(g => isRoomGiftId(g.id)) ?? [] : [];
   const selected = catalog.find(i => i.id === sel) ?? items.find((i) => i.id === sel) ?? null;

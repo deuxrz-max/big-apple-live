@@ -2,6 +2,12 @@
 .gift-framework a{color:var(--gf-gold);text-decoration:underline}
 .spirit-overlay{position:fixed;inset:0;z-index:25;display:flex;align-items:center;justify-content:center;pointer-events:none}
 .spirit-overlay :is(video,img){width:min(72vw,320px);height:auto;max-height:50dvh;object-fit:contain;pointer-events:none;background-color:transparent;border:0;outline:0;box-shadow:none}
+.cosmic-encore-overlay{position:fixed;inset:0;z-index:10001;display:grid;place-items:center;overflow:hidden;background:#05020e;pointer-events:none}
+.cosmic-encore-media{display:block;width:100vw;height:100dvh;object-fit:cover;object-position:center;opacity:0;animation:cosmic-encore-fade-in .5s ease-out forwards;pointer-events:none}
+.cosmic-encore-media.is-fading-out{animation:cosmic-encore-fade-out 1s ease-in forwards}
+@media (min-aspect-ratio:3/4){.cosmic-encore-media{width:100vw;height:100dvh;object-fit:contain}}
+@keyframes cosmic-encore-fade-in{to{opacity:1}}
+@keyframes cosmic-encore-fade-out{to{opacity:0}}
 .gift-framework{--gf-purple:#8A2BFF;--gf-purple-d:#5A12B8;--gf-gold:#C9A24A;--gf-deep:#0E0A18;--gf-white:#fff;color:var(--gf-white);font-family:'Montserrat',system-ui,sans-serif}
 .gift-framework-backdrop{position:fixed;inset:0;z-index:10000;background:rgba(8,5,16,.72);display:flex;align-items:flex-end;justify-content:center}
 .gift-framework.gift-sheet{width:100%;max-width:520px;max-height:85dvh;overflow-y:auto;background:linear-gradient(180deg,#1a1030,var(--gf-deep));border:1px solid var(--gf-gold);border-bottom:0;border-radius:20px 20px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));box-sizing:border-box}
