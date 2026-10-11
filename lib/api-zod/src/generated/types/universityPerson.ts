@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { EmojiIdentity } from './emojiIdentity';
+import type { StreamerPassportBadgeSummary } from './streamerPassportBadgeSummary';
 import type { UniversityPersonBotId } from './universityPersonBotId';
 
 export interface UniversityPerson {
@@ -18,6 +19,7 @@ export interface UniversityPerson {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  passport?: StreamerPassportBadgeSummary;
   identity?: EmojiIdentity;
   /** @nullable */
   photoUrl: string | null;

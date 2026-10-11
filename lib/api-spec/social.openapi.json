@@ -5,6 +5,112 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/social/me/passport": {
+      "get": {
+        "operationId": "getMyStreamerPassport",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "responses": {
+          "200": {"description": "Private platform links and verification codes for the signed-in account", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/MyStreamerPassport"}}}},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"}
+        }
+      }
+    },
+    "/social/me/passport/platforms": {
+      "put": {
+        "operationId": "saveMyStreamerPassportPlatform",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/StreamerPassportPlatformInput"}}}},
+        "responses": {
+          "200": {"description": "Saved platform link and private verification code", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/MyStreamerPassportPlatform"}}}},
+          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"}
+        }
+      }
+    },
+    "/social/me/passport/platforms/{entryId}": {
+      "delete": {
+        "operationId": "deleteMyStreamerPassportPlatform",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "parameters": [{"name": "entryId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}],
+        "responses": {
+          "200": {"description": "Platform link removed", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SocialAction"}}}},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "404": {"description": "Platform link not found"}
+        }
+      }
+    },
+    "/social/me/passport/platforms/{entryId}/request": {
+      "post": {
+        "operationId": "requestMyStreamerPassportVerification",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "parameters": [{"name": "entryId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}],
+        "responses": {
+          "200": {"description": "Manual review requested", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/MyStreamerPassportPlatform"}}}},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "404": {"description": "Platform link not found"},
+          "409": {"description": "Platform is already verified"}
+        }
+      }
+    },
+    "/social/people/{username}/passport": {
+      "get": {
+        "operationId": "getSocialPersonStreamerPassport",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "parameters": [{"name": "username", "in": "path", "required": true, "schema": {"type": "string"}}],
+        "responses": {
+          "200": {"description": "Public profile links and badge data", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/PublicStreamerPassport"}}}},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "404": {"description": "Profile unavailable"}
+        }
+      }
+    },
+    "/social/admin/passport/requests": {
+      "get": {
+        "operationId": "getStreamerPassportReviewQueue",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "responses": {
+          "200": {"description": "Manual verification requests; moderator access required", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/StreamerPassportReviewQueue"}}}},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Moderator access required"}
+        }
+      }
+    },
+    "/social/admin/passport/requests/{entryId}/review": {
+      "post": {
+        "operationId": "reviewStreamerPassportRequest",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "parameters": [{"name": "entryId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/StreamerPassportReviewInput"}}}},
+        "responses": {
+          "200": {"description": "Review recorded", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SocialAction"}}}},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Moderator access required"},
+          "404": {"description": "Verification request not found"}
+        }
+      }
+    },
+    "/social/admin/passport/founding-league": {
+      "post": {
+        "operationId": "setStreamerPassportFoundingLeague",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/StreamerPassportFoundingInput"}}}},
+        "responses": {
+          "200": {"description": "Founding League stamp updated", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SocialAction"}}}},
+          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Moderator access required"},
+          "404": {"description": "Account not found"}
+        }
+      }
+    },
     "/social/me": {
       "get": {
         "operationId": "getSocialMe",
@@ -730,6 +836,99 @@
   },
   "components": {
     "schemas": {
+      "StreamerPassportPlatform": {
+        "type": "object",
+        "required": ["id", "label", "color"],
+        "properties": {
+          "id": {"type": "string", "enum": ["liveme", "tiktok", "bigo", "instagram", "facebook", "youtube", "twitch"]},
+          "label": {"type": "string"},
+          "color": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"}
+        }
+      },
+      "StreamerPassportPlatformInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["platform", "handleOrUrl"],
+        "properties": {
+          "platform": {"type": "string", "enum": ["liveme", "tiktok", "bigo", "instagram", "facebook", "youtube", "twitch"]},
+          "handleOrUrl": {"type": "string", "minLength": 1, "maxLength": 300}
+        }
+      },
+      "MyStreamerPassportPlatform": {
+        "allOf": [
+          {"$ref": "#/components/schemas/StreamerPassportPlatform"},
+          {"type": "object", "required": ["id", "entryId", "handle", "profileUrl", "addedAt", "verificationCode", "verificationStatus", "requestedAt", "verifiedAt"], "properties": {
+            "entryId": {"type": "string", "format": "uuid"},
+            "handle": {"type": "string"},
+            "profileUrl": {"type": "string", "format": "uri"},
+            "addedAt": {"type": "string", "format": "date-time"},
+            "verificationCode": {"type": "string"},
+            "verificationStatus": {"type": "string", "enum": ["unverified", "requested", "verified"]},
+            "requestedAt": {"type": ["string", "null"], "format": "date-time"},
+            "verifiedAt": {"type": ["string", "null"], "format": "date-time"}
+          }}
+        ]
+      },
+      "MyStreamerPassport": {
+        "type": "object",
+        "required": ["availablePlatforms", "platforms", "foundingLeague"],
+        "properties": {
+          "availablePlatforms": {"type": "array", "items": {"$ref": "#/components/schemas/StreamerPassportPlatform"}},
+          "platforms": {"type": "array", "items": {"$ref": "#/components/schemas/MyStreamerPassportPlatform"}},
+          "foundingLeague": {"type": "boolean"}
+        }
+      },
+      "StreamerPassportPublicEntry": {
+        "allOf": [
+          {"$ref": "#/components/schemas/StreamerPassportPlatform"},
+          {"type": "object", "required": ["handle", "profileUrl", "addedAt", "verified"], "properties": {
+            "handle": {"type": "string"},
+            "profileUrl": {"type": "string", "format": "uri"},
+            "addedAt": {"type": "string", "format": "date-time"},
+            "verified": {"type": "boolean"}
+          }}
+        ]
+      },
+      "StreamerPassportBadgeSummary": {
+        "type": "object",
+        "required": ["platforms", "verified", "foundingLeague"],
+        "properties": {
+          "platforms": {"type": "array", "items": {"$ref": "#/components/schemas/StreamerPassportPlatform"}},
+          "verified": {"type": "boolean"},
+          "foundingLeague": {"type": "boolean"}
+        }
+      },
+      "PublicStreamerPassport": {
+        "type": "object",
+        "required": ["username", "displayName", "identity", "platforms", "foundingLeague"],
+        "properties": {
+          "username": {"type": "string"},
+          "displayName": {"type": "string"},
+          "identity": {"$ref": "./openapi.yaml#/components/schemas/EmojiIdentity"},
+          "platforms": {"type": "array", "items": {"$ref": "#/components/schemas/StreamerPassportPublicEntry"}},
+          "foundingLeague": {"type": "boolean"}
+        }
+      },
+      "StreamerPassportReviewQueue": {
+        "type": "object",
+        "required": ["requests"],
+        "properties": {
+          "requests": {"type": "array", "items": {"allOf": [
+            {"$ref": "#/components/schemas/MyStreamerPassportPlatform"},
+            {"type": "object", "required": ["username", "displayName"], "properties": {"username": {"type": "string"}, "displayName": {"type": "string"}}}
+          ]}}
+        }
+      },
+      "StreamerPassportReviewInput": {
+        "type": "object",
+        "required": ["action"],
+        "properties": {"action": {"type": "string", "enum": ["approve", "reject"]}}
+      },
+      "StreamerPassportFoundingInput": {
+        "type": "object",
+        "required": ["username", "grant"],
+        "properties": {"username": {"type": "string"}, "grant": {"type": "boolean"}}
+      },
       "SocialPerson": {
         "type": "object",
         "properties": {
@@ -791,6 +990,7 @@
               }
             ]
           }
+          ,"passport": {"$ref": "#/components/schemas/StreamerPassportBadgeSummary"}
         },
         "required": [
           "username",
@@ -1054,6 +1254,8 @@
           "recipientName": {"type": "string"},
           "senderNameColor": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
           "recipientNameColor": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+          "senderPassport": {"$ref": "#/components/schemas/StreamerPassportBadgeSummary"},
+          "recipientPassport": {"$ref": "#/components/schemas/StreamerPassportBadgeSummary"},
           "createdAt": {"type": "string", "format": "date-time"}
         },
         "required": ["id", "giftId", "senderUsername", "recipientUsername", "senderName", "recipientName", "createdAt"]

@@ -99,6 +99,32 @@ export interface EmojiIdentity4b96100 {
   currentMood?: EmojiIdentity4b96100CurrentMood;
 }
 
+export type StreamerPassportPlatformId = typeof StreamerPassportPlatformId[keyof typeof StreamerPassportPlatformId];
+
+
+export const StreamerPassportPlatformId = {
+  liveme: 'liveme',
+  tiktok: 'tiktok',
+  bigo: 'bigo',
+  instagram: 'instagram',
+  facebook: 'facebook',
+  youtube: 'youtube',
+  twitch: 'twitch',
+} as const;
+
+export interface StreamerPassportPlatform {
+  id: StreamerPassportPlatformId;
+  label: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  color: string;
+}
+
+export interface StreamerPassportBadgeSummary {
+  platforms: StreamerPassportPlatform[];
+  verified: boolean;
+  foundingLeague: boolean;
+}
+
 export type SocialPersonBadgesItem = {
   id: string;
   earnedAt: string;
@@ -137,6 +163,7 @@ export interface SocialPerson {
   blocked: boolean;
   receivedCredits: number;
   badgeId: string | null;
+  passport?: StreamerPassportBadgeSummary;
 }
 
 export interface FavoriteGalleryEntry {
@@ -240,6 +267,7 @@ export interface UniversityPerson {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  passport?: StreamerPassportBadgeSummary;
   identity?: EmojiIdentity;
   /** @nullable */
   photoUrl: string | null;
@@ -256,6 +284,7 @@ export interface UniversityWhisper {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  passport?: StreamerPassportBadgeSummary;
   outgoing: boolean;
   body: string;
   createdAt: string;
@@ -471,6 +500,7 @@ export interface ChatMessage {
   text: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  passport?: StreamerPassportBadgeSummary;
   createdAt: string;
 }
 
@@ -772,6 +802,7 @@ export interface UniversityPerson4b96100 {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  passport?: StreamerPassportBadgeSummary;
   identity?: EmojiIdentity4b96100;
   /** @nullable */
   photoUrl: string | null;
@@ -788,6 +819,7 @@ export interface UniversityWhisper4b96100 {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  passport?: StreamerPassportBadgeSummary;
   outgoing: boolean;
   body: string;
   createdAt: string;
@@ -988,6 +1020,7 @@ export interface ChatMessage4b96100 {
   text: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  passport?: StreamerPassportBadgeSummary;
   createdAt: string;
 }
 
@@ -1234,6 +1267,97 @@ export interface ErrorResponse4b96100 {
   error: string;
 }
 
+export type StreamerPassportPlatformInputPlatform = typeof StreamerPassportPlatformInputPlatform[keyof typeof StreamerPassportPlatformInputPlatform];
+
+
+export const StreamerPassportPlatformInputPlatform = {
+  liveme: 'liveme',
+  tiktok: 'tiktok',
+  bigo: 'bigo',
+  instagram: 'instagram',
+  facebook: 'facebook',
+  youtube: 'youtube',
+  twitch: 'twitch',
+} as const;
+
+export interface StreamerPassportPlatformInput {
+  platform: StreamerPassportPlatformInputPlatform;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  handleOrUrl: string;
+}
+
+export type MyStreamerPassportPlatformVerificationStatus = typeof MyStreamerPassportPlatformVerificationStatus[keyof typeof MyStreamerPassportPlatformVerificationStatus];
+
+
+export const MyStreamerPassportPlatformVerificationStatus = {
+  unverified: 'unverified',
+  requested: 'requested',
+  verified: 'verified',
+} as const;
+
+export type MyStreamerPassportPlatform = StreamerPassportPlatform & ({
+  entryId: string;
+  handle: string;
+  profileUrl: string;
+  addedAt: string;
+  verificationCode: string;
+  verificationStatus: MyStreamerPassportPlatformVerificationStatus;
+  /** @nullable */
+  requestedAt: string | null;
+  /** @nullable */
+  verifiedAt: string | null;
+});
+
+export interface MyStreamerPassport {
+  availablePlatforms: StreamerPassportPlatform[];
+  platforms: MyStreamerPassportPlatform[];
+  foundingLeague: boolean;
+}
+
+export type StreamerPassportPublicEntry = StreamerPassportPlatform & {
+  handle: string;
+  profileUrl: string;
+  addedAt: string;
+  verified: boolean;
+};
+
+export interface PublicStreamerPassport {
+  username: string;
+  displayName: string;
+  identity: EmojiIdentity4b96100;
+  platforms: StreamerPassportPublicEntry[];
+  foundingLeague: boolean;
+}
+
+export type StreamerPassportReviewQueueRequestsItem = MyStreamerPassportPlatform & {
+  username: string;
+  displayName: string;
+};
+
+export interface StreamerPassportReviewQueue {
+  requests: StreamerPassportReviewQueueRequestsItem[];
+}
+
+export type StreamerPassportReviewInputAction = typeof StreamerPassportReviewInputAction[keyof typeof StreamerPassportReviewInputAction];
+
+
+export const StreamerPassportReviewInputAction = {
+  approve: 'approve',
+  reject: 'reject',
+} as const;
+
+export interface StreamerPassportReviewInput {
+  action: StreamerPassportReviewInputAction;
+}
+
+export interface StreamerPassportFoundingInput {
+  username: string;
+  grant: boolean;
+}
+
 /**
  * @nullable
  */
@@ -1349,6 +1473,8 @@ export interface RoomGiftEvent {
   senderNameColor?: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   recipientNameColor?: string;
+  senderPassport?: StreamerPassportBadgeSummary;
+  recipientPassport?: StreamerPassportBadgeSummary;
   createdAt: string;
 }
 

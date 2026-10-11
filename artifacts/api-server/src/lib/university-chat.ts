@@ -1,4 +1,4 @@
-import { db, accountProfiles, chatRooms, chatModerators, socialMessages, socialInventory, socialSettings, universityIgnores, universityPreferences } from "@workspace/db";
+import { db, accountProfiles, chatRooms, chatModerators, socialMessages, socialInventory, socialSettings, socialRelations, universityIgnores, universityPreferences } from "@workspace/db";
 import { and, eq, inArray, notInArray, or, desc, sql } from "drizzle-orm";
 import { RoomError, roomStore } from "./room-store";
 import { targetAccount, pairBlocked } from "./social/core";
@@ -6,6 +6,7 @@ import { sendMessage } from "./social/messages";
 import { visibleProfilePhotos } from "./photo-visibility";
 import { botRotation } from "./moderator-bots";
 import { giftNameColorsForAccounts } from "./social/gift-name-color-data";
+import { passportBadgeSummaries } from "./social/passport";
 import type { UniversityPerson } from "@workspace/api-zod";
 
 export async function ignoredAccounts(id: string) {
@@ -52,8 +53,10 @@ export async function roomWhispers(id: string, roomId: string) {
       outgoing: row.senderId === id, body: row.body, createdAt: row.createdAt });
   }
   const colors = await giftNameColorsForAccounts(result.map(row => row.accountId));
+  const passports = await passportBadgeSummaries(result.map(row => row.accountId));
   return result.map(({ accountId, ...whisper }) => ({
     ...whisper, displayNameColor: colors.get(accountId) ?? "#FFFFFF",
+    passport: passports.get(accountId),
   }));
 }
 export async function universitySession(id: string, roomId: string, sessionId: string) {
@@ -65,6 +68,13 @@ export async function universitySession(id: string, roomId: string, sessionId: s
     .map(participant => roomStore.sessionAccountId(roomId, participant.participantId))
     .filter((accountId): accountId is string => !!accountId))];
   const nameColors = await giftNameColorsForAccounts(presentAccountIds);
+  const blockedRelations = await db.select().from(socialRelations).where(and(
+    eq(socialRelations.kind, "block"),
+    or(eq(socialRelations.ownerId, id), eq(socialRelations.targetId, id)),
+  ));
+  const blockedIds = new Set(blockedRelations.map(relation =>
+    relation.ownerId === id ? relation.targetId : relation.ownerId));
+  const passports = await passportBadgeSummaries(presentAccountIds.filter(accountId => accountId === id || !blockedIds.has(accountId)));
   const selectedBadges = presentAccountIds.length ? await db.select({
     accountId: socialSettings.accountId, badgeId: socialSettings.badgeId,
   }).from(socialSettings).innerJoin(socialInventory, and(
@@ -92,7 +102,7 @@ export async function universitySession(id: string, roomId: string, sessionId: s
       displayNameColor: nameColors.get(ownerId) ?? "#FFFFFF",
       photoStatus: photos.photoReviews?.find(r => r.photoUrl === photos.photoUrl)?.status ?? null,
       self: ownerId === id, moderator: moderators.has(ownerId), ignored: ignored.includes(ownerId), botId: null,
-      badgeId: badgeByAccount.get(ownerId) ?? null });
+      badgeId: badgeByAccount.get(ownerId) ?? null, passport: passports.get(ownerId) });
   }
   for (const bot of botRotation.people(roomId.toUpperCase())) people.push({
     participantId: bot.participantId, username: bot.name, displayName: bot.name, photoUrl: bot.avatarUrl,

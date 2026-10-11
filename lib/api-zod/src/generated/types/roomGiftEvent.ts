@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { StreamerPassportBadgeSummary } from './streamerPassportBadgeSummary';
 
 export interface RoomGiftEvent {
   id: string;
@@ -17,5 +18,7 @@ export interface RoomGiftEvent {
   senderNameColor?: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   recipientNameColor?: string;
+  senderPassport?: StreamerPassportBadgeSummary;
+  recipientPassport?: StreamerPassportBadgeSummary;
   createdAt: Date;
 }

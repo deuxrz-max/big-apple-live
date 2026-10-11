@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link, Route, Switch, useLocation, useParams } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
-import { Users, Heart, Ban, MessageCircle, Coins, Trophy, UserRound, House } from 'lucide-react';
+import { Users, Heart, Ban, MessageCircle, Coins, Trophy, UserRound, House, Stamp } from 'lucide-react';
 import { useGetChatAccess, useGetSocialMe } from '@workspace/api-client-react';
 import '@/beam/beam.css';
 import './social.css';
@@ -13,6 +13,7 @@ import { BotProfile } from '@/profile/ProfileView';
 import { BuyCreditsPage } from './BuyCreditsPage';
 import { InboxPage } from './InboxPage';
 import { LeaderboardPage, RewardsPage, ThreadPage } from './MoneyPages';
+import { StreamerPassportReview } from '@/passport/StreamerPassport';
 
 const NAV = [
   { to: '/community', label: 'People', icon: Users, exact: true },
@@ -51,6 +52,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
             return <Link key={to} href={to} className={`sc-nav-item${on ? ' is-on' : ''}`} aria-current={on ? 'page' : undefined} data-testid={`nav-${label.toLowerCase().replace(/\s/g, '-')}`}><I size={18} /><span>{label}</span></Link>;
           })}
           {access.data?.moderator && <Link href="/community/moderation" className={`sc-nav-item${path === '/community/moderation' ? ' is-on' : ''}`} data-testid="nav-moderation"><Ban size={18} /><span>Moderation</span></Link>}
+          {access.data?.moderator && <Link href="/community/passport-review" className={`sc-nav-item${path === '/community/passport-review' ? ' is-on' : ''}`} data-testid="nav-passport-review"><Stamp size={18} /><span>Passport review</span></Link>}
         </nav>}
         <main className="sc-main">
           {me.isLoading ? <Loading /> : needsIdentity ? (
@@ -66,6 +68,9 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
               <Route path="/community/messages" component={InboxPage} />
               <Route path="/community/messages/:username" component={ThreadRoute} />
               <Route path="/community/moderation" component={ModerationQueue} />
+              <Route path="/community/passport-review">{() => access.data?.moderator
+                ? <StreamerPassportReview />
+                : <div className="sc-empty" role="status" data-testid="status-passport-review-access"><h2>Moderator access required</h2><p>This review desk is limited to authorized moderators.</p><Link href="/community" className="bm-btn">Back to People</Link></div>}</Route>
               <Route path="/community/rewards"><RewardsPage /></Route>
               <Route path="/community/credits" component={BuyCreditsPage} />
               <Route path="/community/leaderboard" component={LeaderboardPage} />

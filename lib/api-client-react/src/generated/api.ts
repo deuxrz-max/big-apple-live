@@ -47,11 +47,14 @@ import type {
   MicrophoneAction,
   ModeratorBotFlag,
   ModeratorBotSettings,
+  MyStreamerPassport,
+  MyStreamerPassportPlatform,
   Participant,
   PhotoReviewEntry,
   ProfileEnvelope,
   ProfileInput,
   ProfilePhotoResult,
+  PublicStreamerPassport,
   ReviewProfilePhoto200,
   ReviewProfilePhotoBody,
   RoomCreateInput,
@@ -73,6 +76,10 @@ import type {
   SocialPurchaseInput,
   SocialRelationshipInput,
   SocialWallet,
+  StreamerPassportFoundingInput,
+  StreamerPassportPlatformInput,
+  StreamerPassportReviewInput,
+  StreamerPassportReviewQueue,
   UniversityActionResult,
   UniversityAudioActionInput,
   UniversityAudioSignalInput,
@@ -2256,6 +2263,602 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getSaveSocialProfileMutationOptions(options));
+    }
+
+export const getGetMyStreamerPassportUrl = () => {
+
+
+
+
+  return `/api/social/me/passport`
+}
+
+export const getMyStreamerPassport = async ( options?: Parameters<typeof customFetch>[1]): Promise<MyStreamerPassport> => {
+
+  return customFetch<MyStreamerPassport>(getGetMyStreamerPassportUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyStreamerPassportQueryKey = () => {
+    return [
+    `/api/social/me/passport`
+    ] as const;
+    }
+
+
+export const getGetMyStreamerPassportQueryOptions = <TData = Awaited<ReturnType<typeof getMyStreamerPassport>>, TError = ErrorType<ErrorResponse4b96100>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyStreamerPassport>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyStreamerPassportQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyStreamerPassport>>> = ({ signal }) => getMyStreamerPassport({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyStreamerPassport>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMyStreamerPassportQueryResult = NonNullable<Awaited<ReturnType<typeof getMyStreamerPassport>>>
+export type GetMyStreamerPassportQueryError = ErrorType<ErrorResponse4b96100>
+
+
+
+export function useGetMyStreamerPassport<TData = Awaited<ReturnType<typeof getMyStreamerPassport>>, TError = ErrorType<ErrorResponse4b96100>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyStreamerPassport>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMyStreamerPassportQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSaveMyStreamerPassportPlatformUrl = () => {
+
+
+
+
+  return `/api/social/me/passport/platforms`
+}
+
+export const saveMyStreamerPassportPlatform = async (streamerPassportPlatformInput: StreamerPassportPlatformInput, options?: Parameters<typeof customFetch>[1]): Promise<MyStreamerPassportPlatform> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<MyStreamerPassportPlatform>(getSaveMyStreamerPassportPlatformUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(streamerPassportPlatformInput)
+  }
+);}
+
+
+
+
+
+export const getSaveMyStreamerPassportPlatformMutationKey = () => ['saveMyStreamerPassportPlatform'] as const;
+
+export const getSaveMyStreamerPassportPlatformMutationOptions = <TError = ErrorType<ErrorResponse4b96100>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveMyStreamerPassportPlatform>>, TError,SaveMyStreamerPassportPlatformMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveMyStreamerPassportPlatform>>, TError,SaveMyStreamerPassportPlatformMutationVariables, TContext> => {
+
+const mutationKey = getSaveMyStreamerPassportPlatformMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveMyStreamerPassportPlatform>>, SaveMyStreamerPassportPlatformMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  saveMyStreamerPassportPlatform(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveMyStreamerPassportPlatformMutationResult = NonNullable<Awaited<ReturnType<typeof saveMyStreamerPassportPlatform>>>
+    export type SaveMyStreamerPassportPlatformMutationBody = BodyType<StreamerPassportPlatformInput>
+    export type SaveMyStreamerPassportPlatformMutationError = ErrorType<ErrorResponse4b96100>
+    export type SaveMyStreamerPassportPlatformMutationVariables = {data: BodyType<StreamerPassportPlatformInput>}
+
+    export const useSaveMyStreamerPassportPlatform = <TError = ErrorType<ErrorResponse4b96100>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveMyStreamerPassportPlatform>>, TError,SaveMyStreamerPassportPlatformMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveMyStreamerPassportPlatform>>,
+        TError,
+        SaveMyStreamerPassportPlatformMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSaveMyStreamerPassportPlatformMutationOptions(options));
+    }
+
+export const getDeleteMyStreamerPassportPlatformUrl = (entryId: string,) => {
+
+
+
+
+  return `/api/social/me/passport/platforms/${entryId}`
+}
+
+export const deleteMyStreamerPassportPlatform = async (entryId: string, options?: Parameters<typeof customFetch>[1]): Promise<SocialAction> => {
+
+  return customFetch<SocialAction>(getDeleteMyStreamerPassportPlatformUrl(entryId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteMyStreamerPassportPlatformMutationKey = () => ['deleteMyStreamerPassportPlatform'] as const;
+
+export const getDeleteMyStreamerPassportPlatformMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyStreamerPassportPlatform>>, TError,DeleteMyStreamerPassportPlatformMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMyStreamerPassportPlatform>>, TError,DeleteMyStreamerPassportPlatformMutationVariables, TContext> => {
+
+const mutationKey = getDeleteMyStreamerPassportPlatformMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMyStreamerPassportPlatform>>, DeleteMyStreamerPassportPlatformMutationVariables> = (props) => {
+          const {entryId} = props ?? {};
+
+          return  deleteMyStreamerPassportPlatform(entryId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMyStreamerPassportPlatformMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMyStreamerPassportPlatform>>>
+
+    export type DeleteMyStreamerPassportPlatformMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type DeleteMyStreamerPassportPlatformMutationVariables = {entryId: string}
+
+    export const useDeleteMyStreamerPassportPlatform = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMyStreamerPassportPlatform>>, TError,DeleteMyStreamerPassportPlatformMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMyStreamerPassportPlatform>>,
+        TError,
+        DeleteMyStreamerPassportPlatformMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteMyStreamerPassportPlatformMutationOptions(options));
+    }
+
+export const getRequestMyStreamerPassportVerificationUrl = (entryId: string,) => {
+
+
+
+
+  return `/api/social/me/passport/platforms/${entryId}/request`
+}
+
+export const requestMyStreamerPassportVerification = async (entryId: string, options?: Parameters<typeof customFetch>[1]): Promise<MyStreamerPassportPlatform> => {
+
+  return customFetch<MyStreamerPassportPlatform>(getRequestMyStreamerPassportVerificationUrl(entryId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRequestMyStreamerPassportVerificationMutationKey = () => ['requestMyStreamerPassportVerification'] as const;
+
+export const getRequestMyStreamerPassportVerificationMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestMyStreamerPassportVerification>>, TError,RequestMyStreamerPassportVerificationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof requestMyStreamerPassportVerification>>, TError,RequestMyStreamerPassportVerificationMutationVariables, TContext> => {
+
+const mutationKey = getRequestMyStreamerPassportVerificationMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof requestMyStreamerPassportVerification>>, RequestMyStreamerPassportVerificationMutationVariables> = (props) => {
+          const {entryId} = props ?? {};
+
+          return  requestMyStreamerPassportVerification(entryId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RequestMyStreamerPassportVerificationMutationResult = NonNullable<Awaited<ReturnType<typeof requestMyStreamerPassportVerification>>>
+
+    export type RequestMyStreamerPassportVerificationMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type RequestMyStreamerPassportVerificationMutationVariables = {entryId: string}
+
+    export const useRequestMyStreamerPassportVerification = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestMyStreamerPassportVerification>>, TError,RequestMyStreamerPassportVerificationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof requestMyStreamerPassportVerification>>,
+        TError,
+        RequestMyStreamerPassportVerificationMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRequestMyStreamerPassportVerificationMutationOptions(options));
+    }
+
+export const getGetSocialPersonStreamerPassportUrl = (username: string,) => {
+
+
+
+
+  return `/api/social/people/${username}/passport`
+}
+
+export const getSocialPersonStreamerPassport = async (username: string, options?: Parameters<typeof customFetch>[1]): Promise<PublicStreamerPassport> => {
+
+  return customFetch<PublicStreamerPassport>(getGetSocialPersonStreamerPassportUrl(username),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSocialPersonStreamerPassportQueryKey = (username: string,) => {
+    return [
+    `/api/social/people/${username}/passport`
+    ] as const;
+    }
+
+
+export const getGetSocialPersonStreamerPassportQueryOptions = <TData = Awaited<ReturnType<typeof getSocialPersonStreamerPassport>>, TError = ErrorType<ErrorResponse4b96100 | void>>(username: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialPersonStreamerPassport>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSocialPersonStreamerPassportQueryKey(username);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSocialPersonStreamerPassport>>> = ({ signal }) => getSocialPersonStreamerPassport(username, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: username !== null && username !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialPersonStreamerPassport>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSocialPersonStreamerPassportQueryResult = NonNullable<Awaited<ReturnType<typeof getSocialPersonStreamerPassport>>>
+export type GetSocialPersonStreamerPassportQueryError = ErrorType<ErrorResponse4b96100 | void>
+
+
+
+export function useGetSocialPersonStreamerPassport<TData = Awaited<ReturnType<typeof getSocialPersonStreamerPassport>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
+ username: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialPersonStreamerPassport>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSocialPersonStreamerPassportQueryOptions(username,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetStreamerPassportReviewQueueUrl = () => {
+
+
+
+
+  return `/api/social/admin/passport/requests`
+}
+
+export const getStreamerPassportReviewQueue = async ( options?: Parameters<typeof customFetch>[1]): Promise<StreamerPassportReviewQueue> => {
+
+  return customFetch<StreamerPassportReviewQueue>(getGetStreamerPassportReviewQueueUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStreamerPassportReviewQueueQueryKey = () => {
+    return [
+    `/api/social/admin/passport/requests`
+    ] as const;
+    }
+
+
+export const getGetStreamerPassportReviewQueueQueryOptions = <TData = Awaited<ReturnType<typeof getStreamerPassportReviewQueue>>, TError = ErrorType<ErrorResponse4b96100 | void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStreamerPassportReviewQueue>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStreamerPassportReviewQueueQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStreamerPassportReviewQueue>>> = ({ signal }) => getStreamerPassportReviewQueue({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStreamerPassportReviewQueue>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetStreamerPassportReviewQueueQueryResult = NonNullable<Awaited<ReturnType<typeof getStreamerPassportReviewQueue>>>
+export type GetStreamerPassportReviewQueueQueryError = ErrorType<ErrorResponse4b96100 | void>
+
+
+
+export function useGetStreamerPassportReviewQueue<TData = Awaited<ReturnType<typeof getStreamerPassportReviewQueue>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStreamerPassportReviewQueue>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetStreamerPassportReviewQueueQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getReviewStreamerPassportRequestUrl = (entryId: string,) => {
+
+
+
+
+  return `/api/social/admin/passport/requests/${entryId}/review`
+}
+
+export const reviewStreamerPassportRequest = async (entryId: string,
+    streamerPassportReviewInput: StreamerPassportReviewInput, options?: Parameters<typeof customFetch>[1]): Promise<SocialAction> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<SocialAction>(getReviewStreamerPassportRequestUrl(entryId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(streamerPassportReviewInput)
+  }
+);}
+
+
+
+
+
+export const getReviewStreamerPassportRequestMutationKey = () => ['reviewStreamerPassportRequest'] as const;
+
+export const getReviewStreamerPassportRequestMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewStreamerPassportRequest>>, TError,ReviewStreamerPassportRequestMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reviewStreamerPassportRequest>>, TError,ReviewStreamerPassportRequestMutationVariables, TContext> => {
+
+const mutationKey = getReviewStreamerPassportRequestMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviewStreamerPassportRequest>>, ReviewStreamerPassportRequestMutationVariables> = (props) => {
+          const {entryId,data} = props ?? {};
+
+          return  reviewStreamerPassportRequest(entryId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReviewStreamerPassportRequestMutationResult = NonNullable<Awaited<ReturnType<typeof reviewStreamerPassportRequest>>>
+    export type ReviewStreamerPassportRequestMutationBody = BodyType<StreamerPassportReviewInput>
+    export type ReviewStreamerPassportRequestMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type ReviewStreamerPassportRequestMutationVariables = {entryId: string;data: BodyType<StreamerPassportReviewInput>}
+
+    export const useReviewStreamerPassportRequest = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewStreamerPassportRequest>>, TError,ReviewStreamerPassportRequestMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reviewStreamerPassportRequest>>,
+        TError,
+        ReviewStreamerPassportRequestMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReviewStreamerPassportRequestMutationOptions(options));
+    }
+
+export const getSetStreamerPassportFoundingLeagueUrl = () => {
+
+
+
+
+  return `/api/social/admin/passport/founding-league`
+}
+
+export const setStreamerPassportFoundingLeague = async (streamerPassportFoundingInput: StreamerPassportFoundingInput, options?: Parameters<typeof customFetch>[1]): Promise<SocialAction> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<SocialAction>(getSetStreamerPassportFoundingLeagueUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(streamerPassportFoundingInput)
+  }
+);}
+
+
+
+
+
+export const getSetStreamerPassportFoundingLeagueMutationKey = () => ['setStreamerPassportFoundingLeague'] as const;
+
+export const getSetStreamerPassportFoundingLeagueMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setStreamerPassportFoundingLeague>>, TError,SetStreamerPassportFoundingLeagueMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setStreamerPassportFoundingLeague>>, TError,SetStreamerPassportFoundingLeagueMutationVariables, TContext> => {
+
+const mutationKey = getSetStreamerPassportFoundingLeagueMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setStreamerPassportFoundingLeague>>, SetStreamerPassportFoundingLeagueMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  setStreamerPassportFoundingLeague(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetStreamerPassportFoundingLeagueMutationResult = NonNullable<Awaited<ReturnType<typeof setStreamerPassportFoundingLeague>>>
+    export type SetStreamerPassportFoundingLeagueMutationBody = BodyType<StreamerPassportFoundingInput>
+    export type SetStreamerPassportFoundingLeagueMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type SetStreamerPassportFoundingLeagueMutationVariables = {data: BodyType<StreamerPassportFoundingInput>}
+
+    export const useSetStreamerPassportFoundingLeague = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setStreamerPassportFoundingLeague>>, TError,SetStreamerPassportFoundingLeagueMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setStreamerPassportFoundingLeague>>,
+        TError,
+        SetStreamerPassportFoundingLeagueMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetStreamerPassportFoundingLeagueMutationOptions(options));
     }
 
 export const getGetSocialPeopleUrl = (params?: GetSocialPeopleParams,) => {

@@ -3,6 +3,7 @@ import { and, desc, eq, or } from 'drizzle-orm';
 import { requireAdult } from '../community';
 import { roomStore, RoomError } from '../room-store';
 import { giftNameColorsForAccounts } from './gift-name-color-data';
+import { passportBadgeSummaries } from './passport';
 
 export function validateGiftRoom(roomId: string, sessionId: string, senderId: string, recipientId: string) {
   if (!roomStore.isCommunity(roomId)) throw new RoomError(404, 'University not found');
@@ -25,6 +26,8 @@ export async function roomGiftEvents(id: string, roomId: string, sessionId: stri
     .orderBy(desc(socialGiftEvents.createdAt), desc(socialGiftEvents.id)).limit(60);
   const nameColors = await giftNameColorsForAccounts(rows.flatMap(row =>
     [row.senderId, row.recipientId].filter((accountId): accountId is string => !!accountId)));
+  const passports = await passportBadgeSummaries(rows.flatMap(row =>
+    [row.senderId, row.recipientId].filter((accountId): accountId is string => !!accountId)));
   const testIds = process.env.NODE_ENV === "production"
     ? new Set((await db.select({ id: accountProfiles.accountId }).from(accountProfiles)
       .where(eq(accountProfiles.isTestAccount, true))).map(row => row.id))
@@ -35,6 +38,8 @@ export async function roomGiftEvents(id: string, roomId: string, sessionId: stri
     senderName: r.senderName, recipientName: r.recipientName,
     senderNameColor: r.senderId ? nameColors.get(r.senderId) ?? "#FFFFFF" : "#FFFFFF",
     recipientNameColor: r.recipientId ? nameColors.get(r.recipientId) ?? "#FFFFFF" : "#FFFFFF",
+    senderPassport: r.senderId ? passports.get(r.senderId) : undefined,
+    recipientPassport: r.recipientId ? passports.get(r.recipientId) : undefined,
     createdAt: r.createdAt.toISOString(),
   })) };
 }

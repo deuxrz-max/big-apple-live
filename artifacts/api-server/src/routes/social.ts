@@ -4,7 +4,8 @@ import {
   GetSocialPersonResponse, SetSocialRelationshipBody, SendSocialGiftBody, PurchaseSocialProductBody,
   SendSocialMessageBody, SendSocialMessageResponse, GetSocialConversationResponse, GetSocialInboxResponse,
   GetSocialLedgerResponse, GetSocialPeopleQueryParams, GetSocialConversationQueryParams,
-  GetFavoritesGalleryResponse, GetFavoriteRoomResponse,
+  GetFavoritesGalleryResponse, GetFavoriteRoomResponse, SaveMyStreamerPassportPlatformBody,
+  ReviewStreamerPassportRequestBody, SetStreamerPassportFoundingLeagueBody,
 } from "@workspace/api-zod";
 import { accountId, sameOrigin } from "./identity";
 import { RoomError } from "../lib/room-store";
@@ -15,6 +16,10 @@ import { roomGiftEvents } from '../lib/social/room-gifts';
 import { serveGiftMedia, serveMoonfoxGiftMedia, serveCosmicEncoreGiftMedia } from '../lib/gift-media';
 import { clearThread, inbox, sendMessage, thread } from "../lib/social/messages";
 import { favoritesGallery, favoriteRoom } from "../lib/social/favorites";
+import {
+  deletePassportPlatform, myStreamerPassport, passportReviewQueue, publicStreamerPassport,
+  requestPassportVerification, reviewPassportRequest, savePassportPlatform, setFoundingLeague,
+} from "../lib/social/passport";
 
 const router: IRouter = Router();
 router.get('/gift-media/spirit-pup/v1/:filename', serveGiftMedia);
@@ -32,6 +37,42 @@ const name = (raw: string | string[] | undefined) => {
   if (!/^[A-Za-z0-9_]{3,24}$/.test(value)) throw new RoomError(400, "Invalid dedicated name");
   return value;
 };
+const passportEntryId = (raw: string | string[] | undefined) => {
+  const value = typeof raw === "string" ? raw : "";
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value))
+    throw new RoomError(400, "Invalid platform link");
+  return value;
+};
+router.get("/social/me/passport", async (req, res): Promise<void> => {
+  res.json(await myStreamerPassport(accountId(req)));
+});
+router.put("/social/me/passport/platforms", async (req, res): Promise<void> => {
+  const input = SaveMyStreamerPassportPlatformBody.safeParse(req.body);
+  if (!input.success) throw new RoomError(400, "Choose a platform and enter a valid handle or profile URL");
+  res.json(await savePassportPlatform(accountId(req), input.data.platform, input.data.handleOrUrl));
+});
+router.delete("/social/me/passport/platforms/:entryId", async (req, res): Promise<void> => {
+  res.json(await deletePassportPlatform(accountId(req), passportEntryId(req.params.entryId)));
+});
+router.post("/social/me/passport/platforms/:entryId/request", async (req, res): Promise<void> => {
+  res.json(await requestPassportVerification(accountId(req), passportEntryId(req.params.entryId)));
+});
+router.get("/social/people/:username/passport", async (req, res): Promise<void> => {
+  res.json(await publicStreamerPassport(accountId(req), name(req.params.username)));
+});
+router.get("/social/admin/passport/requests", async (req, res): Promise<void> => {
+  res.json(await passportReviewQueue(accountId(req)));
+});
+router.post("/social/admin/passport/requests/:entryId/review", async (req, res): Promise<void> => {
+  const input = ReviewStreamerPassportRequestBody.safeParse(req.body);
+  if (!input.success) throw new RoomError(400, "Choose approve or reject");
+  res.json(await reviewPassportRequest(accountId(req), passportEntryId(req.params.entryId), input.data.action));
+});
+router.post("/social/admin/passport/founding-league", async (req, res): Promise<void> => {
+  const input = SetStreamerPassportFoundingLeagueBody.safeParse(req.body);
+  if (!input.success) throw new RoomError(400, "Choose an account and whether to grant or remove the stamp");
+  res.json(await setFoundingLeague(accountId(req), name(input.data.username), input.data.grant));
+});
 router.get("/social/favorites/gallery", async (req, res): Promise<void> => {
   res.json(GetFavoritesGalleryResponse.parse(await favoritesGallery(accountId(req))));
 });

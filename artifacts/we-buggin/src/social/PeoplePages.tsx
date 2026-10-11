@@ -11,6 +11,7 @@ import {
 import { Avatar, BadgeMark, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, refreshSocial, useIdemKey, iconFor } from './common';
 import { ProfileView, ProfileMenu } from '@/profile/ProfileView';
 import { FavoritesGallery, type FavoriteEntry } from './FavoritesGallery';
+import { PublicStreamerPassport } from '@/passport/StreamerPassport';
 
 export function CommunityPage() {
   const me = useGetSocialMe();
@@ -117,6 +118,7 @@ export function PersonPage({ username }: { username: string }) {
             <Gift size={16} /> {gift.isPending ? 'Sending...' : 'Send gift'}</button>
         </div>
       ))}
+      <PublicStreamerPassport username={username} />
     </ProfileView>
   );
 }

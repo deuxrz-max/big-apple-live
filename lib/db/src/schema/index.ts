@@ -30,3 +30,4 @@ export * from "./social-inventory";
 export * from "./social-ledger";
 export * from "./social-messages";
 export * from "./social-login-streaks";
+export * from "./streamer-passport";

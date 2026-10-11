@@ -9,6 +9,7 @@ import type { EmojiIdentity4b96100 } from './emojiIdentity4b96100';
 import type { PhotoReviewStatus4b96100 } from './photoReviewStatus4b96100';
 import type { SocialPersonBadgesItem } from './socialPersonBadgesItem';
 import type { SocialPersonExternalPlatform } from './socialPersonExternalPlatform';
+import type { StreamerPassportBadgeSummary } from './streamerPassportBadgeSummary';
 
 export interface SocialPerson {
   /** @nullable */
@@ -43,4 +44,5 @@ export interface SocialPerson {
   blocked: boolean;
   receivedCredits: number;
   badgeId: string | null;
+  passport?: StreamerPassportBadgeSummary;
 }

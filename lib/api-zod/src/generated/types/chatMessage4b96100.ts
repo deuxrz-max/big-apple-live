@@ -8,6 +8,7 @@
 import type { ChatMessage4b96100BotId } from './chatMessage4b96100BotId';
 import type { ChatMessage4b96100Kind } from './chatMessage4b96100Kind';
 import type { EmojiIdentity4b96100 } from './emojiIdentity4b96100';
+import type { StreamerPassportBadgeSummary } from './streamerPassportBadgeSummary';
 
 export interface ChatMessage4b96100 {
   /** @nullable */
@@ -25,5 +26,6 @@ export interface ChatMessage4b96100 {
   text: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  passport?: StreamerPassportBadgeSummary;
   createdAt: Date;
 }

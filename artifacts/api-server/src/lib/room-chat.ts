@@ -8,6 +8,7 @@ import { botSettings, botRotation, botMessageValues } from "./moderator-bots";
 import { BOT_ACCOUNTS, BOT_WARNING_COOLDOWN_MS, publicViolation } from "./bot-policy";
 import { giftNameColorsForAccounts } from "./social/gift-name-color-data";
 import { giftNameColorForSentCredits } from "./social/gift-name-color";
+import { passportBadgeSummaries } from "./social/passport";
 
 function publicMessage(row: RoomMessageRow) {
   return GetRoomMessagesResponse.element.parse(row);
@@ -41,6 +42,7 @@ export async function getMessages(roomId: string, store: RoomStore = roomStore, 
     .orderBy(desc(roomMessages.createdAt), desc(roomMessages.id)).limit(60);
   const authorIds = [...new Set(rows.map(row => row.message.authorAccountId).filter((id): id is string => !!id))];
   const nameColors = await giftNameColorsForAccounts(authorIds);
+  const passports = await passportBadgeSummaries(authorIds);
   const selectedBadges = authorIds.length ? await db.select({
     accountId: socialSettings.accountId, badgeId: socialSettings.badgeId,
   }).from(socialSettings).innerJoin(socialInventory, and(
@@ -53,6 +55,7 @@ export async function getMessages(roomId: string, store: RoomStore = roomStore, 
     ...publicMessage(row.message), photoUrl: null,
     displayNameColor: row.message.authorAccountId ? nameColors.get(row.message.authorAccountId) ?? "#FFFFFF" : "#FFFFFF",
     badgeId: row.message.authorAccountId ? badgeByAccount.get(row.message.authorAccountId) ?? null : null,
+    passport: row.message.authorAccountId ? passports.get(row.message.authorAccountId) : undefined,
   }));
 }
 export async function acceptMessage(
@@ -93,6 +96,7 @@ export async function acceptMessage(
         eq(socialInventory.itemId, settings.badgeId),
         sql`(${socialInventory.expiresAt} IS NULL OR ${socialInventory.expiresAt} > CURRENT_TIMESTAMP)`)).limit(1) : [];
     const badgeId = activeBadge?.itemId ?? null;
+    const passport = (await passportBadgeSummaries([accountId])).get(accountId);
     profile = { ...profile, bio: settings?.bio ?? "" };
     const [original] = await tx.insert(roomMessages).values({
       roomId: roomId.toUpperCase(), historyId, authorId: sender.participantId, authorAccountId: accountId,
@@ -125,7 +129,8 @@ export async function acceptMessage(
     return { message: { ...publicMessage(message), photoUrl: null,
       displayNameColor: message.authorAccountId === accountId
         ? giftNameColorForSentCredits(wallet?.sent ?? 0) : "#FFFFFF",
-      badgeId: message.authorAccountId === accountId ? badgeId : null }, profile };
+      badgeId: message.authorAccountId === accountId ? badgeId : null,
+      passport: message.authorAccountId === accountId ? passport : undefined }, profile };
   });
   // No events or in-memory avatar changes occur before the transaction commits.
   store.updateAccountIdentity(accountId, accepted.profile.displayName ?? accepted.profile.username, accepted.profile.identity, null);

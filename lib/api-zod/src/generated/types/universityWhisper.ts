@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { StreamerPassportBadgeSummary } from './streamerPassportBadgeSummary';
 
 export interface UniversityWhisper {
   id: string;
@@ -12,6 +13,7 @@ export interface UniversityWhisper {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  passport?: StreamerPassportBadgeSummary;
   outgoing: boolean;
   body: string;
   createdAt: Date;

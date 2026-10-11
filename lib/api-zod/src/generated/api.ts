@@ -111,6 +111,7 @@ export const getFavoritesGalleryResponsePersonIdentityEmojiIdMax = 100;
 
 export const getFavoritesGalleryResponsePersonIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getFavoritesGalleryResponsePersonIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getFavoritesGalleryResponsePersonPassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const GetFavoritesGalleryResponseItem = zod.object({
@@ -148,7 +149,16 @@ export const GetFavoritesGalleryResponseItem = zod.object({
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
   "receivedCredits": zod.number().int(),
-  "badgeId": zod.union([zod.string(),zod.null()])
+  "badgeId": zod.union([zod.string(),zod.null()]),
+  "passport": zod.object({
+  "platforms": zod.array(zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(getFavoritesGalleryResponsePersonPassportPlatformsItemColorRegExp)
+})),
+  "verified": zod.boolean(),
+  "foundingLeague": zod.boolean()
+}).optional()
 }),
   "room": zod.union([zod.object({
   "roomId": zod.string(),
@@ -175,11 +185,13 @@ export const GetUniversitySessionParams = zod.object({
 })
 
 export const getUniversitySessionResponsePeopleItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getUniversitySessionResponsePeopleItemPassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getUniversitySessionResponsePeopleItemIdentityEmojiIdMax = 100;
 
 export const getUniversitySessionResponsePeopleItemIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getUniversitySessionResponsePeopleItemIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getUniversitySessionResponseWhispersItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getUniversitySessionResponseWhispersItemPassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const GetUniversitySessionResponse = zod.object({
@@ -190,6 +202,15 @@ export const GetUniversitySessionResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "displayNameColor": zod.string().regex(getUniversitySessionResponsePeopleItemDisplayNameColorRegExp).optional(),
+  "passport": zod.object({
+  "platforms": zod.array(zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(getUniversitySessionResponsePeopleItemPassportPlatformsItemColorRegExp)
+})),
+  "verified": zod.boolean(),
+  "foundingLeague": zod.boolean()
+}).optional(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getUniversitySessionResponsePeopleItemIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -212,6 +233,15 @@ export const GetUniversitySessionResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "displayNameColor": zod.string().regex(getUniversitySessionResponseWhispersItemDisplayNameColorRegExp).optional(),
+  "passport": zod.object({
+  "platforms": zod.array(zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(getUniversitySessionResponseWhispersItemPassportPlatformsItemColorRegExp)
+})),
+  "verified": zod.boolean(),
+  "foundingLeague": zod.boolean()
+}).optional(),
   "outgoing": zod.boolean(),
   "body": zod.string(),
   "createdAt": zod.coerce.date()
@@ -467,6 +497,7 @@ export const getOlderRoomMessagesResponseIdentityEmojiIdMax = 100;
 export const getOlderRoomMessagesResponseIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getOlderRoomMessagesResponseIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getOlderRoomMessagesResponseDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getOlderRoomMessagesResponsePassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const GetOlderRoomMessagesResponseItem = zod.object({
@@ -488,6 +519,15 @@ export const GetOlderRoomMessagesResponseItem = zod.object({
   "kind": zod.enum(['text', 'reaction']),
   "text": zod.string(),
   "displayNameColor": zod.string().regex(getOlderRoomMessagesResponseDisplayNameColorRegExp).optional(),
+  "passport": zod.object({
+  "platforms": zod.array(zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(getOlderRoomMessagesResponsePassportPlatformsItemColorRegExp)
+})),
+  "verified": zod.boolean(),
+  "foundingLeague": zod.boolean()
+}).optional(),
   "createdAt": zod.coerce.date()
 })
 export const GetOlderRoomMessagesResponse = zod.array(GetOlderRoomMessagesResponseItem)
@@ -586,6 +626,7 @@ export const getSocialMeResponseProfileIdentityEmojiIdMax = 100;
 
 export const getSocialMeResponseProfileIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getSocialMeResponseProfileIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getSocialMeResponseProfilePassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 
@@ -626,7 +667,16 @@ export const GetSocialMeResponse = zod.object({
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
   "receivedCredits": zod.number().int(),
-  "badgeId": zod.union([zod.string(),zod.null()])
+  "badgeId": zod.union([zod.string(),zod.null()]),
+  "passport": zod.object({
+  "platforms": zod.array(zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(getSocialMeResponseProfilePassportPlatformsItemColorRegExp)
+})),
+  "verified": zod.boolean(),
+  "foundingLeague": zod.boolean()
+}).optional()
 }),
   "wallet": zod.object({
   "balance": zod.number().int(),
@@ -693,6 +743,7 @@ export const saveSocialProfileResponseIdentityEmojiIdMax = 100;
 
 export const saveSocialProfileResponseIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const saveSocialProfileResponseIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const saveSocialProfileResponsePassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const SaveSocialProfileResponse = zod.object({
@@ -729,7 +780,187 @@ export const SaveSocialProfileResponse = zod.object({
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
   "receivedCredits": zod.number().int(),
-  "badgeId": zod.union([zod.string(),zod.null()])
+  "badgeId": zod.union([zod.string(),zod.null()]),
+  "passport": zod.object({
+  "platforms": zod.array(zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(saveSocialProfileResponsePassportPlatformsItemColorRegExp)
+})),
+  "verified": zod.boolean(),
+  "foundingLeague": zod.boolean()
+}).optional()
+})
+
+
+export const getMyStreamerPassportResponseAvailablePlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getMyStreamerPassportResponsePlatformsItemOneColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+
+
+export const GetMyStreamerPassportResponse = zod.object({
+  "availablePlatforms": zod.array(zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(getMyStreamerPassportResponseAvailablePlatformsItemColorRegExp)
+})),
+  "platforms": zod.array(zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(getMyStreamerPassportResponsePlatformsItemOneColorRegExp)
+}).and(zod.object({
+  "entryId": zod.string().uuid(),
+  "handle": zod.string(),
+  "profileUrl": zod.string().url(),
+  "addedAt": zod.coerce.date(),
+  "verificationCode": zod.string(),
+  "verificationStatus": zod.enum(['unverified', 'requested', 'verified']),
+  "requestedAt": zod.coerce.date().nullable(),
+  "verifiedAt": zod.coerce.date().nullable()
+}))),
+  "foundingLeague": zod.boolean()
+})
+
+
+export const saveMyStreamerPassportPlatformBodyHandleOrUrlMax = 300;
+
+
+
+export const SaveMyStreamerPassportPlatformBody = zod.object({
+  "platform": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "handleOrUrl": zod.string().min(1).max(saveMyStreamerPassportPlatformBodyHandleOrUrlMax)
+})
+
+export const saveMyStreamerPassportPlatformResponseOneColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+
+
+export const SaveMyStreamerPassportPlatformResponse = zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(saveMyStreamerPassportPlatformResponseOneColorRegExp)
+}).and(zod.object({
+  "entryId": zod.string().uuid(),
+  "handle": zod.string(),
+  "profileUrl": zod.string().url(),
+  "addedAt": zod.coerce.date(),
+  "verificationCode": zod.string(),
+  "verificationStatus": zod.enum(['unverified', 'requested', 'verified']),
+  "requestedAt": zod.coerce.date().nullable(),
+  "verifiedAt": zod.coerce.date().nullable()
+}))
+
+
+export const DeleteMyStreamerPassportPlatformParams = zod.object({
+  "entryId": zod.coerce.string().uuid()
+})
+
+export const DeleteMyStreamerPassportPlatformResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+export const RequestMyStreamerPassportVerificationParams = zod.object({
+  "entryId": zod.coerce.string().uuid()
+})
+
+export const requestMyStreamerPassportVerificationResponseOneColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+
+
+export const RequestMyStreamerPassportVerificationResponse = zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(requestMyStreamerPassportVerificationResponseOneColorRegExp)
+}).and(zod.object({
+  "entryId": zod.string().uuid(),
+  "handle": zod.string(),
+  "profileUrl": zod.string().url(),
+  "addedAt": zod.coerce.date(),
+  "verificationCode": zod.string(),
+  "verificationStatus": zod.enum(['unverified', 'requested', 'verified']),
+  "requestedAt": zod.coerce.date().nullable(),
+  "verifiedAt": zod.coerce.date().nullable()
+}))
+
+
+export const GetSocialPersonStreamerPassportParams = zod.object({
+  "username": zod.coerce.string()
+})
+
+export const getSocialPersonStreamerPassportResponseIdentityEmojiIdMax = 100;
+
+export const getSocialPersonStreamerPassportResponseIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getSocialPersonStreamerPassportResponseIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getSocialPersonStreamerPassportResponsePlatformsItemOneColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+
+
+export const GetSocialPersonStreamerPassportResponse = zod.object({
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "identity": zod.object({
+  "emojiId": zod.string().min(1).max(getSocialPersonStreamerPassportResponseIdentityEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(getSocialPersonStreamerPassportResponseIdentityColorRegExp),
+  "hairColor": zod.string().regex(getSocialPersonStreamerPassportResponseIdentityHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
+}),
+  "platforms": zod.array(zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(getSocialPersonStreamerPassportResponsePlatformsItemOneColorRegExp)
+}).and(zod.object({
+  "handle": zod.string(),
+  "profileUrl": zod.string().url(),
+  "addedAt": zod.coerce.date(),
+  "verified": zod.boolean()
+}))),
+  "foundingLeague": zod.boolean()
+})
+
+
+export const getStreamerPassportReviewQueueResponseRequestsItemOneOneColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+
+
+export const GetStreamerPassportReviewQueueResponse = zod.object({
+  "requests": zod.array(zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(getStreamerPassportReviewQueueResponseRequestsItemOneOneColorRegExp)
+}).and(zod.object({
+  "entryId": zod.string().uuid(),
+  "handle": zod.string(),
+  "profileUrl": zod.string().url(),
+  "addedAt": zod.coerce.date(),
+  "verificationCode": zod.string(),
+  "verificationStatus": zod.enum(['unverified', 'requested', 'verified']),
+  "requestedAt": zod.coerce.date().nullable(),
+  "verifiedAt": zod.coerce.date().nullable()
+})).and(zod.object({
+  "username": zod.string(),
+  "displayName": zod.string()
+})))
+})
+
+
+export const ReviewStreamerPassportRequestParams = zod.object({
+  "entryId": zod.coerce.string().uuid()
+})
+
+export const ReviewStreamerPassportRequestBody = zod.object({
+  "action": zod.enum(['approve', 'reject'])
+})
+
+export const ReviewStreamerPassportRequestResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+export const SetStreamerPassportFoundingLeagueBody = zod.object({
+  "username": zod.string(),
+  "grant": zod.boolean()
+})
+
+export const SetStreamerPassportFoundingLeagueResponse = zod.object({
+  "ok": zod.boolean()
 })
 
 
@@ -760,6 +991,7 @@ export const getSocialPeopleResponsePeopleItemIdentityEmojiIdMax = 100;
 
 export const getSocialPeopleResponsePeopleItemIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getSocialPeopleResponsePeopleItemIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getSocialPeopleResponsePeopleItemPassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const GetSocialPeopleResponse = zod.object({
@@ -797,7 +1029,16 @@ export const GetSocialPeopleResponse = zod.object({
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
   "receivedCredits": zod.number().int(),
-  "badgeId": zod.union([zod.string(),zod.null()])
+  "badgeId": zod.union([zod.string(),zod.null()]),
+  "passport": zod.object({
+  "platforms": zod.array(zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(getSocialPeopleResponsePeopleItemPassportPlatformsItemColorRegExp)
+})),
+  "verified": zod.boolean(),
+  "foundingLeague": zod.boolean()
+}).optional()
 })),
   "total": zod.number().int()
 })
@@ -822,6 +1063,7 @@ export const getSocialPersonResponseIdentityEmojiIdMax = 100;
 
 export const getSocialPersonResponseIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getSocialPersonResponseIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getSocialPersonResponsePassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const GetSocialPersonResponse = zod.object({
@@ -858,7 +1100,16 @@ export const GetSocialPersonResponse = zod.object({
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
   "receivedCredits": zod.number().int(),
-  "badgeId": zod.union([zod.string(),zod.null()])
+  "badgeId": zod.union([zod.string(),zod.null()]),
+  "passport": zod.object({
+  "platforms": zod.array(zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(getSocialPersonResponsePassportPlatformsItemColorRegExp)
+})),
+  "verified": zod.boolean(),
+  "foundingLeague": zod.boolean()
+}).optional()
 })
 
 
@@ -891,6 +1142,7 @@ export const getSocialBlocksResponsePeopleItemIdentityEmojiIdMax = 100;
 
 export const getSocialBlocksResponsePeopleItemIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getSocialBlocksResponsePeopleItemIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getSocialBlocksResponsePeopleItemPassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const GetSocialBlocksResponse = zod.object({
@@ -928,7 +1180,16 @@ export const GetSocialBlocksResponse = zod.object({
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
   "receivedCredits": zod.number().int(),
-  "badgeId": zod.union([zod.string(),zod.null()])
+  "badgeId": zod.union([zod.string(),zod.null()]),
+  "passport": zod.object({
+  "platforms": zod.array(zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(getSocialBlocksResponsePeopleItemPassportPlatformsItemColorRegExp)
+})),
+  "verified": zod.boolean(),
+  "foundingLeague": zod.boolean()
+}).optional()
 })),
   "total": zod.number().int()
 })
@@ -969,6 +1230,8 @@ export const GetRoomGiftEventsParams = zod.object({
 
 export const getRoomGiftEventsResponseEventsItemSenderNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getRoomGiftEventsResponseEventsItemRecipientNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getRoomGiftEventsResponseEventsItemSenderPassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getRoomGiftEventsResponseEventsItemRecipientPassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const GetRoomGiftEventsResponse = zod.object({
@@ -981,6 +1244,24 @@ export const GetRoomGiftEventsResponse = zod.object({
   "recipientName": zod.string(),
   "senderNameColor": zod.string().regex(getRoomGiftEventsResponseEventsItemSenderNameColorRegExp).optional(),
   "recipientNameColor": zod.string().regex(getRoomGiftEventsResponseEventsItemRecipientNameColorRegExp).optional(),
+  "senderPassport": zod.object({
+  "platforms": zod.array(zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(getRoomGiftEventsResponseEventsItemSenderPassportPlatformsItemColorRegExp)
+})),
+  "verified": zod.boolean(),
+  "foundingLeague": zod.boolean()
+}).optional(),
+  "recipientPassport": zod.object({
+  "platforms": zod.array(zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(getRoomGiftEventsResponseEventsItemRecipientPassportPlatformsItemColorRegExp)
+})),
+  "verified": zod.boolean(),
+  "foundingLeague": zod.boolean()
+}).optional(),
   "createdAt": zod.coerce.date()
 }))
 })
@@ -1029,6 +1310,7 @@ export const getSocialLeaderboardResponsePeopleItemIdentityEmojiIdMax = 100;
 
 export const getSocialLeaderboardResponsePeopleItemIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getSocialLeaderboardResponsePeopleItemIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getSocialLeaderboardResponsePeopleItemPassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const GetSocialLeaderboardResponse = zod.object({
@@ -1066,7 +1348,16 @@ export const GetSocialLeaderboardResponse = zod.object({
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
   "receivedCredits": zod.number().int(),
-  "badgeId": zod.union([zod.string(),zod.null()])
+  "badgeId": zod.union([zod.string(),zod.null()]),
+  "passport": zod.object({
+  "platforms": zod.array(zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(getSocialLeaderboardResponsePeopleItemPassportPlatformsItemColorRegExp)
+})),
+  "verified": zod.boolean(),
+  "foundingLeague": zod.boolean()
+}).optional()
 })),
   "total": zod.number().int()
 })
@@ -1126,6 +1417,7 @@ export const getSocialConversationResponsePersonIdentityEmojiIdMax = 100;
 
 export const getSocialConversationResponsePersonIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getSocialConversationResponsePersonIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getSocialConversationResponsePersonPassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const GetSocialConversationResponse = zod.object({
@@ -1163,7 +1455,16 @@ export const GetSocialConversationResponse = zod.object({
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
   "receivedCredits": zod.number().int(),
-  "badgeId": zod.union([zod.string(),zod.null()])
+  "badgeId": zod.union([zod.string(),zod.null()]),
+  "passport": zod.object({
+  "platforms": zod.array(zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(getSocialConversationResponsePersonPassportPlatformsItemColorRegExp)
+})),
+  "verified": zod.boolean(),
+  "foundingLeague": zod.boolean()
+}).optional()
 }),
   "messages": zod.array(zod.object({
   "id": zod.string(),
@@ -1445,6 +1746,7 @@ export const getRoomMessagesResponseIdentityEmojiIdMax = 100;
 export const getRoomMessagesResponseIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getRoomMessagesResponseIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getRoomMessagesResponseDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getRoomMessagesResponsePassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const GetRoomMessagesResponseItem = zod.object({
@@ -1466,6 +1768,15 @@ export const GetRoomMessagesResponseItem = zod.object({
   "kind": zod.enum(['text', 'reaction']),
   "text": zod.string(),
   "displayNameColor": zod.string().regex(getRoomMessagesResponseDisplayNameColorRegExp).optional(),
+  "passport": zod.object({
+  "platforms": zod.array(zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(getRoomMessagesResponsePassportPlatformsItemColorRegExp)
+})),
+  "verified": zod.boolean(),
+  "foundingLeague": zod.boolean()
+}).optional(),
   "createdAt": zod.coerce.date()
 })
 export const GetRoomMessagesResponse = zod.array(GetRoomMessagesResponseItem)
@@ -1496,6 +1807,7 @@ export const sendRoomMessageResponseMessageIdentityEmojiIdMax = 100;
 export const sendRoomMessageResponseMessageIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const sendRoomMessageResponseMessageIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const sendRoomMessageResponseMessageDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const sendRoomMessageResponseMessagePassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const sendRoomMessageResponseProfilePhotoUrlsMax = 4;
 
 export const sendRoomMessageResponseProfileIdentityEmojiIdMax = 100;
@@ -1524,6 +1836,15 @@ export const SendRoomMessageResponse = zod.object({
   "kind": zod.enum(['text', 'reaction']),
   "text": zod.string(),
   "displayNameColor": zod.string().regex(sendRoomMessageResponseMessageDisplayNameColorRegExp).optional(),
+  "passport": zod.object({
+  "platforms": zod.array(zod.object({
+  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
+  "label": zod.string(),
+  "color": zod.string().regex(sendRoomMessageResponseMessagePassportPlatformsItemColorRegExp)
+})),
+  "verified": zod.boolean(),
+  "foundingLeague": zod.boolean()
+}).optional(),
   "createdAt": zod.coerce.date()
 }),
   "profile": zod.object({

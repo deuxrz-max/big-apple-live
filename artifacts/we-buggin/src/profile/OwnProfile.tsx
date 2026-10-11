@@ -7,6 +7,7 @@ import { ErrorBox, Loading } from '@/social/common';
 import { RewardsPage } from '@/social/MoneyPages';
 import { ProfileView } from './ProfileView';
 import { GiftBag, GiftControl } from '@/gifts';
+import { MyStreamerPassport } from '@/passport/StreamerPassport';
 
 export function OwnProfile() {
   const [bagOpen, setBagOpen] = useState(false);
@@ -22,12 +23,14 @@ export function OwnProfile() {
         <nav className="pf-links" aria-label="Profile shortcuts">
           <Link href="/community" className="pf-btn" data-testid="link-community">Community</Link>
           <Link href="/community/profile" className="pf-btn" data-testid="link-platform-bio">Platform and bio</Link>
+          <Link href="#streamer-passport" className="pf-btn" data-testid="link-streamer-passport">Streamer passport</Link>
           {access.data?.moderator && <Link href="/community/moderation" className="pf-btn" data-testid="link-moderation">Moderation</Link>}
         </nav>
       }>
       <Link href="/community/credits" className="pf-btn" data-testid="link-buy-credits">Buy credits</Link>
       <GiftControl onClick={() => setBagOpen(true)} label="Open your gift bag" />
       {bagOpen && <GiftBag onClose={() => setBagOpen(false)} />}
+      <div id="streamer-passport"><MyStreamerPassport /></div>
       <div className="sc pf-rewards"><RewardsPage embedded /></div>
     </ProfileView>
   );

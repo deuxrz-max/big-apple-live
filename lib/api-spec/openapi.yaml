@@ -414,6 +414,22 @@ paths:
               schema: { $ref: "#/components/schemas/ChatReportReceipt" }
   /social/me:
     $ref: './social.openapi.json#/paths/~1social~1me'
+  /social/me/passport:
+    $ref: './social.openapi.json#/paths/~1social~1me~1passport'
+  /social/me/passport/platforms:
+    $ref: './social.openapi.json#/paths/~1social~1me~1passport~1platforms'
+  /social/me/passport/platforms/{entryId}:
+    $ref: './social.openapi.json#/paths/~1social~1me~1passport~1platforms~1{entryId}'
+  /social/me/passport/platforms/{entryId}/request:
+    $ref: './social.openapi.json#/paths/~1social~1me~1passport~1platforms~1{entryId}~1request'
+  /social/people/{username}/passport:
+    $ref: './social.openapi.json#/paths/~1social~1people~1{username}~1passport'
+  /social/admin/passport/requests:
+    $ref: './social.openapi.json#/paths/~1social~1admin~1passport~1requests'
+  /social/admin/passport/requests/{entryId}/review:
+    $ref: './social.openapi.json#/paths/~1social~1admin~1passport~1requests~1{entryId}~1review'
+  /social/admin/passport/founding-league:
+    $ref: './social.openapi.json#/paths/~1social~1admin~1passport~1founding-league'
   /social/people:
     $ref: './social.openapi.json#/paths/~1social~1people'
   /social/people/{username}:
@@ -1027,6 +1043,7 @@ components:
         username: { type: string }
         displayName: { type: string }
         displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
+        passport: { $ref: "./social.openapi.json#/components/schemas/StreamerPassportBadgeSummary" }
         identity: { $ref: "#/components/schemas/EmojiIdentity" }
         photoUrl: { type: [string, "null"] }
         photoStatus: { type: [string, "null"] }
@@ -1041,6 +1058,7 @@ components:
         username: { type: string }
         displayName: { type: string }
         displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
+        passport: { $ref: "./social.openapi.json#/components/schemas/StreamerPassportBadgeSummary" }
         outgoing: { type: boolean }
         body: { type: string }
         createdAt: { type: string, format: date-time }
@@ -1157,6 +1175,7 @@ components:
         kind: { type: string, enum: [text, reaction] }
         text: { type: string }
         displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
+        passport: { $ref: "./social.openapi.json#/components/schemas/StreamerPassportBadgeSummary" }
         createdAt: { type: string, format: date-time }
       required: [id, roomId, authorId, username, identity, kind, text, createdAt]
     ChatAccepted:
