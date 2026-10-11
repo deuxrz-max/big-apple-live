@@ -25,6 +25,7 @@
     "test:university-audio": "esbuild src/lib/university-audio.test.ts --bundle --platform=node --format=esm --outfile=.tests/university-audio.test.mjs && node --test .tests/university-audio.test.mjs",
     "test:chat": "esbuild src/lib/room-chat.test.ts --bundle --platform=node --format=esm --banner:js=\"import { createRequire as createTestRequire } from 'node:module'; const require = createTestRequire(import.meta.url);\" --outfile=.tests/room-chat.test.mjs && node --test .tests/room-chat.test.mjs",
     "test:test-actor": "esbuild src/lib/test-actor-policy.test.ts --bundle --platform=node --format=esm --outfile=.tests/test-actor-policy.test.mjs && node --test .tests/test-actor-policy.test.mjs",
+    "test:dev-audio-harness": "esbuild src/lib/dev-audio-harness-policy.test.ts --bundle --platform=node --format=esm --outfile=.tests/dev-audio-harness-policy.test.mjs && node --test .tests/dev-audio-harness-policy.test.mjs",
     "test-actor": "node scripts/test-actor.mjs"
   },
   "dependencies": {

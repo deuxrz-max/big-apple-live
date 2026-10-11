@@ -23,3 +23,15 @@ Test the sequence: connected listener → slot reservation → listener disconne
 → slot remains held → new speaker connection. Microphone grant after the
 explicit Join action starts the user's mic; permission failure releases the
 reservation and keeps or restores the listener connection.
+
+The Replit headless-browser audio harness did not complete ICE gathering with
+the STUN-only configuration: peers stayed unconnected, no RTP flowed, and SDP
+was not sent. Slot and moderation-control tests therefore do not prove live
+audio works on phones or networks.
+
+**Why:** a successful signaling/session test can coexist with a blocked or
+unfinished ICE path; reporting it as working audio would be misleading.
+
+**How to apply:** check ICE states and RTP counters on real devices/networks
+before claiming audio success. Do not add a TURN provider or credentials
+without the owner's explicit approval.

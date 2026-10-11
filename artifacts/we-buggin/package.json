@@ -12,6 +12,7 @@
     "test:playlist": "esbuild tests/promoPlaylist.test.ts --bundle --platform=node --format=esm --outfile=/tmp/streamtalk-promo-tests.mjs && node --test /tmp/streamtalk-promo-tests.mjs",
     "test:badges": "esbuild tests/badgeCatalog.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-badge-tests.mjs && node --test /tmp/we-buggin-badge-tests.mjs",
     "test:promo-browser": "tsc -p tests/browser/tsconfig.json --noEmit && node tests/browser/run.mjs",
+    "test:audio-harness-browser": "pnpm exec playwright test --config tests/browser/audio-harness.live.config.ts",
     "test:live": "node --test tests/liveBeam.test.mjs"
   },
   "devDependencies": {

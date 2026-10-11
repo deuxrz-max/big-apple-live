@@ -34,6 +34,20 @@ removal.
 **How to apply:** Remove the persistent preview accounts only after an explicit
 owner request; routine cleanup applies only to isolated regression fixtures.
 
+The browser audio harness may control only existing accounts explicitly marked
+as test accounts. Its temporary actors use in-memory session tokens and a
+memory-only test room excluded from public room and follower presence. Generate
+synthetic audio in the browser; never request microphone or camera permission.
+Do not add persistent test-room records, gifts, messages, or credit changes.
+
+**Why:** This lets the owner exercise concurrent beam slots and host actions
+without signing in as a test account or altering real-user data.
+
+**How to apply:** Keep the harness development-only on both client and server,
+limit every action to marked test accounts and the isolated test room, and
+disconnect/expire its temporary sessions without deleting the persistent test
+profiles.
+
 For Replit-managed Clerk, existing passwords cannot be read back for comparison.
 For explicitly authorized development test accounts, set the password through
 Clerk's development user-update API rather than trying to inspect it. A correct

@@ -71,3 +71,22 @@ test("unknown rooms and full rooms fail explicitly", () => {
   assert.throws(() => store.join(creator.room.roomId, "Overflow"),
     (error: unknown) => error instanceof RoomError && error.status === 409);
 });
+
+test("test-only university rooms never appear in public occupied or follower presence", () => {
+  let now = 1_000;
+  const store = new RoomStore(() => now);
+  const identity = { emojiId: "test", gender: "Male" as const, color: "#FFFFFF", hairColor: "#222222" };
+  store.registerCommunity({
+    roomId: "DEV-AUDIO-LAB",
+    historyId: "DEV-AUDIO-LAB-IN-MEMORY",
+    label: "Preview Audio Test Lab",
+    createdAt: new Date(now),
+    testOnly: true,
+  });
+  const joined = store.join("DEV-AUDIO-LAB", "Test account", { accountId: "test-account", identity });
+  assert.deepEqual(store.occupiedUniversities(), []);
+  assert.equal(store.latestUniversityForAccount("test-account"), null);
+  store.leave("DEV-AUDIO-LAB", joined.participantSessionId);
+  now += 1;
+  assert.deepEqual(store.occupiedUniversities(), []);
+});

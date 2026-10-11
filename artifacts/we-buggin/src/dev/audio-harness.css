@@ -1,0 +1,410 @@
+.dev-audio-harness {
+  position: fixed;
+  z-index: 10000;
+  inset: 0;
+  overflow-y: auto;
+  background: #151518;
+  color: #f4f1f8;
+  font-family: Montserrat, Arial, sans-serif;
+  overscroll-behavior: contain;
+}
+
+.dev-audio-harness *,
+.dev-audio-harness *::before,
+.dev-audio-harness *::after {
+  box-sizing: border-box;
+}
+
+.dev-audio-harness__shell {
+  width: min(100% - 28px, 1060px);
+  margin: 0 auto;
+  padding: 26px 0 40px;
+}
+
+.dev-audio-harness__header h1 {
+  margin: 4px 0 8px;
+  color: #a6ff00;
+  font-size: clamp(1.75rem, 6vw, 2.5rem);
+  font-weight: 850;
+  line-height: 1.1;
+}
+
+.dev-audio-harness__eyebrow {
+  margin: 0;
+  color: #ff5da8;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+.dev-audio-harness__summary {
+  max-width: 720px;
+  margin: 0;
+  color: #d1ccd8;
+  line-height: 1.55;
+}
+
+.dev-audio-harness__warning,
+.dev-audio-harness__connect,
+.dev-audio-harness__beam,
+.dev-audio-harness__actors,
+.dev-audio-harness__log {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid #34323a;
+  border-radius: 14px;
+  background: #1d1d23;
+}
+
+.dev-audio-harness__warning {
+  display: grid;
+  gap: 6px;
+  border-color: #6a4a17;
+  background: #211d16;
+  color: #f1e5ca;
+  font-size: .9rem;
+  line-height: 1.45;
+}
+
+.dev-audio-harness__warning strong {
+  color: #a6ff00;
+}
+
+.dev-audio-harness h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.dev-audio-harness h2 span {
+  margin-left: 6px;
+  color: #a6ff00;
+  font-size: .9rem;
+}
+
+.dev-audio-harness__connect p,
+.dev-audio-harness__section-title p,
+.dev-audio-harness__empty,
+.dev-audio-harness__log p {
+  margin: 5px 0 0;
+  color: #aaa4b2;
+  font-size: .86rem;
+  line-height: 1.4;
+}
+
+.dev-audio-harness__connect-controls,
+.dev-audio-harness__section-title,
+.dev-audio-harness__actor-heading,
+.dev-audio-harness__actions,
+.dev-audio-harness__target {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dev-audio-harness__connect-controls {
+  margin-top: 12px;
+}
+
+.dev-audio-harness select {
+  min-width: 0;
+  flex: 1;
+  height: 42px;
+  padding: 0 10px;
+  border: 1px solid #44414b;
+  border-radius: 9px;
+  background: #111114;
+  color: #fff;
+  font: inherit;
+}
+
+.dev-audio-harness__section-title {
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.dev-audio-harness__button {
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid #62556d;
+  border-radius: 10px;
+  background: #28242d;
+  color: #f4f1f8;
+  font: inherit;
+  font-size: .82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dev-audio-harness__button:hover:not(:disabled) {
+  border-color: #d186ff;
+  background: #30263a;
+}
+
+.dev-audio-harness__button:focus-visible,
+.dev-audio-harness select:focus-visible {
+  outline: 2px solid #a6ff00;
+  outline-offset: 2px;
+}
+
+.dev-audio-harness__button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+.dev-audio-harness__button--primary {
+  border-color: #9d1dff;
+  background: #542080;
+}
+
+.dev-audio-harness__button--quiet {
+  border-color: #48444f;
+  background: transparent;
+  color: #c7c1ce;
+}
+
+.dev-audio-harness__button--danger {
+  border-color: #783a55;
+  color: #ffbbd5;
+}
+
+.dev-audio-harness__slots {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.dev-audio-harness__slot {
+  display: flex;
+  min-height: 118px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid #4b4653;
+  border-radius: 12px;
+  background: #111114;
+  overflow-wrap: anywhere;
+}
+
+.dev-audio-harness__slot.is-occupied {
+  border-color: #7c37a9;
+  background: linear-gradient(140deg, #241930, #151318);
+}
+
+.dev-audio-harness__slot-number {
+  color: #a6ff00;
+  font-size: .64rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+.dev-audio-harness__slot strong {
+  font-size: .93rem;
+}
+
+.dev-audio-harness__slot-username,
+.dev-audio-harness__slot-status,
+.dev-audio-harness__empty-label {
+  color: #aaa4b2;
+  font-size: .73rem;
+}
+
+.dev-audio-harness__slot-status {
+  color: #f2c5ff;
+}
+
+.dev-audio-harness__actor-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.dev-audio-harness__actor {
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid #38343f;
+  border-radius: 12px;
+  background: #151519;
+}
+
+.dev-audio-harness__actor-heading {
+  justify-content: space-between;
+}
+
+.dev-audio-harness__actor h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.dev-audio-harness__actor-heading p {
+  margin: 4px 0 0;
+  color: #aaa4b2;
+  font-size: .78rem;
+  overflow-wrap: anywhere;
+}
+
+.dev-audio-harness__state {
+  flex: none;
+  padding: 5px 8px;
+  border: 1px solid #554962;
+  border-radius: 999px;
+  color: #d8b8f1;
+  font-size: .7rem;
+}
+
+.dev-audio-harness__metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0;
+}
+
+.dev-audio-harness__metrics span {
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: #242229;
+  color: #c6c0cc;
+  font-size: .68rem;
+  overflow-wrap: anywhere;
+}
+
+.dev-audio-harness__actions {
+  flex-wrap: wrap;
+}
+
+.dev-audio-harness__host-controls {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #39343f;
+}
+
+.dev-audio-harness__host-controls > strong {
+  color: #ffb4d2;
+  font-size: .8rem;
+}
+
+.dev-audio-harness__target {
+  flex-wrap: wrap;
+}
+
+.dev-audio-harness__target span {
+  min-width: 90px;
+  flex: 1;
+  color: #fff;
+  font-size: .82rem;
+}
+
+.dev-audio-harness__host-controls small {
+  color: #aaa4b2;
+  font-size: .72rem;
+  line-height: 1.4;
+}
+
+.dev-audio-harness__log ol {
+  display: grid;
+  gap: 6px;
+  max-height: 180px;
+  margin: 12px 0 0;
+  padding-left: 20px;
+  overflow: auto;
+  color: #d0cbd6;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: .72rem;
+}
+
+.dev-audio-harness__notice,
+.dev-audio-harness__error {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 9px;
+  line-height: 1.4;
+}
+
+.dev-audio-harness__notice {
+  border: 1px solid #45611e;
+  background: #1c2414;
+  color: #d9ffae;
+}
+
+.dev-audio-harness__error {
+  border: 1px solid #7b3c4d;
+  background: #2a171e;
+  color: #ffbfd0;
+}
+
+.dev-audio-harness__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px 2px;
+  color: #8f8998;
+  font-size: .7rem;
+}
+
+.dev-audio-harness .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (min-width: 760px) {
+  .dev-audio-harness__shell {
+    padding-top: 36px;
+  }
+  .dev-audio-harness__slots {
+    gap: 14px;
+  }
+  .dev-audio-harness__slot {
+    min-height: 150px;
+    padding: 16px;
+  }
+  .dev-audio-harness__actor-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 440px) {
+  .dev-audio-harness__shell {
+    width: min(100% - 20px, 1060px);
+    padding-top: 18px;
+  }
+  .dev-audio-harness__warning,
+  .dev-audio-harness__connect,
+  .dev-audio-harness__beam,
+  .dev-audio-harness__actors,
+  .dev-audio-harness__log {
+    padding: 12px;
+  }
+  .dev-audio-harness__section-title {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .dev-audio-harness__section-title > .dev-audio-harness__button {
+    align-self: flex-start;
+  }
+  .dev-audio-harness__connect-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .dev-audio-harness__connect-controls > * {
+    width: 100%;
+  }
+  .dev-audio-harness__actor-heading {
+    align-items: flex-start;
+  }
+}

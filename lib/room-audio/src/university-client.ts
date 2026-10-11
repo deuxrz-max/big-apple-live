@@ -3,6 +3,17 @@ import { readAudioEvents } from "./events";
 import { AudioConnection } from "./peer";
 import { RoomAudioError, type AudioPeer, type AudioState, type AudioEvent } from "./protocol";
 
+export type UniversityAudioPeerStats = {
+  participantId: string;
+  state: RTCPeerConnectionState;
+  signalingState: RTCSignalingState;
+  iceGatheringState: RTCIceGatheringState;
+  iceConnectionState: RTCIceConnectionState;
+  bytesSent: number;
+  bytesReceived: number;
+  audioLevel: number;
+};
+
 export interface UniversityAudioClientOptions {
   roomId: string;
   roomSessionId: string;
@@ -71,6 +82,37 @@ export class UniversityAudioClient {
       remoteAudioTracks: (peer.audio.srcObject as MediaStream | null)?.getAudioTracks().length ?? 0,
       playbackActive: !!peer.audio.srcObject && !peer.audio.paused,
       playbackMuted: peer.audio.muted,
+    }));
+  }
+
+  async getPeerStats(): Promise<UniversityAudioPeerStats[]> {
+    return Promise.all([...this.peers].map(async ([participantId, peer]) => {
+      const reports = await peer.pc.getStats();
+      let bytesSent = 0;
+      let bytesReceived = 0;
+      let audioLevel = 0;
+      for (const report of reports.values()) {
+        if (report.type === "outbound-rtp") {
+          const audio = report as RTCOutboundRtpStreamStats;
+          if (audio.kind === "audio") bytesSent += audio.bytesSent ?? 0;
+        } else if (report.type === "inbound-rtp") {
+          const audio = report as RTCInboundRtpStreamStats;
+          if (audio.kind === "audio") {
+            bytesReceived += audio.bytesReceived ?? 0;
+            audioLevel = Math.max(audioLevel, audio.audioLevel ?? 0);
+          }
+        }
+      }
+      return {
+        participantId,
+        state: peer.pc.connectionState,
+        signalingState: peer.pc.signalingState,
+        iceGatheringState: peer.pc.iceGatheringState,
+        iceConnectionState: peer.pc.iceConnectionState,
+        bytesSent,
+        bytesReceived,
+        audioLevel,
+      };
     }));
   }
 

@@ -37,6 +37,7 @@ type Room = {
   listeners: Set<Listener>;
   emptySince: number | null;
   community?: boolean;
+  testOnly?: boolean;
 };
 
 /** Single-process, ephemeral presence store. Session credentials are never in snapshots. */
@@ -47,17 +48,17 @@ export class RoomStore {
     private readonly allocateCode: (short: boolean) => string = short => randomBytes(short ? 3 : 6).toString("hex").toUpperCase(),
   ) {}
 
-  registerCommunity(input: { roomId: string; historyId: string; label: string; createdAt: Date }) {
+  registerCommunity(input: { roomId: string; historyId: string; label: string; createdAt: Date; testOnly?: boolean }) {
     if (this.rooms.has(input.roomId)) return;
     this.rooms.set(input.roomId, { roomId: input.roomId, historyId: input.historyId,
       name: input.label, capacity: UNIVERSITY_MEMBER_CAP, createdAt: input.createdAt, hostParticipantId: randomUUID(),
-      sessions: new Map(), listeners: new Set(), emptySince: null, community: true });
+      sessions: new Map(), listeners: new Set(), emptySince: null, community: true, testOnly: input.testOnly });
   }
   isCommunity(roomId: string) { return !!this.rooms.get(roomId.toUpperCase())?.community; }
   /** Bots use this read-only list, never a participant session or a real seat. */
   occupiedUniversities() {
     const now = this.now();
-    return [...this.rooms.values()].filter(room => room.community
+    return [...this.rooms.values()].filter(room => room.community && !room.testOnly
       && [...room.sessions.values()].some(s => now - s.lastSeenAt < SESSION_TIMEOUT_MS)).map(room => room.roomId);
   }
   refreshRoomChat(roomId: string) {
@@ -69,7 +70,7 @@ export class RoomStore {
     let latest: { roomId: string; label: string; at: number } | null = null;
     const now = this.now();
     for (const room of this.rooms.values()) {
-      if (!room.community) continue;
+      if (!room.community || room.testOnly) continue;
       for (const session of room.sessions.values()) {
         if (session.accountId !== accountId || now - session.lastSeenAt >= SESSION_TIMEOUT_MS) continue;
         if (!latest || session.lastSeenAt > latest.at)
@@ -79,7 +80,7 @@ export class RoomStore {
     return latest ? { roomId: latest.roomId, label: latest.label } : null;
   }
   refreshChatVisibility() {
-    for (const room of this.rooms.values()) if (room.community)
+    for (const room of this.rooms.values()) if (room.community && !room.testOnly)
       this.emit(room, { type: "chat.refresh", data: { roomId: room.roomId } });
   }
   hasUniversitySeat(roomId: string, accountId: string, exempt = false) {

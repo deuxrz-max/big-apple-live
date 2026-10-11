@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ClerkProvider, SignIn, SignUp, Show, useClerk, useUser } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
@@ -17,6 +17,10 @@ import '@/profile/profile.css';
 import SocialApp from '@/social/SocialApp';
 import { SignInArtwork } from '@/components/sign-in-artwork';
 import '@/theme.css';
+
+const DevAudioHarnessPage = import.meta.env.DEV
+  ? lazy(() => import('@/dev/AudioHarnessPage'))
+  : null;
 
 const queryClient = new QueryClient();
 
@@ -229,6 +233,13 @@ function ClerkProviderWithRoutes() {
         <ClerkQueryClientCacheInvalidator />
         <div className="app-page"><RoutedErrorBoundary>
           <Switch>
+            {DevAudioHarnessPage && (
+              <Route path="/__dev/audio-harness">
+                <Suspense fallback={<div className="app-page">Loading preview audio test lab…</div>}>
+                  <DevAudioHarnessPage />
+                </Suspense>
+              </Route>
+            )}
             <Route path="/" component={HomeRedirect} />
             <Route path="/beams">{() => <Redirect to="/home" />}</Route>
             <Route path="/beams/*?">{() => <Redirect to="/home" />}</Route>

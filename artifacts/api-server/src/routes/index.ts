@@ -13,6 +13,8 @@ import universityAudioRouter from "./university-audio";
 import { accountId } from "./identity";
 import { requireAdult } from "../lib/community";
 import { requireCompletedProfile } from "../lib/account-profiles";
+import { devAudioHarnessEnabled } from "../lib/dev-audio-harness-policy";
+import devAudioHarnessRouter from "./dev-audio-harness";
 
 const router: IRouter = Router();
 
@@ -31,6 +33,8 @@ router.use(socialRouter);
 router.use(chatRouter);
 router.use(universityChatRouter);
 router.use(universityAudioRouter);
+if (devAudioHarnessEnabled(process.env.NODE_ENV))
+  router.use("/__dev/audio-harness", devAudioHarnessRouter);
 // Leave shared audio modules in place for rollback, but never mount signaling.
 router.use((req, res, next) => {
   if (req.path.includes("/audio") || req.path.endsWith("/microphone")
