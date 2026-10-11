@@ -57,7 +57,7 @@ export function PersonCard({ p, extra }: { p: SocialPerson; extra?: ReactNode })
       <Link href={`/community/people/${p.username}`} className="sc-card-main">
         <Avatar p={p} size={64} />
         <span className="sc-card-text">
-          <span className="sc-name">{(p as PhotoPerson).displayName || p.username}<BadgeMark id={p.badgeId} /></span>
+          <span className="sc-name" style={{ color: p.displayNameColor ?? '#FFFFFF' }}>{(p as PhotoPerson).displayName || p.username}<BadgeMark id={p.badgeId} /></span>
           <span className="sc-sub">@{p.username}{p.country ? ` / ${p.country}` : ''}</span>
           {p.bio && <span className="sc-bio">{p.bio}</span>}
           {p.interests.length > 0 && <span className="sc-tags">{p.interests.slice(0, 4).map((i) => <i key={i}>{i}</i>)}</span>}

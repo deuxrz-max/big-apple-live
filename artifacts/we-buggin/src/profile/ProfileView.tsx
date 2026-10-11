@@ -114,7 +114,7 @@ export function ProfileView({ person, own = false, countryName, products, backHr
         left={<BackButton href={backHref} label="Back" />}
         right={own ? <Link href="/user-portal/edit" className="pf-round" aria-label="Edit your profile" data-testid="link-edit-hero"><Pencil size={18} aria-hidden /></Link> : menu} />
       <section className="pf-panel">
-        <h1 className="pf-name" data-testid="text-display-name">{name}</h1>
+        <h1 className="pf-name" style={{ color: p.displayNameColor ?? '#FFFFFF' }} data-testid="text-display-name">{name}</h1>
         {own && <Link href="/user-portal/edit" className="pf-edit" data-testid="link-edit-profile">Edit your profile</Link>}
         {actions}
         <div className="pf-chips">

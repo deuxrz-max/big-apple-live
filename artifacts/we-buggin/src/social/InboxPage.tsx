@@ -46,7 +46,7 @@ export function InboxPage() {
                   <i className="ib-dot" aria-hidden="true" />
                   <b className="ib-count">{c.unreadCount}</b>
                 </span>
-                <span className="ib-live-name">{c.displayName || c.username}</span>
+                <span className="ib-live-name" style={{ color: c.displayNameColor ?? '#FFFFFF' }}>{c.displayName || c.username}</span>
               </Link>
             </li>
           ))}
@@ -61,7 +61,7 @@ export function InboxPage() {
               <Link href={href(c.username)} className={`ib-row${unread ? ' is-unread' : ''}`} data-testid={`row-conversation-${c.username}`}>
                 <Avatar p={{ username: c.username, displayName: c.displayName, photoUrl: c.photoUrl }} size={52} />
                 <span className="ib-mid">
-                  <span className="ib-name">{c.displayName || c.username}{c.blocked && <em className="ib-blocked">Blocked</em>}</span>
+                  <span className="ib-name" style={{ color: c.displayNameColor ?? '#FFFFFF' }}>{c.displayName || c.username}{c.blocked && <em className="ib-blocked">Blocked</em>}</span>
                   <span className="ib-prev">{c.lastMessageFromMe ? 'You: ' : ''}{c.lastMessage}</span>
                 </span>
                 <span className="ib-side">

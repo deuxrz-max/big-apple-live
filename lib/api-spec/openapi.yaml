@@ -909,6 +909,7 @@ components:
         participantId: { type: string }
         username: { type: string }
         displayName: { type: string }
+        displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
         photoUrl: { type: [string, "null"] }
         photoStatus: { type: [string, "null"] }
         self: { type: boolean }
@@ -921,6 +922,7 @@ components:
         id: { type: string }
         username: { type: string }
         displayName: { type: string }
+        displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
         outgoing: { type: boolean }
         body: { type: string }
         createdAt: { type: string, format: date-time }
@@ -942,6 +944,7 @@ components:
         status: { type: string, enum: [pending, approved, rejected, flagged] }
         username: { type: [string, "null"] }
         displayName: { type: [string, "null"] }
+        displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
         createdAt: { type: string, format: date-time }
     PhotoReviewStatus:
       type: object
@@ -1035,6 +1038,7 @@ components:
         identity: { $ref: "#/components/schemas/EmojiIdentity" }
         kind: { type: string, enum: [text, reaction] }
         text: { type: string }
+        displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
         createdAt: { type: string, format: date-time }
       required: [id, roomId, authorId, username, identity, kind, text, createdAt]
     ChatAccepted:
@@ -1062,6 +1066,7 @@ components:
         roomLabel: { type: string }
         username: { type: string }
         displayName: { type: string }
+        displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
         text: { type: string }
         reason: { type: string }
         createdAt: { type: string, format: date-time }
@@ -1190,6 +1195,7 @@ components:
         micEnabled: { type: boolean }
         hostMuted: { type: boolean }
         unmuteRequested: { type: boolean }
+        displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
         participantId:
           type: string
           format: uuid

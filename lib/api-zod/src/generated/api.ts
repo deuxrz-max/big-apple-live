@@ -55,6 +55,9 @@ export const SaveModeratorBotSettingsResponse = zod.object({
 })
 
 
+export const getModeratorBotFlagsResponseDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+
+
 export const GetModeratorBotFlagsResponseItem = zod.object({
   "id": zod.string().uuid(),
   "messageId": zod.string().uuid(),
@@ -62,6 +65,7 @@ export const GetModeratorBotFlagsResponseItem = zod.object({
   "roomLabel": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
+  "displayNameColor": zod.string().regex(getModeratorBotFlagsResponseDisplayNameColorRegExp).optional(),
   "text": zod.string(),
   "reason": zod.string(),
   "createdAt": zod.coerce.date(),
@@ -74,6 +78,9 @@ export const AcknowledgeModeratorBotFlagParams = zod.object({
   "flagId": zod.coerce.string().uuid()
 })
 
+export const acknowledgeModeratorBotFlagResponseDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+
+
 export const AcknowledgeModeratorBotFlagResponse = zod.object({
   "id": zod.string().uuid(),
   "messageId": zod.string().uuid(),
@@ -81,6 +88,7 @@ export const AcknowledgeModeratorBotFlagResponse = zod.object({
   "roomLabel": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
+  "displayNameColor": zod.string().regex(acknowledgeModeratorBotFlagResponseDisplayNameColorRegExp).optional(),
   "text": zod.string(),
   "reason": zod.string(),
   "createdAt": zod.coerce.date(),
@@ -90,6 +98,7 @@ export const AcknowledgeModeratorBotFlagResponse = zod.object({
 
 export const getFavoritesGalleryResponsePersonExternalHandleMax = 64;
 
+export const getFavoritesGalleryResponsePersonDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getFavoritesGalleryResponsePersonFollowerCountMin = 0;
 
 export const getFavoritesGalleryResponsePersonFollowingCountMin = 0;
@@ -110,6 +119,7 @@ export const GetFavoritesGalleryResponseItem = zod.object({
   "externalHandle": zod.string().max(getFavoritesGalleryResponsePersonExternalHandleMax).nullish(),
   "username": zod.string(),
   "displayName": zod.string().optional(),
+  "displayNameColor": zod.string().regex(getFavoritesGalleryResponsePersonDisplayNameColorRegExp).optional(),
   "followerCount": zod.number().int().min(getFavoritesGalleryResponsePersonFollowerCountMin).optional(),
   "followingCount": zod.number().int().min(getFavoritesGalleryResponsePersonFollowingCountMin).optional(),
   "sentCredits": zod.number().int().min(getFavoritesGalleryResponsePersonSentCreditsMin).optional(),
@@ -164,6 +174,10 @@ export const GetUniversitySessionParams = zod.object({
   "roomId": zod.coerce.string()
 })
 
+export const getUniversitySessionResponsePeopleItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getUniversitySessionResponseWhispersItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+
+
 export const GetUniversitySessionResponse = zod.object({
   "people": zod.array(zod.object({
   "botId": zod.union([zod.literal('ghost'),zod.literal('vampire'),zod.literal('wolf'),zod.literal('zombie'),zod.literal(null)]).nullish(),
@@ -171,6 +185,7 @@ export const GetUniversitySessionResponse = zod.object({
   "participantId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
+  "displayNameColor": zod.string().regex(getUniversitySessionResponsePeopleItemDisplayNameColorRegExp).optional(),
   "photoUrl": zod.string().nullable(),
   "photoStatus": zod.string().nullable(),
   "self": zod.boolean(),
@@ -184,6 +199,7 @@ export const GetUniversitySessionResponse = zod.object({
   "id": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
+  "displayNameColor": zod.string().regex(getUniversitySessionResponseWhispersItemDisplayNameColorRegExp).optional(),
   "outgoing": zod.boolean(),
   "body": zod.string(),
   "createdAt": zod.coerce.date()
@@ -228,12 +244,16 @@ export const AcknowledgeUniversityRulesResponse = zod.object({
 })
 
 
+export const getPhotoReviewQueueResponseDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+
+
 export const GetPhotoReviewQueueResponseItem = zod.object({
   "id": zod.string(),
   "photoUrl": zod.string(),
   "status": zod.enum(['pending', 'approved', 'rejected', 'flagged']),
   "username": zod.string().nullish(),
   "displayName": zod.string().nullish(),
+  "displayNameColor": zod.string().regex(getPhotoReviewQueueResponseDisplayNameColorRegExp).optional(),
   "createdAt": zod.coerce.date()
 })
 export const GetPhotoReviewQueueResponse = zod.array(GetPhotoReviewQueueResponseItem)
@@ -280,6 +300,7 @@ export const getOlderRoomMessagesResponseIdentityEmojiIdMax = 100;
 
 export const getOlderRoomMessagesResponseIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getOlderRoomMessagesResponseIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getOlderRoomMessagesResponseDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const GetOlderRoomMessagesResponseItem = zod.object({
@@ -300,6 +321,7 @@ export const GetOlderRoomMessagesResponseItem = zod.object({
 }),
   "kind": zod.enum(['text', 'reaction']),
   "text": zod.string(),
+  "displayNameColor": zod.string().regex(getOlderRoomMessagesResponseDisplayNameColorRegExp).optional(),
   "createdAt": zod.coerce.date()
 })
 export const GetOlderRoomMessagesResponse = zod.array(GetOlderRoomMessagesResponseItem)
@@ -385,6 +407,7 @@ export const getSocialMeResponseLoginStreakMin = 0;
 
 export const getSocialMeResponseProfileExternalHandleMax = 64;
 
+export const getSocialMeResponseProfileDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getSocialMeResponseProfileFollowerCountMin = 0;
 
 export const getSocialMeResponseProfileFollowingCountMin = 0;
@@ -408,6 +431,7 @@ export const GetSocialMeResponse = zod.object({
   "externalHandle": zod.string().max(getSocialMeResponseProfileExternalHandleMax).nullish(),
   "username": zod.string(),
   "displayName": zod.string().optional(),
+  "displayNameColor": zod.string().regex(getSocialMeResponseProfileDisplayNameColorRegExp).optional(),
   "followerCount": zod.number().int().min(getSocialMeResponseProfileFollowerCountMin).optional(),
   "followingCount": zod.number().int().min(getSocialMeResponseProfileFollowingCountMin).optional(),
   "sentCredits": zod.number().int().min(getSocialMeResponseProfileSentCreditsMin).optional(),
@@ -490,6 +514,7 @@ export const SaveSocialProfileBody = zod.object({
 
 export const saveSocialProfileResponseExternalHandleMax = 64;
 
+export const saveSocialProfileResponseDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const saveSocialProfileResponseFollowerCountMin = 0;
 
 export const saveSocialProfileResponseFollowingCountMin = 0;
@@ -509,6 +534,7 @@ export const SaveSocialProfileResponse = zod.object({
   "externalHandle": zod.string().max(saveSocialProfileResponseExternalHandleMax).nullish(),
   "username": zod.string(),
   "displayName": zod.string().optional(),
+  "displayNameColor": zod.string().regex(saveSocialProfileResponseDisplayNameColorRegExp).optional(),
   "followerCount": zod.number().int().min(saveSocialProfileResponseFollowerCountMin).optional(),
   "followingCount": zod.number().int().min(saveSocialProfileResponseFollowingCountMin).optional(),
   "sentCredits": zod.number().int().min(saveSocialProfileResponseSentCreditsMin).optional(),
@@ -555,6 +581,7 @@ export const GetSocialPeopleQueryParams = zod.object({
 
 export const getSocialPeopleResponsePeopleItemExternalHandleMax = 64;
 
+export const getSocialPeopleResponsePeopleItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getSocialPeopleResponsePeopleItemFollowerCountMin = 0;
 
 export const getSocialPeopleResponsePeopleItemFollowingCountMin = 0;
@@ -575,6 +602,7 @@ export const GetSocialPeopleResponse = zod.object({
   "externalHandle": zod.string().max(getSocialPeopleResponsePeopleItemExternalHandleMax).nullish(),
   "username": zod.string(),
   "displayName": zod.string().optional(),
+  "displayNameColor": zod.string().regex(getSocialPeopleResponsePeopleItemDisplayNameColorRegExp).optional(),
   "followerCount": zod.number().int().min(getSocialPeopleResponsePeopleItemFollowerCountMin).optional(),
   "followingCount": zod.number().int().min(getSocialPeopleResponsePeopleItemFollowingCountMin).optional(),
   "sentCredits": zod.number().int().min(getSocialPeopleResponsePeopleItemSentCreditsMin).optional(),
@@ -615,6 +643,7 @@ export const GetSocialPersonParams = zod.object({
 
 export const getSocialPersonResponseExternalHandleMax = 64;
 
+export const getSocialPersonResponseDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getSocialPersonResponseFollowerCountMin = 0;
 
 export const getSocialPersonResponseFollowingCountMin = 0;
@@ -634,6 +663,7 @@ export const GetSocialPersonResponse = zod.object({
   "externalHandle": zod.string().max(getSocialPersonResponseExternalHandleMax).nullish(),
   "username": zod.string(),
   "displayName": zod.string().optional(),
+  "displayNameColor": zod.string().regex(getSocialPersonResponseDisplayNameColorRegExp).optional(),
   "followerCount": zod.number().int().min(getSocialPersonResponseFollowerCountMin).optional(),
   "followingCount": zod.number().int().min(getSocialPersonResponseFollowingCountMin).optional(),
   "sentCredits": zod.number().int().min(getSocialPersonResponseSentCreditsMin).optional(),
@@ -682,6 +712,7 @@ export const SetSocialRelationshipResponse = zod.object({
 
 export const getSocialBlocksResponsePeopleItemExternalHandleMax = 64;
 
+export const getSocialBlocksResponsePeopleItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getSocialBlocksResponsePeopleItemFollowerCountMin = 0;
 
 export const getSocialBlocksResponsePeopleItemFollowingCountMin = 0;
@@ -702,6 +733,7 @@ export const GetSocialBlocksResponse = zod.object({
   "externalHandle": zod.string().max(getSocialBlocksResponsePeopleItemExternalHandleMax).nullish(),
   "username": zod.string(),
   "displayName": zod.string().optional(),
+  "displayNameColor": zod.string().regex(getSocialBlocksResponsePeopleItemDisplayNameColorRegExp).optional(),
   "followerCount": zod.number().int().min(getSocialBlocksResponsePeopleItemFollowerCountMin).optional(),
   "followingCount": zod.number().int().min(getSocialBlocksResponsePeopleItemFollowingCountMin).optional(),
   "sentCredits": zod.number().int().min(getSocialBlocksResponsePeopleItemSentCreditsMin).optional(),
@@ -769,6 +801,10 @@ export const GetRoomGiftEventsParams = zod.object({
   "roomId": zod.coerce.string()
 })
 
+export const getRoomGiftEventsResponseEventsItemSenderNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getRoomGiftEventsResponseEventsItemRecipientNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+
+
 export const GetRoomGiftEventsResponse = zod.object({
   "events": zod.array(zod.object({
   "id": zod.string(),
@@ -777,6 +813,8 @@ export const GetRoomGiftEventsResponse = zod.object({
   "recipientUsername": zod.string(),
   "senderName": zod.string(),
   "recipientName": zod.string(),
+  "senderNameColor": zod.string().regex(getRoomGiftEventsResponseEventsItemSenderNameColorRegExp).optional(),
+  "recipientNameColor": zod.string().regex(getRoomGiftEventsResponseEventsItemRecipientNameColorRegExp).optional(),
   "createdAt": zod.coerce.date()
 }))
 })
@@ -812,6 +850,7 @@ export const GetSocialLedgerResponse = zod.object({
 
 export const getSocialLeaderboardResponsePeopleItemExternalHandleMax = 64;
 
+export const getSocialLeaderboardResponsePeopleItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getSocialLeaderboardResponsePeopleItemFollowerCountMin = 0;
 
 export const getSocialLeaderboardResponsePeopleItemFollowingCountMin = 0;
@@ -832,6 +871,7 @@ export const GetSocialLeaderboardResponse = zod.object({
   "externalHandle": zod.string().max(getSocialLeaderboardResponsePeopleItemExternalHandleMax).nullish(),
   "username": zod.string(),
   "displayName": zod.string().optional(),
+  "displayNameColor": zod.string().regex(getSocialLeaderboardResponsePeopleItemDisplayNameColorRegExp).optional(),
   "followerCount": zod.number().int().min(getSocialLeaderboardResponsePeopleItemFollowerCountMin).optional(),
   "followingCount": zod.number().int().min(getSocialLeaderboardResponsePeopleItemFollowingCountMin).optional(),
   "sentCredits": zod.number().int().min(getSocialLeaderboardResponsePeopleItemSentCreditsMin).optional(),
@@ -866,6 +906,7 @@ export const GetSocialLeaderboardResponse = zod.object({
 })
 
 
+export const getSocialInboxResponseConversationsItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getSocialInboxResponseConversationsItemIdentityEmojiIdMax = 100;
 
 export const getSocialInboxResponseConversationsItemIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -876,6 +917,7 @@ export const GetSocialInboxResponse = zod.object({
   "conversations": zod.array(zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
+  "displayNameColor": zod.string().regex(getSocialInboxResponseConversationsItemDisplayNameColorRegExp).optional(),
   "photoUrl": zod.string().nullable(),
   "lastMessageFromMe": zod.boolean(),
   "lastUnreadAt": zod.coerce.date().nullable(),
@@ -905,6 +947,7 @@ export const GetSocialConversationQueryParams = zod.object({
 
 export const getSocialConversationResponsePersonExternalHandleMax = 64;
 
+export const getSocialConversationResponsePersonDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getSocialConversationResponsePersonFollowerCountMin = 0;
 
 export const getSocialConversationResponsePersonFollowingCountMin = 0;
@@ -925,6 +968,7 @@ export const GetSocialConversationResponse = zod.object({
   "externalHandle": zod.string().max(getSocialConversationResponsePersonExternalHandleMax).nullish(),
   "username": zod.string(),
   "displayName": zod.string().optional(),
+  "displayNameColor": zod.string().regex(getSocialConversationResponsePersonDisplayNameColorRegExp).optional(),
   "followerCount": zod.number().int().min(getSocialConversationResponsePersonFollowerCountMin).optional(),
   "followingCount": zod.number().int().min(getSocialConversationResponsePersonFollowingCountMin).optional(),
   "sentCredits": zod.number().int().min(getSocialConversationResponsePersonSentCreditsMin).optional(),
@@ -1125,6 +1169,7 @@ export const CreateAccountRoomBody = zod.object({
   "capacity": zod.union([zod.literal(2),zod.literal(4),zod.literal(9),zod.literal(12)])
 })
 
+export const createAccountRoomResponseRoomParticipantsItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const createAccountRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax = 100;
 
 export const createAccountRoomResponseRoomParticipantsItemIdentityOneColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -1144,6 +1189,7 @@ export const CreateAccountRoomResponse = zod.object({
   "micEnabled": zod.boolean(),
   "hostMuted": zod.boolean(),
   "unmuteRequested": zod.boolean(),
+  "displayNameColor": zod.string().regex(createAccountRoomResponseRoomParticipantsItemDisplayNameColorRegExp).optional(),
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
@@ -1169,6 +1215,7 @@ export const JoinAccountRoomParams = zod.object({
   "roomId": zod.coerce.string().regex(joinAccountRoomPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
 })
 
+export const joinAccountRoomResponseRoomParticipantsItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const joinAccountRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax = 100;
 
 export const joinAccountRoomResponseRoomParticipantsItemIdentityOneColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -1188,6 +1235,7 @@ export const JoinAccountRoomResponse = zod.object({
   "micEnabled": zod.boolean(),
   "hostMuted": zod.boolean(),
   "unmuteRequested": zod.boolean(),
+  "displayNameColor": zod.string().regex(joinAccountRoomResponseRoomParticipantsItemDisplayNameColorRegExp).optional(),
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
@@ -1230,6 +1278,7 @@ export const getRoomMessagesResponseIdentityEmojiIdMax = 100;
 
 export const getRoomMessagesResponseIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getRoomMessagesResponseIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getRoomMessagesResponseDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const GetRoomMessagesResponseItem = zod.object({
@@ -1250,6 +1299,7 @@ export const GetRoomMessagesResponseItem = zod.object({
 }),
   "kind": zod.enum(['text', 'reaction']),
   "text": zod.string(),
+  "displayNameColor": zod.string().regex(getRoomMessagesResponseDisplayNameColorRegExp).optional(),
   "createdAt": zod.coerce.date()
 })
 export const GetRoomMessagesResponse = zod.array(GetRoomMessagesResponseItem)
@@ -1279,6 +1329,7 @@ export const sendRoomMessageResponseMessageIdentityEmojiIdMax = 100;
 
 export const sendRoomMessageResponseMessageIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const sendRoomMessageResponseMessageIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const sendRoomMessageResponseMessageDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const sendRoomMessageResponseProfilePhotoUrlsMax = 4;
 
 export const sendRoomMessageResponseProfileIdentityEmojiIdMax = 100;
@@ -1306,6 +1357,7 @@ export const SendRoomMessageResponse = zod.object({
 }),
   "kind": zod.enum(['text', 'reaction']),
   "text": zod.string(),
+  "displayNameColor": zod.string().regex(sendRoomMessageResponseMessageDisplayNameColorRegExp).optional(),
   "createdAt": zod.coerce.date()
 }),
   "profile": zod.object({
@@ -1356,6 +1408,7 @@ export const CreateRoomBody = zod.object({
   "displayName": zod.string().min(1).max(createRoomBodyDisplayNameMax)
 })
 
+export const createRoomResponseRoomParticipantsItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const createRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax = 100;
 
 export const createRoomResponseRoomParticipantsItemIdentityOneColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -1375,6 +1428,7 @@ export const CreateRoomResponse = zod.object({
   "micEnabled": zod.boolean(),
   "hostMuted": zod.boolean(),
   "unmuteRequested": zod.boolean(),
+  "displayNameColor": zod.string().regex(createRoomResponseRoomParticipantsItemDisplayNameColorRegExp).optional(),
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
@@ -1403,6 +1457,7 @@ export const GetRoomParams = zod.object({
   "roomId": zod.coerce.string().regex(getRoomPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
 })
 
+export const getRoomResponseParticipantsItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getRoomResponseParticipantsItemIdentityOneEmojiIdMax = 100;
 
 export const getRoomResponseParticipantsItemIdentityOneColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -1419,6 +1474,7 @@ export const GetRoomResponse = zod.object({
   "micEnabled": zod.boolean(),
   "hostMuted": zod.boolean(),
   "unmuteRequested": zod.boolean(),
+  "displayNameColor": zod.string().regex(getRoomResponseParticipantsItemDisplayNameColorRegExp).optional(),
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
@@ -1454,6 +1510,7 @@ export const JoinRoomBody = zod.object({
   "displayName": zod.string().min(1).max(joinRoomBodyDisplayNameMax)
 })
 
+export const joinRoomResponseRoomParticipantsItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const joinRoomResponseRoomParticipantsItemIdentityOneEmojiIdMax = 100;
 
 export const joinRoomResponseRoomParticipantsItemIdentityOneColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -1473,6 +1530,7 @@ export const JoinRoomResponse = zod.object({
   "micEnabled": zod.boolean(),
   "hostMuted": zod.boolean(),
   "unmuteRequested": zod.boolean(),
+  "displayNameColor": zod.string().regex(joinRoomResponseRoomParticipantsItemDisplayNameColorRegExp).optional(),
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
@@ -1503,6 +1561,7 @@ export const HeartbeatParticipantParams = zod.object({
   "sessionId": zod.coerce.string().uuid()
 })
 
+export const heartbeatParticipantResponseDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const heartbeatParticipantResponseIdentityOneEmojiIdMax = 100;
 
 export const heartbeatParticipantResponseIdentityOneColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -1513,6 +1572,7 @@ export const HeartbeatParticipantResponse = zod.object({
   "micEnabled": zod.boolean(),
   "hostMuted": zod.boolean(),
   "unmuteRequested": zod.boolean(),
+  "displayNameColor": zod.string().regex(heartbeatParticipantResponseDisplayNameColorRegExp).optional(),
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
@@ -1628,6 +1688,7 @@ export const ControlRoomMicrophoneBody = zod.object({
   "action": zod.enum(['mute', 'unmute', 'request-unmute'])
 })
 
+export const controlRoomMicrophoneResponseParticipantsItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const controlRoomMicrophoneResponseParticipantsItemIdentityOneEmojiIdMax = 100;
 
 export const controlRoomMicrophoneResponseParticipantsItemIdentityOneColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
@@ -1644,6 +1705,7 @@ export const ControlRoomMicrophoneResponse = zod.object({
   "micEnabled": zod.boolean(),
   "hostMuted": zod.boolean(),
   "unmuteRequested": zod.boolean(),
+  "displayNameColor": zod.string().regex(controlRoomMicrophoneResponseParticipantsItemDisplayNameColorRegExp).optional(),
   "participantId": zod.string().uuid(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),

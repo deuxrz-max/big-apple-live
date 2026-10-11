@@ -13,5 +13,9 @@ export interface RoomGiftEvent {
   recipientUsername: string;
   senderName: string;
   recipientName: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  senderNameColor?: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  recipientNameColor?: string;
   createdAt: Date;
 }

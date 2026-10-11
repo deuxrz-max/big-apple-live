@@ -6,6 +6,7 @@ import { DAILY_REWARD } from "./catalog";
 import { visibleProfilePhotos } from "../photo-visibility";
 import { TIMED_BADGES } from './marathon-policy';
 import { hasDevelopmentUnlimitedCredits } from "./credits-policy";
+import { giftNameColorForSentCredits } from "./gift-name-color";
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type ProfileRow = typeof accountProfiles.$inferSelect;
@@ -88,7 +89,9 @@ export async function person(viewer: string, profile: ProfileRow, settings?: Set
     externalPlatform: blocked ? null : prefs?.externalPlatform ?? null,
     externalHandle: blocked ? null : prefs?.externalHandle ?? null,
     interests: blocked ? [] : prefs?.interests ?? [], discoverable: prefs?.discoverable ?? false,
-    favorite: !!favorite, blocked, receivedCredits: wallet?.received ?? 0, badgeId: timedSelected && !activeSelected ? null : prefs?.badgeId ?? null,
+    favorite: !!favorite, blocked, receivedCredits: wallet?.received ?? 0,
+    displayNameColor: giftNameColorForSentCredits(wallet?.sent ?? 0),
+    badgeId: timedSelected && !activeSelected ? null : prefs?.badgeId ?? null,
     ...(includeStats ? {
       followerCount: counts?.followerCount ?? 0, followingCount: counts?.followingCount ?? 0,
       sentCredits: wallet?.sent ?? 0,

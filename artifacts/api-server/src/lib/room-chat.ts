@@ -1,4 +1,4 @@
-import { db, accountProfiles, roomMessages, socialRelations, socialSettings, socialInventory, chatMemberships, moderatorBotFlags, type RoomMessageRow } from "@workspace/db";
+import { db, accountProfiles, roomMessages, socialRelations, socialSettings, socialInventory, socialWallets, chatMemberships, moderatorBotFlags, type RoomMessageRow } from "@workspace/db";
 import { eq, desc, sql, and, or, gte, notInArray, isNull, lt, inArray } from "drizzle-orm";
 import { GetRoomMessagesResponse, type ChatInput, type ChatAccepted } from "@workspace/api-zod";
 import { publicProfile } from "./account-profiles";
@@ -6,6 +6,8 @@ import { roomStore, RoomError, type RoomStore } from "./room-store";
 import { ignoredAccounts } from "./university-chat";
 import { botSettings, botRotation, botMessageValues } from "./moderator-bots";
 import { BOT_ACCOUNTS, BOT_WARNING_COOLDOWN_MS, publicViolation } from "./bot-policy";
+import { giftNameColorsForAccounts } from "./social/gift-name-color-data";
+import { giftNameColorForSentCredits } from "./social/gift-name-color";
 
 function publicMessage(row: RoomMessageRow) {
   return GetRoomMessagesResponse.element.parse(row);
@@ -38,6 +40,7 @@ export async function getMessages(roomId: string, store: RoomStore = roomStore, 
     .leftJoin(accountProfiles, eq(accountProfiles.accountId, roomMessages.authorAccountId)).where(and(...conditions))
     .orderBy(desc(roomMessages.createdAt), desc(roomMessages.id)).limit(60);
   const authorIds = [...new Set(rows.map(row => row.message.authorAccountId).filter((id): id is string => !!id))];
+  const nameColors = await giftNameColorsForAccounts(authorIds);
   const selectedBadges = authorIds.length ? await db.select({
     accountId: socialSettings.accountId, badgeId: socialSettings.badgeId,
   }).from(socialSettings).innerJoin(socialInventory, and(
@@ -48,6 +51,7 @@ export async function getMessages(roomId: string, store: RoomStore = roomStore, 
   const badgeByAccount = new Map(selectedBadges.map(row => [row.accountId, row.badgeId]));
   return rows.reverse().map(row => ({
     ...publicMessage(row.message), photoUrl: null,
+    displayNameColor: row.message.authorAccountId ? nameColors.get(row.message.authorAccountId) ?? "#FFFFFF" : "#FFFFFF",
     badgeId: row.message.authorAccountId ? badgeByAccount.get(row.message.authorAccountId) ?? null : null,
   }));
 }
@@ -82,6 +86,8 @@ export async function acceptMessage(
     let profile = { ...publicProfile(row), photoUrl: null, photoUrls: [] };
     const [settings] = await tx.select({ bio: socialSettings.bio, badgeId: socialSettings.badgeId }).from(socialSettings)
       .where(eq(socialSettings.accountId, accountId));
+    const [wallet] = await tx.select({ sent: socialWallets.sent }).from(socialWallets)
+      .where(eq(socialWallets.accountId, accountId));
     const [activeBadge] = settings?.badgeId ? await tx.select({ itemId: socialInventory.itemId })
       .from(socialInventory).where(and(eq(socialInventory.accountId, accountId),
         eq(socialInventory.itemId, settings.badgeId),
@@ -117,6 +123,8 @@ export async function acceptMessage(
     // A leave/expiry while the database was busy rolls back message, flag and warning.
     store.requireAccountMember(roomId, sessionId, accountId);
     return { message: { ...publicMessage(message), photoUrl: null,
+      displayNameColor: message.authorAccountId === accountId
+        ? giftNameColorForSentCredits(wallet?.sent ?? 0) : "#FFFFFF",
       badgeId: message.authorAccountId === accountId ? badgeId : null }, profile };
   });
   // No events or in-memory avatar changes occur before the transaction commits.

@@ -73,6 +73,7 @@ export async function inbox(id: string) {
     if (!profile || (process.env.NODE_ENV === "production" && profile.isTestAccount)) continue;
     const p = await person(id, profile);
     conversations.push({ username: p.username, displayName: p.displayName, photoUrl: p.photoUrl,
+      displayNameColor: p.displayNameColor,
       lastMessageFromMe: entry.message.senderId === id, lastUnreadAt: entry.lastUnreadAt,
       identity: p.identity, lastMessage: entry.message.body,
       updatedAt: entry.message.createdAt, unreadCount: entry.unread, blocked: p.blocked });

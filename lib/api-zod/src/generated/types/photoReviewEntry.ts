@@ -15,5 +15,7 @@ export interface PhotoReviewEntry {
   username?: string | null;
   /** @nullable */
   displayName?: string | null;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   createdAt: Date;
 }

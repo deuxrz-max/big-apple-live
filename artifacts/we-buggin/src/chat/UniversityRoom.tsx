@@ -23,8 +23,8 @@ import './bot-moderation.css';
 const FACES = ['\u{1F600}', '\u{1F602}', '\u{1F60D}', '\u{1F62D}', '\u{1F914}', '\u{1F609}', '\u{1F610}', '\u{1F620}'];
 const RULES = "Stick to the room's topic. Be kind — no harassment or hate. Nothing sexual or explicit, in chat, names or photos. Don't share real names, phone numbers, addresses or other contact details. Don't hog the screen, no ALL CAPS, no ads or spam. Use Ignore on anyone bothering you, or Block and Report for anything serious. Public university chat is moderated by Streamtalk bots. Whispers and direct messages are private and are not scanned by these bots.";
 
-type Target = { username: string; displayName: string };
-type Item = { kind: 'room'; at: number; id: string; m: ChatMessage } | { kind: 'gift'; at: number; id: string; gift: RoomGiftEvent } | { kind: 'whisper'; at: number; id: string; w: { id: string; username: string; displayName: string; outgoing: boolean; body: string } };
+type Target = { username: string; displayName: string; displayNameColor?: string };
+type Item = { kind: 'room'; at: number; id: string; m: ChatMessage } | { kind: 'gift'; at: number; id: string; gift: RoomGiftEvent } | { kind: 'whisper'; at: number; id: string; w: { id: string; username: string; displayName: string; displayNameColor?: string; outgoing: boolean; body: string } };
 
 export function TextChatRoom({ roomId, userId }: { roomId: string; userId: string }) {
   const soundScope = `${roomId}:${userId}`;
@@ -125,10 +125,11 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
 
   const people = session?.people ?? [];
   const giftRecipients = people.filter(person => !person.self && !person.botId)
-    .map(({ username, displayName }) => ({ username, displayName }));
+    .map(({ username, displayName, displayNameColor }) => ({ username, displayName, displayNameColor }));
   const me = people.find((p) => p.self);
   const isSelf = (username: string, authorId?: string) => (!!authorId && authorId === r.creds?.participantId) || me?.username === username;
   const nameOf = (username: string, fallback?: string) => people.find((p) => p.username === username)?.displayName ?? fallback ?? username;
+  const nameColorOf = (username: string, fallback?: string) => people.find((p) => p.username === username)?.displayNameColor ?? fallback ?? '#FFFFFF';
 
   const items = useMemo<Item[]>(() => {
     const a: Item[] = r.messages.filter((m) => m.botId || !ignored.has(m.username)).map((m) => ({ kind: 'room' as const, at: new Date(m.createdAt).getTime(), id: m.id, m }));
@@ -157,7 +158,12 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
       },
     });
   };
-  const openMenu = (username: string, displayName: string, authorId?: string) => { if (!isSelf(username, authorId)) setMenu({ username, displayName }); };
+  const openMenu = (username: string, displayName: string, authorId?: string, displayNameColor?: string) => {
+    if (!isSelf(username, authorId)) setMenu({
+      username, displayName,
+      displayNameColor: displayNameColor ?? nameColorOf(username),
+    });
+  };
 
   const doSend = async (t: string, kind: 'text' | 'reaction' = 'text') => {
     const v = t.trim();
@@ -208,7 +214,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
             <>
               <UserPhoto username={p.username} displayName={p.displayName} photoUrl={p.photoUrl} size={36} reviewStatus={p.self && p.photoStatus ? p.photoStatus : undefined} />
               <span className="ur-pname">
-                <span className="ur-pname-text">{p.displayName}{p.self && <em> (you)</em>}</span>
+                <span className="ur-pname-text" style={{ color: p.displayNameColor ?? '#FFFFFF' }}>{p.displayName}{p.self && <em> (you)</em>}</span>
                 <BadgeMark id={p.badgeId ?? null} label={p.badgeId ? `${p.badgeId === 'night-owl' ? 'Night Owl' : p.badgeId.replaceAll('-', ' ')} badge` : undefined} size={16} compact />
               </span>
               {p.moderator && <span className="ur-badge">Moderator</span>}
@@ -218,7 +224,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           return (
             <li key={p.participantId}>
               {p.self ? <div className="ur-prow">{inner}</div>
-                : <button type="button" className="ur-prow" aria-haspopup="menu" onClick={() => setMenu({ username: p.username, displayName: p.displayName })} data-testid={`button-person-${p.username}`}>{inner}</button>}
+                : <button type="button" className="ur-prow" aria-haspopup="menu" onClick={() => setMenu({ username: p.username, displayName: p.displayName, displayNameColor: p.displayNameColor ?? '#FFFFFF' })} data-testid={`button-person-${p.username}`}>{inner}</button>}
             </li>
           );
         })}
@@ -271,7 +277,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
               {items.map((it) => {
                 if (it.kind === 'gift') {
                   return <div className="ch-msg" key={it.id} data-testid={`gift-notice-${it.gift.id}`}>
-                    <div><p>{it.gift.senderName} sent {it.gift.recipientName} a {it.gift.giftId === 'heart' ? 'Heart' : it.gift.giftId === 'moonfox' ? 'Moonfox' : it.gift.giftId === 'cosmic-encore' ? 'Cosmic Encore' : 'Spirit Pup'}.</p></div>
+                    <div><p><span style={{ color: it.gift.senderNameColor ?? '#FFFFFF' }}>{it.gift.senderName}</span> sent <span style={{ color: it.gift.recipientNameColor ?? '#FFFFFF' }}>{it.gift.recipientName}</span> a {it.gift.giftId === 'heart' ? 'Heart' : it.gift.giftId === 'moonfox' ? 'Moonfox' : it.gift.giftId === 'cosmic-encore' ? 'Cosmic Encore' : 'Spirit Pup'}.</p></div>
                   </div>;
                 }
                 if (it.kind === 'whisper') {
@@ -279,7 +285,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                   return (
                     <div className="ch-msg ur-whisper" key={it.id} data-testid={`whisper-${w.id}`}>
                       <div><span className="ur-wlabel">{w.outgoing && 'You whisper to '}
-                        <button type="button" className="ur-name" aria-haspopup="menu" aria-label={`Actions for ${nm}`} onClick={() => openMenu(w.username, nm)}>{nm}</button>
+                        <button type="button" className="ur-name" style={{ color: w.displayNameColor ?? nameColorOf(w.username) }} aria-haspopup="menu" aria-label={`Actions for ${nm}`} onClick={() => openMenu(w.username, nm, undefined, w.displayNameColor)}>{nm}</button>
                         {!w.outgoing && ' whispers to you'}</span><p>{w.body}</p></div>
                     </div>
                   );
@@ -296,6 +302,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                 }
                 const self = isSelf(m.username, m.authorId);
                 const currentPerson = session?.people.find((p) => p.username === m.username);
+                const displayNameColor = currentPerson?.displayNameColor ?? m.displayNameColor ?? '#FFFFFF';
                 const badgeId = currentPerson?.badgeId !== undefined ? currentPerson.badgeId : m.badgeId ?? null;
                 const badge = <BadgeMark id={badgeId ?? null}
                   label={badgeId ? `${badgeId === 'night-owl' ? 'Night Owl' : badgeId.replaceAll('-', ' ')} badge` : undefined}
@@ -303,8 +310,8 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                 return (
                   <div className="ch-msg" key={m.id}>
                     <div>
-                      {self ? <span className="ch-sender">{nm}{badge}</span>
-                        : <button type="button" className="ch-sender ur-name" aria-haspopup="menu" aria-label={`Actions for ${nm}`} onClick={() => openMenu(m.username, nm, m.authorId)}>{nm}{badge}</button>}
+                       {self ? <span className="ch-sender" style={{ color: displayNameColor }}>{nm}{badge}</span>
+                         : <button type="button" className="ch-sender ur-name" style={{ color: displayNameColor }} aria-haspopup="menu" aria-label={`Actions for ${nm}`} onClick={() => openMenu(m.username, nm, m.authorId, displayNameColor)}>{nm}{badge}</button>}
                       <p>{m.text}</p>
                       <div className="ch-acts"><button type="button" onClick={() => { setReporting(m); setNote(null); }}>Report</button>
                         <button type="button" disabled={block.isPending} onClick={() => block.mutate({ username: m.username, data: { kind: 'block', active: true } }, { onSuccess: () => { setNote(`Blocked ${m.username}.`); r.refresh(); }, onError: (e) => setNote(errMessage(e)) })}>Block</button></div>
@@ -326,7 +333,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
             {note && <p role="status">{note} <Link href="/community/blocks" className="bm-link">Blocked list</Link></p>}
             {whisperTo && (
               <div className="ur-chip" role="status">
-                <span>Whispering to {whisperTo.displayName} · private</span>
+                <span>Whispering to <b style={{ color: whisperTo.displayNameColor ?? '#FFFFFF' }}>{whisperTo.displayName}</b> · private</span>
                 <button type="button" className="bm-btn bm-btn-sm" onClick={() => { setWhisperTo(null); setText(''); setSendErr(null); }} data-testid="button-whisper-close">Back to room</button>
               </div>
             )}
@@ -344,7 +351,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
       {menu && (
         <div className="ur-modal" onClick={() => setMenu(null)}>
           <div ref={menuBox} className="ur-menu" role="menu" aria-label={`Actions for ${menu.displayName}`} onClick={(e) => e.stopPropagation()}>
-            <strong>{menu.displayName}</strong>
+            <strong style={{ color: menu.displayNameColor ?? '#FFFFFF' }}>{menu.displayName}</strong>
             <button type="button" role="menuitem" onClick={() => { setGiftBag({ recipient: menu }); setMenu(null); setDrawer(false); }}>Gift</button>
             <button type="button" role="menuitem" onClick={() => { const u = menu.username; setMenu(null); nav(`/community/messages/${encodeURIComponent(u)}`); }}>Message</button>
             <button type="button" role="menuitem" onClick={() => {

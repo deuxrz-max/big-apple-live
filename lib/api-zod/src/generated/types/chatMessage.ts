@@ -23,5 +23,7 @@ export interface ChatMessage {
   identity: EmojiIdentity;
   kind: ChatMessageKind;
   text: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   createdAt: Date;
 }

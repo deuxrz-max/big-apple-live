@@ -69,6 +69,7 @@ function snapshot(r: RoomState): BeamRoom {
     createdAt: new Date(r.createdAt).getTime(),
     participants: r.participants.map(p => ({
       id: p.participantId, handle: p.displayName, joinedAt: new Date(p.joinedAt).getTime(),
+      displayNameColor: p.displayNameColor ?? '#FFFFFF',
       simulated: false,
       micEnabled: p.micEnabled, hostMuted: p.hostMuted, unmuteRequested: p.unmuteRequested,
       identity: p.identity ? beamIdentity(p.identity) : portraitIdentity('ponytail-smile'),
@@ -103,7 +104,7 @@ function applySnapshot(r: RoomState) {
 function message(m: ChatMessage) {
   return {
     id: m.id, kind: m.kind, authorId: m.authorId,
-    authorSnapshot: { handle: m.username, identity: beamIdentity(m.identity) },
+    authorSnapshot: { handle: m.username, identity: beamIdentity(m.identity), displayNameColor: m.displayNameColor ?? '#FFFFFF' },
     text: m.text, ts: new Date(m.createdAt).getTime(),
   };
 }

@@ -15,6 +15,8 @@ export interface UniversityPerson {
   participantId: string;
   username: string;
   displayName: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   /** @nullable */
   photoUrl: string | null;
   /** @nullable */

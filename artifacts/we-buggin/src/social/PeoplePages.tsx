@@ -157,7 +157,7 @@ export function MyProfilePage() {
   return (
     <section>
       <h1 className="bm-h1 sc-h1">My profile</h1>
-      <div className="sc-hero"><Avatar p={d.profile} size={110} /><div><p className="sc-name">{d.profile.username}<BadgeMark id={badgeId} /></p>
+      <div className="sc-hero"><Avatar p={d.profile} size={110} /><div><p className="sc-name" style={{ color: d.profile.displayNameColor ?? '#FFFFFF' }}>{d.profile.username}<BadgeMark id={badgeId} /></p>
         <p className="sc-sub">Change your display name, photo and bio in <Link href="/user-portal/edit" className="bm-link">Edit profile</Link>.</p></div></div>
       <form className="sc-form" onSubmit={submit}>
         <label className="sc-field"><span className="bm-label">Bio ({bio.length}/200)</span>

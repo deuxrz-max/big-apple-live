@@ -10,6 +10,7 @@ import { recordDailyLogin } from '../lib/social/marathon';
 import { roomStore, RoomError } from "../lib/room-store";
 import { getClerkProxyHost } from "../middlewares/clerkProxyMiddleware";
 import { communityMembership, accessFor, offerOverflow } from "../lib/community";
+import { giftNameColorsForAccounts } from "../lib/social/gift-name-color-data";
 
 const router: IRouter = Router();
 export function accountId(req: Request): string {
@@ -77,7 +78,11 @@ router.post("/account/rooms/:roomId/join", async (req, res) => {
     res.status(409).json({ error: `${roomStore.get(params.data.roomId).name} is full — try ${overflow.label}`, overflow });
     return;
   }
-  const session = roomStore.join(params.data.roomId, profile.displayName ?? profile.username, { accountId: id, identity: profile.identity, capExempt: access.moderator });
+  const nameColors = await giftNameColorsForAccounts([id]);
+  const session = roomStore.join(params.data.roomId, profile.displayName ?? profile.username, {
+    accountId: id, identity: profile.identity, capExempt: access.moderator,
+    displayNameColor: nameColors.get(id) ?? "#FFFFFF",
+  });
   roomStore.restoreParticipantId(params.data.roomId, id, member.participantId);
   res.status(201).json(JoinAccountRoomResponse.parse({ ...session,
     participantId: member.participantId, room: roomStore.get(params.data.roomId) }));

@@ -49,7 +49,7 @@ export function ThreadPage({ username }: { username: string }) {
     <section className="sc-thread">
       <Link href="/community/messages" className="bm-back">All messages</Link>
       <header className="sc-thread-head">
-        <Link href={`/community/people/${username}`} className="sc-row"><span className="sc-name">{d.person.username}<BadgeMark id={d.person.badgeId} /></span></Link>
+        <Link href={`/community/people/${username}`} className="sc-row"><span className="sc-name" style={{ color: d.person.displayNameColor ?? '#FFFFFF' }}>{d.person.username}<BadgeMark id={d.person.badgeId} /></span></Link>
         <div className="sc-actions">
           <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()} disabled={q.isFetching} data-testid="button-refresh"><RefreshCw size={14} /> Refresh</button>
           {confirmDel ? (

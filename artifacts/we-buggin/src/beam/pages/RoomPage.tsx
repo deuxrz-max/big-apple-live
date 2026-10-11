@@ -81,7 +81,7 @@ export function RoomPage({ room, self, notice, onNotice }: Props) {
                   aria-label={`${p.handle}: ${p.micEnabled ? 'mic on' : 'mic off'}${isCreator || p.id === self.id ? '. Open microphone controls' : ''}`}
                   aria-haspopup={isCreator || p.id === self.id ? 'dialog' : undefined}
                   onClick={() => setSelectedId(p.id)} data-testid={`button-mic-tile-${p.id}`}>
-                  <ParticipantEmojiBadge handle={p.handle} identity={p.identity} size="lg" simulated={p.simulated} showHandle />
+                   <ParticipantEmojiBadge handle={p.handle} displayNameColor={p.displayNameColor} identity={p.identity} size="lg" simulated={p.simulated} showHandle />
                   <span className="bm-mic-status">{p.micEnabled ? 'Mic on' : p.hostMuted ? 'Muted' : p.unmuteRequested ? 'Mic requested' : 'Mic off'}</span>
                 </button>
               ) : (

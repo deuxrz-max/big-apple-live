@@ -11,6 +11,8 @@ export interface Participant {
   micEnabled: boolean;
   hostMuted: boolean;
   unmuteRequested: boolean;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   participantId: string;
   displayName: string;
   /** @nullable */

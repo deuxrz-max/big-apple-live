@@ -114,6 +114,8 @@ export interface SocialPerson {
   externalHandle?: string | null;
   username: string;
   displayName?: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   /** @minimum 0 */
   followerCount?: number;
   /** @minimum 0 */
@@ -181,6 +183,8 @@ export interface UniversityPerson {
   participantId: string;
   username: string;
   displayName: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   /** @nullable */
   photoUrl: string | null;
   /** @nullable */
@@ -194,6 +198,8 @@ export interface UniversityWhisper {
   id: string;
   username: string;
   displayName: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   outgoing: boolean;
   body: string;
   createdAt: string;
@@ -225,6 +231,8 @@ export interface PhotoReviewEntry {
   username?: string | null;
   /** @nullable */
   displayName?: string | null;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   createdAt: string;
 }
 
@@ -460,6 +468,8 @@ export interface ChatMessage {
   identity: EmojiIdentity;
   kind: ChatMessageKind;
   text: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   createdAt: string;
 }
 
@@ -502,6 +512,8 @@ export interface ModeratorBotFlag {
   roomLabel: string;
   username: string;
   displayName: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   text: string;
   reason: string;
   createdAt: string;
@@ -595,6 +607,8 @@ export interface Participant {
   micEnabled: boolean;
   hostMuted: boolean;
   unmuteRequested: boolean;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   participantId: string;
   displayName: string;
   /** @nullable */
@@ -676,6 +690,8 @@ export interface UniversityPerson4b96100 {
   participantId: string;
   username: string;
   displayName: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   /** @nullable */
   photoUrl: string | null;
   /** @nullable */
@@ -689,6 +705,8 @@ export interface UniversityWhisper4b96100 {
   id: string;
   username: string;
   displayName: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   outgoing: boolean;
   body: string;
   createdAt: string;
@@ -720,6 +738,8 @@ export interface PhotoReviewEntry4b96100 {
   username?: string | null;
   /** @nullable */
   displayName?: string | null;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   createdAt: string;
 }
 
@@ -885,6 +905,8 @@ export interface ChatMessage4b96100 {
   identity: EmojiIdentity4b96100;
   kind: ChatMessage4b96100Kind;
   text: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   createdAt: string;
 }
 
@@ -927,6 +949,8 @@ export interface ModeratorBotFlag4b96100 {
   roomLabel: string;
   username: string;
   displayName: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   text: string;
   reason: string;
   createdAt: string;
@@ -1020,6 +1044,8 @@ export interface Participant4b96100 {
   micEnabled: boolean;
   hostMuted: boolean;
   unmuteRequested: boolean;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   participantId: string;
   displayName: string;
   /** @nullable */
@@ -1159,6 +1185,10 @@ export interface RoomGiftEvent {
   recipientUsername: string;
   senderName: string;
   recipientName: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  senderNameColor?: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  recipientNameColor?: string;
   createdAt: string;
 }
 
@@ -1215,6 +1245,8 @@ export interface SocialConversation {
 export type SocialInboxConversationsItem = {
   username: string;
   displayName: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   /** @nullable */
   photoUrl: string | null;
   lastMessageFromMe: boolean;

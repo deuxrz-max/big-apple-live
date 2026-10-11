@@ -23,5 +23,7 @@ export interface ChatMessage4b96100 {
   identity: EmojiIdentity4b96100;
   kind: ChatMessage4b96100Kind;
   text: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   createdAt: Date;
 }

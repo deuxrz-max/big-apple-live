@@ -10,6 +10,8 @@ export interface UniversityWhisper {
   id: string;
   username: string;
   displayName: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   outgoing: boolean;
   body: string;
   createdAt: Date;

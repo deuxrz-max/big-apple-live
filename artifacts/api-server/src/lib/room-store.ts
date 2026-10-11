@@ -18,7 +18,7 @@ type RoomEvent =
   | { type: "room.expired"; data: { roomId: string } };
 type Listener = (event: RoomEvent) => void;
 type ActiveSession = { participant: Participant; lastSeenAt: number; accountId?: string; capExempt?: boolean };
-type AccountIdentity = { accountId: string; identity: EmojiIdentity; photoUrl?: string | null; capExempt?: boolean };
+type AccountIdentity = { accountId: string; identity: EmojiIdentity; photoUrl?: string | null; capExempt?: boolean; displayNameColor?: string };
 function copyParticipant(participant: Participant): Participant {
   return {
     ...participant, joinedAt: new Date(participant.joinedAt),
@@ -228,6 +228,20 @@ export class RoomStore {
     }
   }
 
+  /** Update existing room labels after a successful gift changes a member's tier. */
+  updateAccountNameColor(accountId: string, displayNameColor: string): void {
+    for (const room of this.rooms.values()) {
+      this.expire(room);
+      let changed = false;
+      for (const session of room.sessions.values()) {
+        if (session.accountId !== accountId || session.participant.displayNameColor === displayNameColor) continue;
+        session.participant.displayNameColor = displayNameColor;
+        changed = true;
+      }
+      if (changed) this.broadcast(room);
+    }
+  }
+
   private requireRoom(roomId: string): Room {
     const id = roomId.toUpperCase();
     const room = this.rooms.get(id);
@@ -248,6 +262,7 @@ export class RoomStore {
       participant: {
         participantId,
         displayName,
+        displayNameColor: account?.displayNameColor ?? "#FFFFFF",
         photoUrl: room.community ? null : account?.photoUrl ?? null,
         joinedAt: new Date(this.now()),
         identity: account ? { ...account.identity } : null,

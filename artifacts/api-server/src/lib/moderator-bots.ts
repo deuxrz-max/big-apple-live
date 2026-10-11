@@ -1,4 +1,5 @@
 import { db, moderatorBotAccounts, moderatorBotSettings, moderatorBotFlags, roomMessages, chatRooms } from "@workspace/db";
+import { giftNameColorsForAccounts } from "./social/gift-name-color-data";
 import { and, eq, desc, isNull } from "drizzle-orm";
 import { roomStore } from "./room-store";
 import { BOT_ACCOUNTS, BotRotation, DEFAULT_BANNED_WORDS, DEFAULT_BOT_BREAK_SECONDS, type Bot } from "./bot-policy";
@@ -53,13 +54,18 @@ export function startModeratorBotRotation(onError: (err: unknown, context: { bot
   return () => clearInterval(timer);
 }
 export async function getBotFlags() {
-  return db.select({ id: moderatorBotFlags.id, messageId: moderatorBotFlags.messageId,
+  const rows = await db.select({ id: moderatorBotFlags.id, messageId: moderatorBotFlags.messageId,
+    accountId: moderatorBotFlags.accountId,
     roomId: moderatorBotFlags.roomId, roomLabel: chatRooms.label, username: moderatorBotFlags.username,
     displayName: moderatorBotFlags.displayName, reason: moderatorBotFlags.reason, text: roomMessages.text,
     createdAt: moderatorBotFlags.createdAt, reviewedAt: moderatorBotFlags.reviewedAt })
     .from(moderatorBotFlags).innerJoin(roomMessages, eq(roomMessages.id, moderatorBotFlags.messageId))
     .innerJoin(chatRooms, eq(chatRooms.roomId, moderatorBotFlags.roomId))
     .where(isNull(moderatorBotFlags.reviewedAt)).orderBy(desc(moderatorBotFlags.createdAt)).limit(100);
+  const colors = await giftNameColorsForAccounts(rows.map(row => row.accountId));
+  return rows.map(({ accountId, ...flag }) => ({
+    ...flag, displayNameColor: colors.get(accountId) ?? "#FFFFFF",
+  }));
 }
 export async function reviewBotFlag(id: string, reviewer: string) {
   const [updated] = await db.update(moderatorBotFlags).set({ reviewedAt: new Date(), reviewedBy: reviewer })

@@ -18,7 +18,7 @@ export function PhotoReviewQueue() {
     {q.data?.length === 0 && <p>No photos awaiting review.</p>}
     <ul className="ch-list">{q.data?.map(photo => <li key={photo.id}>
       <div><UserPhoto photoUrl={photo.photoUrl} displayName={photo.displayName ?? photo.username} size={96} />
-        <p><b>{photo.displayName ?? photo.username ?? 'Profile setup not finished'}</b> — Pending review</p></div>
+        <p><b style={{ color: photo.displayNameColor ?? '#FFFFFF' }}>{photo.displayName ?? photo.username ?? 'Profile setup not finished'}</b> — Pending review</p></div>
       <div>{(['approve', 'reject'] as const).map(action => <button key={action} className="bm-btn bm-btn-sm"
         disabled={review.isPending} onClick={() => review.mutate({ photoId: photo.id, data: { action } }, {
           onSuccess: () => { void qc.invalidateQueries(); },

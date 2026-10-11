@@ -739,6 +739,7 @@
             "type": "string"
           },
           "displayName": { "type": "string" },
+          "displayNameColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
           "followerCount": { "type": "integer", "minimum": 0 },
           "followingCount": { "type": "integer", "minimum": 0 },
           "sentCredits": { "type": "integer", "minimum": 0 },
@@ -1051,6 +1052,8 @@
           "recipientUsername": {"type": "string"},
           "senderName": {"type": "string"},
           "recipientName": {"type": "string"},
+          "senderNameColor": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+          "recipientNameColor": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
           "createdAt": {"type": "string", "format": "date-time"}
         },
         "required": ["id", "giftId", "senderUsername", "recipientUsername", "senderName", "recipientName", "createdAt"]
@@ -1249,6 +1252,10 @@
                 },
                 "displayName": {
                   "type": "string"
+                },
+                "displayNameColor": {
+                  "type": "string",
+                  "pattern": "^#[0-9A-Fa-f]{6}$"
                 },
                 "photoUrl": {
                   "type": ["string", "null"]

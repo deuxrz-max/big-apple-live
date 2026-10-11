@@ -9,7 +9,7 @@ import { RoomGiftIcon, cosmicEncoreMedia, type RoomGiftId } from './SpiritPup';
 import { ownedGiftItems } from './gift-items';
 import './gifts.css';
 
-type Recipient = { username: string; displayName: string } | null;
+type Recipient = { username: string; displayName: string; displayNameColor?: string } | null;
 
 const FOCUSABLE = 'button:not([disabled]),[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
 const ROOM_GIFT_IDS = new Set<RoomGiftId>(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore']);
@@ -101,7 +101,9 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, onClose
       <div ref={ref} className="gift-framework gift-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId} onKeyDown={onKey} data-testid="gift-bag">
         <div className="gift-head">
           <div>
-            <h2 id={titleId} data-testid="gift-bag-title">{name ? `Gift bag for ${name}` : roomId ? 'Send a gift' : 'Your gift bag'}</h2>
+            <h2 id={titleId} data-testid="gift-bag-title">{name
+              ? <>Gift bag for <span style={{ color: target?.displayNameColor ?? '#FFFFFF' }}>{name}</span></>
+              : roomId ? 'Send a gift' : 'Your gift bag'}</h2>
             <p className="gift-sub">{name ? 'Choose a gift. Sending costs credits.' : roomId ? 'Choose someone here and a gift to send.' : 'Gifts you own.'}</p>
           </div>
           <button type="button" className="gift-btn" onClick={onClose} aria-label="Close gift bag" data-testid="gift-bag-close"><X size={16} aria-hidden /></button>
@@ -118,7 +120,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, onClose
               onChange={e => { setRecipientUsername(e.target.value); setError(null); retry.current = null; }}
             >
               <option value="">{recipients.length ? 'Choose someone in this university' : 'No other people are here yet'}</option>
-              {recipients.map(person => <option key={person.username} value={person.username}>
+              {recipients.map(person => <option key={person.username} value={person.username} style={{ color: person.displayNameColor ?? '#FFFFFF' }}>
                 {person.displayName} (@{person.username})
               </option>)}
             </select>
@@ -157,13 +159,13 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, onClose
         )}
         {selected && (
           <p role="status" data-testid="gift-bag-selection">
-            Selected: {selected.name}{name ? ` for ${name}` : ''}
+            Selected: {selected.name}{name ? <> for <span style={{ color: target?.displayNameColor ?? '#FFFFFF' }}>{name}</span></> : ''}
           </p>
         )}
         {error && <p role="alert">{error}</p>}
         {canSend && !enough && <p>Not enough credits. <Link href="/community/credits">Open credit store</Link></p>}
         {canSend ? <>
-          <p>Send {selected?.name} to {name} for {price} credits. The recipient gets half; the house gets half. Your owned copies are collectibles.</p>
+          <p>Send {selected?.name} to <span style={{ color: target?.displayNameColor ?? '#FFFFFF' }}>{name}</span> for {price} credits. The recipient gets half; the house gets half. Your owned copies are collectibles.</p>
           <button type="button" className="gift-btn gift-send" disabled={busy || !enough} onClick={send} data-testid="gift-bag-send">{busy ? 'Sending…' : 'Send gift'}</button>
         </> : <>
           <button type="button" className="gift-btn gift-send" disabled data-testid="gift-bag-send">Send gift</button>

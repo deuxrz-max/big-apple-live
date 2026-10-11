@@ -13,6 +13,8 @@ export interface ModeratorBotFlag4b96100 {
   roomLabel: string;
   username: string;
   displayName: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   text: string;
   reason: string;
   createdAt: Date;

@@ -1,5 +1,6 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db, profilePhotos, accountProfiles, chatModerators } from "@workspace/db";
+import { giftNameColorsForAccounts } from "./social/gift-name-color-data";
 
 export type PhotoStatus = "pending" | "approved" | "rejected" | "flagged";
 export function photoIdFromUrl(url: string | null | undefined) {
@@ -37,12 +38,17 @@ export async function canReviewPhotos(viewerId: string) {
   return !!mod;
 }
 export async function pendingPhotoQueue() {
-  return db.select({
+  const rows = await db.select({
     id: profilePhotos.id, status: profilePhotos.status, createdAt: profilePhotos.createdAt,
+    accountId: accountProfiles.accountId,
     username: accountProfiles.username, displayName: accountProfiles.displayName,
     photoUrl: sql<string>`'/api/photos/' || ${profilePhotos.id}::text`,
   }).from(profilePhotos).leftJoin(accountProfiles, eq(accountProfiles.accountId, profilePhotos.accountId))
     .where(and(eq(profilePhotos.status, "pending"), sql`${profilePhotos.deletionStartedAt} IS NULL`,
       process.env.NODE_ENV === "production" ? eq(accountProfiles.isTestAccount, false) : undefined))
     .orderBy(profilePhotos.createdAt).limit(100);
+  const colors = await giftNameColorsForAccounts(rows.map(row => row.accountId).filter((id): id is string => !!id));
+  return rows.map(({ accountId, ...photo }) => ({
+    ...photo, displayNameColor: accountId ? colors.get(accountId) ?? "#FFFFFF" : "#FFFFFF",
+  }));
 }

@@ -48,10 +48,10 @@ export function MessageList({ messages, participants, selfId }: Props) {
         const mine = m.authorId === selfId;
         return (
           <li key={m.id} className={`bm-msg ${mine ? 'is-mine' : ''}`} data-testid={`message-${m.id}`}>
-            <ParticipantEmojiBadge handle={who.handle} identity={who.identity} size="sm" />
+            <ParticipantEmojiBadge handle={who.handle} displayNameColor={who.displayNameColor} identity={who.identity} size="sm" />
             <div className="bm-msg-body">
               <div className="bm-msg-meta">
-                <b>{who.handle}</b>
+               <b style={{ color: who.displayNameColor ?? '#FFFFFF' }}>{who.handle}</b>
                 <time>{time(m.ts)}</time>
               </div>
               {m.kind === 'reaction' ? <span className="bm-react">{m.text}</span> : <p>{m.text}</p>}

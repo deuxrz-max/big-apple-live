@@ -2,6 +2,7 @@ import { db, socialGiftEvents, socialRelations, accountProfiles } from '@workspa
 import { and, desc, eq, or } from 'drizzle-orm';
 import { requireAdult } from '../community';
 import { roomStore, RoomError } from '../room-store';
+import { giftNameColorsForAccounts } from './gift-name-color-data';
 
 export function validateGiftRoom(roomId: string, sessionId: string, senderId: string, recipientId: string) {
   if (!roomStore.isCommunity(roomId)) throw new RoomError(404, 'University not found');
@@ -22,6 +23,8 @@ export async function roomGiftEvents(id: string, roomId: string, sessionId: stri
   const rows = await db.select().from(socialGiftEvents)
     .where(eq(socialGiftEvents.historyId, roomStore.getHistoryId(roomId)))
     .orderBy(desc(socialGiftEvents.createdAt), desc(socialGiftEvents.id)).limit(60);
+  const nameColors = await giftNameColorsForAccounts(rows.flatMap(row =>
+    [row.senderId, row.recipientId].filter((accountId): accountId is string => !!accountId)));
   const testIds = process.env.NODE_ENV === "production"
     ? new Set((await db.select({ id: accountProfiles.accountId }).from(accountProfiles)
       .where(eq(accountProfiles.isTestAccount, true))).map(row => row.id))
@@ -29,6 +32,9 @@ export async function roomGiftEvents(id: string, roomId: string, sessionId: stri
   return { events: rows.filter(r => !hidden.has(r.senderId ?? '') && !hidden.has(r.recipientId ?? '')
     && !testIds.has(r.senderId ?? '') && !testIds.has(r.recipientId ?? '')).reverse().map(r => ({
     id: r.id, giftId: r.giftId, senderUsername: r.senderUsername, recipientUsername: r.recipientUsername,
-    senderName: r.senderName, recipientName: r.recipientName, createdAt: r.createdAt.toISOString(),
+    senderName: r.senderName, recipientName: r.recipientName,
+    senderNameColor: r.senderId ? nameColors.get(r.senderId) ?? "#FFFFFF" : "#FFFFFF",
+    recipientNameColor: r.recipientId ? nameColors.get(r.recipientId) ?? "#FFFFFF" : "#FFFFFF",
+    createdAt: r.createdAt.toISOString(),
   })) };
 }

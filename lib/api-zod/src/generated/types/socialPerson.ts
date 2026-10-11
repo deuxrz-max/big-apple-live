@@ -20,6 +20,8 @@ export interface SocialPerson {
   externalHandle?: string | null;
   username: string;
   displayName?: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor?: string;
   /** @minimum 0 */
   followerCount?: number;
   /** @minimum 0 */

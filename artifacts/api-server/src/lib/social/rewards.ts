@@ -10,10 +10,11 @@ import { isRoomGift } from './room-gift-policy';
 import { validateGiftRoom } from './room-gifts';
 import { requireAdult } from '../community';
 import { hasDevelopmentUnlimitedCredits, planCreditSpend } from "./credits-policy";
+import { giftNameColorForSentCredits } from "./gift-name-color";
 
 export async function claimDaily(id: string) {
   const profile = await requireAccount(id);
-  return db.transaction(async tx => {
+  const result = await db.transaction(async tx => {
     await lockAccounts(tx, [id]);
     const [row] = await tx.select().from(socialWallets).where(eq(socialWallets.accountId, id));
     const day = new Date().toISOString().slice(0, 10);
@@ -35,7 +36,7 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
     await requireAdult(id);
     await requireAdult(target.accountId);
   }
-  return db.transaction(async tx => {
+  const result = await db.transaction(async tx => {
     await lockPair(tx, id, target.accountId);
     await assertContact(tx, id, target.accountId);
     await lockAccounts(tx, [id, target.accountId]);
@@ -71,6 +72,10 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
     }
     return wallet(id, tx, sender.username);
   });
+  const [updatedWallet] = await db.select({ sent: socialWallets.sent }).from(socialWallets)
+    .where(eq(socialWallets.accountId, id));
+  roomStore.updateAccountNameColor(id, giftNameColorForSentCredits(updatedWallet?.sent ?? 0));
+  return result;
 }
 export async function purchase(id: string, itemId: string, key: string) {
   const profile = await requireAccount(id);
