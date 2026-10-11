@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { ClerkProvider, SignIn, SignUp, Show, useClerk, useUser } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
@@ -17,6 +17,7 @@ import '@/profile/profile.css';
 import SocialApp from '@/social/SocialApp';
 import { SignInArtwork } from '@/components/sign-in-artwork';
 import '@/theme.css';
+import '@/white-theme.css';
 
 const DevAudioHarnessPage = import.meta.env.DEV
   ? lazy(() => import('@/dev/AudioHarnessPage'))
@@ -32,7 +33,7 @@ function stripBase(path: string): string {
 }
 
 
-const INK = '#F4F1F8';
+const INK = '#211e27';
 const clerkAppearance = {
   theme: shadcn,
   cssLayerName: 'clerk',
@@ -44,10 +45,10 @@ const clerkAppearance = {
   variables: {
     colorPrimary: '#9D1DFF',
     colorForeground: INK,
-    colorMutedForeground: 'hsl(60 3% 62%)',
-    colorDanger: 'hsl(0 85% 66%)',
-    colorBackground: '#1D1D23',
-    colorInput: '#151518',
+    colorMutedForeground: '#6e6976',
+    colorDanger: '#c83255',
+    colorBackground: '#ffffff',
+    colorInput: '#ffffff',
     colorInputForeground: INK,
     colorNeutral: INK,
     fontFamily: "'Montserrat', system-ui, sans-serif",
@@ -55,28 +56,34 @@ const clerkAppearance = {
   },
   elements: {
     rootBox: 'w-full flex justify-center',
-    cardBox: 'bg-[#1D1D23] w-[440px] max-w-full overflow-hidden border border-white/15',
+    cardBox: 'bg-white w-[440px] max-w-full overflow-hidden border border-[#e5e1eb] shadow-sm',
     card: '!shadow-none !border-0 !bg-transparent !rounded-[16px]',
     footer: '!shadow-none !border-0 !bg-transparent !rounded-[16px]',
-    headerTitle: '!font-sans !font-extrabold !text-[#A6FF00]',
-    headerSubtitle: { color: 'hsl(60 3% 62%)' },
+    headerTitle: '!font-sans !font-extrabold !text-[#287b32]',
+    headerSubtitle: { color: '#6e6976' },
     socialButtonsBlockButtonText: { color: INK, fontWeight: 700 },
     formFieldLabel: { color: INK, fontWeight: 700 },
     footerActionLink: { fontWeight: 800, color: '#FF268F', textDecoration: 'none' },
     footerActionText: { color: 'hsl(60 3% 62%)' },
     dividerText: { color: 'hsl(60 3% 62%)' },
     identityPreviewEditButton: { color: INK },
-    formFieldSuccessText: { color: 'hsl(140 60% 60%)' },
-    alertText: { color: 'hsl(0 85% 72%)' },
+    formFieldSuccessText: { color: '#287b32' },
+    alertText: { color: '#b42344' },
     logoBox: 'h-14 justify-center',
     logoImage: 'h-14 w-14',
-    socialButtonsBlockButton: 'border border-white/15 bg-transparent rounded-[12px]',
-    formButtonPrimary: 'border border-white/15 bg-gradient-to-r from-[#9D1DFF] to-[#5E00FF] text-white rounded-[12px] font-bold',
-    formFieldInput: 'border border-white/15 rounded-[12px]',
+    socialButtonsBlockButton: 'border border-[#ded9e5] bg-white rounded-[12px]',
+    formButtonPrimary: {
+      color: '#ffffff',
+      background: 'linear-gradient(120deg,#9D1DFF,#5E00FF)',
+      border: '0',
+      borderRadius: '12px',
+      fontWeight: 700,
+    },
+    formFieldInput: 'border border-[#ded9e5] bg-white rounded-[12px]',
     footerAction: '',
     dividerLine: 'bg-[#9D1DFF]/30',
-    alert: 'border-2 border-[hsl(0_85%_66%)] rounded-[12px]',
-    otpCodeFieldInput: 'border border-white/15 rounded-[12px]',
+    alert: 'border-2 border-[#d84b63] rounded-[12px]',
+    otpCodeFieldInput: 'border border-[#ded9e5] bg-white rounded-[12px]',
     formFieldRow: '',
     main: '',
   },
@@ -206,7 +213,15 @@ function RoutedErrorBoundary({ children }: { children: ReactNode }) {
 }
 
 function ClerkProviderWithRoutes() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+  const isBeamRoomScreen = /^\/rooms\/[^/]+\/?$/.test(stripBase(location));
+  useLayoutEffect(() => {
+    document.body.classList.toggle('streamtalk-beam-screen', isBeamRoomScreen);
+    document.body.classList.toggle('streamtalk-light-screen', !isBeamRoomScreen);
+    return () => {
+      document.body.classList.remove('streamtalk-beam-screen', 'streamtalk-light-screen');
+    };
+  }, [isBeamRoomScreen]);
   const clerkPubKey = publishableKeyFromHost(
     window.location.hostname,
     import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
@@ -231,7 +246,7 @@ function ClerkProviderWithRoutes() {
     >
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
-        <div className="app-page"><RoutedErrorBoundary>
+        <div className={`app-page ${isBeamRoomScreen ? 'is-beam-screen' : 'is-light-screen'}`}><RoutedErrorBoundary>
           <Switch>
             {DevAudioHarnessPage && (
               <Route path="/__dev/audio-harness">

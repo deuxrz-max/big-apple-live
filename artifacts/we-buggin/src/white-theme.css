@@ -1,0 +1,384 @@
+/*
+ * Light theme for every Streamtalk screen except a university beam room.
+ * The route class is toggled by App.tsx before paint; beam-room styles remain
+ * in theme.css and university-room.css without being recolored here.
+ */
+body.streamtalk-light-screen {
+  color-scheme: light;
+  --background: 0 0% 100%;
+  --foreground: 265 14% 13%;
+  --card: 0 0% 100%;
+  --card-foreground: 265 14% 13%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 265 14% 13%;
+  --primary: 274 100% 56%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 264 20% 96%;
+  --secondary-foreground: 265 14% 13%;
+  --muted: 264 20% 96%;
+  --muted-foreground: 258 7% 43%;
+  --border: 260 12% 88%;
+  --input: 260 12% 84%;
+  --ring: 274 100% 56%;
+  --accent: 331 100% 57%;
+  --accent-foreground: 0 0% 100%;
+  --space-0: #ffffff;
+  --space-1: #fbfaff;
+  --space-2: #f3f1f7;
+  --space-ink: #211e27;
+  --space-muted: #6e6976;
+  --space-lime: #287b32;
+  --space-glass: rgba(255,255,255,.96);
+  --space-edge: rgba(159,112,216,.35);
+  --space-shadow: 0 5px 20px rgba(39,26,62,.08);
+  background: #ffffff;
+  background-image: none;
+  color: #211e27;
+}
+
+body.streamtalk-light-screen .dark {
+  --background: 0 0% 100%;
+  --foreground: 265 14% 13%;
+  --card: 0 0% 100%;
+  --card-foreground: 265 14% 13%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 265 14% 13%;
+  --muted: 264 20% 96%;
+  --muted-foreground: 258 7% 43%;
+  --border: 260 12% 88%;
+  --input: 260 12% 84%;
+}
+
+#root .app-page.is-light-screen {
+  min-height: 100dvh;
+  color: #211e27;
+  background: #ffffff;
+}
+
+#root .app-page.is-beam-screen {
+  background: transparent;
+}
+
+#root .app-page.is-light-screen :is(.ch:not(.ur),.beam-app,.sc,.pf,.ib,.fg-page,.bc) {
+  --bm-ink: #211e27;
+  --bm-mute: #6e6976;
+  --bm-line: #e6e2eb;
+  --bm-bg: #ffffff;
+  --space-ink: #211e27;
+  --space-muted: #6e6976;
+  --space-lime: #287b32;
+  --space-glass: rgba(255,255,255,.96);
+  --space-edge: rgba(159,112,216,.35);
+  --space-shadow: 0 5px 20px rgba(39,26,62,.08);
+  color: #211e27;
+  background-color: #ffffff;
+  font-family: 'Montserrat',system-ui,sans-serif;
+}
+
+#root .app-page.is-light-screen .beam-app .bm-bg {
+  display: none;
+}
+
+/* White page canvas and readable default text. */
+#root .app-page.is-light-screen * {
+  color: #211e27;
+  text-shadow: none;
+}
+
+#root .app-page.is-light-screen :is(h1,h2,h3,h4,h5,h6,.st-wordmark,.bm-logo,
+  .bm-room-name,.sc-h1,.sc-h2,.ib-title,.fg-title,.ch-title) {
+  color: #287b32;
+}
+
+#root .app-page.is-light-screen :is(.pf-name,.ib-name,.ib-live-name,.sc-name,
+  .st-card-body strong,.dh-name,.sp-person-heading strong) {
+  color: #211e27;
+}
+
+#root .app-page.is-light-screen :is(.ch-note,.sc-sub,.sc-count,.dh-note,.dh-sub,
+  .st-card-body span,.ib-prev,.ib-time,.fg-empty,.pf-h2,.pf-badge small,
+  .pf-stats dt,.sp-person-heading span,.sp-platform-stamp small,
+  .sp-review-heading span,.sp-review-heading time) {
+  color: #6e6976;
+}
+
+/* Shared light cards with a fine violet-to-blue edge and restrained shadow. */
+#root .app-page.is-light-screen :is(.ch-list li,.sc-card,.sc-panel,.sc-empty,
+  .sc-wallet,.ib-row,.fg-tile,.bc-card,.bc-review,.dh-banner,.dh-card,
+  .pf-dialog,.pf-menu-list,.pf-stats>div,.sp-card,.sp-review,.sp-modal-panel,
+  .sp-review-item,.sc-msgs,.sc-skel,.ch-photo-card,.ch-auth .ch-card) {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(145deg,#ffffff,#fbfaff) padding-box,
+    linear-gradient(135deg,rgba(157,29,255,.45),rgba(201,174,235,.38) 52%,rgba(74,154,214,.42)) border-box;
+  box-shadow: 0 5px 20px rgba(39,26,62,.08);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: #211e27;
+}
+
+#root .app-page.is-light-screen :is(.sc-card,.ch-list li,.ib-row,.fg-tile,
+  .bc-card,.dh-card):hover {
+  border-color: rgba(157,29,255,.35);
+  box-shadow: 0 7px 24px rgba(39,26,62,.11);
+}
+
+/* Inputs and secondary actions. */
+#root .app-page.is-light-screen :is(input,textarea,select,.sc-select,.sc-text,
+  .bm-input-box,.sp-field input,.sp-field select,.gift-recipient select) {
+  color: #211e27;
+  border: 1px solid #ded9e5;
+  background: #ffffff;
+}
+
+#root .app-page.is-light-screen :is(input,textarea,select,.sc-select,.sc-text,
+  .bm-input-box,.sp-field input,.sp-field select):focus,
+#root .app-page.is-light-screen :is(input,textarea,select,.sc-select,.sc-text,
+  .bm-input-box,.sp-field input,.sp-field select):focus-visible {
+  border-color: #9d1dff;
+  box-shadow: 0 0 0 3px rgba(157,29,255,.12);
+}
+
+#root .app-page.is-light-screen :is(input,textarea,select)::placeholder {
+  color: #85808d;
+  opacity: 1;
+}
+
+#root .app-page.is-light-screen :is(.bm-btn:not(.bm-btn-primary),.pf-btn:not(.pf-btn-fill),
+  .pf-edit,.sp-button:not(.sp-button-gold),.sc-nav-item:not(.is-on),
+  .gift-framework .gift-btn:not(.gift-send),.dh-nav-item) {
+  border-color: #8b4fd1;
+  background: #ffffff;
+  color: #52217f;
+}
+
+#root .app-page.is-light-screen :is(.bm-btn-primary,.btn-pink,.pf-btn-fill,
+  .formButtonPrimary,.sc-nav-item.is-on,.gift-framework .gift-send,
+  .st-card-body .st-enter,.dh-join) {
+  border-color: transparent;
+  background: linear-gradient(120deg,#9d1dff,#5e00ff);
+  color: #ffffff;
+}
+
+#root .app-page.is-light-screen :is(.cl-formButtonPrimary,form button[type="submit"],form button),
+body.streamtalk-light-screen #root :is(.cl-formButtonPrimary,[data-localization-key*="formButtonPrimary"]) {
+  color: #ffffff !important;
+}
+body.streamtalk-light-screen #root .cl-formButtonPrimary *,
+body.streamtalk-light-screen #root [data-localization-key*="formButtonPrimary"] * {
+  color: #ffffff !important;
+}
+
+#root .app-page.is-light-screen :is(.pf-btn-fill,.sp-button-gold) {
+  color: #ffffff;
+}
+
+#root .app-page.is-light-screen :is(.pf-edit:hover,.pf-btn:not(.pf-btn-fill):hover,
+  .bm-btn:not(.bm-btn-primary):hover,.sc-nav-item:not(.is-on):hover) {
+  background: #f5effb;
+}
+
+#root .app-page.is-light-screen :is(.bm-error,.ch-fe,.sc-note.is-err,.sp-error) {
+  color: #a8213c;
+  background: #fff3f5;
+  border-color: #e5a3b0;
+}
+
+#root .app-page.is-light-screen :is(.sc-note.is-ok,.pf-bio,.pf-badge.is-equipped small,
+  .pf-shield) {
+  color: #287b32;
+}
+
+/* Directory, discovery and room-list cards. */
+#root .app-page.is-light-screen :is(.st-topbar,.dh-top) { color: #211e27; }
+#root .app-page.is-light-screen .st-search { background: #ffffff !important; border-color: #ded9e5 !important; }
+#root .app-page.is-light-screen .st-credits { color: #ffffff; }
+#root .app-page.is-light-screen .st-card {
+  border: 1px solid transparent !important;
+  background:
+    linear-gradient(145deg,#ffffff,#fbfaff) padding-box,
+    linear-gradient(135deg,rgba(157,29,255,.45),rgba(201,174,235,.38) 52%,rgba(74,154,214,.42)) border-box !important;
+  box-shadow: 0 5px 20px rgba(39,26,62,.08);
+}
+#root .app-page.is-light-screen .st-cover { background: #f1eef6; }
+#root .app-page.is-light-screen :is(.st-live,.st-count) {
+  color: #211e27;
+  background: rgba(255,255,255,.94);
+  border: 1px solid rgba(70,55,92,.12);
+  backdrop-filter: none;
+}
+#root .app-page.is-light-screen .st-live::before { background: #287b32; box-shadow: none; }
+#root .app-page.is-light-screen .st-live b { color: #b5225e; }
+#root .app-page.is-light-screen .st-card-body span { color: #6e6976; }
+#root .app-page.is-light-screen .dh-meta { background: rgba(255,255,255,.96); }
+#root .app-page.is-light-screen .dh-demo { color: #211e27; background: #ffffff; border-color: #ded9e5; }
+#root .app-page.is-light-screen .dh-full { color: #287b32; }
+#root .app-page.is-light-screen .dh-nav { background: #ffffff; border-color: #e6e2eb; }
+#root .app-page.is-light-screen .dh-nav-item { color: #6e6976; }
+#root .app-page.is-light-screen .dh-nav-item[aria-current="page"] { color: #287b32; }
+#root .app-page.is-light-screen .dh-skel,
+#root .app-page.is-light-screen .sc-skel i { background: #f0eef3; }
+
+/* Profile, Following, inbox, credit store and rewards surfaces. */
+#root .app-page.is-light-screen :is(.pf,.sc-inbox-screen,.sc-following-screen,.ib,.fg-page,.bc) {
+  color: #211e27;
+  background: #ffffff;
+}
+#root .app-page.is-light-screen .pf-hero { background: #f1eef6; }
+#root .app-page.is-light-screen .pf-slide-empty { color: #211e27; background: #f3f1f7; }
+#root .app-page.is-light-screen .pf-round { color: #211e27; background: rgba(255,255,255,.88); border-color: #ded9e5; }
+#root .app-page.is-light-screen .pf-panel { background: #ffffff; border-color: #e6e2eb; box-shadow: 0 6px 24px rgba(39,26,62,.1); }
+#root .app-page.is-light-screen :is(.pf-chip,.pf-chip-soft) { color: #514b59; border-color: #e2dce9; background: #f7f5f9; }
+#root .app-page.is-light-screen .pf-edit { color: #742cb1; border-color: #9d1dff; }
+#root .app-page.is-light-screen .pf-btn { color: #742cb1; border-color: #9d1dff; background: #ffffff; }
+#root .app-page.is-light-screen .pf-btn-fill { color: #ffffff; background: linear-gradient(120deg,#9d1dff,#5e00ff); }
+#root .app-page.is-light-screen .pf-stats>div { background: #f7f6f9; }
+#root .app-page.is-light-screen .pf-h2,
+#root .app-page.is-light-screen .pf-badge small,
+#root .app-page.is-light-screen .pf-stats dt { color: #6e6976; }
+#root .app-page.is-light-screen .pf-bio { color: #287b32; }
+#root .app-page.is-light-screen .pf-rewards { border-color: #e6e2eb; }
+#root .app-page.is-light-screen .pf-menu-list button { color: #211e27; }
+#root .app-page.is-light-screen .pf-menu-list button:hover { background: #f4f0f8; }
+#root .app-page.is-light-screen .ib { color: #211e27; }
+#root .app-page.is-light-screen .ib-live-item { color: #211e27; }
+#root .app-page.is-light-screen .ib-name,
+#root .app-page.is-light-screen .ib-live-name { color: #211e27; }
+#root .app-page.is-light-screen .ib-prev,
+#root .app-page.is-light-screen .ib-time { color: #6e6976; }
+#root .app-page.is-light-screen .ib-dot { border-color: #ffffff; }
+#root .app-page.is-light-screen .ib-msgs { background: #ffffff; border-color: #e6e2eb; }
+#root .app-page.is-light-screen .ib-msg { color: #211e27; background: #f3f1f7; border-color: #e6e2eb; }
+#root .app-page.is-light-screen .ib-msg.is-mine { color: #ffffff; background: linear-gradient(120deg,#8050dc,#a464ed); }
+#root .app-page.is-light-screen .fg-empty { color: #6e6976; }
+#root .app-page.is-light-screen .fg-photo { background: #f0edf4; }
+#root .app-page.is-light-screen .fg-room { color: #211e27; background: rgba(255,255,255,.94); }
+#root .app-page.is-light-screen :is(.bc,.bc-bal,.bc-txt,.bc-dl dt,.bc-dl dd,.bc-note) { color: #211e27; }
+#root .app-page.is-light-screen .bc-cr,
+#root .app-page.is-light-screen .bc-note b { color: #287b32; }
+#root .app-page.is-light-screen .bc-card { background: #ffffff; color: #211e27; border-color: #e6e2eb; }
+#root .app-page.is-light-screen .bc-save { color: #6e6976; }
+#root .app-page.is-light-screen .bc-note { background: #f4fbf3; border-color: #a8d3a7; }
+#root .app-page.is-light-screen .sc-list .sc-row:hover { background: #f7f5f9; }
+#root .app-page.is-light-screen .sc-msgs { background: #ffffff; }
+#root .app-page.is-light-screen .sc-msg { color: #211e27; background: #f2eff6; }
+#root .app-page.is-light-screen .sc-msg.is-mine { color: #ffffff; background: linear-gradient(120deg,#8050dc,#a464ed); }
+#root .app-page.is-light-screen .sc-plus { color: #287b32; }
+#root .app-page.is-light-screen .sc-minus { color: #b42344; }
+
+/* Passport keeps its gold/red stamp details on a clean light card. */
+#root .app-page.is-light-screen .sp-card,
+#root .app-page.is-light-screen .sp-review,
+body.streamtalk-light-screen #root .sp-modal-panel {
+  --sp-ink: #211e27;
+  --sp-paper: #ffffff;
+  --sp-black: #ffffff;
+  --sp-muted: #6e6976;
+  color: #211e27;
+  border-color: #e3dce9;
+  background: #ffffff;
+  box-shadow: 0 6px 24px rgba(39,26,62,.1);
+}
+#root .app-page.is-light-screen .sp-card::after,
+#root .app-page.is-light-screen .sp-review::after { display: none; }
+#root .app-page.is-light-screen .sp-intro { border-color: #e6e2eb; }
+#root .app-page.is-light-screen .sp-kicker,
+#root .app-page.is-light-screen .sp-review-callout,
+#root .app-page.is-light-screen .sp-review-callout svg { color: #80611d; }
+#root .app-page.is-light-screen .sp-intro h2,
+#root .app-page.is-light-screen .sp-person-heading strong,
+#root .app-page.is-light-screen .sp-platform-stamp,
+#root .app-page.is-light-screen .sp-platform-stamp * { color: #211e27; }
+#root .app-page.is-light-screen .sp-platform-stamp { background: #fbfaff; border-color: #d9d1e1; }
+#root .app-page.is-light-screen .sp-stamp-ring { background: radial-gradient(circle at center,#ffffff 0 57%,#ebe6f0 58%); }
+#root .app-page.is-light-screen :is(.sp-person-heading span,.sp-review-heading span,.sp-review-heading time) { color: #6e6976; }
+#root .app-page.is-light-screen .sp-review-callout { background: #fff9e9; border-color: #e8d9a9; }
+#root .app-page.is-light-screen .sp-review-item { background: #fbfaff; border-color: #e2dce9; }
+#root .app-page.is-light-screen .sp-review-code { background: #f3f1f6; }
+#root .app-page.is-light-screen .sp-review-code span { color: #514b59; }
+#root .app-page.is-light-screen .sp-review-code code,
+#root .app-page.is-light-screen .sp-review-url { color: #72521a; }
+#root .app-page.is-light-screen .sp-review-actions .sp-button { color: #52217f; }
+#root .app-page.is-light-screen .sp-review-actions .sp-button-gold { color: #211e27; }
+#root .app-page.is-light-screen .sp-league-control { border-color: #e6e2eb; }
+#root .app-page.is-light-screen .sp-league-control span { color: #6e6976; }
+#root .app-page.is-light-screen .sp-league-control button,
+#root .app-page.is-light-screen .sp-league-lookup button { color: #624b16; background: #fff9e9; border-color: #d6c68e; }
+#root .app-page.is-light-screen .sp-league-lookup { background: #fbfaff; border-color: #e2dce9; }
+#root .app-page.is-light-screen .sp-league-lookup>label { color: #624b16; }
+#root .app-page.is-light-screen .sp-league-lookup input { color: #211e27; background: #ffffff; border-color: #ded9e5; }
+#root .app-page.is-light-screen .sp-league-lookup button[type=submit] { color: #211e27; background: #f0dfa0; }
+#root .app-page.is-light-screen .sp-error { color: #a8213c; background: #fff3f5; border-color: #e5a3b0; }
+
+/* Gift catalog and sheets become light; the animated gift-box control is untouched. */
+#root .app-page.is-light-screen .gift-framework.gift-sheet,
+body.streamtalk-light-screen #root .gift-framework.gift-sheet {
+  --gf-deep: #ffffff;
+  --gf-white: #211e27;
+  color: #211e27;
+  border-color: #d7c8e6;
+  background:
+    linear-gradient(145deg,#ffffff,#faf8fc) padding-box,
+    linear-gradient(135deg,rgba(157,29,255,.5),rgba(201,174,235,.42) 52%,rgba(74,154,214,.43)) border-box;
+  box-shadow: 0 8px 28px rgba(39,26,62,.14);
+}
+body.streamtalk-light-screen #root .gift-framework.gift-sheet :is(h1,h2,h3,p,strong,span,li,label) { color: #211e27; }
+body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-sub { color: #6e6976; }
+body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-recipient select { color: #211e27; background: #ffffff; border-color: #c9b6dc; }
+body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-item { color: #211e27; border: 1px solid #e6e2eb; }
+body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-item[aria-pressed=true] { background: #f3eafb; border-color: #9d1dff; }
+body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-item svg { color: #a77a21; }
+body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-btn:not(.gift-send) { color: #52217f; background: #ffffff; border-color: #8b4fd1; }
+body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-send { color: #ffffff; background: linear-gradient(120deg,#9d1dff,#5e00ff); }
+body.streamtalk-light-screen #root .gift-framework-backdrop { background: rgba(35,30,45,.2); }
+
+/* Light dialogs and menus. */
+body.streamtalk-light-screen #root :is([role="dialog"],[role="alertdialog"],.pf-dialog,.pf-menu-list,.sp-modal-panel,.gift-framework.gift-sheet) {
+  color: #211e27;
+  background-color: #ffffff;
+  border-color: #ded7e7;
+  box-shadow: 0 10px 30px rgba(39,26,62,.14);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+body.streamtalk-light-screen #root :is([role="dialog"],[role="alertdialog"],.pf-dialog,.pf-menu-list,.sp-modal-panel,.gift-framework.gift-sheet) * {
+  color: #211e27;
+  text-shadow: none;
+}
+body.streamtalk-light-screen #root :is(.pf-modal,.sp-modal) { background: rgba(32,27,40,.2); backdrop-filter: none; }
+body.streamtalk-light-screen #root .gift-framework.gift-sheet :is(.gift-send,.gift-item[aria-pressed=true]) { color: #ffffff; }
+body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-item[aria-pressed=true] :is(span,svg) { color: #52217f; }
+body.streamtalk-light-screen #root .sp-modal-panel .sp-card { box-shadow: none; }
+body.streamtalk-light-screen #root .sp-modal-close { color: #211e27; background: #ffffff; border-color: #ded9e5; }
+
+/* Persistent navigation on white screens. Keep the gift animation and colored icons. */
+body.streamtalk-light-screen #root .app-bottom-nav {
+  color: #37323d;
+  background: rgba(255,255,255,.97);
+  border: 0;
+  border-top: 1px solid #e7e3eb;
+  border-radius: 0;
+  box-shadow: 0 -4px 18px rgba(32,24,45,.08);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+body.streamtalk-light-screen #root .app-bottom-link,
+body.streamtalk-light-screen #root .app-bottom-link.is-active {
+  color: #37323d;
+  background: transparent;
+  box-shadow: none;
+}
+body.streamtalk-light-screen #root .app-bottom-link.is-active span { color: #211e27; }
+body.streamtalk-light-screen #root .app-bottom-link:nth-child(1) svg { color: #8050dc; }
+body.streamtalk-light-screen #root .app-bottom-link:nth-child(2) svg { color: #e23c8b; }
+body.streamtalk-light-screen #root .app-bottom-link:nth-child(3) svg { color: #287b32; }
+body.streamtalk-light-screen #root .app-bottom-link:nth-child(4) svg { color: #2774c8; }
+body.streamtalk-light-screen #root .app-bottom-link:focus-visible { outline-color: #8050dc; }
+
+@media (prefers-reduced-motion: reduce) {
+  body.streamtalk-light-screen #root *,
+  body.streamtalk-light-screen #root *::before,
+  body.streamtalk-light-screen #root *::after {
+    scroll-behavior: auto;
+  }
+}
