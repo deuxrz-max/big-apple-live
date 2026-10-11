@@ -28,8 +28,12 @@ export function GiftIcon({ id, size = 22 }: { id: string; size?: number }) {
 export function BadgeMark({ id, label, size = 14, compact = false }: { id: string | null; label?: string; size?: number; compact?: boolean }) {
   if (!id) return null;
   const I = iconFor(id);
-  return <span className={`sc-badge${compact ? ' sc-badge-compact' : ''}`} title={label ?? 'Cosmetic badge'}>
-    <I size={size} aria-hidden /><span className="sc-sr">{label ?? 'Badge'}</span>
+  const nightOwl = id === 'night-owl';
+  return <span className={`sc-badge${compact ? ' sc-badge-compact' : ''}${nightOwl ? ' sc-badge-night-owl' : ''}`} title={label ?? 'Cosmetic badge'}>
+    {nightOwl
+      ? <img src={`${import.meta.env.BASE_URL}badges/night-owl-mark.svg`} width={size} height={size} alt="" aria-hidden="true" />
+      : <I size={size} aria-hidden />}
+    <span className="sc-sr">{label ?? 'Badge'}</span>
   </span>;
 }
 

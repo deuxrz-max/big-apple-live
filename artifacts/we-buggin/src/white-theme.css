@@ -228,6 +228,8 @@ body.streamtalk-light-screen #root [data-localization-key*="formButtonPrimary"] 
 #root .app-page.is-light-screen .pf-slide-empty { color: #211e27; background: #f3f1f7; }
 #root .app-page.is-light-screen .pf-round { color: #211e27; background: rgba(255,255,255,.88); border-color: #ded9e5; }
 #root .app-page.is-light-screen .pf-panel { background: #ffffff; border-color: #e6e2eb; box-shadow: 0 6px 24px rgba(39,26,62,.1); }
+#root .app-page.is-light-screen .pf-name { color: #211e27 !important; }
+#root .app-page.is-light-screen .pf-h2 { color: #514b59; font-family: 'Montserrat',system-ui,sans-serif !important; font-size: 13px; font-weight: 700; }
 #root .app-page.is-light-screen :is(.pf-chip,.pf-chip-soft) { color: #514b59; border-color: #e2dce9; background: #f7f5f9; }
 #root .app-page.is-light-screen .pf-edit { color: #742cb1; border-color: #9d1dff; }
 #root .app-page.is-light-screen .pf-btn { color: #742cb1; border-color: #9d1dff; background: #ffffff; }
@@ -354,13 +356,15 @@ body.streamtalk-light-screen #root .sp-modal-close { color: #211e27; background:
 /* Persistent navigation on white screens. Keep the gift animation and colored icons. */
 body.streamtalk-light-screen #root .app-bottom-nav {
   color: #37323d;
-  background: rgba(255,255,255,.97);
+  background: #ffffff !important;
+  opacity: 1;
   border: 0;
   border-top: 1px solid #e7e3eb;
   border-radius: 0;
   box-shadow: 0 -4px 18px rgba(32,24,45,.08);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+  isolation: isolate;
 }
 body.streamtalk-light-screen #root .app-bottom-link,
 body.streamtalk-light-screen #root .app-bottom-link.is-active {

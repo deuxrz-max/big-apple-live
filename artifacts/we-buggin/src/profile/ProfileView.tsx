@@ -20,6 +20,16 @@ function Slide({ url, name, username }: { url: string | null; name: string; user
   return <div className="pf-slide pf-slide-empty"><UserPhoto username={username} displayName={name} photoUrl={null} size={132} /></div>;
 }
 
+function emojiFromId(emojiId: string) {
+  const parts = emojiId.split('-');
+  if (!parts.length || parts.some((part) => !/^[\da-f]{4,6}$/i.test(part))) return '🙂';
+  try {
+    return String.fromCodePoint(...parts.map((part) => Number.parseInt(part, 16)));
+  } catch {
+    return '🙂';
+  }
+}
+
 export function Hero({ urls, name, username, left, right }: { urls: string[]; name: string; username: string; left: ReactNode; right?: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const [idx, setIdx] = useState(0);
@@ -88,11 +98,18 @@ export function ProfileMenu({ name, blocked, pending, onBlock }: { name: string;
 
 function Shield({ id, name, date, equipped }: { id: string; name: string; date: string | null; equipped: boolean }) {
   const I = iconFor(id);
+  const nightOwl = id === 'night-owl';
   return (
     <li className={`pf-badge${equipped ? ' is-equipped' : ''}`} data-testid={`badge-${id}`}>
-      <span className="pf-shield" aria-hidden="true"><span><I size={22} /></span></span>
+      <span className={`pf-shield${nightOwl ? ' pf-shield-night-owl' : ''}`} aria-hidden="true">
+        {nightOwl
+          ? <img className="pf-shield-art" src={`${import.meta.env.BASE_URL}badges/night-owl-mark.svg`} alt="" />
+          : <span><I size={22} /></span>}
+      </span>
       <b>{name}</b>
-      <small>{equipped ? 'Equipped' : date ? `Acquired ${date}` : ''}{equipped && date ? ` / ${date}` : ''}</small>
+      {equipped && <small className="pf-equipped-label">Equipped</small>}
+      {!equipped && date && <time className="pf-badge-date">{`Acquired ${date}`}</time>}
+      {equipped && date && <time className="pf-badge-date">{date}</time>}
     </li>
   );
 }
@@ -114,7 +131,10 @@ export function ProfileView({ person, own = false, countryName, products, backHr
         left={<BackButton href={backHref} label="Back" />}
         right={own ? <Link href="/user-portal/edit" className="pf-round" aria-label="Edit your profile" data-testid="link-edit-hero"><Pencil size={18} aria-hidden /></Link> : menu} />
       <section className="pf-panel">
-        <h1 className="pf-name" style={{ color: p.displayNameColor ?? '#FFFFFF' }} data-testid="text-display-name">{name}</h1>
+        <h1 className="pf-name" data-testid="text-display-name">
+          <span className="pf-name-emoji" aria-hidden="true">{emojiFromId(p.identity.emojiId)}</span>
+          <span className="pf-display-name">{name}</span>
+        </h1>
         {own && <Link href="/user-portal/edit" className="pf-edit" data-testid="link-edit-profile">Edit your profile</Link>}
         {actions}
         <div className="pf-chips">

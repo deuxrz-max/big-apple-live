@@ -32,6 +32,8 @@
 .sc-tags i, .sc-chip { font-style: normal; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; border: 1px solid var(--bm-line); padding: 2px 8px; color: var(--bm-mute); }
 .sc-chip { margin-left: 8px; }
 .sc-badge { display: inline-grid; place-items: center; width: 22px; height: 22px; background: var(--bm-acc); color: #fff; }
+.sc-badge-night-owl { background: transparent; }
+.sc-badge-night-owl img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .sc-badge-line { display: flex; align-items: center; gap: 8px; }
 .sc-badge-line small { color: var(--bm-mute); }
 .sc-pager { display: flex; gap: 10px; justify-content: center; margin-top: 8px; }

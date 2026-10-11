@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 export const BADGE_ART: Record<string, string> = {
   'good-neighbor': 'peak-presenter.png',
   'marathon-master': 'marathon-master.png',
-  'night-owl': 'night-owl.png',
+  'night-owl': 'night-owl-mark.svg',
 };
 
 export function BadgeArt({ id, name }: { id: string; name: string }) {
