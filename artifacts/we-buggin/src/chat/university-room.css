@@ -61,9 +61,9 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 .ur-slot-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:750}
 .ur-empty-name{color:#b8bac3}
 .ur-slot-caption{font-size:10px;color:#777a86}
-.ur-slot-marks{display:flex;align-items:center;gap:5px;min-width:0}
+.ur-slot-marks{display:flex;align-items:center;justify-content:center;gap:4px;min-width:0;max-width:100%;white-space:nowrap}
 .ur-slot-marks .ur-badge{font-size:8px;padding:2px 6px;background:#55505b}
-.ur-slot-you{font-size:9px;color:#aeb0ba;font-weight:650}
+.ur-slot-more{flex:0 0 auto;color:#d8d4e2;font-size:9px;font-weight:750;line-height:1;padding:2px 4px;border:1px solid #676270;border-radius:999px}
 .ur-slot-actions{display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:4px}
 .ur-mic-state{font-size:9px;color:#a9abb5;white-space:nowrap}
 .ur-mic-state.is-live{color:#8ee5c2}

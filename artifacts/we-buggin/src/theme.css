@@ -536,10 +536,12 @@ body {
   width: 100%;
   min-width: 0;
   justify-content: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-content: center;
-  gap: 2px 3px;
+  gap: 3px;
 }
+#root .ur-slot.is-occupied .ur-slot-marks > * { flex: 0 0 auto; }
+#root .ur-slot.is-occupied .ur-slot-marks .sp-summary-badge { margin-left: 0; }
 #root .ur-slot.is-occupied .ur-slot-actions {
   width: 100%;
   flex: 0 0 auto;

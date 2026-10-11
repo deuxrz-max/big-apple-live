@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Mic, MicOff } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
@@ -294,6 +294,21 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                   const mine = slot.participantId === participantId;
                   const joinAvailable = !slot.participantId && !!sessionId && !!participantId && !audioBeam.ownSlot;
                   const isSpeaking = !!slot.participantId && audioBeam.speaking.has(slot.participantId);
+                  const speakerBadgeItems: ReactNode[] = [];
+                  if (person?.badgeId) {
+                    speakerBadgeItems.push(
+                      <BadgeMark key="equipped-badge" id={person.badgeId}
+                        label={`${person.badgeId === 'night-owl' ? 'Night Owl' : person.badgeId.replaceAll('-', ' ')} badge`}
+                        size={15} compact />,
+                    );
+                  }
+                  if (person?.passport?.platforms.length) {
+                    speakerBadgeItems.push(
+                      <PassportSummaryBadge key="streamer-passport" passport={person.passport}
+                        username={person.username} context={`speaker-${slot.slotNumber}`} />,
+                    );
+                  }
+                  const visibleSpeakerBadges = speakerBadgeItems.slice(0, 4);
                   return (
                     <article className={`ur-slot${isSpeaking ? ' is-speaking' : ''}${slot.participantId ? ' is-occupied' : ''}`}
                       key={slot.slotNumber} aria-label={`Speaker slot ${slot.slotNumber}${slot.participantId ? `, ${person?.displayName ?? 'occupied'}` : ', empty'}`}>
@@ -317,14 +332,16 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                                   {slot.micEnabled && !slot.mutedByHost ? <Mic size={13} aria-hidden="true" /> : <MicOff size={13} aria-hidden="true" />}
                                 </span>
                               </span>
-                              <span className="ur-slot-marks">
-                                <BadgeMark id={person.badgeId ?? null}
-                                  label={person.badgeId ? `${person.badgeId === 'night-owl' ? 'Night Owl' : person.badgeId.replaceAll('-', ' ')} badge` : undefined}
-                                  size={15} compact />
-                                <PassportSummaryBadge passport={person.passport} username={person.username} context={`speaker-${slot.slotNumber}`} />
-                                {person.moderator && <span className="ur-badge">Moderator</span>}
-                                {mine && <span className="ur-slot-you">You</span>}
-                              </span>
+                              {speakerBadgeItems.length > 0 && (
+                                <span className="ur-slot-marks" role="group" aria-label={`${speakerBadgeItems.length} badge${speakerBadgeItems.length === 1 ? '' : 's'}`}>
+                                  {visibleSpeakerBadges}
+                                  {speakerBadgeItems.length > visibleSpeakerBadges.length && (
+                                    <span className="ur-slot-more" aria-label={`${speakerBadgeItems.length - visibleSpeakerBadges.length} more badges`}>
+                                      +{speakerBadgeItems.length - visibleSpeakerBadges.length}
+                                    </span>
+                                  )}
+                                </span>
+                              )}
                             </>
                           ) : slot.participantId ? (
                             <>
