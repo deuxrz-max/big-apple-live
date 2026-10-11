@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Mic, MicOff } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -9,7 +10,7 @@ import {
 } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
 import { errMessage, errStatus } from '@/lib/errors';
-import { emojiImageUrl } from '@/lib/identity';
+import { IdentityAvatar } from '@/lib/identity';
 import { BadgeMark } from '@/social/common';
 import { useTextRoom } from './useTextRoom';
 import { useUniversityAudioBeam } from './useUniversityAudioBeam';
@@ -269,19 +270,21 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           {drawer && <div className="ur-backdrop" onClick={closeDrawer} aria-hidden="true" />}
           <div className="ch-room">
             <section className="ur-beam" aria-label="Audio speaker beam">
-              <span className={`ur-audio-status ur-audio-${audioBeam.audioState}`} role="status">
-                <span className="ur-status-dot" aria-hidden="true" />
-                {audioBeam.audioState === 'ready' || audioBeam.audioState === 'connected'
-                  ? 'Audio ready'
-                  : audioBeam.audioState === 'connecting' || audioBeam.audioState === 'reconnecting'
-                    ? 'Connecting'
-                    : audioBeam.audioState === 'error' ? 'Audio issue' : 'Listeners welcome'}
-              </span>
-              {audioBeam.playbackBlocked && (
-                <button type="button" className="ur-resume-audio" onClick={() => void audioBeam.resumePlayback()}>
-                  Tap to hear
-                </button>
-              )}
+              <div className="ur-audio-status-row">
+                <span className={`ur-audio-status ur-audio-${audioBeam.audioState}`} role="status">
+                  <span className="ur-status-dot" aria-hidden="true" />
+                  {audioBeam.audioState === 'ready' || audioBeam.audioState === 'connected'
+                    ? 'Audio ready'
+                    : audioBeam.audioState === 'connecting' || audioBeam.audioState === 'reconnecting'
+                      ? 'Connecting'
+                      : audioBeam.audioState === 'error' ? 'Audio issue' : 'Listeners welcome'}
+                </span>
+                {audioBeam.playbackBlocked && (
+                  <button type="button" className="ur-resume-audio" onClick={() => void audioBeam.resumePlayback()}>
+                    Tap to hear
+                  </button>
+                )}
+              </div>
               {audioBeam.error && <p className="ur-beam-error" role="alert">{audioBeam.error}</p>}
               <div className="ur-slots">
                 {beamSlots.map((slot) => {
@@ -297,8 +300,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                       <div className="ur-slot-identity">
                         {!slot.participantId && <span className="ur-empty-number" aria-hidden="true">{slot.slotNumber}</span>}
                         {person?.identity
-                          ? <img src={emojiImageUrl(person.identity.emojiId, person.identity.color)}
-                              width={34} height={34} className="ur-slot-avatar ur-slot-art" alt="" aria-hidden="true" />
+                          ? <IdentityAvatar identity={person.identity} size={72} className="ur-slot-avatar ur-slot-art" />
                           : person
                             ? <span className="ur-slot-avatar ur-slot-initial" aria-hidden="true">{person.displayName.slice(0, 1)}</span>
                             : slot.participantId
@@ -307,7 +309,14 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                         <div className="ur-slot-copy">
                           {person ? (
                             <>
-                              <span className="ur-slot-name" style={{ color: person.displayNameColor ?? '#F4F1F8' }}>{person.displayName}</span>
+                              <span className="ur-slot-name-line">
+                                <span className="ur-slot-name" style={{ color: person.displayNameColor ?? '#F4F1F8' }}>{person.displayName}</span>
+                                <span className={`ur-slot-mic-icon${slot.micEnabled && !slot.mutedByHost ? ' is-on' : ''}`}
+                                  role="img" aria-label={slot.micEnabled && !slot.mutedByHost ? 'Microphone on' : 'Microphone muted'}
+                                  title={slot.micEnabled && !slot.mutedByHost ? 'Microphone on' : 'Microphone muted'}>
+                                  {slot.micEnabled && !slot.mutedByHost ? <Mic size={13} aria-hidden="true" /> : <MicOff size={13} aria-hidden="true" />}
+                                </span>
+                              </span>
                               <span className="ur-slot-marks">
                                 <BadgeMark id={person.badgeId ?? null}
                                   label={person.badgeId ? `${person.badgeId === 'night-owl' ? 'Night Owl' : person.badgeId.replaceAll('-', ' ')} badge` : undefined}
@@ -334,43 +343,39 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                         <div className="ur-slot-actions">
                           {mine ? (
                             <>
-                              <span className={`ur-mic-state${slot.micEnabled && !slot.mutedByHost ? ' is-live' : ''}`}>
-                                {slot.mutedByHost ? 'Muted by host' : slot.micEnabled ? 'Mic on' : 'Mic off'}
-                              </span>
                               <button type="button" className="ur-slot-action"
                                 disabled={audioBeam.busy || slot.mutedByHost}
                                 aria-pressed={slot.micEnabled && !slot.mutedByHost}
                                 onClick={() => void audioBeam.setOwnMic(!slot.micEnabled || slot.mutedByHost)}>
-                                {slot.mutedByHost ? 'Host muted' : slot.micEnabled ? 'Mute mic' : 'Turn mic on'}
+                                {slot.mutedByHost ? 'Host muted' : slot.micEnabled ? 'Mute mic' : 'Unmute'}
                               </button>
                               <button type="button" className="ur-slot-action ur-slot-leave"
                                 disabled={audioBeam.busy} onClick={() => void audioBeam.leaveSlot()}>Leave</button>
                             </>
                           ) : audioBeam.isHost ? (
                             <>
-                              <span className={`ur-mic-state${slot.micEnabled && !slot.mutedByHost ? ' is-live' : ''}`}>
-                                {slot.mutedByHost ? 'Muted by host' : slot.micEnabled ? 'Mic on' : 'Mic off'}
-                              </span>
                               <button type="button" className="ur-slot-action" disabled={audioBeam.busy}
                                 onClick={() => void audioBeam.hostMute(slot.participantId!, !slot.mutedByHost)}>
-                                {slot.mutedByHost ? 'Lift mute' : 'Mute'}
+                                {slot.mutedByHost ? 'Unmute' : 'Mute mic'}
                               </button>
                               <button type="button" className="ur-slot-action ur-slot-leave" disabled={audioBeam.busy}
                                 onClick={() => void audioBeam.kickSpeaker(slot.participantId!)}>Remove</button>
                             </>
                           ) : (
-                            <span className={`ur-mic-state${slot.micEnabled && !slot.mutedByHost ? ' is-live' : ''}`}>
-                              {slot.mutedByHost ? 'Muted by host' : slot.micEnabled ? 'Speaking spot live' : 'Mic off'}
-                            </span>
+                            null
                           )}
                         </div>
                       ) : (
                         joinAvailable
                           ? <button type="button" className="ur-slot-join" disabled={audioBeam.busy}
                               onClick={() => void audioBeam.joinSlot()}>
-                              {audioBeam.permissionPending ? 'Requesting mic…' : 'Join'}
+                              {audioBeam.permissionPending ? 'Requesting mic…' : 'Tap to join'}
                             </button>
-                          : <span className="ur-slot-caption">{slot.participantId ? 'Syncing room roster' : audioBeam.ownSlot ? 'You’re already on the beam' : 'Open spot'}</span>
+                          : slot.participantId
+                            ? <span className="ur-slot-caption">Syncing room roster</span>
+                            : audioBeam.ownSlot
+                              ? null
+                              : <span className="ur-slot-caption">Tap to join</span>
                       )}
                     </article>
                   );
@@ -456,8 +461,10 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
               <button type="submit" className="bm-btn bm-btn-primary" disabled={(whispering ? whisperMut.isPending : pending) || !text.trim()} data-testid="button-send">
                 {whispering ? (whisperMut.isPending ? 'Sending...' : 'Whisper') : pending ? 'Sending...' : 'Send'}
               </button>
-              {!whispering && <div className="ch-faces">{FACES.map((f) => <button key={f} type="button" disabled={pending} aria-label={`Send ${f}`} onClick={() => doSend(f, 'reaction')}>{f}</button>)}</div>}
             </form>
+            {!whispering && <div className="ch-faces" aria-label="Quick emoji reactions">
+              {FACES.map((f) => <button key={f} type="button" disabled={pending} aria-label={`Send ${f}`} onClick={() => doSend(f, 'reaction')}>{f}</button>)}
+            </div>}
           </div>
         </div>
       </div>

@@ -12,8 +12,18 @@ import { getClerkProxyHost } from "../middlewares/clerkProxyMiddleware";
 import { communityMembership, accessFor, offerOverflow } from "../lib/community";
 import { giftNameColorsForAccounts } from "../lib/social/gift-name-color-data";
 import { universityAudioBeamStore } from "../lib/university-audio-beam";
+import { coloredEmoji } from "../lib/emoji-library";
 
 const router: IRouter = Router();
+router.get("/emojis/:emojiId/:color/image", (req, res): void => {
+  const emojiId = Array.isArray(req.params.emojiId) ? req.params.emojiId[0] ?? "" : req.params.emojiId;
+  const color = Array.isArray(req.params.color) ? req.params.color[0] ?? "" : req.params.color;
+  res
+    .set("Cache-Control", "public, max-age=86400")
+    .type("image/svg+xml")
+    .send(coloredEmoji(emojiId, color));
+});
+
 export function accountId(req: Request): string {
   const auth = getAuth(req);
   const id = auth?.userId;

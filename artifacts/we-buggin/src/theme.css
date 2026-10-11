@@ -92,14 +92,10 @@ body { background-color: #151518; background-image: none; font-family: 'Montserr
 .st-card-body span { font-size: 12px; color: #A9A6B5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .st-card-body .st-enter { margin-top: 6px; align-self: flex-start; padding: 5px 16px; border-radius: 999px; background: var(--st-grad); color: #fff; font-weight: 700; }
 
-/* Owner-approved lime headings/navigation; content and pink accents stay unchanged. */
+/* Owner-approved lime headings; content and pink accents stay unchanged. */
 #root :is(h1, h2, h3, h4, h5, h6),
 #root :is(.st-wordmark, .bm-logo, .sc-nav-item),
 #root .ch-auth [role="tab"] {
-  color: #A6FF00;
-}
-#root .app-bottom-link,
-#root .app-bottom-link:is(.is-active, :hover, :focus-visible) {
   color: #A6FF00;
 }
 #root .app-bottom-link.is-active { background-color: #25252d; }
@@ -248,12 +244,12 @@ body {
 #root .ur-badge { color: #221a35; background: linear-gradient(120deg,#ffe69b,#e5bd64); }
 #root .ur-chip { background: rgba(90,60,145,.58); }
 #root .ur-beam {
-  border: 1px solid transparent;
-  border-radius: 21px;
-  background: linear-gradient(145deg,rgba(27,21,53,.74),rgba(14,15,42,.66)) padding-box,
-    linear-gradient(135deg,rgba(180,127,255,.85),rgba(210,184,255,.45),rgba(127,192,255,.7)) border-box;
-  box-shadow: var(--space-shadow);
-  backdrop-filter: blur(12px);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 #root .ur-slot {
   padding: 10px;
@@ -265,6 +261,10 @@ body {
 #root .ur-slot.is-occupied { border-color: rgba(203,179,255,.6); }
 #root .ur-slot.is-speaking .ur-slot-avatar { box-shadow: 0 0 0 2px #9fe8bd,0 0 0 5px rgba(159,232,189,.25); }
 #root .ur-slot-avatar:not(.ur-slot-art) { background: rgba(124,101,174,.43); color: #fff; }
+#root .ur-slot.is-occupied .ur-slot-initial {
+  background: radial-gradient(circle at 32% 24%, rgba(182,147,255,.72), rgba(79,53,126,.9) 58%, rgba(25,21,46,.98));
+  border: 2px solid rgba(221,196,255,.9);
+}
 #root .ur-empty-number {
   display: grid;
   place-items: center;
@@ -286,7 +286,11 @@ body {
 #root .ur-slot:not(.is-occupied) .ur-slot-identity { align-items: center; }
 #root .ch.ur .ch-msgs { padding-inline: 8px; }
 #root .ch.ur .ch-comp { background: rgba(17,13,34,.72); border: 1px solid rgba(176,144,239,.38); border-radius: 999px; backdrop-filter: blur(12px); }
-#root .ch.ur .ch-comp input[type=text] { background: transparent; border: 0; }
+#root .ch.ur .ch-comp { flex-wrap: nowrap; align-items: center; gap: 7px; padding: 4px 7px; }
+#root .ch.ur .ch-comp input[type=text] { min-width: 0; width: 0; flex: 1 1 auto; background: transparent; border: 0; }
+#root .ch.ur .ch-faces { flex: 0 0 auto; display: flex; flex-wrap: nowrap; justify-content: space-around; gap: 4px; padding: 1px 8px 3px; }
+#root .ch.ur .ch-faces button { display: grid; flex: 0 0 30px; width: 30px; height: 28px; place-items: center; border: 0; border-radius: 9px; background: rgba(30,23,58,.66); color: #fff; }
+#root .ch.ur .ch-faces button:disabled { opacity: .45; }
 #root .ch.ur .ch-acts button { color: #d7baff; }
 #root .ur-wlabel { color: #ffb1d4; }
 #root .ur-modal { background: rgba(5,4,18,.68); backdrop-filter: blur(5px); }
@@ -432,11 +436,7 @@ body {
   color: var(--space-lime);
 }
 #root .beam-app .sc-h1 { color: var(--space-lime); }
-#root .app-bottom-link,
-#root .app-bottom-link.is-active,
-#root .app-bottom-link:is(:hover, :focus-visible) {
-  color: var(--space-lime);
-}
+#root .app-bottom-link.is-active { color: #fff; }
 #root .st-home-pill,
 #root .st-home-pill:is(:hover, :focus-visible) {
   color: var(--space-lime);
@@ -467,26 +467,32 @@ body {
 
 /* Filled audio-beam slots: avatar first, centered identity, controls at the base. */
 #root .ur-slot.is-occupied {
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: stretch;
+  justify-content: initial;
+  gap: 4px;
+  overflow: hidden;
 }
 #root .ur-slot.is-occupied .ur-slot-identity {
   width: 100%;
+  min-width: 0;
   min-height: 0;
-  flex: 1 1 auto;
+  flex: none;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: clamp(3px, .7vh, 7px);
+  gap: clamp(2px, .5vh, 5px);
+  overflow: hidden;
 }
 #root .ur-slot.is-occupied .ur-slot-avatar {
   box-sizing: border-box;
-  width: clamp(56px, 8.5vh, 86px);
-  height: clamp(56px, 8.5vh, 86px);
+  width: clamp(42px, 7.2vh, 72px);
+  height: clamp(42px, 7.2vh, 72px);
   flex: 0 0 auto;
   border: 2px solid rgba(221, 196, 255, .9);
   filter: drop-shadow(0 0 6px rgba(185, 139, 255, .5));
-  font-size: clamp(27px, 4.2vh, 44px);
+  font-size: clamp(23px, 3.8vh, 38px);
 }
 #root .ur-slot.is-occupied .ur-slot-art {
   overflow: hidden;
@@ -495,23 +501,44 @@ body {
 #root .ur-slot.is-occupied .ur-slot-copy {
   width: 100%;
   min-width: 0;
+  display: grid;
   justify-items: center;
+  align-content: start;
   gap: 2px;
   text-align: center;
 }
+#root .ur-slot.is-occupied .ur-slot-name-line {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
 #root .ur-slot.is-occupied .ur-slot-name {
   display: block;
-  width: 100%;
-  max-width: 100%;
+  width: auto;
+  min-width: 0;
+  max-width: calc(100% - 18px);
+  flex: 0 1 auto;
   font-size: clamp(11px, 1.5vw, 15px);
   line-height: 1.15;
   text-align: center;
 }
+#root .ur-slot-mic-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  color: #ffb6ca;
+}
+#root .ur-slot-mic-icon.is-on { color: #9fe8bd; }
 #root .ur-slot.is-occupied .ur-slot-marks {
   width: 100%;
+  min-width: 0;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 2px 4px;
+  align-content: center;
+  gap: 2px 3px;
 }
 #root .ur-slot.is-occupied .ur-slot-actions {
   width: 100%;
@@ -519,19 +546,28 @@ body {
   align-self: stretch;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-top: auto;
+  gap: 3px;
+  margin: 0;
 }
 #root .ur-slot.is-occupied .ur-slot-action {
-  padding: 5px 8px;
-  font-size: clamp(9px, 1vw, 11px);
+  padding: 4px 7px;
+  font-size: clamp(9px, 1vw, 10px);
 }
 @media (max-height: 650px) {
   #root .ur-slot.is-occupied .ur-slot-avatar {
-    width: clamp(42px, 7vh, 54px);
-    height: clamp(42px, 7vh, 54px);
-    font-size: clamp(21px, 3.5vh, 28px);
+    width: clamp(30px, 5vh, 34px);
+    height: clamp(30px, 5vh, 34px);
+    font-size: clamp(18px, 3.2vh, 23px);
   }
-  #root .ur-slot.is-occupied { padding: 5px; gap: 3px; }
-  #root .ur-slot.is-occupied .ur-slot-identity { gap: 3px; }
+  #root .ur-slot.is-occupied { padding: 4px; gap: 2px; }
+  #root .ur-slot.is-occupied .ur-slot-identity { gap: 2px; }
+  #root .ur-slot.is-occupied .ur-slot-marks .ur-badge { padding: 1px 4px; font-size: 7px; }
+  #root .ur-slot.is-occupied .ur-slot-action { padding: 3px 5px; font-size: 9px; }
+}
+@media (max-height: 590px) {
+  #root .ur-slot.is-occupied .ur-slot-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 17px;
+  }
 }
