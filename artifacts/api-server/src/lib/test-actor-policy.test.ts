@@ -12,6 +12,10 @@ test("test actor control is enabled only in development", () => {
 
 test("the command contract rejects unmarked-action fields and invalid payloads", () => {
   assert.notEqual(parseTestActorCommand({ action: "join", as: "TestBigo1", room: "LiveMe" }), null);
+  assert.notEqual(parseTestActorCommand({ action: "cleanup-preview" }), null);
+  assert.notEqual(parseTestActorCommand({ action: "cleanup-delete", confirmation: "a".repeat(64) }), null);
+  assert.equal(parseTestActorCommand({ action: "cleanup-delete", confirmation: "short" }), null);
+  assert.equal(parseTestActorCommand({ action: "cleanup-delete", confirmation: "a".repeat(64), all: true }), null);
   assert.notEqual(parseTestActorCommand({ action: "join", as: "Vampsquad", room: "LiveMe" }), null);
   assert.notEqual(parseTestActorCommand({ action: "gift", as: "TestBigo1", to: "TestBigo2", room: "LiveMe", gift: "heart" }), null);
   assert.notEqual(parseTestActorCommand({ action: "gift", as: "TestBigo1", to: "TestBigo2", room: "LiveMe", gift: "cosmic-encore" }), null);

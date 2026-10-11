@@ -1,5 +1,7 @@
 export type TestActorCommand =
   | { action: "list" }
+  | { action: "cleanup-preview" }
+  | { action: "cleanup-delete"; confirmation: string }
   | { action: "join"; as: string; room: string }
   | { action: "leave"; as: string; room: string }
   | { action: "chat"; as: string; room: string; text: string }
@@ -8,6 +10,8 @@ export type TestActorCommand =
 
 const keys: Record<TestActorCommand["action"], string[]> = {
   list: ["action"],
+  "cleanup-preview": ["action"],
+  "cleanup-delete": ["action", "confirmation"],
   join: ["action", "as", "room"],
   leave: ["action", "as", "room"],
   chat: ["action", "as", "room", "text"],
@@ -29,6 +33,10 @@ export function parseTestActorCommand(value: unknown): TestActorCommand | null {
   const action = value.action as TestActorCommand["action"];
   if (Object.keys(value).some(key => !keys[action].includes(key))) return null;
   if (action === "list") return { action };
+  if (action === "cleanup-preview") return { action };
+  if (action === "cleanup-delete")
+    return typeof value.confirmation === "string" && /^[a-f0-9]{64}$/.test(value.confirmation)
+      ? { action, confirmation: value.confirmation } : null;
   if (!isUsername(value.as)) return null;
   if (action === "join" || action === "leave")
     return isRoom(value.room) ? { action, as: value.as.trim(), room: value.room.trim() } : null;
