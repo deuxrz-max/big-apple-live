@@ -68,7 +68,7 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* LIGHT MODE */
+/* Streamtalk deep-space glass palette */
 :root {
   --button-outline: rgba(0, 0, 0, 0.1);
   --badge-outline: rgba(0, 0, 0, 0.05);
@@ -80,23 +80,23 @@
   --elevate-1: rgba(0, 0, 0, 0.03);
   --elevate-2: rgba(0, 0, 0, 0.08);
 
-  --background: 40 62% 95%;
+  --background: 247 48% 7%;
 
-  --foreground: 255 38% 14%;
+  --foreground: 255 38% 96%;
 
-  --border: 255 20% 20%;
+  --border: 265 45% 48%;
 
-  --card: 42 70% 98%;
+  --card: 258 42% 14%;
 
-  --card-foreground: 255 38% 14%;
+  --card-foreground: 255 38% 96%;
 
-  --card-border: 255 38% 14%;
+  --card-border: 267 55% 56%;
 
-  --sidebar: 40 62% 95%;
+  --sidebar: 249 42% 10%;
 
-  --sidebar-foreground: 255 38% 14%;
+  --sidebar-foreground: 255 38% 96%;
 
-  --sidebar-border: 255 20% 20%;
+  --sidebar-border: 265 45% 48%;
 
   --sidebar-primary: 332 85% 52%;
 
@@ -108,39 +108,39 @@
 
   --sidebar-ring: 332 85% 52%;
 
-  --popover: 42 70% 98%;
+  --popover: 257 44% 13%;
 
-  --popover-foreground: 255 38% 14%;
+  --popover-foreground: 255 38% 96%;
 
-  --popover-border: 255 38% 14%;
+  --popover-border: 267 55% 56%;
 
-  --primary: 332 85% 52%;
+  --primary: 269 90% 64%;
 
-  --primary-foreground: 42 70% 98%;
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 43 96% 58%;
+  --secondary: 254 32% 21%;
 
-  --secondary-foreground: 255 38% 14%;
+  --secondary-foreground: 255 38% 96%;
 
-  --muted: 38 38% 89%;
+  --muted: 252 30% 20%;
 
-  --muted-foreground: 255 16% 36%;
+  --muted-foreground: 254 20% 73%;
 
-  --accent: 200 92% 60%;
+  --accent: 197 84% 72%;
 
-  --accent-foreground: 255 38% 14%;
+  --accent-foreground: 247 48% 7%;
 
-  --destructive: 8 78% 46%;
+  --destructive: 346 84% 70%;
 
-  --destructive-foreground: 42 70% 98%;
+  --destructive-foreground: 247 48% 7%;
 
-  --input: 255 38% 14%;
-  --ring: 200 92% 45%;
-  --chart-1: 332 85% 52%;
-  --chart-2: 43 96% 58%;
-  --chart-3: 200 92% 60%;
-  --chart-4: 270 60% 55%;
-  --chart-5: 160 60% 40%;
+  --input: 265 42% 44%;
+  --ring: 276 100% 76%;
+  --chart-1: 276 90% 72%;
+  --chart-2: 331 87% 72%;
+  --chart-3: 197 84% 72%;
+  --chart-4: 52 82% 72%;
+  --chart-5: 146 67% 66%;
 
   --app-font-sans: 'DM Sans', sans-serif;
   --app-font-serif: 'Bricolage Grotesque', sans-serif;
@@ -229,23 +229,23 @@
   --elevate-1: rgba(255, 255, 255, 0.04);
   --elevate-2: rgba(255, 255, 255, 0.09);
 
-  --background: 255 34% 11%;
+  --background: 247 48% 7%;
 
-  --foreground: 40 60% 94%;
+  --foreground: 255 38% 96%;
 
-  --border: 40 30% 80%;
+  --border: 265 45% 48%;
 
-  --card: 255 30% 15%;
+  --card: 258 42% 14%;
 
-  --card-foreground: 40 60% 94%;
+  --card-foreground: 255 38% 96%;
 
-  --card-border: 255 38% 14%;
+  --card-border: 267 55% 56%;
 
-  --sidebar: 40 62% 95%;
+  --sidebar: 249 42% 10%;
 
-  --sidebar-foreground: 255 38% 14%;
+  --sidebar-foreground: 255 38% 96%;
 
-  --sidebar-border: 255 20% 20%;
+  --sidebar-border: 265 45% 48%;
 
   --sidebar-primary: 332 85% 52%;
 
@@ -257,35 +257,35 @@
 
   --sidebar-ring: 332 85% 52%;
 
-  --popover: 42 70% 98%;
+  --popover: 257 44% 13%;
 
-  --popover-foreground: 255 38% 14%;
+  --popover-foreground: 255 38% 96%;
 
-  --popover-border: 255 38% 14%;
+  --popover-border: 267 55% 56%;
 
-  --primary: 332 85% 52%;
+  --primary: 269 90% 64%;
 
-  --primary-foreground: 42 70% 98%;
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 43 96% 58%;
+  --secondary: 254 32% 21%;
 
-  --secondary-foreground: 255 38% 14%;
+  --secondary-foreground: 255 38% 96%;
 
-  --muted: 255 24% 20%;
+  --muted: 252 30% 20%;
 
-  --muted-foreground: 40 20% 72%;
+  --muted-foreground: 254 20% 73%;
 
-  --accent: 200 92% 60%;
+  --accent: 197 84% 72%;
 
-  --accent-foreground: 255 38% 14%;
+  --accent-foreground: 247 48% 7%;
 
-  --destructive: 8 78% 46%;
+  --destructive: 346 84% 70%;
 
-  --destructive-foreground: 42 70% 98%;
+  --destructive-foreground: 247 48% 7%;
 
   /* Used as the border around inputs. Dark mode: Should be a border that is light enough to have high contrast when rendered on a --card background. More contrast than standard --border */
-  --input: 40 30% 80%;
-  --ring: 200 92% 45%;
+  --input: 265 42% 44%;
+  --ring: 276 100% 76%;
   --chart-1: 332 85% 52%;
   --chart-2: 43 96% 58%;
   --chart-3: 200 92% 60%;

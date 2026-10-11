@@ -295,10 +295,15 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                     <article className={`ur-slot${isSpeaking ? ' is-speaking' : ''}${slot.participantId ? ' is-occupied' : ''}`}
                       key={slot.slotNumber} aria-label={`Speaker slot ${slot.slotNumber}${slot.participantId ? `, ${person?.displayName ?? 'occupied'}` : ', empty'}`}>
                       <div className="ur-slot-identity">
+                        {!slot.participantId && <span className="ur-empty-number" aria-hidden="true">{slot.slotNumber}</span>}
                         {person?.identity
                           ? <img src={emojiImageUrl(person.identity.emojiId, person.identity.color)}
                               width={34} height={34} className="ur-slot-avatar ur-slot-art" alt="" aria-hidden="true" />
-                          : <span className="ur-slot-avatar ur-slot-initial" aria-hidden="true">{person?.displayName.slice(0, 1) ?? String(slot.slotNumber)}</span>}
+                          : person
+                            ? <span className="ur-slot-avatar ur-slot-initial" aria-hidden="true">{person.displayName.slice(0, 1)}</span>
+                            : slot.participantId
+                              ? <span className="ur-slot-avatar ur-slot-initial" aria-hidden="true">{String(slot.slotNumber)}</span>
+                              : null}
                         <div className="ur-slot-copy">
                           {person ? (
                             <>

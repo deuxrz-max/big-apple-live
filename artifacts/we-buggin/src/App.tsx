@@ -58,7 +58,7 @@ const clerkAppearance = {
     cardBox: 'bg-[#1D1D23] w-[440px] max-w-full overflow-hidden border border-white/15',
     card: '!shadow-none !border-0 !bg-transparent !rounded-[16px]',
     footer: '!shadow-none !border-0 !bg-transparent !rounded-[16px]',
-    headerTitle: { fontFamily: "'Montserrat', sans-serif", fontWeight: 800, color: '#A6FF00' },
+    headerTitle: '!font-sans !font-extrabold !text-[#A6FF00]',
     headerSubtitle: { color: 'hsl(60 3% 62%)' },
     socialButtonsBlockButtonText: { color: INK, fontWeight: 700 },
     formFieldLabel: { color: INK, fontWeight: 700 },
