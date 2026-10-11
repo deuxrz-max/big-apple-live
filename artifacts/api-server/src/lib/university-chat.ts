@@ -95,6 +95,10 @@ export async function universitySession(id: string, roomId: string, sessionId: s
       ? { photoUrl: null, photoReviews: undefined } : await visibleProfilePhotos(ownerId, id, profile);
     people.push({ participantId: participant.participantId, username: profile.username,
       displayName: profile.displayName ?? profile.username, photoUrl: photos.photoUrl,
+      identity: {
+        emojiId: profile.emojiId, gender: profile.gender, color: profile.color,
+        hairColor: profile.hairColor, portraitId: profile.portraitId ?? null,
+      },
       displayNameColor: nameColors.get(ownerId) ?? "#FFFFFF",
       photoStatus: photos.photoReviews?.find(r => r.photoUrl === photos.photoUrl)?.status ?? null,
       self: ownerId === id, moderator: moderators.has(ownerId), ignored: ignored.includes(ownerId), botId: null,

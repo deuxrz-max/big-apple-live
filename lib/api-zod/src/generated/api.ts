@@ -175,6 +175,10 @@ export const GetUniversitySessionParams = zod.object({
 })
 
 export const getUniversitySessionResponsePeopleItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getUniversitySessionResponsePeopleItemIdentityEmojiIdMax = 100;
+
+export const getUniversitySessionResponsePeopleItemIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getUniversitySessionResponsePeopleItemIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getUniversitySessionResponseWhispersItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
@@ -186,6 +190,14 @@ export const GetUniversitySessionResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "displayNameColor": zod.string().regex(getUniversitySessionResponsePeopleItemDisplayNameColorRegExp).optional(),
+  "identity": zod.object({
+  "emojiId": zod.string().min(1).max(getUniversitySessionResponsePeopleItemIdentityEmojiIdMax),
+  "gender": zod.enum(['Male', 'Female']),
+  "color": zod.string().regex(getUniversitySessionResponsePeopleItemIdentityColorRegExp),
+  "hairColor": zod.string().regex(getUniversitySessionResponsePeopleItemIdentityHairColorRegExp),
+  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
+  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
+}).optional(),
   "photoUrl": zod.string().nullable(),
   "photoStatus": zod.string().nullable(),
   "self": zod.boolean(),
@@ -205,6 +217,145 @@ export const GetUniversitySessionResponse = zod.object({
   "createdAt": zod.coerce.date()
 }))
 })
+
+
+/**
+ * @summary Read the four-slot audio beam state for an authenticated university member
+ */
+export const getUniversityAudioStatePathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
+
+
+export const GetUniversityAudioStateParams = zod.object({
+  "roomId": zod.coerce.string().regex(getUniversityAudioStatePathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
+})
+
+export const GetUniversityAudioStateHeader = zod.object({
+  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+})
+
+export const getUniversityAudioStateResponseSlotsItemSlotNumberMax = 4;
+
+export const getUniversityAudioStateResponseSlotsMin = 4;
+export const getUniversityAudioStateResponseSlotsMax = 4;
+
+
+
+export const GetUniversityAudioStateResponse = zod.object({
+  "roomId": zod.string(),
+  "beamActive": zod.boolean(),
+  "hostParticipantId": zod.string().uuid().nullable(),
+  "slots": zod.array(zod.object({
+  "slotNumber": zod.number().int().min(1).max(getUniversityAudioStateResponseSlotsItemSlotNumberMax),
+  "participantId": zod.string().uuid().nullable(),
+  "micEnabled": zod.boolean(),
+  "mutedByHost": zod.boolean()
+})).min(getUniversityAudioStateResponseSlotsMin).max(getUniversityAudioStateResponseSlotsMax)
+})
+
+
+/**
+ * @summary Join, leave, or control an audio-only university beam
+ */
+export const performUniversityAudioActionPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
+
+
+export const PerformUniversityAudioActionParams = zod.object({
+  "roomId": zod.coerce.string().regex(performUniversityAudioActionPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
+})
+
+export const PerformUniversityAudioActionHeader = zod.object({
+  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+})
+
+export const PerformUniversityAudioActionBody = zod.object({
+  "action": zod.enum(['join-slot', 'leave-slot', 'mute-self', 'unmute-self', 'host-mute', 'host-unmute', 'kick']),
+  "targetParticipantId": zod.string().uuid().optional()
+})
+
+export const performUniversityAudioActionResponseSlotsItemSlotNumberMax = 4;
+
+export const performUniversityAudioActionResponseSlotsMin = 4;
+export const performUniversityAudioActionResponseSlotsMax = 4;
+
+
+
+export const PerformUniversityAudioActionResponse = zod.object({
+  "roomId": zod.string(),
+  "beamActive": zod.boolean(),
+  "hostParticipantId": zod.string().uuid().nullable(),
+  "slots": zod.array(zod.object({
+  "slotNumber": zod.number().int().min(1).max(performUniversityAudioActionResponseSlotsItemSlotNumberMax),
+  "participantId": zod.string().uuid().nullable(),
+  "micEnabled": zod.boolean(),
+  "mutedByHost": zod.boolean()
+})).min(performUniversityAudioActionResponseSlotsMin).max(performUniversityAudioActionResponseSlotsMax)
+})
+
+
+/**
+ * @summary Listen for audio-only beam peers and moderation state
+ */
+export const streamUniversityAudioEventsPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
+
+
+export const StreamUniversityAudioEventsParams = zod.object({
+  "roomId": zod.coerce.string().regex(streamUniversityAudioEventsPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
+})
+
+export const StreamUniversityAudioEventsHeader = zod.object({
+  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+})
+
+export const StreamUniversityAudioEventsResponse = zod.unknown()
+
+
+/**
+ * @summary Relay a peer-to-peer WebRTC offer or answer between current university beam participants
+ */
+export const sendUniversityAudioSignalPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
+
+
+export const SendUniversityAudioSignalParams = zod.object({
+  "roomId": zod.coerce.string().regex(sendUniversityAudioSignalPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
+})
+
+export const SendUniversityAudioSignalHeader = zod.object({
+  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+})
+
+export const sendUniversityAudioSignalBodyDescriptionSdpMax = 12000;
+
+
+
+export const SendUniversityAudioSignalBody = zod.object({
+  "sourceConnectionId": zod.string().uuid(),
+  "targetParticipantId": zod.string().uuid(),
+  "targetConnectionId": zod.string().uuid(),
+  "description": zod.object({
+  "type": zod.enum(['offer', 'answer']),
+  "sdp": zod.string().min(1).max(sendUniversityAudioSignalBodyDescriptionSdpMax)
+})
+})
+
+export const SendUniversityAudioSignalResponse = zod.void()
+
+
+/**
+ * @summary Disconnect this account's peer audio connection without leaving chat
+ */
+export const disconnectUniversityAudioPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
+
+
+export const DisconnectUniversityAudioParams = zod.object({
+  "roomId": zod.coerce.string().regex(disconnectUniversityAudioPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code'),
+  "connectionId": zod.coerce.string().uuid()
+})
+
+export const DisconnectUniversityAudioHeader = zod.object({
+  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+})
+
+export const DisconnectUniversityAudioResponse = zod.void()
 
 
 export const SendUniversityWhisperParams = zod.object({

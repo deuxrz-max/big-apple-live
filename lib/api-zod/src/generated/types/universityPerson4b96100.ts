@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { EmojiIdentity4b96100 } from './emojiIdentity4b96100';
 import type { UniversityPerson4b96100BotId } from './universityPerson4b96100BotId';
 
 export interface UniversityPerson4b96100 {
@@ -17,6 +18,7 @@ export interface UniversityPerson4b96100 {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  identity?: EmojiIdentity4b96100;
   /** @nullable */
   photoUrl: string | null;
   /** @nullable */

@@ -199,6 +199,19 @@ export class RoomStore {
     this.broadcast(room);
   }
 
+  /** Remove a current university member by public participant ID after host kick. */
+  leaveParticipant(roomId: string, participantId: string): string | null {
+    const room = this.requireRoom(roomId);
+    for (const [sessionId, session] of room.sessions) {
+      if (session.participant.participantId !== participantId) continue;
+      room.sessions.delete(sessionId);
+      if (room.sessions.size === 0) room.emptySince = this.now();
+      this.broadcast(room);
+      return session.accountId ?? null;
+    }
+    return null;
+  }
+
   subscribe(roomId: string, listener: Listener): () => void {
     const room = this.requireRoom(roomId);
     if (room.listeners.size >= (room.community ? 2000 : 100)) {

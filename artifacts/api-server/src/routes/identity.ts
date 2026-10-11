@@ -11,6 +11,7 @@ import { roomStore, RoomError } from "../lib/room-store";
 import { getClerkProxyHost } from "../middlewares/clerkProxyMiddleware";
 import { communityMembership, accessFor, offerOverflow } from "../lib/community";
 import { giftNameColorsForAccounts } from "../lib/social/gift-name-color-data";
+import { universityAudioBeamStore } from "../lib/university-audio-beam";
 
 const router: IRouter = Router();
 export function accountId(req: Request): string {
@@ -64,6 +65,7 @@ router.post("/account/rooms/:roomId/join", async (req, res) => {
   const params = JoinAccountRoomParams.safeParse(req.params);
   if (!params.success) throw new RoomError(400, "Invalid university ID");
   if (!roomStore.isCommunity(params.data.roomId)) throw new RoomError(410, "This legacy Beam is archived. Choose a university from the Directory.");
+  universityAudioBeamStore.assertCanJoin(params.data.roomId, id);
   const profile = await requireCompletedProfile(id);
   const access = await accessFor(id);
   if (!roomStore.hasUniversitySeat(params.data.roomId, id, access.moderator)) {

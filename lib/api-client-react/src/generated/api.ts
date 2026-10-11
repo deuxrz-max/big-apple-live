@@ -74,6 +74,8 @@ import type {
   SocialRelationshipInput,
   SocialWallet,
   UniversityActionResult,
+  UniversityAudioActionInput,
+  UniversityAudioState,
   UniversityIgnoreInput,
   UniversitySession,
   UniversityWhisperInput
@@ -610,6 +612,414 @@ export function useGetUniversitySession<TData = Awaited<ReturnType<typeof getUni
 
 
 
+
+export const getGetUniversityAudioStateUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/account/rooms/${roomId}/audio`
+}
+
+/**
+ * @summary Read the four-slot audio beam state for an authenticated university member
+ */
+export const getUniversityAudioState = async (roomId: string, options?: Parameters<typeof customFetch>[1]): Promise<UniversityAudioState> => {
+
+  return customFetch<UniversityAudioState>(getGetUniversityAudioStateUrl(roomId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetUniversityAudioStateQueryKey = (roomId: string,) => {
+    return [
+    `/api/account/rooms/${roomId}/audio`
+    ] as const;
+    }
+
+
+export const getGetUniversityAudioStateQueryOptions = <TData = Awaited<ReturnType<typeof getUniversityAudioState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUniversityAudioState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUniversityAudioStateQueryKey(roomId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUniversityAudioState>>> = ({ signal }) => getUniversityAudioState(roomId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUniversityAudioState>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetUniversityAudioStateQueryResult = NonNullable<Awaited<ReturnType<typeof getUniversityAudioState>>>
+export type GetUniversityAudioStateQueryError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse>
+
+
+/**
+ * @summary Read the four-slot audio beam state for an authenticated university member
+ */
+
+export function useGetUniversityAudioState<TData = Awaited<ReturnType<typeof getUniversityAudioState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse>>(
+ roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUniversityAudioState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetUniversityAudioStateQueryOptions(roomId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPerformUniversityAudioActionUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/account/rooms/${roomId}/audio/actions`
+}
+
+/**
+ * @summary Join, leave, or control an audio-only university beam
+ */
+export const performUniversityAudioAction = async (roomId: string,
+    universityAudioActionInput: UniversityAudioActionInput, options?: Parameters<typeof customFetch>[1]): Promise<UniversityAudioState> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<UniversityAudioState>(getPerformUniversityAudioActionUrl(roomId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(universityAudioActionInput)
+  }
+);}
+
+
+
+
+
+export const getPerformUniversityAudioActionMutationKey = () => ['performUniversityAudioAction'] as const;
+
+export const getPerformUniversityAudioActionMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof performUniversityAudioAction>>, TError,PerformUniversityAudioActionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof performUniversityAudioAction>>, TError,PerformUniversityAudioActionMutationVariables, TContext> => {
+
+const mutationKey = getPerformUniversityAudioActionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof performUniversityAudioAction>>, PerformUniversityAudioActionMutationVariables> = (props) => {
+          const {roomId,data} = props ?? {};
+
+          return  performUniversityAudioAction(roomId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PerformUniversityAudioActionMutationResult = NonNullable<Awaited<ReturnType<typeof performUniversityAudioAction>>>
+    export type PerformUniversityAudioActionMutationBody = BodyType<UniversityAudioActionInput>
+    export type PerformUniversityAudioActionMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>
+    export type PerformUniversityAudioActionMutationVariables = {roomId: string;data: BodyType<UniversityAudioActionInput>}
+
+    /**
+ * @summary Join, leave, or control an audio-only university beam
+ */
+export const usePerformUniversityAudioAction = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof performUniversityAudioAction>>, TError,PerformUniversityAudioActionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof performUniversityAudioAction>>,
+        TError,
+        PerformUniversityAudioActionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPerformUniversityAudioActionMutationOptions(options));
+    }
+
+export const getStreamUniversityAudioEventsUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/account/rooms/${roomId}/audio/events`
+}
+
+/**
+ * @summary Listen for audio-only beam peers and moderation state
+ */
+export const streamUniversityAudioEvents = async (roomId: string, options?: Parameters<typeof customFetch>[1]): Promise<string> => {
+
+  return customFetch<string>(getStreamUniversityAudioEventsUrl(roomId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getStreamUniversityAudioEventsQueryKey = (roomId: string,) => {
+    return [
+    `/api/account/rooms/${roomId}/audio/events`
+    ] as const;
+    }
+
+
+export const getStreamUniversityAudioEventsQueryOptions = <TData = Awaited<ReturnType<typeof streamUniversityAudioEvents>>, TError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamUniversityAudioEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getStreamUniversityAudioEventsQueryKey(roomId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof streamUniversityAudioEvents>>> = ({ signal }) => streamUniversityAudioEvents(roomId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof streamUniversityAudioEvents>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type StreamUniversityAudioEventsQueryResult = NonNullable<Awaited<ReturnType<typeof streamUniversityAudioEvents>>>
+export type StreamUniversityAudioEventsQueryError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>
+
+
+/**
+ * @summary Listen for audio-only beam peers and moderation state
+ */
+
+export function useStreamUniversityAudioEvents<TData = Awaited<ReturnType<typeof streamUniversityAudioEvents>>, TError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>>(
+ roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamUniversityAudioEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getStreamUniversityAudioEventsQueryOptions(roomId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSendUniversityAudioSignalUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/account/rooms/${roomId}/audio/signals`
+}
+
+/**
+ * @summary Relay a peer-to-peer WebRTC offer or answer between current university beam participants
+ */
+export const sendUniversityAudioSignal = async (roomId: string,
+    audioSignalInput: AudioSignalInput, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<void>(getSendUniversityAudioSignalUrl(roomId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(audioSignalInput)
+  }
+);}
+
+
+
+
+
+export const getSendUniversityAudioSignalMutationKey = () => ['sendUniversityAudioSignal'] as const;
+
+export const getSendUniversityAudioSignalMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendUniversityAudioSignal>>, TError,SendUniversityAudioSignalMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendUniversityAudioSignal>>, TError,SendUniversityAudioSignalMutationVariables, TContext> => {
+
+const mutationKey = getSendUniversityAudioSignalMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendUniversityAudioSignal>>, SendUniversityAudioSignalMutationVariables> = (props) => {
+          const {roomId,data} = props ?? {};
+
+          return  sendUniversityAudioSignal(roomId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendUniversityAudioSignalMutationResult = NonNullable<Awaited<ReturnType<typeof sendUniversityAudioSignal>>>
+    export type SendUniversityAudioSignalMutationBody = BodyType<AudioSignalInput>
+    export type SendUniversityAudioSignalMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
+    export type SendUniversityAudioSignalMutationVariables = {roomId: string;data: BodyType<AudioSignalInput>}
+
+    /**
+ * @summary Relay a peer-to-peer WebRTC offer or answer between current university beam participants
+ */
+export const useSendUniversityAudioSignal = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendUniversityAudioSignal>>, TError,SendUniversityAudioSignalMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendUniversityAudioSignal>>,
+        TError,
+        SendUniversityAudioSignalMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSendUniversityAudioSignalMutationOptions(options));
+    }
+
+export const getDisconnectUniversityAudioUrl = (roomId: string,
+    connectionId: string,) => {
+
+
+
+
+  return `/api/account/rooms/${roomId}/audio/connections/${connectionId}`
+}
+
+/**
+ * @summary Disconnect this account's peer audio connection without leaving chat
+ */
+export const disconnectUniversityAudio = async (roomId: string,
+    connectionId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDisconnectUniversityAudioUrl(roomId,connectionId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDisconnectUniversityAudioMutationKey = () => ['disconnectUniversityAudio'] as const;
+
+export const getDisconnectUniversityAudioMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disconnectUniversityAudio>>, TError,DisconnectUniversityAudioMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof disconnectUniversityAudio>>, TError,DisconnectUniversityAudioMutationVariables, TContext> => {
+
+const mutationKey = getDisconnectUniversityAudioMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof disconnectUniversityAudio>>, DisconnectUniversityAudioMutationVariables> = (props) => {
+          const {roomId,connectionId} = props ?? {};
+
+          return  disconnectUniversityAudio(roomId,connectionId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DisconnectUniversityAudioMutationResult = NonNullable<Awaited<ReturnType<typeof disconnectUniversityAudio>>>
+
+    export type DisconnectUniversityAudioMutationError = ErrorType<SessionUnauthorizedResponse>
+    export type DisconnectUniversityAudioMutationVariables = {roomId: string;connectionId: string}
+
+    /**
+ * @summary Disconnect this account's peer audio connection without leaving chat
+ */
+export const useDisconnectUniversityAudio = <TError = ErrorType<SessionUnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disconnectUniversityAudio>>, TError,DisconnectUniversityAudioMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof disconnectUniversityAudio>>,
+        TError,
+        DisconnectUniversityAudioMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDisconnectUniversityAudioMutationOptions(options));
+    }
 
 export const getSendUniversityWhisperUrl = (roomId: string,) => {
 

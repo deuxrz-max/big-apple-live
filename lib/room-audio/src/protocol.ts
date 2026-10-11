@@ -3,12 +3,14 @@ export type { AudioSignalInput, AudioDescription } from "@workspace/api-zod";
 export interface AudioPeer {
   participantId: string;
   connectionId: string;
+  role?: "listener" | "speaker";
 }
 
 export type AudioEvent =
   | { type: "audio.ready"; data: { self: AudioPeer; peers: AudioPeer[] } }
   | { type: "audio.peers"; data: { peers: AudioPeer[] } }
   | { type: "audio.microphones"; data: { participants: { participantId: string; micEnabled: boolean }[] } }
+  | { type: "audio.beam"; data: import("@workspace/api-zod").UniversityAudioState }
   | {
       type: "audio.signal";
       data: {

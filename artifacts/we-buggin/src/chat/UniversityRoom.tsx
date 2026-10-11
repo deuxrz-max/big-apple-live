@@ -9,9 +9,10 @@ import {
 } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
 import { errMessage, errStatus } from '@/lib/errors';
+import { emojiImageUrl } from '@/lib/identity';
 import { BadgeMark } from '@/social/common';
 import { useTextRoom } from './useTextRoom';
-import { PromoBackground } from './PromoBackground';
+import { useUniversityAudioBeam } from './useUniversityAudioBeam';
 import { BotShield } from './BotShield';
 import { GiftBag, GiftControl } from '@/gifts';
 import { useRoomGifts } from '@/gifts/useRoomGifts';
@@ -27,14 +28,12 @@ type Target = { username: string; displayName: string; displayNameColor?: string
 type Item = { kind: 'room'; at: number; id: string; m: ChatMessage } | { kind: 'gift'; at: number; id: string; gift: RoomGiftEvent } | { kind: 'whisper'; at: number; id: string; w: { id: string; username: string; displayName: string; displayNameColor?: string; outgoing: boolean; body: string } };
 
 export function TextChatRoom({ roomId, userId }: { roomId: string; userId: string }) {
-  const soundScope = `${roomId}:${userId}`;
-  const [sound, setSound] = useState({ scope: soundScope, on: false });
-  const soundOn = sound.scope === soundScope && sound.on;
-  const [backgroundUnavailable, setBackgroundUnavailable] = useState(false);
   const qc = useQueryClient();
   const [, nav] = useLocation();
   const r = useTextRoom(roomId, userId);
   const sessionId = r.creds?.participantSessionId ?? '';
+  const participantId = r.creds?.participantId ?? '';
+  const audioBeam = useUniversityAudioBeam(roomId, sessionId, participantId);
   const sessionKey = [...getGetUniversitySessionQueryKey(roomId), 'user', userId] as const;
   const headers = { 'X-Room-Session': sessionId };
   const uni = useGetUniversitySession(roomId, {
@@ -75,7 +74,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
 
   const session = uni.data;
   useEffect(() => {
-    setSound({ scope: soundScope, on: false });
     setText(''); setWhisperTo(null); setMenu(null); setDrawer(false); setRulesOpen(false);
     setGiftBag(null);
     setIgnored(new Set()); setSendErr(null); setNote(null);
@@ -127,6 +125,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const giftRecipients = people.filter(person => !person.self && !person.botId)
     .map(({ username, displayName, displayNameColor }) => ({ username, displayName, displayNameColor }));
   const me = people.find((p) => p.self);
+  const beamSlots = [...audioBeam.beam.slots].sort((a, b) => a.slotNumber - b.slotNumber);
   const isSelf = (username: string, authorId?: string) => (!!authorId && authorId === r.creds?.participantId) || me?.username === username;
   const nameOf = (username: string, fallback?: string) => people.find((p) => p.username === username)?.displayName ?? fallback ?? username;
   const nameColorOf = (username: string, fallback?: string) => people.find((p) => p.username === username)?.displayNameColor ?? fallback ?? '#FFFFFF';
@@ -234,7 +233,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
 
   return (
     <div className="ch ch-university ur">
-      <div className="ch-atm"><PromoBackground key={`${roomId}:${userId}`} soundOn={soundOn} onUnavailableChange={setBackgroundUnavailable} /></div>
       <div className="ch-in ur-in">
         <div className="ur-head">
           <button type="button" ref={peopleBtn} className="bm-btn bm-btn-sm ur-people-btn" aria-haspopup="dialog" aria-expanded={drawer} onClick={() => setDrawer(true)} data-testid="button-people">People · {people.length}</button>
@@ -252,12 +250,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
         {r.overflow && <p><Link className="bm-btn bm-btn-primary" href={`/rooms/${encodeURIComponent(r.overflow.roomId)}`}>Enter {r.overflow.label}</Link></p>}
         <div className="ur-sound-row">
           <GiftControl onClick={() => { setMenu(null); setDrawer(false); setGiftBag({ recipient: null }); }} />
-          <button type="button" className="bm-btn bm-btn-sm" aria-pressed={soundOn}
-            aria-label={soundOn ? 'Turn background sound off' : 'Turn background sound on'}
-            disabled={backgroundUnavailable} data-testid="button-background-sound"
-            onClick={() => setSound({ scope: soundScope, on: !soundOn })}>
-            {backgroundUnavailable ? 'Sound unavailable' : soundOn ? 'Sound on' : 'Sound off'}
-          </button>
         </div>
         <div className="ur-body">
           <aside ref={drawerBox} className={`ur-side${drawer ? ' is-open' : ''}`} role={drawer ? 'dialog' : undefined} aria-modal={drawer ? true : undefined} aria-labelledby="ur-people-title">
@@ -265,6 +257,115 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           </aside>
           {drawer && <div className="ur-backdrop" onClick={closeDrawer} aria-hidden="true" />}
           <div className="ch-room">
+            <section className="ur-beam" aria-label="Audio speaker beam">
+              <div className="ur-beam-head">
+                <div>
+                  <h2>Room audio</h2>
+                  <p>{audioBeam.clientRole === 'speaker' ? 'You’re on the beam' : 'Listening is always open'}</p>
+                </div>
+                <span className={`ur-audio-status ur-audio-${audioBeam.audioState}`} role="status">
+                  <span className="ur-status-dot" aria-hidden="true" />
+                  {audioBeam.audioState === 'ready' || audioBeam.audioState === 'connected'
+                    ? 'Audio ready'
+                    : audioBeam.audioState === 'connecting' || audioBeam.audioState === 'reconnecting'
+                      ? 'Connecting'
+                      : audioBeam.audioState === 'error' ? 'Audio issue' : 'Listeners welcome'}
+                </span>
+              </div>
+              {audioBeam.playbackBlocked && (
+                <button type="button" className="ur-resume-audio" onClick={() => void audioBeam.resumePlayback()}>
+                  Tap to hear
+                </button>
+              )}
+              {audioBeam.error && <p className="ur-beam-error" role="alert">{audioBeam.error}</p>}
+              <div className="ur-slots">
+                {beamSlots.map((slot) => {
+                  const person = slot.participantId
+                    ? people.find((p) => p.participantId === slot.participantId)
+                    : undefined;
+                  const mine = slot.participantId === participantId;
+                  const joinAvailable = !slot.participantId && !!sessionId && !!participantId && !audioBeam.ownSlot;
+                  const isSpeaking = !!slot.participantId && audioBeam.speaking.has(slot.participantId);
+                  return (
+                    <article className={`ur-slot${isSpeaking ? ' is-speaking' : ''}${slot.participantId ? ' is-occupied' : ''}`}
+                      key={slot.slotNumber} aria-label={`Speaker slot ${slot.slotNumber}${slot.participantId ? `, ${person?.displayName ?? 'occupied'}` : ', empty'}`}>
+                      <div className="ur-slot-identity">
+                        {person?.identity
+                          ? <img src={emojiImageUrl(person.identity.emojiId, person.identity.color)}
+                              width={34} height={34} className="ur-slot-avatar ur-slot-art" alt="" aria-hidden="true" />
+                          : <span className="ur-slot-avatar ur-slot-initial" aria-hidden="true">{person?.displayName.slice(0, 1) ?? String(slot.slotNumber)}</span>}
+                        <div className="ur-slot-copy">
+                          {person ? (
+                            <>
+                              <span className="ur-slot-name" style={{ color: person.displayNameColor ?? '#F4F1F8' }}>{person.displayName}</span>
+                              <span className="ur-slot-marks">
+                                <BadgeMark id={person.badgeId ?? null}
+                                  label={person.badgeId ? `${person.badgeId === 'night-owl' ? 'Night Owl' : person.badgeId.replaceAll('-', ' ')} badge` : undefined}
+                                  size={15} compact />
+                                {person.moderator && <span className="ur-badge">Moderator</span>}
+                                {mine && <span className="ur-slot-you">You</span>}
+                              </span>
+                            </>
+                          ) : slot.participantId ? (
+                            <>
+                              <span className="ur-slot-name">Speaker details loading</span>
+                              <span className="ur-slot-caption">Syncing room roster</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="ur-slot-name ur-empty-name">Empty</span>
+                              <span className="ur-slot-caption">Open speaker spot</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      {person ? (
+                        <div className="ur-slot-actions">
+                          {mine ? (
+                            <>
+                              <span className={`ur-mic-state${slot.micEnabled && !slot.mutedByHost ? ' is-live' : ''}`}>
+                                {slot.mutedByHost ? 'Muted by host' : slot.micEnabled ? 'Mic on' : 'Mic off'}
+                              </span>
+                              <button type="button" className="ur-slot-action"
+                                disabled={audioBeam.busy || slot.mutedByHost}
+                                aria-pressed={slot.micEnabled && !slot.mutedByHost}
+                                onClick={() => void audioBeam.setOwnMic(!slot.micEnabled || slot.mutedByHost)}>
+                                {slot.mutedByHost ? 'Host muted' : slot.micEnabled ? 'Mute mic' : 'Turn mic on'}
+                              </button>
+                              <button type="button" className="ur-slot-action ur-slot-leave"
+                                disabled={audioBeam.busy} onClick={() => void audioBeam.leaveSlot()}>Leave</button>
+                            </>
+                          ) : audioBeam.isHost ? (
+                            <>
+                              <span className={`ur-mic-state${slot.micEnabled && !slot.mutedByHost ? ' is-live' : ''}`}>
+                                {slot.mutedByHost ? 'Muted by host' : slot.micEnabled ? 'Mic on' : 'Mic off'}
+                              </span>
+                              <button type="button" className="ur-slot-action" disabled={audioBeam.busy}
+                                onClick={() => void audioBeam.hostMute(slot.participantId!, !slot.mutedByHost)}>
+                                {slot.mutedByHost ? 'Lift mute' : 'Mute'}
+                              </button>
+                              <button type="button" className="ur-slot-action ur-slot-leave" disabled={audioBeam.busy}
+                                onClick={() => void audioBeam.kickSpeaker(slot.participantId!)}>Remove</button>
+                            </>
+                          ) : (
+                            <span className={`ur-mic-state${slot.micEnabled && !slot.mutedByHost ? ' is-live' : ''}`}>
+                              {slot.mutedByHost ? 'Muted by host' : slot.micEnabled ? 'Speaking spot live' : 'Mic off'}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        joinAvailable
+                          ? <button type="button" className="ur-slot-join" disabled={audioBeam.busy}
+                              onClick={() => void audioBeam.joinSlot()}>
+                              {audioBeam.permissionPending ? 'Requesting mic…' : 'Join'}
+                            </button>
+                          : <span className="ur-slot-caption">{slot.participantId ? 'Syncing room roster' : audioBeam.ownSlot ? 'You’re already on the beam' : 'Open spot'}</span>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
             <div className="ch-msgs" ref={box} role="log" aria-live="polite" aria-label="University messages" tabIndex={0} onScroll={(e) => { const el = e.currentTarget; near.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }} data-testid="list-messages">
               {r.hasOlder && <button type="button" className="bm-btn bm-btn-sm" disabled={r.loadingOlder}
                 onClick={async () => {

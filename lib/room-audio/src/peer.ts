@@ -2,7 +2,7 @@ import { RoomAudioError, type AudioPeer, type AudioDescription } from "./protoco
 
 type PeerOptions = {
   remote: AudioPeer;
-  stream: MediaStream;
+  stream?: MediaStream;
   configuration: RTCConfiguration;
   offerer: boolean;
   send(description: AudioDescription): Promise<void>;
@@ -46,7 +46,19 @@ export class AudioConnection {
       }
       options.changed();
     };
-    for (const track of options.stream.getAudioTracks()) this.pc.addTrack(track, options.stream);
+    if (options.stream) {
+      for (const track of options.stream.getAudioTracks()) {
+        const sender = this.pc.addTrack(track, options.stream);
+        try {
+          const parameters = sender.getParameters();
+          if (!parameters.encodings.length) parameters.encodings = [{}];
+          parameters.encodings[0]!.maxBitrate = 32_000;
+          void sender.setParameters(parameters).catch(() => {});
+        } catch { /* some browsers do not expose sender encoding controls */ }
+      }
+    } else {
+      this.pc.addTransceiver("audio", { direction: "recvonly" });
+    }
     this.negotiationTimer = setTimeout(() => {
       if (!this.closed && this.pc.connectionState !== "connected") {
         options.failed(new RoomAudioError("peer-connection-failed", "Audio negotiation timed out; reconnecting"));

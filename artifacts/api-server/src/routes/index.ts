@@ -9,6 +9,7 @@ import socialRouter from "./social";
 import communityRouter from "./community";
 import profilePhotosRouter from "./profile-photos";
 import photoReviewRouter from "./photo-review";
+import universityAudioRouter from "./university-audio";
 import { accountId } from "./identity";
 import { requireAdult } from "../lib/community";
 import { requireCompletedProfile } from "../lib/account-profiles";
@@ -29,6 +30,7 @@ router.use(identityRouter);
 router.use(socialRouter);
 router.use(chatRouter);
 router.use(universityChatRouter);
+router.use(universityAudioRouter);
 // Leave shared audio modules in place for rollback, but never mount signaling.
 router.use((req, res, next) => {
   if (req.path.includes("/audio") || req.path.endsWith("/microphone")

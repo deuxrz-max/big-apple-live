@@ -95,6 +95,123 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/UniversitySession" }
+  /account/rooms/{roomId}/audio:
+    get:
+      operationId: getUniversityAudioState
+      tags: [audio]
+      summary: Read the four-slot audio beam state for an authenticated university member
+      security:
+        - AccountSession: []
+          AccountRoomSession: []
+      parameters:
+        - { $ref: "#/components/parameters/RoomId" }
+        - { $ref: "#/components/parameters/RoomSessionHeader" }
+      responses:
+        "200":
+          description: Current speaker slots and beam host; no audio is returned by this endpoint
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UniversityAudioState" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "404": { $ref: "#/components/responses/InvalidInput" }
+  /account/rooms/{roomId}/audio/actions:
+    post:
+      operationId: performUniversityAudioAction
+      tags: [audio]
+      summary: Join, leave, or control an audio-only university beam
+      security:
+        - AccountSession: []
+          AccountRoomSession: []
+      parameters:
+        - { $ref: "#/components/parameters/RoomId" }
+        - { $ref: "#/components/parameters/RoomSessionHeader" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UniversityAudioActionInput" }
+      responses:
+        "200":
+          description: Updated beam state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UniversityAudioState" }
+        "400": { $ref: "#/components/responses/InvalidInput" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "403":
+          description: Only a current speaker may unmute themselves, and only the beam host may mute or remove another speaker
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "409":
+          description: All four speaker slots are occupied, or the account was recently removed from this beam
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+  /account/rooms/{roomId}/audio/events:
+    get:
+      operationId: streamUniversityAudioEvents
+      tags: [audio]
+      summary: Listen for audio-only beam peers and moderation state
+      security:
+        - AccountSession: []
+          AccountRoomSession: []
+      parameters:
+        - { $ref: "#/components/parameters/RoomId" }
+        - { $ref: "#/components/parameters/RoomSessionHeader" }
+      responses:
+        "200":
+          description: Server-sent signaling events; media itself travels peer-to-peer
+          content:
+            text/event-stream:
+              schema: { type: string }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "403":
+          description: The account is temporarily blocked from this beam after being removed by its host
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+  /account/rooms/{roomId}/audio/signals:
+    post:
+      operationId: sendUniversityAudioSignal
+      tags: [audio]
+      summary: Relay a peer-to-peer WebRTC offer or answer between current university beam participants
+      security:
+        - AccountSession: []
+          AccountRoomSession: []
+      parameters:
+        - { $ref: "#/components/parameters/RoomId" }
+        - { $ref: "#/components/parameters/RoomSessionHeader" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AudioSignalInput" }
+      responses:
+        "204": { description: Signaling description delivered to the current peer }
+        "400": { $ref: "#/components/responses/InvalidInput" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "404": { description: Target is not a connected audio peer }
+        "409": { description: Stale connection or invalid negotiation direction }
+        "429": { description: Signaling rate limit exceeded }
+  /account/rooms/{roomId}/audio/connections/{connectionId}:
+    delete:
+      operationId: disconnectUniversityAudio
+      tags: [audio]
+      summary: Disconnect this account's peer audio connection without leaving chat
+      security:
+        - AccountSession: []
+          AccountRoomSession: []
+      parameters:
+        - { $ref: "#/components/parameters/RoomId" }
+        - name: connectionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - { $ref: "#/components/parameters/RoomSessionHeader" }
+      responses:
+        "204": { description: Connection closed or already gone }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
   /account/rooms/{roomId}/whispers:
     post:
       operationId: sendUniversityWhisper
@@ -910,6 +1027,7 @@ components:
         username: { type: string }
         displayName: { type: string }
         displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
+        identity: { $ref: "#/components/schemas/EmojiIdentity" }
         photoUrl: { type: [string, "null"] }
         photoStatus: { type: [string, "null"] }
         self: { type: boolean }
@@ -1166,6 +1284,34 @@ components:
         description:
           $ref: "#/components/schemas/AudioDescription"
       required: [sourceConnectionId, targetParticipantId, targetConnectionId, description]
+    UniversityAudioActionInput:
+      type: object
+      properties:
+        action:
+          type: string
+          enum: [join-slot, leave-slot, mute-self, unmute-self, host-mute, host-unmute, kick]
+        targetParticipantId: { type: string, format: uuid }
+      required: [action]
+    UniversityAudioSlot:
+      type: object
+      properties:
+        slotNumber: { type: integer, minimum: 1, maximum: 4 }
+        participantId: { type: [string, "null"], format: uuid }
+        micEnabled: { type: boolean }
+        mutedByHost: { type: boolean }
+      required: [slotNumber, participantId, micEnabled, mutedByHost]
+    UniversityAudioState:
+      type: object
+      properties:
+        roomId: { type: string }
+        beamActive: { type: boolean }
+        hostParticipantId: { type: [string, "null"], format: uuid }
+        slots:
+          type: array
+          minItems: 4
+          maxItems: 4
+          items: { $ref: "#/components/schemas/UniversityAudioSlot" }
+      required: [roomId, beamActive, hostParticipantId, slots]
     HealthStatus:
       type: object
       properties:

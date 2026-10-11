@@ -175,6 +175,61 @@ export const UniversityPersonBotId = {
   zombie: 'zombie',
 } as const;
 
+export type EmojiIdentityGender = typeof EmojiIdentityGender[keyof typeof EmojiIdentityGender];
+
+
+export const EmojiIdentityGender = {
+  Male: 'Male',
+  Female: 'Female',
+} as const;
+
+/**
+ * @nullable
+ */
+export type EmojiIdentityCurrentMood = typeof EmojiIdentityCurrentMood[keyof typeof EmojiIdentityCurrentMood] | null;
+
+
+export const EmojiIdentityCurrentMood = {
+  laughing: 'laughing',
+  tears_of_joy: 'tears_of_joy',
+  crying: 'crying',
+  rofl: 'rofl',
+  heart_eyes: 'heart_eyes',
+  affectionate: 'affectionate',
+  melting: 'melting',
+  grateful: 'grateful',
+  thinking: 'thinking',
+  winking: 'winking',
+  neutral: 'neutral',
+  smiling_eyes: 'smiling_eyes',
+  delighted: 'delighted',
+  grinning: 'grinning',
+  smiling: 'smiling',
+  kissing: 'kissing',
+  playful_wink: 'playful_wink',
+  skeptical: 'skeptical',
+} as const;
+
+export interface EmojiIdentity {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  emojiId: string;
+  gender: EmojiIdentityGender;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  color: string;
+  /** @pattern ^#[0-9a-fA-F]{6}$ */
+  hairColor: string;
+  /**
+     * Omitted preserves old artwork; null clears it on explicit manual identity edits
+     * @nullable
+     */
+  portraitId?: string | null;
+  /** @nullable */
+  currentMood?: EmojiIdentityCurrentMood;
+}
+
 export interface UniversityPerson {
   /** @nullable */
   botId?: UniversityPersonBotId;
@@ -185,6 +240,7 @@ export interface UniversityPerson {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  identity?: EmojiIdentity;
   /** @nullable */
   photoUrl: string | null;
   /** @nullable */
@@ -399,61 +455,6 @@ export const ChatMessageKind = {
   reaction: 'reaction',
 } as const;
 
-export type EmojiIdentityGender = typeof EmojiIdentityGender[keyof typeof EmojiIdentityGender];
-
-
-export const EmojiIdentityGender = {
-  Male: 'Male',
-  Female: 'Female',
-} as const;
-
-/**
- * @nullable
- */
-export type EmojiIdentityCurrentMood = typeof EmojiIdentityCurrentMood[keyof typeof EmojiIdentityCurrentMood] | null;
-
-
-export const EmojiIdentityCurrentMood = {
-  laughing: 'laughing',
-  tears_of_joy: 'tears_of_joy',
-  crying: 'crying',
-  rofl: 'rofl',
-  heart_eyes: 'heart_eyes',
-  affectionate: 'affectionate',
-  melting: 'melting',
-  grateful: 'grateful',
-  thinking: 'thinking',
-  winking: 'winking',
-  neutral: 'neutral',
-  smiling_eyes: 'smiling_eyes',
-  delighted: 'delighted',
-  grinning: 'grinning',
-  smiling: 'smiling',
-  kissing: 'kissing',
-  playful_wink: 'playful_wink',
-  skeptical: 'skeptical',
-} as const;
-
-export interface EmojiIdentity {
-  /**
-     * @minLength 1
-     * @maxLength 100
-     */
-  emojiId: string;
-  gender: EmojiIdentityGender;
-  /** @pattern ^#[0-9a-fA-F]{6}$ */
-  color: string;
-  /** @pattern ^#[0-9a-fA-F]{6}$ */
-  hairColor: string;
-  /**
-     * Omitted preserves old artwork; null clears it on explicit manual identity edits
-     * @nullable
-     */
-  portraitId?: string | null;
-  /** @nullable */
-  currentMood?: EmojiIdentityCurrentMood;
-}
-
 export interface ChatMessage {
   /** @nullable */
   botId?: ChatMessageBotId;
@@ -583,6 +584,48 @@ export interface AudioSignalInput {
   description: AudioDescription;
 }
 
+export type UniversityAudioActionInputAction = typeof UniversityAudioActionInputAction[keyof typeof UniversityAudioActionInputAction];
+
+
+export const UniversityAudioActionInputAction = {
+  'join-slot': 'join-slot',
+  'leave-slot': 'leave-slot',
+  'mute-self': 'mute-self',
+  'unmute-self': 'unmute-self',
+  'host-mute': 'host-mute',
+  'host-unmute': 'host-unmute',
+  kick: 'kick',
+} as const;
+
+export interface UniversityAudioActionInput {
+  action: UniversityAudioActionInputAction;
+  targetParticipantId?: string;
+}
+
+export interface UniversityAudioSlot {
+  /**
+     * @minimum 1
+     * @maximum 4
+     */
+  slotNumber: number;
+  /** @nullable */
+  participantId: string | null;
+  micEnabled: boolean;
+  mutedByHost: boolean;
+}
+
+export interface UniversityAudioState {
+  roomId: string;
+  beamActive: boolean;
+  /** @nullable */
+  hostParticipantId: string | null;
+  /**
+     * @minItems 4
+     * @maxItems 4
+     */
+  slots: UniversityAudioSlot[];
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -692,6 +735,7 @@ export interface UniversityPerson4b96100 {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  identity?: EmojiIdentity4b96100;
   /** @nullable */
   photoUrl: string | null;
   /** @nullable */
@@ -1018,6 +1062,48 @@ export interface AudioSignalInput4b96100 {
   targetParticipantId: string;
   targetConnectionId: string;
   description: AudioDescription4b96100;
+}
+
+export type UniversityAudioActionInput4b96100Action = typeof UniversityAudioActionInput4b96100Action[keyof typeof UniversityAudioActionInput4b96100Action];
+
+
+export const UniversityAudioActionInput4b96100Action = {
+  'join-slot': 'join-slot',
+  'leave-slot': 'leave-slot',
+  'mute-self': 'mute-self',
+  'unmute-self': 'unmute-self',
+  'host-mute': 'host-mute',
+  'host-unmute': 'host-unmute',
+  kick: 'kick',
+} as const;
+
+export interface UniversityAudioActionInput4b96100 {
+  action: UniversityAudioActionInput4b96100Action;
+  targetParticipantId?: string;
+}
+
+export interface UniversityAudioSlot4b96100 {
+  /**
+     * @minimum 1
+     * @maximum 4
+     */
+  slotNumber: number;
+  /** @nullable */
+  participantId: string | null;
+  micEnabled: boolean;
+  mutedByHost: boolean;
+}
+
+export interface UniversityAudioState4b96100 {
+  roomId: string;
+  beamActive: boolean;
+  /** @nullable */
+  hostParticipantId: string | null;
+  /**
+     * @minItems 4
+     * @maxItems 4
+     */
+  slots: UniversityAudioSlot4b96100[];
 }
 
 export interface HealthStatus4b96100 {
