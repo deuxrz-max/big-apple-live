@@ -121,6 +121,41 @@ test("a disconnected speaker releases its spot and listeners never negotiate a s
   assert.ok(listenerSink.events.some(event => event.type === "audio.peers" && event.data.peers.length === 0));
 });
 
+test("mic permission handoff keeps the slot and lets the speaker-enable action succeed", () => {
+  const rooms = new RoomStore();
+  createRoom(rooms, "LIVEME", "history-live");
+  const beams = new UniversityAudioBeamStore(rooms);
+  const signaling = new UniversityAudioSignaling(rooms, beams);
+  const member = addMember(rooms, "LIVEME", "member");
+
+  const listenerSink = sink();
+  const disconnectListener = signaling.connect(
+    "LIVEME", member.participantSessionId, "member", listenerSink,
+  );
+  assert.equal(listenerSink.self().role, "listener");
+
+  beams.joinSlot("LIVEME", member.participantId, "member");
+  assert.equal(beams.getState("LIVEME").slots.some(slot => slot.participantId === member.participantId), true);
+  disconnectListener();
+
+  assert.equal(
+    beams.getState("LIVEME").slots.some(slot => slot.participantId === member.participantId),
+    true,
+    "closing the pre-permission listener connection must not release the reserved speaker slot",
+  );
+
+  const speakerSink = sink();
+  signaling.connect("LIVEME", member.participantSessionId, "member", speakerSink);
+  assert.equal(speakerSink.self().role, "speaker");
+  assert.equal(beams.getState("LIVEME").slots.some(slot => slot.participantId === member.participantId), true);
+  const enabled = beams.setOwnMicrophone("LIVEME", member.participantId, true);
+  assert.equal(
+    enabled.slots.find(slot => slot.participantId === member.participantId)?.micEnabled,
+    true,
+    "the post-permission unmute action must still find the reserved speaker slot",
+  );
+});
+
 test("leaving the university frees the active speaker slot", () => {
   const rooms = new RoomStore();
   createRoom(rooms, "LIVEME", "history-live");

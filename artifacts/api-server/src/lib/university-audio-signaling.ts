@@ -127,8 +127,10 @@ export class UniversityAudioSignaling {
     for (const connection of group.connections.values()) {
       connection.sink.send({ type: "audio.beam", data: state });
       connection.sink.send({ type: "audio.microphones", data: { participants: this.microphones(state) } });
-      const role = speakerIds.has(connection.participantId) ? "speaker" : "listener";
-      connection.role = role;
+      // Role belongs to this signaling connection's handshake. A listener may
+      // have reserved a slot but still be answering the browser mic prompt; do
+      // not promote that old connection or its normal disconnect would release
+      // the reservation before the speaker connection is established.
     }
     if (changed) this.broadcastPeers(group);
   }

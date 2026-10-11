@@ -135,18 +135,16 @@ export function useUniversityAudioBeam(
     actionRef.current = true;
     setBusy(true); setError(null); setPermissionPending(true);
     let stream: MediaStream | undefined;
+    let ownsReservation = false;
+    let speakerClientStarted = false;
     try {
       const reserved = await action({ action: "join-slot" });
-      try {
-        if (!navigator.mediaDevices?.getUserMedia) throw new RoomAudioError("microphone-unavailable", "Microphone access is not available in this browser.");
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-          video: false,
-        });
-      } catch (failure) {
-        await action({ action: "leave-slot" });
-        throw failure;
-      }
+      ownsReservation = true;
+      if (!navigator.mediaDevices?.getUserMedia) throw new RoomAudioError("microphone-unavailable", "Microphone access is not available in this browser.");
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        video: false,
+      });
       for (const track of stream.getAudioTracks()) track.enabled = false;
       const current = clientRef.current;
       clientRef.current = null;
@@ -154,13 +152,29 @@ export function useUniversityAudioBeam(
       microphoneRef.current = stream;
       applyBeam(reserved);
       await startClient("speaker", stream);
+      speakerClientStarted = true;
+      // Joining is the user's explicit consent; after the browser grants mic
+      // access, start sending without requiring a second, easy-to-miss tap.
+      const enabled = await action({ action: "unmute-self" });
+      const ownMicEnabled = enabled.slots.some(slot =>
+        slot.participantId === participantId && slot.micEnabled && !slot.mutedByHost);
+      for (const track of stream.getAudioTracks()) track.enabled = ownMicEnabled;
       setError(null);
     } catch (failure) {
+      if (speakerClientStarted && clientRef.current) {
+        const failedClient = clientRef.current;
+        clientRef.current = null;
+        try { await failedClient.stop(); } catch { /* continue to release the failed reservation */ }
+      }
       stream?.getTracks().forEach(track => track.stop());
       microphoneRef.current = null;
+      roleRef.current = "listener";
+      setClientRole("listener");
+      if (ownsReservation) {
+        try { await action({ action: "leave-slot" }); } catch { /* the connection failure may already have cleared it */ }
+      }
       setError(failure instanceof Error ? failure.message : "Could not join a speaker slot.");
-      try { await action({ action: "leave-slot" }); } catch { /* a failed reservation is already clear */ }
-      if (activeRef.current) {
+      if (activeRef.current && !clientRef.current) {
         try { await startClient("listener"); } catch { /* the visible connection state reports this */ }
       }
     } finally {
