@@ -1420,4 +1420,3 @@ export type GetRoomGiftEvents200 = {
 export type GetSocialConversationParams = {
 cursor?: string;
 };
-

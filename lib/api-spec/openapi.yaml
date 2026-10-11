@@ -1391,4 +1391,3 @@ components:
         error:
           type: string
       required: [error]
-
