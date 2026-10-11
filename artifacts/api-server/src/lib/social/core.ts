@@ -5,6 +5,7 @@ import { publicProfile } from "../account-profiles";
 import { DAILY_REWARD } from "./catalog";
 import { visibleProfilePhotos } from "../photo-visibility";
 import { TIMED_BADGES } from './marathon-policy';
+import { hasDevelopmentUnlimitedCredits } from "./credits-policy";
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type ProfileRow = typeof accountProfiles.$inferSelect;
@@ -95,11 +96,12 @@ export async function person(viewer: string, profile: ProfileRow, settings?: Set
     } : {}),
   };
 }
-export async function wallet(id: string, tx: Tx | typeof db = db) {
+export async function wallet(id: string, tx: Tx | typeof db = db, username?: string) {
   const [row] = await tx.select().from(socialWallets).where(eq(socialWallets.accountId, id));
   if (!row) throw new RoomError(409, "Open Rewards to initialize your wallet");
   return { balance: row.balance, earned: row.earned, received: row.received, sent: row.sent,
-    canClaimDaily: row.lastClaimDay !== new Date().toISOString().slice(0, 10), dailyReward: DAILY_REWARD };
+    canClaimDaily: row.lastClaimDay !== new Date().toISOString().slice(0, 10), dailyReward: DAILY_REWARD,
+    unlimited: hasDevelopmentUnlimitedCredits(username) };
 }
 export async function replay(tx: Tx, id: string, key: string, ref: string) {
   const [row] = await tx.select().from(socialLedger).where(and(eq(socialLedger.accountId, id), eq(socialLedger.requestKey, key)));

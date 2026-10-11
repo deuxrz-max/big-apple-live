@@ -444,7 +444,8 @@ export const GetSocialMeResponse = zod.object({
   "received": zod.number().int(),
   "sent": zod.number().int(),
   "canClaimDaily": zod.boolean(),
-  "dailyReward": zod.number().int()
+  "dailyReward": zod.number().int(),
+  "unlimited": zod.boolean().describe('True only for the development-preview owner account; does not alter the stored wallet balance.')
 }),
   "inventory": zod.array(zod.string()),
   "products": zod.array(zod.object({
@@ -741,7 +742,8 @@ export const ClaimSocialDailyRewardResponse = zod.object({
   "received": zod.number().int(),
   "sent": zod.number().int(),
   "canClaimDaily": zod.boolean(),
-  "dailyReward": zod.number().int()
+  "dailyReward": zod.number().int(),
+  "unlimited": zod.boolean().describe('True only for the development-preview owner account; does not alter the stored wallet balance.')
 })
 
 
@@ -758,7 +760,8 @@ export const SendSocialGiftResponse = zod.object({
   "received": zod.number().int(),
   "sent": zod.number().int(),
   "canClaimDaily": zod.boolean(),
-  "dailyReward": zod.number().int()
+  "dailyReward": zod.number().int(),
+  "unlimited": zod.boolean().describe('True only for the development-preview owner account; does not alter the stored wallet balance.')
 })
 
 
@@ -790,7 +793,8 @@ export const PurchaseSocialProductResponse = zod.object({
   "received": zod.number().int(),
   "sent": zod.number().int(),
   "canClaimDaily": zod.boolean(),
-  "dailyReward": zod.number().int()
+  "dailyReward": zod.number().int(),
+  "unlimited": zod.boolean().describe('True only for the development-preview owner account; does not alter the stored wallet balance.')
 })
 
 

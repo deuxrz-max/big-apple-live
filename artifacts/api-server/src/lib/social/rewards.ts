@@ -9,9 +9,10 @@ import { SPIRIT_PUP, spiritSplit } from './spirit-pup-policy';
 import { isRoomGift } from './room-gift-policy';
 import { validateGiftRoom } from './room-gifts';
 import { requireAdult } from '../community';
+import { hasDevelopmentUnlimitedCredits, planCreditSpend } from "./credits-policy";
 
 export async function claimDaily(id: string) {
-  await requireAccount(id);
+  const profile = await requireAccount(id);
   return db.transaction(async tx => {
     await lockAccounts(tx, [id]);
     const [row] = await tx.select().from(socialWallets).where(eq(socialWallets.accountId, id));
@@ -20,7 +21,7 @@ export async function claimDaily(id: string) {
     await tx.update(socialWallets).set({ balance: sql`${socialWallets.balance} + ${DAILY_REWARD}`,
       earned: sql`${socialWallets.earned} + ${DAILY_REWARD}`, lastClaimDay: day }).where(eq(socialWallets.accountId, id));
     await tx.insert(socialLedger).values({ accountId: id, delta: DAILY_REWARD, kind: "reward", description: `Daily reward · ${day}` });
-    return wallet(id, tx);
+    return wallet(id, tx, profile.username);
   });
 }
 export async function gift(id: string, recipient: string, giftId: string, key: string, context?: { roomId: string; sessionId: string }) {
@@ -40,16 +41,22 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
     await lockAccounts(tx, [id, target.accountId]);
     const boundHistory = roomGift ? roomStore.getHistoryId(context!.roomId.toUpperCase()) : null;
     const ref = `gift:${giftId}:${target.accountId}${roomGift ? ':' + boundHistory : ''}`;
-    if (await replay(tx, id, key, ref)) return wallet(id, tx);
+    if (await replay(tx, id, key, ref)) return wallet(id, tx, sender.username);
     const historyId = roomGift ? validateGiftRoom(context!.roomId.toUpperCase(), context!.sessionId, id, target.accountId) : null;
     if (roomGift && historyId !== boundHistory) throw new RoomError(409, 'This university changed. Re-enter before sending.');
-    const current = await wallet(id, tx);
-    if (current.balance < item.cost) throw new RoomError(409, roomGift ? "Not enough credits. Open the credit store to get more." : "Not enough credits. Claim a daily reward first.");
+    const current = await wallet(id, tx, sender.username);
+    const unlimited = hasDevelopmentUnlimitedCredits(sender.username);
+    const spend = planCreditSpend(current.balance, item.cost, unlimited);
+    if (!spend.allowed) throw new RoomError(409, roomGift ? "Not enough credits. Open the credit store to get more." : "Not enough credits. Claim a daily reward first.");
     const recipientCredits = roomGift ? spiritSplit(item.cost).recipientCredits : item.cost;
-    await tx.update(socialWallets).set({ balance: sql`${socialWallets.balance} - ${item.cost}`, sent: sql`${socialWallets.sent} + ${item.cost}` }).where(eq(socialWallets.accountId, id));
+    if (spend.debit > 0) {
+      await tx.update(socialWallets).set({ balance: sql`${socialWallets.balance} - ${spend.debit}`, sent: sql`${socialWallets.sent} + ${item.cost}` }).where(eq(socialWallets.accountId, id));
+    } else {
+      await tx.update(socialWallets).set({ sent: sql`${socialWallets.sent} + ${item.cost}` }).where(eq(socialWallets.accountId, id));
+    }
     await tx.update(socialWallets).set({ balance: sql`${socialWallets.balance} + ${recipientCredits}`, received: sql`${socialWallets.received} + ${recipientCredits}` }).where(eq(socialWallets.accountId, target.accountId));
     await tx.insert(socialLedger).values([
-      { accountId: id, delta: -item.cost, kind: "gift_sent", description: `${item.name} sent to ${target.username}`, peer: target.username, requestKey: key, refKey: ref },
+      { accountId: id, delta: -spend.debit, kind: "gift_sent", description: `${item.name} sent to ${target.username}${unlimited ? " (development unlimited credits)" : ""}`, peer: target.username, requestKey: key, refKey: ref },
       { accountId: target.accountId, delta: recipientCredits, kind: "gift_received", description: `${item.name} from ${sender.username}`, peer: sender.username },
     ]);
     if (roomGift) {
@@ -62,29 +69,32 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
       await tx.insert(socialGiftBag).values({ accountId: target.accountId, giftId: item.id, quantity: 1 })
         .onConflictDoUpdate({ target: [socialGiftBag.accountId, socialGiftBag.giftId], set: { quantity: sql`${socialGiftBag.quantity} + 1` } });
     }
-    return wallet(id, tx);
+    return wallet(id, tx, sender.username);
   });
 }
 export async function purchase(id: string, itemId: string, key: string) {
-  await requireAccount(id);
+  const profile = await requireAccount(id);
   const item = PRODUCTS.find(p => p.id === itemId);
   if (!item) throw new RoomError(400, "Choose a product from the catalog");
   return db.transaction(async tx => {
     await lockAccounts(tx, [id]);
-    if (await replay(tx, id, key, `purchase:${itemId}`)) return wallet(id, tx);
+    if (await replay(tx, id, key, `purchase:${itemId}`)) return wallet(id, tx, profile.username);
     const owned = await tx.select().from(socialInventory).where(eq(socialInventory.accountId, id));
     const timed = TIMED_BADGES.find(p => p.id === itemId);
     const existing = owned.find(p => p.itemId === itemId);
     if (itemId === NIGHT_OWL.id && existing && !existing.expiresAt)
       throw new RoomError(409, "You already own Night Owl permanently. No renewal is needed.");
     if (!timed && existing) throw new RoomError(409, "You already own this badge");
-    if ((await wallet(id, tx)).balance < item.cost) throw new RoomError(409, "Not enough credits to buy this badge");
-    await tx.update(socialWallets).set({ balance: sql`${socialWallets.balance} - ${item.cost}` }).where(eq(socialWallets.accountId, id));
+    const unlimited = hasDevelopmentUnlimitedCredits(profile.username);
+    const spend = planCreditSpend((await wallet(id, tx, profile.username)).balance, item.cost, unlimited);
+    if (!spend.allowed) throw new RoomError(409, "Not enough credits to buy this badge");
+    if (spend.debit > 0)
+      await tx.update(socialWallets).set({ balance: sql`${socialWallets.balance} - ${spend.debit}` }).where(eq(socialWallets.accountId, id));
     if (timed) await grantTimedBadge(tx, id, timed, timed.boughtDays, new Date());
     else await tx.insert(socialInventory).values({ accountId: id, itemId });
     await tx.update(socialSettings).set({ badgeId: itemId }).where(eq(socialSettings.accountId, id));
-    await tx.insert(socialLedger).values({ accountId: id, delta: -item.cost, kind: "purchase", description: `${item.name} badge`, requestKey: key, refKey: `purchase:${itemId}` });
-    return wallet(id, tx);
+    await tx.insert(socialLedger).values({ accountId: id, delta: -spend.debit, kind: "purchase", description: `${item.name} badge${unlimited ? " (development unlimited credits)" : ""}`, requestKey: key, refKey: `purchase:${itemId}` });
+    return wallet(id, tx, profile.username);
   });
 }
 export async function ledger(id: string) {

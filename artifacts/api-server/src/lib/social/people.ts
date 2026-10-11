@@ -13,7 +13,7 @@ export async function getMe(id: string) {
     sql`(${socialInventory.expiresAt} IS NULL OR ${socialInventory.expiresAt} > CURRENT_TIMESTAMP)`));
   const [streak] = await db.select().from(socialLoginStreaks).where(eq(socialLoginStreaks.accountId, id));
   const giftsOwned = await db.select().from(socialGiftBag).where(eq(socialGiftBag.accountId, id));
-  return { profile: await person(id, profile, undefined, true), wallet: await wallet(id), inventory: [...new Set([...items.map(i => i.itemId), ...giftsOwned.map(g => g.giftId)])],
+  return { profile: await person(id, profile, undefined, true), wallet: await wallet(id, db, profile.username), inventory: [...new Set([...items.map(i => i.itemId), ...giftsOwned.map(g => g.giftId)])],
     giftQuantities: Object.fromEntries(giftsOwned.map(g => [g.giftId, g.quantity])),
     badgeExpirations: Object.fromEntries(items.filter(i => i.expiresAt).map(i => [i.itemId, i.expiresAt!.toISOString()])),
     loginStreak: streak?.consecutiveDays ?? 0, products: PRODUCTS, gifts: GIFTS, countries: COUNTRIES };

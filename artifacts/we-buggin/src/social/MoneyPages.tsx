@@ -108,7 +108,7 @@ export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
       {embedded ? <h2 className="bm-h1 sc-h1">Rewards</h2> : <h1 className="bm-h1 sc-h1">Rewards</h1>}
       <p className="bm-lede">Credits are earned, never bought, and have no cash value.</p>
       <div className="sc-wallet">
-        <div className="sc-balance"><Coins size={28} /><b data-testid="text-balance">{w.balance}</b><span>credits</span></div>
+        <div className="sc-balance"><Coins size={28} /><b data-testid="text-balance">{w.unlimited ? 'Unlimited test' : w.balance}</b><span>credits</span></div>
         <dl><div><dt>Earned</dt><dd>{w.earned}</dd></div><div><dt>Received</dt><dd>{w.received}</dd></div><div><dt>Sent</dt><dd>{w.sent}</dd></div></dl>
         <button type="button" className="bm-btn bm-btn-primary" disabled={!w.canClaimDaily || claim.isPending} onClick={doClaim} data-testid="button-claim">
           {claim.isPending ? 'Claiming...' : w.canClaimDaily ? `Claim ${w.dailyReward} daily credits` : 'Claimed today, back after 00:00 UTC'}</button>
@@ -124,6 +124,7 @@ export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
         const remaining = expiry ? Math.max(0, new Date(expiry).getTime() - now) : 0;
         const own = inventory.includes(p.id) && (!expiry || remaining > 0);
         const permanent = nightOwl && own && !expiry;
+        const enough = w.unlimited || w.balance >= p.cost;
         const I = iconFor(p.id);
         return (
         <div key={p.id} className="sc-gift sc-product" data-testid={`card-product-${p.id}`}>
@@ -136,9 +137,9 @@ export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
             {permanent ? <span>Owned permanently from an earlier purchase. No renewal needed.</span>
               : <span>Each {marathon ? '7' : '30'}-day streak milestone adds {marathon ? '7' : '30'} days. Buying adds 3 days to any time remaining; expired badges restart from now.</span>}
           </>}
-          <button type="button" className="bm-btn bm-btn-sm" disabled={(!timed && own) || permanent || buy.isPending || w.balance < p.cost} onClick={() => doBuy(p.id, p.name)} data-testid={`button-buy-${p.id}`}>
-            {permanent ? 'Owned permanently' : buy.isPending ? 'Buying...' : timed ? w.balance < p.cost ? 'Need more credits' : `Buy for ${p.cost} credits` : own ? 'Owned' : w.balance < p.cost ? 'Not enough credits' : 'Buy'}</button>
-          {timed && !permanent && w.balance < p.cost && <Link href="/community/credits" className="bm-link">Buy credits</Link>}
+          <button type="button" className="bm-btn bm-btn-sm" disabled={(!timed && own) || permanent || buy.isPending || !enough} onClick={() => doBuy(p.id, p.name)} data-testid={`button-buy-${p.id}`}>
+            {permanent ? 'Owned permanently' : buy.isPending ? 'Buying...' : timed ? !enough ? 'Need more credits' : `Buy for ${p.cost} credits` : own ? 'Owned' : !enough ? 'Not enough credits' : 'Buy'}</button>
+          {timed && !permanent && !enough && <Link href="/community/credits" className="bm-link">Buy credits</Link>}
           </div>); })}</div>
       <h2 className="sc-h2">Gifts</h2>
       <p className="sc-sub">Send these from anyone's profile.</p>

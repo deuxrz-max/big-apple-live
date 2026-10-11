@@ -16,7 +16,7 @@ export function BuyCreditsPage() {
     <section className="bc" data-testid="page-buy-credits">
       <Link href="/user-portal" className="bm-back" data-testid="link-credits-back">My profile</Link>
       <h1 className="bm-h1 sc-h1">Buy credits</h1>
-      <p className="bc-bal"><Coins size={18} aria-hidden /> Current balance: <b data-testid="text-credits-balance">{balance.toLocaleString()}</b> credits</p>
+      <p className="bc-bal"><Coins size={18} aria-hidden /> Current balance: <b data-testid="text-credits-balance">{me.data.wallet.unlimited ? 'Unlimited test credits' : balance.toLocaleString()}</b>{!me.data.wallet.unlimited && ' credits'}</p>
       {!sel ? (
         <>
           <p className="bc-txt">Choose a bundle.</p>
@@ -37,7 +37,7 @@ export function BuyCreditsPage() {
           <dl className="bc-dl">
             <div><dt>Credits</dt><dd data-testid="text-review-credits">{sel.credits.toLocaleString()}</dd></div>
             <div><dt>Price</dt><dd data-testid="text-review-price">{formatUsd(sel.priceCents)} USD</dd></div>
-            <div><dt>Current balance</dt><dd data-testid="text-review-balance">{balance.toLocaleString()} credits</dd></div>
+            <div><dt>Current balance</dt><dd data-testid="text-review-balance">{me.data.wallet.unlimited ? 'Unlimited test credits' : `${balance.toLocaleString()} credits`}</dd></div>
           </dl>
           <div className="bc-note" role="status" data-testid="text-checkout-unavailable">
             <b>Checkout unavailable</b>

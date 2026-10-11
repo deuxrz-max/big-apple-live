@@ -59,7 +59,8 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, onClose
   const price = me.data?.gifts.find(g => g.id === sel)?.cost ?? 0;
   const target = recipient ?? recipients.find(person => person.username === recipientUsername) ?? null;
   const canSend = !!target && !!roomId && !!sessionId && !!sel && isRoomGiftId(sel);
-  const enough = (me.data?.wallet.balance ?? 0) >= price;
+  const unlimited = me.data?.wallet.unlimited === true;
+  const enough = unlimited || (me.data?.wallet.balance ?? 0) >= price;
   const name = target ? (target.displayName || target.username) : null;
   async function send() {
     if (!canSend || busy || !enough || !target || !roomId || !sessionId) return;
@@ -105,7 +106,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, onClose
           </div>
           <button type="button" className="gift-btn" onClick={onClose} aria-label="Close gift bag" data-testid="gift-bag-close"><X size={16} aria-hidden /></button>
         </div>
-        {me.data && <p>Balance: {me.data.wallet.balance} credits</p>}
+        {me.data && <p>Balance: {unlimited ? 'Unlimited test credits' : `${me.data.wallet.balance} credits`}</p>}
         {roomId && !recipient && (
           <label className="gift-recipient">
             <span>Send to</span>

@@ -105,11 +105,11 @@ export function PersonPage({ username }: { username: string }) {
       {!own && (p.blocked ? <p className="sc-sub">Blocked in either direction: no new gifts, messages or follows. Past messages stay readable.</p> : (
         <div className="sc-panel">
           <h2>Send a gift</h2>
-          <p className="sc-sub">Credits have no cash value. Balance: {me.data?.wallet.balance ?? '...'}</p>
+          <p className="sc-sub">Credits have no cash value. Balance: {me.data?.wallet.unlimited ? 'Unlimited test credits' : me.data?.wallet.balance ?? '...'}</p>
           <div className="sc-gifts" role="radiogroup" aria-label="Gift">
             {me.data?.gifts.map((g) => (
               <button key={g.id} type="button" role="radio" aria-checked={giftId === g.id} className={`sc-gift${giftId === g.id ? ' is-on' : ''}`}
-                disabled={gift.isPending || (me.data?.wallet.balance ?? 0) < g.cost} onClick={() => setGiftId(g.id)} data-testid={`button-gift-${g.id}`}>
+                disabled={gift.isPending || (!me.data?.wallet.unlimited && (me.data?.wallet.balance ?? 0) < g.cost)} onClick={() => setGiftId(g.id)} data-testid={`button-gift-${g.id}`}>
                 <GiftIcon id={g.id} size={26} /><b>{g.name}</b><span>{g.cost} credits</span></button>
             ))}
           </div>

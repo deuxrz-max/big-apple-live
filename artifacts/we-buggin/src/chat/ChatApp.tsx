@@ -71,7 +71,9 @@ function List({ preview, query = '' }: { preview?: boolean; query?: string }) {
 function CreditsChip() {
   const me = useGetSocialMe();
   if (!me.data) return null;
-  return <Link href="/community/rewards" className="st-credits" data-testid="text-credits">{me.data.wallet.balance.toLocaleString()} credits</Link>;
+  return <Link href="/community/rewards" className="st-credits" data-testid="text-credits">
+    {me.data.wallet.unlimited ? 'Unlimited test credits' : `${me.data.wallet.balance.toLocaleString()} credits`}
+  </Link>;
 }
 
 function TopBar({ signedIn, query, setQuery }: { signedIn: boolean; query: string; setQuery: (v: string) => void }) {

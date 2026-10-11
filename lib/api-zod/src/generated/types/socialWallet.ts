@@ -13,4 +13,6 @@ export interface SocialWallet {
   sent: number;
   canClaimDaily: boolean;
   dailyReward: number;
+  /** True only for the development-preview owner account; does not alter the stored wallet balance. */
+  unlimited: boolean;
 }
