@@ -7,6 +7,9 @@ The owner requested persistent, sign-in-capable preview test accounts and sample
 conversations to inspect personally. Keep these distinct from temporary regression
 fixtures. Never seed them automatically during startup or publishing.
 
+Keep all preview test accounts and their data until the owner explicitly asks for
+their removal. Do not clean them up based on age, inactivity, or task completion.
+
 **Why:** These accounts are intended for the owner to look around the app, and
 their messages to the owner's real preview account must remain unread until the
 owner opens them. They are development-only test data, not real broadcasters.
@@ -16,6 +19,12 @@ fixtures, not bulk-delete accounts based on a test-like display name. Confirm th
 provider's private test marker and the profile's explicit test-account bio before
 any later cleanup. Do not sign in as the owner or open the owner's sample
 conversations merely to verify delivery; use read-only counts instead.
+
+**Why:** The owner explicitly said to keep the test accounts until they ask for
+removal.
+
+**How to apply:** Remove the persistent preview accounts only after an explicit
+owner request; routine cleanup applies only to isolated regression fixtures.
 
 For Replit-managed Clerk, existing passwords cannot be read back for comparison.
 For explicitly authorized development test accounts, set the password through
