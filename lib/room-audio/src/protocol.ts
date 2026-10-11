@@ -1,4 +1,9 @@
-export type { AudioSignalInput, AudioDescription } from "@workspace/api-zod";
+export type {
+  AudioSignalInput,
+  AudioDescription,
+  UniversityAudioSignalInput,
+  UniversityIceCandidate,
+} from "@workspace/api-zod";
 
 export interface AudioPeer {
   participantId: string;
@@ -16,6 +21,13 @@ export type AudioEvent =
       data: {
         from: AudioPeer;
         description: { type: "offer" | "answer"; sdp: string };
+      };
+    }
+  | {
+      type: "audio.candidate";
+      data: {
+        from: AudioPeer;
+        candidate: import("@workspace/api-zod").UniversityIceCandidate | null;
       };
     }
   | {

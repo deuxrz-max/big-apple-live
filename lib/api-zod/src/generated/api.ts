@@ -17,6 +17,7 @@ export const getModeratorBotSettingsResponseBreakSecondsMin = 15;
 export const getModeratorBotSettingsResponseBreakSecondsMax = 600;
 
 
+
 export const GetModeratorBotSettingsResponse = zod.object({
   "bannedWords": zod.array(zod.string().min(getModeratorBotSettingsResponseBannedWordsItemMin).max(getModeratorBotSettingsResponseBannedWordsItemMax)).max(getModeratorBotSettingsResponseBannedWordsMax),
   "breakSeconds": zod.number().int().min(getModeratorBotSettingsResponseBreakSecondsMin).max(getModeratorBotSettingsResponseBreakSecondsMax)
@@ -32,6 +33,7 @@ export const saveModeratorBotSettingsBodyBreakSecondsMin = 15;
 export const saveModeratorBotSettingsBodyBreakSecondsMax = 600;
 
 
+
 export const SaveModeratorBotSettingsBody = zod.object({
   "bannedWords": zod.array(zod.string().min(saveModeratorBotSettingsBodyBannedWordsItemMin).max(saveModeratorBotSettingsBodyBannedWordsItemMax)).max(saveModeratorBotSettingsBodyBannedWordsMax),
   "breakSeconds": zod.number().int().min(saveModeratorBotSettingsBodyBreakSecondsMin).max(saveModeratorBotSettingsBodyBreakSecondsMax)
@@ -44,6 +46,7 @@ export const saveModeratorBotSettingsResponseBannedWordsMax = 200;
 
 export const saveModeratorBotSettingsResponseBreakSecondsMin = 15;
 export const saveModeratorBotSettingsResponseBreakSecondsMax = 600;
+
 
 
 export const SaveModeratorBotSettingsResponse = zod.object({
@@ -307,7 +310,7 @@ export const StreamUniversityAudioEventsResponse = zod.unknown()
 
 
 /**
- * @summary Relay a peer-to-peer WebRTC offer or answer between current university beam participants
+ * @summary Relay peer-to-peer WebRTC descriptions and trickled ICE candidates between current university beam participants
  */
 export const sendUniversityAudioSignalPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
 
@@ -322,16 +325,31 @@ export const SendUniversityAudioSignalHeader = zod.object({
 
 export const sendUniversityAudioSignalBodyDescriptionSdpMax = 12000;
 
+export const sendUniversityAudioSignalBodyCandidateOneCandidateMax = 4096;
+
+export const sendUniversityAudioSignalBodyCandidateOneSdpMidMax = 256;
+
+export const sendUniversityAudioSignalBodyCandidateOneSdpMLineIndexMin = 0;
+
+export const sendUniversityAudioSignalBodyCandidateOneUsernameFragmentMax = 256;
+
 
 
 export const SendUniversityAudioSignalBody = zod.object({
   "sourceConnectionId": zod.string().uuid(),
   "targetParticipantId": zod.string().uuid(),
   "targetConnectionId": zod.string().uuid(),
+  "kind": zod.enum(['description', 'candidate']),
   "description": zod.object({
   "type": zod.enum(['offer', 'answer']),
   "sdp": zod.string().min(1).max(sendUniversityAudioSignalBodyDescriptionSdpMax)
-})
+}).optional(),
+  "candidate": zod.union([zod.object({
+  "candidate": zod.string().max(sendUniversityAudioSignalBodyCandidateOneCandidateMax),
+  "sdpMid": zod.string().max(sendUniversityAudioSignalBodyCandidateOneSdpMidMax).nullish(),
+  "sdpMLineIndex": zod.number().int().min(sendUniversityAudioSignalBodyCandidateOneSdpMLineIndexMin).nullish(),
+  "usernameFragment": zod.string().max(sendUniversityAudioSignalBodyCandidateOneUsernameFragmentMax).nullish()
+}),zod.null()]).optional()
 })
 
 export const SendUniversityAudioSignalResponse = zod.void()
@@ -360,6 +378,7 @@ export const SendUniversityWhisperParams = zod.object({
 })
 
 export const sendUniversityWhisperBodyBodyMax = 1000;
+
 
 
 export const SendUniversityWhisperBody = zod.object({
@@ -477,6 +496,7 @@ export const GetOlderRoomMessagesResponse = zod.array(GetOlderRoomMessagesRespon
 export const getChatDirectoryResponseHeadcountMin = 0;
 
 
+
 export const GetChatDirectoryResponseItem = zod.object({
   "roomId": zod.string(),
   "label": zod.string(),
@@ -504,6 +524,7 @@ export const ConfirmChatAdultResponse = zod.object({
 
 
 export const reportChatMessageBodyDetailsMax = 500;
+
 
 
 export const ReportChatMessageBody = zod.object({
@@ -565,6 +586,7 @@ export const getSocialMeResponseProfileIdentityEmojiIdMax = 100;
 
 export const getSocialMeResponseProfileIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getSocialMeResponseProfileIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
 
 
 export const GetSocialMeResponse = zod.object({
@@ -645,6 +667,7 @@ export const saveSocialProfileBodyInterestsItemMax = 24;
 export const saveSocialProfileBodyInterestsMax = 8;
 
 
+
 export const SaveSocialProfileBody = zod.object({
   "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
   "externalHandle": zod.string().max(saveSocialProfileBodyExternalHandleMax).nullish(),
@@ -711,6 +734,7 @@ export const SaveSocialProfileResponse = zod.object({
 
 
 export const getSocialPeopleQueryOffsetMin = 0;
+
 
 
 export const GetSocialPeopleQueryParams = zod.object({
@@ -1161,6 +1185,7 @@ export const SendSocialMessageParams = zod.object({
 export const sendSocialMessageBodyBodyMax = 1000;
 
 
+
 export const SendSocialMessageBody = zod.object({
   "body": zod.string().min(1).max(sendSocialMessageBodyBodyMax),
   "idempotencyKey": zod.string().uuid()
@@ -1233,6 +1258,7 @@ export const saveMyProfileBodyPhotoUrlsItemMax = 200;
 export const saveMyProfileBodyPhotoUrlsMax = 4;
 
 
+
 export const SaveMyProfileBody = zod.object({
   "username": zod.string().regex(saveMyProfileBodyUsernameRegExp),
   "identity": zod.object({
@@ -1301,6 +1327,7 @@ export const GetEmojiImageResponse = zod.unknown()
 
 export const createAccountRoomBodyNameMin = 2;
 export const createAccountRoomBodyNameMax = 32;
+
 
 
 export const CreateAccountRoomBody = zod.object({
@@ -1458,6 +1485,7 @@ export const SendRoomMessageHeader = zod.object({
 export const sendRoomMessageBodyTextMax = 280;
 
 
+
 export const SendRoomMessageBody = zod.object({
   "text": zod.string().min(1).max(sendRoomMessageBodyTextMax),
   "kind": zod.enum(['text', 'reaction'])
@@ -1539,6 +1567,7 @@ export const StreamAccountRoomEventsResponse = zod.unknown()
  * @summary Create a room and join as its first participant
  */
 export const createRoomBodyDisplayNameMax = 40;
+
 
 
 export const CreateRoomBody = zod.object({
@@ -1640,6 +1669,7 @@ export const JoinRoomParams = zod.object({
 })
 
 export const joinRoomBodyDisplayNameMax = 40;
+
 
 
 export const JoinRoomBody = zod.object({
@@ -1780,6 +1810,7 @@ export const SendAudioSignalParams = zod.object({
 export const sendAudioSignalBodyDescriptionSdpMax = 12000;
 
 
+
 export const SendAudioSignalBody = zod.object({
   "sourceConnectionId": zod.string().uuid(),
   "targetParticipantId": zod.string().uuid(),
@@ -1856,4 +1887,5 @@ export const ControlRoomMicrophoneResponse = zod.object({
   "isRegistered": zod.boolean()
 }))
 })
+
 

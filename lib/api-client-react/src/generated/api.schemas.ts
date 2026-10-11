@@ -584,6 +584,43 @@ export interface AudioSignalInput {
   description: AudioDescription;
 }
 
+export interface UniversityIceCandidate {
+  /** @maxLength 4096 */
+  candidate: string;
+  /**
+     * @maxLength 256
+     * @nullable
+     */
+  sdpMid?: string | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  sdpMLineIndex?: number | null;
+  /**
+     * @maxLength 256
+     * @nullable
+     */
+  usernameFragment?: string | null;
+}
+
+export type UniversityAudioSignalInputKind = typeof UniversityAudioSignalInputKind[keyof typeof UniversityAudioSignalInputKind];
+
+
+export const UniversityAudioSignalInputKind = {
+  description: 'description',
+  candidate: 'candidate',
+} as const;
+
+export interface UniversityAudioSignalInput {
+  sourceConnectionId: string;
+  targetParticipantId: string;
+  targetConnectionId: string;
+  kind: UniversityAudioSignalInputKind;
+  description?: AudioDescription;
+  candidate?: UniversityIceCandidate | null;
+}
+
 export type UniversityAudioActionInputAction = typeof UniversityAudioActionInputAction[keyof typeof UniversityAudioActionInputAction];
 
 
@@ -1064,6 +1101,43 @@ export interface AudioSignalInput4b96100 {
   description: AudioDescription4b96100;
 }
 
+export interface UniversityIceCandidate4b96100 {
+  /** @maxLength 4096 */
+  candidate: string;
+  /**
+     * @maxLength 256
+     * @nullable
+     */
+  sdpMid?: string | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  sdpMLineIndex?: number | null;
+  /**
+     * @maxLength 256
+     * @nullable
+     */
+  usernameFragment?: string | null;
+}
+
+export type UniversityAudioSignalInput4b96100Kind = typeof UniversityAudioSignalInput4b96100Kind[keyof typeof UniversityAudioSignalInput4b96100Kind];
+
+
+export const UniversityAudioSignalInput4b96100Kind = {
+  description: 'description',
+  candidate: 'candidate',
+} as const;
+
+export interface UniversityAudioSignalInput4b96100 {
+  sourceConnectionId: string;
+  targetParticipantId: string;
+  targetConnectionId: string;
+  kind: UniversityAudioSignalInput4b96100Kind;
+  description?: AudioDescription4b96100;
+  candidate?: UniversityIceCandidate4b96100 | null;
+}
+
 export type UniversityAudioActionInput4b96100Action = typeof UniversityAudioActionInput4b96100Action[keyof typeof UniversityAudioActionInput4b96100Action];
 
 
@@ -1420,3 +1494,4 @@ export type GetRoomGiftEvents200 = {
 export type GetSocialConversationParams = {
 cursor?: string;
 };
+

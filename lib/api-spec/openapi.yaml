@@ -175,7 +175,7 @@ paths:
     post:
       operationId: sendUniversityAudioSignal
       tags: [audio]
-      summary: Relay a peer-to-peer WebRTC offer or answer between current university beam participants
+      summary: Relay peer-to-peer WebRTC descriptions and trickled ICE candidates between current university beam participants
       security:
         - AccountSession: []
           AccountRoomSession: []
@@ -186,9 +186,9 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/AudioSignalInput" }
+            schema: { $ref: "#/components/schemas/UniversityAudioSignalInput" }
       responses:
-        "204": { description: Signaling description delivered to the current peer }
+        "204": { description: WebRTC description or ICE candidate delivered to the current peer }
         "400": { $ref: "#/components/responses/InvalidInput" }
         "401": { $ref: "#/components/responses/SessionUnauthorized" }
         "404": { description: Target is not a connected audio peer }
@@ -1284,6 +1284,30 @@ components:
         description:
           $ref: "#/components/schemas/AudioDescription"
       required: [sourceConnectionId, targetParticipantId, targetConnectionId, description]
+    UniversityIceCandidate:
+      type: object
+      properties:
+        candidate: { type: string, maxLength: 4096 }
+        sdpMid: { type: ["string", "null"], maxLength: 256 }
+        sdpMLineIndex: { type: ["integer", "null"], minimum: 0 }
+        usernameFragment: { type: ["string", "null"], maxLength: 256 }
+      required: [candidate]
+    UniversityAudioSignalInput:
+      type: object
+      properties:
+        sourceConnectionId: { type: string, format: uuid }
+        targetParticipantId: { type: string, format: uuid }
+        targetConnectionId: { type: string, format: uuid }
+        kind:
+          type: string
+          enum: [description, candidate]
+        description:
+          $ref: "#/components/schemas/AudioDescription"
+        candidate:
+          anyOf:
+            - $ref: "#/components/schemas/UniversityIceCandidate"
+            - type: "null"
+      required: [sourceConnectionId, targetParticipantId, targetConnectionId, kind]
     UniversityAudioActionInput:
       type: object
       properties:

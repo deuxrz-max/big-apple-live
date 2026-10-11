@@ -75,6 +75,7 @@ import type {
   SocialWallet,
   UniversityActionResult,
   UniversityAudioActionInput,
+  UniversityAudioSignalInput,
   UniversityAudioState,
   UniversityIgnoreInput,
   UniversitySession,
@@ -865,10 +866,10 @@ export const getSendUniversityAudioSignalUrl = (roomId: string,) => {
 }
 
 /**
- * @summary Relay a peer-to-peer WebRTC offer or answer between current university beam participants
+ * @summary Relay peer-to-peer WebRTC descriptions and trickled ICE candidates between current university beam participants
  */
 export const sendUniversityAudioSignal = async (roomId: string,
-    audioSignalInput: AudioSignalInput, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+    universityAudioSignalInput: UniversityAudioSignalInput, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -889,7 +890,7 @@ return customFetch<void>(getSendUniversityAudioSignalUrl(roomId),
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(audioSignalInput)
+    body: JSON.stringify(universityAudioSignalInput)
   }
 );}
 
@@ -927,12 +928,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type SendUniversityAudioSignalMutationResult = NonNullable<Awaited<ReturnType<typeof sendUniversityAudioSignal>>>
-    export type SendUniversityAudioSignalMutationBody = BodyType<AudioSignalInput>
+    export type SendUniversityAudioSignalMutationBody = BodyType<UniversityAudioSignalInput>
     export type SendUniversityAudioSignalMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
-    export type SendUniversityAudioSignalMutationVariables = {roomId: string;data: BodyType<AudioSignalInput>}
+    export type SendUniversityAudioSignalMutationVariables = {roomId: string;data: BodyType<UniversityAudioSignalInput>}
 
     /**
- * @summary Relay a peer-to-peer WebRTC offer or answer between current university beam participants
+ * @summary Relay peer-to-peer WebRTC descriptions and trickled ICE candidates between current university beam participants
  */
 export const useSendUniversityAudioSignal = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendUniversityAudioSignal>>, TError,SendUniversityAudioSignalMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}

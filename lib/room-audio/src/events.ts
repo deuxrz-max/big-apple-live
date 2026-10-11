@@ -20,7 +20,7 @@ export async function readAudioEvents(
         buffer = buffer.slice(end + 2);
         const type = frame.split("\n").find((line) => line.startsWith("event: "))?.slice(7);
         const data = frame.split("\n").find((line) => line.startsWith("data: "))?.slice(6);
-        if (type && data && ["audio.ready", "audio.peers", "audio.microphones", "audio.beam", "audio.signal", "audio.ended"].includes(type)) {
+        if (type && data && ["audio.ready", "audio.peers", "audio.microphones", "audio.beam", "audio.signal", "audio.candidate", "audio.ended"].includes(type)) {
           receive({ type, data: JSON.parse(data) } as AudioEvent);
         }
       }

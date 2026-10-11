@@ -1,4 +1,9 @@
-import { RoomAudioError, type AudioPeer, type AudioDescription } from "./protocol";
+import {
+  RoomAudioError,
+  type AudioPeer,
+  type AudioDescription,
+  type UniversityIceCandidate,
+} from "./protocol";
 
 type PeerOptions = {
   remote: AudioPeer;
@@ -6,6 +11,8 @@ type PeerOptions = {
   configuration: RTCConfiguration;
   offerer: boolean;
   send(description: AudioDescription): Promise<void>;
+  trickleIce?: boolean;
+  sendCandidate?(candidate: UniversityIceCandidate | null): Promise<void>;
   changed(): void;
   failed(error: RoomAudioError): void;
   warning(error: RoomAudioError): void;
@@ -16,6 +23,7 @@ export class AudioConnection {
   readonly audio = new Audio();
   private readonly abort = new AbortController();
   private queue = Promise.resolve();
+  private pendingCandidates: (UniversityIceCandidate | null)[] = [];
   private negotiationTimer: ReturnType<typeof setTimeout>;
   private disconnectTimer?: ReturnType<typeof setTimeout>;
   closed = false;
@@ -23,6 +31,22 @@ export class AudioConnection {
   constructor(readonly options: PeerOptions) {
     this.pc = new RTCPeerConnection(options.configuration);
     this.audio.autoplay = true;
+    this.pc.onicecandidate = (event) => {
+      if (!options.trickleIce || !options.sendCandidate || this.closed) return;
+      const candidate: UniversityIceCandidate | null = event.candidate
+        ? {
+            candidate: event.candidate.candidate,
+            sdpMid: event.candidate.sdpMid,
+            sdpMLineIndex: event.candidate.sdpMLineIndex,
+            usernameFragment: event.candidate.usernameFragment,
+          }
+        : null;
+      void options.sendCandidate(candidate).catch(() => {
+        if (!this.closed) {
+          options.failed(new RoomAudioError("signaling-unavailable", "Could not send an ICE candidate; reconnecting"));
+        }
+      });
+    };
     this.pc.ontrack = (event) => {
       if (event.track.kind !== "audio" || this.closed) return;
       this.audio.srcObject = event.streams[0] ?? new MediaStream([event.track]);
@@ -75,10 +99,21 @@ export class AudioConnection {
   receive(description: AudioDescription): void {
     this.enqueue(async () => {
       await this.pc.setRemoteDescription(description);
+      await this.flushPendingCandidates();
       if (description.type === "offer") {
         await this.pc.setLocalDescription(await this.pc.createAnswer());
         await this.sendDescription("answer");
       }
+    });
+  }
+
+  receiveCandidate(candidate: UniversityIceCandidate | null): void {
+    this.enqueue(async () => {
+      if (!this.pc.remoteDescription) {
+        this.pendingCandidates.push(candidate);
+        return;
+      }
+      await this.pc.addIceCandidate(candidate);
     });
   }
 
@@ -97,6 +132,8 @@ export class AudioConnection {
     this.abort.abort();
     clearTimeout(this.negotiationTimer);
     clearTimeout(this.disconnectTimer);
+    this.pendingCandidates = [];
+    this.pc.onicecandidate = null;
     this.pc.ontrack = null;
     this.pc.onconnectionstatechange = null;
     this.pc.close();
@@ -115,10 +152,19 @@ export class AudioConnection {
   }
 
   private async sendDescription(type: "offer" | "answer"): Promise<void> {
-    // Non-trickle ICE: SDP contains all candidates, so no candidate/SDP ordering races.
-    await this.gatherIce();
+    // The university beam trickles candidates separately; legacy audio peers
+    // retain the original complete-SDP signaling behavior.
+    if (!this.options.trickleIce) await this.gatherIce();
     if (!this.closed && this.pc.localDescription) {
       await this.options.send({ type, sdp: this.pc.localDescription.sdp });
+    }
+  }
+
+  private async flushPendingCandidates(): Promise<void> {
+    const candidates = this.pendingCandidates.splice(0);
+    for (const candidate of candidates) {
+      if (this.closed) return;
+      await this.pc.addIceCandidate(candidate);
     }
   }
 

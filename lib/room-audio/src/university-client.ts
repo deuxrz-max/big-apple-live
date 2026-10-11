@@ -1,4 +1,8 @@
-import type { AudioSignalInput, UniversityAudioState } from "@workspace/api-zod";
+import type {
+  UniversityAudioSignalInput,
+  UniversityAudioState,
+  UniversityIceCandidate,
+} from "@workspace/api-zod";
 import { readAudioEvents } from "./events";
 import { AudioConnection } from "./peer";
 import { RoomAudioError, type AudioPeer, type AudioState, type AudioEvent } from "./protocol";
@@ -225,6 +229,11 @@ export class UniversityAudioClient {
     } else if (event.type === "audio.signal") {
       const peer = this.peers.get(event.data.from.participantId);
       if (peer?.options.remote.connectionId === event.data.from.connectionId) peer.receive(event.data.description);
+    } else if (event.type === "audio.candidate") {
+      const peer = this.peers.get(event.data.from.participantId);
+      if (peer?.options.remote.connectionId === event.data.from.connectionId) {
+        peer.receiveCandidate(event.data.candidate);
+      }
     } else if (event.type === "audio.ended") {
       if (event.data.reason === "replaced") {
         this.fail(new RoomAudioError("session-in-use", "Audio was connected from another tab or device."));
@@ -262,23 +271,10 @@ export class UniversityAudioClient {
         stream: this.currentRole === "speaker" ? this.options.microphoneStream : undefined,
         configuration: { iceServers: this.options.iceServers ?? [{ urls: "stun:stun.l.google.com:19302" }] },
         offerer: self.participantId < remote.participantId,
-        send: async description => {
-          if (!this.active || this.self !== self || peer.closed) return;
-          const payload: AudioSignalInput = {
-            sourceConnectionId: self.connectionId,
-            targetParticipantId: remote.participantId,
-            targetConnectionId: remote.connectionId,
-            description,
-          };
-          const response = await fetch(`${this.audioUrl}/signals`, {
-            method: "POST",
-            headers: { ...this.headers(), "Content-Type": "application/json" },
-            credentials: "include",
-            signal: this.transport?.signal,
-            body: JSON.stringify(payload),
-          });
-          if (!response.ok) throw new RoomAudioError("signaling-unavailable", `Peer audio signal failed (${response.status}).`);
-        },
+        trickleIce: true,
+        send: async description => sendSignal({ kind: "description", description }),
+        sendCandidate: async (candidate: UniversityIceCandidate | null) =>
+          sendSignal({ kind: "candidate", candidate }),
         changed: () => {
           if (peer.closed || this.peers.get(remote.participantId) !== peer) return;
           this.options.onPeerState?.(remote.participantId, peer.pc.connectionState);
@@ -292,6 +288,26 @@ export class UniversityAudioClient {
       });
       peer.audio.muted = !this.allowedPeers.get(remote.participantId);
       this.peers.set(remote.participantId, peer);
+
+      const sendSignal = async (
+        signal: Pick<UniversityAudioSignalInput, "kind" | "description" | "candidate">,
+      ): Promise<void> => {
+        if (!this.active || this.self !== self || peer.closed) return;
+        const payload: UniversityAudioSignalInput = {
+          sourceConnectionId: self.connectionId,
+          targetParticipantId: remote.participantId,
+          targetConnectionId: remote.connectionId,
+          ...signal,
+        };
+        const response = await fetch(`${this.audioUrl}/signals`, {
+          method: "POST",
+          headers: { ...this.headers(), "Content-Type": "application/json" },
+          credentials: "include",
+          signal: this.transport?.signal,
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) throw new RoomAudioError("signaling-unavailable", `Peer audio signal failed (${response.status}).`);
+      };
     }
     this.updateState();
   }

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { AudioSignalInput, UniversityAudioState } from "@workspace/api-zod";
+import type { UniversityAudioSignalInput, UniversityAudioState } from "@workspace/api-zod";
 import type { AudioEvent, AudioPeer } from "@workspace/room-audio";
 import { RoomError, RoomStore, roomStore } from "./room-store";
 import { UniversityAudioBeamStore, universityAudioBeamStore } from "./university-audio-beam";
@@ -87,27 +87,44 @@ export class UniversityAudioSignaling {
     };
   }
 
-  signal(roomId: string, sessionId: string, accountId: string, input: AudioSignalInput): void {
+  signal(roomId: string, sessionId: string, accountId: string, input: UniversityAudioSignalInput): void {
     const id = roomId.toUpperCase();
     const participant = this.rooms.requireAccountMember(id, sessionId, accountId);
     const group = this.groups.get(id);
     const source = group?.connections.get(participant.participantId);
     if (!source || source.connectionId !== input.sourceConnectionId) throw new RoomError(409, "Audio connection is stale.");
-    if (source.role !== "speaker" && sdpCanSendAudio(input.description.sdp)) {
-      throw new RoomError(403, "Listeners cannot send microphone audio.");
-    }
     const target = group?.connections.get(input.targetParticipantId);
     if (!target || target.participantId === source.participantId) throw new RoomError(404, "Audio peer is no longer connected.");
     if (target.connectionId !== input.targetConnectionId) throw new RoomError(409, "Audio peer connection is stale.");
-    const shouldOffer = source.participantId < target.participantId;
-    if ((input.description.type === "offer") !== shouldOffer) throw new RoomError(409, "Invalid audio negotiation direction.");
+    if (input.kind === "description") {
+      if (!input.description || input.candidate !== undefined) {
+        throw new RoomError(400, "Provide exactly one WebRTC description or ICE candidate.");
+      }
+      if (source.role !== "speaker" && sdpCanSendAudio(input.description.sdp)) {
+        throw new RoomError(403, "Listeners cannot send microphone audio.");
+      }
+      const shouldOffer = source.participantId < target.participantId;
+      if ((input.description.type === "offer") !== shouldOffer) {
+        throw new RoomError(409, "Invalid audio negotiation direction.");
+      }
+    } else if (input.kind === "candidate") {
+      if (input.description !== undefined || input.candidate === undefined) {
+        throw new RoomError(400, "Provide exactly one WebRTC description or ICE candidate.");
+      }
+    } else {
+      throw new RoomError(400, "Invalid audio signal type.");
+    }
     const now = Date.now();
     if (now - source.windowStartedAt >= 60_000) {
       source.windowStartedAt = now;
       source.signalCount = 0;
     }
     if (++source.signalCount > 120) throw new RoomError(429, "Audio signaling rate limit exceeded.");
-    target.sink.send({ type: "audio.signal", data: { from: this.publicPeer(source), description: input.description } });
+    if (input.kind === "description") {
+      target.sink.send({ type: "audio.signal", data: { from: this.publicPeer(source), description: input.description! } });
+    } else {
+      target.sink.send({ type: "audio.candidate", data: { from: this.publicPeer(source), candidate: input.candidate! } });
+    }
   }
 
   disconnect(roomId: string, sessionId: string, accountId: string, connectionId: string): void {

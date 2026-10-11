@@ -24,14 +24,18 @@ Test the sequence: connected listener → slot reservation → listener disconne
 explicit Join action starts the user's mic; permission failure releases the
 reservation and keeps or restores the listener connection.
 
-The Replit headless-browser audio harness did not complete ICE gathering with
-the STUN-only configuration: peers stayed unconnected, no RTP flowed, and SDP
-was not sent. Slot and moderation-control tests therefore do not prove live
-audio works on phones or networks.
+The university beam client must trickle ICE: send its SDP as soon as the local
+description is set, relay each candidate separately, and queue remote candidates
+until the remote description is installed. The legacy audio client still uses
+its existing gathered-description flow. Headless Chromium with Google STUN has
+now established P2P connections and nonzero RTP, but this does not verify real
+phones or restrictive networks.
 
-**Why:** a successful signaling/session test can coexist with a blocked or
-unfinished ICE path; reporting it as working audio would be misleading.
+**Why:** waiting for ICE gathering to finish before sending SDP prevented any
+peer negotiation in the browser harness. Trickle signaling resolved that
+specific failure without adding a paid service or TURN.
 
-**How to apply:** check ICE states and RTP counters on real devices/networks
-before claiming audio success. Do not add a TURN provider or credentials
-without the owner's explicit approval.
+**How to apply:** preserve room/connection validation for candidate relays,
+test SDP and candidate exchange plus ICE/RTP metrics, and still verify on real
+devices/networks before claiming mobile audio reliability. Do not add a TURN
+provider or credentials without the owner's explicit approval.

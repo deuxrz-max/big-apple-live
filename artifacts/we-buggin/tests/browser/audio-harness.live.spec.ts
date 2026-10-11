@@ -2,8 +2,18 @@ import { test, expect } from "@playwright/test";
 
 test("marked test accounts exercise real four-slot P2P signaling without device permissions", async ({ page }) => {
   const pageErrors: string[] = [];
+  const signalingKinds: string[] = [];
   let mediaPermissionCalls = 0;
   page.on("pageerror", error => pageErrors.push(error.message));
+  page.on("request", request => {
+    if (request.method() !== "POST" || !request.url().includes("/audio/signals")) return;
+    try {
+      const body = request.postDataJSON() as { kind?: string };
+      if (body.kind) signalingKinds.push(body.kind);
+    } catch {
+      // Ignore unrelated or non-JSON requests.
+    }
+  });
   await page.addInitScript(() => {
     const mediaDevices = navigator.mediaDevices;
     if (!mediaDevices) return;
@@ -49,6 +59,8 @@ test("marked test accounts exercise real four-slot P2P signaling without device 
   const p2pObserved = transportCards.some(text => /P2P connected [1-9]/.test(text) || /RTP sent [1-9]/.test(text));
   const metrics = await page.locator(".dev-audio-harness__metrics").allTextContents();
   console.info(`[audio-harness] Browser transport metrics: ${metrics.join(" | ")}`);
+  expect(signalingKinds).toContain("description");
+  expect(signalingKinds).toContain("candidate");
 
   const hostCard = page.locator(".dev-audio-harness__actor").filter({ hasText: "Host controls" });
   await expect(hostCard).toHaveCount(1);
@@ -79,7 +91,9 @@ test("marked test accounts exercise real four-slot P2P signaling without device 
   expect(mediaPermissionCalls).toBe(0);
   test.info().annotations.push({
     type: "P2P transport",
-    description: p2pObserved ? "P2P connection or RTP activity was observed in the browser." : "The app reported a negotiation timeout; no P2P connection was established in this browser environment.",
+    description: p2pObserved
+      ? "P2P connection or RTP activity was observed in the browser."
+      : `ICE candidates and SDP descriptions were exchanged, but no P2P connection or RTP was established in this browser environment (signals: ${signalingKinds.join(", ")}).`,
   });
 
   await page.getByRole("button", { name: "Disconnect all" }).click();

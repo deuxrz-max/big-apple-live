@@ -113,12 +113,67 @@ test("a disconnected speaker releases its spot and listeners never negotiate a s
     sourceConnectionId: listenerSink.self().connectionId,
     targetParticipantId: speaker.participantId,
     targetConnectionId: speakerSink.self().connectionId,
+    kind: "description",
     description: { type: listener.participantId < speaker.participantId ? "offer" : "answer", sdp: "v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=sendrecv\r\n" },
   }), (error: unknown) => error instanceof RoomError && error.status === 403);
   disconnectSpeaker();
   assert.equal(beams.getState("LIVEME").slots.filter(slot => slot.participantId).length, 0);
   assert.ok(speakerSink.closed);
   assert.ok(listenerSink.events.some(event => event.type === "audio.peers" && event.data.peers.length === 0));
+});
+
+test("university audio trickles candidates only between current room connections", () => {
+  const rooms = new RoomStore();
+  createRoom(rooms, "LIVEME", "history-live");
+  createRoom(rooms, "BIGOLV", "history-bigo");
+  const beams = new UniversityAudioBeamStore(rooms);
+  const signaling = new UniversityAudioSignaling(rooms, beams);
+  const speaker = addMember(rooms, "LIVEME", "speaker");
+  const listener = addMember(rooms, "LIVEME", "listener");
+  const outsider = addMember(rooms, "BIGOLV", "outsider");
+  beams.joinSlot("LIVEME", speaker.participantId, "speaker");
+  const speakerSink = sink();
+  const listenerSink = sink();
+  const outsiderSink = sink();
+  signaling.connect("LIVEME", speaker.participantSessionId, "speaker", speakerSink);
+  signaling.connect("LIVEME", listener.participantSessionId, "listener", listenerSink);
+  signaling.connect("BIGOLV", outsider.participantSessionId, "outsider", outsiderSink);
+
+  const candidate = {
+    candidate: "candidate:1 1 udp 2130706431 192.0.2.1 5000 typ host",
+    sdpMid: "0",
+    sdpMLineIndex: 0,
+  };
+  signaling.signal("LIVEME", speaker.participantSessionId, "speaker", {
+    sourceConnectionId: speakerSink.self().connectionId,
+    targetParticipantId: listener.participantId,
+    targetConnectionId: listenerSink.self().connectionId,
+    kind: "candidate",
+    candidate,
+  });
+  assert.ok(listenerSink.events.some(event =>
+    event.type === "audio.candidate" &&
+    event.data.from.participantId === speaker.participantId &&
+    event.data.candidate?.candidate === candidate.candidate));
+  assert.equal(outsiderSink.events.some(event => event.type === "audio.candidate"), false);
+
+  assert.throws(() => signaling.signal("LIVEME", speaker.participantSessionId, "speaker", {
+    sourceConnectionId: speakerSink.self().connectionId,
+    targetParticipantId: listener.participantId,
+    targetConnectionId: "00000000-0000-4000-8000-000000000000",
+    kind: "candidate",
+    candidate: null,
+  }), (error: unknown) => error instanceof RoomError && error.status === 409);
+  assert.throws(() => signaling.signal("LIVEME", listener.participantSessionId, "listener", {
+    sourceConnectionId: listenerSink.self().connectionId,
+    targetParticipantId: speaker.participantId,
+    targetConnectionId: speakerSink.self().connectionId,
+    kind: "description",
+    description: {
+      type: listener.participantId < speaker.participantId ? "offer" : "answer",
+      sdp: "v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=sendrecv\r\n",
+    },
+  }), (error: unknown) => error instanceof RoomError && error.status === 403);
 });
 
 test("mic permission handoff keeps the slot and lets the speaker-enable action succeed", () => {
