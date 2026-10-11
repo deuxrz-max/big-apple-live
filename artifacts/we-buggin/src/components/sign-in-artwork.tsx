@@ -8,7 +8,7 @@ export function SignInArtwork({ children }: { children: ReactNode }) {
       <Wordmark />
       <div className="st-sign-in-layout">
         <div className="st-sign-in-art" aria-hidden="true">
-          <img src={`${import.meta.env.BASE_URL}streamtalk-signin.webp`} alt=""
+          <img src={`${import.meta.env.BASE_URL}streamtalk-shield.svg`} alt="Streamtalk shield"
             decoding="async" fetchPriority="high" />
         </div>
         <div className="st-sign-in-form">{children}</div>

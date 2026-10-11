@@ -3,6 +3,7 @@ import { Link, Route, Switch, useLocation, useParams } from 'wouter';
 import { Show, useUser } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getGetMyProfileQueryKey } from '@workspace/api-client-react';
+import { Wordmark } from '@/components/brand';
 import './beam.css';
 import { useBeamRoom, useBeamState } from './hooks/useBeam';
 import { configureBeamAccount, getPersistenceNotice, restoreBeam, subscribe, getProfileSnapshot } from './services/beamService';
@@ -69,9 +70,7 @@ function BeamApp() {
     <div className="beam-app">
       <div className="bm-bg" aria-hidden="true"><i /><i /><i /></div>
       <nav className="bm-nav">
-        <Link href="/beams" className="bm-logo" data-testid="link-logo">
-          <span aria-hidden>🐞</span> STREAMTALK
-        </Link>
+        <Wordmark href="/beams" className="bm-logo" />
         <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end', minWidth: 0 }}>
           <Link href="/community" className="bm-tag">People</Link>
           <Link href="/community/rewards" className="bm-tag">Rewards</Link>

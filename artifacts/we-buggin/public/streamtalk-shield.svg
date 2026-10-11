@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="metal" x1="25" y1="9" x2="103" y2="119" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#626A75"/>
+      <stop offset=".14" stop-color="#222832"/>
+      <stop offset=".52" stop-color="#080B10"/>
+      <stop offset=".83" stop-color="#252B34"/>
+      <stop offset="1" stop-color="#090B10"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="18" y1="14" x2="111" y2="111" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D5DDE4"/>
+      <stop offset=".32" stop-color="#606A77"/>
+      <stop offset=".68" stop-color="#202832"/>
+      <stop offset="1" stop-color="#A8B2BC"/>
+    </linearGradient>
+    <linearGradient id="red" x1="34" y1="46" x2="64" y2="82" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF737B"/>
+      <stop offset=".55" stop-color="#E63143"/>
+      <stop offset="1" stop-color="#8E1229"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="63" y1="43" x2="96" y2="81" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#70D8FF"/>
+      <stop offset=".52" stop-color="#268ED9"/>
+      <stop offset="1" stop-color="#15509D"/>
+    </linearGradient>
+    <filter id="glow-red" x="23" y="34" width="51" height="62" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="3.5"/>
+    </filter>
+    <filter id="glow-blue" x="57" y="34" width="48" height="62" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="3.5"/>
+    </filter>
+    <filter id="shadow" x="5" y="3" width="118" height="124" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="2.5"/>
+    </filter>
+  </defs>
+  <path d="M64 5 116 22v37c0 29-20 50-52 64C32 109 12 88 12 59V22L64 5Z" fill="#020407" filter="url(#shadow)" opacity=".7"/>
+  <path d="M64 6 114 22v36c0 28-19 48-50 62C33 106 14 86 14 58V22L64 6Z" fill="url(#metal)" stroke="url(#edge)" stroke-width="3"/>
+  <path d="M64 14 106 27v30c0 23-15 40-42 52C37 97 22 80 22 57V27l42-13Z" stroke="#9AA5AF" stroke-opacity=".42" stroke-width="1.2"/>
+  <path d="M24 28 64 15l40 13" stroke="#E5EBF1" stroke-opacity=".32" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M22 58c0 23 15 41 42 52 27-11 42-29 42-52" stroke="#05080D" stroke-width="3" stroke-linecap="round"/>
+  <path d="M31 37h66M28 94h72" stroke="#75808C" stroke-opacity=".22" stroke-width="1"/>
+  <text x="34" y="79" font-family="Arial Black,Arial,sans-serif" font-size="43" font-weight="900" letter-spacing="-6" fill="#FF3448" opacity=".8" filter="url(#glow-red)">S</text>
+  <text x="63" y="79" font-family="Arial Black,Arial,sans-serif" font-size="43" font-weight="900" letter-spacing="-6" fill="#39AFFF" opacity=".8" filter="url(#glow-blue)">T</text>
+  <text x="34" y="79" font-family="Arial Black,Arial,sans-serif" font-size="43" font-weight="900" letter-spacing="-6" fill="url(#red)" stroke="#FF8790" stroke-opacity=".35" stroke-width=".8">S</text>
+  <text x="63" y="79" font-family="Arial Black,Arial,sans-serif" font-size="43" font-weight="900" letter-spacing="-6" fill="url(#blue)" stroke="#9AE5FF" stroke-opacity=".4" stroke-width=".8">T</text>
+  <path d="M25 23 64 11l39 12" stroke="#F5F7F8" stroke-opacity=".45" stroke-width="1" stroke-linecap="round"/>
+  <circle cx="19" cy="31" r="1.4" fill="#B8C2CC" opacity=".7"/>
+  <circle cx="109" cy="31" r="1.4" fill="#B8C2CC" opacity=".7"/>
+</svg>

@@ -1,14 +1,14 @@
 import { useEffect } from 'react';
 import { Link, Route, Switch, useLocation, useParams } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
-import { Users, Heart, Ban, MessageCircle, Coins, Trophy, UserRound, House, Stamp } from 'lucide-react';
+import { Users, Heart, Ban, MessageCircle, Coins, Trophy, UserRound, House, Stamp, EllipsisVertical } from 'lucide-react';
 import { useGetChatAccess, useGetSocialMe } from '@workspace/api-client-react';
 import '@/beam/beam.css';
 import './social.css';
 import { ErrorBox, Loading, errStatus, refreshSocial } from './common';
 import { BlocksPage, CommunityPage, FavoritesPage, MyProfilePage, PersonPage } from './PeoplePages';
 import { ModerationQueue } from '@/chat/ChatApp';
-import { AppLogo } from '@/components/brand';
+import { Wordmark } from '@/components/brand';
 import { BotProfile } from '@/profile/ProfileView';
 import { BuyCreditsPage } from './BuyCreditsPage';
 import { InboxPage } from './InboxPage';
@@ -42,8 +42,25 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
     <div className={`beam-app sc${bare ? ' sc-profile-screen' : ''}${path === '/community/messages' ? ' sc-inbox-screen' : path === '/community/favorites' ? ' sc-following-screen' : ''}`}>
       <div className="bm-bg" aria-hidden="true"><i /><i /><i /></div>
       {!bare && <nav className="bm-nav">
-        <Link href="/home" className="bm-logo"><AppLogo size={32} /> STREAMTALK</Link>
-        <Link href="/home" className="bm-tag st-home-pill"><House size={12} /> Home</Link>
+        <Wordmark href="/home" className="bm-logo" />
+        <div className="sc-header-actions">
+          <Link href="/home" className="sc-header-home" aria-label="Home">
+            <House size={21} aria-hidden="true" />
+            <span>Home</span>
+          </Link>
+          <details className="sc-more-menu">
+            <summary aria-label="More pages" title="More pages"><EllipsisVertical size={21} aria-hidden="true" /></summary>
+            <nav aria-label="More pages">
+              {NAV.map(({ to, label, icon: I }) => (
+                <Link key={to} href={to} onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}>
+                  <I size={17} aria-hidden="true" /><span>{label}</span>
+                </Link>
+              ))}
+              {access.data?.moderator && <Link href="/community/moderation" onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}><Ban size={17} aria-hidden="true" /><span>Moderation</span></Link>}
+              {access.data?.moderator && <Link href="/community/passport-review" onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}><Stamp size={17} aria-hidden="true" /><span>Passport review</span></Link>}
+            </nav>
+          </details>
+        </div>
       </nav>}
       <div className={`sc-shell${path === '/community/messages' || path === '/community/favorites' ? ' is-inbox' : ''}`}>
         {!bare && path !== '/community/messages' && path !== '/community/favorites' && <nav className="sc-nav" aria-label="Community">

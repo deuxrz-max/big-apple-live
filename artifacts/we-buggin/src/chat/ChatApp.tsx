@@ -10,7 +10,7 @@ import {
   getGetChatReportsQueryKey, getGetChatDirectoryQueryKey, ChatReportReviewInputAction,
 } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
-import { AppLogo } from '@/components/brand';
+import { Wordmark } from '@/components/brand';
 import { errMessage } from '@/lib/errors';
 import { PhotoReviewQueue } from './PhotoReviewQueue';
 import { BotModerationPanel } from './BotModerationPanel';
@@ -79,7 +79,7 @@ function CreditsChip() {
 function TopBar({ signedIn, query, setQuery }: { signedIn: boolean; query: string; setQuery: (v: string) => void }) {
   return (
     <div className="st-topbar">
-      <Link href={signedIn ? '/home' : '/'} className="st-brand" aria-label="Streamtalk home"><AppLogo size={36} /></Link>
+      <Wordmark href={signedIn ? '/home' : '/'} className="st-brand" />
       <input type="search" className="st-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search" aria-label="Search universities" />
       {signedIn ? <CreditsChip /> : <Link href="/sign-in" className="bm-btn bm-btn-sm bm-btn-primary">Sign in</Link>}
     </div>

@@ -40,7 +40,7 @@ const clerkAppearance = {
   options: {
     logoPlacement: 'inside' as const,
     logoLinkUrl: basePath || '/',
-    logoImageUrl: `${window.location.origin}${basePath}/streamtalk-logo.webp`,
+    logoImageUrl: `${window.location.origin}${basePath}/streamtalk-shield-512.png`,
   },
   variables: {
     colorPrimary: '#9D1DFF',
@@ -282,6 +282,11 @@ function AppRoutes() {
 }
 
 function App() {
+  useEffect(() => {
+    const shareImage = new URL(`${basePath}/streamtalk-shield-512.png`, window.location.origin).href;
+    document.querySelector('meta[property="og:image"]')?.setAttribute('content', shareImage);
+    document.querySelector('meta[name="twitter:image"]')?.setAttribute('content', shareImage);
+  }, []);
   return (
     <WouterRouter base={basePath}>
       <RoutedErrorBoundary><AppRoutes /></RoutedErrorBoundary>

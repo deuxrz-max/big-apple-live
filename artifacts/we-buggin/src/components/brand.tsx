@@ -1,16 +1,16 @@
 import { Link } from 'wouter';
 
 export function AppLogo({ size = 36 }: { size?: number }) {
-  return <img src={`${import.meta.env.BASE_URL}streamtalk-logo.webp`} alt="Streamtalk logo"
-    width={size} height={size} decoding="async"
+  return <img className="st-shield-logo" src={`${import.meta.env.BASE_URL}streamtalk-shield.svg`} alt="Streamtalk shield"
+    width={size} height={size} decoding="async" fetchPriority="high"
     style={{ objectFit: 'contain', flexShrink: 0 }} />;
 }
 
-export function Wordmark({ href = '/' }: { href?: string }) {
+export function Wordmark({ href = '/', className = '' }: { href?: string; className?: string }) {
   return (
-    <Link href={href} className="inline-flex items-center gap-2" data-testid="link-home">
+    <Link href={href} className={`st-wordmark-lockup ${className}`.trim()} aria-label="STREAMTALK home" data-testid="link-home">
       <AppLogo />
-      <span className="st-wordmark font-display text-xl font-extrabold">Streamtalk</span>
+      <span className="st-wordmark font-display text-xl font-extrabold">STREAMTALK</span>
     </Link>
   );
 }

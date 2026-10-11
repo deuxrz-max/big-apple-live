@@ -10,12 +10,9 @@ import './inbox.css';
 function stamp(s: string): string {
   const d = new Date(s);
   if (Number.isNaN(d.getTime())) return '';
-  const now = new Date();
-  const day = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
-  const diff = Math.round((day(now) - day(d)) / 86400000);
-  if (diff === 0) return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-  if (diff === 1) return 'Yesterday';
-  return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  const date = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return `${date}, ${time}`;
 }
 
 const href = (u: string) => `/community/messages/${encodeURIComponent(u)}`;
@@ -46,7 +43,7 @@ export function InboxPage() {
                   <i className="ib-dot" aria-hidden="true" />
                   <b className="ib-count">{c.unreadCount}</b>
                 </span>
-                <span className="ib-live-name" style={{ color: c.displayNameColor ?? '#FFFFFF' }}>{c.displayName || c.username}</span>
+                <span className="ib-live-name">{c.displayName || c.username}</span>
               </Link>
             </li>
           ))}
@@ -59,14 +56,18 @@ export function InboxPage() {
           return (
             <li key={c.username}>
               <Link href={href(c.username)} className={`ib-row${unread ? ' is-unread' : ''}`} data-testid={`row-conversation-${c.username}`}>
-                <Avatar p={{ username: c.username, displayName: c.displayName, photoUrl: c.photoUrl }} size={52} />
+                <span className="ib-avatar">
+                  <Avatar p={{ username: c.username, displayName: c.displayName, photoUrl: c.photoUrl }} size={52} />
+                </span>
                 <span className="ib-mid">
-                  <span className="ib-name" style={{ color: c.displayNameColor ?? '#FFFFFF' }}>{c.displayName || c.username}{c.blocked && <em className="ib-blocked">Blocked</em>}</span>
+                  <span className="ib-heading">
+                    <span className="ib-name">{c.displayName || c.username}{c.blocked && <em className="ib-blocked">Blocked</em>}</span>
+                    {unread && <b className="ib-count ib-count-row" aria-label={`${c.unreadCount} unread`}>{c.unreadCount}</b>}
+                  </span>
                   <span className="ib-prev">{c.lastMessageFromMe ? 'You: ' : ''}{c.lastMessage}</span>
                 </span>
                 <span className="ib-side">
                   <time className="ib-time" dateTime={c.updatedAt}>{stamp(c.updatedAt)}</time>
-                  {unread && <b className="ib-count ib-count-row" aria-label={`${c.unreadCount} unread`}>{c.unreadCount}</b>}
                 </span>
               </Link>
             </li>
