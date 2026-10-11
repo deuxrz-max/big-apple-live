@@ -9,9 +9,8 @@ import router from "../routes";
 import { roomStore } from "./room-store";
 import { getProfile } from "./account-profiles";
 import { acceptMessage, getMessages } from "./room-chat";
-import { COMMUNITY_ROOMS } from "./community";
-import { UNIVERSITY_TOPICS } from "./university-chat";
 import { GetUniversitySessionResponse, GetSocialConversationResponse } from "@workspace/api-zod";
+import { universityTopic } from "./university-chat";
 
 test("Phase 3 real database and authenticated HTTP privacy safeguards (synthetic identities)", async t => {
   const token = randomUUID().replaceAll("-", "").slice(0, 7);
@@ -142,13 +141,10 @@ test("Phase 3 real database and authenticated HTTP privacy safeguards (synthetic
     const history = await getMessages(codes[0]!, roomStore, ids[1]!);
     assert.equal(history.find(m => m.text === "Badge fixture message")!.badgeId, "night-owl");
   });
-  await t.test("overflow topic inherits parent; all six initial topics are available", async () => {
-    assert.equal((await feed(0)).topic, UNIVERSITY_TOPICS.LIVEME);
-    assert.deepEqual(COMMUNITY_ROOMS.map(r => UNIVERSITY_TOPICS[r.roomId]), [
-      "Beam tips, camera presence and keeping viewers", "Growing on Bigo, PK battles and fan clubs",
-      "Tango streams, gifting etiquette and building regulars", "TikTok LIVE, short clips and going viral",
-      "IG Lives, collabs and growing followers", "Super Live hosting, events and audience tips",
-    ]);
+  await t.test("all university and overflow room topics are hidden, including saved topics", async () => {
+    assert.equal((await feed(0)).topic, "");
+    assert.equal(await universityTopic("LIVEME"), "");
+    assert.equal(await universityTopic(codes[1]!), "");
   });
   await t.test("rules acknowledgement saves per account and remains unseen for another account", async () => {
     assert.equal((await feed(0)).rulesSeen, false);

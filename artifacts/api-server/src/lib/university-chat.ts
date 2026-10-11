@@ -8,14 +8,6 @@ import { botRotation } from "./moderator-bots";
 import { giftNameColorsForAccounts } from "./social/gift-name-color-data";
 import type { UniversityPerson } from "@workspace/api-zod";
 
-export const UNIVERSITY_TOPICS: Record<string, string> = {
-  LIVEME: "Beam tips, camera presence and keeping viewers",
-  BIGOLV: "Growing on Bigo, PK battles and fan clubs",
-  TANGOL: "Tango streams, gifting etiquette and building regulars",
-  TIKTOK: "TikTok LIVE, short clips and going viral",
-  INSTAL: "IG Lives, collabs and growing followers",
-  SUPRLV: "Super Live hosting, events and audience tips",
-};
 export async function ignoredAccounts(id: string) {
   return (await db.select().from(universityIgnores).where(eq(universityIgnores.accountId, id))).map(r => r.targetId);
 }
@@ -39,9 +31,7 @@ export async function markRulesSeen(id: string) {
 export async function universityTopic(roomId: string) {
   const [room] = await db.select().from(chatRooms).where(eq(chatRooms.roomId, roomId.toUpperCase()));
   if (!room) throw new RoomError(404, "University not found");
-  const [parent] = room.parentRoomId
-    ? await db.select().from(chatRooms).where(eq(chatRooms.roomId, room.parentRoomId)) : [room];
-  return parent?.topic ?? UNIVERSITY_TOPICS[parent?.roomId ?? room.roomId] ?? "";
+  return "";
 }
 /** The only inline-whisper read path: membership AND sender/recipient are checked on the server. */
 export async function roomWhispers(id: string, roomId: string) {

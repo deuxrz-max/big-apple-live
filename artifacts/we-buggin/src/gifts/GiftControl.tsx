@@ -4,6 +4,7 @@ import './gifts.css';
 const ASSET_BASE = `${import.meta.env.BASE_URL}gift-control/`;
 const REPLAY_INTERVAL_MS = 30_000;
 const ANIMATION_DURATION_MS = 6_100;
+export const OPEN_ROOM_GIFTS_EVENT = 'streamtalk:open-room-gifts';
 
 type PlaybackMode = 'checking' | 'video' | 'webp' | 'still';
 

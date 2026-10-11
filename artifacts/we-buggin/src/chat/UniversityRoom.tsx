@@ -14,7 +14,7 @@ import { BadgeMark } from '@/social/common';
 import { useTextRoom } from './useTextRoom';
 import { useUniversityAudioBeam } from './useUniversityAudioBeam';
 import { BotShield } from './BotShield';
-import { GiftBag, GiftControl } from '@/gifts';
+import { GiftBag, OPEN_ROOM_GIFTS_EVENT } from '@/gifts';
 import { useRoomGifts } from '@/gifts/useRoomGifts';
 import { HeartAnimation } from '@/gifts/HeartAnimation';
 import { CosmicEncoreAnimation, MoonfoxAnimation, SpiritAnimation } from '@/gifts/SpiritPup';
@@ -79,6 +79,15 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
     setIgnored(new Set()); setSendErr(null); setNote(null);
     autoRules.current = false; ignoreVersion.current = null; idem.current = null;
   }, [roomId, userId]);
+  useEffect(() => {
+    const openGifts = () => {
+      setMenu(null);
+      setDrawer(false);
+      setGiftBag({ recipient: null });
+    };
+    window.addEventListener(OPEN_ROOM_GIFTS_EVENT, openGifts);
+    return () => window.removeEventListener(OPEN_ROOM_GIFTS_EVENT, openGifts);
+  }, []);
   useEffect(() => {
     if (session && ignoreBusy.current === 0) {
       setIgnored(new Set(session.ignoredUsernames));
@@ -248,9 +257,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
         </div>
         {r.error && <div className="ch-err" role="alert">{r.error} <Link href="/user-portal" className="bm-link">Profile</Link></div>}
         {r.overflow && <p><Link className="bm-btn bm-btn-primary" href={`/rooms/${encodeURIComponent(r.overflow.roomId)}`}>Enter {r.overflow.label}</Link></p>}
-        <div className="ur-sound-row">
-          <GiftControl onClick={() => { setMenu(null); setDrawer(false); setGiftBag({ recipient: null }); }} />
-        </div>
         <div className="ur-body">
           <aside ref={drawerBox} className={`ur-side${drawer ? ' is-open' : ''}`} role={drawer ? 'dialog' : undefined} aria-modal={drawer ? true : undefined} aria-labelledby="ur-people-title">
             {peopleList}
@@ -258,20 +264,14 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           {drawer && <div className="ur-backdrop" onClick={closeDrawer} aria-hidden="true" />}
           <div className="ch-room">
             <section className="ur-beam" aria-label="Audio speaker beam">
-              <div className="ur-beam-head">
-                <div>
-                  <h2>Room audio</h2>
-                  <p>{audioBeam.clientRole === 'speaker' ? 'You’re on the beam' : 'Listening is always open'}</p>
-                </div>
-                <span className={`ur-audio-status ur-audio-${audioBeam.audioState}`} role="status">
-                  <span className="ur-status-dot" aria-hidden="true" />
-                  {audioBeam.audioState === 'ready' || audioBeam.audioState === 'connected'
-                    ? 'Audio ready'
-                    : audioBeam.audioState === 'connecting' || audioBeam.audioState === 'reconnecting'
-                      ? 'Connecting'
-                      : audioBeam.audioState === 'error' ? 'Audio issue' : 'Listeners welcome'}
-                </span>
-              </div>
+              <span className={`ur-audio-status ur-audio-${audioBeam.audioState}`} role="status">
+                <span className="ur-status-dot" aria-hidden="true" />
+                {audioBeam.audioState === 'ready' || audioBeam.audioState === 'connected'
+                  ? 'Audio ready'
+                  : audioBeam.audioState === 'connecting' || audioBeam.audioState === 'reconnecting'
+                    ? 'Connecting'
+                    : audioBeam.audioState === 'error' ? 'Audio issue' : 'Listeners welcome'}
+              </span>
               {audioBeam.playbackBlocked && (
                 <button type="button" className="ur-resume-audio" onClick={() => void audioBeam.resumePlayback()}>
                   Tap to hear
