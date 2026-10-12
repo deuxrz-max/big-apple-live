@@ -28,6 +28,17 @@ const RULES = "Stick to the room's topic. Be kind — no harassment or hate. Not
 type Target = { username: string; displayName: string; displayNameColor?: string };
 type Item = { kind: 'room'; at: number; id: string; m: ChatMessage } | { kind: 'gift'; at: number; id: string; gift: RoomGiftEvent } | { kind: 'whisper'; at: number; id: string; w: { id: string; username: string; displayName: string; displayNameColor?: string; outgoing: boolean; body: string; passport?: StreamerPassportBadgeSummary } };
 
+function identityEmoji(emojiId?: string) {
+  if (!emojiId) return '';
+  const codePoints = emojiId.split('-').map(part => Number.parseInt(part, 16));
+  if (codePoints.some(point => !Number.isInteger(point) || point < 0 || point > 0x10ffff)) return '';
+  try {
+    return String.fromCodePoint(...codePoints);
+  } catch {
+    return '';
+  }
+}
+
 export function TextChatRoom({ roomId, userId }: { roomId: string; userId: string }) {
   const qc = useQueryClient();
   const [, nav] = useLocation();
@@ -299,6 +310,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                   const isSpeaking = !!slot.participantId && videoBeam.speaking.has(slot.participantId);
                   const media = slot.participantId ? videoBeam.media[slot.participantId] : undefined;
                   const showVideo = !!person && !slot.cameraOff && !!media?.video;
+                  const moodEmoji = person ? identityEmoji(person.identity?.emojiId) : '';
                   const speakerBadgeItems: ReactNode[] = [];
                   if (person?.badgeId) {
                     speakerBadgeItems.push(
@@ -339,19 +351,20 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                         {person ? (
                           <div className="ur-slot-copy">
                             <span className="ur-slot-name-line">
+                              {moodEmoji && <span className="ur-slot-mood" aria-hidden="true">{moodEmoji}</span>}
                               <span className="ur-slot-name" style={{ color: person.displayNameColor ?? '#F4F1F8' }}>{person.displayName}</span>
                               {slot.micMuted && <span className="ur-slot-mic-icon" role="img" aria-label="Microphone muted" title="Microphone muted"><MicOff size={13} aria-hidden="true" /></span>}
+                              {speakerBadgeItems.length > 0 && (
+                                <span className="ur-slot-marks" role="group" aria-label={`${speakerBadgeItems.length} badge${speakerBadgeItems.length === 1 ? '' : 's'}`}>
+                                  {visibleSpeakerBadges}
+                                  {speakerBadgeItems.length > visibleSpeakerBadges.length && (
+                                    <span className="ur-slot-more" aria-label={`${speakerBadgeItems.length - visibleSpeakerBadges.length} more badges`}>
+                                      +{speakerBadgeItems.length - visibleSpeakerBadges.length}
+                                    </span>
+                                  )}
+                                </span>
+                              )}
                             </span>
-                            {speakerBadgeItems.length > 0 && (
-                              <span className="ur-slot-marks" role="group" aria-label={`${speakerBadgeItems.length} badge${speakerBadgeItems.length === 1 ? '' : 's'}`}>
-                                {visibleSpeakerBadges}
-                                {speakerBadgeItems.length > visibleSpeakerBadges.length && (
-                                  <span className="ur-slot-more" aria-label={`${speakerBadgeItems.length - visibleSpeakerBadges.length} more badges`}>
-                                    +{speakerBadgeItems.length - visibleSpeakerBadges.length}
-                                  </span>
-                                )}
-                              </span>
-                            )}
                           </div>
                         ) : slot.participantId ? (
                           <div className="ur-slot-copy">
@@ -360,8 +373,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                           </div>
                         ) : (
                           <div className="ur-slot-empty-copy">
-                            <span className="ur-slot-name ur-empty-name">Open spot</span>
-                            <span className="ur-slot-caption">Camera and mic start only after you join</span>
+                            <span className="ur-slot-name ur-empty-name">{joinAvailable ? 'Tap to join' : 'Open spot'}</span>
                           </div>
                         )}
                       </div>
@@ -385,19 +397,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                             </>
                           )}
                         </div>
-                      ) : (
-                        joinAvailable
-                          ? <button type="button" className="ur-slot-join" disabled={videoBeam.busy}
-                              aria-label={`Join open speaker spot ${slot.slotNumber}`}
-                              onClick={() => void videoBeam.joinSpeaker()}>
-                              {videoBeam.busy ? 'Connecting…' : speakerCount < 3 ? `Open spot ${slot.slotNumber} · Join` : 'Join beam'}
-                            </button>
-                          : slot.participantId
-                            ? <span className="ur-slot-caption">Syncing room roster</span>
-                            : videoBeam.ownSlot
-                              ? null
-                              : <span className="ur-slot-caption">Open spot</span>
-                      )}
+                      ) : slot.participantId ? <span className="ur-slot-caption">Syncing room roster</span> : null}
                     </article>
                   );
                 })}

@@ -65,7 +65,7 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 .ur-slot-initial{font-size:13px;font-weight:750;color:#c6c8d0}
 .ur-slot-copy{display:grid;gap:3px;min-width:0}
 .ur-slot-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:750}
-.ur-empty-name{color:#b8bac3}
+.ur-empty-name{color:#f4eaff;font-weight:750;text-shadow:0 1px 8px rgba(8,5,20,.9)}
 .ur-slot-caption{font-size:10px;color:#777a86}
 .ur-slot-marks{display:flex;align-items:center;justify-content:center;gap:4px;min-width:0;max-width:100%;white-space:nowrap}
 .ur-slot-marks .ur-badge{font-size:8px;padding:2px 6px;background:#55505b}

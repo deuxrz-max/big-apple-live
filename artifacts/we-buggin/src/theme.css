@@ -482,7 +482,7 @@ body {
   color: var(--space-ink);
 }
 
-/* Filled audio-beam slots: avatar first, centered identity, controls at the base. */
+/* Filled video-beam slots: camera fills the tile; compact identity stays in the bottom bar. */
 #root .ur-slot.is-occupied {
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
@@ -518,29 +518,45 @@ body {
 #root .ur-slot.is-occupied .ur-slot-copy {
   width: 100%;
   min-width: 0;
-  display: grid;
-  justify-items: center;
-  align-content: start;
-  gap: 2px;
-  text-align: center;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  background: rgba(5, 6, 12, .78);
+  text-align: left;
 }
 #root .ur-slot.is-occupied .ur-slot-name-line {
   display: flex;
-  width: 100%;
+  flex: 1 1 auto;
+  width: auto;
   min-width: 0;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  overflow: hidden;
   gap: 4px;
 }
 #root .ur-slot.is-occupied .ur-slot-name {
   display: block;
-  width: auto;
+  flex: 1 1 auto;
+  width: 0;
   min-width: 0;
-  max-width: calc(100% - 18px);
-  flex: 0 1 auto;
-  font-size: clamp(11px, 1.5vw, 15px);
+  max-width: none;
+  font-size: clamp(9px, 1vw + 6px, 12px);
   line-height: 1.15;
-  text-align: center;
+  text-align: left;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+#root .ur-slot-mood {
+  display: inline-grid;
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+  font-size: 13px;
+  line-height: 1;
 }
 #root .ur-slot-mic-icon {
   display: inline-flex;
@@ -550,12 +566,15 @@ body {
 }
 #root .ur-slot-mic-icon.is-on { color: #9fe8bd; }
 #root .ur-slot.is-occupied .ur-slot-marks {
-  width: 100%;
+  flex: 0 1 auto;
+  width: auto;
   min-width: 0;
-  justify-content: center;
+  max-width: 38%;
+  justify-content: flex-end;
   flex-wrap: nowrap;
   align-content: center;
   gap: 3px;
+  overflow: hidden;
 }
 #root .ur-slot.is-occupied .ur-slot-marks > * { flex: 0 0 auto; }
 #root .ur-slot.is-occupied .ur-slot-marks .sp-summary-badge { margin-left: 0; }

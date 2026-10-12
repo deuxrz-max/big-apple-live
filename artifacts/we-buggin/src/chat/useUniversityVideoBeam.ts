@@ -471,7 +471,21 @@ export function VideoBeamMedia({ track, kind, muted = false }: {
     const element = elementRef.current;
     if (!element || !track) return;
     const attached = track.attach(element) as HTMLVideoElement | HTMLAudioElement;
-    if ("playsInline" in attached) attached.playsInline = true;
+    if (attached instanceof HTMLVideoElement) {
+      attached.playsInline = true;
+      Object.assign(attached.style, {
+        position: "absolute",
+        inset: "0",
+        display: "block",
+        width: "100%",
+        height: "100%",
+        minWidth: "100%",
+        minHeight: "100%",
+        maxWidth: "none",
+        maxHeight: "none",
+        objectFit: "cover",
+      });
+    }
     attached.autoplay = true;
     attached.muted = muted;
     void attached.play().catch(() => undefined);
@@ -485,6 +499,18 @@ export function VideoBeamMedia({ track, kind, muted = false }: {
       autoPlay: true,
       playsInline: true,
       muted,
+      style: {
+        position: "absolute",
+        inset: 0,
+        display: "block",
+        width: "100%",
+        height: "100%",
+        minWidth: "100%",
+        minHeight: "100%",
+        maxWidth: "none",
+        maxHeight: "none",
+        objectFit: "cover",
+      },
       "aria-label": muted ? "Your camera preview" : "Participant camera",
     })
     : createElement("audio", {
