@@ -14,3 +14,9 @@ Room confirmation notices must float above the layout rather than consume stage 
 **Why:** An in-flow identity notice, combined with a tall mobile header, collapsed the chat viewport and clipped participant avatars on short screens.
 
 **How to apply:** Keep notices dismissible and accessible without moving the roster; reserve visible space for both messages and the composer on short screens.
+
+In Video Beam tiles, keep the media viewport filling the tile; control rows must not reserve vertical space. Overlay host controls, and keep the speaker identity in a compact bottom bar.
+
+**Why:** The owner confirmed this layout fixed a phone issue where the camera only occupied a narrow strip and left unused space in the tile.
+
+**How to apply:** When changing beam controls or responsive sizing, preserve the full-size cropped video viewport and avoid adding in-flow controls that shrink it.
