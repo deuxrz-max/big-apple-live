@@ -159,3 +159,9 @@ hashes and every video frame, while one reported duration moved by 0.045 ms.
 alongside reported durations when verifying that full uploaded clips survive
 optimization. Investigate material timing differences rather than requiring
 decimal-string equality across different muxes.
+
+The product goal is a downloadable Android app distributed through Google Play; browser testing is not required by default.
+
+**Why:** The owner explicitly said browser testing is unnecessary because the target is a Play Store mobile app.
+
+**How to apply:** Prioritize Android app builds and device/emulator checks for user-facing verification. Skip browser checks unless they answer a separate web-specific question or the owner asks for them.
