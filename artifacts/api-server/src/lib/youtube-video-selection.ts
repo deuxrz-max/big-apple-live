@@ -16,11 +16,18 @@ export type YouTubeVideoEligibility = {
 export function selectPlayableYouTubeVideos(
   candidates: YouTubeVideoCandidate[],
   eligibility: YouTubeVideoEligibility[],
+  trustedChannelTitles?: readonly string[],
 ) {
   const eligibilityById = new Map(eligibility.map(item => [item.videoId, item]));
+  const trustedChannels = trustedChannelTitles
+    ? new Set(trustedChannelTitles.map(title => title.trim().replace(/\s+/g, " ").toLocaleLowerCase("en-US")))
+    : null;
   const durationMsByVideoId: Record<string, number> = {};
   const videos = candidates.filter(candidate => {
     if (!/^[A-Za-z0-9_-]{11}$/.test(candidate.videoId)) return false;
+    if (trustedChannels && !trustedChannels.has(
+      (candidate.channelTitle ?? "").trim().replace(/\s+/g, " ").toLocaleLowerCase("en-US"),
+    )) return false;
     if (candidate.liveBroadcastContent === "live" || candidate.liveBroadcastContent === "upcoming") return false;
     const details = eligibilityById.get(candidate.videoId);
     if (!details?.embeddable || !details.durationMs || details.durationMs <= 0) return false;

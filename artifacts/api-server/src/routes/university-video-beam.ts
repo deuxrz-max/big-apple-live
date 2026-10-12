@@ -19,7 +19,7 @@ import { RoomError, roomStore } from "../lib/room-store";
 import { requireCompletedProfile } from "../lib/account-profiles";
 import { universityVideoBeamStore } from "../lib/university-video-beam";
 import { liveKitBeamService, publicLiveKitFailure } from "../lib/livekit";
-import { communityDefaultVideoSearch } from "../lib/community-config";
+import { communityDefaultVideoSearch, communityVideoSearchPolicy } from "../lib/community-config";
 import { selectPlayableYouTubeVideos } from "../lib/youtube-video-selection";
 import {
   postBeamTvVoteAnnouncement,
@@ -59,8 +59,17 @@ function parseYouTubeDurationMs(value: unknown): number | null {
   return Number.isFinite(seconds) && seconds > 0 ? Math.round(seconds * 1_000) : null;
 }
 
-async function searchYouTube(query: string, apiKey: string) {
-  const cacheKey = normalizeSearchQuery(query);
+async function searchYouTube(
+  query: string,
+  apiKey: string,
+  policy: ReturnType<typeof communityVideoSearchPolicy> = null,
+) {
+  const cacheKey = [
+    normalizeSearchQuery(query),
+    policy?.order ?? "relevance",
+    policy?.publishedWithinDays ?? "any-date",
+    policy?.trustedChannelTitles?.map(normalizeSearchQuery).sort().join(",") ?? "all-channels",
+  ].join("|");
   const cached = youtubeSearchCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
       return {
@@ -80,7 +89,7 @@ async function searchYouTube(query: string, apiKey: string) {
 
   const request = (async () => {
     const searchUrl = new URL("https://www.googleapis.com/youtube/v3/search");
-    searchUrl.search = new URLSearchParams({
+    const searchParams = new URLSearchParams({
       part: "snippet",
       type: "video",
       videoEmbeddable: "true",
@@ -88,7 +97,14 @@ async function searchYouTube(query: string, apiKey: string) {
       maxResults: "10",
       q: query,
       key: apiKey,
-    }).toString();
+    });
+    if (policy?.order) searchParams.set("order", policy.order);
+    if (policy?.publishedWithinDays) {
+      searchParams.set("publishedAfter", new Date(
+        Date.now() - policy.publishedWithinDays * 24 * 60 * 60 * 1_000,
+      ).toISOString());
+    }
+    searchUrl.search = searchParams.toString();
     let response: Response;
     try {
       response = await fetch(searchUrl, { signal: AbortSignal.timeout(8_000) });
@@ -162,7 +178,7 @@ async function searchYouTube(query: string, apiKey: string) {
           ? record.contentDetails.contentRating.ytRating : null,
       }];
     });
-    const playable = selectPlayableYouTubeVideos(results, eligibility);
+    const playable = selectPlayableYouTubeVideos(results, eligibility, policy?.trustedChannelTitles);
     if (playable.videos.length === 0) {
       throw new RoomError(404, "No suitable videos are available for this room right now.");
     }
@@ -554,7 +570,8 @@ router.post("/account/rooms/:roomId/video-beam/tv/search", async (req, res) => {
   if (!apiKey) {
     throw new RoomError(503, "YouTube search is temporarily unavailable. A room-matched video will appear when it is available.");
   }
-  const result = await searchYouTube(query, apiKey);
+  const policy = autoDefaultSearch ? communityVideoSearchPolicy(roomId, roomStore) : null;
+  const result = await searchYouTube(query, apiKey, policy);
   if (autoDefaultSearch) {
     const before = universityVideoBeamStore.getState(roomId).tv.currentVideoId;
     const state = universityVideoBeamStore.initializeDefaultTvQueue(

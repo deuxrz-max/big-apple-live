@@ -34,7 +34,7 @@ test("real PostgreSQL profile setup, interruption, edit persistence and request 
     await db.delete(accountProfiles).where(inArray(accountProfiles.accountId, ids));
     await db.$client.end();
   });
-  await t.test("the nine ordered communities each have a room-specific default video search", () => {
+  await t.test("all ordered communities have room-specific default video searches", () => {
     assert.deepEqual(COMMUNITY_ROOMS.map(r => r.label), [
       "Video Games & Interactive Media",
       "Television & Streaming Services",
@@ -45,9 +45,11 @@ test("real PostgreSQL profile setup, interruption, edit persistence and request 
       "Theme Parks & Amusement Attractions",
       "Social Media & Creator Economy Content",
       "Performing Arts, Theater & Comedy Shows",
+      "Sports",
+      "World News",
     ]);
-    assert.equal(new Set(COMMUNITY_ROOMS.map(r => r.roomId)).size, 9);
-    assert.equal(new Set(COMMUNITY_ROOMS.map(r => r.defaultVideoSearch)).size, 9);
+    assert.equal(new Set(COMMUNITY_ROOMS.map(r => r.roomId)).size, 11);
+    assert.equal(new Set(COMMUNITY_ROOMS.map(r => r.defaultVideoSearch)).size, 11);
     assert.ok(COMMUNITY_ROOMS.every(r => r.defaultVideoSearch.length > 8));
   });
   await t.test("unsaved and invalid setup never becomes complete", async () => {

@@ -23,3 +23,15 @@ test("automatic Beam TV selection excludes non-embeddable, age-restricted and li
   assert.deepEqual(result.videos.map(video => video.videoId), ["dQw4w9WgXcQ"]);
   assert.deepEqual(result.durationMsByVideoId, { dQw4w9WgXcQ: 240_000 });
 });
+
+test("World News selection only accepts configured trusted channel names", () => {
+  const candidates = [
+    { videoId: "abc12345678", title: "World update", channelTitle: "BBC News", description: null },
+    { videoId: "def12345678", title: "Unverified upload", channelTitle: "Daily World Update", description: null },
+  ];
+  const result = selectPlayableYouTubeVideos(candidates, [
+    { videoId: "abc12345678", durationMs: 60_000, embeddable: true },
+    { videoId: "def12345678", durationMs: 60_000, embeddable: true },
+  ], ["BBC News", "Reuters"]);
+  assert.deepEqual(result.videos.map(video => video.videoId), ["abc12345678"]);
+});

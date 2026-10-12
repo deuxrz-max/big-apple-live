@@ -5,7 +5,12 @@ import type { EmojiIdentity } from "@workspace/api-zod";
 import { RoomError, RoomStore } from "./room-store";
 import { UniversityVideoBeamStore } from "./university-video-beam";
 import { LiveKitBeamService, type LiveKitSettings } from "./livekit";
-import { COMMUNITY_ROOMS, communityDefaultVideoSearch, isPublicTopicRoom } from "./community-config";
+import {
+  COMMUNITY_ROOMS,
+  communityDefaultVideoSearch,
+  communityVideoSearchPolicy,
+  isPublicTopicRoom,
+} from "./community-config";
 import { beamTvReactionLine } from "./beam-tv-reaction-policy";
 
 const identity: EmojiIdentity = {
@@ -24,7 +29,7 @@ function addMember(store: RoomStore, roomId: string, accountId: string) {
   return store.join(roomId, accountId, { accountId, identity });
 }
 
-test("only the nine public topic rooms and their overflow rooms use the ownerless policy", () => {
+test("public topic rooms and their overflow rooms use the ownerless policy", () => {
   const rooms = new RoomStore();
   for (const item of COMMUNITY_ROOMS) {
     createRoom(rooms, item.roomId, `history-${item.roomId}`, undefined, item.label);
@@ -310,6 +315,30 @@ test("public Beam TV searches by the exact room name and holds a synchronized in
   assert.equal(state.tv.sourceValue, defaultSearch);
   assert.deepEqual(state.tv.queue, ["dQw4w9WgXcQ", "5qap5aO4i9A"]);
   assert.equal(state.tv.skipVotingEnabled, false);
+});
+
+test("Sports and World News use recent topic-specific searches across their overflow rooms", () => {
+  const rooms = new RoomStore();
+  createRoom(rooms, "SPORTS", "history-sports", undefined, "Sports");
+  createRoom(rooms, "WORLDNEWS", "history-world-news", undefined, "World News");
+  createRoom(rooms, "SPORTSROOM2", "history-sports-2", "SPORTS", "Sports 2");
+  createRoom(rooms, "WORLDNEWS2", "history-world-news-2", "WORLDNEWS", "World News 2");
+
+  assert.equal(communityDefaultVideoSearch("SPORTS", rooms), "recent sports highlights and sports news");
+  assert.equal(communityDefaultVideoSearch("SPORTSROOM2", rooms), "recent sports highlights and sports news");
+  assert.equal(communityDefaultVideoSearch("WORLDNEWS", rooms),
+    "recent world news coverage BBC News Reuters Associated Press");
+  assert.equal(communityDefaultVideoSearch("WORLDNEWS2", rooms),
+    "recent world news coverage BBC News Reuters Associated Press");
+  assert.deepEqual(communityVideoSearchPolicy("SPORTS", rooms), {
+    order: "date",
+    publishedWithinDays: 14,
+  });
+  const newsPolicy = communityVideoSearchPolicy("WORLDNEWS2", rooms);
+  assert.equal(newsPolicy?.order, "date");
+  assert.equal(newsPolicy?.publishedWithinDays, 14);
+  assert.ok(newsPolicy?.trustedChannelTitles?.includes("Reuters"));
+  assert.ok(newsPolicy?.trustedChannelTitles?.includes("BBC News"));
 });
 
 test("a speaker muted by choice stays muted when a video ends and the break begins", () => {
