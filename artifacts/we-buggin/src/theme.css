@@ -741,3 +741,139 @@ body {
   padding: 4px 10px;
   font-size: 12px;
 }
+
+/* Keep the room header on one line and make each of the eight beam cells square. */
+#root .ch.ur .ur-head { gap: clamp(4px, 1.4vw, 10px); }
+#root .ch.ur .ur-head > .ur-people-btn,
+#root .ch.ur .ur-head > .ur-rules-btn {
+  flex: 0 0 auto;
+  padding-inline: clamp(6px, 1.8vw, 10px);
+  font-size: clamp(9px, 2.7vw, 12px);
+}
+#root .ch.ur .ur-titlebox { flex: 1 1 0%; width: 0; min-width: 0; }
+#root .ch.ur .ur-title {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 2px 0;
+  font-size: clamp(11px, 3.4vw, 16px);
+  line-height: 1.1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#root .ch.ur .ur-title .ch-word { white-space: nowrap; }
+
+#root .ur-beam,
+#root .ur-beam.is-tv-on { flex: 0 0 auto; }
+#root .ur-slots,
+#root .ur-slots[data-tv="on"] {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 2 / 1;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+#root .ur-slot {
+  box-sizing: border-box;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 1 / 1;
+  align-self: stretch;
+}
+
+/* A compact, clean footer: preserve the display name verbatim and isolate mic status. */
+#root .ur-slot.is-occupied .ur-slot-copy {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  min-height: 0;
+  max-height: 34%;
+  box-sizing: border-box;
+  padding: 12px 4px 3px;
+  background: linear-gradient(180deg, transparent, rgba(5, 6, 12, .88) 48%);
+}
+#root .ur-slot.is-occupied .ur-slot-name-line {
+  flex: 1 1 0%;
+  width: 100%;
+  min-width: 0;
+  justify-content: flex-start;
+  gap: 3px;
+  overflow: hidden;
+}
+#root .ur-slot.is-occupied .ur-slot-name {
+  flex: 1 1 0%;
+  width: 0;
+  min-width: 0;
+  max-width: none;
+  font-size: clamp(8px, 2.2vw, 10px);
+  line-height: 1.1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#root .ur-slot.is-occupied .ur-slot-marks {
+  flex: 0 0 auto;
+  width: 15px;
+  max-width: 15px;
+  overflow: visible;
+}
+#root .ur-slot.is-occupied .ur-slot-marks .ur-badge {
+  width: 14px;
+  height: 14px;
+  padding: 0;
+}
+#root .ur-slot.is-occupied .ur-slot-mic-icon {
+  position: absolute;
+  z-index: 3;
+  top: 4px;
+  left: 4px;
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 1px solid rgba(239, 221, 255, .46);
+  border-radius: 50%;
+  background: rgba(5, 6, 12, .78);
+  color: #ffc4d4;
+  pointer-events: none;
+}
+#root .ur-slot.is-occupied .ur-slot-mic-icon svg { width: 10px; height: 10px; }
+
+#root .ur-slot .ur-slot-empty-copy {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 3px;
+  box-sizing: border-box;
+  padding: 4px;
+  text-align: center;
+}
+#root .ur-slot .ur-empty-number {
+  width: 34px;
+  height: 34px;
+  flex-basis: 34px;
+  font-size: 16px;
+  line-height: 1;
+}
+#root .ur-slot .ur-empty-name {
+  display: block;
+  max-width: 100%;
+  font-size: clamp(7px, 2.2vw, 9px);
+  line-height: 1.05;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

@@ -18,6 +18,7 @@ type YtPlayer = {
   seekTo(seconds: number, allowSeekAhead: boolean): void;
   getCurrentTime(): number;
   getVideoData(): { video_id?: string };
+  unloadModule(moduleName: string): void;
 };
 type YtNamespace = {
   Player: new (target: HTMLElement, options: {
@@ -221,6 +222,7 @@ export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
           disablekb: 1,
           fs: 0,
           rel: 0,
+          cc_load_policy: 0,
           iv_load_policy: 3,
           enablejsapi: 1,
           origin: window.location.origin,
@@ -259,6 +261,7 @@ export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
                 startSeconds: positionAt(latest.startedAtMs, serverClockOffsetMs.current),
               });
             }
+            try { event.target.unloadModule("captions"); } catch { /* some embeds omit the captions module */ }
             if (soundUnlockedRef.current || roomGestureSeenRef.current) requestSound(event.target);
             setPlayerReady(true);
           },

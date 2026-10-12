@@ -32,17 +32,6 @@ type Item = { kind: 'room'; at: number; id: string; m: ChatMessage }
   | { kind: 'gift'; at: number; id: string; gift: RoomGiftEvent }
   | { kind: 'whisper'; at: number; id: string; w: { id: string; username: string; displayName: string; displayNameColor?: string; outgoing: boolean; body: string; passport?: StreamerPassportBadgeSummary } };
 
-function identityEmoji(emojiId?: string) {
-  if (!emojiId) return '';
-  const codePoints = emojiId.split('-').map(part => Number.parseInt(part, 16));
-  if (codePoints.some(point => !Number.isInteger(point) || point < 0 || point > 0x10ffff)) return '';
-  try {
-    return String.fromCodePoint(...codePoints);
-  } catch {
-    return '';
-  }
-}
-
 export function TextChatRoom({ roomId, userId }: { roomId: string; userId: string }) {
   const qc = useQueryClient();
   const [, nav] = useLocation();
@@ -329,19 +318,12 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                   const isSpeaking = !!slot.participantId && videoBeam.speaking.has(slot.participantId);
                   const media = slot.participantId ? videoBeam.media[slot.participantId] : undefined;
                   const showVideo = !!person && !slot.cameraOff && !!media?.video;
-                  const moodEmoji = person ? identityEmoji(person.identity?.emojiId) : '';
                   const speakerBadgeItems: ReactNode[] = [];
                   if (person?.badgeId) {
                     speakerBadgeItems.push(
                       <BadgeMark key="equipped-badge" id={person.badgeId}
                         label={`${person.badgeId === 'night-owl' ? 'Night Owl' : person.badgeId.replaceAll('-', ' ')} badge`}
                         size={15} compact />,
-                    );
-                  }
-                  if (person?.passport?.platforms.length) {
-                    speakerBadgeItems.push(
-                      <PassportSummaryBadge key="streamer-passport" passport={person.passport}
-                        username={person.username} context={`speaker-${slot.slotNumber}`} />,
                     );
                   }
                   const visibleSpeakerBadges = speakerBadgeItems.slice(0, 4);
@@ -364,25 +346,23 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                             <VideoBeamMedia track={media?.video} kind="video" muted={mine} />
                           </div>
                         )}
+                        {person && (slot.micMuted || slot.mutedByHost || micsLockedDuringVideo) && (
+                          <span className="ur-slot-mic-icon" role="img"
+                            aria-label={micsLockedDuringVideo ? 'Microphone locked off during video' : 'Microphone muted'}
+                            title={micsLockedDuringVideo ? 'Microphone locked off during video' : 'Microphone muted'}>
+                            {micsLockedDuringVideo ? <LockKeyhole size={13} aria-hidden="true" /> : <MicOff size={13} aria-hidden="true" />}
+                          </span>
+                        )}
                         {!showVideo && person?.identity && (
                           <IdentityAvatar identity={person.identity} size={64} className="ur-slot-avatar ur-slot-art" />
                         )}
                         {!showVideo && person && !person.identity && (
                           <span className="ur-slot-avatar ur-slot-initial" aria-hidden="true">{person.displayName.slice(0, 1)}</span>
                         )}
-                        {!slot.participantId && <span className="ur-empty-number" aria-hidden="true">{slot.slotNumber}</span>}
                         {person ? (
                           <div className="ur-slot-copy">
                             <span className="ur-slot-name-line">
-                              {moodEmoji && <span className="ur-slot-mood" aria-hidden="true">{moodEmoji}</span>}
                               <span className="ur-slot-name" style={{ color: person.displayNameColor ?? '#F4F1F8' }}>{person.displayName}</span>
-                              {(slot.micMuted || slot.mutedByHost || micsLockedDuringVideo) && (
-                                <span className="ur-slot-mic-icon" role="img"
-                                  aria-label={micsLockedDuringVideo ? 'Microphone locked off during video' : 'Microphone muted'}
-                                  title={micsLockedDuringVideo ? 'Microphone locked off during video' : 'Microphone muted'}>
-                                  {micsLockedDuringVideo ? <LockKeyhole size={13} aria-hidden="true" /> : <MicOff size={13} aria-hidden="true" />}
-                                </span>
-                              )}
                               {speakerBadgeItems.length > 0 && (
                                 <span className="ur-slot-marks" role="group" aria-label={`${speakerBadgeItems.length} badge${speakerBadgeItems.length === 1 ? '' : 's'}`}>
                                   {visibleSpeakerBadges}
@@ -402,6 +382,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                           </div>
                         ) : (
                           <div className="ur-slot-empty-copy">
+                            <span className="ur-empty-number" aria-hidden="true">{slot.slotNumber}</span>
                             <span className="ur-slot-name ur-empty-name">{joinAvailable ? 'Tap to join' : 'Open spot'}</span>
                           </div>
                         )}
