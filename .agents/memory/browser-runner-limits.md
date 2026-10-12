@@ -160,8 +160,8 @@ alongside reported durations when verifying that full uploaded clips survive
 optimization. Investigate material timing differences rather than requiring
 decimal-string equality across different muxes.
 
-The product goal is a downloadable Android app distributed through Google Play; browser testing is not required by default.
+The product is intended to be wrapped for Google Play later; mobile-web behavior on portrait phone screens matters, while desktop browser testing can be skipped.
 
-**Why:** The owner explicitly said browser testing is unnecessary because the target is a Play Store mobile app.
+**Why:** The owner clarified that camera and microphone permissions and other mobile-web behavior need testing before wrapping the app for Google Play.
 
-**How to apply:** Prioritize Android app builds and device/emulator checks for user-facing verification. Skip browser checks unless they answer a separate web-specific question or the owner asks for them.
+**How to apply:** Check user-facing web flows at portrait phone sizes, including camera/microphone permissions when relevant. Skip desktop browser testing by default; use Android device/emulator checks where available.
