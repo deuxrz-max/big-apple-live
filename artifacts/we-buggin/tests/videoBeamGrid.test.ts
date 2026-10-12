@@ -34,6 +34,10 @@ test('live video is forced to fill and crop inside every camera tile', () => {
   assert.match(beamHook, /objectFit:\s*"cover"/);
   assert.match(beamHook, /minWidth:\s*"100%"/);
   assert.match(beamHook, /minHeight:\s*"100%"/);
+  assert.match(roomComponent, /className="ur-video-fill"[\s\S]*?<VideoBeamMedia/);
+  assert.match(themeCss, /#root \.ur-slot\.is-occupied \.ur-slot-media\s*\{[^}]*flex:\s*1 1 0%/);
+  assert.match(themeCss, /#root \.ur-slot-media \.ur-video-fill > \.ur-live-video\s*\{[^}]*height:\s*100% !important[^}]*object-fit:\s*cover !important/);
+  assert.match(themeCss, /#root \.ur-slot\.is-occupied \.ur-slot-actions\s*\{[^}]*position:\s*absolute/);
 });
 
 test('speaker name, mood emoji, and badges stay in a compact bottom bar', () => {

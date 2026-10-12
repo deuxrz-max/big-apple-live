@@ -340,7 +340,11 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                             void videoBeam.joinSpeaker();
                           }
                         } : undefined}>
-                        {showVideo && <VideoBeamMedia track={media?.video} kind="video" muted={mine} />}
+                        {showVideo && (
+                          <div className="ur-video-fill" aria-hidden="true">
+                            <VideoBeamMedia track={media?.video} kind="video" muted={mine} />
+                          </div>
+                        )}
                         {!showVideo && person?.identity && (
                           <IdentityAvatar identity={person.identity} size={64} className="ur-slot-avatar ur-slot-art" />
                         )}
@@ -377,27 +381,23 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                           </div>
                         )}
                       </div>
-                      {person ? (
+                      {person && !mine && videoBeam.isHost ? (
                         <div className="ur-slot-actions">
-                          {!mine && videoBeam.isHost && (
-                            <>
-                              <button type="button" className="ur-slot-action" disabled={videoBeam.busy || slot.micMuted}
-                                aria-label={`Mute ${person.displayName}'s microphone`} title={`Mute ${person.displayName}'s microphone`}
-                                onClick={() => void videoBeam.hostMuteMic(slot.participantId!)}>
-                                <MicOff size={16} />
-                              </button>
-                              <button type="button" className="ur-slot-action" disabled={videoBeam.busy || slot.cameraOff}
-                                aria-label={`Turn off ${person.displayName}'s camera`} title={`Turn off ${person.displayName}'s camera`}
-                                onClick={() => void videoBeam.hostDisableCamera(slot.participantId!)}>
-                                <CameraOff size={16} />
-                              </button>
-                              <button type="button" className="ur-slot-action ur-slot-leave" disabled={videoBeam.busy}
-                                aria-label={`Remove ${person.displayName} from the beam`} title={`Remove ${person.displayName} from the beam`}
-                                onClick={() => void videoBeam.kick(slot.participantId!)}><X size={16} /></button>
-                            </>
-                          )}
+                          <button type="button" className="ur-slot-action" disabled={videoBeam.busy || slot.micMuted}
+                            aria-label={`Mute ${person.displayName}'s microphone`} title={`Mute ${person.displayName}'s microphone`}
+                            onClick={() => void videoBeam.hostMuteMic(slot.participantId!)}>
+                            <MicOff size={16} />
+                          </button>
+                          <button type="button" className="ur-slot-action" disabled={videoBeam.busy || slot.cameraOff}
+                            aria-label={`Turn off ${person.displayName}'s camera`} title={`Turn off ${person.displayName}'s camera`}
+                            onClick={() => void videoBeam.hostDisableCamera(slot.participantId!)}>
+                            <CameraOff size={16} />
+                          </button>
+                          <button type="button" className="ur-slot-action ur-slot-leave" disabled={videoBeam.busy}
+                            aria-label={`Remove ${person.displayName} from the beam`} title={`Remove ${person.displayName} from the beam`}
+                            onClick={() => void videoBeam.kick(slot.participantId!)}><X size={16} /></button>
                         </div>
-                      ) : slot.participantId ? <span className="ur-slot-caption">Syncing room roster</span> : null}
+                      ) : !person && slot.participantId ? <span className="ur-slot-caption">Syncing room roster</span> : null}
                     </article>
                   );
                 })}

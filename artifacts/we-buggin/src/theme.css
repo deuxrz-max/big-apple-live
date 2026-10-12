@@ -482,14 +482,45 @@ body {
   color: var(--space-ink);
 }
 
-/* Filled video-beam slots: camera fills the tile; compact identity stays in the bottom bar. */
+/* Filled video-beam slots: a flex layout lets both the video viewport and compact footer size reliably. */
 #root .ur-slot.is-occupied {
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
   align-items: stretch;
-  justify-content: initial;
+  justify-content: flex-start;
   gap: 4px;
   overflow: hidden;
+}
+#root .ur-slot.is-occupied .ur-slot-media {
+  position: relative;
+  flex: 1 1 0%;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  align-self: stretch;
+}
+#root .ur-video-fill {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+#root .ur-slot-media .ur-video-fill > .ur-live-video {
+  position: absolute !important;
+  inset: 0 !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
 }
 #root .ur-slot.is-occupied .ur-slot-identity {
   width: 100%;
@@ -579,14 +610,23 @@ body {
 #root .ur-slot.is-occupied .ur-slot-marks > * { flex: 0 0 auto; }
 #root .ur-slot.is-occupied .ur-slot-marks .sp-summary-badge { margin-left: 0; }
 #root .ur-slot.is-occupied .ur-slot-actions {
-  width: 100%;
+  position: absolute;
+  z-index: 4;
+  top: 5px;
+  right: 5px;
+  width: auto;
+  min-height: 0;
   flex: 0 0 auto;
-  align-self: stretch;
-  justify-content: center;
+  align-self: auto;
+  justify-content: flex-end;
   flex-wrap: nowrap;
   gap: 3px;
-  min-height: 32px;
   margin: 0;
+  padding: 3px;
+  border: 1px solid rgba(220, 200, 255, .24);
+  border-radius: 999px;
+  background: rgba(5, 6, 12, .7);
+  backdrop-filter: blur(4px);
 }
 #root .ur-slot.is-occupied .ur-slot-action {
   box-sizing: border-box;
