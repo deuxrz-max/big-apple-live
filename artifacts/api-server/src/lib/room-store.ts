@@ -54,6 +54,12 @@ export class RoomStore {
       name: input.label, capacity: UNIVERSITY_MEMBER_CAP, createdAt: input.createdAt, hostParticipantId: randomUUID(),
       sessions: new Map(), listeners: new Set(), emptySince: null, community: true, testOnly: input.testOnly });
   }
+  unregisterCommunity(roomId: string): void {
+    const room = this.requireRoom(roomId);
+    if (!room.community) throw new RoomError(409, "Only a university room can be unregistered");
+    if (room.sessions.size) throw new RoomError(409, "A university room with active participants cannot be unregistered");
+    this.rooms.delete(room.roomId);
+  }
   isCommunity(roomId: string) { return !!this.rooms.get(roomId.toUpperCase())?.community; }
   /** Bots use this read-only list, never a participant session or a real seat. */
   occupiedUniversities() {

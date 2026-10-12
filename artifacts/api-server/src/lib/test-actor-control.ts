@@ -155,6 +155,12 @@ async function execute(command: TestActorCommand): Promise<unknown> {
   return { sent: true, from: sender.username, to: recipient.username, gift: command.gift, testCreditsRemaining: result.balance };
 }
 
+export async function executeTestActorCommand(value: unknown): Promise<unknown> {
+  const command = parseTestActorCommand(value);
+  if (!command) throw new RoomError(400, "Invalid test actor command");
+  return execute(command);
+}
+
 const count = async (query: Promise<{ count: number }[]>) => (await query)[0]?.count ?? 0;
 function canonical(value: unknown): unknown {
   if (Array.isArray(value))
@@ -438,9 +444,7 @@ export async function startTestActorControl(): Promise<void> {
           let raw: unknown;
           try { raw = JSON.parse(input.slice(0, newline)); }
           catch { throw new RoomError(400, "Invalid test actor command"); }
-          const command = parseTestActorCommand(raw);
-          if (!command) throw new RoomError(400, "Invalid test actor command");
-          const result = await execute(command);
+          const result = await executeTestActorCommand(raw);
           send(socket, { ok: true, result });
         } catch (error) {
           send(socket, {
