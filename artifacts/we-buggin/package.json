@@ -87,6 +87,7 @@
     "@clerk/themes": "^2.4.57",
     "@workspace/beam-identity": "workspace:*",
     "@workspace/room-audio": "workspace:*",
+    "livekit-client": "^2.22.4",
     "socket.io-client": "^4.8.4"
   }
 }

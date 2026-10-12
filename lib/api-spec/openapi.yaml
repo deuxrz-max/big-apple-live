@@ -14,6 +14,8 @@ tags:
     description: Room and active participant session management
   - name: audio
     description: Authenticated room-scoped WebRTC signaling; media travels peer-to-peer
+  - name: video
+    description: Authenticated university video beam management and LiveKit access
 paths:
   /account/chat/bots/settings:
     get:
@@ -114,6 +116,80 @@ paths:
               schema: { $ref: "#/components/schemas/UniversityAudioState" }
         "401": { $ref: "#/components/responses/SessionUnauthorized" }
         "404": { $ref: "#/components/responses/InvalidInput" }
+  /account/rooms/{roomId}/video-beam:
+    get:
+      operationId: getUniversityVideoBeamState
+      tags: [video]
+      summary: Read the four-slot LiveKit video beam for an authenticated university member
+      security:
+        - AccountSession: []
+          AccountRoomSession: []
+      parameters:
+        - { $ref: "#/components/parameters/RoomId" }
+        - { $ref: "#/components/parameters/RoomSessionHeader" }
+      responses:
+        "200":
+          description: Current speaker slots and beam host
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UniversityVideoBeamState" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "404": { $ref: "#/components/responses/InvalidInput" }
+        "503": { description: LiveKit credentials are unavailable or the room service cannot be reached }
+  /account/rooms/{roomId}/video-beam/token:
+    post:
+      operationId: getUniversityVideoBeamToken
+      tags: [video]
+      summary: Issue a short-lived, room-scoped LiveKit token to an authenticated university member
+      security:
+        - AccountSession: []
+          AccountRoomSession: []
+      parameters:
+        - { $ref: "#/components/parameters/RoomId" }
+        - { $ref: "#/components/parameters/RoomSessionHeader" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UniversityVideoBeamTokenInput" }
+      responses:
+        "200":
+          description: Short-lived token; LiveKit API secrets are never returned
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UniversityVideoBeamToken" }
+        "400": { $ref: "#/components/responses/InvalidInput" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "409": { description: No open speaker slot is available or the member was recently removed }
+        "503": { description: LiveKit credentials are unavailable or the room service cannot be reached }
+  /account/rooms/{roomId}/video-beam/actions:
+    post:
+      operationId: performUniversityVideoBeamAction
+      tags: [video]
+      summary: Leave a speaker slot or apply consent-based self and host controls
+      security:
+        - AccountSession: []
+          AccountRoomSession: []
+      parameters:
+        - { $ref: "#/components/parameters/RoomId" }
+        - { $ref: "#/components/parameters/RoomSessionHeader" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UniversityVideoBeamActionInput" }
+      responses:
+        "200":
+          description: Updated beam state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UniversityVideoBeamState" }
+        "400": { $ref: "#/components/responses/InvalidInput" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "403":
+          description: "Only the host may control another participant, and a host cannot enable another participant's media"
+        "404": { description: The selected participant is not on the beam }
+        "503": { description: LiveKit room control is unavailable }
   /account/rooms/{roomId}/audio/actions:
     post:
       operationId: performUniversityAudioAction
@@ -1354,6 +1430,54 @@ components:
           minItems: 4
           maxItems: 4
           items: { $ref: "#/components/schemas/UniversityAudioSlot" }
+      required: [roomId, beamActive, hostParticipantId, slots]
+    UniversityVideoBeamTokenInput:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [audience, speaker]
+      required: [role]
+    UniversityVideoBeamToken:
+      type: object
+      properties:
+        url: { type: string, format: uri }
+        token: { type: string }
+        role:
+          type: string
+          enum: [audience, speaker]
+        slotNumber: { type: ["integer", "null"], minimum: 1, maximum: 4 }
+      required: [url, token, role, slotNumber]
+    UniversityVideoBeamActionInput:
+      type: object
+      properties:
+        action:
+          type: string
+          enum: [reserve-slot, speaker-connected, leave-slot, set-self-mic, set-self-camera, host-mute-mic, host-disable-camera, kick]
+        enabled: { type: boolean }
+        targetParticipantId: { type: string, format: uuid }
+      required: [action]
+    UniversityVideoBeamSlot:
+      type: object
+      properties:
+        slotNumber: { type: integer, minimum: 1, maximum: 4 }
+        participantId: { type: [string, "null"], format: uuid }
+        micMuted: { type: boolean }
+        cameraOff: { type: boolean }
+        mutedByHost: { type: boolean }
+        cameraDisabledByHost: { type: boolean }
+      required: [slotNumber, participantId, micMuted, cameraOff, mutedByHost, cameraDisabledByHost]
+    UniversityVideoBeamState:
+      type: object
+      properties:
+        roomId: { type: string }
+        beamActive: { type: boolean }
+        hostParticipantId: { type: [string, "null"], format: uuid }
+        slots:
+          type: array
+          minItems: 4
+          maxItems: 4
+          items: { $ref: "#/components/schemas/UniversityVideoBeamSlot" }
       required: [roomId, beamActive, hostParticipantId, slots]
     HealthStatus:
       type: object

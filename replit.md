@@ -272,6 +272,32 @@ Real accounts and voice-room capabilities remain separate from the beam demo.
 Root authentication callbacks must let Clerk finish its handshake before showing
 the public demo or redirecting the signed-in user to discovery.
 
+## University Video Beam
+
+The university room includes a real LiveKit video beam, separate from the archived
+browser-local beam demo above. It has four camera/microphone slots total including
+the first speaker/host; other room members can watch and chat as audience members.
+Only an explicit “Join beam” action asks for camera and microphone permission.
+Audience access is subscribe-only, and LiveKit tokens are signed on the API server
+using the configured Replit Secrets. Never expose the LiveKit API secret to the
+browser or logs. Do not buy service plans or add another provider without approval.
+
+Host media controls disable a participant's publication at LiveKit; participants
+can only enable their own media with an explicit action. Joining is atomic and
+limited to four, the host can remove a speaker, and a kicked account has a short
+cooldown for that same room. A connected speaker disappearing from LiveKit frees
+their slot; a new join's permission/connection handoff has a grace period.
+
+The video grid uses a synchronized CSS neon frame: hot pink, purple, electric
+blue, then cyan, eight seconds per color. Empty spots use a dimmer starfield and
+reduced-motion preferences hold a static pink-purple frame. The beam grid itself
+has no background video. Existing university chat, accounts, moderation and gifts
+remain shared and unchanged.
+
+**Why:** The owner approved a real LiveKit Video Beam after the earlier audio-only
+P2P decision, then specified the changing neon frame as a visual layer on those
+four video boxes.
+
 ## Run & Operate
 
 - `pnpm --filter @workspace/api-server run dev` — run the API server using workflow-provided PORT

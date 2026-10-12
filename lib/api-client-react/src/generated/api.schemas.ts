@@ -693,6 +693,84 @@ export interface UniversityAudioState {
   slots: UniversityAudioSlot[];
 }
 
+export type UniversityVideoBeamTokenInputRole = typeof UniversityVideoBeamTokenInputRole[keyof typeof UniversityVideoBeamTokenInputRole];
+
+
+export const UniversityVideoBeamTokenInputRole = {
+  audience: 'audience',
+  speaker: 'speaker',
+} as const;
+
+export interface UniversityVideoBeamTokenInput {
+  role: UniversityVideoBeamTokenInputRole;
+}
+
+export type UniversityVideoBeamTokenRole = typeof UniversityVideoBeamTokenRole[keyof typeof UniversityVideoBeamTokenRole];
+
+
+export const UniversityVideoBeamTokenRole = {
+  audience: 'audience',
+  speaker: 'speaker',
+} as const;
+
+export interface UniversityVideoBeamToken {
+  url: string;
+  token: string;
+  role: UniversityVideoBeamTokenRole;
+  /**
+     * @minimum 1
+     * @maximum 4
+     * @nullable
+     */
+  slotNumber: number | null;
+}
+
+export type UniversityVideoBeamActionInputAction = typeof UniversityVideoBeamActionInputAction[keyof typeof UniversityVideoBeamActionInputAction];
+
+
+export const UniversityVideoBeamActionInputAction = {
+  'reserve-slot': 'reserve-slot',
+  'speaker-connected': 'speaker-connected',
+  'leave-slot': 'leave-slot',
+  'set-self-mic': 'set-self-mic',
+  'set-self-camera': 'set-self-camera',
+  'host-mute-mic': 'host-mute-mic',
+  'host-disable-camera': 'host-disable-camera',
+  kick: 'kick',
+} as const;
+
+export interface UniversityVideoBeamActionInput {
+  action: UniversityVideoBeamActionInputAction;
+  enabled?: boolean;
+  targetParticipantId?: string;
+}
+
+export interface UniversityVideoBeamSlot {
+  /**
+     * @minimum 1
+     * @maximum 4
+     */
+  slotNumber: number;
+  /** @nullable */
+  participantId: string | null;
+  micMuted: boolean;
+  cameraOff: boolean;
+  mutedByHost: boolean;
+  cameraDisabledByHost: boolean;
+}
+
+export interface UniversityVideoBeamState {
+  roomId: string;
+  beamActive: boolean;
+  /** @nullable */
+  hostParticipantId: string | null;
+  /**
+     * @minItems 4
+     * @maxItems 4
+     */
+  slots: UniversityVideoBeamSlot[];
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -1211,6 +1289,84 @@ export interface UniversityAudioState4b96100 {
      * @maxItems 4
      */
   slots: UniversityAudioSlot4b96100[];
+}
+
+export type UniversityVideoBeamTokenInput4b96100Role = typeof UniversityVideoBeamTokenInput4b96100Role[keyof typeof UniversityVideoBeamTokenInput4b96100Role];
+
+
+export const UniversityVideoBeamTokenInput4b96100Role = {
+  audience: 'audience',
+  speaker: 'speaker',
+} as const;
+
+export interface UniversityVideoBeamTokenInput4b96100 {
+  role: UniversityVideoBeamTokenInput4b96100Role;
+}
+
+export type UniversityVideoBeamToken4b96100Role = typeof UniversityVideoBeamToken4b96100Role[keyof typeof UniversityVideoBeamToken4b96100Role];
+
+
+export const UniversityVideoBeamToken4b96100Role = {
+  audience: 'audience',
+  speaker: 'speaker',
+} as const;
+
+export interface UniversityVideoBeamToken4b96100 {
+  url: string;
+  token: string;
+  role: UniversityVideoBeamToken4b96100Role;
+  /**
+     * @minimum 1
+     * @maximum 4
+     * @nullable
+     */
+  slotNumber: number | null;
+}
+
+export type UniversityVideoBeamActionInput4b96100Action = typeof UniversityVideoBeamActionInput4b96100Action[keyof typeof UniversityVideoBeamActionInput4b96100Action];
+
+
+export const UniversityVideoBeamActionInput4b96100Action = {
+  'reserve-slot': 'reserve-slot',
+  'speaker-connected': 'speaker-connected',
+  'leave-slot': 'leave-slot',
+  'set-self-mic': 'set-self-mic',
+  'set-self-camera': 'set-self-camera',
+  'host-mute-mic': 'host-mute-mic',
+  'host-disable-camera': 'host-disable-camera',
+  kick: 'kick',
+} as const;
+
+export interface UniversityVideoBeamActionInput4b96100 {
+  action: UniversityVideoBeamActionInput4b96100Action;
+  enabled?: boolean;
+  targetParticipantId?: string;
+}
+
+export interface UniversityVideoBeamSlot4b96100 {
+  /**
+     * @minimum 1
+     * @maximum 4
+     */
+  slotNumber: number;
+  /** @nullable */
+  participantId: string | null;
+  micMuted: boolean;
+  cameraOff: boolean;
+  mutedByHost: boolean;
+  cameraDisabledByHost: boolean;
+}
+
+export interface UniversityVideoBeamState4b96100 {
+  roomId: string;
+  beamActive: boolean;
+  /** @nullable */
+  hostParticipantId: string | null;
+  /**
+     * @minItems 4
+     * @maxItems 4
+     */
+  slots: UniversityVideoBeamSlot4b96100[];
 }
 
 export interface HealthStatus4b96100 {

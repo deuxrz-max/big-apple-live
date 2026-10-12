@@ -1,41 +1,22 @@
 ---
-name: Audio beam constraints
-description: Owner-approved transport and privacy constraints for Streamtalk university beams.
+name: University beam transport decisions
+description: The audio-only preference was explicitly superseded by an approved, real LiveKit video beam.
 ---
 
-University beams are audio-only: no camera capture or camera permission. Prefer direct peer-to-peer audio with free connection helpers; do not add hosted or paid live-media services or request their credentials. If restrictive networks make a relay necessary, propose a self-hosted option and explain the tradeoffs before adding it.
+The owner's current approved university-room beam is real four-slot audio/video via LiveKit, with the host included in the four slots. This explicitly replaces the earlier audio-only/P2P preference for this feature; use the server-side LiveKit integration and existing Replit Secrets, never expose the API secret to a browser. Audience tokens are subscribe-only; camera/microphone capture starts only after a person taps to join a speaker slot.
 
-**Why:** the owner changed the beam plan from video to audio-only, rejected services that could create future billing, and explicitly said not to ask for paid service keys.
+**Why:** on 2026-10-12 the owner explicitly changed the plan back to a real LiveKit-powered Video Beam and supplied the three LiveKit secret names. The latest feature decision takes precedence over the previous cost-avoidance/P2P choice.
 
-**How to apply:** preserve the four-speaker-slot limit and use direct connections by default; clearly disclose that some NAT/firewall combinations may fail without TURN and that P2P host-mute relies on clients honoring the server's moderation event.
+**How to apply:** preserve the four-person limit including the host; create signed tokens on the server only, enforce subscribe-only audience permissions, and make host media controls revoke publication server-side. Do not ask for any other paid-service credentials or purchase service plans.
 
-Keep a signaling connection's speaker/listener role fixed for that connection's
-lifetime. A listener can reserve a beam slot before opening the browser's
-microphone permission prompt; its disconnect during the subsequent handoff must
-not be mistaken for the reserved speaker disconnecting.
+The former P2P audio design and its connection-scoped speaker/listener signaling are historical only. If that older feature is explicitly restored later, keep a signaling connection's role fixed for its lifetime: a listener can reserve a slot before a microphone prompt, and the listener disconnect during handoff must not release the reservation.
 
-**Why:** changing the existing listener connection's role immediately when a
-slot was reserved caused its normal handoff close to release the slot before
-the new speaker connection could establish.
+**Why:** changing an existing listener connection's role at reservation time caused its normal handoff close to release the slot before the new speaker connection established.
 
-**How to apply:** derive role when each signaling connection is established.
-Test the sequence: connected listener → slot reservation → listener disconnect
-→ slot remains held → new speaker connection. Microphone grant after the
-explicit Join action starts the user's mic; permission failure releases the
-reservation and keeps or restores the listener connection.
+**How to apply:** do not reuse this signaling behavior for LiveKit; apply it only if the owner explicitly reverts to the prior audio-only implementation.
 
-The university beam client must trickle ICE: send its SDP as soon as the local
-description is set, relay each candidate separately, and queue remote candidates
-until the remote description is installed. The legacy audio client still uses
-its existing gathered-description flow. Headless Chromium with Google STUN has
-now established P2P connections and nonzero RTP, but this does not verify real
-phones or restrictive networks.
+The LiveKit frame colors are synchronized: hot pink → purple → electric blue → cyan, eight seconds per color (32 seconds for a full cycle). Empty slots use the same cycle at lower intensity; reduced-motion users get a static pink-purple border.
 
-**Why:** waiting for ICE gathering to finish before sending SDP prevented any
-peer negotiation in the browser harness. Trickle signaling resolved that
-specific failure without adding a paid service or TURN.
+**Why:** the owner approved the described neon frame and requested smooth color changes without battery-heavy effects.
 
-**How to apply:** preserve room/connection validation for candidate relays,
-test SDP and candidate exchange plus ICE/RTP metrics, and still verify on real
-devices/networks before claiming mobile audio reliability. Do not add a TURN
-provider or credentials without the owner's explicit approval.
+**How to apply:** keep the frame CSS-driven and reduced-motion aware; verify the one-, two-, and four-speaker grid arrangements at mobile widths.

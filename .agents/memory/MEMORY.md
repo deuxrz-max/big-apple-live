@@ -12,7 +12,7 @@
 - [OpenAPI generation](openapi-generation.md) — modular refs need an allowlist before codegen; combined path/query schemas can collide in Zod barrel exports.
 - [Additive schema guards](additive-schema-guards.md) — stop unrelated truncation prompts; apply only approved development additions without deleting histories.
 - [Beam screen layout](beam-screen-layout.md) — participant boxes stay anchored; chat is borderless below them and older messages require chat-only scrolling.
-- [Audio beam constraints](audio-beam-constraints.md) — keep beams audio-only/P2P; signaling role stays connection-scoped through mic-permission handoff.
+- [University beam transport](audio-beam-constraints.md) — approved LiveKit video beam supersedes the earlier audio-only/P2P choice; tokens stay server-only and audience cannot publish.
 - [Living Beam rooms](living-beam-goal.md) — archived Beam goal; superseded for active routes by the text-chat pivot.
 - [Text-chat follow-ons](text-chat-pivot.md) — optional ownership checks require a unique bio code and reviewer, never an official platform verification claim.
 - [Artifact command environment](artifact-command-environment.md) — one-off shell checks do not necessarily inherit managed service routing variables.

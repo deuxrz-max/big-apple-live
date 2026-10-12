@@ -86,6 +86,10 @@ import type {
   UniversityAudioState,
   UniversityIgnoreInput,
   UniversitySession,
+  UniversityVideoBeamActionInput,
+  UniversityVideoBeamState,
+  UniversityVideoBeamToken,
+  UniversityVideoBeamTokenInput,
   UniversityWhisperInput
 } from './api.schemas';
 
@@ -697,6 +701,261 @@ export function useGetUniversityAudioState<TData = Awaited<ReturnType<typeof get
 
 
 
+
+export const getGetUniversityVideoBeamStateUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/account/rooms/${roomId}/video-beam`
+}
+
+/**
+ * @summary Read the four-slot LiveKit video beam for an authenticated university member
+ */
+export const getUniversityVideoBeamState = async (roomId: string, options?: Parameters<typeof customFetch>[1]): Promise<UniversityVideoBeamState> => {
+
+  return customFetch<UniversityVideoBeamState>(getGetUniversityVideoBeamStateUrl(roomId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetUniversityVideoBeamStateQueryKey = (roomId: string,) => {
+    return [
+    `/api/account/rooms/${roomId}/video-beam`
+    ] as const;
+    }
+
+
+export const getGetUniversityVideoBeamStateQueryOptions = <TData = Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse | void>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUniversityVideoBeamStateQueryKey(roomId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUniversityVideoBeamState>>> = ({ signal }) => getUniversityVideoBeamState(roomId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetUniversityVideoBeamStateQueryResult = NonNullable<Awaited<ReturnType<typeof getUniversityVideoBeamState>>>
+export type GetUniversityVideoBeamStateQueryError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse | void>
+
+
+/**
+ * @summary Read the four-slot LiveKit video beam for an authenticated university member
+ */
+
+export function useGetUniversityVideoBeamState<TData = Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse | void>>(
+ roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetUniversityVideoBeamStateQueryOptions(roomId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetUniversityVideoBeamTokenUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/account/rooms/${roomId}/video-beam/token`
+}
+
+/**
+ * @summary Issue a short-lived, room-scoped LiveKit token to an authenticated university member
+ */
+export const getUniversityVideoBeamToken = async (roomId: string,
+    universityVideoBeamTokenInput: UniversityVideoBeamTokenInput, options?: Parameters<typeof customFetch>[1]): Promise<UniversityVideoBeamToken> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<UniversityVideoBeamToken>(getGetUniversityVideoBeamTokenUrl(roomId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(universityVideoBeamTokenInput)
+  }
+);}
+
+
+
+
+
+export const getGetUniversityVideoBeamTokenMutationKey = () => ['getUniversityVideoBeamToken'] as const;
+
+export const getGetUniversityVideoBeamTokenMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getUniversityVideoBeamToken>>, TError,GetUniversityVideoBeamTokenMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof getUniversityVideoBeamToken>>, TError,GetUniversityVideoBeamTokenMutationVariables, TContext> => {
+
+const mutationKey = getGetUniversityVideoBeamTokenMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getUniversityVideoBeamToken>>, GetUniversityVideoBeamTokenMutationVariables> = (props) => {
+          const {roomId,data} = props ?? {};
+
+          return  getUniversityVideoBeamToken(roomId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GetUniversityVideoBeamTokenMutationResult = NonNullable<Awaited<ReturnType<typeof getUniversityVideoBeamToken>>>
+    export type GetUniversityVideoBeamTokenMutationBody = BodyType<UniversityVideoBeamTokenInput>
+    export type GetUniversityVideoBeamTokenMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
+    export type GetUniversityVideoBeamTokenMutationVariables = {roomId: string;data: BodyType<UniversityVideoBeamTokenInput>}
+
+    /**
+ * @summary Issue a short-lived, room-scoped LiveKit token to an authenticated university member
+ */
+export const useGetUniversityVideoBeamToken = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getUniversityVideoBeamToken>>, TError,GetUniversityVideoBeamTokenMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof getUniversityVideoBeamToken>>,
+        TError,
+        GetUniversityVideoBeamTokenMutationVariables,
+        TContext
+      > => {
+      return useMutation(getGetUniversityVideoBeamTokenMutationOptions(options));
+    }
+
+export const getPerformUniversityVideoBeamActionUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/account/rooms/${roomId}/video-beam/actions`
+}
+
+/**
+ * @summary Leave a speaker slot or apply consent-based self and host controls
+ */
+export const performUniversityVideoBeamAction = async (roomId: string,
+    universityVideoBeamActionInput: UniversityVideoBeamActionInput, options?: Parameters<typeof customFetch>[1]): Promise<UniversityVideoBeamState> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<UniversityVideoBeamState>(getPerformUniversityVideoBeamActionUrl(roomId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(universityVideoBeamActionInput)
+  }
+);}
+
+
+
+
+
+export const getPerformUniversityVideoBeamActionMutationKey = () => ['performUniversityVideoBeamAction'] as const;
+
+export const getPerformUniversityVideoBeamActionMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof performUniversityVideoBeamAction>>, TError,PerformUniversityVideoBeamActionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof performUniversityVideoBeamAction>>, TError,PerformUniversityVideoBeamActionMutationVariables, TContext> => {
+
+const mutationKey = getPerformUniversityVideoBeamActionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof performUniversityVideoBeamAction>>, PerformUniversityVideoBeamActionMutationVariables> = (props) => {
+          const {roomId,data} = props ?? {};
+
+          return  performUniversityVideoBeamAction(roomId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PerformUniversityVideoBeamActionMutationResult = NonNullable<Awaited<ReturnType<typeof performUniversityVideoBeamAction>>>
+    export type PerformUniversityVideoBeamActionMutationBody = BodyType<UniversityVideoBeamActionInput>
+    export type PerformUniversityVideoBeamActionMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
+    export type PerformUniversityVideoBeamActionMutationVariables = {roomId: string;data: BodyType<UniversityVideoBeamActionInput>}
+
+    /**
+ * @summary Leave a speaker slot or apply consent-based self and host controls
+ */
+export const usePerformUniversityVideoBeamAction = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof performUniversityVideoBeamAction>>, TError,PerformUniversityVideoBeamActionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof performUniversityVideoBeamAction>>,
+        TError,
+        PerformUniversityVideoBeamActionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPerformUniversityVideoBeamActionMutationOptions(options));
+    }
 
 export const getPerformUniversityAudioActionUrl = (roomId: string,) => {
 

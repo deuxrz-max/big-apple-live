@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Mic, MicOff } from 'lucide-react';
+import { Camera, CameraOff, Mic, MicOff, RotateCw } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -13,7 +13,7 @@ import { errMessage, errStatus } from '@/lib/errors';
 import { IdentityAvatar } from '@/lib/identity';
 import { BadgeMark } from '@/social/common';
 import { useTextRoom } from './useTextRoom';
-import { useUniversityAudioBeam } from './useUniversityAudioBeam';
+import { VideoBeamMedia, useUniversityVideoBeam } from './useUniversityVideoBeam';
 import { BotShield } from './BotShield';
 import { GiftBag, OPEN_ROOM_GIFTS_EVENT } from '@/gifts';
 import { useRoomGifts } from '@/gifts/useRoomGifts';
@@ -35,7 +35,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const r = useTextRoom(roomId, userId);
   const sessionId = r.creds?.participantSessionId ?? '';
   const participantId = r.creds?.participantId ?? '';
-  const audioBeam = useUniversityAudioBeam(roomId, sessionId, participantId);
+  const videoBeam = useUniversityVideoBeam(roomId, sessionId, participantId);
   const sessionKey = [...getGetUniversitySessionQueryKey(roomId), 'user', userId] as const;
   const headers = { 'X-Room-Session': sessionId };
   const uni = useGetUniversitySession(roomId, {
@@ -133,10 +133,13 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   }
 
   const people = session?.people ?? [];
-  const giftRecipients = people.filter(person => !person.self && !person.botId)
+  const onBeam = new Set(videoBeam.beam.slots.flatMap(slot => slot.participantId ? [slot.participantId] : []));
+  const giftRecipients = people.filter(person => !person.self && !person.botId
+    && (!videoBeam.beam.beamActive || onBeam.has(person.participantId)))
     .map(({ username, displayName, displayNameColor }) => ({ username, displayName, displayNameColor }));
   const me = people.find((p) => p.self);
-  const beamSlots = [...audioBeam.beam.slots].sort((a, b) => a.slotNumber - b.slotNumber);
+  const beamSlots = [...videoBeam.beam.slots].sort((a, b) => a.slotNumber - b.slotNumber);
+  const speakerCount = beamSlots.filter(slot => slot.participantId).length;
   const isSelf = (username: string, authorId?: string) => (!!authorId && authorId === r.creds?.participantId) || me?.username === username;
   const nameOf = (username: string, fallback?: string) => people.find((p) => p.username === username)?.displayName ?? fallback ?? username;
   const nameColorOf = (username: string, fallback?: string) => people.find((p) => p.username === username)?.displayNameColor ?? fallback ?? '#FFFFFF';
@@ -269,31 +272,34 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           </aside>
           {drawer && <div className="ur-backdrop" onClick={closeDrawer} aria-hidden="true" />}
           <div className="ch-room">
-            <section className="ur-beam" aria-label="Audio speaker beam">
+            <section className="ur-beam" aria-label="Four-slot LiveKit video beam">
               <div className="ur-audio-status-row">
-                <span className={`ur-audio-status ur-audio-${audioBeam.audioState}`} role="status">
+                <span className={`ur-audio-status ur-audio-${videoBeam.connection}`} role="status">
                   <span className="ur-status-dot" aria-hidden="true" />
-                  {audioBeam.audioState === 'ready' || audioBeam.audioState === 'connected'
-                    ? 'Audio ready'
-                    : audioBeam.audioState === 'connecting' || audioBeam.audioState === 'reconnecting'
-                      ? 'Connecting'
-                      : audioBeam.audioState === 'error' ? 'Audio issue' : 'Listeners welcome'}
+                  {videoBeam.connection === 'connected' ? 'Live ready'
+                    : videoBeam.connection === 'connecting' ? 'Connecting'
+                      : videoBeam.connection === 'error' ? 'Connection issue'
+                        : videoBeam.beam.beamActive ? 'Joining live room' : 'Start the beam'}
                 </span>
-                {audioBeam.playbackBlocked && (
-                  <button type="button" className="ur-resume-audio" onClick={() => void audioBeam.resumePlayback()}>
+                {videoBeam.playbackBlocked && (
+                  <button type="button" className="ur-resume-audio" onClick={() => void videoBeam.resumePlayback()}>
                     Tap to hear
                   </button>
                 )}
               </div>
-              {audioBeam.error && <p className="ur-beam-error" role="alert">{audioBeam.error}</p>}
-              <div className="ur-slots">
+              {videoBeam.error && <p className="ur-beam-error" role="alert">{videoBeam.error}</p>}
+              {videoBeam.beam.beamActive && !videoBeam.ownSlot && beamSlots.every(slot => slot.participantId)
+                && <p className="ur-beam-full" role="status">Beam is full. You can still watch and chat; an open spot can be joined as soon as someone leaves.</p>}
+              <div className="ur-slots" data-count={speakerCount}>
                 {beamSlots.map((slot) => {
                   const person = slot.participantId
                     ? people.find((p) => p.participantId === slot.participantId)
                     : undefined;
                   const mine = slot.participantId === participantId;
-                  const joinAvailable = !slot.participantId && !!sessionId && !!participantId && !audioBeam.ownSlot;
-                  const isSpeaking = !!slot.participantId && audioBeam.speaking.has(slot.participantId);
+                  const joinAvailable = !slot.participantId && !!sessionId && !!participantId && !videoBeam.ownSlot;
+                  const isSpeaking = !!slot.participantId && videoBeam.speaking.has(slot.participantId);
+                  const media = slot.participantId ? videoBeam.media[slot.participantId] : undefined;
+                  const showVideo = !!person && !slot.cameraOff && !!media?.video;
                   const speakerBadgeItems: ReactNode[] = [];
                   if (person?.badgeId) {
                     speakerBadgeItems.push(
@@ -312,87 +318,95 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                   return (
                     <article className={`ur-slot${isSpeaking ? ' is-speaking' : ''}${slot.participantId ? ' is-occupied' : ''}`}
                       key={slot.slotNumber} aria-label={`Speaker slot ${slot.slotNumber}${slot.participantId ? `, ${person?.displayName ?? 'occupied'}` : ', empty'}`}>
-                      <div className="ur-slot-identity">
+                      <div className="ur-slot-media">
+                        {showVideo && <VideoBeamMedia track={media?.video} kind="video" muted={mine} />}
+                        {!showVideo && person?.identity && (
+                          <IdentityAvatar identity={person.identity} size={64} className="ur-slot-avatar ur-slot-art" />
+                        )}
+                        {!showVideo && person && !person.identity && (
+                          <span className="ur-slot-avatar ur-slot-initial" aria-hidden="true">{person.displayName.slice(0, 1)}</span>
+                        )}
                         {!slot.participantId && <span className="ur-empty-number" aria-hidden="true">{slot.slotNumber}</span>}
-                        {person?.identity
-                          ? <IdentityAvatar identity={person.identity} size={72} className="ur-slot-avatar ur-slot-art" />
-                          : person
-                            ? <span className="ur-slot-avatar ur-slot-initial" aria-hidden="true">{person.displayName.slice(0, 1)}</span>
-                            : slot.participantId
-                              ? <span className="ur-slot-avatar ur-slot-initial" aria-hidden="true">{String(slot.slotNumber)}</span>
-                              : null}
-                        <div className="ur-slot-copy">
-                          {person ? (
-                            <>
-                              <span className="ur-slot-name-line">
-                                <span className="ur-slot-name" style={{ color: person.displayNameColor ?? '#F4F1F8' }}>{person.displayName}</span>
-                                <span className={`ur-slot-mic-icon${slot.micEnabled && !slot.mutedByHost ? ' is-on' : ''}`}
-                                  role="img" aria-label={slot.micEnabled && !slot.mutedByHost ? 'Microphone on' : 'Microphone muted'}
-                                  title={slot.micEnabled && !slot.mutedByHost ? 'Microphone on' : 'Microphone muted'}>
-                                  {slot.micEnabled && !slot.mutedByHost ? <Mic size={13} aria-hidden="true" /> : <MicOff size={13} aria-hidden="true" />}
-                                </span>
+                        {person ? (
+                          <div className="ur-slot-copy">
+                            <span className="ur-slot-name-line">
+                              <span className="ur-slot-name" style={{ color: person.displayNameColor ?? '#F4F1F8' }}>{person.displayName}</span>
+                              {slot.micMuted && <span className="ur-slot-mic-icon" role="img" aria-label="Microphone muted" title="Microphone muted"><MicOff size={13} aria-hidden="true" /></span>}
+                            </span>
+                            {speakerBadgeItems.length > 0 && (
+                              <span className="ur-slot-marks" role="group" aria-label={`${speakerBadgeItems.length} badge${speakerBadgeItems.length === 1 ? '' : 's'}`}>
+                                {visibleSpeakerBadges}
+                                {speakerBadgeItems.length > visibleSpeakerBadges.length && (
+                                  <span className="ur-slot-more" aria-label={`${speakerBadgeItems.length - visibleSpeakerBadges.length} more badges`}>
+                                    +{speakerBadgeItems.length - visibleSpeakerBadges.length}
+                                  </span>
+                                )}
                               </span>
-                              {speakerBadgeItems.length > 0 && (
-                                <span className="ur-slot-marks" role="group" aria-label={`${speakerBadgeItems.length} badge${speakerBadgeItems.length === 1 ? '' : 's'}`}>
-                                  {visibleSpeakerBadges}
-                                  {speakerBadgeItems.length > visibleSpeakerBadges.length && (
-                                    <span className="ur-slot-more" aria-label={`${speakerBadgeItems.length - visibleSpeakerBadges.length} more badges`}>
-                                      +{speakerBadgeItems.length - visibleSpeakerBadges.length}
-                                    </span>
-                                  )}
-                                </span>
-                              )}
-                            </>
-                          ) : slot.participantId ? (
-                            <>
-                              <span className="ur-slot-name">Speaker details loading</span>
-                              <span className="ur-slot-caption">Syncing room roster</span>
-                            </>
-                          ) : (
-                            <>
-                              <span className="ur-slot-name ur-empty-name">Empty</span>
-                              <span className="ur-slot-caption">Open speaker spot</span>
-                            </>
-                          )}
-                        </div>
+                            )}
+                          </div>
+                        ) : slot.participantId ? (
+                          <div className="ur-slot-copy">
+                            <span className="ur-slot-name">Speaker details loading</span>
+                            <span className="ur-slot-caption">Syncing room roster</span>
+                          </div>
+                        ) : (
+                          <div className="ur-slot-empty-copy">
+                            <span className="ur-slot-name ur-empty-name">Open spot</span>
+                            <span className="ur-slot-caption">Camera and mic start only after you join</span>
+                          </div>
+                        )}
                       </div>
                       {person ? (
                         <div className="ur-slot-actions">
-                          {mine ? (
+                          {mine && (
                             <>
                               <button type="button" className="ur-slot-action"
-                                disabled={audioBeam.busy || slot.mutedByHost}
-                                aria-pressed={slot.micEnabled && !slot.mutedByHost}
-                                onClick={() => void audioBeam.setOwnMic(!slot.micEnabled || slot.mutedByHost)}>
-                                {slot.mutedByHost ? 'Host muted' : slot.micEnabled ? 'Mute mic' : 'Unmute'}
+                                disabled={videoBeam.busy}
+                                aria-pressed={!slot.micMuted}
+                                onClick={() => void videoBeam.toggleMic(slot.micMuted)}>
+                                {slot.micMuted ? <><MicOff size={13} /> Unmute mic</> : <><Mic size={13} /> Mute mic</>}
+                              </button>
+                              <button type="button" className="ur-slot-action"
+                                disabled={videoBeam.busy}
+                                aria-pressed={!slot.cameraOff}
+                                onClick={() => void videoBeam.toggleCamera(slot.cameraOff)}>
+                                {slot.cameraOff ? <><CameraOff size={13} /> Camera on</> : <><Camera size={13} /> Camera off</>}
+                              </button>
+                              <button type="button" className="ur-slot-action ur-slot-flip" disabled={videoBeam.busy}
+                                onClick={() => void videoBeam.flipCamera()} aria-label="Flip camera" title="Flip camera">
+                                <RotateCw size={13} />
                               </button>
                               <button type="button" className="ur-slot-action ur-slot-leave"
-                                disabled={audioBeam.busy} onClick={() => void audioBeam.leaveSlot()}>Leave</button>
+                                disabled={videoBeam.busy} onClick={() => void videoBeam.leaveSlot()}>Leave</button>
                             </>
-                          ) : audioBeam.isHost ? (
+                          )}
+                          {!mine && videoBeam.isHost && (
                             <>
-                              <button type="button" className="ur-slot-action" disabled={audioBeam.busy}
-                                onClick={() => void audioBeam.hostMute(slot.participantId!, !slot.mutedByHost)}>
-                                {slot.mutedByHost ? 'Unmute' : 'Mute mic'}
+                              <button type="button" className="ur-slot-action" disabled={videoBeam.busy || slot.micMuted}
+                                onClick={() => void videoBeam.hostMuteMic(slot.participantId!)}>
+                                <MicOff size={13} /> Mute mic
                               </button>
-                              <button type="button" className="ur-slot-action ur-slot-leave" disabled={audioBeam.busy}
-                                onClick={() => void audioBeam.kickSpeaker(slot.participantId!)}>Remove</button>
+                              <button type="button" className="ur-slot-action" disabled={videoBeam.busy || slot.cameraOff}
+                                onClick={() => void videoBeam.hostDisableCamera(slot.participantId!)}>
+                                <CameraOff size={13} /> Turn camera off
+                              </button>
+                              <button type="button" className="ur-slot-action ur-slot-leave" disabled={videoBeam.busy}
+                                onClick={() => void videoBeam.kick(slot.participantId!)}>Remove</button>
                             </>
-                          ) : (
-                            null
                           )}
                         </div>
                       ) : (
                         joinAvailable
-                          ? <button type="button" className="ur-slot-join" disabled={audioBeam.busy}
-                              onClick={() => void audioBeam.joinSlot()}>
-                              {audioBeam.permissionPending ? 'Requesting mic…' : 'Tap to join'}
+                          ? <button type="button" className="ur-slot-join" disabled={videoBeam.busy}
+                              aria-label={`Join open speaker spot ${slot.slotNumber}`}
+                              onClick={() => void videoBeam.joinSpeaker()}>
+                              {videoBeam.busy ? 'Connecting…' : speakerCount < 3 ? `Open spot ${slot.slotNumber} · Join` : 'Join beam'}
                             </button>
                           : slot.participantId
                             ? <span className="ur-slot-caption">Syncing room roster</span>
-                            : audioBeam.ownSlot
+                            : videoBeam.ownSlot
                               ? null
-                              : <span className="ur-slot-caption">Tap to join</span>
+                              : <span className="ur-slot-caption">Open spot</span>
                       )}
                     </article>
                   );

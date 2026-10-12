@@ -284,6 +284,114 @@ export const GetUniversityAudioStateResponse = zod.object({
 
 
 /**
+ * @summary Read the four-slot LiveKit video beam for an authenticated university member
+ */
+export const getUniversityVideoBeamStatePathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
+
+
+export const GetUniversityVideoBeamStateParams = zod.object({
+  "roomId": zod.coerce.string().regex(getUniversityVideoBeamStatePathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
+})
+
+export const GetUniversityVideoBeamStateHeader = zod.object({
+  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+})
+
+export const getUniversityVideoBeamStateResponseSlotsItemSlotNumberMax = 4;
+
+export const getUniversityVideoBeamStateResponseSlotsMin = 4;
+export const getUniversityVideoBeamStateResponseSlotsMax = 4;
+
+
+
+export const GetUniversityVideoBeamStateResponse = zod.object({
+  "roomId": zod.string(),
+  "beamActive": zod.boolean(),
+  "hostParticipantId": zod.string().uuid().nullable(),
+  "slots": zod.array(zod.object({
+  "slotNumber": zod.number().int().min(1).max(getUniversityVideoBeamStateResponseSlotsItemSlotNumberMax),
+  "participantId": zod.string().uuid().nullable(),
+  "micMuted": zod.boolean(),
+  "cameraOff": zod.boolean(),
+  "mutedByHost": zod.boolean(),
+  "cameraDisabledByHost": zod.boolean()
+})).min(getUniversityVideoBeamStateResponseSlotsMin).max(getUniversityVideoBeamStateResponseSlotsMax)
+})
+
+
+/**
+ * @summary Issue a short-lived, room-scoped LiveKit token to an authenticated university member
+ */
+export const getUniversityVideoBeamTokenPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
+
+
+export const GetUniversityVideoBeamTokenParams = zod.object({
+  "roomId": zod.coerce.string().regex(getUniversityVideoBeamTokenPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
+})
+
+export const GetUniversityVideoBeamTokenHeader = zod.object({
+  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+})
+
+export const GetUniversityVideoBeamTokenBody = zod.object({
+  "role": zod.enum(['audience', 'speaker'])
+})
+
+export const getUniversityVideoBeamTokenResponseSlotNumberMax = 4;
+
+
+
+export const GetUniversityVideoBeamTokenResponse = zod.object({
+  "url": zod.string().url(),
+  "token": zod.string(),
+  "role": zod.enum(['audience', 'speaker']),
+  "slotNumber": zod.number().int().min(1).max(getUniversityVideoBeamTokenResponseSlotNumberMax).nullable()
+})
+
+
+/**
+ * @summary Leave a speaker slot or apply consent-based self and host controls
+ */
+export const performUniversityVideoBeamActionPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
+
+
+export const PerformUniversityVideoBeamActionParams = zod.object({
+  "roomId": zod.coerce.string().regex(performUniversityVideoBeamActionPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
+})
+
+export const PerformUniversityVideoBeamActionHeader = zod.object({
+  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+})
+
+export const PerformUniversityVideoBeamActionBody = zod.object({
+  "action": zod.enum(['reserve-slot', 'speaker-connected', 'leave-slot', 'set-self-mic', 'set-self-camera', 'host-mute-mic', 'host-disable-camera', 'kick']),
+  "enabled": zod.boolean().optional(),
+  "targetParticipantId": zod.string().uuid().optional()
+})
+
+export const performUniversityVideoBeamActionResponseSlotsItemSlotNumberMax = 4;
+
+export const performUniversityVideoBeamActionResponseSlotsMin = 4;
+export const performUniversityVideoBeamActionResponseSlotsMax = 4;
+
+
+
+export const PerformUniversityVideoBeamActionResponse = zod.object({
+  "roomId": zod.string(),
+  "beamActive": zod.boolean(),
+  "hostParticipantId": zod.string().uuid().nullable(),
+  "slots": zod.array(zod.object({
+  "slotNumber": zod.number().int().min(1).max(performUniversityVideoBeamActionResponseSlotsItemSlotNumberMax),
+  "participantId": zod.string().uuid().nullable(),
+  "micMuted": zod.boolean(),
+  "cameraOff": zod.boolean(),
+  "mutedByHost": zod.boolean(),
+  "cameraDisabledByHost": zod.boolean()
+})).min(performUniversityVideoBeamActionResponseSlotsMin).max(performUniversityVideoBeamActionResponseSlotsMax)
+})
+
+
+/**
  * @summary Join, leave, or control an audio-only university beam
  */
 export const performUniversityAudioActionPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');

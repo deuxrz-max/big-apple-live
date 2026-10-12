@@ -8,12 +8,18 @@ import { PRODUCTS } from '../../api-server/src/lib/social/catalog';
 const BADGE_DIR = join(process.cwd(), 'public', 'badges');
 const EXPECTED_BADGES = [
   'marathon-master.png',
+  'night-owl-mark.png',
   'night-owl.png',
   'peak-presenter.png',
 ];
 const SIZE = 512;
 
-function decodeBadgePng(filePath: string) {
+function decodeBadgePng(
+  filePath: string,
+  expectedSize = SIZE,
+  expectedBitDepth = 8,
+  expectedColorType = 6,
+) {
   const png = readFileSync(filePath);
   assert.deepEqual(
     [...png.subarray(0, 8)],
@@ -52,14 +58,17 @@ function decodeBadgePng(filePath: string) {
     offset = dataEnd + 4;
   }
 
-  assert.equal(width, SIZE, `${filePath} must be ${SIZE}px wide`);
-  assert.equal(height, SIZE, `${filePath} must be ${SIZE}px tall`);
-  assert.equal(bitDepth, 8, `${filePath} must use 8-bit PNG channels`);
-  assert.equal(colorType, 6, `${filePath} must contain an RGBA alpha channel`);
+  assert.equal(width, expectedSize, `${filePath} must be ${expectedSize}px wide`);
+  assert.equal(height, expectedSize, `${filePath} must be ${expectedSize}px tall`);
+  assert.equal(bitDepth, expectedBitDepth, `${filePath} must use ${expectedBitDepth}-bit PNG channels`);
+  assert.equal(colorType, expectedColorType, `${filePath} must use PNG color type ${expectedColorType}`);
   assert.equal(interlace, 0, `${filePath} must use non-interlaced PNG encoding`);
   assert.ok(imageData.length > 0, `${filePath} is missing image data`);
 
-  const stride = width * 4;
+  const bytesPerChannel = bitDepth / 8;
+  const channelCount = colorType === 6 ? 4 : 3;
+  const bytesPerPixel = bytesPerChannel * channelCount;
+  const stride = width * bytesPerPixel;
   const filtered = inflateSync(Buffer.concat(imageData));
   assert.equal(filtered.length, height * (stride + 1), `${filePath} has invalid RGBA image data`);
   const rgba = Buffer.alloc(height * stride);
@@ -72,9 +81,9 @@ function decodeBadgePng(filePath: string) {
 
     for (let x = 0; x < stride; x += 1) {
       const raw = filtered[sourceOffset++];
-      const left = x >= 4 ? rgba[rowOffset + x - 4] : 0;
+      const left = x >= bytesPerPixel ? rgba[rowOffset + x - bytesPerPixel] : 0;
       const above = y > 0 ? rgba[rowOffset - stride + x] : 0;
-      const upperLeft = y > 0 && x >= 4 ? rgba[rowOffset - stride + x - 4] : 0;
+      const upperLeft = y > 0 && x >= bytesPerPixel ? rgba[rowOffset - stride + x - bytesPerPixel] : 0;
       let predictor = 0;
 
       if (filter === 1) predictor = left;
@@ -94,7 +103,20 @@ function decodeBadgePng(filePath: string) {
     }
   }
 
-  return { width, height, rgba };
+  const alphaAt = (x: number, y: number) => {
+    if (colorType !== 6) return 255;
+    const offset = y * stride + x * bytesPerPixel + 3 * bytesPerChannel;
+    if (bytesPerChannel === 1) return rgba[offset];
+    return Math.round((rgba.readUInt16BE(offset) / 65535) * 255);
+  };
+  const rgbAt = (x: number, y: number) => {
+    const offset = y * stride + x * bytesPerPixel;
+    const readChannel = (channel: number) => bytesPerChannel === 1
+      ? rgba[offset + channel]
+      : Math.round((rgba.readUInt16BE(offset + channel * bytesPerChannel) / 65535) * 255);
+    return [readChannel(0), readChannel(1), readChannel(2)];
+  };
+  return { width, height, alphaAt, rgbAt, hasAlpha: colorType === 6 };
 }
 
 test('Peak Presenter replaces the first listing without changing its saved ownership ID or price', () => {
@@ -113,7 +135,12 @@ test('badge artwork keeps its dimensions, transparency and circular framing', ()
   assert.deepEqual(actualBadges, EXPECTED_BADGES, 'update this check when the badge artwork set changes');
 
   for (const file of actualBadges) {
-    const { width, height, rgba } = decodeBadgePng(join(BADGE_DIR, file));
+    const expectedSize = file === 'night-owl-mark.png' ? 128 : SIZE;
+    const expectedBitDepth = file === 'night-owl-mark.png' ? 16 : 8;
+    const expectedColorType = file === 'night-owl-mark.png' ? 2 : 6;
+    const { width, height, alphaAt, rgbAt, hasAlpha } = decodeBadgePng(
+      join(BADGE_DIR, file), expectedSize, expectedBitDepth, expectedColorType,
+    );
     let minX = width;
     let minY = height;
     let maxX = -1;
@@ -124,7 +151,7 @@ test('badge artwork keeps its dimensions, transparency and circular framing', ()
 
     for (let y = 0; y < height; y += 1) {
       for (let x = 0; x < width; x += 1) {
-        const alpha = rgba[(y * width + x) * 4 + 3];
+        const alpha = alphaAt(x, y);
         if (alpha === 0) transparentPixels += 1;
         if (alpha === 255) opaquePixels += 1;
         if (alpha > 0) {
@@ -135,29 +162,48 @@ test('badge artwork keeps its dimensions, transparency and circular framing', ()
         }
 
         const distanceFromCenter = Math.hypot(x - (width - 1) / 2, y - (height - 1) / 2);
-        if (alpha >= 128 && distanceFromCenter > 258) opaquePixelsOutsideCircle += 1;
+        if (alpha >= 128 && distanceFromCenter > expectedSize / 2 + 2) opaquePixelsOutsideCircle += 1;
       }
     }
 
-    assert.ok(transparentPixels > 0, `${file} must contain transparent pixels`);
     assert.ok(opaquePixels > 0, `${file} must contain visible, fully opaque artwork`);
 
-    for (let x = 0; x < width; x += 1) {
-      assert.equal(rgba[(0 * width + x) * 4 + 3], 0, `${file} must have a transparent top edge`);
-      assert.equal(rgba[((height - 1) * width + x) * 4 + 3], 0, `${file} must have a transparent bottom edge`);
-    }
-    for (let y = 0; y < height; y += 1) {
-      assert.equal(rgba[(y * width) * 4 + 3], 0, `${file} must have a transparent left edge`);
-      assert.equal(rgba[(y * width + width - 1) * 4 + 3], 0, `${file} must have a transparent right edge`);
+    if (hasAlpha) {
+      assert.ok(transparentPixels > 0, `${file} must contain transparent pixels`);
+      for (let x = 0; x < width; x += 1) {
+        assert.equal(alphaAt(x, 0), 0, `${file} must have a transparent top edge`);
+        assert.equal(alphaAt(x, height - 1), 0, `${file} must have a transparent bottom edge`);
+      }
+      for (let y = 0; y < height; y += 1) {
+        assert.equal(alphaAt(0, y), 0, `${file} must have a transparent left edge`);
+        assert.equal(alphaAt(width - 1, y), 0, `${file} must have a transparent right edge`);
+      }
+    } else {
+      // The 128px Night Owl mark is RGB-only. Its corners must remain dark so
+      // the app's circular mask does not expose a bright square on beam UI.
+      for (const [x, y] of [[0, 0], [width - 1, 0], [0, height - 1], [width - 1, height - 1]]) {
+        assert.ok(Math.max(...rgbAt(x, y)) < 64, `${file} must have dark corners for its circular mask`);
+      }
     }
 
     const artworkCenterX = (minX + maxX) / 2;
     const artworkCenterY = (minY + maxY) / 2;
-    assert.ok(Math.abs(artworkCenterX - (width - 1) / 2) <= 12, `${file} artwork is off-center horizontally`);
-    assert.ok(Math.abs(artworkCenterY - (height - 1) / 2) <= 12, `${file} artwork is off-center vertically`);
-    assert.ok(
-      opaquePixelsOutsideCircle <= 512,
-      `${file} has a large opaque region outside the circular badge, possibly a floor or reflection`,
-    );
+    assert.ok(Math.abs(artworkCenterX - (width - 1) / 2) <= expectedSize * 0.024, `${file} artwork is off-center horizontally`);
+    assert.ok(Math.abs(artworkCenterY - (height - 1) / 2) <= expectedSize * 0.024, `${file} artwork is off-center vertically`);
+    if (hasAlpha) {
+      assert.ok(
+        opaquePixelsOutsideCircle <= 512,
+        `${file} has a large opaque region outside the circular badge, possibly a floor or reflection`,
+      );
+    } else {
+      let brightOutsideCircle = 0;
+      for (let y = 0; y < height; y += 1) {
+        for (let x = 0; x < width; x += 1) {
+          if (Math.hypot(x - (width - 1) / 2, y - (height - 1) / 2) > expectedSize / 2 + 2
+            && Math.max(...rgbAt(x, y)) > 64) brightOutsideCircle += 1;
+        }
+      }
+      assert.ok(brightOutsideCircle <= 512, `${file} has a bright square/region outside its circular artwork`);
+    }
   }
 });

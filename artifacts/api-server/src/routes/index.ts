@@ -10,6 +10,7 @@ import communityRouter from "./community";
 import profilePhotosRouter from "./profile-photos";
 import photoReviewRouter from "./photo-review";
 import universityAudioRouter from "./university-audio";
+import universityVideoBeamRouter from "./university-video-beam";
 import { accountId } from "./identity";
 import { requireAdult } from "../lib/community";
 import { requireCompletedProfile } from "../lib/account-profiles";
@@ -33,6 +34,7 @@ router.use(socialRouter);
 router.use(chatRouter);
 router.use(universityChatRouter);
 router.use(universityAudioRouter);
+router.use(universityVideoBeamRouter);
 if (devAudioHarnessEnabled(process.env.NODE_ENV))
   router.use("/__dev/audio-harness", devAudioHarnessRouter);
 // Leave shared audio modules in place for rollback, but never mount signaling.
