@@ -9,6 +9,12 @@ Do not rely on ImageMagick montage's default font when assembling image review s
 
 **How to apply:** For visual asset reviews, separate contact-sheet tooling errors from actual image-generation or decoding failures.
 
+For chroma-key cutouts, do not key only on green-versus-red: compare green against both red and blue, and verify the result over light and dark backgrounds. Preserve an untouched base before compositing.
+
+**Why:** Green-versus-red keying can erase white details, while low-contrast green fringes and overwritten source layers can make a composite look damaged.
+
+**How to apply:** Keep a source copy, derive alpha from green dominance over both other channels, and inspect edge quality on contrasting backgrounds before replacing a project asset.
+
 When composing onto a canvas with Sharp, materialize the composite before resizing the finished image.
 
 **Why:** Sharp can perform resize before compositing even when chained afterward, so a large overlay fails against the newly smaller canvas.

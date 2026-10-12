@@ -103,7 +103,7 @@ function Shield({ id, name, date, equipped }: { id: string; name: string; date: 
     <li className={`pf-badge${equipped ? ' is-equipped' : ''}`} data-testid={`badge-${id}`}>
       <span className={`pf-shield${nightOwl ? ' pf-shield-night-owl' : ''}`} aria-hidden="true">
         {nightOwl
-          ? <img className="pf-shield-art" src={`${import.meta.env.BASE_URL}badges/night-owl-mark.svg`} alt="" />
+          ? <img className="pf-shield-art" src={`${import.meta.env.BASE_URL}badges/night-owl.png`} alt="" />
           : <span><I size={22} /></span>}
       </span>
       <b>{name}</b>

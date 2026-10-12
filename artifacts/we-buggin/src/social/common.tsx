@@ -31,7 +31,7 @@ export function BadgeMark({ id, label, size = 14, compact = false }: { id: strin
   const nightOwl = id === 'night-owl';
   return <span className={`sc-badge${compact ? ' sc-badge-compact' : ''}${nightOwl ? ' sc-badge-night-owl' : ''}`} title={label ?? 'Cosmetic badge'}>
     {nightOwl
-      ? <img src={`${import.meta.env.BASE_URL}badges/night-owl-mark.svg`} width={size} height={size} alt="" aria-hidden="true" />
+      ? <img src={`${import.meta.env.BASE_URL}badges/night-owl-mark.png`} width={size} height={size} alt="" aria-hidden="true" />
       : <I size={size} aria-hidden />}
     <span className="sc-sr">{label ?? 'Badge'}</span>
   </span>;
