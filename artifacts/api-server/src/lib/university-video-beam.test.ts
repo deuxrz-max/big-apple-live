@@ -353,6 +353,74 @@ test("Beam TV bot reactions use only known metadata and avoid claiming scene det
   assert.doesNotMatch(line, /the singer|the crowd|at the end/i);
 });
 
+test("Beam TV is host-only, shares one queue position, loops, and can be stopped and resumed", () => {
+  let now = 100_000;
+  const rooms = new RoomStore(() => now);
+  createRoom(rooms, "CHANNEL1", "history-channel");
+  const beam = new UniversityVideoBeamStore(rooms, () => now);
+  const host = addMember(rooms, "CHANNEL1", "host");
+  const viewer = addMember(rooms, "CHANNEL1", "viewer");
+  beam.joinSlot("CHANNEL1", host.participantId, "host");
+
+  assert.throws(() => beam.assertTvHost("CHANNEL1", viewer.participantId),
+    (error: unknown) => error instanceof RoomError && error.status === 403);
+  let state = beam.actOnTv("CHANNEL1", host.participantId, {
+    action: "start",
+    sourceType: "search",
+    sourceValue: "late night music",
+    queue: ["dQw4w9WgXcQ", "5qap5aO4i9A"],
+  });
+  assert.equal(state.tv.enabled, true);
+  assert.equal(state.tv.currentVideoId, "dQw4w9WgXcQ");
+  assert.equal(state.tv.startedAtMs, now);
+
+  now += 15_000;
+  state = beam.actOnTv("CHANNEL1", host.participantId, { action: "skip" });
+  assert.equal(state.tv.currentVideoId, "5qap5aO4i9A");
+  assert.equal(state.tv.startedAtMs, now);
+  state = beam.actOnTv("CHANNEL1", host.participantId, { action: "skip" });
+  assert.equal(state.tv.currentVideoId, "dQw4w9WgXcQ", "the queue repeats from its first item");
+
+  state = beam.actOnTv("CHANNEL1", host.participantId, { action: "stop" });
+  assert.equal(state.tv.enabled, false);
+  assert.equal(state.tv.queue.length, 2, "turning the TV off keeps its source for a quick restart");
+  state = beam.actOnTv("CHANNEL1", host.participantId, { action: "enable" });
+  assert.equal(state.tv.enabled, true);
+
+  assert.throws(() => beam.actOnTv("CHANNEL1", viewer.participantId, { action: "stop" }),
+    (error: unknown) => error instanceof RoomError && error.status === 403);
+});
+
+test("Beam TV accepts a keyless playlist URL flow and synchronizes its player queue", () => {
+  let now = 200_000;
+  const rooms = new RoomStore(() => now);
+  createRoom(rooms, "CHANNEL1", "history-channel");
+  const beam = new UniversityVideoBeamStore(rooms, () => now);
+  const host = addMember(rooms, "CHANNEL1", "host");
+  beam.joinSlot("CHANNEL1", host.participantId, "host");
+  let state = beam.actOnTv("CHANNEL1", host.participantId, {
+    action: "start",
+    sourceType: "playlist",
+    sourceValue: "https://www.youtube.com/playlist?list=PL1234567890abcdef",
+    playlistId: "PL1234567890abcdef",
+  });
+  assert.equal(state.tv.enabled, true);
+  assert.equal(state.tv.currentVideoId, null, "the official player supplies playlist items without Data API access");
+  state = beam.actOnTv("CHANNEL1", host.participantId, {
+    action: "publish-queue",
+    queue: ["dQw4w9WgXcQ", "5qap5aO4i9A"],
+    currentVideoId: "5qap5aO4i9A",
+  });
+  assert.equal(state.tv.currentVideoId, "5qap5aO4i9A");
+  now += 4_000;
+  state = beam.actOnTv("CHANNEL1", host.participantId, {
+    action: "publish-playback",
+    currentVideoId: "dQw4w9WgXcQ",
+    startedAtMs: now - 8_000,
+  });
+  assert.equal(state.tv.startedAtMs, now - 8_000);
+});
+
 test("LiveKit audience access is subscribe-only and tokens are room-scoped", async () => {
   const fakeSettings: LiveKitSettings = {
     url: "wss://live.example.test",

@@ -22,7 +22,15 @@ export function useRoomGifts(roomId: string, userId: string, sessionId: string, 
       const age = Date.now() - new Date(event.createdAt).getTime();
       if (!document.hidden && (event.giftId === 'heart' || event.giftId === 'spirit-pup' || event.giftId === 'moonfox' || event.giftId === 'cosmic-encore') && age >= -5000 && age <= 10000) fresh.push(event);
     }
-    if (fresh.length) setQueue(prev => [...prev, ...fresh]);
+    if (fresh.length) {
+      fresh.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() || a.id.localeCompare(b.id));
+      setQueue(prev => [...prev, ...fresh]);
+    }
   }, [events]);
-  return { events, animation: queue[0], finish: () => setQueue(prev => prev.slice(1)) };
+  const activeId = queue[0]?.id;
+  const finish = () => {
+    if (!activeId) return;
+    setQueue(prev => prev[0]?.id === activeId ? prev.slice(1) : prev);
+  };
+  return { events, animation: queue[0], finish };
 }

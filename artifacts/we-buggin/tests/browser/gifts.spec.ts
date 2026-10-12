@@ -330,6 +330,72 @@ test('Heart is a 50-credit first gift and shows its lightweight room animation',
   await expect(animation).toHaveCount(0, { timeout: 3000 });
 });
 
+test('room gift animations serialize Cosmic Encore and following gifts without duplicates', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+
+  const firstAt = Date.now() - 1000;
+  const orderedGifts = ['cosmic-encore', 'heart', 'spirit-pup', 'moonfox'];
+  const events = orderedGifts.map((giftId, index) => ({
+    id: `queued-${giftId}`,
+    giftId,
+    senderUsername: 'fixture',
+    recipientUsername: 'friend',
+    senderName: 'Fixture',
+    recipientName: 'Friend',
+    createdAt: new Date(firstAt + index * 100).toISOString(),
+  }));
+  let polls = 0;
+  await page.route('**/api/social/gifts/rooms/*', route => {
+    polls++;
+    return route.fulfill({ json: { events: [...events].reverse() } });
+  });
+  for (const giftId of ['spirit-pup', 'moonfox']) {
+    await page.route(`**/api/gift-media/${giftId}/v1/*`, async route => {
+      const name = new URL(route.request().url()).pathname.split('/').at(-1)!;
+      const body = await readFile(new URL(`../../../../generated-artifacts/${giftId}/${name}`, import.meta.url));
+      await route.fulfill({ body, contentType: name.endsWith('.png') ? 'image/png' : 'image/webp' });
+    });
+  }
+
+  await page.goto('/tests/browser/harness.html');
+  const cosmic = page.getByTestId('cosmic-encore-animation');
+  await expect(cosmic).toBeVisible();
+  await page.waitForTimeout(2200); // A second polling response must not enqueue copies.
+  expect(polls).toBeGreaterThanOrEqual(2);
+  await expect(page.getByTestId('heart-animation')).toHaveCount(0);
+  await expect(page.getByTestId('spirit-pup-animation')).toHaveCount(0);
+  await expect(page.getByTestId('moonfox-animation')).toHaveCount(0);
+
+  await cosmic.evaluate(element => {
+    const media = element.querySelector('video, img');
+    media?.dispatchEvent(new AnimationEvent('animationend', {
+      bubbles: true,
+      animationName: 'cosmic-encore-fade-out',
+    }));
+  });
+  const heart = page.getByTestId('heart-animation');
+  await expect(heart).toBeVisible();
+  await expect(cosmic).toHaveCount(0);
+  await heart.locator('.heart-gift-animation').evaluate(element =>
+    element.dispatchEvent(new AnimationEvent('animationend', { bubbles: true })));
+
+  const spirit = page.getByTestId('spirit-pup-animation');
+  await expect(spirit).toBeVisible();
+  await expect(page.getByTestId('moonfox-animation')).toHaveCount(0);
+  await expect(spirit.locator('img')).toHaveAttribute('src', /icon\.png$/);
+  await spirit.locator('img').dispatchEvent('error');
+
+  const moonfox = page.getByTestId('moonfox-animation');
+  await expect(moonfox).toBeVisible();
+  await expect(spirit).toHaveCount(0);
+  await expect(moonfox.locator('img')).toHaveAttribute('src', /icon\.png$/);
+  await moonfox.locator('img').dispatchEvent('error');
+  await expect(moonfox).toHaveCount(0);
+  await page.waitForTimeout(2200);
+  await expect(page.locator('[data-testid$="-animation"]')).toHaveCount(0);
+});
+
 test('real component reads saved inventory, selection cannot transfer or buy', async ({ page }) => {
   await page.route('**/api/social/me', r => r.fulfill({
     contentType: 'application/json', body: JSON.stringify({
