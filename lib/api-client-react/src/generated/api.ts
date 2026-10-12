@@ -869,7 +869,7 @@ export const getGetUniversityVideoBeamStateUrl = (roomId: string,) => {
 }
 
 /**
- * @summary Read the four-slot LiveKit video beam for an authenticated university member
+ * @summary Read the eight-slot LiveKit video beam for an authenticated university member
  */
 export const getUniversityVideoBeamState = async (roomId: string, options?: Parameters<typeof customFetch>[1]): Promise<UniversityVideoBeamState> => {
 
@@ -916,7 +916,7 @@ export type GetUniversityVideoBeamStateQueryError = ErrorType<SessionUnauthorize
 
 
 /**
- * @summary Read the four-slot LiveKit video beam for an authenticated university member
+ * @summary Read the eight-slot LiveKit video beam for an authenticated university member
  */
 
 export function useGetUniversityVideoBeamState<TData = Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse | void>>(

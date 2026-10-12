@@ -22,4 +22,4 @@
 - [Gift-flow demos](gift-flow-demos.md) — show existing gift UI in an isolated phone-sized browser recording and disclose synthetic responses.
 - [Gift-media transparency](gift-media-transparency.md) — owner confirmed Moonfox stays transparent; keep alpha support and verify other gift assets separately.
 - [Safe preview schema pushes](safe-preview-schema-pushes.md) — stop when Drizzle proposes truncating unrelated Passport rows; preserve data and apply only additive preview changes.
-- [Public topic-room ownership](public-topic-room-ownership.md) — public topic rooms have no Beam TV host; room votes alone change default playback.
+- [Public topic-room ownership](public-topic-room-ownership.md) — public Beam TV is ownerless and control-free; server searches by the current room name and advances automatically.

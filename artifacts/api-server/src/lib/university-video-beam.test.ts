@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { TrackSource } from "livekit-server-sdk";
 import type { EmojiIdentity } from "@workspace/api-zod";
 import { RoomError, RoomStore } from "./room-store";
 import { UniversityVideoBeamStore } from "./university-video-beam";
@@ -10,8 +11,14 @@ import { beamTvReactionLine } from "./beam-tv-reaction-policy";
 const identity: EmojiIdentity = {
   emojiId: "1F642", gender: "Male", color: "#F7C531", hairColor: "#111111",
 };
-function createRoom(store: RoomStore, id = "LIVEME", historyId = "history-live", parentRoomId?: string) {
-  store.registerCommunity({ roomId: id, historyId, label: id, createdAt: new Date(0), parentRoomId });
+function createRoom(
+  store: RoomStore,
+  id = "LIVEME",
+  historyId = "history-live",
+  parentRoomId?: string,
+  label = id,
+) {
+  store.registerCommunity({ roomId: id, historyId, label, createdAt: new Date(0), parentRoomId });
 }
 function addMember(store: RoomStore, roomId: string, accountId: string) {
   return store.join(roomId, accountId, { accountId, identity });
@@ -19,8 +26,10 @@ function addMember(store: RoomStore, roomId: string, accountId: string) {
 
 test("only the nine public topic rooms and their overflow rooms use the ownerless policy", () => {
   const rooms = new RoomStore();
-  for (const item of COMMUNITY_ROOMS) createRoom(rooms, item.roomId, `history-${item.roomId}`);
-  createRoom(rooms, "LIVEME2", "history-liveme-2", "LIVEME");
+  for (const item of COMMUNITY_ROOMS) {
+    createRoom(rooms, item.roomId, `history-${item.roomId}`, undefined, item.label);
+  }
+  createRoom(rooms, "LIVEME2", "history-liveme-2", "LIVEME", `${COMMUNITY_ROOMS[0]!.label} 2`);
   rooms.registerCommunity({
     roomId: "LIVEME_TEST", historyId: "history-test", label: "test-only LiveMe",
     createdAt: new Date(0), parentRoomId: "LIVEME", testOnly: true,
@@ -34,21 +43,21 @@ test("only the nine public topic rooms and their overflow rooms use the ownerles
   assert.equal(isPublicTopicRoom("NOT_A_ROOM", rooms), false);
 });
 
-test("video beam reserves exactly four slots under simultaneous joins and keeps room scopes isolated", async () => {
+test("video beam reserves exactly eight slots under simultaneous joins and keeps room scopes isolated", async () => {
   const rooms = new RoomStore();
   createRoom(rooms);
   createRoom(rooms, "BIGOLV", "history-bigo");
   const beam = new UniversityVideoBeamStore(rooms);
-  const members = Array.from({ length: 6 }, (_, i) => addMember(rooms, "LIVEME", `account-${i}`));
+  const members = Array.from({ length: 10 }, (_, i) => addMember(rooms, "LIVEME", `account-${i}`));
   const attempts = await Promise.allSettled(members.map((member, i) =>
     Promise.resolve().then(() => beam.joinSlot("LIVEME", member.participantId, `account-${i}`))));
-  assert.equal(attempts.filter(result => result.status === "fulfilled").length, 4);
+  assert.equal(attempts.filter(result => result.status === "fulfilled").length, 8);
   assert.equal(attempts.filter(result => result.status === "rejected").length, 2);
-  assert.equal(beam.getState("LIVEME").slots.filter(slot => slot.participantId).length, 4);
-  assert.equal(new Set(beam.getState("LIVEME").slots.map(slot => slot.slotNumber)).size, 4);
+  assert.equal(beam.getState("LIVEME").slots.filter(slot => slot.participantId).length, 8);
+  assert.equal(new Set(beam.getState("LIVEME").slots.map(slot => slot.slotNumber)).size, 8);
   assert.equal(beam.getState("LIVEME").hostParticipantId, null, "public topic rooms have no beam host");
   assert.equal(beam.getState("BIGOLV").slots.filter(slot => slot.participantId).length, 0);
-  assert.throws(() => beam.joinSlot("LIVEME", members[4]!.participantId, "account-4"),
+  assert.throws(() => beam.joinSlot("LIVEME", members[8]!.participantId, "account-8"),
     (error: unknown) => error instanceof RoomError && error.status === 409);
 });
 
@@ -149,6 +158,8 @@ test("Beam TV is host-only, shares one queue position, loops, and can be stopped
   assert.equal(state.tv.enabled, true);
   assert.equal(state.tv.currentVideoId, "dQw4w9WgXcQ");
   assert.equal(state.tv.startedAtMs, now);
+  assert.equal(state.tv.micLockedDuringVideo, false,
+    "the automatic topic-room intermission policy does not change older host-controlled rooms");
 
   now += 15_000;
   state = beam.actOnTv("CHANNEL1", host.participantId, { action: "skip" });
@@ -159,6 +170,7 @@ test("Beam TV is host-only, shares one queue position, loops, and can be stopped
 
   state = beam.actOnTv("CHANNEL1", host.participantId, { action: "stop" });
   assert.equal(state.tv.enabled, false);
+  assert.equal(state.tv.micLockedDuringVideo, false);
   assert.equal(state.tv.queue.length, 2, "turning the TV off keeps its source for a quick restart");
   state = beam.actOnTv("CHANNEL1", host.participantId, { action: "enable" });
   assert.equal(state.tv.enabled, true);
@@ -167,12 +179,13 @@ test("Beam TV is host-only, shares one queue position, loops, and can be stopped
     (error: unknown) => error instanceof RoomError && error.status === 403);
 });
 
-test("public Beam TV keeps its default queue and only advances naturally or by room vote", () => {
+test("public Beam TV searches by the exact room name and holds a synchronized intermission", () => {
   let now = 300_000;
   const rooms = new RoomStore(() => now);
-  createRoom(rooms);
-  createRoom(rooms, "BIGOLV", "history-bigo");
-  createRoom(rooms, "A1B2C3D4E5F6", "history-overflow", "LIVEME");
+  const liveMeName = "Video Games & Interactive Media";
+  createRoom(rooms, "LIVEME", "history-live", undefined, liveMeName);
+  createRoom(rooms, "BIGOLV", "history-bigo", undefined, "Television & Streaming Services");
+  createRoom(rooms, "A1B2C3D4E5F6", "history-overflow", "LIVEME", `${liveMeName} 2`);
   const beam = new UniversityVideoBeamStore(rooms, () => now);
   const host = addMember(rooms, "LIVEME", "host");
   const viewer = addMember(rooms, "LIVEME", "viewer");
@@ -189,11 +202,9 @@ test("public Beam TV keeps its default queue and only advances naturally or by r
     currentVideoId: "dQw4w9WgXcQ",
   }), (error: unknown) => error instanceof RoomError && error.status === 403,
   "audience members cannot inject a video before the server creates the default queue");
-  assert.equal(
-    communityDefaultVideoSearch("A1B2C3D4E5F6", rooms),
-    defaultSearch,
-    "overflow rooms inherit their parent room's default search",
-  );
+  assert.equal(defaultSearch, liveMeName, "the room's displayed name is its YouTube query");
+  assert.equal(communityDefaultVideoSearch("A1B2C3D4E5F6", rooms), `${liveMeName} 2`,
+    "overflow rooms search using their own displayed name");
   assert.notEqual(
     communityDefaultVideoSearch("BIGOLV", rooms),
     defaultSearch,
@@ -206,6 +217,15 @@ test("public Beam TV keeps its default queue and only advances naturally or by r
   ], { dQw4w9WgXcQ: 10_000, "5qap5aO4i9A": 10_000 });
   assert.deepEqual(state.tv.queue, ["dQw4w9WgXcQ", "5qap5aO4i9A"]);
   assert.equal(state.tv.startedAtMs, now);
+  assert.equal(beam.getNextAutomaticPlaybackTransitionAt("LIVEME"), now + 10_000);
+  assert.equal(state.tv.micLockedDuringVideo, true);
+  assert.equal(state.tv.breakEndsAtMs, null);
+  assert.throws(() => beam.setSelfMedia("LIVEME", host.participantId, "mic", true),
+    (error: unknown) => error instanceof RoomError && error.status === 409,
+    "the server rejects attempts to enable a microphone during playback");
+  state = beam.joinSlot("LIVEME", viewer.participantId, "viewer");
+  assert.equal(state.slots.find(slot => slot.participantId === viewer.participantId)?.micMuted, true,
+    "a speaker joining mid-video starts muted");
   now += 8_000;
   assert.throws(() => beam.actOnTv("LIVEME", viewer.participantId, {
     action: "publish-playback",
@@ -215,13 +235,52 @@ test("public Beam TV keeps its default queue and only advances naturally or by r
   "a participant cannot skip the current default video by publishing a different player position");
   now += 2_000;
   state = beam.getState("LIVEME");
-  assert.equal(state.tv.currentVideoId, "5qap5aO4i9A", "the server advances after the current video's duration");
+  assert.equal(state.tv.currentVideoId, "dQw4w9WgXcQ", "the current video remains selected during its intermission");
+  assert.equal(state.tv.breakEndsAtMs, now + 180_000);
+  assert.equal(state.tv.micLockedDuringVideo, false, "microphones unlock during the intermission");
+  assert.equal(state.tv.serverNowMs, now);
+  assert.throws(() => beam.actOnTv("LIVEME", viewer.participantId, {
+    action: "publish-playback",
+    currentVideoId: "dQw4w9WgXcQ",
+    startedAtMs: now - 1_000,
+  }), (error: unknown) => error instanceof RoomError && error.status === 403,
+  "public playback synchronization stays closed during the intermission");
+  state = beam.setSelfMedia("LIVEME", host.participantId, "mic", false);
+  assert.equal(state.slots.find(slot => slot.participantId === host.participantId)?.micMuted, true);
+  assert.equal(state.slots.find(slot => slot.participantId === viewer.participantId)?.micMuted, true,
+    "a person who joined while locked is not automatically unmuted");
+  const breakEndsAt = state.tv.breakEndsAtMs!;
+  assert.equal(beam.getNextAutomaticPlaybackTransitionAt("LIVEME"), breakEndsAt);
+  now = breakEndsAt - 1;
+  state = beam.getState("LIVEME");
+  assert.equal(state.tv.currentVideoId, "dQw4w9WgXcQ");
+  assert.equal(state.tv.micLockedDuringVideo, false);
+  now = breakEndsAt;
+  state = beam.getState("LIVEME");
+  assert.equal(state.tv.currentVideoId, "5qap5aO4i9A", "the next video starts when the shared break ends");
+  assert.equal(state.tv.startedAtMs, breakEndsAt);
+  assert.equal(state.tv.breakEndsAtMs, null);
+  assert.equal(state.tv.micLockedDuringVideo, true);
+  assert.equal(beam.getNextAutomaticPlaybackTransitionAt("LIVEME"), breakEndsAt + 10_000);
   state = beam.actOnTv("LIVEME", viewer.participantId, {
     action: "publish-playback",
     currentVideoId: "5qap5aO4i9A",
     startedAtMs: now - 1_000,
   });
-  assert.equal(state.tv.currentVideoId, "5qap5aO4i9A", "listeners can synchronize to the server-selected video");
+  assert.equal(state.tv.startedAtMs, breakEndsAt,
+    "players sync to the server's next-video start instead of resetting its clock");
+  assert.equal(state.slots.find(slot => slot.participantId === host.participantId)?.micMuted, true,
+    "a manual mute during the break remains in effect for the next video");
+  assert.equal(state.slots.find(slot => slot.participantId === viewer.participantId)?.micMuted, true);
+  assert.throws(() => beam.setSelfMedia("LIVEME", viewer.participantId, "mic", true),
+    (error: unknown) => error instanceof RoomError && error.status === 409);
+  state = beam.actOnTv("LIVEME", viewer.participantId, {
+    action: "publish-playback",
+    currentVideoId: "5qap5aO4i9A",
+    startedAtMs: now - 1_000,
+  });
+  assert.equal(state.tv.startedAtMs, breakEndsAt,
+    "player sync cannot reset the server-selected video start time");
   assert.throws(() => beam.actOnTv("LIVEME", viewer.participantId, { action: "skip" }),
     (error: unknown) => error instanceof RoomError && error.status === 403);
   assert.throws(() => beam.actOnTv("LIVEME", viewer.participantId, {
@@ -250,7 +309,42 @@ test("public Beam TV keeps its default queue and only advances naturally or by r
   assert.equal(state.tv.enabled, true);
   assert.equal(state.tv.sourceValue, defaultSearch);
   assert.deepEqual(state.tv.queue, ["dQw4w9WgXcQ", "5qap5aO4i9A"]);
-  assert.equal(state.tv.skipVotingEnabled, true);
+  assert.equal(state.tv.skipVotingEnabled, false);
+});
+
+test("a speaker muted by choice stays muted when a video ends and the break begins", () => {
+  let now = 700_000;
+  const rooms = new RoomStore(() => now);
+  createRoom(rooms, "LIVEME", "history-live", undefined, "Video Games & Interactive Media");
+  const beam = new UniversityVideoBeamStore(rooms, () => now);
+  const speaker = addMember(rooms, "LIVEME", "speaker");
+  beam.joinSlot("LIVEME", speaker.participantId, "speaker");
+  beam.setSelfMedia("LIVEME", speaker.participantId, "mic", false);
+  beam.initializeDefaultTvQueue("LIVEME", "Video Games & Interactive Media", [
+    { videoId: "dQw4w9WgXcQ", title: "First", channelTitle: "Channel", description: null },
+    { videoId: "5qap5aO4i9A", title: "Second", channelTitle: "Channel", description: null },
+  ], { dQw4w9WgXcQ: 5_000, "5qap5aO4i9A": 5_000 });
+  now += 5_000;
+  const state = beam.getState("LIVEME");
+  assert.equal(state.tv.micLockedDuringVideo, false);
+  assert.equal(state.slots.find(slot => slot.participantId === speaker.participantId)?.micMuted, true);
+});
+
+test("renaming a public topic room clears the old queue and selects the new room-name query", () => {
+  const rooms = new RoomStore();
+  createRoom(rooms, "LIVEME", "history-live", undefined, "Video Games & Interactive Media");
+  const beam = new UniversityVideoBeamStore(rooms);
+  const oldName = communityDefaultVideoSearch("LIVEME", rooms);
+  beam.initializeDefaultTvQueue("LIVEME", oldName, [
+    { videoId: "dQw4w9WgXcQ", title: "Old room result", channelTitle: "Channel", description: null },
+  ], { dQw4w9WgXcQ: 60_000 });
+
+  createRoom(rooms, "LIVEME", "history-live", undefined, "Updated room title");
+  const state = beam.getState("LIVEME");
+  assert.equal(state.tv.defaultSearch, "Updated room title");
+  assert.equal(state.tv.sourceValue, "Updated room title");
+  assert.deepEqual(state.tv.queue, []);
+  assert.equal(state.tv.currentVideoId, null);
 });
 
 test("Beam TV accepts a keyless playlist URL flow and synchronizes its player queue", () => {
@@ -283,11 +377,11 @@ test("Beam TV accepts a keyless playlist URL flow and synchronizes its player qu
   assert.equal(state.tv.startedAtMs, now - 8_000);
 });
 
-test("public Beam TV skip voting needs at least two votes and a strict majority and cannot be disabled", () => {
+test("public Beam TV has no viewer or host controls to vote, skip or change the queue", () => {
   const rooms = new RoomStore();
   createRoom(rooms);
   const beam = new UniversityVideoBeamStore(rooms);
-  const [one, two, three, four] = Array.from({ length: 4 }, (_, index) =>
+  const [one] = Array.from({ length: 1 }, (_, index) =>
     addMember(rooms, "LIVEME", `account-${index}`));
   const defaultSearch = communityDefaultVideoSearch("LIVEME", rooms);
   beam.initializeDefaultTvQueue("LIVEME", defaultSearch, [
@@ -296,29 +390,17 @@ test("public Beam TV skip voting needs at least two votes and a strict majority 
     { videoId: "M7lc1UVf-VE", title: "Three", channelTitle: "Channel", description: null },
   ], { dQw4w9WgXcQ: 60_000, "5qap5aO4i9A": 60_000, "M7lc1UVf-VE": 60_000 });
 
-  let state = beam.actOnTv("LIVEME", one!.participantId, { action: "vote-skip" }, "account-0");
-  assert.equal(state.tv.skipVoteCount, 1);
-  assert.equal(state.tv.skipVoteTotal, 4);
-  assert.equal(state.tv.hasVotedToSkip, true);
-  state = beam.actOnTv("LIVEME", one!.participantId, { action: "vote-skip" }, "account-0");
-  assert.equal(state.tv.skipVoteCount, 1, "one account can only vote once for a video");
-  state = beam.actOnTv("LIVEME", two!.participantId, { action: "vote-skip" }, "account-1");
-  assert.equal(state.tv.currentVideoId, "dQw4w9WgXcQ", "two of four is not more than half");
-  state = beam.actOnTv("LIVEME", three!.participantId, { action: "vote-skip" }, "account-2");
-  assert.equal(state.tv.currentVideoId, "5qap5aO4i9A", "three of four passes the strict-majority threshold");
-  assert.equal(state.tv.skipVoteCount, 0, "votes reset after the video advances");
-  assert.equal(state.tv.hasVotedToSkip, false);
-
-  assert.throws(() => beam.actOnTv("LIVEME", one!.participantId, {
-    action: "set-skip-voting", skipVotingEnabled: false,
-  }, "account-0"), (error: unknown) => error instanceof RoomError && error.status === 403);
+  assert.throws(() => beam.actOnTv("LIVEME", one!.participantId, { action: "vote-skip" }, "account-0"),
+    (error: unknown) => error instanceof RoomError && error.status === 403);
   assert.throws(() => beam.actOnTv("LIVEME", one!.participantId, { action: "skip" }, "account-0"),
     (error: unknown) => error instanceof RoomError && error.status === 403);
-  state = beam.getState("LIVEME");
-  assert.equal(state.tv.skipVotingEnabled, true);
-  assert.equal(state.tv.currentVideoId, "5qap5aO4i9A");
-  assert.equal(state.tv.skipVoteTotal, 4);
-  assert.ok(four);
+  assert.throws(() => beam.actOnTv("LIVEME", one!.participantId, {
+    action: "start", sourceType: "search", sourceValue: "manual", queue: ["dQw4w9WgXcQ"],
+  }, "account-0"), (error: unknown) => error instanceof RoomError && error.status === 403);
+  const state = beam.getState("LIVEME");
+  assert.equal(state.tv.skipVotingEnabled, false);
+  assert.equal(state.tv.skipVoteCount, 0);
+  assert.equal(state.tv.currentVideoId, "dQw4w9WgXcQ");
 });
 
 test("Beam TV playlist voting advances the synced player sequence with two room members", () => {
@@ -451,5 +533,30 @@ test("LiveKit audience access is subscribe-only and tokens are room-scoped", asy
   const speakerClaims = JSON.parse(Buffer.from(speaker.token.split(".")[1]!, "base64url").toString("utf8"));
   assert.equal(speakerClaims.video.canPublish, true);
   assert.equal(speakerClaims.video.canSubscribe, true);
+  assert.deepEqual(speakerClaims.video.canPublishSources, ["camera"],
+    "speaker tokens do not initially grant microphone publishing");
   assert.equal(speaker.token.includes(fakeSettings.apiSecret), false);
+
+  const policyUpdates: Array<{ sources: TrackSource[]; muted: boolean }> = [];
+  const policyClient = {
+    getParticipant: async () => ({ tracks: [{ source: TrackSource.MICROPHONE, sid: "mic-track" }] }),
+    updateParticipant: async (_room: string, _participant: string,
+      update: { permission: { canPublish: boolean; canPublishSources: TrackSource[] } }) => {
+      policyUpdates.push({ sources: update.permission.canPublishSources, muted: false });
+    },
+    mutePublishedTrack: async (_room: string, _participant: string, _track: string, muted: boolean) => {
+      policyUpdates.at(-1)!.muted = muted;
+    },
+  };
+  const policyService = new LiveKitBeamService(
+    () => fakeSettings,
+    () => policyClient as unknown as import("livekit-server-sdk").RoomServiceClient,
+  );
+  await policyService.applySpeakerMediaPolicy("streamtalk-test-room", "speaker", [TrackSource.CAMERA], false);
+  await policyService.applySpeakerMediaPolicy(
+    "streamtalk-test-room", "speaker", [TrackSource.CAMERA, TrackSource.MICROPHONE], true,
+  );
+  assert.deepEqual(policyUpdates.map(update => update.muted), [true, false],
+    "server-side media policy mutes during video and restores only the previously allowed state");
+  assert.deepEqual(policyUpdates[0]?.sources, [TrackSource.CAMERA]);
 });

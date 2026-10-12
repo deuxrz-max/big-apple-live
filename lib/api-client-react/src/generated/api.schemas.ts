@@ -783,7 +783,7 @@ export interface UniversityVideoBeamToken {
   role: UniversityVideoBeamTokenRole;
   /**
      * @minimum 1
-     * @maximum 4
+     * @maximum 8
      * @nullable
      */
   slotNumber: number | null;
@@ -812,7 +812,7 @@ export interface UniversityVideoBeamActionInput {
 export interface UniversityVideoBeamSlot {
   /**
      * @minimum 1
-     * @maximum 4
+     * @maximum 8
      */
   slotNumber: number;
   /** @nullable */
@@ -880,6 +880,14 @@ export interface UniversityVideoBeamTvState {
      * @nullable
      */
   startedAtMs: number | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  breakEndsAtMs: number | null;
+  /** @minimum 0 */
+  serverNowMs: number;
+  micLockedDuringVideo: boolean;
   skipVotingEnabled: boolean;
   /** @minimum 0 */
   skipVoteCount: number;
@@ -897,8 +905,8 @@ export interface UniversityVideoBeamState {
   hostParticipantId: string | null;
   tv: UniversityVideoBeamTvState;
   /**
-     * @minItems 4
-     * @maxItems 4
+     * @minItems 8
+     * @maxItems 8
      */
   slots: UniversityVideoBeamSlot[];
 }
@@ -1585,7 +1593,7 @@ export interface UniversityVideoBeamToken4b96100 {
   role: UniversityVideoBeamToken4b96100Role;
   /**
      * @minimum 1
-     * @maximum 4
+     * @maximum 8
      * @nullable
      */
   slotNumber: number | null;
@@ -1614,7 +1622,7 @@ export interface UniversityVideoBeamActionInput4b96100 {
 export interface UniversityVideoBeamSlot4b96100 {
   /**
      * @minimum 1
-     * @maximum 4
+     * @maximum 8
      */
   slotNumber: number;
   /** @nullable */
@@ -1682,6 +1690,14 @@ export interface UniversityVideoBeamTvState4b96100 {
      * @nullable
      */
   startedAtMs: number | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  breakEndsAtMs: number | null;
+  /** @minimum 0 */
+  serverNowMs: number;
+  micLockedDuringVideo: boolean;
   skipVotingEnabled: boolean;
   /** @minimum 0 */
   skipVoteCount: number;
@@ -1699,8 +1715,8 @@ export interface UniversityVideoBeamState4b96100 {
   hostParticipantId: string | null;
   tv: UniversityVideoBeamTvState4b96100;
   /**
-     * @minItems 4
-     * @maxItems 4
+     * @minItems 8
+     * @maxItems 8
      */
   slots: UniversityVideoBeamSlot4b96100[];
 }

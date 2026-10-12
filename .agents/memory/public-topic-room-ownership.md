@@ -3,8 +3,8 @@ name: Public topic-room ownership
 description: Beam TV ownership and playback rules for Streamtalk's public topic rooms.
 ---
 
-Public topic rooms and their overflow rooms are ownerless for Beam TV. No participant receives host controls; the default topic queue stays on, and the room vote is the only manual way to skip. Preserve host-control code for future creator channel rooms. App moderators keep their separate moderation powers.
+Public topic rooms and their overflow rooms are ownerless for Beam TV. No participant receives TV controls or skip-vote controls; the server searches YouTube by the room's current displayed name and advances the shared queue automatically. Cache selected results, use only embeddable non-live, non-age-restricted videos, and keep the API key server-side. App moderators keep their separate moderation powers.
 
-**Why:** The owner wants public viewing rooms to be community-run, without granting the first person who joins control over everyone else's viewing.
+**Why:** The owner wants public viewing rooms to be community-run and fully automatic, with no participant controlling what everyone sees. During Beam TV playback, all room microphones are server-locked; the shared intermission is three minutes and unlocks them without overriding each person's saved mute choice.
 
-**How to apply:** Apply this policy only to the configured public topic rooms and their overflow children. Keep it separate from ordinary host-enabled/private rooms and from administrator or moderator permissions.
+**How to apply:** Apply automatic room-name search, playback timing, microphone lock and intermission only to configured public topic rooms and their overflow children. Do not add room-level search, playback, sound, skip or voting controls. Keep the YouTube key on the server, enforce mic policy through LiveKit, and preserve administrator or moderator permissions for chat moderation.

@@ -66,6 +66,9 @@ export class RoomStore {
     const room = this.rooms.get(normalized);
     return room?.parentRoomId ?? room?.roomId ?? normalized;
   }
+  communityLabel(roomId: string): string | null {
+    return this.rooms.get(roomId.toUpperCase())?.name ?? null;
+  }
   unregisterCommunity(roomId: string): void {
     const room = this.requireRoom(roomId);
     if (!room.community) throw new RoomError(409, "Only a university room can be unregistered");

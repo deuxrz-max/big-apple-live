@@ -15,8 +15,8 @@ export interface UniversityVideoBeamState4b96100 {
   hostParticipantId: string | null;
   tv: UniversityVideoBeamTvState4b96100;
   /**
-     * @minItems 4
-     * @maxItems 4
+     * @minItems 8
+     * @maxItems 8
      */
   slots: UniversityVideoBeamSlot4b96100[];
 }

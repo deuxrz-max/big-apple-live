@@ -42,7 +42,9 @@ export class LiveKitBeamService {
       room: input.roomName,
       canSubscribe: true,
       canPublish: input.role === "speaker",
-      canPublishSources: input.role === "speaker" ? [TrackSource.MICROPHONE, TrackSource.CAMERA] : [],
+      // Speaker tokens start camera-only. The server grants microphone publishing
+      // only after it confirms the speaker slot and the room's current TV state.
+      canPublishSources: input.role === "speaker" ? [TrackSource.CAMERA] : [],
       canPublishData: false,
     });
     return { url: settings.url, token: await token.toJwt() };
@@ -73,6 +75,23 @@ export class LiveKitBeamService {
     allowedSources: TrackSource[],
   ): Promise<void> {
     await this.setTrackEnabled(roomName, participantId, source, enabled, allowedSources);
+  }
+
+  async applySpeakerMediaPolicy(
+    roomName: string,
+    participantId: string,
+    allowedSources: TrackSource[],
+    microphoneEnabled: boolean,
+  ): Promise<void> {
+    const client = this.clientFactory(this.getSettings());
+    const participant = await client.getParticipant(roomName, participantId);
+    await client.updateParticipant(roomName, participantId, {
+      permission: { canPublish: allowedSources.length > 0, canPublishSources: allowedSources },
+    });
+    const microphone = participant.tracks.find(item => item.source === TrackSource.MICROPHONE);
+    if (microphone) {
+      await client.mutePublishedTrack(roomName, participantId, microphone.sid, !microphoneEnabled);
+    }
   }
 
   async removeParticipant(roomName: string, participantId: string): Promise<void> {

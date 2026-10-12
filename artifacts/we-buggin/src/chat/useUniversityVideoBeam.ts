@@ -3,10 +3,8 @@ import {
   getUniversityVideoBeamState,
   getUniversityVideoBeamToken,
   performUniversityVideoBeamAction,
-  performUniversityVideoBeamTvAction,
   searchYouTubeForVideoBeam,
   type UniversityVideoBeamActionInput,
-  type UniversityVideoBeamTvActionInput,
   type UniversityVideoBeamState,
   type UniversityVideoBeamTvSearchResponse,
 } from "@workspace/api-client-react";
@@ -40,13 +38,16 @@ const emptyState = (roomId: string): UniversityVideoBeamState => ({
     videoMetadata: [],
     currentVideoId: null,
     startedAtMs: null,
-    skipVotingEnabled: true,
+    breakEndsAtMs: null,
+    serverNowMs: Date.now(),
+    micLockedDuringVideo: false,
+    skipVotingEnabled: false,
     skipVoteCount: 0,
     skipVoteTotal: 0,
     hasVotedToSkip: false,
     skipSequence: 0,
   },
-  slots: [1, 2, 3, 4].map(slotNumber => ({
+  slots: [1, 2, 3, 4, 5, 6, 7, 8].map(slotNumber => ({
     slotNumber,
     participantId: null,
     micMuted: true,
@@ -78,6 +79,7 @@ export function useUniversityVideoBeam(
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const roomRef = useRef<Room | null>(null);
   const roleRef = useRef<"audience" | "speaker" | null>(null);
+  const speakerReadyRef = useRef(false);
   const tracksRef = useRef<LocalTrack[]>([]);
   const activeRef = useRef(false);
   const startingRef = useRef(false);
@@ -102,20 +104,6 @@ export function useUniversityVideoBeam(
     credentials: "include",
   }), [headers]);
 
-  const runTvAction = useCallback(async (data: UniversityVideoBeamTvActionInput) => {
-    const args = latest.current;
-    const next = await performUniversityVideoBeamTvAction(args.roomId, data, {
-      headers: headers(args.roomSessionId),
-      credentials: "include",
-    });
-    setBeam(current => {
-      const updated = { ...current, tv: next };
-      beamRef.current = updated;
-      return updated;
-    });
-    return next;
-  }, [headers]);
-
   const searchTv = useCallback(async (query: string): Promise<UniversityVideoBeamTvSearchResponse> => {
     const args = latest.current;
     return searchYouTubeForVideoBeam(args.roomId, { query }, {
@@ -128,6 +116,7 @@ export function useUniversityVideoBeam(
     const room = roomRef.current;
     roomRef.current = null;
     roleRef.current = null;
+    speakerReadyRef.current = false;
     if (room) {
       try { room.removeAllListeners(); } catch { /* close may already be underway */ }
       void room.disconnect();
@@ -305,7 +294,7 @@ export function useUniversityVideoBeam(
       applyBeam(latestBeam);
       const alreadyOwnsSpot = latestBeam.slots.some(slot => slot.participantId === args.participantId);
       const available = alreadyOwnsSpot || latestBeam.slots.some(slot => !slot.participantId);
-      if (!available) throw new Error("All four speaker spots are full. You can still watch and chat.");
+      if (!available) throw new Error("All eight speaker spots are full. You can still watch and chat.");
       if (!navigator.mediaDevices?.getUserMedia) {
         throw new Error("This browser cannot access a camera and microphone for live video.");
       }
@@ -317,7 +306,9 @@ export function useUniversityVideoBeam(
 
       // Capture is requested only inside the explicit speaker-join click.
       localTracks = await createLocalTracks({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        audio: reserved.tv.micLockedDuringVideo
+          ? false
+          : { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
         video: { facingMode: "user", resolution: { width: 640, height: 360 }, frameRate: 24 },
       });
       tracksRef.current = localTracks;
@@ -328,6 +319,7 @@ export function useUniversityVideoBeam(
       room = new Room({ adaptiveStream: true, dynacast: true });
       roomRef.current = room;
       roleRef.current = "speaker";
+      speakerReadyRef.current = false;
       const refreshMedia = () => {
         const snapshot: MediaMap = {};
         for (const participant of room!.remoteParticipants.values()) {
@@ -366,6 +358,7 @@ export function useUniversityVideoBeam(
         if (!activeRef.current || roomRef.current !== room) return;
         roomRef.current = null;
         roleRef.current = null;
+        speakerReadyRef.current = false;
         setMedia({});
         stopTracks(tracksRef.current);
         tracksRef.current = [];
@@ -374,9 +367,14 @@ export function useUniversityVideoBeam(
         void doAction(args, { action: "leave-slot" }).catch(() => undefined);
       });
       await room.connect(token.url, token.token, { autoSubscribe: true });
-      for (const track of localTracks) await room.localParticipant.publishTrack(track);
+      // The server gives speaker tokens camera-only permissions. It grants mic
+      // publishing after the slot is connected and re-checks the TV lock.
+      for (const track of localTracks) {
+        if (track.kind === Track.Kind.Video) await room.localParticipant.publishTrack(track);
+      }
       const state = await doAction(args, { action: "speaker-connected" });
       applyBeam(state);
+      speakerReadyRef.current = true;
       refreshMedia();
       setConnection("connected");
       try {
@@ -394,6 +392,7 @@ export function useUniversityVideoBeam(
         roomRef.current = null;
         roleRef.current = null;
       }
+      speakerReadyRef.current = false;
       stopTracks(localTracks);
       tracksRef.current = [];
       setConnection("error");
@@ -417,18 +416,11 @@ export function useUniversityVideoBeam(
     try {
       const state = await doAction(args, data);
       applyBeam(state);
-      if (data.action === "set-self-mic" || data.action === "set-self-camera") {
-        const source = data.action === "set-self-mic" ? Track.Source.Microphone : Track.Source.Camera;
-        const publication = roomRef.current?.localParticipant.getTrackPublication(source);
-        if (publication?.track) {
-          if (data.enabled) await publication.track.unmute();
-          else await publication.track.mute();
-        }
-      }
       if (data.action === "leave-slot") {
         const room = roomRef.current;
         roomRef.current = null;
         roleRef.current = null;
+        speakerReadyRef.current = false;
         if (room) { room.removeAllListeners(); await room.disconnect(); }
         stopTracks(tracksRef.current);
         tracksRef.current = [];
@@ -444,6 +436,55 @@ export function useUniversityVideoBeam(
       try { await refresh(); } catch { /* next scheduled refresh will retry */ }
     }
   }, [applyBeam, doAction, refresh]);
+
+  const ownSlot = beam.slots.find(slot => slot.participantId === participantId);
+  useEffect(() => {
+    const room = roomRef.current;
+    if (!room || roleRef.current !== "speaker" || !speakerReadyRef.current || connection !== "connected"
+      || !ownSlot || ownSlot.participantId !== participantId) return;
+    const microphoneShouldBeEnabled = !beam.tv.micLockedDuringVideo
+      && !ownSlot.micMuted && !ownSlot.mutedByHost;
+    let active = true;
+    void (async () => {
+      try {
+        const publication = room.localParticipant.getTrackPublication(Track.Source.Microphone);
+        const unpublishedTrack = tracksRef.current.find(track => track.kind === Track.Kind.Audio);
+        if (!microphoneShouldBeEnabled) {
+          if (publication?.track) await publication.track.mute();
+          else if (unpublishedTrack) await unpublishedTrack.mute();
+          return;
+        }
+        if (publication?.track) {
+          await publication.track.unmute();
+        } else if (unpublishedTrack) {
+          await room.localParticipant.publishTrack(unpublishedTrack);
+          await unpublishedTrack.unmute();
+        } else {
+          // A speaker who joined during a video did not get a mic track. They
+          // can opt in after the intermission by tapping Unmute.
+          await room.localParticipant.setMicrophoneEnabled(true);
+        }
+      } catch (failure) {
+        if (!active) return;
+        setError(errMessage(failure, "Microphone access is unavailable. Check your browser permission and try again."));
+        if (microphoneShouldBeEnabled) {
+          void doAction(latest.current, { action: "set-self-mic", enabled: false })
+            .then(applyBeam)
+            .catch(() => undefined);
+        }
+      }
+    })();
+    return () => { active = false; };
+  }, [
+    applyBeam,
+    beam.tv.micLockedDuringVideo,
+    connection,
+    doAction,
+    ownSlot?.micMuted,
+    ownSlot?.mutedByHost,
+    ownSlot?.participantId,
+    participantId,
+  ]);
 
   const toggleMic = useCallback((enabled: boolean) => runAction({ action: "set-self-mic", enabled }), [runAction]);
   const toggleCamera = useCallback((enabled: boolean) => runAction({ action: "set-self-camera", enabled }), [runAction]);
@@ -477,7 +518,6 @@ export function useUniversityVideoBeam(
     }
   }, []);
 
-  const ownSlot = beam.slots.find(slot => slot.participantId === participantId);
   const isHost = beam.hostParticipantId === participantId && !!ownSlot;
 
   return {
@@ -499,7 +539,6 @@ export function useUniversityVideoBeam(
     hostMuteMic,
     hostDisableCamera,
     kick,
-    runTvAction,
     searchTv,
     resumePlayback,
     refresh,

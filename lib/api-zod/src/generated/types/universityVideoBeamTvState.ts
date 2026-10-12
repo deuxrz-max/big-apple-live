@@ -36,6 +36,14 @@ export interface UniversityVideoBeamTvState {
      * @nullable
      */
   startedAtMs: number | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  breakEndsAtMs: number | null;
+  /** @minimum 0 */
+  serverNowMs: number;
+  micLockedDuringVideo: boolean;
   skipVotingEnabled: boolean;
   /** @minimum 0 */
   skipVoteCount: number;

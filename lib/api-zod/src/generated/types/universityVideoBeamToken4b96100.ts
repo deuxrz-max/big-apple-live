@@ -13,7 +13,7 @@ export interface UniversityVideoBeamToken4b96100 {
   role: UniversityVideoBeamToken4b96100Role;
   /**
      * @minimum 1
-     * @maximum 4
+     * @maximum 8
      * @nullable
      */
   slotNumber: number | null;

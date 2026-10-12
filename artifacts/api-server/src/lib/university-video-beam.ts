@@ -8,9 +8,10 @@ import type {
 import { RoomError, RoomStore, roomStore } from "./room-store";
 import { communityDefaultVideoSearch, isPublicTopicRoom } from "./community-config";
 
-export const VIDEO_BEAM_SLOT_COUNT = 4;
+export const VIDEO_BEAM_SLOT_COUNT = 8;
 export const VIDEO_BEAM_KICK_COOLDOWN_MS = 60_000;
 export const VIDEO_BEAM_CONNECT_GRACE_MS = 90_000;
+export const PUBLIC_BEAM_TV_BREAK_MS = 3 * 60_000;
 
 type BeamSlot = {
   slotNumber: number;
@@ -29,7 +30,9 @@ type Beam = {
   historyId: string;
   hostParticipantId: string | null;
   slots: BeamSlot[];
-  tv: Omit<UniversityVideoBeamTvState, "searchAvailable" | "skipVoteCount" | "skipVoteTotal" | "hasVotedToSkip">;
+  tv: Omit<UniversityVideoBeamTvState,
+    "searchAvailable" | "skipVoteCount" | "skipVoteTotal" | "hasVotedToSkip"
+    | "micLockedDuringVideo" | "serverNowMs">;
   skipVotes: Set<string>;
   videoDurationsMs: Map<string, number>;
 };
@@ -64,6 +67,18 @@ export class UniversityVideoBeamStore {
     return this.toState(this.ensure(roomId), viewerAccountId);
   }
 
+  getNextAutomaticPlaybackTransitionAt(roomId: string): number | null {
+    const beam = this.ensure(roomId);
+    this.advanceOwnerlessTopicPlayback(beam);
+    const tv = beam.tv;
+    if (!this.isOwnerlessTopicRoom(beam.roomId) || !tv.enabled || !tv.currentVideoId || tv.startedAtMs === null) {
+      return null;
+    }
+    if (tv.breakEndsAtMs !== null) return tv.breakEndsAtMs;
+    const durationMs = beam.videoDurationsMs.get(tv.currentVideoId);
+    return durationMs ? tv.startedAtMs + durationMs : null;
+  }
+
   assertTvHost(roomId: string, participantId: string): void {
     this.requireHost(this.ensure(roomId), participantId);
   }
@@ -95,6 +110,7 @@ export class UniversityVideoBeamStore {
     }
     tv.currentVideoId = validIds[0]!;
     tv.startedAtMs = this.now();
+    tv.breakEndsAtMs = null;
     beam.skipVotes.clear();
     return this.toState(beam);
   }
@@ -113,6 +129,7 @@ export class UniversityVideoBeamStore {
       && tv.enabled && tv.sourceType === "search"
       && tv.sourceValue === tv.defaultSearch
       && tv.queue.length > 0
+      && tv.breakEndsAtMs === null
       && tv.queue.includes(input.currentVideoId ?? "")
       && (!ownerlessTopicRoom || input.currentVideoId === tv.currentVideoId);
     const defaultQueueSync = ownerlessTopicRoom && input.action === "publish-queue"
@@ -143,6 +160,7 @@ export class UniversityVideoBeamStore {
           ?? queue[0]
           ?? null;
         tv.startedAtMs = tv.currentVideoId ? this.now() : null;
+        tv.breakEndsAtMs = null;
         beam.skipVotes.clear();
         break;
       }
@@ -153,12 +171,14 @@ export class UniversityVideoBeamStore {
         tv.enabled = true;
         if (tv.queue.length && !tv.currentVideoId) tv.currentVideoId = tv.queue[0]!;
         tv.startedAtMs = tv.currentVideoId ? this.now() : null;
+        tv.breakEndsAtMs = null;
         beam.skipVotes.clear();
         break;
       }
       case "stop":
         tv.enabled = false;
         tv.startedAtMs = null;
+        tv.breakEndsAtMs = null;
         beam.skipVotes.clear();
         break;
       case "reset":
@@ -170,6 +190,7 @@ export class UniversityVideoBeamStore {
         tv.videoMetadata = [];
         tv.currentVideoId = null;
         tv.startedAtMs = null;
+        tv.breakEndsAtMs = null;
         beam.skipVotes.clear();
         break;
       case "publish-queue": {
@@ -189,6 +210,7 @@ export class UniversityVideoBeamStore {
           }
           tv.currentVideoId = current;
           if (changed || tv.startedAtMs === null) tv.startedAtMs = this.now();
+          tv.breakEndsAtMs = null;
         } else {
           tv.currentVideoId = queue[0]!;
           tv.startedAtMs = this.now();
@@ -211,7 +233,10 @@ export class UniversityVideoBeamStore {
         }
         if (tv.currentVideoId !== current) beam.skipVotes.clear();
         tv.currentVideoId = current;
-        if (!ownerlessTopicRoom) tv.startedAtMs = this.validPlaybackTime(input.startedAtMs);
+        if (!ownerlessTopicRoom) {
+          tv.startedAtMs = this.validPlaybackTime(input.startedAtMs);
+          tv.breakEndsAtMs = null;
+        }
         if (input.videoMetadata && input.videoMetadata.videoId === current) {
           this.storeVideoMetadata(tv, input.videoMetadata);
         }
@@ -232,6 +257,7 @@ export class UniversityVideoBeamStore {
           throw new RoomError(409, "There is no next video in this Beam TV queue.");
         }
         tv.startedAtMs = this.now();
+        tv.breakEndsAtMs = null;
         beam.skipVotes.clear();
         break;
       }
@@ -245,6 +271,9 @@ export class UniversityVideoBeamStore {
         break;
       }
       case "vote-skip": {
+        if (ownerlessTopicRoom) {
+          throw new RoomError(403, "Beam TV plays automatically in public topic rooms.");
+        }
         if (!tv.enabled || !tv.currentVideoId) throw new RoomError(409, "There is no active Beam TV video to vote on.");
         if (!tv.skipVotingEnabled) throw new RoomError(409, "Skip voting is off for this room.");
         if (!accountId || !this.rooms.activeAccountIds(roomId).includes(accountId)) {
@@ -263,6 +292,7 @@ export class UniversityVideoBeamStore {
             tv.skipSequence += 1;
           }
           tv.startedAtMs = this.now();
+          tv.breakEndsAtMs = null;
           beam.skipVotes.clear();
         }
         break;
@@ -295,12 +325,14 @@ export class UniversityVideoBeamStore {
       throw new RoomError(409, "You already have a speaker spot in this beam.");
     }
     const slot = beam.slots.find(candidate => candidate.participantId === null);
-    if (!slot) throw new RoomError(409, "All four speaker spots are full. You can still watch and chat.");
+    if (!slot) throw new RoomError(409, "All eight speaker spots are full. You can still watch and chat.");
     slot.participantId = participantId;
     slot.accountId = accountId;
     slot.joinedAt = this.now();
     slot.connectedAt = null;
-    slot.micMuted = false;
+    // A person who first joins while a video is already playing starts muted.
+    // Existing speakers keep their saved mic preference through the lock.
+    slot.micMuted = this.isMicLocked(beam);
     slot.cameraOff = false;
     slot.mutedByHost = false;
     slot.cameraDisabledByHost = false;
@@ -343,9 +375,11 @@ export class UniversityVideoBeamStore {
   }
 
   assertSelfMedia(roomId: string, participantId: string, media: "mic" | "camera", enabled: boolean): void {
-    void media;
-    void enabled;
-    this.requireSlot(this.ensure(roomId), participantId);
+    const beam = this.ensure(roomId);
+    this.requireSlot(beam, participantId);
+    if (media === "mic" && enabled && this.isMicLocked(beam)) {
+      throw new RoomError(409, "Microphones are off while a Beam TV video is playing.");
+    }
   }
 
   setSelfMedia(roomId: string, participantId: string, media: "mic" | "camera", enabled: boolean): UniversityVideoBeamState {
@@ -419,6 +453,7 @@ export class UniversityVideoBeamStore {
           videoMetadata: [],
           currentVideoId: null,
           startedAtMs: null,
+          breakEndsAtMs: null,
           skipVotingEnabled: true,
           skipSequence: 0,
         },
@@ -452,8 +487,9 @@ export class UniversityVideoBeamStore {
   private enforceOwnerlessTopicDefaults(beam: Beam): void {
     beam.hostParticipantId = null;
     beam.tv.enabled = true;
-    beam.tv.skipVotingEnabled = true;
     const defaultSearch = communityDefaultVideoSearch(beam.roomId, this.rooms);
+    beam.tv.defaultSearch = defaultSearch;
+    beam.tv.skipVotingEnabled = false;
     const normalize = (value: string | null) => (value ?? "").trim().replace(/\s+/g, " ").toLocaleLowerCase("en-US");
     const isDefaultSource = beam.tv.sourceType === "search"
       && normalize(beam.tv.sourceValue) === normalize(defaultSearch)
@@ -467,6 +503,7 @@ export class UniversityVideoBeamStore {
     beam.tv.videoMetadata = [];
     beam.tv.currentVideoId = null;
     beam.tv.startedAtMs = null;
+    beam.tv.breakEndsAtMs = null;
     beam.videoDurationsMs.clear();
     beam.skipVotes.clear();
   }
@@ -474,29 +511,32 @@ export class UniversityVideoBeamStore {
   private advanceOwnerlessTopicPlayback(beam: Beam): void {
     const tv = beam.tv;
     if (!tv.enabled || !tv.queue.length || !tv.currentVideoId || tv.startedAtMs === null) return;
-    let currentId = tv.currentVideoId;
-    let startedAtMs = tv.startedAtMs;
-    let advanced = false;
-    for (let steps = 0; steps < tv.queue.length; steps += 1) {
-      const durationMs = beam.videoDurationsMs.get(currentId);
-      if (!durationMs || this.now() - startedAtMs < durationMs) break;
-      const index = tv.queue.indexOf(currentId);
-      const next = tv.queue[(index + 1 + tv.queue.length) % tv.queue.length];
-      if (!next) break;
-      startedAtMs += durationMs;
-      currentId = next;
-      advanced = true;
+    const now = this.now();
+    for (let steps = 0; steps < 10_000; steps += 1) {
+      if (tv.breakEndsAtMs !== null) {
+        if (now < tv.breakEndsAtMs) return;
+        const index = tv.queue.indexOf(tv.currentVideoId);
+        const next = tv.queue[(index + 1 + tv.queue.length) % tv.queue.length];
+        if (!next) return;
+        tv.currentVideoId = next;
+        tv.startedAtMs = tv.breakEndsAtMs;
+        tv.breakEndsAtMs = null;
+        tv.skipSequence += 1;
+        beam.skipVotes.clear();
+        this.automaticVideoStartListener?.(
+          beam.roomId,
+          next,
+          tv.videoMetadata.find(item => item.videoId === next),
+        );
+        continue;
+      }
+
+      const durationMs = beam.videoDurationsMs.get(tv.currentVideoId);
+      if (!durationMs || tv.startedAtMs + durationMs > now) return;
+      tv.breakEndsAtMs = tv.startedAtMs + durationMs + PUBLIC_BEAM_TV_BREAK_MS;
+      beam.skipVotes.clear();
+      if (now < tv.breakEndsAtMs) return;
     }
-    if (!advanced) return;
-    tv.currentVideoId = currentId;
-    tv.startedAtMs = startedAtMs;
-    tv.skipSequence += 1;
-    beam.skipVotes.clear();
-    this.automaticVideoStartListener?.(
-      beam.roomId,
-      currentId,
-      tv.videoMetadata.find(item => item.videoId === currentId),
-    );
   }
 
   private requireSlot(beam: Beam, participantId: string): BeamSlot {
@@ -579,6 +619,8 @@ export class UniversityVideoBeamStore {
         ...beam.tv,
         searchAvailable: Boolean(process.env.YOUTUBE_API_KEY?.trim()),
         videoMetadata: beam.tv.videoMetadata.map(item => ({ ...item })),
+          micLockedDuringVideo: this.isMicLocked(beam),
+          serverNowMs: this.now(),
         skipVoteCount: beam.skipVotes.size,
         skipVoteTotal: activeAccounts.size,
         hasVotedToSkip: viewerAccountId ? beam.skipVotes.has(viewerAccountId) : false,
@@ -592,6 +634,13 @@ export class UniversityVideoBeamStore {
         cameraDisabledByHost,
       })),
     };
+  }
+
+  private isMicLocked(beam: Beam): boolean {
+    return this.isOwnerlessTopicRoom(beam.roomId)
+      && beam.tv.enabled
+      && beam.tv.currentVideoId !== null
+      && beam.tv.breakEndsAtMs === null;
   }
 
   private validPlaybackTime(startedAtMs: number | undefined): number {

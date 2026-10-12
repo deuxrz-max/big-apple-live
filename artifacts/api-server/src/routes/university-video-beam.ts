@@ -10,6 +10,7 @@ import {
   PerformUniversityVideoBeamTvActionResponse,
   SearchYouTubeForVideoBeamBody,
   SearchYouTubeForVideoBeamResponse,
+  type UniversityVideoBeamState,
   type UniversityVideoBeamTvVideoMetadata,
 } from "@workspace/api-zod";
 import { TrackSource } from "livekit-server-sdk";
@@ -19,6 +20,7 @@ import { requireCompletedProfile } from "../lib/account-profiles";
 import { universityVideoBeamStore } from "../lib/university-video-beam";
 import { liveKitBeamService, publicLiveKitFailure } from "../lib/livekit";
 import { communityDefaultVideoSearch } from "../lib/community-config";
+import { selectPlayableYouTubeVideos } from "../lib/youtube-video-selection";
 import {
   postBeamTvVoteAnnouncement,
   scheduleBeamTvVideoStart,
@@ -30,6 +32,8 @@ universityVideoBeamStore.setAutomaticVideoStartListener((roomId, videoId, metada
   scheduleBeamTvVideoStart(roomId, videoId, metadata);
 });
 const participantSnapshots = new Map<string, { expiresAt: number; identities: Set<string> }>();
+const appliedSpeakerPolicies = new Map<string, Map<string, string>>();
+const publicPlaybackTimers = new Map<string, { dueAt: number; timer: ReturnType<typeof setTimeout> }>();
 const PARTICIPANT_SNAPSHOT_TTL_MS = 1_500;
 type YouTubeSearchResult = {
   videoIds: string[];
@@ -38,8 +42,10 @@ type YouTubeSearchResult = {
   durationMsByVideoId: Record<string, number>;
 };
 const youtubeSearchCache = new Map<string, { expiresAt: number } & YouTubeSearchResult>();
+const youtubeSearchFailureCache = new Map<string, { expiresAt: number; status: number; message: string }>();
 const youtubeSearchInFlight = new Map<string, Promise<YouTubeSearchResult>>();
 const YOUTUBE_SEARCH_CACHE_MS = 24 * 60 * 60 * 1000;
+const YOUTUBE_SEARCH_TRANSIENT_FAILURE_MS = 10 * 60 * 1000;
 
 function normalizeSearchQuery(value: string) {
   return value.trim().replace(/\s+/g, " ").toLocaleLowerCase("en-US");
@@ -64,6 +70,11 @@ async function searchYouTube(query: string, apiKey: string) {
         durationMsByVideoId: cached.durationMsByVideoId,
       };
   }
+  const cachedFailure = youtubeSearchFailureCache.get(cacheKey);
+  if (cachedFailure && cachedFailure.expiresAt > Date.now()) {
+    throw new RoomError(cachedFailure.status, cachedFailure.message);
+  }
+  if (cachedFailure) youtubeSearchFailureCache.delete(cacheKey);
   const pending = youtubeSearchInFlight.get(cacheKey);
   if (pending) return pending;
 
@@ -84,7 +95,13 @@ async function searchYouTube(query: string, apiKey: string) {
     } catch {
       throw new RoomError(502, "YouTube search could not be reached. Paste a video or playlist link instead.");
     }
-    if (!response.ok) throw new RoomError(502, "YouTube search is unavailable right now. Paste a video or playlist link instead.");
+    if (!response.ok) {
+      const quotaOrCredentialFailure = response.status === 403 || response.status === 429;
+      throw new RoomError(
+        quotaOrCredentialFailure ? 503 : 502,
+        "YouTube search is unavailable right now. A room-matched video will appear when it is available.",
+      );
+    }
     const payload: unknown = await response.json().catch(() => null);
     const items = typeof payload === "object" && payload !== null && "items" in payload
       && Array.isArray((payload as { items?: unknown }).items)
@@ -92,7 +109,7 @@ async function searchYouTube(query: string, apiKey: string) {
     const results = items.flatMap(item => {
       if (typeof item !== "object" || item === null) return [];
       const record = item as { id?: { videoId?: unknown }; snippet?: {
-        title?: unknown; channelTitle?: unknown; description?: unknown;
+        title?: unknown; channelTitle?: unknown; description?: unknown; liveBroadcastContent?: unknown;
       } };
       const videoId = record.id?.videoId;
       if (typeof videoId !== "string" || !/^[A-Za-z0-9_-]{11}$/.test(videoId)) return [];
@@ -101,13 +118,15 @@ async function searchYouTube(query: string, apiKey: string) {
         ? record.snippet.channelTitle.slice(0, 120) : null;
       const description = typeof record.snippet?.description === "string"
         ? record.snippet.description.slice(0, 500) : null;
-      return [{ videoId, title, channelTitle, description }];
+      const liveBroadcastContent = typeof record.snippet?.liveBroadcastContent === "string"
+        ? record.snippet.liveBroadcastContent : null;
+      return [{ videoId, title, channelTitle, description, liveBroadcastContent }];
     });
     if (results.length === 0) throw new RoomError(404, "No embeddable YouTube videos were found for that topic.");
 
     const detailsUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
     detailsUrl.search = new URLSearchParams({
-      part: "contentDetails",
+      part: "contentDetails,status",
       id: results.map(item => item.videoId).join(","),
       key: apiKey,
     }).toString();
@@ -118,39 +137,68 @@ async function searchYouTube(query: string, apiKey: string) {
       throw new RoomError(502, "YouTube video details could not be reached. Try again shortly.");
     }
     if (!detailsResponse.ok) {
-      throw new RoomError(502, "YouTube video details are unavailable right now. Try again shortly.");
+      throw new RoomError(
+        detailsResponse.status === 403 || detailsResponse.status === 429 ? 503 : 502,
+        "YouTube video details are unavailable right now.",
+      );
     }
     const detailsPayload: unknown = await detailsResponse.json().catch(() => null);
     const details = typeof detailsPayload === "object" && detailsPayload !== null && "items" in detailsPayload
       && Array.isArray((detailsPayload as { items?: unknown }).items)
       ? (detailsPayload as { items: unknown[] }).items : [];
-    const durationMsByVideoId: Record<string, number> = {};
-    for (const item of details) {
-      if (typeof item !== "object" || item === null) continue;
-      const record = item as { id?: unknown; contentDetails?: { duration?: unknown } };
-      const durationMs = parseYouTubeDurationMs(record.contentDetails?.duration);
-      if (typeof record.id === "string" && durationMs) durationMsByVideoId[record.id] = durationMs;
-    }
-    const timedResults = results.filter(item => durationMsByVideoId[item.videoId] !== undefined);
-    if (timedResults.length === 0) {
-      throw new RoomError(404, "No playable videos with a known duration were found for that topic.");
+    const eligibility = details.flatMap(item => {
+      if (typeof item !== "object" || item === null) return [];
+      const record = item as {
+        id?: unknown;
+        contentDetails?: { duration?: unknown; contentRating?: { ytRating?: unknown } };
+        status?: { embeddable?: unknown };
+      };
+      if (typeof record.id !== "string") return [];
+      return [{
+        videoId: record.id,
+        durationMs: parseYouTubeDurationMs(record.contentDetails?.duration),
+        embeddable: record.status?.embeddable === true,
+        ytRating: typeof record.contentDetails?.contentRating?.ytRating === "string"
+          ? record.contentDetails.contentRating.ytRating : null,
+      }];
+    });
+    const playable = selectPlayableYouTubeVideos(results, eligibility);
+    if (playable.videos.length === 0) {
+      throw new RoomError(404, "No suitable videos are available for this room right now.");
     }
     return {
-      videoIds: timedResults.map(item => item.videoId),
-      titles: timedResults.map(item => item.title),
-      videos: timedResults,
-      durationMsByVideoId,
+      videoIds: playable.videos.map(item => item.videoId),
+      titles: playable.videos.map(item => item.title),
+      videos: playable.videos.map(({ liveBroadcastContent: _live, ...video }) => video),
+      durationMsByVideoId: playable.durationMsByVideoId,
     };
   })();
   youtubeSearchInFlight.set(cacheKey, request);
   try {
     const result = await request;
     youtubeSearchCache.set(cacheKey, { ...result, expiresAt: Date.now() + YOUTUBE_SEARCH_CACHE_MS });
+    youtubeSearchFailureCache.delete(cacheKey);
     if (youtubeSearchCache.size > 100) {
       const oldestKey = youtubeSearchCache.keys().next().value;
       if (oldestKey) youtubeSearchCache.delete(oldestKey);
     }
     return result;
+  } catch (error) {
+    if (error instanceof RoomError) {
+      const cacheMs = error.status === 404 || error.status === 503
+        ? YOUTUBE_SEARCH_CACHE_MS
+        : YOUTUBE_SEARCH_TRANSIENT_FAILURE_MS;
+      youtubeSearchFailureCache.set(cacheKey, {
+        expiresAt: Date.now() + cacheMs,
+        status: error.status,
+        message: error.message,
+      });
+      if (youtubeSearchFailureCache.size > 100) {
+        const oldestKey = youtubeSearchFailureCache.keys().next().value;
+        if (oldestKey) youtubeSearchFailureCache.delete(oldestKey);
+      }
+    }
+    throw error;
   } finally {
     if (youtubeSearchInFlight.get(cacheKey) === request) youtubeSearchInFlight.delete(cacheKey);
   }
@@ -173,11 +221,42 @@ async function reconcileState(roomId: string, viewerAccountId?: string) {
     };
     participantSnapshots.set(roomName, snapshot);
   }
-  return universityVideoBeamStore.reconcileLiveKitParticipants(
+  const state = universityVideoBeamStore.reconcileLiveKitParticipants(
     roomId,
     snapshot.identities,
     viewerAccountId,
   );
+  const synchronized = await synchronizeSpeakerMediaPermissions(
+    roomId, state, snapshot.identities, viewerAccountId,
+  );
+  schedulePublicPlaybackTransition(roomId);
+  return synchronized;
+}
+
+function schedulePublicPlaybackTransition(roomId: string) {
+  const dueAt = universityVideoBeamStore.getNextAutomaticPlaybackTransitionAt(roomId);
+  const previous = publicPlaybackTimers.get(roomId);
+  if (previous?.dueAt === dueAt) return;
+  if (previous) clearTimeout(previous.timer);
+  publicPlaybackTimers.delete(roomId);
+  if (dueAt === null) return;
+
+  const timer = setTimeout(() => {
+    const current = publicPlaybackTimers.get(roomId);
+    if (current?.dueAt !== dueAt) return;
+    publicPlaybackTimers.delete(roomId);
+    void reconcileState(roomId).catch(() => {
+      const retryDueAt = Date.now() + 2_500;
+      const retryTimer = setTimeout(() => {
+        const retry = publicPlaybackTimers.get(roomId);
+        if (retry?.dueAt !== retryDueAt) return;
+        publicPlaybackTimers.delete(roomId);
+        schedulePublicPlaybackTransition(roomId);
+      }, 2_500);
+      publicPlaybackTimers.set(roomId, { dueAt: retryDueAt, timer: retryTimer });
+    });
+  }, Math.max(0, dueAt - Date.now()));
+  publicPlaybackTimers.set(roomId, { dueAt, timer });
 }
 
 async function refreshParticipantSnapshot(roomName: string) {
@@ -188,6 +267,69 @@ async function refreshParticipantSnapshot(roomName: string) {
     identities,
   });
   return identities;
+}
+
+function sourcesForSlot(
+  slot: UniversityVideoBeamState["slots"][number],
+  micLockedDuringVideo: boolean,
+  micOverride?: boolean,
+  cameraOverride?: boolean,
+): { sources: TrackSource[]; microphoneEnabled: boolean } {
+  const microphoneEnabled = !micLockedDuringVideo
+    && (micOverride ?? (!slot.micMuted && !slot.mutedByHost));
+  const cameraEnabled = cameraOverride ?? (!slot.cameraOff && !slot.cameraDisabledByHost);
+  return {
+    sources: [
+      microphoneEnabled ? TrackSource.MICROPHONE : null,
+      cameraEnabled ? TrackSource.CAMERA : null,
+    ].filter((source): source is TrackSource => source !== null),
+    microphoneEnabled,
+  };
+}
+
+async function synchronizeSpeakerMediaPermissions(
+  roomId: string,
+  state: UniversityVideoBeamState,
+  liveIdentities: ReadonlySet<string>,
+  viewerAccountId?: string,
+): Promise<UniversityVideoBeamState> {
+  const roomName = universityVideoBeamStore.getRoomName(roomId);
+  let policies = appliedSpeakerPolicies.get(roomName);
+  if (!policies) {
+    policies = new Map();
+    appliedSpeakerPolicies.set(roomName, policies);
+  }
+  const occupied = new Set(state.slots.flatMap(slot => slot.participantId ? [slot.participantId] : []));
+  for (const participantId of policies.keys()) {
+    if (!occupied.has(participantId)) policies.delete(participantId);
+  }
+
+  for (const slot of state.slots) {
+    const participantId = slot.participantId;
+    if (!participantId || !liveIdentities.has(participantId)) continue;
+    const policy = sourcesForSlot(slot, state.tv.micLockedDuringVideo);
+    const signature = `${policy.microphoneEnabled}:${policy.sources.join(",")}`;
+    if (policies.get(participantId) === signature) continue;
+    try {
+      await liveKitBeamService.applySpeakerMediaPolicy(
+        roomName, participantId, policy.sources, policy.microphoneEnabled,
+      );
+      policies.set(participantId, signature);
+    } catch (failure) {
+      if (state.tv.micLockedDuringVideo) {
+        try {
+          await liveKitBeamService.removeParticipant(roomName, participantId);
+          universityVideoBeamStore.leaveSlot(roomId, participantId);
+          policies.delete(participantId);
+          continue;
+        } catch {
+          throw publicLiveKitFailure(failure);
+        }
+      }
+      throw publicLiveKitFailure(failure);
+    }
+  }
+  return universityVideoBeamStore.getState(roomId, viewerAccountId);
 }
 
 router.get("/account/rooms/:roomId/video-beam", async (req, res) => {
@@ -288,12 +430,15 @@ router.post("/account/rooms/:roomId/video-beam/actions", async (req, res) => {
         const media = input.data.action === "set-self-mic" ? "mic" : "camera";
         universityVideoBeamStore.assertSelfMedia(roomId, participant.participantId, media, input.data.enabled);
         const slot = universityVideoBeamStore.slotFor(roomId, participant.participantId);
-        const allowedSources = [
-          (media === "mic" ? input.data.enabled : !slot.micMuted) ? TrackSource.MICROPHONE : null,
-          (media === "camera" ? input.data.enabled : !slot.cameraOff) ? TrackSource.CAMERA : null,
-        ].filter((source): source is TrackSource => source !== null);
+        const current = universityVideoBeamStore.getState(roomId);
+        const policy = sourcesForSlot(
+          slot,
+          current.tv.micLockedDuringVideo,
+          media === "mic" ? input.data.enabled : undefined,
+          media === "camera" ? input.data.enabled : undefined,
+        );
         await liveKitBeamService.setSelfTrackEnabled(
-          roomName, participant.participantId, media, input.data.enabled, allowedSources,
+          roomName, participant.participantId, media, input.data.enabled, policy.sources,
         );
         state = universityVideoBeamStore.setSelfMedia(
           roomId, participant.participantId, media, input.data.enabled,
@@ -306,11 +451,14 @@ router.post("/account/rooms/:roomId/video-beam/actions", async (req, res) => {
         const target = input.data.targetParticipantId;
         const media = input.data.action === "host-mute-mic" ? "mic" : "camera";
         const slot = universityVideoBeamStore.assertHostControl(roomId, participant.participantId, target);
-        const allowedSources = [
-          media !== "mic" && !slot.micMuted ? TrackSource.MICROPHONE : null,
-          media !== "camera" && !slot.cameraOff ? TrackSource.CAMERA : null,
-        ].filter((source): source is TrackSource => source !== null);
-        await liveKitBeamService.disableTrack(roomName, target, media, allowedSources);
+        const current = universityVideoBeamStore.getState(roomId);
+        const policy = sourcesForSlot(
+          slot,
+          current.tv.micLockedDuringVideo,
+          media === "mic" ? false : undefined,
+          media === "camera" ? false : undefined,
+        );
+        await liveKitBeamService.disableTrack(roomName, target, media, policy.sources);
         state = universityVideoBeamStore.hostDisableMedia(
           roomId, participant.participantId, target, media,
         );
@@ -332,14 +480,17 @@ router.post("/account/rooms/:roomId/video-beam/actions", async (req, res) => {
     throw publicLiveKitFailure(failure);
   }
 
+  const identities = await refreshParticipantSnapshot(roomName);
+  state = await synchronizeSpeakerMediaPermissions(roomId, state, identities, id);
   res.set("Cache-Control", "no-store").json(PerformUniversityVideoBeamActionResponse.parse(state));
 });
 
-router.get("/account/rooms/:roomId/video-beam/tv", (req, res) => {
+router.get("/account/rooms/:roomId/video-beam/tv", async (req, res) => {
   const id = accountId(req);
   requireMember(req, req.params.roomId, id);
+  const state = await reconcileState(req.params.roomId, id);
   res.set("Cache-Control", "no-store")
-    .json(GetUniversityVideoBeamTvStateResponse.parse(universityVideoBeamStore.getState(req.params.roomId, id).tv));
+    .json(GetUniversityVideoBeamTvStateResponse.parse(state.tv));
 });
 
 router.post("/account/rooms/:roomId/video-beam/tv", async (req, res): Promise<void> => {
@@ -355,7 +506,7 @@ router.post("/account/rooms/:roomId/video-beam/tv", async (req, res): Promise<vo
     throw new RoomError(400, "Choose a valid Beam TV action.");
   }
   const roomId = req.params.roomId;
-  const before = universityVideoBeamStore.getState(roomId).tv;
+  const before = (await reconcileState(roomId, id)).tv;
   const state = universityVideoBeamStore.actOnTv(roomId, participant.participantId, input.data, id);
   const videoChanged = state.tv.currentVideoId !== before.currentVideoId;
   const restarted = input.data.action === "start" || input.data.action === "enable";
@@ -374,8 +525,11 @@ router.post("/account/rooms/:roomId/video-beam/tv", async (req, res): Promise<vo
       req.log.error({ err: error, roomId }, "Could not post Beam TV vote announcement");
     });
   }
+  const identities = await refreshParticipantSnapshot(universityVideoBeamStore.getRoomName(roomId));
+  const synchronized = await synchronizeSpeakerMediaPermissions(roomId, state, identities, id);
+  schedulePublicPlaybackTransition(roomId);
   res.set("Cache-Control", "no-store")
-    .json(PerformUniversityVideoBeamTvActionResponse.parse(state.tv));
+    .json(PerformUniversityVideoBeamTvActionResponse.parse(synchronized.tv));
 });
 
 router.post("/account/rooms/:roomId/video-beam/tv/search", async (req, res) => {
@@ -389,7 +543,7 @@ router.post("/account/rooms/:roomId/video-beam/tv/search", async (req, res) => {
   const query = input.data.query.trim().replace(/\s+/g, " ");
   if (!query) throw new RoomError(400, "Enter a YouTube search topic.");
   const roomId = req.params.roomId;
-  const tv = universityVideoBeamStore.getState(roomId).tv;
+  const tv = (await reconcileState(roomId, id)).tv;
   const defaultSearch = communityDefaultVideoSearch(roomId, roomStore);
   const autoDefaultSearch = tv.enabled && tv.sourceType === "search"
     && tv.queue.length === 0 && tv.currentVideoId === null
@@ -398,7 +552,7 @@ router.post("/account/rooms/:roomId/video-beam/tv/search", async (req, res) => {
   if (!autoDefaultSearch) universityVideoBeamStore.assertTvHost(roomId, participant.participantId);
   const apiKey = process.env.YOUTUBE_API_KEY?.trim();
   if (!apiKey) {
-    throw new RoomError(503, "YouTube search needs YOUTUBE_API_KEY. Paste a video or playlist link instead.");
+    throw new RoomError(503, "YouTube search is temporarily unavailable. A room-matched video will appear when it is available.");
   }
   const result = await searchYouTube(query, apiKey);
   if (autoDefaultSearch) {
@@ -406,6 +560,9 @@ router.post("/account/rooms/:roomId/video-beam/tv/search", async (req, res) => {
     const state = universityVideoBeamStore.initializeDefaultTvQueue(
       roomId, query, result.videos, result.durationMsByVideoId,
     );
+    const identities = await refreshParticipantSnapshot(universityVideoBeamStore.getRoomName(roomId));
+    await synchronizeSpeakerMediaPermissions(roomId, state, identities, id);
+    schedulePublicPlaybackTransition(roomId);
     if (state.tv.currentVideoId && state.tv.currentVideoId !== before) {
       scheduleBeamTvVideoStart(roomId, state.tv.currentVideoId,
         result.videos.find(video => video.videoId === state.tv.currentVideoId));

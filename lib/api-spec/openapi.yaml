@@ -142,7 +142,7 @@ paths:
     get:
       operationId: getUniversityVideoBeamState
       tags: [video]
-      summary: Read the four-slot LiveKit video beam for an authenticated university member
+      summary: Read the eight-slot LiveKit video beam for an authenticated university member
       security:
         - AccountSession: []
           AccountRoomSession: []
@@ -312,7 +312,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ErrorResponse" }
         "409":
-          description: All four speaker slots are occupied, or the account was recently removed from this beam
+          description: All eight speaker slots are occupied, or the account was recently removed from this beam
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ErrorResponse" }
@@ -1564,7 +1564,7 @@ components:
         role:
           type: string
           enum: [audience, speaker]
-        slotNumber: { type: ["integer", "null"], minimum: 1, maximum: 4 }
+        slotNumber: { type: ["integer", "null"], minimum: 1, maximum: 8 }
       required: [url, token, role, slotNumber]
     UniversityVideoBeamActionInput:
       type: object
@@ -1578,7 +1578,7 @@ components:
     UniversityVideoBeamSlot:
       type: object
       properties:
-        slotNumber: { type: integer, minimum: 1, maximum: 4 }
+        slotNumber: { type: integer, minimum: 1, maximum: 8 }
         participantId: { type: [string, "null"], format: uuid }
         micMuted: { type: boolean }
         cameraOff: { type: boolean }
@@ -1594,8 +1594,8 @@ components:
         tv: { $ref: "#/components/schemas/UniversityVideoBeamTvState" }
         slots:
           type: array
-          minItems: 4
-          maxItems: 4
+          minItems: 8
+          maxItems: 8
           items: { $ref: "#/components/schemas/UniversityVideoBeamSlot" }
       required: [roomId, beamActive, hostParticipantId, tv, slots]
     UniversityVideoBeamTvState:
@@ -1619,12 +1619,15 @@ components:
           items: { $ref: "#/components/schemas/UniversityVideoBeamTvVideoMetadata" }
         currentVideoId: { type: [string, "null"], pattern: "^[A-Za-z0-9_-]{11}$" }
         startedAtMs: { type: [integer, "null"], minimum: 0 }
+        breakEndsAtMs: { type: [integer, "null"], minimum: 0 }
+        serverNowMs: { type: integer, minimum: 0 }
+        micLockedDuringVideo: { type: boolean }
         skipVotingEnabled: { type: boolean }
         skipVoteCount: { type: integer, minimum: 0 }
         skipVoteTotal: { type: integer, minimum: 0 }
         hasVotedToSkip: { type: boolean }
         skipSequence: { type: integer, minimum: 0 }
-      required: [enabled, searchAvailable, defaultSearch, sourceType, sourceValue, playlistId, queue, videoMetadata, currentVideoId, startedAtMs, skipVotingEnabled, skipVoteCount, skipVoteTotal, hasVotedToSkip, skipSequence]
+      required: [enabled, searchAvailable, defaultSearch, sourceType, sourceValue, playlistId, queue, videoMetadata, currentVideoId, startedAtMs, breakEndsAtMs, serverNowMs, micLockedDuringVideo, skipVotingEnabled, skipVoteCount, skipVoteTotal, hasVotedToSkip, skipSequence]
     UniversityVideoBeamTvVideoMetadata:
       type: object
       properties:

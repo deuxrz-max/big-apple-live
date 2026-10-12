@@ -361,7 +361,7 @@ export const GetUniversityAudioStateResponse = zod.object({
 
 
 /**
- * @summary Read the four-slot LiveKit video beam for an authenticated university member
+ * @summary Read the eight-slot LiveKit video beam for an authenticated university member
  */
 export const getUniversityVideoBeamStatePathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
 
@@ -391,16 +391,20 @@ export const getUniversityVideoBeamStateResponseTvVideoMetadataMax = 50;
 export const getUniversityVideoBeamStateResponseTvCurrentVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
 export const getUniversityVideoBeamStateResponseTvStartedAtMsMin = 0;
 
+export const getUniversityVideoBeamStateResponseTvBreakEndsAtMsMin = 0;
+
+export const getUniversityVideoBeamStateResponseTvServerNowMsMin = 0;
+
 export const getUniversityVideoBeamStateResponseTvSkipVoteCountMin = 0;
 
 export const getUniversityVideoBeamStateResponseTvSkipVoteTotalMin = 0;
 
 export const getUniversityVideoBeamStateResponseTvSkipSequenceMin = 0;
 
-export const getUniversityVideoBeamStateResponseSlotsItemSlotNumberMax = 4;
+export const getUniversityVideoBeamStateResponseSlotsItemSlotNumberMax = 8;
 
-export const getUniversityVideoBeamStateResponseSlotsMin = 4;
-export const getUniversityVideoBeamStateResponseSlotsMax = 4;
+export const getUniversityVideoBeamStateResponseSlotsMin = 8;
+export const getUniversityVideoBeamStateResponseSlotsMax = 8;
 
 
 
@@ -424,6 +428,9 @@ export const GetUniversityVideoBeamStateResponse = zod.object({
 })).max(getUniversityVideoBeamStateResponseTvVideoMetadataMax),
   "currentVideoId": zod.string().regex(getUniversityVideoBeamStateResponseTvCurrentVideoIdRegExp).nullable(),
   "startedAtMs": zod.number().int().min(getUniversityVideoBeamStateResponseTvStartedAtMsMin).nullable(),
+  "breakEndsAtMs": zod.number().int().min(getUniversityVideoBeamStateResponseTvBreakEndsAtMsMin).nullable(),
+  "serverNowMs": zod.number().int().min(getUniversityVideoBeamStateResponseTvServerNowMsMin),
+  "micLockedDuringVideo": zod.boolean(),
   "skipVotingEnabled": zod.boolean(),
   "skipVoteCount": zod.number().int().min(getUniversityVideoBeamStateResponseTvSkipVoteCountMin),
   "skipVoteTotal": zod.number().int().min(getUniversityVideoBeamStateResponseTvSkipVoteTotalMin),
@@ -459,7 +466,7 @@ export const GetUniversityVideoBeamTokenBody = zod.object({
   "role": zod.enum(['audience', 'speaker'])
 })
 
-export const getUniversityVideoBeamTokenResponseSlotNumberMax = 4;
+export const getUniversityVideoBeamTokenResponseSlotNumberMax = 8;
 
 
 
@@ -508,16 +515,20 @@ export const performUniversityVideoBeamActionResponseTvVideoMetadataMax = 50;
 export const performUniversityVideoBeamActionResponseTvCurrentVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
 export const performUniversityVideoBeamActionResponseTvStartedAtMsMin = 0;
 
+export const performUniversityVideoBeamActionResponseTvBreakEndsAtMsMin = 0;
+
+export const performUniversityVideoBeamActionResponseTvServerNowMsMin = 0;
+
 export const performUniversityVideoBeamActionResponseTvSkipVoteCountMin = 0;
 
 export const performUniversityVideoBeamActionResponseTvSkipVoteTotalMin = 0;
 
 export const performUniversityVideoBeamActionResponseTvSkipSequenceMin = 0;
 
-export const performUniversityVideoBeamActionResponseSlotsItemSlotNumberMax = 4;
+export const performUniversityVideoBeamActionResponseSlotsItemSlotNumberMax = 8;
 
-export const performUniversityVideoBeamActionResponseSlotsMin = 4;
-export const performUniversityVideoBeamActionResponseSlotsMax = 4;
+export const performUniversityVideoBeamActionResponseSlotsMin = 8;
+export const performUniversityVideoBeamActionResponseSlotsMax = 8;
 
 
 
@@ -541,6 +552,9 @@ export const PerformUniversityVideoBeamActionResponse = zod.object({
 })).max(performUniversityVideoBeamActionResponseTvVideoMetadataMax),
   "currentVideoId": zod.string().regex(performUniversityVideoBeamActionResponseTvCurrentVideoIdRegExp).nullable(),
   "startedAtMs": zod.number().int().min(performUniversityVideoBeamActionResponseTvStartedAtMsMin).nullable(),
+  "breakEndsAtMs": zod.number().int().min(performUniversityVideoBeamActionResponseTvBreakEndsAtMsMin).nullable(),
+  "serverNowMs": zod.number().int().min(performUniversityVideoBeamActionResponseTvServerNowMsMin),
+  "micLockedDuringVideo": zod.boolean(),
   "skipVotingEnabled": zod.boolean(),
   "skipVoteCount": zod.number().int().min(performUniversityVideoBeamActionResponseTvSkipVoteCountMin),
   "skipVoteTotal": zod.number().int().min(performUniversityVideoBeamActionResponseTvSkipVoteTotalMin),
@@ -589,6 +603,10 @@ export const getUniversityVideoBeamTvStateResponseVideoMetadataMax = 50;
 export const getUniversityVideoBeamTvStateResponseCurrentVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
 export const getUniversityVideoBeamTvStateResponseStartedAtMsMin = 0;
 
+export const getUniversityVideoBeamTvStateResponseBreakEndsAtMsMin = 0;
+
+export const getUniversityVideoBeamTvStateResponseServerNowMsMin = 0;
+
 export const getUniversityVideoBeamTvStateResponseSkipVoteCountMin = 0;
 
 export const getUniversityVideoBeamTvStateResponseSkipVoteTotalMin = 0;
@@ -613,6 +631,9 @@ export const GetUniversityVideoBeamTvStateResponse = zod.object({
 })).max(getUniversityVideoBeamTvStateResponseVideoMetadataMax),
   "currentVideoId": zod.string().regex(getUniversityVideoBeamTvStateResponseCurrentVideoIdRegExp).nullable(),
   "startedAtMs": zod.number().int().min(getUniversityVideoBeamTvStateResponseStartedAtMsMin).nullable(),
+  "breakEndsAtMs": zod.number().int().min(getUniversityVideoBeamTvStateResponseBreakEndsAtMsMin).nullable(),
+  "serverNowMs": zod.number().int().min(getUniversityVideoBeamTvStateResponseServerNowMsMin),
+  "micLockedDuringVideo": zod.boolean(),
   "skipVotingEnabled": zod.boolean(),
   "skipVoteCount": zod.number().int().min(getUniversityVideoBeamTvStateResponseSkipVoteCountMin),
   "skipVoteTotal": zod.number().int().min(getUniversityVideoBeamTvStateResponseSkipVoteTotalMin),
@@ -687,6 +708,10 @@ export const performUniversityVideoBeamTvActionResponseVideoMetadataMax = 50;
 export const performUniversityVideoBeamTvActionResponseCurrentVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
 export const performUniversityVideoBeamTvActionResponseStartedAtMsMin = 0;
 
+export const performUniversityVideoBeamTvActionResponseBreakEndsAtMsMin = 0;
+
+export const performUniversityVideoBeamTvActionResponseServerNowMsMin = 0;
+
 export const performUniversityVideoBeamTvActionResponseSkipVoteCountMin = 0;
 
 export const performUniversityVideoBeamTvActionResponseSkipVoteTotalMin = 0;
@@ -711,6 +736,9 @@ export const PerformUniversityVideoBeamTvActionResponse = zod.object({
 })).max(performUniversityVideoBeamTvActionResponseVideoMetadataMax),
   "currentVideoId": zod.string().regex(performUniversityVideoBeamTvActionResponseCurrentVideoIdRegExp).nullable(),
   "startedAtMs": zod.number().int().min(performUniversityVideoBeamTvActionResponseStartedAtMsMin).nullable(),
+  "breakEndsAtMs": zod.number().int().min(performUniversityVideoBeamTvActionResponseBreakEndsAtMsMin).nullable(),
+  "serverNowMs": zod.number().int().min(performUniversityVideoBeamTvActionResponseServerNowMsMin),
+  "micLockedDuringVideo": zod.boolean(),
   "skipVotingEnabled": zod.boolean(),
   "skipVoteCount": zod.number().int().min(performUniversityVideoBeamTvActionResponseSkipVoteCountMin),
   "skipVoteTotal": zod.number().int().min(performUniversityVideoBeamTvActionResponseSkipVoteTotalMin),

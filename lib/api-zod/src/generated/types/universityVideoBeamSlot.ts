@@ -9,7 +9,7 @@
 export interface UniversityVideoBeamSlot {
   /**
      * @minimum 1
-     * @maximum 4
+     * @maximum 8
      */
   slotNumber: number;
   /** @nullable */

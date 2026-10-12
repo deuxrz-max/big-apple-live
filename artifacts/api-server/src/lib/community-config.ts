@@ -1,17 +1,18 @@
 export const COMMUNITY_ROOMS = [
-  { roomId: "LIVEME", label: "Video Games & Interactive Media", defaultVideoSearch: "video game gameplay highlights new game trailers" },
-  { roomId: "BIGOLV", label: "Television & Streaming Services", defaultVideoSearch: "TV show trailers streaming series recaps" },
-  { roomId: "TANGOL", label: "Film & Theatrical Box Office", defaultVideoSearch: "new movie trailers box office news" },
-  { roomId: "TIKTOK", label: "Recorded Music & Audio Streaming", defaultVideoSearch: "new music videos official releases audio streaming" },
-  { roomId: "INSTAL", label: "Live Concerts & Music Festivals", defaultVideoSearch: "live concert performances music festival highlights" },
-  { roomId: "SUPRLV", label: "Spectator Sports Events", defaultVideoSearch: "sports event highlights best plays" },
-  { roomId: "THEMEP", label: "Theme Parks & Amusement Attractions", defaultVideoSearch: "theme park ride POV park tours" },
-  { roomId: "SOCIAL", label: "Social Media & Creator Economy Content", defaultVideoSearch: "creator economy social media creator trends" },
-  { roomId: "PERFRM", label: "Performing Arts, Theater & Comedy Shows", defaultVideoSearch: "stand-up comedy clips Broadway theater performances" },
+  { roomId: "LIVEME", label: "Video Games & Interactive Media", defaultVideoSearch: "Video Games & Interactive Media" },
+  { roomId: "BIGOLV", label: "Television & Streaming Services", defaultVideoSearch: "Television & Streaming Services" },
+  { roomId: "TANGOL", label: "Film & Theatrical Box Office", defaultVideoSearch: "Film & Theatrical Box Office" },
+  { roomId: "TIKTOK", label: "Recorded Music & Audio Streaming", defaultVideoSearch: "Recorded Music & Audio Streaming" },
+  { roomId: "INSTAL", label: "Live Concerts & Music Festivals", defaultVideoSearch: "Live Concerts & Music Festivals" },
+  { roomId: "SUPRLV", label: "Spectator Sports Events", defaultVideoSearch: "Spectator Sports Events" },
+  { roomId: "THEMEP", label: "Theme Parks & Amusement Attractions", defaultVideoSearch: "Theme Parks & Amusement Attractions" },
+  { roomId: "SOCIAL", label: "Social Media & Creator Economy Content", defaultVideoSearch: "Social Media & Creator Economy Content" },
+  { roomId: "PERFRM", label: "Performing Arts, Theater & Comedy Shows", defaultVideoSearch: "Performing Arts, Theater & Comedy Shows" },
 ];
 
 export interface CommunityParentLookup {
   communityParentId(roomId: string): string | null;
+  communityLabel?(roomId: string): string | null;
   isCommunity?(roomId: string): boolean;
   isTestOnly?(roomId: string): boolean;
 }
@@ -25,8 +26,13 @@ export function isPublicTopicRoom(roomId: string, store: CommunityParentLookup):
 }
 
 export function communityDefaultVideoSearch(roomId: string, store?: CommunityParentLookup): string {
-  const parentRoomId = store?.communityParentId(roomId);
-  return COMMUNITY_ROOMS.find(room => room.roomId === parentRoomId)?.defaultVideoSearch
-    ?? COMMUNITY_ROOMS.find(room => room.roomId === roomId.toUpperCase())?.defaultVideoSearch
-    ?? "live entertainment highlights";
+  const normalizedId = roomId.toUpperCase();
+  const currentRoomName = store?.communityLabel?.(normalizedId)?.trim();
+  if (currentRoomName) return currentRoomName;
+  const parentRoomId = store?.communityParentId(normalizedId)?.toUpperCase();
+  const parentRoomName = parentRoomId ? store?.communityLabel?.(parentRoomId)?.trim() : null;
+  if (parentRoomName) return parentRoomName;
+  return COMMUNITY_ROOMS.find(room => room.roomId === normalizedId)?.label
+    ?? COMMUNITY_ROOMS.find(room => room.roomId === parentRoomId)?.label
+    ?? "University";
 }
