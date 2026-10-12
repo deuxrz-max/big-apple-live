@@ -11,6 +11,8 @@ export const roomMessages = pgTable("room_messages", {
   authorAccountId: text("author_account_id"),
   // Only the server can author system messages; never derived from a user's name.
   botId: text("bot_id"),
+  // Separates occasional character chatter from moderation and room-visit notices.
+  botMessageType: text("bot_message_type", { enum: ["chatter", "moderation", "visit"] }),
   hidden: text("hidden").notNull().default("false"),
   username: text("username").notNull(),
   identity: jsonb("identity").$type<{

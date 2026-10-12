@@ -1,4 +1,4 @@
-import { pgTable, text, uuid, integer, jsonb, timestamp, index } from "drizzle-orm/pg-core";
+import { pgTable, text, uuid, integer, jsonb, timestamp, index, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { roomMessages } from "./room-messages";
 
@@ -12,6 +12,19 @@ export const moderatorBotSettings = pgTable("moderator_bot_settings", {
   id: text("id").primaryKey(),
   bannedWords: jsonb("banned_words").$type<string[]>().notNull(),
   breakSeconds: integer("break_seconds").notNull().default(45),
+});
+export type ModeratorBotChatterProfile = {
+  id: "ghost" | "vampire" | "wolf" | "zombie";
+  name: string;
+  personality: string;
+  lines: string[];
+};
+export const moderatorBotChatterSettings = pgTable("moderator_bot_chatter_settings", {
+  id: text("id").primaryKey(),
+  enabled: boolean("enabled").notNull().default(true),
+  frequency: text("frequency", { enum: ["rare", "normal", "often"] }).notNull().default("normal"),
+  bots: jsonb("bots").$type<ModeratorBotChatterProfile[]>().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 export const moderatorBotFlags = pgTable("moderator_bot_flags", {
   id: uuid("id").primaryKey().defaultRandom(),

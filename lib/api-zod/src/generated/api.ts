@@ -55,6 +55,83 @@ export const SaveModeratorBotSettingsResponse = zod.object({
 })
 
 
+export const getModeratorBotChatterSettingsResponseBotsItemNameMax = 40;
+
+export const getModeratorBotChatterSettingsResponseBotsItemPersonalityMax = 140;
+
+export const getModeratorBotChatterSettingsResponseBotsItemLinesItemMax = 160;
+
+export const getModeratorBotChatterSettingsResponseBotsItemLinesMin = 20;
+export const getModeratorBotChatterSettingsResponseBotsItemLinesMax = 30;
+
+export const getModeratorBotChatterSettingsResponseBotsMin = 4;
+export const getModeratorBotChatterSettingsResponseBotsMax = 4;
+
+
+
+export const GetModeratorBotChatterSettingsResponse = zod.object({
+  "enabled": zod.boolean(),
+  "frequency": zod.enum(['rare', 'normal', 'often']),
+  "bots": zod.array(zod.object({
+  "id": zod.enum(['ghost', 'vampire', 'wolf', 'zombie']),
+  "name": zod.string().min(1).max(getModeratorBotChatterSettingsResponseBotsItemNameMax),
+  "personality": zod.string().min(1).max(getModeratorBotChatterSettingsResponseBotsItemPersonalityMax),
+  "lines": zod.array(zod.string().min(1).max(getModeratorBotChatterSettingsResponseBotsItemLinesItemMax)).min(getModeratorBotChatterSettingsResponseBotsItemLinesMin).max(getModeratorBotChatterSettingsResponseBotsItemLinesMax)
+})).min(getModeratorBotChatterSettingsResponseBotsMin).max(getModeratorBotChatterSettingsResponseBotsMax)
+})
+
+
+export const saveModeratorBotChatterSettingsBodyBotsItemNameMax = 40;
+
+export const saveModeratorBotChatterSettingsBodyBotsItemPersonalityMax = 140;
+
+export const saveModeratorBotChatterSettingsBodyBotsItemLinesItemMax = 160;
+
+export const saveModeratorBotChatterSettingsBodyBotsItemLinesMin = 20;
+export const saveModeratorBotChatterSettingsBodyBotsItemLinesMax = 30;
+
+export const saveModeratorBotChatterSettingsBodyBotsMin = 4;
+export const saveModeratorBotChatterSettingsBodyBotsMax = 4;
+
+
+
+export const SaveModeratorBotChatterSettingsBody = zod.object({
+  "enabled": zod.boolean(),
+  "frequency": zod.enum(['rare', 'normal', 'often']),
+  "bots": zod.array(zod.object({
+  "id": zod.enum(['ghost', 'vampire', 'wolf', 'zombie']),
+  "name": zod.string().min(1).max(saveModeratorBotChatterSettingsBodyBotsItemNameMax),
+  "personality": zod.string().min(1).max(saveModeratorBotChatterSettingsBodyBotsItemPersonalityMax),
+  "lines": zod.array(zod.string().min(1).max(saveModeratorBotChatterSettingsBodyBotsItemLinesItemMax)).min(saveModeratorBotChatterSettingsBodyBotsItemLinesMin).max(saveModeratorBotChatterSettingsBodyBotsItemLinesMax)
+})).min(saveModeratorBotChatterSettingsBodyBotsMin).max(saveModeratorBotChatterSettingsBodyBotsMax)
+})
+
+export const saveModeratorBotChatterSettingsResponseBotsItemNameMax = 40;
+
+export const saveModeratorBotChatterSettingsResponseBotsItemPersonalityMax = 140;
+
+export const saveModeratorBotChatterSettingsResponseBotsItemLinesItemMax = 160;
+
+export const saveModeratorBotChatterSettingsResponseBotsItemLinesMin = 20;
+export const saveModeratorBotChatterSettingsResponseBotsItemLinesMax = 30;
+
+export const saveModeratorBotChatterSettingsResponseBotsMin = 4;
+export const saveModeratorBotChatterSettingsResponseBotsMax = 4;
+
+
+
+export const SaveModeratorBotChatterSettingsResponse = zod.object({
+  "enabled": zod.boolean(),
+  "frequency": zod.enum(['rare', 'normal', 'often']),
+  "bots": zod.array(zod.object({
+  "id": zod.enum(['ghost', 'vampire', 'wolf', 'zombie']),
+  "name": zod.string().min(1).max(saveModeratorBotChatterSettingsResponseBotsItemNameMax),
+  "personality": zod.string().min(1).max(saveModeratorBotChatterSettingsResponseBotsItemPersonalityMax),
+  "lines": zod.array(zod.string().min(1).max(saveModeratorBotChatterSettingsResponseBotsItemLinesItemMax)).min(saveModeratorBotChatterSettingsResponseBotsItemLinesMin).max(saveModeratorBotChatterSettingsResponseBotsItemLinesMax)
+})).min(saveModeratorBotChatterSettingsResponseBotsMin).max(saveModeratorBotChatterSettingsResponseBotsMax)
+})
+
+
 export const getModeratorBotFlagsResponseDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
@@ -297,6 +374,29 @@ export const GetUniversityVideoBeamStateHeader = zod.object({
   "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
 })
 
+export const getUniversityVideoBeamStateResponseTvDefaultSearchMax = 120;
+
+export const getUniversityVideoBeamStateResponseTvQueueItemRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const getUniversityVideoBeamStateResponseTvQueueMax = 50;
+
+export const getUniversityVideoBeamStateResponseTvVideoMetadataItemVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const getUniversityVideoBeamStateResponseTvVideoMetadataItemTitleMax = 200;
+
+export const getUniversityVideoBeamStateResponseTvVideoMetadataItemChannelTitleMax = 120;
+
+export const getUniversityVideoBeamStateResponseTvVideoMetadataItemDescriptionMax = 500;
+
+export const getUniversityVideoBeamStateResponseTvVideoMetadataMax = 50;
+
+export const getUniversityVideoBeamStateResponseTvCurrentVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const getUniversityVideoBeamStateResponseTvStartedAtMsMin = 0;
+
+export const getUniversityVideoBeamStateResponseTvSkipVoteCountMin = 0;
+
+export const getUniversityVideoBeamStateResponseTvSkipVoteTotalMin = 0;
+
+export const getUniversityVideoBeamStateResponseTvSkipSequenceMin = 0;
+
 export const getUniversityVideoBeamStateResponseSlotsItemSlotNumberMax = 4;
 
 export const getUniversityVideoBeamStateResponseSlotsMin = 4;
@@ -308,6 +408,28 @@ export const GetUniversityVideoBeamStateResponse = zod.object({
   "roomId": zod.string(),
   "beamActive": zod.boolean(),
   "hostParticipantId": zod.string().uuid().nullable(),
+  "tv": zod.object({
+  "enabled": zod.boolean(),
+  "searchAvailable": zod.boolean(),
+  "defaultSearch": zod.string().max(getUniversityVideoBeamStateResponseTvDefaultSearchMax),
+  "sourceType": zod.union([zod.literal('video'),zod.literal('playlist'),zod.literal('search'),zod.literal(null)]).nullable(),
+  "sourceValue": zod.string().nullable(),
+  "playlistId": zod.string().nullable(),
+  "queue": zod.array(zod.string().regex(getUniversityVideoBeamStateResponseTvQueueItemRegExp)).max(getUniversityVideoBeamStateResponseTvQueueMax),
+  "videoMetadata": zod.array(zod.object({
+  "videoId": zod.string().regex(getUniversityVideoBeamStateResponseTvVideoMetadataItemVideoIdRegExp),
+  "title": zod.string().max(getUniversityVideoBeamStateResponseTvVideoMetadataItemTitleMax),
+  "channelTitle": zod.string().max(getUniversityVideoBeamStateResponseTvVideoMetadataItemChannelTitleMax).nullable(),
+  "description": zod.string().max(getUniversityVideoBeamStateResponseTvVideoMetadataItemDescriptionMax).nullable()
+})).max(getUniversityVideoBeamStateResponseTvVideoMetadataMax),
+  "currentVideoId": zod.string().regex(getUniversityVideoBeamStateResponseTvCurrentVideoIdRegExp).nullable(),
+  "startedAtMs": zod.number().int().min(getUniversityVideoBeamStateResponseTvStartedAtMsMin).nullable(),
+  "skipVotingEnabled": zod.boolean(),
+  "skipVoteCount": zod.number().int().min(getUniversityVideoBeamStateResponseTvSkipVoteCountMin),
+  "skipVoteTotal": zod.number().int().min(getUniversityVideoBeamStateResponseTvSkipVoteTotalMin),
+  "hasVotedToSkip": zod.boolean(),
+  "skipSequence": zod.number().int().min(getUniversityVideoBeamStateResponseTvSkipSequenceMin)
+}),
   "slots": zod.array(zod.object({
   "slotNumber": zod.number().int().min(1).max(getUniversityVideoBeamStateResponseSlotsItemSlotNumberMax),
   "participantId": zod.string().uuid().nullable(),
@@ -369,6 +491,29 @@ export const PerformUniversityVideoBeamActionBody = zod.object({
   "targetParticipantId": zod.string().uuid().optional()
 })
 
+export const performUniversityVideoBeamActionResponseTvDefaultSearchMax = 120;
+
+export const performUniversityVideoBeamActionResponseTvQueueItemRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const performUniversityVideoBeamActionResponseTvQueueMax = 50;
+
+export const performUniversityVideoBeamActionResponseTvVideoMetadataItemVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const performUniversityVideoBeamActionResponseTvVideoMetadataItemTitleMax = 200;
+
+export const performUniversityVideoBeamActionResponseTvVideoMetadataItemChannelTitleMax = 120;
+
+export const performUniversityVideoBeamActionResponseTvVideoMetadataItemDescriptionMax = 500;
+
+export const performUniversityVideoBeamActionResponseTvVideoMetadataMax = 50;
+
+export const performUniversityVideoBeamActionResponseTvCurrentVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const performUniversityVideoBeamActionResponseTvStartedAtMsMin = 0;
+
+export const performUniversityVideoBeamActionResponseTvSkipVoteCountMin = 0;
+
+export const performUniversityVideoBeamActionResponseTvSkipVoteTotalMin = 0;
+
+export const performUniversityVideoBeamActionResponseTvSkipSequenceMin = 0;
+
 export const performUniversityVideoBeamActionResponseSlotsItemSlotNumberMax = 4;
 
 export const performUniversityVideoBeamActionResponseSlotsMin = 4;
@@ -380,6 +525,28 @@ export const PerformUniversityVideoBeamActionResponse = zod.object({
   "roomId": zod.string(),
   "beamActive": zod.boolean(),
   "hostParticipantId": zod.string().uuid().nullable(),
+  "tv": zod.object({
+  "enabled": zod.boolean(),
+  "searchAvailable": zod.boolean(),
+  "defaultSearch": zod.string().max(performUniversityVideoBeamActionResponseTvDefaultSearchMax),
+  "sourceType": zod.union([zod.literal('video'),zod.literal('playlist'),zod.literal('search'),zod.literal(null)]).nullable(),
+  "sourceValue": zod.string().nullable(),
+  "playlistId": zod.string().nullable(),
+  "queue": zod.array(zod.string().regex(performUniversityVideoBeamActionResponseTvQueueItemRegExp)).max(performUniversityVideoBeamActionResponseTvQueueMax),
+  "videoMetadata": zod.array(zod.object({
+  "videoId": zod.string().regex(performUniversityVideoBeamActionResponseTvVideoMetadataItemVideoIdRegExp),
+  "title": zod.string().max(performUniversityVideoBeamActionResponseTvVideoMetadataItemTitleMax),
+  "channelTitle": zod.string().max(performUniversityVideoBeamActionResponseTvVideoMetadataItemChannelTitleMax).nullable(),
+  "description": zod.string().max(performUniversityVideoBeamActionResponseTvVideoMetadataItemDescriptionMax).nullable()
+})).max(performUniversityVideoBeamActionResponseTvVideoMetadataMax),
+  "currentVideoId": zod.string().regex(performUniversityVideoBeamActionResponseTvCurrentVideoIdRegExp).nullable(),
+  "startedAtMs": zod.number().int().min(performUniversityVideoBeamActionResponseTvStartedAtMsMin).nullable(),
+  "skipVotingEnabled": zod.boolean(),
+  "skipVoteCount": zod.number().int().min(performUniversityVideoBeamActionResponseTvSkipVoteCountMin),
+  "skipVoteTotal": zod.number().int().min(performUniversityVideoBeamActionResponseTvSkipVoteTotalMin),
+  "hasVotedToSkip": zod.boolean(),
+  "skipSequence": zod.number().int().min(performUniversityVideoBeamActionResponseTvSkipSequenceMin)
+}),
   "slots": zod.array(zod.object({
   "slotNumber": zod.number().int().min(1).max(performUniversityVideoBeamActionResponseSlotsItemSlotNumberMax),
   "participantId": zod.string().uuid().nullable(),
@@ -388,6 +555,219 @@ export const PerformUniversityVideoBeamActionResponse = zod.object({
   "mutedByHost": zod.boolean(),
   "cameraDisabledByHost": zod.boolean()
 })).min(performUniversityVideoBeamActionResponseSlotsMin).max(performUniversityVideoBeamActionResponseSlotsMax)
+})
+
+
+/**
+ * @summary Read the room-synchronized Beam TV state
+ */
+export const getUniversityVideoBeamTvStatePathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
+
+
+export const GetUniversityVideoBeamTvStateParams = zod.object({
+  "roomId": zod.coerce.string().regex(getUniversityVideoBeamTvStatePathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
+})
+
+export const GetUniversityVideoBeamTvStateHeader = zod.object({
+  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+})
+
+export const getUniversityVideoBeamTvStateResponseDefaultSearchMax = 120;
+
+export const getUniversityVideoBeamTvStateResponseQueueItemRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const getUniversityVideoBeamTvStateResponseQueueMax = 50;
+
+export const getUniversityVideoBeamTvStateResponseVideoMetadataItemVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const getUniversityVideoBeamTvStateResponseVideoMetadataItemTitleMax = 200;
+
+export const getUniversityVideoBeamTvStateResponseVideoMetadataItemChannelTitleMax = 120;
+
+export const getUniversityVideoBeamTvStateResponseVideoMetadataItemDescriptionMax = 500;
+
+export const getUniversityVideoBeamTvStateResponseVideoMetadataMax = 50;
+
+export const getUniversityVideoBeamTvStateResponseCurrentVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const getUniversityVideoBeamTvStateResponseStartedAtMsMin = 0;
+
+export const getUniversityVideoBeamTvStateResponseSkipVoteCountMin = 0;
+
+export const getUniversityVideoBeamTvStateResponseSkipVoteTotalMin = 0;
+
+export const getUniversityVideoBeamTvStateResponseSkipSequenceMin = 0;
+
+
+
+export const GetUniversityVideoBeamTvStateResponse = zod.object({
+  "enabled": zod.boolean(),
+  "searchAvailable": zod.boolean(),
+  "defaultSearch": zod.string().max(getUniversityVideoBeamTvStateResponseDefaultSearchMax),
+  "sourceType": zod.union([zod.literal('video'),zod.literal('playlist'),zod.literal('search'),zod.literal(null)]).nullable(),
+  "sourceValue": zod.string().nullable(),
+  "playlistId": zod.string().nullable(),
+  "queue": zod.array(zod.string().regex(getUniversityVideoBeamTvStateResponseQueueItemRegExp)).max(getUniversityVideoBeamTvStateResponseQueueMax),
+  "videoMetadata": zod.array(zod.object({
+  "videoId": zod.string().regex(getUniversityVideoBeamTvStateResponseVideoMetadataItemVideoIdRegExp),
+  "title": zod.string().max(getUniversityVideoBeamTvStateResponseVideoMetadataItemTitleMax),
+  "channelTitle": zod.string().max(getUniversityVideoBeamTvStateResponseVideoMetadataItemChannelTitleMax).nullable(),
+  "description": zod.string().max(getUniversityVideoBeamTvStateResponseVideoMetadataItemDescriptionMax).nullable()
+})).max(getUniversityVideoBeamTvStateResponseVideoMetadataMax),
+  "currentVideoId": zod.string().regex(getUniversityVideoBeamTvStateResponseCurrentVideoIdRegExp).nullable(),
+  "startedAtMs": zod.number().int().min(getUniversityVideoBeamTvStateResponseStartedAtMsMin).nullable(),
+  "skipVotingEnabled": zod.boolean(),
+  "skipVoteCount": zod.number().int().min(getUniversityVideoBeamTvStateResponseSkipVoteCountMin),
+  "skipVoteTotal": zod.number().int().min(getUniversityVideoBeamTvStateResponseSkipVoteTotalMin),
+  "hasVotedToSkip": zod.boolean(),
+  "skipSequence": zod.number().int().min(getUniversityVideoBeamTvStateResponseSkipSequenceMin)
+})
+
+
+/**
+ * @summary Configure Beam TV or synchronize playback as the current beam host
+ */
+export const performUniversityVideoBeamTvActionPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
+
+
+export const PerformUniversityVideoBeamTvActionParams = zod.object({
+  "roomId": zod.coerce.string().regex(performUniversityVideoBeamTvActionPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
+})
+
+export const PerformUniversityVideoBeamTvActionHeader = zod.object({
+  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+})
+
+export const performUniversityVideoBeamTvActionBodySourceValueMax = 160;
+
+export const performUniversityVideoBeamTvActionBodyPlaylistIdRegExp = new RegExp('^[A-Za-z0-9_-]{10,80}$');
+export const performUniversityVideoBeamTvActionBodyQueueItemRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const performUniversityVideoBeamTvActionBodyQueueMax = 50;
+
+export const performUniversityVideoBeamTvActionBodyCurrentVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const performUniversityVideoBeamTvActionBodyStartedAtMsMin = 0;
+
+export const performUniversityVideoBeamTvActionBodyVideoMetadataVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const performUniversityVideoBeamTvActionBodyVideoMetadataTitleMax = 200;
+
+export const performUniversityVideoBeamTvActionBodyVideoMetadataChannelTitleMax = 120;
+
+export const performUniversityVideoBeamTvActionBodyVideoMetadataDescriptionMax = 500;
+
+
+
+export const PerformUniversityVideoBeamTvActionBody = zod.object({
+  "action": zod.enum(['start', 'enable', 'stop', 'reset', 'publish-queue', 'publish-playback', 'skip', 'vote-skip', 'set-skip-voting']),
+  "sourceType": zod.union([zod.literal('video'),zod.literal('playlist'),zod.literal('search'),zod.literal(null)]).nullish(),
+  "sourceValue": zod.string().max(performUniversityVideoBeamTvActionBodySourceValueMax).optional(),
+  "playlistId": zod.string().regex(performUniversityVideoBeamTvActionBodyPlaylistIdRegExp).optional(),
+  "queue": zod.array(zod.string().regex(performUniversityVideoBeamTvActionBodyQueueItemRegExp)).max(performUniversityVideoBeamTvActionBodyQueueMax).optional(),
+  "currentVideoId": zod.string().regex(performUniversityVideoBeamTvActionBodyCurrentVideoIdRegExp).optional(),
+  "startedAtMs": zod.number().int().min(performUniversityVideoBeamTvActionBodyStartedAtMsMin).optional(),
+  "skipVotingEnabled": zod.boolean().optional(),
+  "videoMetadata": zod.object({
+  "videoId": zod.string().regex(performUniversityVideoBeamTvActionBodyVideoMetadataVideoIdRegExp),
+  "title": zod.string().max(performUniversityVideoBeamTvActionBodyVideoMetadataTitleMax),
+  "channelTitle": zod.string().max(performUniversityVideoBeamTvActionBodyVideoMetadataChannelTitleMax).nullable(),
+  "description": zod.string().max(performUniversityVideoBeamTvActionBodyVideoMetadataDescriptionMax).nullable()
+}).optional()
+})
+
+export const performUniversityVideoBeamTvActionResponseDefaultSearchMax = 120;
+
+export const performUniversityVideoBeamTvActionResponseQueueItemRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const performUniversityVideoBeamTvActionResponseQueueMax = 50;
+
+export const performUniversityVideoBeamTvActionResponseVideoMetadataItemVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const performUniversityVideoBeamTvActionResponseVideoMetadataItemTitleMax = 200;
+
+export const performUniversityVideoBeamTvActionResponseVideoMetadataItemChannelTitleMax = 120;
+
+export const performUniversityVideoBeamTvActionResponseVideoMetadataItemDescriptionMax = 500;
+
+export const performUniversityVideoBeamTvActionResponseVideoMetadataMax = 50;
+
+export const performUniversityVideoBeamTvActionResponseCurrentVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const performUniversityVideoBeamTvActionResponseStartedAtMsMin = 0;
+
+export const performUniversityVideoBeamTvActionResponseSkipVoteCountMin = 0;
+
+export const performUniversityVideoBeamTvActionResponseSkipVoteTotalMin = 0;
+
+export const performUniversityVideoBeamTvActionResponseSkipSequenceMin = 0;
+
+
+
+export const PerformUniversityVideoBeamTvActionResponse = zod.object({
+  "enabled": zod.boolean(),
+  "searchAvailable": zod.boolean(),
+  "defaultSearch": zod.string().max(performUniversityVideoBeamTvActionResponseDefaultSearchMax),
+  "sourceType": zod.union([zod.literal('video'),zod.literal('playlist'),zod.literal('search'),zod.literal(null)]).nullable(),
+  "sourceValue": zod.string().nullable(),
+  "playlistId": zod.string().nullable(),
+  "queue": zod.array(zod.string().regex(performUniversityVideoBeamTvActionResponseQueueItemRegExp)).max(performUniversityVideoBeamTvActionResponseQueueMax),
+  "videoMetadata": zod.array(zod.object({
+  "videoId": zod.string().regex(performUniversityVideoBeamTvActionResponseVideoMetadataItemVideoIdRegExp),
+  "title": zod.string().max(performUniversityVideoBeamTvActionResponseVideoMetadataItemTitleMax),
+  "channelTitle": zod.string().max(performUniversityVideoBeamTvActionResponseVideoMetadataItemChannelTitleMax).nullable(),
+  "description": zod.string().max(performUniversityVideoBeamTvActionResponseVideoMetadataItemDescriptionMax).nullable()
+})).max(performUniversityVideoBeamTvActionResponseVideoMetadataMax),
+  "currentVideoId": zod.string().regex(performUniversityVideoBeamTvActionResponseCurrentVideoIdRegExp).nullable(),
+  "startedAtMs": zod.number().int().min(performUniversityVideoBeamTvActionResponseStartedAtMsMin).nullable(),
+  "skipVotingEnabled": zod.boolean(),
+  "skipVoteCount": zod.number().int().min(performUniversityVideoBeamTvActionResponseSkipVoteCountMin),
+  "skipVoteTotal": zod.number().int().min(performUniversityVideoBeamTvActionResponseSkipVoteTotalMin),
+  "hasVotedToSkip": zod.boolean(),
+  "skipSequence": zod.number().int().min(performUniversityVideoBeamTvActionResponseSkipSequenceMin)
+})
+
+
+/**
+ * @summary Search embeddable YouTube videos for the beam host
+ */
+export const searchYouTubeForVideoBeamPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
+
+
+export const SearchYouTubeForVideoBeamParams = zod.object({
+  "roomId": zod.coerce.string().regex(searchYouTubeForVideoBeamPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
+})
+
+export const SearchYouTubeForVideoBeamHeader = zod.object({
+  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+})
+
+export const searchYouTubeForVideoBeamBodyQueryMax = 120;
+
+
+
+export const SearchYouTubeForVideoBeamBody = zod.object({
+  "query": zod.string().min(1).max(searchYouTubeForVideoBeamBodyQueryMax)
+})
+
+export const searchYouTubeForVideoBeamResponseVideoIdsItemRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const searchYouTubeForVideoBeamResponseVideoIdsMax = 10;
+
+export const searchYouTubeForVideoBeamResponseTitlesItemMax = 200;
+
+export const searchYouTubeForVideoBeamResponseTitlesMax = 10;
+
+export const searchYouTubeForVideoBeamResponseVideosItemVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const searchYouTubeForVideoBeamResponseVideosItemTitleMax = 200;
+
+export const searchYouTubeForVideoBeamResponseVideosItemChannelTitleMax = 120;
+
+export const searchYouTubeForVideoBeamResponseVideosItemDescriptionMax = 500;
+
+export const searchYouTubeForVideoBeamResponseVideosMax = 10;
+
+
+
+export const SearchYouTubeForVideoBeamResponse = zod.object({
+  "videoIds": zod.array(zod.string().regex(searchYouTubeForVideoBeamResponseVideoIdsItemRegExp)).min(1).max(searchYouTubeForVideoBeamResponseVideoIdsMax),
+  "titles": zod.array(zod.string().max(searchYouTubeForVideoBeamResponseTitlesItemMax)).max(searchYouTubeForVideoBeamResponseTitlesMax),
+  "videos": zod.array(zod.object({
+  "videoId": zod.string().regex(searchYouTubeForVideoBeamResponseVideosItemVideoIdRegExp),
+  "title": zod.string().max(searchYouTubeForVideoBeamResponseVideosItemTitleMax),
+  "channelTitle": zod.string().max(searchYouTubeForVideoBeamResponseVideosItemChannelTitleMax).nullable(),
+  "description": zod.string().max(searchYouTubeForVideoBeamResponseVideosItemDescriptionMax).nullable()
+})).max(searchYouTubeForVideoBeamResponseVideosMax)
 })
 
 
@@ -610,6 +990,7 @@ export const getOlderRoomMessagesResponsePassportPlatformsItemColorRegExp = new 
 
 export const GetOlderRoomMessagesResponseItem = zod.object({
   "botId": zod.union([zod.literal('ghost'),zod.literal('vampire'),zod.literal('wolf'),zod.literal('zombie'),zod.literal(null)]).nullish(),
+  "botMessageType": zod.union([zod.literal('chatter'),zod.literal('moderation'),zod.literal('visit'),zod.literal(null)]).nullish(),
   "badgeId": zod.string().nullish(),
   "id": zod.string().uuid(),
   "roomId": zod.string(),
@@ -1859,6 +2240,7 @@ export const getRoomMessagesResponsePassportPlatformsItemColorRegExp = new RegEx
 
 export const GetRoomMessagesResponseItem = zod.object({
   "botId": zod.union([zod.literal('ghost'),zod.literal('vampire'),zod.literal('wolf'),zod.literal('zombie'),zod.literal(null)]).nullish(),
+  "botMessageType": zod.union([zod.literal('chatter'),zod.literal('moderation'),zod.literal('visit'),zod.literal(null)]).nullish(),
   "badgeId": zod.string().nullish(),
   "id": zod.string().uuid(),
   "roomId": zod.string(),
@@ -1927,6 +2309,7 @@ export const sendRoomMessageResponseProfileIdentityHairColorRegExp = new RegExp(
 export const SendRoomMessageResponse = zod.object({
   "message": zod.object({
   "botId": zod.union([zod.literal('ghost'),zod.literal('vampire'),zod.literal('wolf'),zod.literal('zombie'),zod.literal(null)]).nullish(),
+  "botMessageType": zod.union([zod.literal('chatter'),zod.literal('moderation'),zod.literal('visit'),zod.literal(null)]).nullish(),
   "badgeId": zod.string().nullish(),
   "id": zod.string().uuid(),
   "roomId": zod.string(),

@@ -17,6 +17,7 @@ export function useTextRoom(roomId: string, userId: string) {
   const qc = useQueryClient();
   const [room, setRoom] = useState<RoomState | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [arrivals, setArrivals] = useState<{ id: string; participantId: string; displayName: string; at: number }[]>([]);
   const [creds, setCreds] = useState<RoomCreds | null>(null);
   const credential = useRef<RoomCreds | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,8 +63,9 @@ export function useTextRoom(roomId: string, userId: string) {
     let retry: ReturnType<typeof setTimeout> | undefined;
     let heartbeat: ReturnType<typeof setInterval> | undefined;
     let joining = false;
+    let knownParticipantIds: Set<string> | null = null;
     const headers = () => ({ "X-Room-Session": credential.current!.participantSessionId });
-    setRoom(null); setMessages([]); setLoading(true); setError(null); setOverflow(null);
+    setRoom(null); setMessages([]); setArrivals([]); setLoading(true); setError(null); setOverflow(null);
     credential.current = null; setCreds(null);
 
     async function history(replace = true) {
@@ -82,7 +84,16 @@ export function useTextRoom(roomId: string, userId: string) {
         const session = await joinAccountRoom(roomId, { signal: controller.signal });
         if (!active) return;
         const c = { participantSessionId: session.participantSessionId, participantId: session.participantId };
-        credential.current = c; setCreds(c); saveCreds(userId, roomId, c); setRoom(session.room);
+        credential.current = c; setCreds(c); saveCreds(userId, roomId, c);
+        knownParticipantIds = new Set(session.room.participants.map(participant => participant.participantId));
+        const self = session.room.participants.find(participant => participant.participantId === session.participantId);
+        if (self) setArrivals(previous => [...previous, {
+          id: `arrival-${self.participantId}-${self.joinedAt}`,
+          participantId: self.participantId,
+          displayName: self.displayName,
+          at: new Date(self.joinedAt).getTime(),
+        }].slice(-100));
+        setRoom(session.room);
       } finally { joining = false; }
     }
     refreshAction.current = async () => {
@@ -115,7 +126,21 @@ export function useTextRoom(roomId: string, userId: string) {
             const type = /^event: (.+)$/m.exec(frame)?.[1];
             const data = /^data: (.+)$/m.exec(frame)?.[1];
             if (!data || !active) continue;
-            if (type === "room.snapshot") setRoom(JSON.parse(data) as RoomState);
+            if (type === "room.snapshot") {
+              const snapshot = JSON.parse(data) as RoomState;
+              const nextIds = new Set(snapshot.participants.map(participant => participant.participantId));
+              if (knownParticipantIds) {
+                const entered = snapshot.participants.filter(participant => !knownParticipantIds!.has(participant.participantId));
+                if (entered.length) setArrivals(previous => [...previous, ...entered.map(participant => ({
+                  id: `arrival-${participant.participantId}-${participant.joinedAt}`,
+                  participantId: participant.participantId,
+                  displayName: participant.displayName,
+                  at: new Date(participant.joinedAt).getTime(),
+                }))].slice(-100));
+              }
+              knownParticipantIds = nextIds;
+              setRoom(snapshot);
+            }
             if (type === "chat.accepted") {
               const accepted = JSON.parse(data) as ChatAccepted;
               setMessages(previous => ordered([...previous, accepted.message]));
@@ -151,5 +176,5 @@ export function useTextRoom(roomId: string, userId: string) {
       // via the existing heartbeat lease; persisted history/membership remains.
     };
   }, [roomId, userId]);
-  return { room, messages, creds, loading, connection, error, overflow, send, refresh, loadOlder, loadingOlder, hasOlder };
+  return { room, messages, arrivals, creds, loading, connection, error, overflow, send, refresh, loadOlder, loadingOlder, hasOlder };
 }

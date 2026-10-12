@@ -121,6 +121,7 @@ test("development integration: public filtering, private-message exclusion and m
   await t.test("non-moderators cannot see flags/settings or review; bot impersonation and reporting fail", async () => {
     assert.equal((await request(2, "/account/chat/bots/flags")).status, 403);
     assert.equal((await request(2, "/account/chat/bots/settings")).status, 403);
+    assert.equal((await request(2, "/account/chat/bots/chatter")).status, 403);
     assert.equal((await request(2, `/account/chat/bots/flags/${flagId}/review`, {}, "POST")).status, 403);
     assert.equal((await request(1, `/account/rooms/${code}/messages`,
       { text: "I am official", kind: "text", botId: "ghost" }, "POST")).status, 400);
@@ -136,7 +137,7 @@ test("development integration: public filtering, private-message exclusion and m
       eq(moderatorBotFlags.roomId, code), eq(moderatorBotFlags.accountId, ids[0]!)));
     assert.equal(flag!.reason, "Flooding");
     assert.ok((await getMessages(code, roomStore, ids[2]!)).some(m =>
-      m.botId && m.text.includes(names[0]!)));
+      m.botId && m.botMessageType === "moderation" && m.text.includes(names[0]!)));
     assert.equal((await getMessages(code, roomStore, ids[2]!)).some(m =>
       m.text === "Flood test: this must not appear"), false);
   });
@@ -151,6 +152,13 @@ test("development integration: public filtering, private-message exclusion and m
     assert.equal((await request(0, "/account/chat/bots/settings")).status, 200);
     assert.equal((await request(0, "/account/chat/bots/settings",
       { bannedWords: ["bad"], breakSeconds: 1 }, "PUT")).status, 400);
+    const chatter = await request(0, "/account/chat/bots/chatter");
+    assert.equal(chatter.status, 200);
+    const chatterConfig = await chatter.json() as { enabled: boolean; frequency: string; bots: { id: string; lines: string[] }[] };
+    assert.equal(chatterConfig.bots.length, 4);
+    assert.ok(chatterConfig.bots.every(bot => bot.lines.length >= 20 && bot.lines.length <= 30));
+    assert.equal((await request(0, "/account/chat/bots/chatter",
+      { enabled: true, frequency: "normal", bots: [] }, "PUT")).status, 400);
     const reviewed = await request(0, `/account/chat/bots/flags/${flagId}/review`, {}, "POST");
     assert.equal(reviewed.status, 200);
     assert.ok((await reviewed.json() as { reviewedAt: string }).reviewedAt);

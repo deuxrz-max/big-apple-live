@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ChatMessageBotId } from './chatMessageBotId';
+import type { ChatMessageBotMessageType } from './chatMessageBotMessageType';
 import type { ChatMessageKind } from './chatMessageKind';
 import type { EmojiIdentity } from './emojiIdentity';
 import type { StreamerPassportBadgeSummary } from './streamerPassportBadgeSummary';
@@ -13,6 +14,8 @@ import type { StreamerPassportBadgeSummary } from './streamerPassportBadgeSummar
 export interface ChatMessage {
   /** @nullable */
   botId?: ChatMessageBotId;
+  /** @nullable */
+  botMessageType?: ChatMessageBotMessageType;
   /** @nullable */
   badgeId?: string | null;
   id: string;

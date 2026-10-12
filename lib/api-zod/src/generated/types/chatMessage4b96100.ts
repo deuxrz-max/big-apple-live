@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ChatMessage4b96100BotId } from './chatMessage4b96100BotId';
+import type { ChatMessage4b96100BotMessageType } from './chatMessage4b96100BotMessageType';
 import type { ChatMessage4b96100Kind } from './chatMessage4b96100Kind';
 import type { EmojiIdentity4b96100 } from './emojiIdentity4b96100';
 import type { StreamerPassportBadgeSummary } from './streamerPassportBadgeSummary';
@@ -13,6 +14,8 @@ import type { StreamerPassportBadgeSummary } from './streamerPassportBadgeSummar
 export interface ChatMessage4b96100 {
   /** @nullable */
   botId?: ChatMessage4b96100BotId;
+  /** @nullable */
+  botMessageType?: ChatMessage4b96100BotMessageType;
   /** @nullable */
   badgeId?: string | null;
   id: string;

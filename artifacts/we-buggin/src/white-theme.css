@@ -201,6 +201,12 @@ body.streamtalk-light-screen #root [data-localization-key*="formButtonPrimary"] 
   box-shadow: 0 5px 20px rgba(39,26,62,.08);
 }
 #root .app-page.is-light-screen .st-cover { background: #f1eef6; }
+#root .app-page.is-light-screen .st-cover.is-fallback.st-cover-0 { background: linear-gradient(150deg,#391d62,#aa2b96 58%,#161323); }
+#root .app-page.is-light-screen .st-cover.is-fallback.st-cover-1 { background: linear-gradient(150deg,#501d80,#e43d9b 54%,#181324); }
+#root .app-page.is-light-screen .st-cover.is-fallback.st-cover-2 { background: linear-gradient(150deg,#221b5d,#7626ba 55%,#15131f); }
+#root .app-page.is-light-screen .st-cover.is-fallback.st-cover-3 { background: linear-gradient(150deg,#692478,#d72b91 55%,#171321); }
+#root .app-page.is-light-screen .st-cover.is-fallback.st-cover-4 { background: linear-gradient(150deg,#2f246f,#8542c4 55%,#111525); }
+#root .app-page.is-light-screen .st-cover.is-fallback.st-cover-5 { background: linear-gradient(150deg,#442063,#a344ab 54%,#131222); }
 #root .app-page.is-light-screen :is(.st-live,.st-count) {
   color: #211e27;
   background: rgba(255,255,255,.94);
@@ -352,6 +358,47 @@ body.streamtalk-light-screen #root .gift-framework.gift-sheet :is(.gift-send,.gi
 body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-item[aria-pressed=true] :is(span,svg) { color: #52217f; }
 body.streamtalk-light-screen #root .sp-modal-panel .sp-card { box-shadow: none; }
 body.streamtalk-light-screen #root .sp-modal-close { color: #211e27; background: #ffffff; border-color: #ded9e5; }
+
+/* The moderator desk opts out of the white community theme. */
+#root .app-page.is-moderation-screen {
+  min-height: 100dvh;
+  background:
+    radial-gradient(1px 1px at 6% 13%, rgba(255,255,255,.5) 50%, transparent 100%),
+    radial-gradient(1px 1px at 75% 8%, rgba(205,184,255,.42) 50%, transparent 100%),
+    radial-gradient(ellipse at 13% 0%, rgba(102,53,175,.22), transparent 42%),
+    linear-gradient(150deg,#080714 0%,#100c22 52%,#0a0a1c 100%);
+  color: #f3efff;
+}
+#root .app-page.is-moderation-screen .beam-app.sc-moderation-screen {
+  min-height: calc(100dvh - var(--app-bottom-nav-clearance));
+  background: transparent;
+  color: #f3efff;
+}
+#root .app-page.is-moderation-screen .beam-app.sc-moderation-screen .sc-shell {
+  padding-bottom: 28px;
+}
+#root .app-page.is-moderation-screen .beam-app.sc-moderation-screen .sc-main,
+#root .app-page.is-moderation-screen .beam-app.sc-moderation-screen .sc-main > *,
+#root .app-page.is-moderation-screen .beam-app.sc-moderation-screen .ch {
+  color: #f3efff;
+}
+#root .app-page.is-moderation-screen .beam-app.sc-moderation-screen .sc-nav-item {
+  color: #c2bbd1;
+  background: rgba(26,20,51,.66);
+}
+#root .app-page.is-moderation-screen .beam-app.sc-moderation-screen .sc-nav-item.is-on {
+  color: #ffffff;
+  background: linear-gradient(120deg,#7650d4,#9d6aee);
+  box-shadow: 0 0 19px rgba(148,94,230,.26);
+}
+#root .app-page.is-moderation-screen .beam-app.sc-moderation-screen .bm-nav {
+  background: rgba(13,10,30,.62);
+  border-bottom: 1px solid rgba(190,159,255,.24);
+}
+#root .app-page.is-moderation-screen .beam-app.sc-moderation-screen .bm-logo,
+#root .app-page.is-moderation-screen .beam-app.sc-moderation-screen .bm-logo .st-wordmark {
+  color: #b9ffd2;
+}
 
 /* Profile editor: compact, readable photo slots and space above the fixed nav. */
 #root .app-page.is-light-screen .ch-profile-screen {

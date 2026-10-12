@@ -7,6 +7,7 @@ import { UNIVERSITY_MEMBER_CAP } from "./university-config";
 
 test("four distinct system identities; one minute visits, 45-second breaks and no simultaneous visits", () => {
   assert.equal(new Set(BOT_ACCOUNTS.map(b => b.id)).size, 4);
+  assert.ok(BOT_ACCOUNTS.every(bot => bot.arrival === `${bot.name} has arrived`));
   const rotation = new BotRotation(0, () => 0);
   const first = rotation.tick(["LIVEME", "BIGOLV", "BIGOLV2", "TIKTOK", "SUPRLV"], 0);
   assert.equal(first[0]!.type, "join");
@@ -34,6 +35,15 @@ test("no empty-room visits; numbered overflow rooms are eligible; random selecti
   assert.deepEqual(rotation.tick([], 0), []);
   const joined = rotation.tick(["LIVEME", "BIGOLV2"], 5000);
   assert.equal(joined[0]!.roomId, "BIGOLV2");
+});
+test("moderator-edited bot names update the visible visitor without resetting its room", () => {
+  const rotation = new BotRotation(0, () => 0);
+  rotation.tick(["LIVEME"], 0);
+  rotation.setDisplayNames({ ghost: "Night Ghost" });
+  assert.equal(rotation.people("LIVEME")[0]?.name, "Night Ghost");
+  assert.equal(rotation.people("LIVEME")[0]?.arrival, "Night Ghost has arrived");
+  const leave = rotation.tick(["LIVEME"], BOT_VISIT_MS).find(event => event.bot.id === "ghost");
+  assert.equal(leave?.bot.departure, "Night Ghost slips quietly away.");
 });
 test("a bot never consumes a seat or creates overflow even with 24 real participants", () => {
   const store = new RoomStore(() => 0);

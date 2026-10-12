@@ -34,12 +34,18 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
   const qc = useQueryClient();
   const me = useGetSocialMe();
   useEffect(() => { refreshSocial(qc); }, [path, qc]);
-    useEffect(() => { document.title = path === '/community/messages' ? 'Messages — Streamtalk' : path === '/community/favorites' ? 'Following — Streamtalk' : 'People — Streamtalk'; return () => { document.title = 'Streamtalk'; }; }, [path]);
+    useEffect(() => {
+      document.title = path === '/community/moderation' ? 'Moderation — Streamtalk'
+        : path === '/community/messages' ? 'Messages — Streamtalk'
+          : path === '/community/favorites' ? 'Following — Streamtalk'
+            : 'People — Streamtalk';
+      return () => { document.title = 'Streamtalk'; };
+    }, [path]);
   const access = useGetChatAccess();
   const bare = path.startsWith('/community/people/') || path.startsWith('/community/bots/');
   const needsIdentity = errStatus(me.error) === 409;
   return (
-    <div className={`beam-app sc${bare ? ' sc-profile-screen' : ''}${path === '/community/messages' ? ' sc-inbox-screen' : path === '/community/favorites' ? ' sc-following-screen' : ''}`}>
+      <div className={`beam-app sc${bare ? ' sc-profile-screen' : ''}${path === '/community/messages' ? ' sc-inbox-screen' : path === '/community/favorites' ? ' sc-following-screen' : path === '/community/moderation' ? ' sc-moderation-screen' : ''}`}>
       <div className="bm-bg" aria-hidden="true"><i /><i /><i /></div>
       {!bare && <nav className="bm-nav">
         <Wordmark href="/home" className="bm-logo" />

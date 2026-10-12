@@ -38,6 +38,7 @@ type Room = {
   emptySince: number | null;
   community?: boolean;
   testOnly?: boolean;
+  parentRoomId?: string | null;
 };
 
 /** Single-process, ephemeral presence store. Session credentials are never in snapshots. */
@@ -48,11 +49,22 @@ export class RoomStore {
     private readonly allocateCode: (short: boolean) => string = short => randomBytes(short ? 3 : 6).toString("hex").toUpperCase(),
   ) {}
 
-  registerCommunity(input: { roomId: string; historyId: string; label: string; createdAt: Date; testOnly?: boolean }) {
-    if (this.rooms.has(input.roomId)) return;
+  registerCommunity(input: { roomId: string; historyId: string; label: string; createdAt: Date; testOnly?: boolean; parentRoomId?: string | null }) {
+    const existing = this.rooms.get(input.roomId);
+    if (existing) {
+      existing.name = input.label;
+      existing.parentRoomId = input.parentRoomId ?? existing.parentRoomId;
+      return;
+    }
     this.rooms.set(input.roomId, { roomId: input.roomId, historyId: input.historyId,
       name: input.label, capacity: UNIVERSITY_MEMBER_CAP, createdAt: input.createdAt, hostParticipantId: randomUUID(),
-      sessions: new Map(), listeners: new Set(), emptySince: null, community: true, testOnly: input.testOnly });
+      sessions: new Map(), listeners: new Set(), emptySince: null, community: true, testOnly: input.testOnly,
+      parentRoomId: input.parentRoomId });
+  }
+  communityParentId(roomId: string) {
+    const normalized = roomId.toUpperCase();
+    const room = this.rooms.get(normalized);
+    return room?.parentRoomId ?? room?.roomId ?? normalized;
   }
   unregisterCommunity(roomId: string): void {
     const room = this.requireRoom(roomId);
@@ -61,6 +73,7 @@ export class RoomStore {
     this.rooms.delete(room.roomId);
   }
   isCommunity(roomId: string) { return !!this.rooms.get(roomId.toUpperCase())?.community; }
+  isTestOnly(roomId: string) { return !!this.rooms.get(roomId.toUpperCase())?.testOnly; }
   /** Bots use this read-only list, never a participant session or a real seat. */
   occupiedUniversities() {
     const now = this.now();
@@ -149,6 +162,16 @@ export class RoomStore {
 
   get(roomId: string): RoomState {
     return this.snapshot(this.requireRoom(roomId));
+  }
+
+  activeAccountIds(roomId: string): string[] {
+    const now = this.now();
+    const room = this.requireRoom(roomId);
+    const active = new Set<string>();
+    for (const session of room.sessions.values()) {
+      if (session.accountId && now - session.lastSeenAt < SESSION_TIMEOUT_MS) active.add(session.accountId);
+    }
+    return [...active];
   }
 
   /** Private incarnation identifier, never a reusable room-code history key. */

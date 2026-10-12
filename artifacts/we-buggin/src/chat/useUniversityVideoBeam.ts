@@ -3,8 +3,12 @@ import {
   getUniversityVideoBeamState,
   getUniversityVideoBeamToken,
   performUniversityVideoBeamAction,
+  performUniversityVideoBeamTvAction,
+  searchYouTubeForVideoBeam,
   type UniversityVideoBeamActionInput,
+  type UniversityVideoBeamTvActionInput,
   type UniversityVideoBeamState,
+  type UniversityVideoBeamTvSearchResponse,
 } from "@workspace/api-client-react";
 import {
   createLocalTracks,
@@ -25,6 +29,23 @@ const emptyState = (roomId: string): UniversityVideoBeamState => ({
   roomId,
   beamActive: false,
   hostParticipantId: null,
+  tv: {
+    enabled: false,
+    searchAvailable: false,
+    defaultSearch: "",
+    sourceType: null,
+    sourceValue: null,
+    playlistId: null,
+    queue: [],
+    videoMetadata: [],
+    currentVideoId: null,
+    startedAtMs: null,
+    skipVotingEnabled: true,
+    skipVoteCount: 0,
+    skipVoteTotal: 0,
+    hasVotedToSkip: false,
+    skipSequence: 0,
+  },
   slots: [1, 2, 3, 4].map(slotNumber => ({
     slotNumber,
     participantId: null,
@@ -80,6 +101,28 @@ export function useUniversityVideoBeam(
     headers: headers(args.roomSessionId),
     credentials: "include",
   }), [headers]);
+
+  const runTvAction = useCallback(async (data: UniversityVideoBeamTvActionInput) => {
+    const args = latest.current;
+    const next = await performUniversityVideoBeamTvAction(args.roomId, data, {
+      headers: headers(args.roomSessionId),
+      credentials: "include",
+    });
+    setBeam(current => {
+      const updated = { ...current, tv: next };
+      beamRef.current = updated;
+      return updated;
+    });
+    return next;
+  }, [headers]);
+
+  const searchTv = useCallback(async (query: string): Promise<UniversityVideoBeamTvSearchResponse> => {
+    const args = latest.current;
+    return searchYouTubeForVideoBeam(args.roomId, { query }, {
+      headers: headers(args.roomSessionId),
+      credentials: "include",
+    });
+  }, [headers]);
 
   const clearRoom = useCallback((stopLocal: boolean) => {
     const room = roomRef.current;
@@ -456,6 +499,8 @@ export function useUniversityVideoBeam(
     hostMuteMic,
     hostDisableCamera,
     kick,
+    runTvAction,
+    searchTv,
     resumePlayback,
     refresh,
   };

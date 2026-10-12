@@ -10,3 +10,237 @@
 .bm-bots .bm-flag{padding:10px;border-radius:10px;background:rgba(255,255,255,.06);display:grid;gap:4px;list-style:none}
 .bm-bots ul{margin:0;padding:0;display:grid;gap:8px}
 .bm-bots .bm-flag q{display:block;white-space:pre-wrap;overflow-wrap:anywhere;quotes:none}
+.ur-bot-chatter .ch-sender { color: #b9ffd2; }
+.ur-bot-chatter > div > p { color: #d2cce0; font-size: .95em; }
+.ur-bot-tag {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  padding: 1px 5px;
+  border: 1px solid rgba(185, 255, 210, .45);
+  border-radius: 999px;
+  color: #c9f5d6;
+  font: 700 9px/1.3 'DM Sans', 'Montserrat', sans-serif;
+  letter-spacing: .04em;
+  vertical-align: middle;
+}
+
+/* The moderation desk stays on the room's dark neon theme, unlike other community pages. */
+#root .beam-app.sc-moderation-screen .bm-bots {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid transparent;
+  border-radius: 18px;
+  background:
+    linear-gradient(145deg, rgba(28, 22, 54, .9), rgba(16, 14, 37, .86)) padding-box,
+    linear-gradient(135deg, rgba(179, 127, 255, .8), rgba(209, 184, 255, .42) 52%, rgba(126, 191, 255, .68)) border-box;
+  box-shadow: 0 8px 28px rgba(6, 3, 22, .42), 0 0 18px rgba(143, 91, 222, .12);
+}
+#root .beam-app.sc-moderation-screen .bm-bots h2 {
+  color: #b9ffd2;
+  font-family: 'DM Sans', 'Montserrat', sans-serif;
+  font-size: 18px;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+#root .beam-app.sc-moderation-screen .bm-bots p {
+  color: #c2bbd1;
+  line-height: 1.5;
+}
+#root .beam-app.sc-moderation-screen .bm-bots label {
+  gap: 8px;
+  color: #f3efff;
+  font-size: 14px;
+  line-height: 1.4;
+}
+#root .beam-app.sc-moderation-screen .bm-bots textarea,
+#root .beam-app.sc-moderation-screen .bm-bots input[type="number"] {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(196, 170, 255, .44);
+  border-radius: 12px;
+  background: rgba(11, 9, 26, .92);
+  color: #f3efff;
+  font: 14px/1.5 'DM Sans', 'Montserrat', sans-serif;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, .24);
+}
+#root .beam-app.sc-moderation-screen .bm-bots textarea {
+  height: 184px;
+  min-height: 184px;
+  max-height: 45vh;
+  overflow: auto;
+  resize: vertical;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+#root .beam-app.sc-moderation-screen .bm-bots input[type="number"] {
+  max-width: 180px;
+}
+#root .beam-app.sc-moderation-screen .bm-bots :is(textarea, input):focus-visible {
+  outline: 2px solid #b58aff;
+  outline-offset: 2px;
+  border-color: #a879ff;
+  box-shadow: 0 0 0 3px rgba(165, 112, 255, .2);
+}
+#root .beam-app.sc-moderation-screen .bm-bots .bm-flag {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(196, 170, 255, .22);
+  border-radius: 12px;
+  background: rgba(11, 9, 26, .7);
+  color: #f3efff;
+  overflow-wrap: anywhere;
+}
+#root .beam-app.sc-moderation-screen .bm-bots .bm-flag .ch-note {
+  color: #b9b0c8;
+}
+#root .beam-app.sc-moderation-screen .bm-chatter {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid rgba(174, 137, 255, .34);
+  border-radius: 15px;
+  background: rgba(10, 8, 25, .52);
+}
+#root .beam-app.sc-moderation-screen .bm-chatter-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+#root .beam-app.sc-moderation-screen .bm-chatter h3 {
+  margin: 0;
+  color: #f3efff;
+  font-size: 16px;
+}
+#root .beam-app.sc-moderation-screen .bm-chatter p {
+  margin: 4px 0 0;
+  color: #b9b0c8;
+  font-size: 13px;
+}
+#root .beam-app.sc-moderation-screen .bm-chatter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  color: #b9ffd2;
+}
+#root .beam-app.sc-moderation-screen .bm-chatter-toggle input {
+  appearance: none;
+  position: relative;
+  width: 20px;
+  height: 20px;
+  width: 40px;
+  border: 1px solid rgba(196, 170, 255, .55);
+  border-radius: 999px;
+  background: rgba(74, 65, 93, .85);
+  cursor: pointer;
+  transition: background-color .18s ease, border-color .18s ease;
+}
+#root .beam-app.sc-moderation-screen .bm-chatter-toggle input::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #f3efff;
+  transition: transform .18s ease;
+}
+#root .beam-app.sc-moderation-screen .bm-chatter-toggle input:checked {
+  border-color: #b58aff;
+  background: #7e43df;
+}
+#root .beam-app.sc-moderation-screen .bm-chatter-toggle input:checked::after {
+  transform: translateX(20px);
+}
+#root .beam-app.sc-moderation-screen .bm-chatter-toggle input:focus-visible {
+  outline: 2px solid #b58aff;
+  outline-offset: 2px;
+}
+#root .beam-app.sc-moderation-screen .bm-chatter-frequency {
+  max-width: 100%;
+}
+#root .beam-app.sc-moderation-screen .bm-chatter select,
+#root .beam-app.sc-moderation-screen .bm-chatter input:not([type="checkbox"]) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid rgba(196, 170, 255, .4);
+  border-radius: 11px;
+  background: rgba(11, 9, 26, .92);
+  color: #f3efff;
+  font: 14px/1.4 'DM Sans', 'Montserrat', sans-serif;
+}
+#root .beam-app.sc-moderation-screen .bm-chatter-profiles {
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+}
+#root .beam-app.sc-moderation-screen .bm-chatter-profile {
+  min-width: 0;
+  border: 1px solid rgba(196, 170, 255, .24);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .035);
+}
+#root .beam-app.sc-moderation-screen .bm-chatter-profile summary {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 11px 12px;
+  cursor: pointer;
+  color: #e9e2f5;
+}
+#root .beam-app.sc-moderation-screen .bm-chatter-profile summary strong {
+  color: #b9ffd2;
+  overflow-wrap: anywhere;
+}
+#root .beam-app.sc-moderation-screen .bm-chatter-profile summary span {
+  color: #b9b0c8;
+  font-size: 12px;
+  line-height: 1.4;
+}
+#root .beam-app.sc-moderation-screen .bm-chatter-fields {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 0 12px 12px;
+}
+#root .beam-app.sc-moderation-screen .bm-chatter-fields textarea.bm-chatter-lines {
+  height: 220px;
+  min-height: 160px;
+  max-height: 42vh;
+  resize: vertical;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow: auto;
+}
+#root .beam-app.sc-moderation-screen .bm-chatter .bm-chatter-count {
+  margin: -6px 0 0;
+  text-align: right;
+  font-size: 12px;
+}
+#root .beam-app.sc-moderation-screen .bm-chatter .bm-chatter-error {
+  color: #ffb4c2;
+}
+#root .beam-app.sc-moderation-screen .bm-chatter .bm-chatter-saved {
+  color: #b9ffd2;
+}
+@media (max-width: 480px) {
+  #root .beam-app.sc-moderation-screen .bm-bots {
+    padding: 13px;
+    border-radius: 16px;
+  }
+  #root .beam-app.sc-moderation-screen .bm-chatter {
+    padding: 11px;
+  }
+}

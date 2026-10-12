@@ -214,14 +214,17 @@ function RoutedErrorBoundary({ children }: { children: ReactNode }) {
 
 function ClerkProviderWithRoutes() {
   const [location, setLocation] = useLocation();
-  const isBeamRoomScreen = /^\/rooms\/[^/]+\/?$/.test(stripBase(location));
+  const currentPath = stripBase(location);
+  const isBeamRoomScreen = /^\/rooms\/[^/]+\/?$/.test(currentPath);
+  const isModerationScreen = currentPath === '/community/moderation';
+  const isLightScreen = !isBeamRoomScreen && !isModerationScreen;
   useLayoutEffect(() => {
     document.body.classList.toggle('streamtalk-beam-screen', isBeamRoomScreen);
-    document.body.classList.toggle('streamtalk-light-screen', !isBeamRoomScreen);
+    document.body.classList.toggle('streamtalk-light-screen', isLightScreen);
     return () => {
       document.body.classList.remove('streamtalk-beam-screen', 'streamtalk-light-screen');
     };
-  }, [isBeamRoomScreen]);
+  }, [isBeamRoomScreen, isLightScreen]);
   const clerkPubKey = publishableKeyFromHost(
     window.location.hostname,
     import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
@@ -246,7 +249,7 @@ function ClerkProviderWithRoutes() {
     >
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
-        <div className={`app-page ${isBeamRoomScreen ? 'is-beam-screen' : 'is-light-screen'}`}><RoutedErrorBoundary>
+        <div className={`app-page ${isBeamRoomScreen ? 'is-beam-screen' : isModerationScreen ? 'is-moderation-screen' : 'is-light-screen'}`}><RoutedErrorBoundary>
           <Switch>
             {DevAudioHarnessPage && (
               <Route path="/__dev/audio-harness">

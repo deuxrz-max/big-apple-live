@@ -14,6 +14,7 @@ import { IdentityAvatar } from '@/lib/identity';
 import { BadgeMark } from '@/social/common';
 import { useTextRoom } from './useTextRoom';
 import { VideoBeamMedia, useUniversityVideoBeam } from './useUniversityVideoBeam';
+import { BeamTv, BeamTvToggle } from './BeamTv';
 import { BotShield } from './BotShield';
 import { GiftBag, OPEN_ROOM_GIFTS_EVENT } from '@/gifts';
 import { useRoomGifts } from '@/gifts/useRoomGifts';
@@ -26,7 +27,10 @@ import './bot-moderation.css';
 const RULES = "Stick to the room's topic. Be kind — no harassment or hate. Nothing sexual or explicit, in chat, names or photos. Don't share real names, phone numbers, addresses or other contact details. Don't hog the screen, no ALL CAPS, no ads or spam. Use Ignore on anyone bothering you, or Block and Report for anything serious. Public university chat is moderated by Streamtalk bots. Whispers and direct messages are private and are not scanned by these bots.";
 
 type Target = { username: string; displayName: string; displayNameColor?: string };
-type Item = { kind: 'room'; at: number; id: string; m: ChatMessage } | { kind: 'gift'; at: number; id: string; gift: RoomGiftEvent } | { kind: 'whisper'; at: number; id: string; w: { id: string; username: string; displayName: string; displayNameColor?: string; outgoing: boolean; body: string; passport?: StreamerPassportBadgeSummary } };
+type Item = { kind: 'room'; at: number; id: string; m: ChatMessage }
+  | { kind: 'arrival'; at: number; id: string; displayName: string }
+  | { kind: 'gift'; at: number; id: string; gift: RoomGiftEvent }
+  | { kind: 'whisper'; at: number; id: string; w: { id: string; username: string; displayName: string; displayNameColor?: string; outgoing: boolean; body: string; passport?: StreamerPassportBadgeSummary } };
 
 function identityEmoji(emojiId?: string) {
   if (!emojiId) return '';
@@ -70,6 +74,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const [giftBag, setGiftBag] = useState<{ recipient: Target | null } | null>(null);
   const [drawer, setDrawer] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [tvSettingsOpen, setTvSettingsOpen] = useState(false);
   const [ignored, setIgnored] = useState<Set<string>>(new Set());
   const gifts = useRoomGifts(roomId, userId, sessionId, ignored);
   const ignoreBusy = useRef(0);
@@ -158,8 +163,9 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
     const a: Item[] = r.messages.filter((m) => m.botId || !ignored.has(m.username)).map((m) => ({ kind: 'room' as const, at: new Date(m.createdAt).getTime(), id: m.id, m }));
     const b: Item[] = (session?.whispers ?? []).filter((w) => !ignored.has(w.username)).map((w) => ({ kind: 'whisper' as const, at: new Date(w.createdAt).getTime(), id: `w-${w.id}`, w }));
     const c: Item[] = gifts.events.map(gift => ({ kind: 'gift', at: new Date(gift.createdAt).getTime(), id: `gift-${gift.id}`, gift }));
-    return [...a, ...b, ...c].sort((x, y) => x.at - y.at || x.id.localeCompare(y.id));
-  }, [r.messages, session?.whispers, ignored, gifts.events]);
+    const d: Item[] = r.arrivals.map(arrival => ({ kind: 'arrival', at: arrival.at, id: arrival.id, displayName: arrival.displayName }));
+    return [...a, ...b, ...c, ...d].sort((x, y) => x.at - y.at || x.id.localeCompare(y.id));
+  }, [r.messages, r.arrivals, session?.whispers, ignored, gifts.events]);
   useEffect(() => { const el = box.current; if (el && near.current) el.scrollTop = el.scrollHeight; }, [items.length]);
 
   const toggleIgnore = (t: Target) => {
@@ -282,7 +288,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           </aside>
           {drawer && <div className="ur-backdrop" onClick={closeDrawer} aria-hidden="true" />}
           <div className="ch-room">
-            <section className="ur-beam" aria-label="Four-slot LiveKit video beam">
+            <section className={`ur-beam${videoBeam.beam.tv.enabled ? ' is-tv-on' : ''}`} aria-label="Four-slot LiveKit video beam">
               <div className="ur-audio-status-row">
                 <span className={`ur-audio-status ur-audio-${videoBeam.connection}`} role="status">
                   <span className="ur-status-dot" aria-hidden="true" />
@@ -291,16 +297,23 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                       : videoBeam.connection === 'error' ? 'Connection issue'
                         : videoBeam.beam.beamActive ? 'Joining live room' : 'Start the beam'}
                 </span>
+                {videoBeam.isHost && (
+                  <BeamTvToggle enabled={videoBeam.beam.tv.enabled} expanded={tvSettingsOpen}
+                    onClick={() => setTvSettingsOpen(true)} />
+                )}
                 {videoBeam.playbackBlocked && (
                   <button type="button" className="ur-resume-audio" onClick={() => void videoBeam.resumePlayback()}>
                     Tap to hear
                   </button>
                 )}
               </div>
+              <BeamTv roomName={r.room?.name ?? 'University'} isHost={videoBeam.isHost}
+                tv={videoBeam.beam.tv} runAction={videoBeam.runTvAction} search={videoBeam.searchTv}
+                settingsOpen={tvSettingsOpen} closeSettings={() => setTvSettingsOpen(false)} />
               {videoBeam.error && <p className="ur-beam-error" role="alert">{videoBeam.error}</p>}
               {videoBeam.beam.beamActive && !videoBeam.ownSlot && beamSlots.every(slot => slot.participantId)
                 && <p className="ur-beam-full" role="status">Beam is full. You can still watch and chat; an open spot can be joined as soon as someone leaves.</p>}
-              <div className="ur-slots" data-count={speakerCount}>
+              <div className="ur-slots" data-count={speakerCount} data-tv={videoBeam.beam.tv.enabled ? 'on' : 'off'}>
                 {beamSlots.map((slot) => {
                   const person = slot.participantId
                     ? people.find((p) => p.participantId === slot.participantId)
@@ -449,6 +462,11 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                     <div><p><span className="ur-gift-person"><span style={{ color: it.gift.senderNameColor ?? '#FFFFFF' }}>{it.gift.senderName}</span><PassportSummaryBadge passport={it.gift.senderPassport} username={it.gift.senderUsername} context={`gift-sender-${it.gift.id}`} /></span> sent <span className="ur-gift-person"><span style={{ color: it.gift.recipientNameColor ?? '#FFFFFF' }}>{it.gift.recipientName}</span><PassportSummaryBadge passport={it.gift.recipientPassport} username={it.gift.recipientUsername} context={`gift-recipient-${it.gift.id}`} /></span> a {it.gift.giftId === 'heart' ? 'Heart' : it.gift.giftId === 'moonfox' ? 'Moonfox' : it.gift.giftId === 'cosmic-encore' ? 'Cosmic Encore' : 'Spirit Pup'}.</p></div>
                   </div>;
                 }
+                if (it.kind === 'arrival') {
+                  return <div className="ch-msg ur-arrival-line" key={it.id} data-testid="room-arrival">
+                    <div><span>{it.displayName}</span> has <strong className="ur-arrived-word">arrived</strong></div>
+                  </div>;
+                }
                 if (it.kind === 'whisper') {
                   const w = it.w; const nm = nameOf(w.username, w.displayName);
                   return (
@@ -464,9 +482,19 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                 if (m.botId) {
                   let body = m.text.trim();
                   for (const n of [nm, m.username]) if (n && body.toLowerCase().startsWith(n.toLowerCase())) { body = body.slice(n.length).replace(/^[\s:,\-–—]+/, ''); break; }
+                  if (m.botMessageType === 'visit' && body.trim().replace(/[.!?]+$/, '').toLowerCase() === 'has arrived') {
+                    return <div className="ch-msg ur-arrival-line" key={m.id} data-testid={`bot-arrival-${m.id}`}>
+                      <div><span>{nm}</span> <BotShield botId={m.botId} /> has <strong className="ur-arrived-word">arrived</strong></div>
+                    </div>;
+                  }
                   return (
-                    <div className="ch-msg" key={m.id} data-testid={`bot-message-${m.id}`}>
-                      <div><span className="ch-sender">{nm}<BotShield botId={m.botId} /></span><p>{body}</p></div>
+                    <div className={`ch-msg${m.botMessageType === 'chatter' ? ' ur-bot-chatter' : ''}`} key={m.id} data-testid={`bot-message-${m.id}`}>
+                      <div>
+                        <span className="ch-sender">{nm}<BotShield botId={m.botId} />
+                          {m.botMessageType === 'chatter' && <span className="ur-bot-tag" aria-label="Bot account">BOT</span>}
+                        </span>
+                        <p>{body}</p>
+                      </div>
                     </div>
                   );
                 }

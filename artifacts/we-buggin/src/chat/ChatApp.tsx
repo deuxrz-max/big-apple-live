@@ -25,7 +25,7 @@ function Shell({ children, className = '' }: { children: ReactNode; className?: 
 function Cover({ roomId, i }: { roomId: string; i: number }) {
   const [bad, setBad] = useState(false);
   return (
-    <div className={`st-cover st-cover-${i % 6}`}>
+    <div className={`st-cover st-cover-${i % 6}${bad ? ' is-fallback' : ''}`}>
       {!bad && <img src={`${import.meta.env.BASE_URL}university-covers/${encodeURIComponent(roomId)}.webp`} alt="" loading="lazy" onError={() => setBad(true)} />}
     </div>
   );

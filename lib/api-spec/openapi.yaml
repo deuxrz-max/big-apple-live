@@ -39,6 +39,28 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ModeratorBotSettings" }
+  /account/chat/bots/chatter:
+    get:
+      operationId: getModeratorBotChatterSettings
+      responses:
+        "200":
+          description: Moderator-only bot chatter settings and editable profiles
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModeratorBotChatterSettings" }
+    put:
+      operationId: saveModeratorBotChatterSettings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ModeratorBotChatterSettings" }
+      responses:
+        "200":
+          description: Saved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ModeratorBotChatterSettings" }
   /account/chat/bots/flags:
     get:
       operationId: getModeratorBotFlags
@@ -190,6 +212,76 @@ paths:
           description: "Only the host may control another participant, and a host cannot enable another participant's media"
         "404": { description: The selected participant is not on the beam }
         "503": { description: LiveKit room control is unavailable }
+  /account/rooms/{roomId}/video-beam/tv:
+    get:
+      operationId: getUniversityVideoBeamTvState
+      tags: [video]
+      summary: Read the room-synchronized Beam TV state
+      security:
+        - AccountSession: []
+          AccountRoomSession: []
+      parameters:
+        - { $ref: "#/components/parameters/RoomId" }
+        - { $ref: "#/components/parameters/RoomSessionHeader" }
+      responses:
+        "200":
+          description: Current TV source and synchronized playback state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UniversityVideoBeamTvState" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "404": { $ref: "#/components/responses/InvalidInput" }
+    post:
+      operationId: performUniversityVideoBeamTvAction
+      tags: [video]
+      summary: Configure Beam TV or synchronize playback as the current beam host
+      security:
+        - AccountSession: []
+          AccountRoomSession: []
+      parameters:
+        - { $ref: "#/components/parameters/RoomId" }
+        - { $ref: "#/components/parameters/RoomSessionHeader" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UniversityVideoBeamTvActionInput" }
+      responses:
+        "200":
+          description: Updated room TV state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UniversityVideoBeamTvState" }
+        "400": { $ref: "#/components/responses/InvalidInput" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "403": { description: Only the current beam host can control Beam TV }
+        "404": { description: Room or beam not found }
+  /account/rooms/{roomId}/video-beam/tv/search:
+    post:
+      operationId: searchYouTubeForVideoBeam
+      tags: [video]
+      summary: Search embeddable YouTube videos for the beam host
+      security:
+        - AccountSession: []
+          AccountRoomSession: []
+      parameters:
+        - { $ref: "#/components/parameters/RoomId" }
+        - { $ref: "#/components/parameters/RoomSessionHeader" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UniversityVideoBeamTvSearchInput" }
+      responses:
+        "200":
+          description: Cached or newly fetched queue of embeddable video IDs
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UniversityVideoBeamTvSearchResponse" }
+        "400": { $ref: "#/components/responses/InvalidInput" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "403": { description: Only the current beam host can search for Beam TV videos }
+        "503": { description: YouTube search is unavailable without YOUTUBE_API_KEY }
   /account/rooms/{roomId}/audio/actions:
     post:
       operationId: performUniversityAudioAction
@@ -1241,6 +1333,7 @@ components:
       type: object
       properties:
         botId: { type: [string, "null"], enum: [ghost, vampire, wolf, zombie, null] }
+        botMessageType: { type: [string, "null"], enum: [chatter, moderation, visit, null] }
         badgeId: { type: [string, "null"] }
         id: { type: string, format: uuid }
         roomId: { type: string }
@@ -1269,6 +1362,31 @@ components:
           maxItems: 200
           items: { type: string, minLength: 2, maxLength: 80 }
         breakSeconds: { type: integer, minimum: 15, maximum: 600 }
+    ModeratorBotChatterProfile:
+      type: object
+      additionalProperties: false
+      required: [id, name, personality, lines]
+      properties:
+        id: { type: string, enum: [ghost, vampire, wolf, zombie] }
+        name: { type: string, minLength: 1, maxLength: 40 }
+        personality: { type: string, minLength: 1, maxLength: 140 }
+        lines:
+          type: array
+          minItems: 20
+          maxItems: 30
+          items: { type: string, minLength: 1, maxLength: 160 }
+    ModeratorBotChatterSettings:
+      type: object
+      additionalProperties: false
+      required: [enabled, frequency, bots]
+      properties:
+        enabled: { type: boolean }
+        frequency: { type: string, enum: [rare, normal, often] }
+        bots:
+          type: array
+          minItems: 4
+          maxItems: 4
+          items: { $ref: "#/components/schemas/ModeratorBotChatterProfile" }
     ModeratorBotFlag:
       type: object
       required: [id, messageId, roomId, roomLabel, username, displayName, text, reason, createdAt, reviewedAt]
@@ -1473,12 +1591,90 @@ components:
         roomId: { type: string }
         beamActive: { type: boolean }
         hostParticipantId: { type: [string, "null"], format: uuid }
+        tv: { $ref: "#/components/schemas/UniversityVideoBeamTvState" }
         slots:
           type: array
           minItems: 4
           maxItems: 4
           items: { $ref: "#/components/schemas/UniversityVideoBeamSlot" }
-      required: [roomId, beamActive, hostParticipantId, slots]
+      required: [roomId, beamActive, hostParticipantId, tv, slots]
+    UniversityVideoBeamTvState:
+      type: object
+      properties:
+        enabled: { type: boolean }
+        searchAvailable: { type: boolean }
+        defaultSearch: { type: string, maxLength: 120 }
+        sourceType:
+          type: [string, "null"]
+          enum: [video, playlist, search, null]
+        sourceValue: { type: [string, "null"] }
+        playlistId: { type: [string, "null"] }
+        queue:
+          type: array
+          maxItems: 50
+          items: { type: string, pattern: "^[A-Za-z0-9_-]{11}$" }
+        videoMetadata:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/UniversityVideoBeamTvVideoMetadata" }
+        currentVideoId: { type: [string, "null"], pattern: "^[A-Za-z0-9_-]{11}$" }
+        startedAtMs: { type: [integer, "null"], minimum: 0 }
+        skipVotingEnabled: { type: boolean }
+        skipVoteCount: { type: integer, minimum: 0 }
+        skipVoteTotal: { type: integer, minimum: 0 }
+        hasVotedToSkip: { type: boolean }
+        skipSequence: { type: integer, minimum: 0 }
+      required: [enabled, searchAvailable, defaultSearch, sourceType, sourceValue, playlistId, queue, videoMetadata, currentVideoId, startedAtMs, skipVotingEnabled, skipVoteCount, skipVoteTotal, hasVotedToSkip, skipSequence]
+    UniversityVideoBeamTvVideoMetadata:
+      type: object
+      properties:
+        videoId: { type: string, pattern: "^[A-Za-z0-9_-]{11}$" }
+        title: { type: string, maxLength: 200 }
+        channelTitle: { type: [string, "null"], maxLength: 120 }
+        description: { type: [string, "null"], maxLength: 500 }
+      required: [videoId, title, channelTitle, description]
+    UniversityVideoBeamTvActionInput:
+      type: object
+      properties:
+        action:
+          type: string
+          enum: [start, enable, stop, reset, publish-queue, publish-playback, skip, vote-skip, set-skip-voting]
+        sourceType:
+          type: [string, "null"]
+          enum: [video, playlist, search, null]
+        sourceValue: { type: string, maxLength: 160 }
+        playlistId: { type: string, pattern: "^[A-Za-z0-9_-]{10,80}$" }
+        queue:
+          type: array
+          maxItems: 50
+          items: { type: string, pattern: "^[A-Za-z0-9_-]{11}$" }
+        currentVideoId: { type: string, pattern: "^[A-Za-z0-9_-]{11}$" }
+        startedAtMs: { type: integer, minimum: 0 }
+        skipVotingEnabled: { type: boolean }
+        videoMetadata: { $ref: "#/components/schemas/UniversityVideoBeamTvVideoMetadata" }
+      required: [action]
+    UniversityVideoBeamTvSearchInput:
+      type: object
+      properties:
+        query: { type: string, minLength: 1, maxLength: 120 }
+      required: [query]
+    UniversityVideoBeamTvSearchResponse:
+      type: object
+      properties:
+        videoIds:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items: { type: string, pattern: "^[A-Za-z0-9_-]{11}$" }
+        titles:
+          type: array
+          maxItems: 10
+          items: { type: string, maxLength: 200 }
+        videos:
+          type: array
+          maxItems: 10
+          items: { $ref: "#/components/schemas/UniversityVideoBeamTvVideoMetadata" }
+      required: [videoIds, titles, videos]
     HealthStatus:
       type: object
       properties:

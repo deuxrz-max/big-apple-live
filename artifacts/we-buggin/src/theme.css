@@ -106,7 +106,7 @@ body { background-color: #151518; background-image: none; font-family: 'Montserr
 .st-live b { font-weight: 800; color: #FF9442; }
 .st-count { position: absolute; right: 8px; top: 8px; border-radius: 999px; padding: 3px 8px; color: #fff; background: rgba(21,21,24,.75); font-size: 11px; font-weight: 600; }
 .st-card-body { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px 12px; min-width: 0; }
-.st-card-body strong { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st-card-body strong { display: block; min-height: 3.6em; font-weight: 700; font-size: 14px; line-height: 1.2; white-space: normal; overflow: visible; overflow-wrap: normal; word-break: normal; }
 .st-card-body span { font-size: 12px; color: #A9A6B5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .st-card-body .st-enter { margin-top: 6px; align-self: flex-start; padding: 5px 16px; border-radius: 999px; background: var(--st-grad); color: #fff; font-weight: 700; }
 

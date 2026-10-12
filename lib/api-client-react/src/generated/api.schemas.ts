@@ -476,6 +476,18 @@ export const ChatMessageBotId = {
   zombie: 'zombie',
 } as const;
 
+/**
+ * @nullable
+ */
+export type ChatMessageBotMessageType = typeof ChatMessageBotMessageType[keyof typeof ChatMessageBotMessageType] | null;
+
+
+export const ChatMessageBotMessageType = {
+  chatter: 'chatter',
+  moderation: 'moderation',
+  visit: 'visit',
+} as const;
+
 export type ChatMessageKind = typeof ChatMessageKind[keyof typeof ChatMessageKind];
 
 
@@ -487,6 +499,8 @@ export const ChatMessageKind = {
 export interface ChatMessage {
   /** @nullable */
   botId?: ChatMessageBotId;
+  /** @nullable */
+  botMessageType?: ChatMessageBotMessageType;
   /** @nullable */
   badgeId?: string | null;
   id: string;
@@ -534,6 +548,56 @@ export interface ModeratorBotSettings {
      * @maximum 600
      */
   breakSeconds: number;
+}
+
+export type ModeratorBotChatterProfileId = typeof ModeratorBotChatterProfileId[keyof typeof ModeratorBotChatterProfileId];
+
+
+export const ModeratorBotChatterProfileId = {
+  ghost: 'ghost',
+  vampire: 'vampire',
+  wolf: 'wolf',
+  zombie: 'zombie',
+} as const;
+
+export interface ModeratorBotChatterProfile {
+  id: ModeratorBotChatterProfileId;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 140
+     */
+  personality: string;
+  /**
+     * @minItems 20
+     * @maxItems 30
+     * @items.minLength 1
+     * @items.maxLength 160
+     */
+  lines: string[];
+}
+
+export type ModeratorBotChatterSettingsFrequency = typeof ModeratorBotChatterSettingsFrequency[keyof typeof ModeratorBotChatterSettingsFrequency];
+
+
+export const ModeratorBotChatterSettingsFrequency = {
+  rare: 'rare',
+  normal: 'normal',
+  often: 'often',
+} as const;
+
+export interface ModeratorBotChatterSettings {
+  enabled: boolean;
+  frequency: ModeratorBotChatterSettingsFrequency;
+  /**
+     * @minItems 4
+     * @maxItems 4
+     */
+  bots: ModeratorBotChatterProfile[];
 }
 
 export interface ModeratorBotFlag {
@@ -759,16 +823,156 @@ export interface UniversityVideoBeamSlot {
   cameraDisabledByHost: boolean;
 }
 
+/**
+ * @nullable
+ */
+export type UniversityVideoBeamTvStateSourceType = typeof UniversityVideoBeamTvStateSourceType[keyof typeof UniversityVideoBeamTvStateSourceType] | null;
+
+
+export const UniversityVideoBeamTvStateSourceType = {
+  video: 'video',
+  playlist: 'playlist',
+  search: 'search',
+} as const;
+
+export interface UniversityVideoBeamTvVideoMetadata {
+  /** @pattern ^[A-Za-z0-9_-]{11}$ */
+  videoId: string;
+  /** @maxLength 200 */
+  title: string;
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  channelTitle: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  description: string | null;
+}
+
+export interface UniversityVideoBeamTvState {
+  enabled: boolean;
+  searchAvailable: boolean;
+  /** @maxLength 120 */
+  defaultSearch: string;
+  /** @nullable */
+  sourceType: UniversityVideoBeamTvStateSourceType;
+  /** @nullable */
+  sourceValue: string | null;
+  /** @nullable */
+  playlistId: string | null;
+  /**
+     * @maxItems 50
+     * @items.pattern ^[A-Za-z0-9_-]{11}$
+     */
+  queue: string[];
+  /** @maxItems 50 */
+  videoMetadata: UniversityVideoBeamTvVideoMetadata[];
+  /**
+     * @nullable
+     * @pattern ^[A-Za-z0-9_-]{11}$
+     */
+  currentVideoId: string | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  startedAtMs: number | null;
+  skipVotingEnabled: boolean;
+  /** @minimum 0 */
+  skipVoteCount: number;
+  /** @minimum 0 */
+  skipVoteTotal: number;
+  hasVotedToSkip: boolean;
+  /** @minimum 0 */
+  skipSequence: number;
+}
+
 export interface UniversityVideoBeamState {
   roomId: string;
   beamActive: boolean;
   /** @nullable */
   hostParticipantId: string | null;
+  tv: UniversityVideoBeamTvState;
   /**
      * @minItems 4
      * @maxItems 4
      */
   slots: UniversityVideoBeamSlot[];
+}
+
+export type UniversityVideoBeamTvActionInputAction = typeof UniversityVideoBeamTvActionInputAction[keyof typeof UniversityVideoBeamTvActionInputAction];
+
+
+export const UniversityVideoBeamTvActionInputAction = {
+  start: 'start',
+  enable: 'enable',
+  stop: 'stop',
+  reset: 'reset',
+  'publish-queue': 'publish-queue',
+  'publish-playback': 'publish-playback',
+  skip: 'skip',
+  'vote-skip': 'vote-skip',
+  'set-skip-voting': 'set-skip-voting',
+} as const;
+
+/**
+ * @nullable
+ */
+export type UniversityVideoBeamTvActionInputSourceType = typeof UniversityVideoBeamTvActionInputSourceType[keyof typeof UniversityVideoBeamTvActionInputSourceType] | null;
+
+
+export const UniversityVideoBeamTvActionInputSourceType = {
+  video: 'video',
+  playlist: 'playlist',
+  search: 'search',
+} as const;
+
+export interface UniversityVideoBeamTvActionInput {
+  action: UniversityVideoBeamTvActionInputAction;
+  /** @nullable */
+  sourceType?: UniversityVideoBeamTvActionInputSourceType;
+  /** @maxLength 160 */
+  sourceValue?: string;
+  /** @pattern ^[A-Za-z0-9_-]{10,80}$ */
+  playlistId?: string;
+  /**
+     * @maxItems 50
+     * @items.pattern ^[A-Za-z0-9_-]{11}$
+     */
+  queue?: string[];
+  /** @pattern ^[A-Za-z0-9_-]{11}$ */
+  currentVideoId?: string;
+  /** @minimum 0 */
+  startedAtMs?: number;
+  skipVotingEnabled?: boolean;
+  videoMetadata?: UniversityVideoBeamTvVideoMetadata;
+}
+
+export interface UniversityVideoBeamTvSearchInput {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  query: string;
+}
+
+export interface UniversityVideoBeamTvSearchResponse {
+  /**
+     * @minItems 1
+     * @maxItems 10
+     * @items.pattern ^[A-Za-z0-9_-]{11}$
+     */
+  videoIds: string[];
+  /**
+     * @maxItems 10
+     * @items.maxLength 200
+     */
+  titles: string[];
+  /** @maxItems 10 */
+  videos: UniversityVideoBeamTvVideoMetadata[];
 }
 
 export interface HealthStatus {
@@ -1074,6 +1278,18 @@ export const ChatMessage4b96100BotId = {
   zombie: 'zombie',
 } as const;
 
+/**
+ * @nullable
+ */
+export type ChatMessage4b96100BotMessageType = typeof ChatMessage4b96100BotMessageType[keyof typeof ChatMessage4b96100BotMessageType] | null;
+
+
+export const ChatMessage4b96100BotMessageType = {
+  chatter: 'chatter',
+  moderation: 'moderation',
+  visit: 'visit',
+} as const;
+
 export type ChatMessage4b96100Kind = typeof ChatMessage4b96100Kind[keyof typeof ChatMessage4b96100Kind];
 
 
@@ -1085,6 +1301,8 @@ export const ChatMessage4b96100Kind = {
 export interface ChatMessage4b96100 {
   /** @nullable */
   botId?: ChatMessage4b96100BotId;
+  /** @nullable */
+  botMessageType?: ChatMessage4b96100BotMessageType;
   /** @nullable */
   badgeId?: string | null;
   id: string;
@@ -1132,6 +1350,56 @@ export interface ModeratorBotSettings4b96100 {
      * @maximum 600
      */
   breakSeconds: number;
+}
+
+export type ModeratorBotChatterProfile4b96100Id = typeof ModeratorBotChatterProfile4b96100Id[keyof typeof ModeratorBotChatterProfile4b96100Id];
+
+
+export const ModeratorBotChatterProfile4b96100Id = {
+  ghost: 'ghost',
+  vampire: 'vampire',
+  wolf: 'wolf',
+  zombie: 'zombie',
+} as const;
+
+export interface ModeratorBotChatterProfile4b96100 {
+  id: ModeratorBotChatterProfile4b96100Id;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 140
+     */
+  personality: string;
+  /**
+     * @minItems 20
+     * @maxItems 30
+     * @items.minLength 1
+     * @items.maxLength 160
+     */
+  lines: string[];
+}
+
+export type ModeratorBotChatterSettings4b96100Frequency = typeof ModeratorBotChatterSettings4b96100Frequency[keyof typeof ModeratorBotChatterSettings4b96100Frequency];
+
+
+export const ModeratorBotChatterSettings4b96100Frequency = {
+  rare: 'rare',
+  normal: 'normal',
+  often: 'often',
+} as const;
+
+export interface ModeratorBotChatterSettings4b96100 {
+  enabled: boolean;
+  frequency: ModeratorBotChatterSettings4b96100Frequency;
+  /**
+     * @minItems 4
+     * @maxItems 4
+     */
+  bots: ModeratorBotChatterProfile4b96100[];
 }
 
 export interface ModeratorBotFlag4b96100 {
@@ -1357,16 +1625,156 @@ export interface UniversityVideoBeamSlot4b96100 {
   cameraDisabledByHost: boolean;
 }
 
+/**
+ * @nullable
+ */
+export type UniversityVideoBeamTvState4b96100SourceType = typeof UniversityVideoBeamTvState4b96100SourceType[keyof typeof UniversityVideoBeamTvState4b96100SourceType] | null;
+
+
+export const UniversityVideoBeamTvState4b96100SourceType = {
+  video: 'video',
+  playlist: 'playlist',
+  search: 'search',
+} as const;
+
+export interface UniversityVideoBeamTvVideoMetadata4b96100 {
+  /** @pattern ^[A-Za-z0-9_-]{11}$ */
+  videoId: string;
+  /** @maxLength 200 */
+  title: string;
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  channelTitle: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  description: string | null;
+}
+
+export interface UniversityVideoBeamTvState4b96100 {
+  enabled: boolean;
+  searchAvailable: boolean;
+  /** @maxLength 120 */
+  defaultSearch: string;
+  /** @nullable */
+  sourceType: UniversityVideoBeamTvState4b96100SourceType;
+  /** @nullable */
+  sourceValue: string | null;
+  /** @nullable */
+  playlistId: string | null;
+  /**
+     * @maxItems 50
+     * @items.pattern ^[A-Za-z0-9_-]{11}$
+     */
+  queue: string[];
+  /** @maxItems 50 */
+  videoMetadata: UniversityVideoBeamTvVideoMetadata4b96100[];
+  /**
+     * @nullable
+     * @pattern ^[A-Za-z0-9_-]{11}$
+     */
+  currentVideoId: string | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  startedAtMs: number | null;
+  skipVotingEnabled: boolean;
+  /** @minimum 0 */
+  skipVoteCount: number;
+  /** @minimum 0 */
+  skipVoteTotal: number;
+  hasVotedToSkip: boolean;
+  /** @minimum 0 */
+  skipSequence: number;
+}
+
 export interface UniversityVideoBeamState4b96100 {
   roomId: string;
   beamActive: boolean;
   /** @nullable */
   hostParticipantId: string | null;
+  tv: UniversityVideoBeamTvState4b96100;
   /**
      * @minItems 4
      * @maxItems 4
      */
   slots: UniversityVideoBeamSlot4b96100[];
+}
+
+export type UniversityVideoBeamTvActionInput4b96100Action = typeof UniversityVideoBeamTvActionInput4b96100Action[keyof typeof UniversityVideoBeamTvActionInput4b96100Action];
+
+
+export const UniversityVideoBeamTvActionInput4b96100Action = {
+  start: 'start',
+  enable: 'enable',
+  stop: 'stop',
+  reset: 'reset',
+  'publish-queue': 'publish-queue',
+  'publish-playback': 'publish-playback',
+  skip: 'skip',
+  'vote-skip': 'vote-skip',
+  'set-skip-voting': 'set-skip-voting',
+} as const;
+
+/**
+ * @nullable
+ */
+export type UniversityVideoBeamTvActionInput4b96100SourceType = typeof UniversityVideoBeamTvActionInput4b96100SourceType[keyof typeof UniversityVideoBeamTvActionInput4b96100SourceType] | null;
+
+
+export const UniversityVideoBeamTvActionInput4b96100SourceType = {
+  video: 'video',
+  playlist: 'playlist',
+  search: 'search',
+} as const;
+
+export interface UniversityVideoBeamTvActionInput4b96100 {
+  action: UniversityVideoBeamTvActionInput4b96100Action;
+  /** @nullable */
+  sourceType?: UniversityVideoBeamTvActionInput4b96100SourceType;
+  /** @maxLength 160 */
+  sourceValue?: string;
+  /** @pattern ^[A-Za-z0-9_-]{10,80}$ */
+  playlistId?: string;
+  /**
+     * @maxItems 50
+     * @items.pattern ^[A-Za-z0-9_-]{11}$
+     */
+  queue?: string[];
+  /** @pattern ^[A-Za-z0-9_-]{11}$ */
+  currentVideoId?: string;
+  /** @minimum 0 */
+  startedAtMs?: number;
+  skipVotingEnabled?: boolean;
+  videoMetadata?: UniversityVideoBeamTvVideoMetadata4b96100;
+}
+
+export interface UniversityVideoBeamTvSearchInput4b96100 {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  query: string;
+}
+
+export interface UniversityVideoBeamTvSearchResponse4b96100 {
+  /**
+     * @minItems 1
+     * @maxItems 10
+     * @items.pattern ^[A-Za-z0-9_-]{11}$
+     */
+  videoIds: string[];
+  /**
+     * @maxItems 10
+     * @items.maxLength 200
+     */
+  titles: string[];
+  /** @maxItems 10 */
+  videos: UniversityVideoBeamTvVideoMetadata4b96100[];
 }
 
 export interface HealthStatus4b96100 {

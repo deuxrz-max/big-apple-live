@@ -5,7 +5,7 @@ import { publicProfile } from "./account-profiles";
 import { roomStore, RoomError, type RoomStore } from "./room-store";
 import { ignoredAccounts } from "./university-chat";
 import { botSettings, botRotation, botMessageValues } from "./moderator-bots";
-import { BOT_ACCOUNTS, BOT_WARNING_COOLDOWN_MS, publicViolation } from "./bot-policy";
+import { BOT_WARNING_COOLDOWN_MS, publicViolation } from "./bot-policy";
 import { giftNameColorsForAccounts } from "./social/gift-name-color-data";
 import { giftNameColorForSentCredits } from "./social/gift-name-color";
 import { passportBadgeSummaries } from "./social/passport";
@@ -115,7 +115,7 @@ export async function acceptMessage(
           eq(roomMessages.historyId, historyId), isNull(roomMessages.authorAccountId))).limit(1) : [];
       if (existingWarning) message = existingWarning;
       else {
-        const bot = botRotation.people(roomId.toUpperCase())[0] ?? BOT_ACCOUNTS[0];
+        const bot = botRotation.people(roomId.toUpperCase())[0] ?? botRotation.botById("ghost");
         const [warning] = await tx.insert(roomMessages).values(botMessageValues(bot, roomId.toUpperCase(), historyId,
           `@${profile.username}, your public message was hidden. Keep it respectful and avoid spam.`)).returning();
         message = warning!;

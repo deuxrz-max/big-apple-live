@@ -2,11 +2,12 @@ import { Router } from "express";
 import { db, moderatorBotFlags, roomMessages, chatRooms } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { GetModeratorBotSettingsResponse, SaveModeratorBotSettingsBody, GetModeratorBotFlagsResponse,
-  AcknowledgeModeratorBotFlagResponse, AcknowledgeModeratorBotFlagParams } from "@workspace/api-zod";
+  AcknowledgeModeratorBotFlagResponse, AcknowledgeModeratorBotFlagParams,
+  GetModeratorBotChatterSettingsResponse, SaveModeratorBotChatterSettingsBody } from "@workspace/api-zod";
 import { accountId, sameOrigin } from "./identity";
 import { requireModerator } from "../lib/community";
 import { RoomError } from "../lib/room-store";
-import { botSettings, saveBotSettings, getBotFlags, reviewBotFlag } from "../lib/moderator-bots";
+import { botSettings, saveBotSettings, botChatterSettings, saveBotChatterSettings, getBotFlags, reviewBotFlag } from "../lib/moderator-bots";
 
 const router = Router();
 router.use("/account/chat/bots", async (req, res, next) => {
@@ -25,6 +26,31 @@ router.put("/account/chat/bots/settings", async (req, res) => {
   const bannedWords = [...new Set(parsed.data.bannedWords.map(w => w.trim()).filter(Boolean))];
   if (bannedWords.some(w => w.length < 2)) throw new RoomError(400, "Each word or phrase needs at least two characters");
   res.json(GetModeratorBotSettingsResponse.parse(await saveBotSettings({ ...parsed.data, bannedWords })));
+});
+router.get("/account/chat/bots/chatter", async (_req, res) => {
+  res.json(GetModeratorBotChatterSettingsResponse.parse(await botChatterSettings()));
+});
+router.put("/account/chat/bots/chatter", async (req, res) => {
+  sameOrigin(req);
+  const parsed = SaveModeratorBotChatterSettingsBody.safeParse(req.body);
+  const expectedIds = ["ghost", "vampire", "wolf", "zombie"];
+  if (!parsed.success || Object.keys(req.body).some(key => !["enabled", "frequency", "bots"].includes(key))
+    || parsed.data.bots.length !== expectedIds.length
+    || new Set(parsed.data.bots.map(bot => bot.id)).size !== expectedIds.length
+    || expectedIds.some(id => !parsed.data.bots.some(bot => bot.id === id))) {
+    throw new RoomError(400, "Provide settings for all four moderator bots.");
+  }
+  const bots = parsed.data.bots.map(bot => ({
+    ...bot,
+    name: bot.name.trim(),
+    personality: bot.personality.trim(),
+    lines: bot.lines.map(line => line.trim()),
+  }));
+  if (bots.some(bot => !bot.name || !bot.personality || bot.lines.some(line =>
+    !line || line.split(/\s+/u).length > 14))) {
+    throw new RoomError(400, "Each bot needs a name, personality, and 20–30 lines of no more than 14 words.");
+  }
+  res.json(GetModeratorBotChatterSettingsResponse.parse(await saveBotChatterSettings({ ...parsed.data, bots })));
 });
 router.get("/account/chat/bots/flags", async (_req, res) => {
   res.json(GetModeratorBotFlagsResponse.parse(await getBotFlags()));

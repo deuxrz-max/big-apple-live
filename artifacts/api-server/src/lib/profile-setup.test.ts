@@ -34,9 +34,21 @@ test("real PostgreSQL profile setup, interruption, edit persistence and request 
     await db.delete(accountProfiles).where(inArray(accountProfiles.accountId, ids));
     await db.$client.end();
   });
-  await t.test("Super Live follows Instagram and shares directory room configuration", () => {
-    assert.deepEqual(COMMUNITY_ROOMS.map(r => r.label), ["LiveMe", "Bigo Live", "Tango Live", "TikTok", "Instagram Live", "Super Live"]);
-    assert.equal(new Set(COMMUNITY_ROOMS.map(r => r.roomId)).size, 6);
+  await t.test("the nine ordered communities each have a room-specific default video search", () => {
+    assert.deepEqual(COMMUNITY_ROOMS.map(r => r.label), [
+      "Video Games & Interactive Media",
+      "Television & Streaming Services",
+      "Film & Theatrical Box Office",
+      "Recorded Music & Audio Streaming",
+      "Live Concerts & Music Festivals",
+      "Spectator Sports Events",
+      "Theme Parks & Amusement Attractions",
+      "Social Media & Creator Economy Content",
+      "Performing Arts, Theater & Comedy Shows",
+    ]);
+    assert.equal(new Set(COMMUNITY_ROOMS.map(r => r.roomId)).size, 9);
+    assert.equal(new Set(COMMUNITY_ROOMS.map(r => r.defaultVideoSearch)).size, 9);
+    assert.ok(COMMUNITY_ROOMS.every(r => r.defaultVideoSearch.length > 8));
   });
   await t.test("unsaved and invalid setup never becomes complete", async () => {
     assert.equal(await getProfile(ids[0]!), null);

@@ -4,7 +4,7 @@ import { roomStore } from "./lib/room-store";
 import { createServer } from "node:http";
 import { initializeCommunities } from "./lib/community";
 import { startPhotoRetentionScheduler } from "./lib/profile-photo-retention";
-import { initializeModeratorBots, startModeratorBotRotation } from "./lib/moderator-bots";
+import { initializeModeratorBots, startModeratorBotChatter, startModeratorBotRotation } from "./lib/moderator-bots";
 import { startTestActorControl } from "./lib/test-actor-control";
 
 const rawPort = process.env["PORT"];
@@ -28,6 +28,7 @@ const server = createServer(app);
 await initializeCommunities();
 await initializeModeratorBots();
 startModeratorBotRotation((err, context) => logger.error({ err, ...context }, "Bot rotation failed"));
+startModeratorBotChatter((err, context) => logger.error({ err, ...context }, "Bot chatter failed"));
 startPhotoRetentionScheduler();
 await startTestActorControl();
 server.listen(port, () => {

@@ -21,3 +21,5 @@
 - [Sesame MCP handoff](sesame-mcp-handoff.md) — use official Replit MCP for Agent recommendations; do not publish Streamtalk to enable access.
 - [Gift-flow demos](gift-flow-demos.md) — show existing gift UI in an isolated phone-sized browser recording and disclose synthetic responses.
 - [Gift-media transparency](gift-media-transparency.md) — owner confirmed Moonfox stays transparent; keep alpha support and verify other gift assets separately.
+- [Safe preview schema pushes](safe-preview-schema-pushes.md) — stop when Drizzle proposes truncating unrelated Passport rows; preserve data and apply only additive preview changes.
+- [Public topic-room ownership](public-topic-room-ownership.md) — public topic rooms have no Beam TV host; room votes alone change default playback.

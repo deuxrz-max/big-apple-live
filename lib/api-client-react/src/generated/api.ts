@@ -45,6 +45,7 @@ import type {
   HealthStatus,
   InvalidInputResponse,
   MicrophoneAction,
+  ModeratorBotChatterSettings,
   ModeratorBotFlag,
   ModeratorBotSettings,
   MyStreamerPassport,
@@ -90,6 +91,10 @@ import type {
   UniversityVideoBeamState,
   UniversityVideoBeamToken,
   UniversityVideoBeamTokenInput,
+  UniversityVideoBeamTvActionInput,
+  UniversityVideoBeamTvSearchInput,
+  UniversityVideoBeamTvSearchResponse,
+  UniversityVideoBeamTvState,
   UniversityWhisperInput
 } from './api.schemas';
 
@@ -271,6 +276,159 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getSaveModeratorBotSettingsMutationOptions(options));
+    }
+
+export const getGetModeratorBotChatterSettingsUrl = () => {
+
+
+
+
+  return `/api/account/chat/bots/chatter`
+}
+
+export const getModeratorBotChatterSettings = async ( options?: Parameters<typeof customFetch>[1]): Promise<ModeratorBotChatterSettings> => {
+
+  return customFetch<ModeratorBotChatterSettings>(getGetModeratorBotChatterSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetModeratorBotChatterSettingsQueryKey = () => {
+    return [
+    `/api/account/chat/bots/chatter`
+    ] as const;
+    }
+
+
+export const getGetModeratorBotChatterSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getModeratorBotChatterSettings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotChatterSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetModeratorBotChatterSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getModeratorBotChatterSettings>>> = ({ signal }) => getModeratorBotChatterSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotChatterSettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetModeratorBotChatterSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getModeratorBotChatterSettings>>>
+export type GetModeratorBotChatterSettingsQueryError = ErrorType<unknown>
+
+
+
+export function useGetModeratorBotChatterSettings<TData = Awaited<ReturnType<typeof getModeratorBotChatterSettings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotChatterSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetModeratorBotChatterSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSaveModeratorBotChatterSettingsUrl = () => {
+
+
+
+
+  return `/api/account/chat/bots/chatter`
+}
+
+export const saveModeratorBotChatterSettings = async (moderatorBotChatterSettings: ModeratorBotChatterSettings, options?: Parameters<typeof customFetch>[1]): Promise<ModeratorBotChatterSettings> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ModeratorBotChatterSettings>(getSaveModeratorBotChatterSettingsUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(moderatorBotChatterSettings)
+  }
+);}
+
+
+
+
+
+export const getSaveModeratorBotChatterSettingsMutationKey = () => ['saveModeratorBotChatterSettings'] as const;
+
+export const getSaveModeratorBotChatterSettingsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveModeratorBotChatterSettings>>, TError,SaveModeratorBotChatterSettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveModeratorBotChatterSettings>>, TError,SaveModeratorBotChatterSettingsMutationVariables, TContext> => {
+
+const mutationKey = getSaveModeratorBotChatterSettingsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveModeratorBotChatterSettings>>, SaveModeratorBotChatterSettingsMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  saveModeratorBotChatterSettings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveModeratorBotChatterSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof saveModeratorBotChatterSettings>>>
+    export type SaveModeratorBotChatterSettingsMutationBody = BodyType<ModeratorBotChatterSettings>
+    export type SaveModeratorBotChatterSettingsMutationError = ErrorType<unknown>
+    export type SaveModeratorBotChatterSettingsMutationVariables = {data: BodyType<ModeratorBotChatterSettings>}
+
+    export const useSaveModeratorBotChatterSettings = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveModeratorBotChatterSettings>>, TError,SaveModeratorBotChatterSettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveModeratorBotChatterSettings>>,
+        TError,
+        SaveModeratorBotChatterSettingsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSaveModeratorBotChatterSettingsMutationOptions(options));
     }
 
 export const getGetModeratorBotFlagsUrl = () => {
@@ -955,6 +1113,261 @@ export const usePerformUniversityVideoBeamAction = <TError = ErrorType<InvalidIn
         TContext
       > => {
       return useMutation(getPerformUniversityVideoBeamActionMutationOptions(options));
+    }
+
+export const getGetUniversityVideoBeamTvStateUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/account/rooms/${roomId}/video-beam/tv`
+}
+
+/**
+ * @summary Read the room-synchronized Beam TV state
+ */
+export const getUniversityVideoBeamTvState = async (roomId: string, options?: Parameters<typeof customFetch>[1]): Promise<UniversityVideoBeamTvState> => {
+
+  return customFetch<UniversityVideoBeamTvState>(getGetUniversityVideoBeamTvStateUrl(roomId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetUniversityVideoBeamTvStateQueryKey = (roomId: string,) => {
+    return [
+    `/api/account/rooms/${roomId}/video-beam/tv`
+    ] as const;
+    }
+
+
+export const getGetUniversityVideoBeamTvStateQueryOptions = <TData = Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUniversityVideoBeamTvStateQueryKey(roomId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>> = ({ signal }) => getUniversityVideoBeamTvState(roomId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetUniversityVideoBeamTvStateQueryResult = NonNullable<Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>>
+export type GetUniversityVideoBeamTvStateQueryError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse>
+
+
+/**
+ * @summary Read the room-synchronized Beam TV state
+ */
+
+export function useGetUniversityVideoBeamTvState<TData = Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse>>(
+ roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetUniversityVideoBeamTvStateQueryOptions(roomId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPerformUniversityVideoBeamTvActionUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/account/rooms/${roomId}/video-beam/tv`
+}
+
+/**
+ * @summary Configure Beam TV or synchronize playback as the current beam host
+ */
+export const performUniversityVideoBeamTvAction = async (roomId: string,
+    universityVideoBeamTvActionInput: UniversityVideoBeamTvActionInput, options?: Parameters<typeof customFetch>[1]): Promise<UniversityVideoBeamTvState> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<UniversityVideoBeamTvState>(getPerformUniversityVideoBeamTvActionUrl(roomId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(universityVideoBeamTvActionInput)
+  }
+);}
+
+
+
+
+
+export const getPerformUniversityVideoBeamTvActionMutationKey = () => ['performUniversityVideoBeamTvAction'] as const;
+
+export const getPerformUniversityVideoBeamTvActionMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof performUniversityVideoBeamTvAction>>, TError,PerformUniversityVideoBeamTvActionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof performUniversityVideoBeamTvAction>>, TError,PerformUniversityVideoBeamTvActionMutationVariables, TContext> => {
+
+const mutationKey = getPerformUniversityVideoBeamTvActionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof performUniversityVideoBeamTvAction>>, PerformUniversityVideoBeamTvActionMutationVariables> = (props) => {
+          const {roomId,data} = props ?? {};
+
+          return  performUniversityVideoBeamTvAction(roomId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PerformUniversityVideoBeamTvActionMutationResult = NonNullable<Awaited<ReturnType<typeof performUniversityVideoBeamTvAction>>>
+    export type PerformUniversityVideoBeamTvActionMutationBody = BodyType<UniversityVideoBeamTvActionInput>
+    export type PerformUniversityVideoBeamTvActionMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
+    export type PerformUniversityVideoBeamTvActionMutationVariables = {roomId: string;data: BodyType<UniversityVideoBeamTvActionInput>}
+
+    /**
+ * @summary Configure Beam TV or synchronize playback as the current beam host
+ */
+export const usePerformUniversityVideoBeamTvAction = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof performUniversityVideoBeamTvAction>>, TError,PerformUniversityVideoBeamTvActionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof performUniversityVideoBeamTvAction>>,
+        TError,
+        PerformUniversityVideoBeamTvActionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPerformUniversityVideoBeamTvActionMutationOptions(options));
+    }
+
+export const getSearchYouTubeForVideoBeamUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/account/rooms/${roomId}/video-beam/tv/search`
+}
+
+/**
+ * @summary Search embeddable YouTube videos for the beam host
+ */
+export const searchYouTubeForVideoBeam = async (roomId: string,
+    universityVideoBeamTvSearchInput: UniversityVideoBeamTvSearchInput, options?: Parameters<typeof customFetch>[1]): Promise<UniversityVideoBeamTvSearchResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<UniversityVideoBeamTvSearchResponse>(getSearchYouTubeForVideoBeamUrl(roomId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(universityVideoBeamTvSearchInput)
+  }
+);}
+
+
+
+
+
+export const getSearchYouTubeForVideoBeamMutationKey = () => ['searchYouTubeForVideoBeam'] as const;
+
+export const getSearchYouTubeForVideoBeamMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof searchYouTubeForVideoBeam>>, TError,SearchYouTubeForVideoBeamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof searchYouTubeForVideoBeam>>, TError,SearchYouTubeForVideoBeamMutationVariables, TContext> => {
+
+const mutationKey = getSearchYouTubeForVideoBeamMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof searchYouTubeForVideoBeam>>, SearchYouTubeForVideoBeamMutationVariables> = (props) => {
+          const {roomId,data} = props ?? {};
+
+          return  searchYouTubeForVideoBeam(roomId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SearchYouTubeForVideoBeamMutationResult = NonNullable<Awaited<ReturnType<typeof searchYouTubeForVideoBeam>>>
+    export type SearchYouTubeForVideoBeamMutationBody = BodyType<UniversityVideoBeamTvSearchInput>
+    export type SearchYouTubeForVideoBeamMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
+    export type SearchYouTubeForVideoBeamMutationVariables = {roomId: string;data: BodyType<UniversityVideoBeamTvSearchInput>}
+
+    /**
+ * @summary Search embeddable YouTube videos for the beam host
+ */
+export const useSearchYouTubeForVideoBeam = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof searchYouTubeForVideoBeam>>, TError,SearchYouTubeForVideoBeamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof searchYouTubeForVideoBeam>>,
+        TError,
+        SearchYouTubeForVideoBeamMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSearchYouTubeForVideoBeamMutationOptions(options));
     }
 
 export const getPerformUniversityAudioActionUrl = (roomId: string,) => {

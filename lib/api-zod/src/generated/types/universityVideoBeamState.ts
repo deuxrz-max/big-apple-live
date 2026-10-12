@@ -6,12 +6,14 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { UniversityVideoBeamSlot } from './universityVideoBeamSlot';
+import type { UniversityVideoBeamTvState } from './universityVideoBeamTvState';
 
 export interface UniversityVideoBeamState {
   roomId: string;
   beamActive: boolean;
   /** @nullable */
   hostParticipantId: string | null;
+  tv: UniversityVideoBeamTvState;
   /**
      * @minItems 4
      * @maxItems 4
