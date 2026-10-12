@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Camera, CameraOff, Mic, MicOff, RotateCw } from 'lucide-react';
+import { Camera, CameraOff, LogOut, Mic, MicOff, RotateCw, X } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -23,7 +23,6 @@ import { PassportSummaryBadge } from '@/passport/StreamerPassport';
 import './university-room.css';
 import './bot-moderation.css';
 
-const FACES = ['\u{1F600}', '\u{1F602}', '\u{1F60D}', '\u{1F62D}', '\u{1F914}', '\u{1F609}', '\u{1F610}', '\u{1F620}'];
 const RULES = "Stick to the room's topic. Be kind — no harassment or hate. Nothing sexual or explicit, in chat, names or photos. Don't share real names, phone numbers, addresses or other contact details. Don't hog the screen, no ALL CAPS, no ads or spam. Use Ignore on anyone bothering you, or Block and Report for anything serious. Public university chat is moderated by Streamtalk bots. Whispers and direct messages are private and are not scanned by these bots.";
 
 type Target = { username: string; displayName: string; displayNameColor?: string };
@@ -318,7 +317,17 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                   return (
                     <article className={`ur-slot${isSpeaking ? ' is-speaking' : ''}${slot.participantId ? ' is-occupied' : ''}`}
                       key={slot.slotNumber} aria-label={`Speaker slot ${slot.slotNumber}${slot.participantId ? `, ${person?.displayName ?? 'occupied'}` : ', empty'}`}>
-                      <div className="ur-slot-media">
+                      <div className="ur-slot-media"
+                        role={joinAvailable && !videoBeam.busy ? 'button' : undefined}
+                        tabIndex={joinAvailable && !videoBeam.busy ? 0 : undefined}
+                        aria-label={joinAvailable && !videoBeam.busy ? `Join open speaker spot ${slot.slotNumber}` : undefined}
+                        onClick={joinAvailable && !videoBeam.busy ? () => void videoBeam.joinSpeaker() : undefined}
+                        onKeyDown={joinAvailable && !videoBeam.busy ? (event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            void videoBeam.joinSpeaker();
+                          }
+                        } : undefined}>
                         {showVideo && <VideoBeamMedia track={media?.video} kind="video" muted={mine} />}
                         {!showVideo && person?.identity && (
                           <IdentityAvatar identity={person.identity} size={64} className="ur-slot-avatar ur-slot-art" />
@@ -358,40 +367,21 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                       </div>
                       {person ? (
                         <div className="ur-slot-actions">
-                          {mine && (
-                            <>
-                              <button type="button" className="ur-slot-action"
-                                disabled={videoBeam.busy}
-                                aria-pressed={!slot.micMuted}
-                                onClick={() => void videoBeam.toggleMic(slot.micMuted)}>
-                                {slot.micMuted ? <><MicOff size={13} /> Unmute mic</> : <><Mic size={13} /> Mute mic</>}
-                              </button>
-                              <button type="button" className="ur-slot-action"
-                                disabled={videoBeam.busy}
-                                aria-pressed={!slot.cameraOff}
-                                onClick={() => void videoBeam.toggleCamera(slot.cameraOff)}>
-                                {slot.cameraOff ? <><CameraOff size={13} /> Camera on</> : <><Camera size={13} /> Camera off</>}
-                              </button>
-                              <button type="button" className="ur-slot-action ur-slot-flip" disabled={videoBeam.busy}
-                                onClick={() => void videoBeam.flipCamera()} aria-label="Flip camera" title="Flip camera">
-                                <RotateCw size={13} />
-                              </button>
-                              <button type="button" className="ur-slot-action ur-slot-leave"
-                                disabled={videoBeam.busy} onClick={() => void videoBeam.leaveSlot()}>Leave</button>
-                            </>
-                          )}
                           {!mine && videoBeam.isHost && (
                             <>
                               <button type="button" className="ur-slot-action" disabled={videoBeam.busy || slot.micMuted}
+                                aria-label={`Mute ${person.displayName}'s microphone`} title={`Mute ${person.displayName}'s microphone`}
                                 onClick={() => void videoBeam.hostMuteMic(slot.participantId!)}>
-                                <MicOff size={13} /> Mute mic
+                                <MicOff size={16} />
                               </button>
                               <button type="button" className="ur-slot-action" disabled={videoBeam.busy || slot.cameraOff}
+                                aria-label={`Turn off ${person.displayName}'s camera`} title={`Turn off ${person.displayName}'s camera`}
                                 onClick={() => void videoBeam.hostDisableCamera(slot.participantId!)}>
-                                <CameraOff size={13} /> Turn camera off
+                                <CameraOff size={16} />
                               </button>
                               <button type="button" className="ur-slot-action ur-slot-leave" disabled={videoBeam.busy}
-                                onClick={() => void videoBeam.kick(slot.participantId!)}>Remove</button>
+                                aria-label={`Remove ${person.displayName} from the beam`} title={`Remove ${person.displayName} from the beam`}
+                                onClick={() => void videoBeam.kick(slot.participantId!)}><X size={16} /></button>
                             </>
                           )}
                         </div>
@@ -412,6 +402,37 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                   );
                 })}
               </div>
+              {videoBeam.ownSlot && (
+                <div className="ur-beam-self-controls" role="group" aria-label="Your beam controls">
+                  <button type="button" className="ur-slot-action"
+                    disabled={videoBeam.busy}
+                    aria-pressed={!videoBeam.ownSlot.micMuted}
+                    aria-label={videoBeam.ownSlot.micMuted ? 'Turn microphone on' : 'Mute microphone'}
+                    title={videoBeam.ownSlot.micMuted ? 'Turn microphone on' : 'Mute microphone'}
+                    onClick={() => void videoBeam.toggleMic(videoBeam.ownSlot!.micMuted)}>
+                    {videoBeam.ownSlot.micMuted ? <MicOff size={16} /> : <Mic size={16} />}
+                    {videoBeam.ownSlot.micMuted ? 'Unmute' : 'Mute'}
+                  </button>
+                  <button type="button" className="ur-slot-action"
+                    disabled={videoBeam.busy}
+                    aria-pressed={!videoBeam.ownSlot.cameraOff}
+                    aria-label={videoBeam.ownSlot.cameraOff ? 'Turn camera on' : 'Turn camera off'}
+                    title={videoBeam.ownSlot.cameraOff ? 'Turn camera on' : 'Turn camera off'}
+                    onClick={() => void videoBeam.toggleCamera(videoBeam.ownSlot!.cameraOff)}>
+                    {videoBeam.ownSlot.cameraOff ? <CameraOff size={16} /> : <Camera size={16} />}
+                    {videoBeam.ownSlot.cameraOff ? 'Cam on' : 'Cam off'}
+                  </button>
+                  <button type="button" className="ur-slot-action" disabled={videoBeam.busy}
+                    onClick={() => void videoBeam.flipCamera()} aria-label="Flip camera" title="Flip camera">
+                    <RotateCw size={16} /> Flip
+                  </button>
+                  <button type="button" className="ur-slot-action ur-slot-leave"
+                    disabled={videoBeam.busy} onClick={() => void videoBeam.leaveSlot()}
+                    aria-label="Leave beam" title="Leave beam">
+                    <LogOut size={16} /> Leave
+                  </button>
+                </div>
+              )}
             </section>
             <div className="ch-msgs" ref={box} role="log" aria-live="polite" aria-label="University messages" tabIndex={0} onScroll={(e) => { const el = e.currentTarget; near.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }} data-testid="list-messages">
               {r.hasOlder && <button type="button" className="bm-btn bm-btn-sm" disabled={r.loadingOlder}
@@ -493,9 +514,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                 {whispering ? (whisperMut.isPending ? 'Sending...' : 'Whisper') : pending ? 'Sending...' : 'Send'}
               </button>
             </form>
-            {!whispering && <div className="ch-faces" aria-label="Quick emoji reactions">
-              {FACES.map((f) => <button key={f} type="button" disabled={pending} aria-label={`Send ${f}`} onClick={() => doSend(f, 'reaction')}>{f}</button>)}
-            </div>}
           </div>
         </div>
       </div>

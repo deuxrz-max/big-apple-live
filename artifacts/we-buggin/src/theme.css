@@ -306,9 +306,6 @@ body {
 #root .ch.ur .ch-comp { background: rgba(17,13,34,.72); border: 1px solid rgba(176,144,239,.38); border-radius: 999px; backdrop-filter: blur(12px); }
 #root .ch.ur .ch-comp { flex-wrap: nowrap; align-items: center; gap: 7px; padding: 4px 7px; }
 #root .ch.ur .ch-comp input[type=text] { min-width: 0; width: 0; flex: 1 1 auto; background: transparent; border: 0; }
-#root .ch.ur .ch-faces { flex: 0 0 auto; display: flex; flex-wrap: nowrap; justify-content: space-around; gap: 4px; padding: 1px 8px 3px; }
-#root .ch.ur .ch-faces button { display: grid; flex: 0 0 30px; width: 30px; height: 28px; place-items: center; border: 0; border-radius: 9px; background: rgba(30,23,58,.66); color: #fff; }
-#root .ch.ur .ch-faces button:disabled { opacity: .45; }
 #root .ch.ur .ch-acts button { color: #d7baff; }
 #root .ur-wlabel { color: #ffb1d4; }
 #root .ur-modal { background: rgba(5,4,18,.68); backdrop-filter: blur(5px); }
@@ -567,13 +564,32 @@ body {
   flex: 0 0 auto;
   align-self: stretch;
   justify-content: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 3px;
+  min-height: 32px;
   margin: 0;
 }
 #root .ur-slot.is-occupied .ur-slot-action {
-  padding: 4px 7px;
-  font-size: clamp(9px, 1vw, 10px);
+  box-sizing: border-box;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  flex: 0 0 32px;
+  justify-content: center;
+  padding: 0;
+  font-size: 0;
+}
+#root .ur-slot.is-occupied .ur-slot-action svg { width: 16px; height: 16px; }
+@media (max-width: 359px) {
+  #root .ur-slot.is-occupied .ur-slot-actions { gap: 2px; }
+  #root .ur-slot.is-occupied .ur-slot-action {
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+    min-height: 28px;
+    flex-basis: 28px;
+  }
 }
 @media (max-height: 650px) {
   #root .ur-slot.is-occupied .ur-slot-avatar {
