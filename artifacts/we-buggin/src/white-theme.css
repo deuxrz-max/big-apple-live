@@ -160,7 +160,7 @@ body.streamtalk-light-screen .dark {
   color: #ffffff;
 }
 
-#root .app-page.is-light-screen :is(.cl-formButtonPrimary,form button[type="submit"],form button),
+#root .app-page.is-light-screen :is(.cl-formButtonPrimary,form button.bm-btn-primary,form button.pf-btn-fill),
 body.streamtalk-light-screen #root :is(.cl-formButtonPrimary,[data-localization-key*="formButtonPrimary"]) {
   color: #ffffff !important;
 }
@@ -352,6 +352,135 @@ body.streamtalk-light-screen #root .gift-framework.gift-sheet :is(.gift-send,.gi
 body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-item[aria-pressed=true] :is(span,svg) { color: #52217f; }
 body.streamtalk-light-screen #root .sp-modal-panel .sp-card { box-shadow: none; }
 body.streamtalk-light-screen #root .sp-modal-close { color: #211e27; background: #ffffff; border-color: #ded9e5; }
+
+/* Profile editor: compact, readable photo slots and space above the fixed nav. */
+#root .app-page.is-light-screen .ch-profile-screen {
+  box-sizing: border-box;
+  min-width: 0;
+  padding-bottom: 48px;
+}
+#root .app-page.is-light-screen .ch-profile-screen .ch-in,
+#root .app-page.is-light-screen .ch-profile-screen .ch-form,
+#root .app-page.is-light-screen .ch-profile-screen .ch-form label {
+  min-width: 0;
+}
+#root .app-page.is-light-screen .ch-profile-screen input,
+#root .app-page.is-light-screen .ch-profile-screen textarea {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+#root .app-page.is-light-screen .ch-profile-screen textarea {
+  min-height: 96px;
+  border-radius: 12px;
+  padding: 10px 12px;
+  resize: vertical;
+}
+#root .app-page.is-light-screen .ch-field-count {
+  justify-self: end;
+  color: #6e6976;
+  font-size: 12px;
+  font-weight: 500;
+}
+#root .app-page.is-light-screen .ch-photo-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 4px 0 8px;
+}
+#root .app-page.is-light-screen .ch-photo-heading span {
+  color: #6e6976;
+  font-size: 13px;
+  font-weight: 500;
+}
+#root .app-page.is-light-screen .ch-photo-card {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 164px;
+  padding: 8px 5px;
+  gap: 7px;
+  border: 1px solid #e3dce9;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #211e27;
+  box-shadow: 0 4px 14px rgba(39,26,62,.06);
+}
+#root .app-page.is-light-screen .ch-photo-main {
+  align-self: flex-start;
+  border-radius: 999px;
+  padding: 2px 8px;
+  color: #52217f;
+  background: #f3eaff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+#root .app-page.is-light-screen .ch-photo-status {
+  min-height: 18px;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+#root .app-page.is-light-screen .ch-photo-status.is-approved {
+  color: #176534;
+  background: #e7f7eb;
+}
+#root .app-page.is-light-screen .ch-photo-status.is-pending,
+#root .app-page.is-light-screen .ch-photo-status.is-uploading {
+  color: #805400;
+  background: #fff3cf;
+}
+#root .app-page.is-light-screen .ch-photo-status.is-rejected {
+  color: #a31d35;
+  background: #ffedf0;
+}
+#root .app-page.is-light-screen .ch-photo-actions {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 3px;
+  width: 100%;
+  margin-top: auto;
+}
+#root .app-page.is-light-screen .ch-photo-actions .bm-btn {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: none;
+  padding: 6px 2px;
+  color: #52217f;
+  font-size: clamp(9px,2.7vw,12px);
+  line-height: 1.15;
+  white-space: nowrap;
+}
+#root .app-page.is-light-screen .ch-photo-actions .bm-btn[aria-pressed="true"] {
+  color: #52217f;
+  border-color: #8b4fd1;
+  background: #f5effb;
+}
+#root .app-page.is-light-screen .ch-photo-empty {
+  justify-content: center;
+  border: 1.5px dashed #9b73c7;
+  background: #ffffff;
+  color: #52217f;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+#root .app-page.is-light-screen .ch-photo-empty:disabled {
+  cursor: default;
+  opacity: .6;
+}
+#root .app-page.is-light-screen .ch-add-plus {
+  color: #742cb1;
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1;
+}
+#root .app-page.is-light-screen .ch-photo-uploading {
+  border-style: dashed;
+}
 
 /* Persistent navigation on white screens. Keep the gift animation and colored icons. */
 body.streamtalk-light-screen #root .app-bottom-nav {

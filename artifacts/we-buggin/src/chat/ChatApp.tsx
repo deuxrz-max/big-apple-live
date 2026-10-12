@@ -18,8 +18,8 @@ import './chat.css';
 
 const DISCLAIMER = 'Streamtalk is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
 
-function Shell({ children }: { children: ReactNode }) {
-  return <div className="ch"><div className="ch-in">{children}</div></div>;
+function Shell({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return <div className={`ch ${className}`.trim()}><div className="ch-in">{children}</div></div>;
 }
 
 function Cover({ roomId, i }: { roomId: string; i: number }) {
@@ -242,38 +242,49 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
               {tried && !nameOk && <span className="ch-fe" role="alert">Use 3-24 letters, digits or underscores.</span>}
             </label>
           )}
-          <label>Display name (shown to others, 1-40 characters)
+          <label>Display name
             <input type="text" value={shownDisplay} maxLength={40} aria-invalid={tried && !dnOk} onChange={(e) => { setNameTouched(true); setDisplayName(e.target.value); }} data-testid="input-display-name" />
+            <span className="ch-field-count">{shownDisplay.length}/40</span>
             {tried && !dnOk && <span className="ch-fe" role="alert">Enter a display name.</span>}
           </label>
-          <label>Bio (optional, up to 280)
+          <label>Bio
             <textarea value={bio} maxLength={280} rows={3} onChange={(e) => setBio(e.target.value)} data-testid="input-bio" />
-            <span className="ch-note">{bio.length}/280</span>
+            <span className="ch-field-count">{bio.length}/280</span>
           </label>
           <div>
-            <p><b>Profile photos (optional, {photoUrls.length}/4)</b></p>
+            <div className="ch-photo-heading"><b>Profile photos</b><span>{photoUrls.length}/4</span></div>
             <div className="ch-photos" aria-label="Saved profile photos">
-              {photoUrls.map((url, i) => (
-                <div className="ch-photo-card" key={url}>
-                  <UserPhoto username={profile?.username ?? username} displayName={dn} photoUrl={url} size={72} />
-                  <span role="status">{(() => {
-                    const status = profile?.photoReviews?.find(p => p.photoUrl === url)?.status ?? 'pending';
-                    return status === 'approved' ? 'Approved' : status === 'pending' ? 'Pending review' : 'Not approved — upload another photo';
-                  })()}</span>
-                  <button type="button" className="bm-btn bm-btn-sm" aria-pressed={photoUrl === url} aria-label={`Use photo ${i + 1} as main photo`} disabled={uploading || save.isPending}
-                    onClick={() => { setPhotoUrl(url); setSaved(false); }} data-testid={`button-main-photo-${i}`}>{photoUrl === url ? 'Main' : 'Make main'}</button>
-                  <button type="button" className="bm-btn bm-btn-sm" aria-label={`Replace photo ${i + 1}`} disabled={uploading || save.isPending}
-                    onClick={() => { replaceTarget.current = url; fileRef.current?.click(); }} data-testid={`button-replace-photo-${i}`}>Replace</button>
-                  <button type="button" className="bm-btn bm-btn-sm" aria-label={`Remove photo ${i + 1}`} disabled={uploading || save.isPending}
-                    onClick={() => { const remaining = photoUrls.filter(item => item !== url); setPhotoUrls(remaining); if (photoUrl === url) setPhotoUrl(remaining[0] ?? null); setUpErr(null); setSaved(false); }} data-testid={`button-remove-photo-${i}`}>Remove</button>
-                </div>
+              {photoUrls.map((url, i) => {
+                const status = profile?.photoReviews?.find(p => p.photoUrl === url)?.status ?? 'pending';
+                const replacingPreview = !!preview && replaceTarget.current === url;
+                const statusLabel = status === 'approved' ? '✓ Approved' : status === 'pending' ? 'Pending review' : status === 'rejected' ? 'Rejected' : 'Flagged';
+                const statusClass = status === 'approved' ? 'is-approved' : status === 'pending' ? 'is-pending' : 'is-rejected';
+                return (
+                  <div className="ch-photo-card" key={url}>
+                    {photoUrl === url && <span className="ch-photo-main">Main</span>}
+                    <UserPhoto username={profile?.username ?? username} displayName={dn} photoUrl={replacingPreview ? preview : url} size={72} />
+                    <span className={`ch-photo-status ${replacingPreview ? 'is-uploading' : statusClass}`} role="status">{replacingPreview ? 'Uploading…' : statusLabel}</span>
+                    <div className="ch-photo-actions">
+                      <button type="button" className="bm-btn bm-btn-sm" aria-pressed={photoUrl === url} aria-label={`Use photo ${i + 1} as main photo`} disabled={uploading || save.isPending}
+                        onClick={() => { setPhotoUrl(url); setSaved(false); }} data-testid={`button-main-photo-${i}`}>{photoUrl === url ? 'Main' : 'Make main'}</button>
+                      <button type="button" className="bm-btn bm-btn-sm" aria-label={`Replace photo ${i + 1}`} disabled={uploading || save.isPending}
+                        onClick={() => { replaceTarget.current = url; fileRef.current?.click(); }} data-testid={`button-replace-photo-${i}`}>Replace</button>
+                      <button type="button" className="bm-btn bm-btn-sm" aria-label={`Remove photo ${i + 1}`} disabled={uploading || save.isPending}
+                        onClick={() => { const remaining = photoUrls.filter(item => item !== url); setPhotoUrls(remaining); if (photoUrl === url) setPhotoUrl(remaining[0] ?? null); setUpErr(null); setSaved(false); }} data-testid={`button-remove-photo-${i}`}>Remove</button>
+                    </div>
+                  </div>
+                );
+              })}
+              {preview && !replaceTarget.current && <div className="ch-photo-card ch-photo-uploading"><UserPhoto displayName={dn} photoUrl={preview} size={72} /><span className="ch-photo-status is-uploading" role="status">Uploading…</span></div>}
+              {Array.from({ length: Math.max(0, 4 - photoUrls.length - (preview && !replaceTarget.current ? 1 : 0)) }, (_, slot) => (
+                <button type="button" className="ch-photo-card ch-photo-empty" key={`empty-photo-${slot}`} disabled={photoUrls.length >= 4 || uploading || save.isPending}
+                  aria-label="Add photo" onClick={() => { replaceTarget.current = null; fileRef.current?.click(); }}
+                  data-testid={photoUrls.length === 0 && slot === 0 ? 'button-add-photo' : `button-add-photo-${slot}`}>
+                  <span className="ch-add-plus" aria-hidden="true">+</span><span>Add photo</span>
+                </button>
               ))}
             </div>
-            {!photoUrls.length && <UserPhoto username={profile?.username ?? username} displayName={dn} photoUrl={null} size={72} />}
-            {preview && <div role="status"><UserPhoto displayName={dn} photoUrl={preview} size={72} /> Uploading...</div>}
             <input ref={fileRef} type="file" hidden accept="image/jpeg,image/png,image/webp" aria-label="Upload profile photo" disabled={uploading || save.isPending} onChange={(e) => pickPhoto(e.target.files?.[0])} data-testid="input-photo" />
-            <p><button type="button" className="bm-btn bm-btn-sm ch-add-photo" disabled={photoUrls.length >= 4 || uploading || save.isPending}
-              onClick={() => { replaceTarget.current = null; fileRef.current?.click(); }} data-testid="button-add-photo"><span aria-hidden="true">+</span> Click to add</button></p>
             <p className="ch-note">Add up to 4 photos and choose one main photo. Only approved photos are visible to others. No sexual or explicit photos; keep your profile professional. JPEG, PNG or WebP, up to 5 MiB each. Save changes to apply.{photoUrls.length >= 4 ? ' At the limit: replace or remove a photo to change your collection.' : ''}</p>
             {upErr && <div className="ch-err" role="alert">{upErr}</div>}
           </div>
@@ -286,7 +297,7 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
       <p className="ch-note">{DISCLAIMER}</p>
     </>
   );
-  return <Shell>{body}</Shell>;
+  return <Shell className="ch-profile-screen">{body}</Shell>;
 }
 
 export { TextChatRoom } from './UniversityRoom';
