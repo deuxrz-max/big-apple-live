@@ -49,7 +49,7 @@ test("real PostgreSQL profile setup, interruption, edit persistence and request 
       "Pranks",
       "Food",
       "Beauty",
-      "How-To",
+      "History",
       "Tech",
       "Education",
       "Fitness",

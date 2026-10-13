@@ -23,4 +23,4 @@
 - [Transparent media assets](gift-media-transparency.md) — verify decoded per-frame alpha and composites; container alpha flags alone are not proof.
 - [Safe preview schema pushes](safe-preview-schema-pushes.md) — stop when Drizzle proposes truncating unrelated Passport rows; preserve data and apply only additive preview changes.
 - [Public topic-room ownership](public-topic-room-ownership.md) — public Beam TV is ownerless and control-free; server searches by the current room name and advances automatically.
-- [Beam TV video screening](beam-tv-video-screening.md) — English and widescreen filters use YouTube metadata and thumbnails as signals, not proof of audio language or source dimensions.
+- [Beam TV video screening](beam-tv-video-screening.md) — English/widescreen checks are best-effort; persist pools, cursors and play history to avoid repeats after restart.

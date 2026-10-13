@@ -24,13 +24,23 @@ export type CommunityWrestlingSearchPolicy = {
   cacheTtlMs: number;
 };
 
+export type CommunityOfficialChannelSearchPolicy = {
+  channelHandle: string;
+  channelTitle: string;
+  query: string;
+  cacheTtlMs: number;
+};
+
 type CommunityRoomConfig = {
   roomId: string;
   label: string;
   defaultVideoSearch: string;
+  videoSearchTerms?: readonly string[];
   videoSearchPolicy?: CommunityVideoSearchPolicy;
   liveStreamPolicy?: CommunityLiveStreamPolicy;
   wrestlingSearchPolicy?: CommunityWrestlingSearchPolicy;
+  officialChannelSearchPolicy?: CommunityOfficialChannelSearchPolicy;
+  dailyWebSeries?: boolean;
 };
 
 export const COMMUNITY_ROOMS: CommunityRoomConfig[] = [
@@ -38,13 +48,25 @@ export const COMMUNITY_ROOMS: CommunityRoomConfig[] = [
     roomId: "MUSIC1",
     label: "Music",
     defaultVideoSearch: "popular official music videos and new song releases",
-    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+    videoSearchTerms: [
+      "popular official English music videos full song",
+      "new song official music video live performance English",
+      "full live concert performance popular artists English",
+      "popular music festival full performance English",
+    ],
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 90 },
   },
   {
     roomId: "GAMING",
     label: "Gaming",
     defaultVideoSearch: "popular video game gameplay highlights and new game trailers",
-    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+    videoSearchTerms: [
+      "popular video game gameplay highlights full match English",
+      "new video game trailers official English",
+      "esports tournament full match highlights English",
+      "popular gaming walkthrough full video English",
+    ],
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 90 },
   },
   {
     roomId: "KIDS01",
@@ -68,18 +90,36 @@ export const COMMUNITY_ROOMS: CommunityRoomConfig[] = [
     roomId: "COMEDY",
     label: "Comedy",
     defaultVideoSearch: "popular stand up comedy and clean comedy sketches",
-    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+    videoSearchTerms: [
+      "English clean stand up comedy full set",
+      "English comedy special full segment",
+      "late night comedy monologue full episode English",
+      "clean English improv comedy full performance",
+    ],
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 90 },
   },
   {
     roomId: "VLOGS1",
     label: "Vlogs",
     defaultVideoSearch: "popular creator vlogs daily life and travel vlogs",
-    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+    videoSearchTerms: [
+      "popular English creator daily life full vlog",
+      "English travel vlog full video popular creator",
+      "day in my life creator full vlog English",
+      "popular lifestyle vlog full episode English",
+    ],
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 90 },
   },
   {
     roomId: "SPORTS",
     label: "Sports",
     defaultVideoSearch: "popular recent sports highlights and sports news",
+    videoSearchTerms: [
+      "recent popular sports highlights English",
+      "latest sports news highlights",
+      "best game highlights recent sports",
+      "sports championship highlights English",
+    ],
     videoSearchPolicy: { order: "viewCount", publishedWithinDays: 14 },
   },
   {
@@ -103,79 +143,163 @@ export const COMMUNITY_ROOMS: CommunityRoomConfig[] = [
     roomId: "MOVIES",
     label: "Movies",
     defaultVideoSearch: "popular official movie trailers and box office news",
-    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+    videoSearchTerms: [
+      "popular official Hollywood movie trailers English full length",
+      "new English movie trailer official studio",
+      "box office news analysis full episode English",
+      "movie behind the scenes featurette English full video",
+    ],
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 90 },
   },
   {
     roomId: "PODCAS",
     label: "Podcasts",
     defaultVideoSearch: "popular podcast clips interviews and conversations",
-    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+    videoSearchTerms: [
+      "popular English podcast full episode interview",
+      "long form podcast conversation English full episode",
+      "creator podcast discussion full conversation English",
+      "comedy podcast full episode English",
+    ],
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 90 },
   },
   {
     roomId: "REACTS",
     label: "Reactions",
     defaultVideoSearch: "popular reaction videos music movies and internet trends",
-    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+    videoSearchTerms: [
+      "popular English reaction video full length music",
+      "movie trailer reaction full video English",
+      "internet trends reaction full video English",
+      "creator reacts to viral videos full English",
+    ],
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 90 },
   },
   {
     roomId: "PRANKS",
     label: "Pranks",
     defaultVideoSearch: "popular harmless clean prank videos and funny surprises",
-    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+    videoSearchTerms: [
+      "popular harmless prank full video English",
+      "clean funny prank compilation full length English",
+      "friendly surprise prank full episode English",
+      "popular social experiment prank full video English",
+    ],
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 90 },
   },
   {
     roomId: "FOOD01",
     label: "Food",
     defaultVideoSearch: "popular cooking recipes street food and food challenges",
-    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+    videoSearchTerms: [
+      "popular cooking recipe full video English",
+      "street food tour full episode English",
+      "food challenge full video English",
+      "easy recipe creator full video English",
+    ],
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 90 },
   },
   {
     roomId: "BEAUTY",
     label: "Beauty",
     defaultVideoSearch: "popular makeup skincare beauty tutorials and trends",
-    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+    videoSearchTerms: [
+      "popular English makeup tutorial full video",
+      "skincare routine full video English",
+      "beauty product review full review English",
+      "makeup artist transformation tutorial English full",
+    ],
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 90 },
   },
   {
-    roomId: "HOWTO1",
-    label: "How-To",
-    defaultVideoSearch: "popular how to tutorials DIY tips and practical guides",
-    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+    roomId: "HIST01",
+    label: "History",
+    defaultVideoSearch: "HISTORY full episodes The Men Who Built America documentary",
+    videoSearchPolicy: { order: "date", trustedChannelTitles: ["HISTORY"] },
+    officialChannelSearchPolicy: {
+      channelHandle: "@HISTORY",
+      channelTitle: "HISTORY",
+      query: "full episodes The Men Who Built America documentary",
+      cacheTtlMs: 24 * 60 * 60_000,
+    },
   },
   {
     roomId: "TECH01",
     label: "Tech",
     defaultVideoSearch: "popular technology reviews gadgets and product launches",
-    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+    videoSearchTerms: [
+      "popular English technology review full video",
+      "new technology product launch full review English",
+      "smartphone laptop full review English",
+      "technology news full episode English",
+    ],
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 90 },
   },
   {
     roomId: "EDUCAT",
     label: "Education",
     defaultVideoSearch: "popular educational science history and learning videos",
-    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+    videoSearchTerms: [
+      "popular science documentary full episode English",
+      "history educational documentary full video English",
+      "science lecture full lesson English",
+      "educational experiment full episode English",
+    ],
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 90 },
   },
   {
     roomId: "FITNES",
     label: "Fitness",
     defaultVideoSearch: "popular fitness workouts training routines and exercise",
-    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+    videoSearchTerms: [
+      "popular full fitness workout English follow along",
+      "strength training workout full session English",
+      "home workout complete routine English",
+      "fitness tips full episode English",
+    ],
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 90 },
   },
   {
     roomId: "PETS01",
     label: "Pets",
     defaultVideoSearch: "popular cute pets dogs cats and animal videos",
-    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+    videoSearchTerms: [
+      "popular dogs cats pet full video English",
+      "animal rescue story full episode English",
+      "funny pet compilation full length English",
+      "wildlife animal behavior documentary English",
+    ],
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 90 },
   },
   {
     roomId: "TRAVEL",
     label: "Travel",
     defaultVideoSearch: "popular travel vlogs destination tours and travel tips",
-    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+    videoSearchTerms: [
+      "popular travel destinations full tour English",
+      "city walking tour 4K full video English",
+      "travel vlog complete itinerary English",
+      "beautiful places travel guide full episode English",
+    ],
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 90 },
   },
   {
     roomId: "ASMR01",
     label: "ASMR",
     defaultVideoSearch: "popular ASMR relaxation whispering and soothing sounds",
+    videoSearchTerms: [
+      "popular ASMR relaxation English",
+      "ASMR whispering roleplay long video",
+      "ASMR no talking sounds English",
+      "sleep relaxation ASMR triggers",
+    ],
     videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+  },
+  {
+    roomId: "WEBSER",
+    label: "Web Series",
+    defaultVideoSearch: "Series of the Day",
+    dailyWebSeries: true,
   },
 ];
 
@@ -226,6 +350,17 @@ export function communityVideoSearchPolicy(
   };
 }
 
+export function communityVideoSearchTerms(
+  roomId: string,
+  store?: CommunityParentLookup,
+): string[] {
+  const normalizedId = roomId.toUpperCase();
+  const parentRoomId = store?.communityParentId(normalizedId)?.toUpperCase() ?? normalizedId;
+  const room = COMMUNITY_ROOMS.find(item => item.roomId === parentRoomId)
+    ?? COMMUNITY_ROOMS.find(item => item.roomId === normalizedId);
+  return [...(room?.videoSearchTerms?.length ? room.videoSearchTerms : [communityDefaultVideoSearch(roomId, store)])];
+}
+
 export function communityLiveStreamPolicy(
   roomId: string,
   store?: CommunityParentLookup,
@@ -250,4 +385,26 @@ export function communityWrestlingSearchPolicy(
     ...room.wrestlingSearchPolicy,
     channels: room.wrestlingSearchPolicy.channels.map(channel => ({ ...channel })),
   };
+}
+
+export function communityOfficialChannelSearchPolicy(
+  roomId: string,
+  store?: CommunityParentLookup,
+): CommunityOfficialChannelSearchPolicy | null {
+  const normalizedId = roomId.toUpperCase();
+  const parentRoomId = store?.communityParentId(normalizedId)?.toUpperCase() ?? normalizedId;
+  const room = COMMUNITY_ROOMS.find(item => item.roomId === parentRoomId)
+    ?? COMMUNITY_ROOMS.find(item => item.roomId === normalizedId);
+  return room?.officialChannelSearchPolicy ? { ...room.officialChannelSearchPolicy } : null;
+}
+
+export function isCommunityDailyWebSeriesRoom(
+  roomId: string,
+  store?: CommunityParentLookup,
+): boolean {
+  const normalizedId = roomId.toUpperCase();
+  const parentRoomId = store?.communityParentId(normalizedId)?.toUpperCase() ?? normalizedId;
+  const room = COMMUNITY_ROOMS.find(item => item.roomId === parentRoomId)
+    ?? COMMUNITY_ROOMS.find(item => item.roomId === normalizedId);
+  return room?.dailyWebSeries === true;
 }

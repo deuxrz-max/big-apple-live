@@ -342,6 +342,8 @@ export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
           <div className="ur-tv-placeholder" role="status">
             {tv.breakEndsAtMs !== null
               ? `Next video in ${countdown(tv.breakEndsAtMs, now)}`
+              : tv.defaultSearch === "Series of the Day"
+                ? "Today's series is being selected. It will appear here when available."
               : "A room-matched video will appear here when one is available."}
           </div>
         )}

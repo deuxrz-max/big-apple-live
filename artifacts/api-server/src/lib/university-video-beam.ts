@@ -6,12 +6,21 @@ import type {
   UniversityVideoBeamTvVideoMetadata,
 } from "@workspace/api-zod";
 import { RoomError, RoomStore, roomStore } from "./room-store";
-import { communityDefaultVideoSearch, isPublicTopicRoom } from "./community-config";
+import {
+  communityDefaultVideoSearch,
+  communityLiveStreamPolicy,
+  isCommunityDailyWebSeriesRoom,
+  isPublicTopicRoom,
+} from "./community-config";
 
 export const VIDEO_BEAM_SLOT_COUNT = 8;
 export const VIDEO_BEAM_KICK_COOLDOWN_MS = 60_000;
 export const VIDEO_BEAM_CONNECT_GRACE_MS = 90_000;
 export const PUBLIC_BEAM_TV_BREAK_MS = 3 * 60_000;
+
+function utcDateFromKey(value: string | null | undefined) {
+  return value ? new Date(`${value}T00:00:00.000Z`) : null;
+}
 
 type BeamSlot = {
   slotNumber: number;
@@ -74,7 +83,12 @@ export class UniversityVideoBeamStore {
     if (!this.isOwnerlessTopicRoom(beam.roomId) || !tv.enabled || !tv.currentVideoId || tv.startedAtMs === null) {
       return null;
     }
-    if (tv.breakEndsAtMs !== null) return tv.breakEndsAtMs;
+    if (tv.breakEndsAtMs !== null) {
+      if (tv.breakEndsAtMs <= this.now()
+        && !communityLiveStreamPolicy(beam.roomId, this.rooms)
+        && !isCommunityDailyWebSeriesRoom(beam.roomId, this.rooms)) return null;
+      return tv.breakEndsAtMs;
+    }
     const durationMs = beam.videoDurationsMs.get(tv.currentVideoId);
     return durationMs ? tv.startedAtMs + durationMs : null;
   }
@@ -88,6 +102,7 @@ export class UniversityVideoBeamStore {
     query: string,
     videos: UniversityVideoBeamTvVideoMetadata[],
     durationMsByVideoId: Readonly<Record<string, number>> = {},
+    series?: { title: string; date: string; episodeNumber: number },
   ): UniversityVideoBeamState {
     const beam = this.ensure(roomId);
     const tv = beam.tv;
@@ -97,9 +112,7 @@ export class UniversityVideoBeamStore {
       || normalize(tv.sourceValue ?? "") !== normalize(tv.defaultSearch)) {
       return this.toState(beam);
     }
-    // Official Pro Wrestling search merges up to 10 current results from each of three channels.
-    // Keep the mixed newest-first queue intact; other room searches still return at most 10.
-    const validVideos = videos.filter(video => /^[A-Za-z0-9_-]{11}$/.test(video.videoId)).slice(0, 30);
+    const validVideos = videos.filter(video => /^[A-Za-z0-9_-]{11}$/.test(video.videoId)).slice(0, 50);
     const validIds = validVideos.map(video => video.videoId);
     if (!validIds.length) throw new RoomError(400, "No playable YouTube videos were found.");
     tv.queue = [...validIds];
@@ -113,7 +126,63 @@ export class UniversityVideoBeamStore {
     tv.currentVideoId = validIds[0]!;
     tv.startedAtMs = this.now();
     tv.breakEndsAtMs = null;
+    tv.seriesTitle = series?.title ?? null;
+    tv.seriesDate = utcDateFromKey(series?.date);
+    tv.seriesEpisodeNumber = series?.episodeNumber ?? null;
     beam.skipVotes.clear();
+    return this.toState(beam);
+  }
+
+  replaceDailyWebSeries(
+    roomId: string,
+    query: string,
+    date: string,
+    selection: {
+      title: string;
+      episodes: UniversityVideoBeamTvVideoMetadata[];
+      durationMsByVideoId: Readonly<Record<string, number>>;
+    } | null,
+  ): UniversityVideoBeamState {
+    const beam = this.ensure(roomId);
+    const tv = beam.tv;
+    const normalize = (value: string) => value.trim().replace(/\s+/g, " ").toLocaleLowerCase("en-US");
+    if (!isCommunityDailyWebSeriesRoom(beam.roomId, this.rooms)
+      || !this.isOwnerlessTopicRoom(beam.roomId)
+      || normalize(query) !== normalize(tv.defaultSearch)
+      || normalize(tv.sourceValue ?? "") !== normalize(tv.defaultSearch)) {
+      return this.toState(beam);
+    }
+    const videos = selection?.episodes
+      .filter(video => /^[A-Za-z0-9_-]{11}$/.test(video.videoId))
+      .slice(0, 50) ?? [];
+    const videoIds = videos.map(video => video.videoId);
+    tv.enabled = true;
+    tv.sourceType = "search";
+    tv.sourceValue = tv.defaultSearch;
+    tv.playlistId = null;
+    tv.queue = videoIds;
+    tv.videoMetadata = videos;
+    tv.seriesTitle = selection?.title ?? null;
+    tv.seriesDate = utcDateFromKey(date);
+    tv.seriesEpisodeNumber = videos.length ? 1 : null;
+    tv.currentVideoId = videoIds[0] ?? null;
+    tv.startedAtMs = tv.currentVideoId ? this.now() : null;
+    tv.breakEndsAtMs = null;
+    beam.videoDurationsMs.clear();
+    for (const [videoId, videoDurationMs] of Object.entries(selection?.durationMsByVideoId ?? {})) {
+      if (videoIds.includes(videoId) && Number.isFinite(videoDurationMs) && videoDurationMs > 0) {
+        beam.videoDurationsMs.set(videoId, videoDurationMs);
+      }
+    }
+    beam.skipVotes.clear();
+    tv.skipSequence += 1;
+    if (tv.currentVideoId) {
+      this.automaticVideoStartListener?.(
+        beam.roomId,
+        tv.currentVideoId,
+        tv.videoMetadata.find(item => item.videoId === tv.currentVideoId),
+      );
+    }
     return this.toState(beam);
   }
 
@@ -154,7 +223,66 @@ export class UniversityVideoBeamStore {
     tv.currentVideoId = validIds[0]!;
     tv.startedAtMs = this.now();
     tv.breakEndsAtMs = null;
+    tv.seriesTitle = null;
+    tv.seriesDate = null;
+    tv.seriesEpisodeNumber = null;
     beam.skipVotes.clear();
+    return this.toState(beam);
+  }
+
+  advanceAutomaticDefaultTvVideo(
+    roomId: string,
+    videos: UniversityVideoBeamTvVideoMetadata[],
+    durationMsByVideoId: Readonly<Record<string, number>>,
+    selectedVideoId: string,
+    expectedCurrentVideoId: string,
+    expectedStartedAtMs: number,
+    expectedBreakEndsAtMs: number,
+    series?: { title: string; date: string; episodeNumber: number },
+  ): UniversityVideoBeamState {
+    const beam = this.ensure(roomId);
+    const tv = beam.tv;
+    const normalize = (value: string | null) => (value ?? "").trim().replace(/\s+/g, " ").toLocaleLowerCase("en-US");
+    if (!this.isOwnerlessTopicRoom(beam.roomId)
+      || communityLiveStreamPolicy(beam.roomId, this.rooms)
+      || !tv.enabled
+      || tv.sourceType !== "search"
+      || normalize(tv.sourceValue) !== normalize(tv.defaultSearch)
+      || tv.currentVideoId !== expectedCurrentVideoId
+      || tv.startedAtMs !== expectedStartedAtMs
+      || tv.breakEndsAtMs !== expectedBreakEndsAtMs
+      || tv.breakEndsAtMs === null
+      || tv.breakEndsAtMs > this.now()) {
+      return this.toState(beam);
+    }
+
+    const validVideos = videos
+      .filter(video => /^[A-Za-z0-9_-]{11}$/.test(video.videoId))
+      .slice(0, 50);
+    const validIds = validVideos.map(video => video.videoId);
+    if (!validIds.includes(selectedVideoId)) return this.toState(beam);
+
+    tv.queue = [selectedVideoId, ...validIds.filter(videoId => videoId !== selectedVideoId)];
+    tv.videoMetadata = validVideos;
+    beam.videoDurationsMs.clear();
+    for (const [videoId, durationMs] of Object.entries(durationMsByVideoId)) {
+      if (validIds.includes(videoId) && Number.isFinite(durationMs) && durationMs > 0) {
+        beam.videoDurationsMs.set(videoId, durationMs);
+      }
+    }
+    tv.currentVideoId = selectedVideoId;
+    tv.startedAtMs = this.now();
+    tv.breakEndsAtMs = null;
+    tv.seriesTitle = series?.title ?? null;
+    tv.seriesDate = utcDateFromKey(series?.date);
+    tv.seriesEpisodeNumber = series?.episodeNumber ?? null;
+    tv.skipSequence += 1;
+    beam.skipVotes.clear();
+    this.automaticVideoStartListener?.(
+      beam.roomId,
+      selectedVideoId,
+      validVideos.find(item => item.videoId === selectedVideoId),
+    );
     return this.toState(beam);
   }
 
@@ -204,6 +332,9 @@ export class UniversityVideoBeamStore {
           ?? null;
         tv.startedAtMs = tv.currentVideoId ? this.now() : null;
         tv.breakEndsAtMs = null;
+        tv.seriesTitle = null;
+        tv.seriesDate = null;
+        tv.seriesEpisodeNumber = null;
         beam.skipVotes.clear();
         break;
       }
@@ -222,6 +353,9 @@ export class UniversityVideoBeamStore {
         tv.enabled = false;
         tv.startedAtMs = null;
         tv.breakEndsAtMs = null;
+        tv.seriesTitle = null;
+        tv.seriesDate = null;
+        tv.seriesEpisodeNumber = null;
         beam.skipVotes.clear();
         break;
       case "reset":
@@ -234,6 +368,9 @@ export class UniversityVideoBeamStore {
         tv.currentVideoId = null;
         tv.startedAtMs = null;
         tv.breakEndsAtMs = null;
+        tv.seriesTitle = null;
+        tv.seriesDate = null;
+        tv.seriesEpisodeNumber = null;
         beam.skipVotes.clear();
         break;
       case "publish-queue": {
@@ -497,6 +634,9 @@ export class UniversityVideoBeamStore {
           currentVideoId: null,
           startedAtMs: null,
           breakEndsAtMs: null,
+          seriesTitle: null,
+          seriesDate: null,
+          seriesEpisodeNumber: null,
           skipVotingEnabled: true,
           skipSequence: 0,
         },
@@ -547,6 +687,9 @@ export class UniversityVideoBeamStore {
     beam.tv.currentVideoId = null;
     beam.tv.startedAtMs = null;
     beam.tv.breakEndsAtMs = null;
+    beam.tv.seriesTitle = null;
+    beam.tv.seriesDate = null;
+    beam.tv.seriesEpisodeNumber = null;
     beam.videoDurationsMs.clear();
     beam.skipVotes.clear();
   }
@@ -558,12 +701,18 @@ export class UniversityVideoBeamStore {
     for (let steps = 0; steps < 10_000; steps += 1) {
       if (tv.breakEndsAtMs !== null) {
         if (now < tv.breakEndsAtMs) return;
+        // Public topic rooms choose the next item from the durable rotation service.
+        // Keep the existing timed CNN stream behavior unchanged.
+        if (!communityLiveStreamPolicy(beam.roomId, this.rooms)) return;
         const index = tv.queue.indexOf(tv.currentVideoId);
         const next = tv.queue[(index + 1 + tv.queue.length) % tv.queue.length];
         if (!next) return;
         tv.currentVideoId = next;
         tv.startedAtMs = tv.breakEndsAtMs;
         tv.breakEndsAtMs = null;
+        tv.seriesTitle = null;
+        tv.seriesDate = null;
+        tv.seriesEpisodeNumber = null;
         tv.skipSequence += 1;
         beam.skipVotes.clear();
         this.automaticVideoStartListener?.(

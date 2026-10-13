@@ -30,7 +30,7 @@ export const YOUTUBE_VIDEO_FILTER_VERSION = "medium-duration-shorts-metadata-en-
 export const MIN_AUTOMATIC_VIDEO_DURATION_MS = 4 * 60 * 1_000;
 
 const NON_ENGLISH_SCRIPTS = /[\p{Script=Cyrillic}\p{Script=Arabic}\p{Script=Hebrew}\p{Script=Devanagari}\p{Script=Bengali}\p{Script=Thai}\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Greek}\p{Script=Armenian}\p{Script=Georgian}]/u;
-const CLEAR_NON_ENGLISH_LATIN = /\b(?:lucha libre|resumen|noticias|en vivo|partido|últimos momentos|últimas noticias|melhores momentos|lutte professionnelle|résumé officiel|français|en direct|match complet|ao vivo|luta livre|nachrichten|zusammenfassung|in diretta)\b/i;
+const CLEAR_NON_ENGLISH_LATIN = /\b(?:lucha libre|resumen|noticias|en vivo|partido|últimos momentos|últimas noticias|melhores momentos|lutte professionnelle|résumé officiel|français|en direct|match complet|ao vivo|luta livre|nachrichten|zusammenfassung|in diretta|hindi|tamil|telugu|bengali|urdu|punjabi|kannada|malayalam|marathi|spanish|portuguese|german|italian|japanese|korean|chinese|arabic|russian)\b/i;
 const SHORTS_MARKER = /shorts/i;
 const SIXTEEN_BY_NINE_MIN = 1.70;
 const SIXTEEN_BY_NINE_MAX = 1.85;

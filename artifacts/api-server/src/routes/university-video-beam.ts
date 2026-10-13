@@ -21,9 +21,9 @@ import { universityVideoBeamStore } from "../lib/university-video-beam";
 import { liveKitBeamService, publicLiveKitFailure } from "../lib/livekit";
 import {
   communityDefaultVideoSearch,
+  isCommunityDailyWebSeriesRoom,
   communityLiveStreamPolicy,
   communityVideoSearchPolicy,
-  communityWrestlingSearchPolicy,
 } from "../lib/community-config";
 import {
   selectPlayableYouTubeVideos,
@@ -31,7 +31,18 @@ import {
   YOUTUBE_VIDEO_FILTER_VERSION,
 } from "../lib/youtube-video-selection";
 import { resolveYouTubeChannelId, searchCnnLiveStream } from "../lib/cnn-live-news";
-import { searchOfficialProWrestlingVideos } from "../lib/pro-wrestling-youtube";
+import {
+  getNextCommunityVideoSelection,
+  recordCommunityVideoPlayed,
+  reserveYouTubeApiUnits,
+} from "../lib/room-video-rotation";
+import {
+  WEB_SERIES_ROOM_ID,
+  easternDateKey,
+  getOrChooseWebSeries,
+  nextEasternMidnightMs,
+  orderedWebSeriesEpisodes,
+} from "../lib/web-series";
 import { logger } from "../lib/logger";
 import {
   postBeamTvVoteAnnouncement,
@@ -40,6 +51,7 @@ import {
 } from "../lib/moderator-bots";
 
 const router = Router();
+const webSeriesMidnightTimers = new Map<string, { dueAt: number; timer: ReturnType<typeof setTimeout> }>();
 universityVideoBeamStore.setAutomaticVideoStartListener((roomId, videoId, metadata) => {
   scheduleBeamTvVideoStart(roomId, videoId, metadata);
 });
@@ -52,6 +64,7 @@ type YouTubeSearchResult = {
   titles: string[];
   videos: UniversityVideoBeamTvVideoMetadata[];
   durationMsByVideoId: Record<string, number>;
+  selectedVideoId?: string;
 };
 const youtubeSearchCache = new Map<string, { expiresAt: number } & YouTubeSearchResult>();
 const youtubeSearchFailureCache = new Map<string, { expiresAt: number; status: number; message: string }>();
@@ -75,7 +88,7 @@ async function searchYouTube(
   query: string,
   apiKey: string,
   policy: ReturnType<typeof communityVideoSearchPolicy> = null,
-  options: { channelId?: string; cacheTtlMs?: number } = {},
+  options: { channelId?: string; cacheTtlMs?: number; roomId?: string } = {},
 ) {
   const cacheKey = [
     YOUTUBE_VIDEO_FILTER_VERSION,
@@ -103,6 +116,9 @@ async function searchYouTube(
   if (pending) return pending;
 
   const request = (async () => {
+    if (options.roomId && !(await reserveYouTubeApiUnits(options.roomId, 100))) {
+      throw new RoomError(503, "YouTube is taking a break while this room's video pool is refreshed.");
+    }
     const searchUrl = new URL("https://www.googleapis.com/youtube/v3/search");
     const searchParams = new URLSearchParams({
       part: "snippet",
@@ -182,6 +198,9 @@ async function searchYouTube(
       id: results.map(item => item.videoId).join(","),
       key: apiKey,
     }).toString();
+    if (options.roomId && !(await reserveYouTubeApiUnits(options.roomId, 1))) {
+      throw new RoomError(503, "YouTube is taking a break while this room's video pool is refreshed.");
+    }
     let detailsResponse: Response;
     try {
       detailsResponse = await fetch(detailsUrl, { signal: AbortSignal.timeout(8_000) });
@@ -277,21 +296,31 @@ async function searchYouTube(
 }
 
 async function searchDefaultCommunityVideos(roomId: string, apiKey: string) {
-  const wrestlingPolicy = communityWrestlingSearchPolicy(roomId, roomStore);
-  if (wrestlingPolicy) return searchOfficialProWrestlingVideos(apiKey, wrestlingPolicy);
-
   const livePolicy = communityLiveStreamPolicy(roomId, roomStore);
   if (!livePolicy) {
-    return searchYouTube(
-      communityDefaultVideoSearch(roomId, roomStore) ?? "popular videos",
-      apiKey,
-      communityVideoSearchPolicy(roomId, roomStore),
-    );
+    const selection = await getNextCommunityVideoSelection(roomId, apiKey, roomStore);
+    return {
+      videoIds: selection.queue.map(video => video.videoId),
+      titles: selection.queue.map(video => video.title),
+      videos: selection.queue,
+      durationMsByVideoId: selection.durationMsByVideoId,
+      selectedVideoId: selection.selected?.videoId,
+    };
   }
 
-  const channelId = await resolveYouTubeChannelId(apiKey, livePolicy.channelHandle, livePolicy.channelTitle);
+  const channelId = await resolveYouTubeChannelId(
+    apiKey,
+    livePolicy.channelHandle,
+    livePolicy.channelTitle,
+    units => reserveYouTubeApiUnits(roomId, units, 8_000),
+  );
   try {
-    const liveVideo = await searchCnnLiveStream(apiKey, channelId, livePolicy);
+    const liveVideo = await searchCnnLiveStream(
+      apiKey,
+      channelId,
+      livePolicy,
+      units => reserveYouTubeApiUnits(roomId, units, 8_000),
+    );
     if (liveVideo) {
       return {
         videoIds: [liveVideo.videoId],
@@ -310,7 +339,7 @@ async function searchDefaultCommunityVideos(roomId: string, apiKey: string) {
     livePolicy.fallbackSearch,
     apiKey,
     communityVideoSearchPolicy(roomId, roomStore),
-    { channelId, cacheTtlMs: 60 * 60_000 },
+    { channelId, cacheTtlMs: 60 * 60_000, roomId },
   );
 }
 
@@ -340,6 +369,13 @@ async function reconcileState(roomId: string, viewerAccountId?: string) {
     roomId, state, snapshot.identities, viewerAccountId,
   );
   schedulePublicPlaybackTransition(roomId);
+  if (isCommunityDailyWebSeriesRoom(roomId, roomStore)) {
+    scheduleWebSeriesMidnight(roomId);
+    void activateWebSeriesForToday(roomId).catch(error => {
+      logger.warn({ roomId, error: error instanceof Error ? error.message : "unknown" },
+        "Could not load the Web Series room's daily selection");
+    });
+  }
   return synchronized;
 }
 
@@ -387,6 +423,168 @@ async function refreshNewsQueueAtTransition(
   }
 }
 
+function scheduleWebSeriesMidnight(roomId: string) {
+  const dueAt = nextEasternMidnightMs();
+  const previous = webSeriesMidnightTimers.get(roomId);
+  if (previous?.dueAt === dueAt) return;
+  if (previous) clearTimeout(previous.timer);
+  const timer = setTimeout(() => {
+    const current = webSeriesMidnightTimers.get(roomId);
+    if (current?.dueAt !== dueAt) return;
+    webSeriesMidnightTimers.delete(roomId);
+    if (!roomStore.isCommunity(roomId)) return;
+    void activateWebSeriesForToday(roomId).catch(error => {
+      logger.warn({ roomId, error: error instanceof Error ? error.message : "unknown" },
+        "Could not select the Web Series room's next daily show");
+    }).finally(() => scheduleWebSeriesMidnight(roomId));
+  }, Math.max(0, dueAt - Date.now()));
+  timer.unref?.();
+  webSeriesMidnightTimers.set(roomId, { dueAt, timer });
+}
+
+async function activateWebSeriesForToday(roomId: string, synchronizeMedia = true) {
+  const easternDate = easternDateKey();
+  const apiKey = process.env.YOUTUBE_API_KEY?.trim() || null;
+  const selection = await getOrChooseWebSeries(apiKey);
+  if (selection && selection.easternDate !== easternDate) return;
+  const defaultSearch = communityDefaultVideoSearch(roomId, roomStore);
+  if (!defaultSearch) return;
+  const current = universityVideoBeamStore.getState(roomId).tv;
+  const nextTitle = selection?.seriesTitle ?? null;
+  const alreadyApplied = current.seriesDate?.toISOString().slice(0, 10) === easternDate
+    && current.seriesTitle === nextTitle
+    && (selection
+      ? current.queue.length === selection.episodes.length && !!current.currentVideoId
+      : !current.currentVideoId && current.queue.length === 0);
+  if (alreadyApplied) return;
+
+  const durationMsByVideoId = Object.fromEntries(
+    (selection?.episodes ?? []).map(episode => [episode.videoId, episode.durationMs]),
+  );
+  const state = universityVideoBeamStore.replaceDailyWebSeries(
+    roomId,
+    defaultSearch,
+    easternDate,
+    selection ? {
+      title: selection.seriesTitle,
+      episodes: orderedWebSeriesEpisodes(selection).map(episode => ({
+        videoId: episode.videoId,
+        title: episode.title,
+        channelTitle: episode.channelTitle,
+        description: episode.description,
+      })),
+      durationMsByVideoId,
+    } : null,
+  );
+  if (state.tv.currentVideoId && state.tv.startedAtMs !== null) {
+    scheduleBeamTvVideoStart(
+      roomId,
+      state.tv.currentVideoId,
+      state.tv.videoMetadata.find(video => video.videoId === state.tv.currentVideoId),
+      true,
+    );
+  }
+  if (synchronizeMedia) {
+    const identities = await refreshParticipantSnapshot(universityVideoBeamStore.getRoomName(roomId));
+    await synchronizeSpeakerMediaPermissions(roomId, state, identities);
+  }
+  schedulePublicPlaybackTransition(roomId);
+}
+
+export function startWebSeriesDailySelection() {
+  const roomId = WEB_SERIES_ROOM_ID;
+  scheduleWebSeriesMidnight(roomId);
+  void activateWebSeriesForToday(roomId, false).catch(error => {
+    logger.warn({ roomId, error: error instanceof Error ? error.message : "unknown" },
+      "Could not initialize today's Web Series selection");
+  });
+}
+
+async function refreshTopicQueueAtTransition(
+  roomId: string,
+  state: UniversityVideoBeamState,
+) {
+  const livePolicy = communityLiveStreamPolicy(roomId, roomStore);
+  const defaultSearch = communityDefaultVideoSearch(roomId, roomStore);
+  const tv = state.tv;
+  if (livePolicy || !defaultSearch || !tv.enabled || tv.sourceType !== "search"
+    || normalizeSearchQuery(tv.sourceValue ?? "") !== normalizeSearchQuery(defaultSearch)
+    || tv.breakEndsAtMs === null || tv.breakEndsAtMs > Date.now()
+    || !tv.currentVideoId || tv.startedAtMs === null) {
+    return;
+  }
+
+  if (isCommunityDailyWebSeriesRoom(roomId, roomStore)) {
+    try {
+      const selection = await getOrChooseWebSeries(process.env.YOUTUBE_API_KEY?.trim() || null);
+      if (!selection || selection.easternDate !== easternDateKey()) return;
+      const episodes = orderedWebSeriesEpisodes(selection);
+      const currentIndex = episodes.findIndex(episode =>
+        episode.episodeNumber === tv.seriesEpisodeNumber || episode.videoId === tv.currentVideoId,
+      );
+      const nextEpisode = episodes[(currentIndex + 1 + episodes.length) % episodes.length];
+      if (!nextEpisode) return;
+      const advanced = universityVideoBeamStore.advanceAutomaticDefaultTvVideo(
+        roomId,
+        episodes.map(episode => ({
+          videoId: episode.videoId,
+          title: episode.title,
+          channelTitle: episode.channelTitle,
+          description: episode.description,
+        })),
+        Object.fromEntries(episodes.map(episode => [episode.videoId, episode.durationMs])),
+        nextEpisode.videoId,
+        tv.currentVideoId,
+        tv.startedAtMs,
+        tv.breakEndsAtMs,
+        {
+          title: selection.seriesTitle,
+          date: selection.easternDate,
+          episodeNumber: nextEpisode.episodeNumber,
+        },
+      );
+      if (advanced.tv.startedAtMs !== tv.startedAtMs
+        && advanced.tv.currentVideoId === nextEpisode.videoId) {
+        const roomName = universityVideoBeamStore.getRoomName(roomId);
+        const identities = await refreshParticipantSnapshot(roomName);
+        await synchronizeSpeakerMediaPermissions(roomId, advanced, identities);
+        schedulePublicPlaybackTransition(roomId);
+      }
+    } catch (error) {
+      logger.warn({ roomId, error: error instanceof Error ? error.message : "unknown" },
+        "Could not advance the Web Series episode");
+    }
+    return;
+  }
+
+  const apiKey = process.env.YOUTUBE_API_KEY?.trim();
+  if (!apiKey) return;
+  try {
+    const selection = await getNextCommunityVideoSelection(roomId, apiKey, roomStore);
+    if (!selection.selected || selection.queue.length === 0) return;
+    const advanced = universityVideoBeamStore.advanceAutomaticDefaultTvVideo(
+      roomId,
+      selection.queue,
+      selection.durationMsByVideoId,
+      selection.selected.videoId,
+      tv.currentVideoId,
+      tv.startedAtMs,
+      tv.breakEndsAtMs,
+    );
+    if (advanced.tv.startedAtMs !== tv.startedAtMs
+      && advanced.tv.currentVideoId === selection.selected.videoId) {
+      await recordCommunityVideoPlayed(roomId, selection.selected.videoId);
+      const roomName = universityVideoBeamStore.getRoomName(roomId);
+      const identities = await refreshParticipantSnapshot(roomName);
+      await synchronizeSpeakerMediaPermissions(roomId, advanced, identities);
+      schedulePublicPlaybackTransition(roomId);
+    }
+  } catch (error) {
+    logger.warn({ roomId, error: error instanceof Error ? error.message : "unknown" },
+      "Could not select the next saved Beam TV video");
+  }
+}
+
 function schedulePublicPlaybackTransition(roomId: string) {
   const dueAt = universityVideoBeamStore.getNextAutomaticPlaybackTransitionAt(roomId);
   const previous = publicPlaybackTimers.get(roomId);
@@ -399,7 +597,13 @@ function schedulePublicPlaybackTransition(roomId: string) {
     const current = publicPlaybackTimers.get(roomId);
     if (current?.dueAt !== dueAt) return;
     publicPlaybackTimers.delete(roomId);
-    void reconcileState(roomId).then(state => refreshNewsQueueAtTransition(roomId, state, dueAt)).catch(() => {
+    void reconcileState(roomId).then(async state => {
+      if (communityLiveStreamPolicy(roomId, roomStore)) {
+        await refreshNewsQueueAtTransition(roomId, state, dueAt);
+      } else {
+        await refreshTopicQueueAtTransition(roomId, state);
+      }
+    }).catch(() => {
       const retryDueAt = Date.now() + 2_500;
       const retryTimer = setTimeout(() => {
         const retry = publicPlaybackTimers.get(roomId);
@@ -699,8 +903,9 @@ router.post("/account/rooms/:roomId/video-beam/tv/search", async (req, res) => {
   const roomId = req.params.roomId;
   const tv = (await reconcileState(roomId, id)).tv;
   const defaultSearch = communityDefaultVideoSearch(roomId, roomStore);
+  const dailyWebSeriesRoom = isCommunityDailyWebSeriesRoom(roomId, roomStore);
   const autoDefaultSearch = tv.enabled && tv.sourceType === "search"
-    && tv.queue.length === 0 && tv.currentVideoId === null
+    && (dailyWebSeriesRoom || (tv.queue.length === 0 && tv.currentVideoId === null))
     && normalizeSearchQuery(tv.sourceValue ?? "") === normalizeSearchQuery(defaultSearch)
     && normalizeSearchQuery(query) === normalizeSearchQuery(defaultSearch);
   if (!autoDefaultSearch) universityVideoBeamStore.assertTvHost(roomId, participant.participantId);
@@ -708,23 +913,56 @@ router.post("/account/rooms/:roomId/video-beam/tv/search", async (req, res) => {
   if (!apiKey) {
     throw new RoomError(503, "YouTube search is temporarily unavailable. A room-matched video will appear when it is available.");
   }
+  if (autoDefaultSearch && dailyWebSeriesRoom) {
+    const selection = await getOrChooseWebSeries(apiKey);
+    if (!selection) {
+      throw new RoomError(503, "The Series of the Day is not available yet. Beam TV will retry automatically.");
+    }
+    const episodes = orderedWebSeriesEpisodes(selection);
+    await activateWebSeriesForToday(roomId);
+    const state = universityVideoBeamStore.getState(roomId);
+    if (!state.tv.currentVideoId) {
+      throw new RoomError(503, "The Series of the Day is not available yet. Beam TV will retry automatically.");
+    }
+    const firstTen = episodes.slice(0, 10);
+    res.set("Cache-Control", "no-store").json(SearchYouTubeForVideoBeamResponse.parse({
+      videoIds: firstTen.map(episode => episode.videoId),
+      titles: firstTen.map(episode => episode.title),
+      videos: firstTen.map(episode => ({
+        videoId: episode.videoId,
+        title: episode.title,
+        channelTitle: episode.channelTitle,
+        description: episode.description,
+      })),
+    }));
+    return;
+  }
   const result = autoDefaultSearch
     ? await searchDefaultCommunityVideos(roomId, apiKey)
     : await searchYouTube(query, apiKey);
   if (autoDefaultSearch) {
     const before = universityVideoBeamStore.getState(roomId).tv.currentVideoId;
-    const state = universityVideoBeamStore.initializeDefaultTvQueue(
-      roomId, query, result.videos, result.durationMsByVideoId,
-    );
-    const identities = await refreshParticipantSnapshot(universityVideoBeamStore.getRoomName(roomId));
-    await synchronizeSpeakerMediaPermissions(roomId, state, identities, id);
-    schedulePublicPlaybackTransition(roomId);
-    if (state.tv.currentVideoId && state.tv.currentVideoId !== before) {
-      scheduleBeamTvVideoStart(roomId, state.tv.currentVideoId,
-        result.videos.find(video => video.videoId === state.tv.currentVideoId));
+    if (result.videos.length > 0) {
+      const state = universityVideoBeamStore.initializeDefaultTvQueue(
+        roomId, query, result.videos, result.durationMsByVideoId,
+      );
+      if (result.selectedVideoId && state.tv.currentVideoId === result.selectedVideoId) {
+        await recordCommunityVideoPlayed(roomId, result.selectedVideoId);
+      }
+      const identities = await refreshParticipantSnapshot(universityVideoBeamStore.getRoomName(roomId));
+      await synchronizeSpeakerMediaPermissions(roomId, state, identities, id);
+      schedulePublicPlaybackTransition(roomId);
+      if (state.tv.currentVideoId && state.tv.currentVideoId !== before) {
+        scheduleBeamTvVideoStart(roomId, state.tv.currentVideoId,
+          result.videos.find(video => video.videoId === state.tv.currentVideoId));
+      }
     }
   }
-  const { durationMsByVideoId: _durations, ...publicResult } = result;
+  const {
+    durationMsByVideoId: _durations,
+    selectedVideoId: _selectedVideoId,
+    ...publicResult
+  } = result;
   res.set("Cache-Control", "no-store")
     .json(SearchYouTubeForVideoBeamResponse.parse(publicResult));
 });

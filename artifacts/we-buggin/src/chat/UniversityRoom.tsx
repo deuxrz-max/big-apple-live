@@ -296,6 +296,11 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                 <span className="ch-word" key={`${w}-${i}`} style={{ animationDelay: `${i * 140}ms` }}>{w}</span>
               ))}
             </h1>
+            {videoBeam.beam.tv.seriesTitle && videoBeam.beam.tv.seriesEpisodeNumber !== null && (
+              <p className="ur-series-of-day" data-testid="text-series-of-day">
+                {videoBeam.beam.tv.seriesTitle} · Episode {videoBeam.beam.tv.seriesEpisodeNumber}
+              </p>
+            )}
             {session?.topic && <p className="ur-topic" title={session.topic} data-testid="text-topic">{session.topic}</p>}
           </div>
           <button type="button" className="bm-btn bm-btn-sm ur-rules-btn" onClick={() => setRulesOpen(true)} data-testid="button-rules">Rules</button>

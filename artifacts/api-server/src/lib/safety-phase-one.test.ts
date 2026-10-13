@@ -136,7 +136,7 @@ test("real HTTP/DB/storage photo moderation and university overflow; synthetic C
     );
     assert.deepEqual(directory.map(room => room.label), [
       "Music", "Gaming", "Pro Wrestling", "Comedy", "Vlogs", "Sports", "News", "Movies", "Podcasts", "Reactions",
-      "Pranks", "Food", "Beauty", "How-To", "Tech", "Education", "Fitness", "Pets", "Travel", "ASMR",
+      "Pranks", "Food", "Beauty", "History", "Tech", "Education", "Fitness", "Pets", "Travel", "ASMR",
     ]);
     assert.equal(directory.length, 20);
     assert.equal(directory.some(room => room.roomId === "LIVEME" || room.roomId === "WORLDNEWS"), false);

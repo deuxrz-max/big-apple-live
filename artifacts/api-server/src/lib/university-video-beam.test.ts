@@ -8,9 +8,11 @@ import { LiveKitBeamService, type LiveKitSettings } from "./livekit";
 import {
   COMMUNITY_ROOMS,
   communityDefaultVideoSearch,
+  communityOfficialChannelSearchPolicy,
   communityLiveStreamPolicy,
   communityVideoSearchPolicy,
   communityWrestlingSearchPolicy,
+  isCommunityDailyWebSeriesRoom,
   isPublicTopicRoom,
 } from "./community-config";
 import { beamTvReactionLine } from "./beam-tv-reaction-policy";
@@ -50,6 +52,30 @@ test("public topic rooms and their overflow rooms use the ownerless policy", () 
   createRoom(rooms, "LIVEME", "history-retired", undefined, "Video Games & Interactive Media");
   assert.equal(isPublicTopicRoom("LIVEME", rooms), false, "retired room IDs are no longer public topics");
   assert.equal(isPublicTopicRoom("NOT_A_ROOM", rooms), false);
+});
+
+test("public topic playback waits for the durable rotation choice after the break", () => {
+  let now = 1_000;
+  const rooms = new RoomStore(() => now);
+  createRoom(rooms);
+  const beam = new UniversityVideoBeamStore(rooms, () => now);
+  const defaultSearch = communityDefaultVideoSearch("MUSIC1", rooms)!;
+  const first = { videoId: "aaa11111111", title: "First", channelTitle: "Music", description: null };
+  const second = { videoId: "bbb22222222", title: "Second", channelTitle: "Music", description: null };
+  beam.initializeDefaultTvQueue("MUSIC1", defaultSearch, [first], { [first.videoId]: 1_000 });
+  now += 1_000;
+  let state = beam.getState("MUSIC1");
+  assert.equal(state.tv.currentVideoId, first.videoId);
+  const transitionAt = state.tv.breakEndsAtMs!;
+  now = transitionAt;
+  assert.equal(beam.getNextAutomaticPlaybackTransitionAt("MUSIC1"), null,
+    "the expired queue does not advance itself before the server selects an unplayed item");
+  state = beam.advanceAutomaticDefaultTvVideo(
+    "MUSIC1", [second], { [second.videoId]: 2_000 }, second.videoId,
+    first.videoId, 1_000, transitionAt,
+  );
+  assert.equal(state.tv.currentVideoId, second.videoId);
+  assert.equal(state.tv.breakEndsAtMs, null);
 });
 
 test("video beam reserves exactly eight slots under simultaneous joins and keeps room scopes isolated", async () => {
@@ -265,6 +291,20 @@ test("public Beam TV uses its curated topic search and holds a synchronized inte
   assert.equal(state.tv.micLockedDuringVideo, false);
   now = breakEndsAt;
   state = beam.getState("MUSIC1");
+  assert.equal(state.tv.currentVideoId, "dQw4w9WgXcQ",
+    "public topic playback waits for the server's saved-pool rotation at break end");
+  state = beam.advanceAutomaticDefaultTvVideo(
+    "MUSIC1",
+    [
+      { videoId: "5qap5aO4i9A", title: "Second video", channelTitle: "Channel", description: null },
+      { videoId: "dQw4w9WgXcQ", title: "First video", channelTitle: "Channel", description: null },
+    ],
+    { dQw4w9WgXcQ: 10_000, "5qap5aO4i9A": 10_000 },
+    "5qap5aO4i9A",
+    "dQw4w9WgXcQ",
+    300_000,
+    breakEndsAt,
+  );
   assert.equal(state.tv.currentVideoId, "5qap5aO4i9A", "the next video starts when the shared break ends");
   assert.equal(state.tv.startedAtMs, breakEndsAt);
   assert.equal(state.tv.breakEndsAtMs, null);
@@ -316,11 +356,11 @@ test("public Beam TV uses its curated topic search and holds a synchronized inte
   state = beam.getState("MUSIC1");
   assert.equal(state.tv.enabled, true);
   assert.equal(state.tv.sourceValue, defaultSearch);
-  assert.deepEqual(state.tv.queue, ["dQw4w9WgXcQ", "5qap5aO4i9A"]);
+  assert.deepEqual(state.tv.queue, ["5qap5aO4i9A", "dQw4w9WgXcQ"]);
   assert.equal(state.tv.skipVotingEnabled, false);
 });
 
-test("all 20 categories use recent popular searches across their overflow rooms", () => {
+test("all configured categories use their settings across overflow rooms", () => {
   const rooms = new RoomStore();
   for (const room of COMMUNITY_ROOMS) {
     createRoom(rooms, room.roomId, `history-${room.roomId}`, undefined, room.label);
@@ -339,13 +379,24 @@ test("all 20 categories use recent popular searches across their overflow rooms"
       assert.equal(policy?.order, "date");
       assert.equal(policy?.publishedWithinDays, undefined);
       assert.deepEqual(policy?.trustedChannelTitles, ["All Elite Wrestling", "WWE", "TNA Wrestling"]);
+    } else if (room.label === "History") {
+      assert.equal(policy?.order, "date");
+      assert.deepEqual(policy?.trustedChannelTitles, ["HISTORY"]);
+      assert.equal(communityOfficialChannelSearchPolicy(overflowId, rooms)?.channelHandle, "@HISTORY");
+      assert.equal(communityOfficialChannelSearchPolicy(overflowId, rooms)?.query,
+        "full episodes The Men Who Built America documentary");
+    } else if (room.label === "Web Series") {
+      assert.equal(room.dailyWebSeries, true);
+      assert.equal(isCommunityDailyWebSeriesRoom(room.roomId, rooms), true);
+      assert.equal(isCommunityDailyWebSeriesRoom(overflowId, rooms), true,
+        "Web Series overflow rooms inherit the daily series selection");
     } else {
       assert.equal(policy?.order, "viewCount", `${room.label} sorts recent results by popularity`);
       assert.ok(policy?.publishedWithinDays && policy.publishedWithinDays > 0);
     }
     assert.equal(isPublicTopicRoom(overflowId, rooms), true);
   }
-  assert.equal(COMMUNITY_ROOMS.length, 20);
+  assert.equal(COMMUNITY_ROOMS.length, 21);
   const wrestlingPolicy = communityWrestlingSearchPolicy("KIDS01", rooms);
   assert.deepEqual(wrestlingPolicy?.channels.map(channel => channel.channelTitle),
     ["All Elite Wrestling", "WWE", "TNA Wrestling"]);
@@ -355,6 +406,9 @@ test("all 20 categories use recent popular searches across their overflow rooms"
     "the Pro Wrestling overflow inherits the exact official channel allowlist",
   );
   assert.equal(wrestlingPolicy?.cacheTtlMs, 6 * 60 * 60_000);
+  const historyPolicy = communityOfficialChannelSearchPolicy("HIST01", rooms);
+  assert.equal(historyPolicy?.channelHandle, "@HISTORY");
+  assert.equal(historyPolicy?.channelTitle, "HISTORY");
   const newsPolicy = communityVideoSearchPolicy("NEWS01", rooms);
   assert.equal(newsPolicy?.order, "date");
   assert.equal(newsPolicy?.publishedWithinDays, undefined);
@@ -362,6 +416,54 @@ test("all 20 categories use recent popular searches across their overflow rooms"
   assert.equal(communityLiveStreamPolicy("NEWS01", rooms)?.streamTitle, "CNN Headlines: 24/7 Live News");
   assert.equal(communityLiveStreamPolicy("NEWS012", rooms)?.streamTitle, "CNN Headlines: 24/7 Live News",
     "News overflow inherits the parent live-stream setup");
+});
+
+test("Web Series plays episodes in order, loops, and carries its title through the break", () => {
+  const rooms = new RoomStore();
+  createRoom(rooms, "WEBSER", "history-web-series", undefined, "Web Series");
+  let now = 1_000_000;
+  const beam = new UniversityVideoBeamStore(rooms, () => now);
+  const episodes = [1, 2, 3].map(index => ({
+    videoId: `W${String(index).padStart(10, "0")}`,
+    title: `Night Story - Episode ${index}`,
+    channelTitle: "Example",
+    description: null,
+  }));
+  const durations = Object.fromEntries(episodes.map(episode => [episode.videoId, 60_000]));
+  let state = beam.replaceDailyWebSeries(
+    "WEBSER",
+    communityDefaultVideoSearch("WEBSER", rooms),
+    "2026-10-13",
+    { title: "Night Story", episodes, durationMsByVideoId: durations },
+  );
+  assert.equal(state.tv.seriesTitle, "Night Story");
+  assert.equal(state.tv.seriesDate?.toISOString().slice(0, 10), "2026-10-13");
+  assert.equal(state.tv.seriesEpisodeNumber, 1);
+  assert.equal(state.tv.currentVideoId, episodes[0]?.videoId);
+
+  for (const expectedEpisode of [2, 3, 1]) {
+    now += 60_000;
+    beam.getNextAutomaticPlaybackTransitionAt("WEBSER");
+    state = beam.getState("WEBSER");
+    assert.equal(state.tv.breakEndsAtMs, now + 3 * 60_000);
+    now = state.tv.breakEndsAtMs!;
+    beam.getNextAutomaticPlaybackTransitionAt("WEBSER");
+    const next = episodes[expectedEpisode - 1]!;
+    state = beam.advanceAutomaticDefaultTvVideo(
+      "WEBSER",
+      episodes,
+      durations,
+      next.videoId,
+      state.tv.currentVideoId!,
+      state.tv.startedAtMs!,
+      state.tv.breakEndsAtMs!,
+      { title: "Night Story", date: "2026-10-13", episodeNumber: expectedEpisode },
+    );
+    assert.equal(state.tv.currentVideoId, next.videoId);
+    assert.equal(state.tv.seriesTitle, "Night Story");
+    assert.equal(state.tv.seriesEpisodeNumber, expectedEpisode);
+    assert.equal(state.tv.breakEndsAtMs, null);
+  }
 });
 
 test("Pro Wrestling keeps the full mixed newest-first lineup from all three official channels", () => {

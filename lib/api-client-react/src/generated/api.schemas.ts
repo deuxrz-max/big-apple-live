@@ -896,6 +896,18 @@ export interface UniversityVideoBeamTvState {
   hasVotedToSkip: boolean;
   /** @minimum 0 */
   skipSequence: number;
+  /**
+     * @maxLength 160
+     * @nullable
+     */
+  seriesTitle: string | null;
+  /** @nullable */
+  seriesDate: string | null;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  seriesEpisodeNumber: number | null;
 }
 
 export interface UniversityVideoBeamState {
@@ -1706,6 +1718,18 @@ export interface UniversityVideoBeamTvState4b96100 {
   hasVotedToSkip: boolean;
   /** @minimum 0 */
   skipSequence: number;
+  /**
+     * @maxLength 160
+     * @nullable
+     */
+  seriesTitle: string | null;
+  /** @nullable */
+  seriesDate: string | null;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  seriesEpisodeNumber: number | null;
 }
 
 export interface UniversityVideoBeamState4b96100 {

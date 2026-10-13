@@ -108,6 +108,7 @@ test("all room selections reject known non-English, Shorts, and non-widescreen v
   const candidates = [
     { videoId: "dQw4w9WgXcQ", title: "English video", channelTitle: "A", description: null },
     { videoId: "5qap5aO4i9A", title: "Spanish audio", channelTitle: "A", description: null },
+    { videoId: "abc12345678", title: "Hindi movie trailer", channelTitle: "A", description: null },
     { videoId: "M7lc1UVf-VE", title: "Новости сегодня", channelTitle: "A", description: null },
     { videoId: "aqz-KE-bpKQ", title: "Wrestling #Shorts", channelTitle: "A", description: null },
     { videoId: "ScMzIvxBSi4", title: "Portrait video", channelTitle: "A", description: null },
@@ -116,6 +117,7 @@ test("all room selections reject known non-English, Shorts, and non-widescreen v
   const result = selectPlayableYouTubeVideos(candidates, [
     { videoId: "dQw4w9WgXcQ", durationMs: 240_000, embeddable: true, defaultAudioLanguage: "en-US", thumbnailAspectRatios: wide },
     { videoId: "5qap5aO4i9A", durationMs: 240_000, embeddable: true, defaultAudioLanguage: "es-MX", thumbnailAspectRatios: wide },
+    { videoId: "abc12345678", durationMs: 240_000, embeddable: true, thumbnailAspectRatios: wide },
     { videoId: "M7lc1UVf-VE", durationMs: 240_000, embeddable: true, thumbnailAspectRatios: wide },
     { videoId: "aqz-KE-bpKQ", durationMs: 240_000, embeddable: true, thumbnailAspectRatios: wide },
     { videoId: "ScMzIvxBSi4", durationMs: 240_000, embeddable: true, thumbnailAspectRatios: [9 / 16] },

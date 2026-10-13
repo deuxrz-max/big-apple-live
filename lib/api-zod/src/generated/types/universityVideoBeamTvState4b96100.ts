@@ -52,4 +52,16 @@ export interface UniversityVideoBeamTvState4b96100 {
   hasVotedToSkip: boolean;
   /** @minimum 0 */
   skipSequence: number;
+  /**
+     * @maxLength 160
+     * @nullable
+     */
+  seriesTitle: string | null;
+  /** @nullable */
+  seriesDate: Date | null;
+  /**
+     * @minimum 1
+     * @nullable
+     */
+  seriesEpisodeNumber: number | null;
 }

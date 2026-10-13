@@ -401,6 +401,9 @@ export const getUniversityVideoBeamStateResponseTvSkipVoteTotalMin = 0;
 
 export const getUniversityVideoBeamStateResponseTvSkipSequenceMin = 0;
 
+export const getUniversityVideoBeamStateResponseTvSeriesTitleMax = 160;
+
+
 export const getUniversityVideoBeamStateResponseSlotsItemSlotNumberMax = 8;
 
 export const getUniversityVideoBeamStateResponseSlotsMin = 8;
@@ -435,7 +438,10 @@ export const GetUniversityVideoBeamStateResponse = zod.object({
   "skipVoteCount": zod.number().int().min(getUniversityVideoBeamStateResponseTvSkipVoteCountMin),
   "skipVoteTotal": zod.number().int().min(getUniversityVideoBeamStateResponseTvSkipVoteTotalMin),
   "hasVotedToSkip": zod.boolean(),
-  "skipSequence": zod.number().int().min(getUniversityVideoBeamStateResponseTvSkipSequenceMin)
+  "skipSequence": zod.number().int().min(getUniversityVideoBeamStateResponseTvSkipSequenceMin),
+  "seriesTitle": zod.string().max(getUniversityVideoBeamStateResponseTvSeriesTitleMax).nullable(),
+  "seriesDate": zod.coerce.date().nullable(),
+  "seriesEpisodeNumber": zod.number().int().min(1).nullable()
 }),
   "slots": zod.array(zod.object({
   "slotNumber": zod.number().int().min(1).max(getUniversityVideoBeamStateResponseSlotsItemSlotNumberMax),
@@ -525,6 +531,9 @@ export const performUniversityVideoBeamActionResponseTvSkipVoteTotalMin = 0;
 
 export const performUniversityVideoBeamActionResponseTvSkipSequenceMin = 0;
 
+export const performUniversityVideoBeamActionResponseTvSeriesTitleMax = 160;
+
+
 export const performUniversityVideoBeamActionResponseSlotsItemSlotNumberMax = 8;
 
 export const performUniversityVideoBeamActionResponseSlotsMin = 8;
@@ -559,7 +568,10 @@ export const PerformUniversityVideoBeamActionResponse = zod.object({
   "skipVoteCount": zod.number().int().min(performUniversityVideoBeamActionResponseTvSkipVoteCountMin),
   "skipVoteTotal": zod.number().int().min(performUniversityVideoBeamActionResponseTvSkipVoteTotalMin),
   "hasVotedToSkip": zod.boolean(),
-  "skipSequence": zod.number().int().min(performUniversityVideoBeamActionResponseTvSkipSequenceMin)
+  "skipSequence": zod.number().int().min(performUniversityVideoBeamActionResponseTvSkipSequenceMin),
+  "seriesTitle": zod.string().max(performUniversityVideoBeamActionResponseTvSeriesTitleMax).nullable(),
+  "seriesDate": zod.coerce.date().nullable(),
+  "seriesEpisodeNumber": zod.number().int().min(1).nullable()
 }),
   "slots": zod.array(zod.object({
   "slotNumber": zod.number().int().min(1).max(performUniversityVideoBeamActionResponseSlotsItemSlotNumberMax),
@@ -613,6 +625,9 @@ export const getUniversityVideoBeamTvStateResponseSkipVoteTotalMin = 0;
 
 export const getUniversityVideoBeamTvStateResponseSkipSequenceMin = 0;
 
+export const getUniversityVideoBeamTvStateResponseSeriesTitleMax = 160;
+
+
 
 
 export const GetUniversityVideoBeamTvStateResponse = zod.object({
@@ -638,7 +653,10 @@ export const GetUniversityVideoBeamTvStateResponse = zod.object({
   "skipVoteCount": zod.number().int().min(getUniversityVideoBeamTvStateResponseSkipVoteCountMin),
   "skipVoteTotal": zod.number().int().min(getUniversityVideoBeamTvStateResponseSkipVoteTotalMin),
   "hasVotedToSkip": zod.boolean(),
-  "skipSequence": zod.number().int().min(getUniversityVideoBeamTvStateResponseSkipSequenceMin)
+  "skipSequence": zod.number().int().min(getUniversityVideoBeamTvStateResponseSkipSequenceMin),
+  "seriesTitle": zod.string().max(getUniversityVideoBeamTvStateResponseSeriesTitleMax).nullable(),
+  "seriesDate": zod.coerce.date().nullable(),
+  "seriesEpisodeNumber": zod.number().int().min(1).nullable()
 })
 
 
@@ -718,6 +736,9 @@ export const performUniversityVideoBeamTvActionResponseSkipVoteTotalMin = 0;
 
 export const performUniversityVideoBeamTvActionResponseSkipSequenceMin = 0;
 
+export const performUniversityVideoBeamTvActionResponseSeriesTitleMax = 160;
+
+
 
 
 export const PerformUniversityVideoBeamTvActionResponse = zod.object({
@@ -743,7 +764,10 @@ export const PerformUniversityVideoBeamTvActionResponse = zod.object({
   "skipVoteCount": zod.number().int().min(performUniversityVideoBeamTvActionResponseSkipVoteCountMin),
   "skipVoteTotal": zod.number().int().min(performUniversityVideoBeamTvActionResponseSkipVoteTotalMin),
   "hasVotedToSkip": zod.boolean(),
-  "skipSequence": zod.number().int().min(performUniversityVideoBeamTvActionResponseSkipSequenceMin)
+  "skipSequence": zod.number().int().min(performUniversityVideoBeamTvActionResponseSkipSequenceMin),
+  "seriesTitle": zod.string().max(performUniversityVideoBeamTvActionResponseSeriesTitleMax).nullable(),
+  "seriesDate": zod.coerce.date().nullable(),
+  "seriesEpisodeNumber": zod.number().int().min(1).nullable()
 })
 
 

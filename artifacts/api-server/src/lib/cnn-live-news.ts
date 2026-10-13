@@ -16,13 +16,20 @@ const channelCache = new Map<string, CachedChannel>();
 const liveSearchCache = new Map<string, CachedLiveResult>();
 const liveSearchInFlight = new Map<string, Promise<UniversityVideoBeamTvVideoMetadata | null>>();
 const CHANNEL_CACHE_MS = 24 * 60 * 60_000;
-const LIVE_RESULT_CACHE_MS = 15 * 60_000;
+// The CNN live video ID remains stable across its 15-minute playback segments.
+// Cache lookup longer than one segment to preserve quota for the other room pools.
+const LIVE_RESULT_CACHE_MS = 3 * 60 * 60_000;
 
 async function youtubeDataJson(
   endpoint: "channels" | "search" | "videos",
   params: URLSearchParams,
   unavailableMessage: string,
+  reserveUnits?: (units: number) => Promise<boolean>,
 ): Promise<unknown> {
+  const units = endpoint === "search" ? 100 : 1;
+  if (reserveUnits && !(await reserveUnits(units))) {
+    throw new RoomError(503, "YouTube is taking a short break before this room checks for another video.");
+  }
   const url = new URL(`https://www.googleapis.com/youtube/v3/${endpoint}`);
   url.search = params.toString();
   let response: Response;
@@ -60,6 +67,7 @@ export async function resolveYouTubeChannelId(
   apiKey: string,
   channelHandle: string,
   expectedChannelTitle: string,
+  reserveUnits?: (units: number) => Promise<boolean>,
 ): Promise<string> {
   const cacheKey = `${channelHandle.toLocaleLowerCase("en-US")}|${expectedChannelTitle.toLocaleLowerCase("en-US")}`;
   const cached = channelCache.get(cacheKey);
@@ -69,7 +77,7 @@ export async function resolveYouTubeChannelId(
     part: "snippet",
     forHandle: channelHandle,
     key: apiKey,
-  }), "CNN's official YouTube channel could not be checked.");
+  }), "CNN's official YouTube channel could not be checked.", reserveUnits);
   const channel = recordsFrom(payload).find(item =>
     asText(asObject(item.snippet)?.title)?.trim() === expectedChannelTitle,
   );
@@ -85,6 +93,7 @@ export async function searchCnnLiveStream(
   apiKey: string,
   channelId: string,
   policy: CommunityLiveStreamPolicy,
+  reserveUnits?: (units: number) => Promise<boolean>,
 ): Promise<UniversityVideoBeamTvVideoMetadata | null> {
   const cacheKey = `${YOUTUBE_VIDEO_FILTER_VERSION}|${channelId}|${policy.liveSearchQuery.toLocaleLowerCase("en-US")}`;
   const cached = liveSearchCache.get(cacheKey);
@@ -105,7 +114,7 @@ export async function searchCnnLiveStream(
       maxResults: "10",
       q: policy.liveSearchQuery,
       key: apiKey,
-    }), "CNN's live stream could not be searched right now.");
+    }), "CNN's live stream could not be searched right now.", reserveUnits);
 
     const candidates: YouTubeVideoCandidate[] = recordsFrom(searchPayload).flatMap(item => {
       const id = asObject(item.id);
@@ -136,7 +145,7 @@ export async function searchCnnLiveStream(
       part: "snippet,status,contentDetails",
       id: candidates.map(video => video.videoId).join(","),
       key: apiKey,
-    }), "CNN's live stream details could not be checked right now.");
+    }), "CNN's live stream details could not be checked right now.", reserveUnits);
     const eligibility: YouTubeVideoEligibility[] = recordsFrom(detailsPayload).flatMap(item => {
       const videoId = asText(item.id);
       const contentDetails = asObject(item.contentDetails);

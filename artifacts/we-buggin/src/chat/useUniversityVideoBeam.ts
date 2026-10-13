@@ -46,6 +46,9 @@ const emptyState = (roomId: string): UniversityVideoBeamState => ({
     skipVoteTotal: 0,
     hasVotedToSkip: false,
     skipSequence: 0,
+    seriesTitle: null,
+    seriesDate: null,
+    seriesEpisodeNumber: null,
   },
   slots: [1, 2, 3, 4, 5, 6, 7, 8].map(slotNumber => ({
     slotNumber,

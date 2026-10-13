@@ -32,3 +32,4 @@ export * from "./social-ledger";
 export * from "./social-messages";
 export * from "./social-login-streaks";
 export * from "./streamer-passport";
+export * from "./community-video-rotation";

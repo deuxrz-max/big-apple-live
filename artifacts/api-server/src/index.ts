@@ -6,6 +6,7 @@ import { initializeCommunities } from "./lib/community";
 import { startPhotoRetentionScheduler } from "./lib/profile-photo-retention";
 import { initializeModeratorBots, startModeratorBotChatter, startModeratorBotRotation } from "./lib/moderator-bots";
 import { startTestActorControl } from "./lib/test-actor-control";
+import { startWebSeriesDailySelection } from "./routes/university-video-beam";
 
 const rawPort = process.env["PORT"];
 
@@ -26,6 +27,7 @@ presenceSweep.unref();
 
 const server = createServer(app);
 await initializeCommunities();
+startWebSeriesDailySelection();
 await initializeModeratorBots();
 startModeratorBotRotation((err, context) => logger.error({ err, ...context }, "Bot rotation failed"));
 startModeratorBotChatter((err, context) => logger.error({ err, ...context }, "Bot chatter failed"));

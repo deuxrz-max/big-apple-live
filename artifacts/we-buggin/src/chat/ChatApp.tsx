@@ -24,9 +24,13 @@ function Shell({ children, className = '' }: { children: ReactNode; className?: 
 
 function Cover({ roomId, i }: { roomId: string; i: number }) {
   const [bad, setBad] = useState(false);
+  const coverPath = roomId === 'HIST01' || roomId === 'WEBSER'
+    ? `university-covers/${encodeURIComponent(roomId)}.svg`
+    : `university-covers/${encodeURIComponent(roomId)}.webp`;
   return (
     <div className={`st-cover st-cover-${i % 6}${bad ? ' is-fallback' : ''}`}>
-      {!bad && <img src={`${import.meta.env.BASE_URL}university-covers/${encodeURIComponent(roomId)}.webp`} alt="" loading="lazy" onError={() => setBad(true)} />}
+      {!bad && <img src={`${import.meta.env.BASE_URL}${coverPath}`} alt=""
+        loading={roomId === 'HIST01' || roomId === 'WEBSER' ? 'eager' : 'lazy'} onError={() => setBad(true)} />}
     </div>
   );
 }
