@@ -9,6 +9,7 @@ export type YouTubeVideoCandidate = {
   defaultLanguage?: string | null;
   defaultAudioLanguage?: string | null;
   thumbnailAspectRatios?: number[];
+  tags?: string[];
 };
 
 export type YouTubeVideoEligibility = {
@@ -19,11 +20,20 @@ export type YouTubeVideoEligibility = {
   defaultLanguage?: string | null;
   defaultAudioLanguage?: string | null;
   thumbnailAspectRatios?: number[];
+  description?: string | null;
+  tags?: string[];
+  width?: number | null;
+  height?: number | null;
 };
 
+export const YOUTUBE_VIDEO_FILTER_VERSION = "medium-duration-shorts-metadata-en-us-v3";
+export const MIN_AUTOMATIC_VIDEO_DURATION_MS = 4 * 60 * 1_000;
+
 const NON_ENGLISH_SCRIPTS = /[\p{Script=Cyrillic}\p{Script=Arabic}\p{Script=Hebrew}\p{Script=Devanagari}\p{Script=Bengali}\p{Script=Thai}\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Greek}\p{Script=Armenian}\p{Script=Georgian}]/u;
-const CLEAR_NON_ENGLISH_LATIN = /\b(?:lucha libre|resumen|últimos momentos|últimas noticias|melhores momentos|lutte professionnelle|résumé officiel)\b/i;
-const SHORTS_TITLE = /(?:#shorts?\b|\byoutube shorts?\b|\bshorts\b)/i;
+const CLEAR_NON_ENGLISH_LATIN = /\b(?:lucha libre|resumen|noticias|en vivo|partido|últimos momentos|últimas noticias|melhores momentos|lutte professionnelle|résumé officiel|français|en direct|match complet|ao vivo|luta livre|nachrichten|zusammenfassung|in diretta)\b/i;
+const SHORTS_MARKER = /shorts/i;
+const SIXTEEN_BY_NINE_MIN = 1.70;
+const SIXTEEN_BY_NINE_MAX = 1.85;
 
 export function youtubeThumbnailAspectRatios(value: unknown): number[] {
   if (typeof value !== "object" || value === null) return [];
@@ -45,7 +55,14 @@ function passesEnglishAndWidescreen(
   candidate: YouTubeVideoCandidate,
   details: YouTubeVideoEligibility | undefined,
 ): boolean {
-  if (SHORTS_TITLE.test(candidate.title)
+  const textToScreen = [
+    candidate.title,
+    candidate.description ?? "",
+    ...(candidate.tags ?? []),
+    details?.description ?? "",
+    ...(details?.tags ?? []),
+  ];
+  if (textToScreen.some(value => SHORTS_MARKER.test(value))
     || NON_ENGLISH_SCRIPTS.test(candidate.title)
     || CLEAR_NON_ENGLISH_LATIN.test(candidate.title)) return false;
 
@@ -57,12 +74,21 @@ function passesEnglishAndWidescreen(
   ].filter((value): value is string => typeof value === "string" && value.trim().length > 0);
   if (languageHints.some(language => !isEnglishLanguage(language))) return false;
 
+  const sourceWidth = details?.width;
+  const sourceHeight = details?.height;
+  if (typeof sourceWidth === "number" && typeof sourceHeight === "number"
+    && sourceWidth > 0 && sourceHeight > 0) {
+    const ratio = sourceWidth / sourceHeight;
+    return sourceWidth > sourceHeight
+      && ratio >= SIXTEEN_BY_NINE_MIN && ratio <= SIXTEEN_BY_NINE_MAX;
+  }
+
   const ratios = details?.thumbnailAspectRatios?.length
     ? details.thumbnailAspectRatios
     : candidate.thumbnailAspectRatios ?? [];
   const hasPortraitVariant = ratios.some(ratio => Number.isFinite(ratio) && ratio > 0 && ratio < 1);
   const hasSixteenByNineVariant = ratios.some(
-    ratio => Number.isFinite(ratio) && ratio >= 1.70 && ratio <= 1.85,
+    ratio => Number.isFinite(ratio) && ratio >= SIXTEEN_BY_NINE_MIN && ratio <= SIXTEEN_BY_NINE_MAX,
   );
   return hasSixteenByNineVariant && !hasPortraitVariant;
 }
@@ -127,6 +153,7 @@ export function selectPlayableYouTubeVideos(
     if (candidate.liveBroadcastContent === "live" || candidate.liveBroadcastContent === "upcoming") return false;
     const details = eligibilityById.get(candidate.videoId);
     if (!details?.embeddable || !details.durationMs || details.durationMs <= 0) return false;
+    if (details.durationMs < MIN_AUTOMATIC_VIDEO_DURATION_MS) return false;
     if (details.ytRating === "ytAgeRestricted") return false;
     if (!passesEnglishAndWidescreen(candidate, details)) return false;
     durationMsByVideoId[candidate.videoId] = details.durationMs;

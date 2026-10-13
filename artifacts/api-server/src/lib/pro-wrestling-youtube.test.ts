@@ -72,7 +72,7 @@ test("Pro Wrestling queries only the three official channels and globally orders
           defaultAudioLanguage: "en-US",
           thumbnails: { high: { width: 1280, height: 720 } },
         },
-        contentDetails: { duration: "PT2M30S", contentRating: {} },
+        contentDetails: { duration: "PT5M30S", contentRating: {} },
         status: { embeddable: true },
       };
     }) }), { status: 200 });
@@ -90,6 +90,7 @@ test("Pro Wrestling queries only the three official channels and globally orders
       assert.equal(url.searchParams.get("videoEmbeddable"), "true");
       assert.equal(url.searchParams.get("relevanceLanguage"), "en");
       assert.equal(url.searchParams.get("regionCode"), "US");
+      assert.equal(url.searchParams.get("videoDuration"), "medium");
       assert.ok(channels.has(url.searchParams.get("channelId")!));
     }
     assert.deepEqual(result.videos.map(video => video.videoId), [

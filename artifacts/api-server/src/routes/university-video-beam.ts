@@ -25,7 +25,11 @@ import {
   communityVideoSearchPolicy,
   communityWrestlingSearchPolicy,
 } from "../lib/community-config";
-import { selectPlayableYouTubeVideos, youtubeThumbnailAspectRatios } from "../lib/youtube-video-selection";
+import {
+  selectPlayableYouTubeVideos,
+  youtubeThumbnailAspectRatios,
+  YOUTUBE_VIDEO_FILTER_VERSION,
+} from "../lib/youtube-video-selection";
 import { resolveYouTubeChannelId, searchCnnLiveStream } from "../lib/cnn-live-news";
 import { searchOfficialProWrestlingVideos } from "../lib/pro-wrestling-youtube";
 import { logger } from "../lib/logger";
@@ -74,6 +78,7 @@ async function searchYouTube(
   options: { channelId?: string; cacheTtlMs?: number } = {},
 ) {
   const cacheKey = [
+    YOUTUBE_VIDEO_FILTER_VERSION,
     normalizeSearchQuery(query),
     policy?.order ?? "relevance",
     policy?.publishedWithinDays ?? "any-date",
@@ -106,6 +111,7 @@ async function searchYouTube(
       safeSearch: "strict",
       relevanceLanguage: "en",
       regionCode: "US",
+      videoDuration: "medium",
       maxResults: "10",
       q: query,
       key: apiKey,
@@ -140,7 +146,8 @@ async function searchYouTube(
       const record = item as { id?: { videoId?: unknown }; snippet?: {
         title?: unknown; channelTitle?: unknown; channelId?: unknown;
         description?: unknown; liveBroadcastContent?: unknown;
-        defaultLanguage?: unknown; defaultAudioLanguage?: unknown; thumbnails?: unknown;
+        defaultLanguage?: unknown; defaultAudioLanguage?: unknown;
+        thumbnails?: unknown; tags?: unknown;
       } };
       const videoId = record.id?.videoId;
       if (typeof videoId !== "string" || !/^[A-Za-z0-9_-]{11}$/.test(videoId)) return [];
@@ -160,11 +167,16 @@ async function searchYouTube(
         defaultAudioLanguage: typeof record.snippet?.defaultAudioLanguage === "string"
           ? record.snippet.defaultAudioLanguage : null,
         thumbnailAspectRatios: youtubeThumbnailAspectRatios(record.snippet?.thumbnails),
+        tags: Array.isArray(record.snippet?.tags)
+          ? record.snippet.tags.filter((tag): tag is string => typeof tag === "string") : [],
       }];
     });
     if (results.length === 0) throw new RoomError(404, "No embeddable YouTube videos were found for that topic.");
 
     const detailsUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
+    // Public videos.list responses do not expose source width/height for videos
+    // owned by other channels. Keep the server-side duration, Shorts metadata,
+    // language, and thumbnail checks rather than requesting owner-only fileDetails.
     detailsUrl.search = new URLSearchParams({
       part: "snippet,contentDetails,status",
       id: results.map(item => item.videoId).join(","),
@@ -191,7 +203,8 @@ async function searchYouTube(
       const record = item as {
         id?: unknown;
         snippet?: {
-          defaultLanguage?: unknown; defaultAudioLanguage?: unknown; thumbnails?: unknown;
+          defaultLanguage?: unknown; defaultAudioLanguage?: unknown;
+          thumbnails?: unknown; description?: unknown; tags?: unknown;
         };
         contentDetails?: { duration?: unknown; contentRating?: { ytRating?: unknown } };
         status?: { embeddable?: unknown };
@@ -208,6 +221,9 @@ async function searchYouTube(
         defaultAudioLanguage: typeof record.snippet?.defaultAudioLanguage === "string"
           ? record.snippet.defaultAudioLanguage : null,
         thumbnailAspectRatios: youtubeThumbnailAspectRatios(record.snippet?.thumbnails),
+        description: typeof record.snippet?.description === "string" ? record.snippet.description : null,
+        tags: Array.isArray(record.snippet?.tags)
+          ? record.snippet.tags.filter((tag): tag is string => typeof tag === "string") : [],
       }];
     });
     const playable = selectPlayableYouTubeVideos(results, eligibility, policy?.trustedChannelTitles);

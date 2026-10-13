@@ -4,6 +4,7 @@ import { RoomError } from "./room-store";
 import {
   selectExactLiveYouTubeVideo,
   youtubeThumbnailAspectRatios,
+  YOUTUBE_VIDEO_FILTER_VERSION,
   type YouTubeVideoCandidate,
   type YouTubeVideoEligibility,
 } from "./youtube-video-selection";
@@ -85,7 +86,7 @@ export async function searchCnnLiveStream(
   channelId: string,
   policy: CommunityLiveStreamPolicy,
 ): Promise<UniversityVideoBeamTvVideoMetadata | null> {
-  const cacheKey = `${channelId}|${policy.liveSearchQuery.toLocaleLowerCase("en-US")}`;
+  const cacheKey = `${YOUTUBE_VIDEO_FILTER_VERSION}|${channelId}|${policy.liveSearchQuery.toLocaleLowerCase("en-US")}`;
   const cached = liveSearchCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) return cached.video;
   const pending = liveSearchInFlight.get(cacheKey);
@@ -122,6 +123,8 @@ export async function searchCnnLiveStream(
         defaultLanguage: asText(snippet?.defaultLanguage),
         defaultAudioLanguage: asText(snippet?.defaultAudioLanguage),
         thumbnailAspectRatios: youtubeThumbnailAspectRatios(snippet?.thumbnails),
+        tags: Array.isArray(snippet?.tags)
+          ? snippet.tags.filter((tag): tag is string => typeof tag === "string") : [],
       }];
     });
     if (candidates.length === 0) {
@@ -149,6 +152,9 @@ export async function searchCnnLiveStream(
         defaultLanguage: asText(snippet?.defaultLanguage),
         defaultAudioLanguage: asText(snippet?.defaultAudioLanguage),
         thumbnailAspectRatios: youtubeThumbnailAspectRatios(snippet?.thumbnails),
+        description: asText(snippet?.description),
+        tags: Array.isArray(snippet?.tags)
+          ? snippet.tags.filter((tag): tag is string => typeof tag === "string") : [],
       }];
     });
     const selected = selectExactLiveYouTubeVideo(candidates, eligibility, {

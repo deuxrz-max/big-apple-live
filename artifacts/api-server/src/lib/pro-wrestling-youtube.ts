@@ -6,6 +6,7 @@ import { RoomError } from "./room-store";
 import {
   selectPlayableYouTubeVideos,
   youtubeThumbnailAspectRatios,
+  YOUTUBE_VIDEO_FILTER_VERSION,
   type YouTubeVideoCandidate,
   type YouTubeVideoEligibility,
 } from "./youtube-video-selection";
@@ -81,6 +82,7 @@ async function searchFromChannel(
     safeSearch: "strict",
     relevanceLanguage: "en",
     regionCode: "US",
+    videoDuration: "medium",
     order: "date",
     maxResults: "10",
     channelId: channel.channelId,
@@ -109,6 +111,8 @@ async function searchFromChannel(
       defaultLanguage: text(snippet?.defaultLanguage),
       defaultAudioLanguage: text(snippet?.defaultAudioLanguage),
       thumbnailAspectRatios: youtubeThumbnailAspectRatios(snippet?.thumbnails),
+      tags: Array.isArray(snippet?.tags)
+        ? snippet.tags.filter((tag): tag is string => typeof tag === "string") : [],
     }];
   });
 }
@@ -149,6 +153,9 @@ async function uncachedSearch(apiKey: string, policy: CommunityWrestlingSearchPo
       defaultLanguage: text(snippet?.defaultLanguage),
       defaultAudioLanguage: text(snippet?.defaultAudioLanguage),
       thumbnailAspectRatios: youtubeThumbnailAspectRatios(thumbnails),
+      description: text(snippet?.description),
+      tags: Array.isArray(snippet?.tags)
+        ? snippet.tags.filter((tag): tag is string => typeof tag === "string") : [],
     }];
   });
   const allowedTitles = policy.channels.map(channel => channel.channelTitle);
@@ -178,7 +185,7 @@ export async function searchOfficialProWrestlingVideos(
   apiKey: string,
   policy: CommunityWrestlingSearchPolicy,
 ): Promise<SearchResult> {
-  const cacheKey = `${policy.query.trim().toLocaleLowerCase("en-US")}|${policy.channels.map(channel => channel.channelId).join(",")}`;
+  const cacheKey = `${YOUTUBE_VIDEO_FILTER_VERSION}|${policy.query.trim().toLocaleLowerCase("en-US")}|${policy.channels.map(channel => channel.channelId).join(",")}`;
   const cached = cache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) return cached.result;
   const failed = failureCache.get(cacheKey);

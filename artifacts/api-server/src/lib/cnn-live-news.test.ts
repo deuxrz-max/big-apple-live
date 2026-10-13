@@ -64,6 +64,7 @@ test("CNN live lookup uses the official channel, exact title, embeddability and 
     assert.equal(searchUrl?.searchParams.get("safeSearch"), "strict");
     assert.equal(searchUrl?.searchParams.get("relevanceLanguage"), "en");
     assert.equal(searchUrl?.searchParams.get("regionCode"), "US");
+    assert.equal(searchUrl?.searchParams.get("videoDuration"), null);
   } finally {
     globalThis.fetch = originalFetch;
   }

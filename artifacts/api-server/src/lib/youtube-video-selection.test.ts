@@ -80,10 +80,10 @@ test("World News selection only accepts configured trusted channel names", () =>
   ];
   const result = selectPlayableYouTubeVideos(candidates, [
     {
-      videoId: "abc12345678", durationMs: 60_000, embeddable: true,
+      videoId: "abc12345678", durationMs: 240_000, embeddable: true,
       defaultAudioLanguage: "en", thumbnailAspectRatios: [16 / 9],
     },
-    { videoId: "def12345678", durationMs: 60_000, embeddable: true },
+    { videoId: "def12345678", durationMs: 240_000, embeddable: true },
   ], ["BBC News", "Reuters"]);
   assert.deepEqual(result.videos.map(video => video.videoId), ["abc12345678"]);
 });
@@ -95,10 +95,10 @@ test("Kids selection only accepts the approved family-channel list", () => {
   ];
   const result = selectPlayableYouTubeVideos(candidates, [
     {
-      videoId: "abc12345678", durationMs: 90_000, embeddable: true,
+      videoId: "abc12345678", durationMs: 240_000, embeddable: true,
       defaultAudioLanguage: "en", thumbnailAspectRatios: [16 / 9],
     },
-    { videoId: "def12345678", durationMs: 90_000, embeddable: true },
+    { videoId: "def12345678", durationMs: 240_000, embeddable: true },
   ], ["Super Simple Songs - Kids Songs", "PBS KIDS"]);
   assert.deepEqual(result.videos.map(video => video.videoId), ["abc12345678"]);
 });
@@ -114,16 +114,59 @@ test("all room selections reject known non-English, Shorts, and non-widescreen v
     { videoId: "GotlA1KKWoo", title: "Lucha Libre resumen", channelTitle: "A", description: null },
   ];
   const result = selectPlayableYouTubeVideos(candidates, [
-    { videoId: "dQw4w9WgXcQ", durationMs: 60_000, embeddable: true, defaultAudioLanguage: "en-US", thumbnailAspectRatios: wide },
-    { videoId: "5qap5aO4i9A", durationMs: 60_000, embeddable: true, defaultAudioLanguage: "es-MX", thumbnailAspectRatios: wide },
-    { videoId: "M7lc1UVf-VE", durationMs: 60_000, embeddable: true, thumbnailAspectRatios: wide },
-    { videoId: "aqz-KE-bpKQ", durationMs: 60_000, embeddable: true, thumbnailAspectRatios: wide },
-    { videoId: "ScMzIvxBSi4", durationMs: 60_000, embeddable: true, thumbnailAspectRatios: [9 / 16] },
-    { videoId: "GotlA1KKWoo", durationMs: 60_000, embeddable: true, thumbnailAspectRatios: wide },
+    { videoId: "dQw4w9WgXcQ", durationMs: 240_000, embeddable: true, defaultAudioLanguage: "en-US", thumbnailAspectRatios: wide },
+    { videoId: "5qap5aO4i9A", durationMs: 240_000, embeddable: true, defaultAudioLanguage: "es-MX", thumbnailAspectRatios: wide },
+    { videoId: "M7lc1UVf-VE", durationMs: 240_000, embeddable: true, thumbnailAspectRatios: wide },
+    { videoId: "aqz-KE-bpKQ", durationMs: 240_000, embeddable: true, thumbnailAspectRatios: wide },
+    { videoId: "ScMzIvxBSi4", durationMs: 240_000, embeddable: true, thumbnailAspectRatios: [9 / 16] },
+    { videoId: "GotlA1KKWoo", durationMs: 240_000, embeddable: true, thumbnailAspectRatios: wide },
   ]);
   assert.deepEqual(result.videos.map(video => video.videoId), ["dQw4w9WgXcQ"]);
   assert.deepEqual(youtubeThumbnailAspectRatios({
     default: { width: 120, height: 90 },
     high: { width: 1280, height: 720 },
   }), [4 / 3, 16 / 9]);
+});
+
+test("duration, title, description and tags all exclude Shorts, with an optional real-dimensions check", () => {
+  const wide = [16 / 9];
+  const base = {
+    channelTitle: "Channel",
+    description: null,
+    thumbnailAspectRatios: wide,
+  };
+  const candidates = [
+    { ...base, videoId: "dQw4w9WgXcQ", title: "Regular video" },
+    { ...base, videoId: "5qap5aO4i9A", title: "Short title: Shorts" },
+    { ...base, videoId: "M7lc1UVf-VE", title: "Description marker" },
+    { ...base, videoId: "aqz-KE-bpKQ", title: "Tag marker" },
+    { ...base, videoId: "ScMzIvxBSi4", title: "Below four minutes" },
+    { ...base, videoId: "GotlA1KKWoo", title: "Portrait dimensions" },
+  ];
+  const result = selectPlayableYouTubeVideos(candidates, [
+    {
+      videoId: "dQw4w9WgXcQ", durationMs: 240_000, embeddable: true,
+      defaultAudioLanguage: "en", width: 1920, height: 1080,
+    },
+    {
+      videoId: "5qap5aO4i9A", durationMs: 240_000, embeddable: true,
+      defaultAudioLanguage: "en",
+    },
+    {
+      videoId: "M7lc1UVf-VE", durationMs: 240_000, embeddable: true,
+      description: "Watch this #Shorts clip",
+    },
+    {
+      videoId: "aqz-KE-bpKQ", durationMs: 240_000, embeddable: true,
+      tags: ["shorts"],
+    },
+    {
+      videoId: "ScMzIvxBSi4", durationMs: 239_999, embeddable: true,
+    },
+    {
+      videoId: "GotlA1KKWoo", durationMs: 240_000, embeddable: true,
+      width: 720, height: 1280,
+    },
+  ]);
+  assert.deepEqual(result.videos.map(video => video.videoId), ["dQw4w9WgXcQ"]);
 });
