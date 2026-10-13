@@ -135,7 +135,7 @@ test("real HTTP/DB/storage photo moderation and university overflow; synthetic C
       await (await request(owner, "/account/chat/rooms")).json(),
     );
     assert.deepEqual(directory.map(room => room.label), [
-      "Music", "Gaming", "Kids", "Comedy", "Vlogs", "Sports", "News", "Movies", "Podcasts", "Reactions",
+      "Music", "Gaming", "Pro Wrestling", "Comedy", "Vlogs", "Sports", "News", "Movies", "Podcasts", "Reactions",
       "Pranks", "Food", "Beauty", "How-To", "Tech", "Education", "Fitness", "Pets", "Travel", "ASMR",
     ]);
     assert.equal(directory.length, 20);

@@ -13,28 +13,25 @@ export type CommunityLiveStreamPolicy = {
   segmentDurationMs: number;
 };
 
+export type CommunityWrestlingChannel = {
+  channelId: string;
+  channelTitle: string;
+};
+
+export type CommunityWrestlingSearchPolicy = {
+  query: string;
+  channels: readonly CommunityWrestlingChannel[];
+  cacheTtlMs: number;
+};
+
 type CommunityRoomConfig = {
   roomId: string;
   label: string;
   defaultVideoSearch: string;
   videoSearchPolicy?: CommunityVideoSearchPolicy;
   liveStreamPolicy?: CommunityLiveStreamPolicy;
+  wrestlingSearchPolicy?: CommunityWrestlingSearchPolicy;
 };
-
-const TRUSTED_KIDS_CHANNELS = [
-  "BabyBus - Kids Songs and Cartoons",
-  "Bluey - Official Channel",
-  "CoComelon - Nursery Rhymes",
-  "Disney Jr.",
-  "Little Baby Bum - Nursery Rhymes & Kids Songs",
-  "Ms Rachel - Toddler Learning Videos",
-  "PBS KIDS",
-  "Peppa Pig - Official Channel",
-  "Pinkfong Baby Shark - Kids' Songs & Stories",
-  "Sesame Street",
-  "Super Simple Songs - Kids Songs",
-  "The Wiggles",
-];
 
 export const COMMUNITY_ROOMS: CommunityRoomConfig[] = [
   {
@@ -51,12 +48,20 @@ export const COMMUNITY_ROOMS: CommunityRoomConfig[] = [
   },
   {
     roomId: "KIDS01",
-    label: "Kids",
-    defaultVideoSearch: "kid friendly family cartoons learning videos and nursery rhymes",
+    label: "Pro Wrestling",
+    defaultVideoSearch: "Pro Wrestling highlights full matches and promos",
     videoSearchPolicy: {
-      order: "viewCount",
-      publishedWithinDays: 30,
-      trustedChannelTitles: TRUSTED_KIDS_CHANNELS,
+      order: "date",
+      trustedChannelTitles: ["All Elite Wrestling", "WWE", "TNA Wrestling"],
+    },
+    wrestlingSearchPolicy: {
+      query: "highlights full matches promos",
+      cacheTtlMs: 6 * 60 * 60_000,
+      channels: [
+        { channelId: "UCFN4JkGP_bVhAdBsoV9xftA", channelTitle: "All Elite Wrestling" },
+        { channelId: "UCJ5v_MCY6GNUBTO8-D3XoAg", channelTitle: "WWE" },
+        { channelId: "UCOp8wkVqdrWbFYHjDv946QQ", channelTitle: "TNA Wrestling" },
+      ],
     },
   },
   {
@@ -230,4 +235,19 @@ export function communityLiveStreamPolicy(
   const room = COMMUNITY_ROOMS.find(item => item.roomId === parentRoomId)
     ?? COMMUNITY_ROOMS.find(item => item.roomId === normalizedId);
   return room?.liveStreamPolicy ? { ...room.liveStreamPolicy } : null;
+}
+
+export function communityWrestlingSearchPolicy(
+  roomId: string,
+  store?: CommunityParentLookup,
+): CommunityWrestlingSearchPolicy | null {
+  const normalizedId = roomId.toUpperCase();
+  const parentRoomId = store?.communityParentId(normalizedId)?.toUpperCase() ?? normalizedId;
+  const room = COMMUNITY_ROOMS.find(item => item.roomId === parentRoomId)
+    ?? COMMUNITY_ROOMS.find(item => item.roomId === normalizedId);
+  if (!room?.wrestlingSearchPolicy) return null;
+  return {
+    ...room.wrestlingSearchPolicy,
+    channels: room.wrestlingSearchPolicy.channels.map(channel => ({ ...channel })),
+  };
 }

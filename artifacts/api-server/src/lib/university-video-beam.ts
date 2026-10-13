@@ -97,7 +97,9 @@ export class UniversityVideoBeamStore {
       || normalize(tv.sourceValue ?? "") !== normalize(tv.defaultSearch)) {
       return this.toState(beam);
     }
-    const validVideos = videos.filter(video => /^[A-Za-z0-9_-]{11}$/.test(video.videoId)).slice(0, 10);
+    // Official Pro Wrestling search merges up to 10 current results from each of three channels.
+    // Keep the mixed newest-first queue intact; other room searches still return at most 10.
+    const validVideos = videos.filter(video => /^[A-Za-z0-9_-]{11}$/.test(video.videoId)).slice(0, 30);
     const validIds = validVideos.map(video => video.videoId);
     if (!validIds.length) throw new RoomError(400, "No playable YouTube videos were found.");
     tv.queue = [...validIds];

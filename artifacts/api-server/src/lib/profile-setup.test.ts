@@ -38,7 +38,7 @@ test("real PostgreSQL profile setup, interruption, edit persistence and request 
     assert.deepEqual(COMMUNITY_ROOMS.map(r => r.label), [
       "Music",
       "Gaming",
-      "Kids",
+      "Pro Wrestling",
       "Comedy",
       "Vlogs",
       "Sports",

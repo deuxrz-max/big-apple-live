@@ -27,7 +27,11 @@ test("CNN live lookup uses the official channel, exact title, embeddability and 
         }] }
         : { items: [{
           id: "GotlA1KKWoo",
-          snippet: { channelId },
+          snippet: {
+            channelId,
+            defaultAudioLanguage: "en-US",
+            thumbnails: { high: { width: 1280, height: 720 } },
+          },
           contentDetails: { contentRating: {} },
           status: { embeddable: true },
         }] };
@@ -58,6 +62,8 @@ test("CNN live lookup uses the official channel, exact title, embeddability and 
     assert.equal(searchUrl?.searchParams.get("channelId"), channelId);
     assert.equal(searchUrl?.searchParams.get("videoEmbeddable"), "true");
     assert.equal(searchUrl?.searchParams.get("safeSearch"), "strict");
+    assert.equal(searchUrl?.searchParams.get("relevanceLanguage"), "en");
+    assert.equal(searchUrl?.searchParams.get("regionCode"), "US");
   } finally {
     globalThis.fetch = originalFetch;
   }

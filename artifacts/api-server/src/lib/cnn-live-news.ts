@@ -3,6 +3,7 @@ import type { CommunityLiveStreamPolicy } from "./community-config";
 import { RoomError } from "./room-store";
 import {
   selectExactLiveYouTubeVideo,
+  youtubeThumbnailAspectRatios,
   type YouTubeVideoCandidate,
   type YouTubeVideoEligibility,
 } from "./youtube-video-selection";
@@ -98,6 +99,8 @@ export async function searchCnnLiveStream(
       channelId,
       videoEmbeddable: "true",
       safeSearch: "strict",
+      relevanceLanguage: "en",
+      regionCode: "US",
       maxResults: "10",
       q: policy.liveSearchQuery,
       key: apiKey,
@@ -116,6 +119,9 @@ export async function searchCnnLiveStream(
         channelId: asText(snippet?.channelId),
         description: asText(snippet?.description),
         liveBroadcastContent: asText(snippet?.liveBroadcastContent),
+        defaultLanguage: asText(snippet?.defaultLanguage),
+        defaultAudioLanguage: asText(snippet?.defaultAudioLanguage),
+        thumbnailAspectRatios: youtubeThumbnailAspectRatios(snippet?.thumbnails),
       }];
     });
     if (candidates.length === 0) {
@@ -131,6 +137,7 @@ export async function searchCnnLiveStream(
     const eligibility: YouTubeVideoEligibility[] = recordsFrom(detailsPayload).flatMap(item => {
       const videoId = asText(item.id);
       const contentDetails = asObject(item.contentDetails);
+      const snippet = asObject(item.snippet);
       const status = asObject(item.status);
       const rating = asObject(contentDetails?.contentRating);
       if (!videoId) return [];
@@ -139,6 +146,9 @@ export async function searchCnnLiveStream(
         durationMs: null,
         embeddable: status?.embeddable === true,
         ytRating: asText(rating?.ytRating),
+        defaultLanguage: asText(snippet?.defaultLanguage),
+        defaultAudioLanguage: asText(snippet?.defaultAudioLanguage),
+        thumbnailAspectRatios: youtubeThumbnailAspectRatios(snippet?.thumbnails),
       }];
     });
     const selected = selectExactLiveYouTubeVideo(candidates, eligibility, {

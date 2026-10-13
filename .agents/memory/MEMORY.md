@@ -23,3 +23,4 @@
 - [Gift-media transparency](gift-media-transparency.md) — owner confirmed Moonfox stays transparent; keep alpha support and verify other gift assets separately.
 - [Safe preview schema pushes](safe-preview-schema-pushes.md) — stop when Drizzle proposes truncating unrelated Passport rows; preserve data and apply only additive preview changes.
 - [Public topic-room ownership](public-topic-room-ownership.md) — public Beam TV is ownerless and control-free; server searches by the current room name and advances automatically.
+- [Beam TV video screening](beam-tv-video-screening.md) — English and widescreen filters use YouTube metadata and thumbnails as signals, not proof of audio language or source dimensions.

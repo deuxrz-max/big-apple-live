@@ -10,6 +10,7 @@ import {
   communityDefaultVideoSearch,
   communityLiveStreamPolicy,
   communityVideoSearchPolicy,
+  communityWrestlingSearchPolicy,
   isPublicTopicRoom,
 } from "./community-config";
 import { beamTvReactionLine } from "./beam-tv-reaction-policy";
@@ -334,6 +335,10 @@ test("all 20 categories use recent popular searches across their overflow rooms"
       assert.equal(policy?.order, "date", "News falls back to CNN's latest uploads");
       assert.equal(policy?.publishedWithinDays, undefined);
       assert.deepEqual(policy?.trustedChannelTitles, ["CNN"]);
+    } else if (room.label === "Pro Wrestling") {
+      assert.equal(policy?.order, "date");
+      assert.equal(policy?.publishedWithinDays, undefined);
+      assert.deepEqual(policy?.trustedChannelTitles, ["All Elite Wrestling", "WWE", "TNA Wrestling"]);
     } else {
       assert.equal(policy?.order, "viewCount", `${room.label} sorts recent results by popularity`);
       assert.ok(policy?.publishedWithinDays && policy.publishedWithinDays > 0);
@@ -341,7 +346,15 @@ test("all 20 categories use recent popular searches across their overflow rooms"
     assert.equal(isPublicTopicRoom(overflowId, rooms), true);
   }
   assert.equal(COMMUNITY_ROOMS.length, 20);
-  assert.equal(communityVideoSearchPolicy("KIDS01", rooms)?.trustedChannelTitles?.length, 12);
+  const wrestlingPolicy = communityWrestlingSearchPolicy("KIDS01", rooms);
+  assert.deepEqual(wrestlingPolicy?.channels.map(channel => channel.channelTitle),
+    ["All Elite Wrestling", "WWE", "TNA Wrestling"]);
+  assert.deepEqual(
+    communityWrestlingSearchPolicy("KIDS012", rooms)?.channels.map(channel => channel.channelId),
+    wrestlingPolicy?.channels.map(channel => channel.channelId),
+    "the Pro Wrestling overflow inherits the exact official channel allowlist",
+  );
+  assert.equal(wrestlingPolicy?.cacheTtlMs, 6 * 60 * 60_000);
   const newsPolicy = communityVideoSearchPolicy("NEWS01", rooms);
   assert.equal(newsPolicy?.order, "date");
   assert.equal(newsPolicy?.publishedWithinDays, undefined);
@@ -349,6 +362,30 @@ test("all 20 categories use recent popular searches across their overflow rooms"
   assert.equal(communityLiveStreamPolicy("NEWS01", rooms)?.streamTitle, "CNN Headlines: 24/7 Live News");
   assert.equal(communityLiveStreamPolicy("NEWS012", rooms)?.streamTitle, "CNN Headlines: 24/7 Live News",
     "News overflow inherits the parent live-stream setup");
+});
+
+test("Pro Wrestling keeps the full mixed newest-first lineup from all three official channels", () => {
+  const rooms = new RoomStore();
+  createRoom(rooms, "KIDS01", "history-pro-wrestling", undefined, "Pro Wrestling");
+  const beam = new UniversityVideoBeamStore(rooms, () => 900_000);
+  const viewer = addMember(rooms, "KIDS01", "viewer");
+  beam.joinSlot("KIDS01", viewer.participantId, "viewer");
+  const channels = ["All Elite Wrestling", "WWE", "TNA Wrestling"];
+  const videos = Array.from({ length: 30 }, (_, index) => ({
+    videoId: `PW${String(index).padStart(9, "0")}`,
+    title: `Official match highlight ${index + 1}`,
+    channelTitle: channels[index % channels.length]!,
+    description: null,
+  }));
+  const state = beam.initializeDefaultTvQueue(
+    "KIDS01",
+    communityDefaultVideoSearch("KIDS01", rooms),
+    videos,
+  );
+  assert.equal(state.tv.queue.length, 30);
+  assert.deepEqual(state.tv.queue, videos.map(video => video.videoId));
+  assert.deepEqual(new Set(state.tv.videoMetadata.map(video => video.channelTitle)),
+    new Set(channels));
 });
 
 test("a speaker muted by choice stays muted when a video ends and the break begins", () => {

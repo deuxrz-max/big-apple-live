@@ -1,6 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { selectExactLiveYouTubeVideo, selectPlayableYouTubeVideos } from "./youtube-video-selection";
+import {
+  selectExactLiveYouTubeVideo,
+  selectPlayableYouTubeVideos,
+  youtubeThumbnailAspectRatios,
+} from "./youtube-video-selection";
 
 test("automatic Beam TV selection excludes non-embeddable, age-restricted and live videos", () => {
   const candidates = [
@@ -12,7 +16,10 @@ test("automatic Beam TV selection excludes non-embeddable, age-restricted and li
     { videoId: "invalid", title: "Invalid ID", channelTitle: "Channel F", description: null },
   ];
   const result = selectPlayableYouTubeVideos(candidates, [
-    { videoId: "dQw4w9WgXcQ", durationMs: 240_000, embeddable: true },
+    {
+      videoId: "dQw4w9WgXcQ", durationMs: 240_000, embeddable: true,
+      defaultAudioLanguage: "en-US", thumbnailAspectRatios: [16 / 9],
+    },
     { videoId: "5qap5aO4i9A", durationMs: 240_000, embeddable: false },
     { videoId: "M7lc1UVf-VE", durationMs: 240_000, embeddable: true, ytRating: "ytAgeRestricted" },
     { videoId: "aqz-KE-bpKQ", durationMs: 240_000, embeddable: true },
@@ -38,9 +45,13 @@ test("CNN News live selection accepts only the exact embeddable official live st
     channelId: options.channelId,
     description: "The latest headlines.",
     liveBroadcastContent: "live",
+    thumbnailAspectRatios: [16 / 9],
   };
   const accepted = selectExactLiveYouTubeVideo([candidate], [
-    { videoId: candidate.videoId, durationMs: null, embeddable: true },
+    {
+      videoId: candidate.videoId, durationMs: null, embeddable: true,
+      defaultAudioLanguage: "en", thumbnailAspectRatios: [16 / 9],
+    },
   ], options);
   assert.equal(accepted?.video.videoId, candidate.videoId);
   assert.equal(accepted?.durationMs, 15 * 60_000);
@@ -68,7 +79,10 @@ test("World News selection only accepts configured trusted channel names", () =>
     { videoId: "def12345678", title: "Unverified upload", channelTitle: "Daily World Update", description: null },
   ];
   const result = selectPlayableYouTubeVideos(candidates, [
-    { videoId: "abc12345678", durationMs: 60_000, embeddable: true },
+    {
+      videoId: "abc12345678", durationMs: 60_000, embeddable: true,
+      defaultAudioLanguage: "en", thumbnailAspectRatios: [16 / 9],
+    },
     { videoId: "def12345678", durationMs: 60_000, embeddable: true },
   ], ["BBC News", "Reuters"]);
   assert.deepEqual(result.videos.map(video => video.videoId), ["abc12345678"]);
@@ -80,8 +94,36 @@ test("Kids selection only accepts the approved family-channel list", () => {
     { videoId: "def12345678", title: "Cartoon compilation", channelTitle: "Random Cartoons", description: null },
   ];
   const result = selectPlayableYouTubeVideos(candidates, [
-    { videoId: "abc12345678", durationMs: 90_000, embeddable: true },
+    {
+      videoId: "abc12345678", durationMs: 90_000, embeddable: true,
+      defaultAudioLanguage: "en", thumbnailAspectRatios: [16 / 9],
+    },
     { videoId: "def12345678", durationMs: 90_000, embeddable: true },
   ], ["Super Simple Songs - Kids Songs", "PBS KIDS"]);
   assert.deepEqual(result.videos.map(video => video.videoId), ["abc12345678"]);
+});
+
+test("all room selections reject known non-English, Shorts, and non-widescreen videos", () => {
+  const wide = [16 / 9];
+  const candidates = [
+    { videoId: "dQw4w9WgXcQ", title: "English video", channelTitle: "A", description: null },
+    { videoId: "5qap5aO4i9A", title: "Spanish audio", channelTitle: "A", description: null },
+    { videoId: "M7lc1UVf-VE", title: "Новости сегодня", channelTitle: "A", description: null },
+    { videoId: "aqz-KE-bpKQ", title: "Wrestling #Shorts", channelTitle: "A", description: null },
+    { videoId: "ScMzIvxBSi4", title: "Portrait video", channelTitle: "A", description: null },
+    { videoId: "GotlA1KKWoo", title: "Lucha Libre resumen", channelTitle: "A", description: null },
+  ];
+  const result = selectPlayableYouTubeVideos(candidates, [
+    { videoId: "dQw4w9WgXcQ", durationMs: 60_000, embeddable: true, defaultAudioLanguage: "en-US", thumbnailAspectRatios: wide },
+    { videoId: "5qap5aO4i9A", durationMs: 60_000, embeddable: true, defaultAudioLanguage: "es-MX", thumbnailAspectRatios: wide },
+    { videoId: "M7lc1UVf-VE", durationMs: 60_000, embeddable: true, thumbnailAspectRatios: wide },
+    { videoId: "aqz-KE-bpKQ", durationMs: 60_000, embeddable: true, thumbnailAspectRatios: wide },
+    { videoId: "ScMzIvxBSi4", durationMs: 60_000, embeddable: true, thumbnailAspectRatios: [9 / 16] },
+    { videoId: "GotlA1KKWoo", durationMs: 60_000, embeddable: true, thumbnailAspectRatios: wide },
+  ]);
+  assert.deepEqual(result.videos.map(video => video.videoId), ["dQw4w9WgXcQ"]);
+  assert.deepEqual(youtubeThumbnailAspectRatios({
+    default: { width: 120, height: 90 },
+    high: { width: 1280, height: 720 },
+  }), [4 / 3, 16 / 9]);
 });
