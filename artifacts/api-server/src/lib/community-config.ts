@@ -1,5 +1,5 @@
 export type CommunityVideoSearchPolicy = {
-  order?: "date";
+  order?: "date" | "viewCount";
   publishedWithinDays?: number;
   trustedChannelTitles?: readonly string[];
 };
@@ -11,7 +11,7 @@ type CommunityRoomConfig = {
   videoSearchPolicy?: CommunityVideoSearchPolicy;
 };
 
-const TRUSTED_WORLD_NEWS_CHANNELS = [
+const TRUSTED_NEWS_CHANNELS = [
   "ABC News",
   "Al Jazeera English",
   "Associated Press",
@@ -28,31 +28,149 @@ const TRUSTED_WORLD_NEWS_CHANNELS = [
   "The Guardian",
 ];
 
+const TRUSTED_KIDS_CHANNELS = [
+  "BabyBus - Kids Songs and Cartoons",
+  "Bluey - Official Channel",
+  "CoComelon - Nursery Rhymes",
+  "Disney Jr.",
+  "Little Baby Bum - Nursery Rhymes & Kids Songs",
+  "Ms Rachel - Toddler Learning Videos",
+  "PBS KIDS",
+  "Peppa Pig - Official Channel",
+  "Pinkfong Baby Shark - Kids' Songs & Stories",
+  "Sesame Street",
+  "Super Simple Songs - Kids Songs",
+  "The Wiggles",
+];
+
 export const COMMUNITY_ROOMS: CommunityRoomConfig[] = [
-  { roomId: "LIVEME", label: "Video Games & Interactive Media", defaultVideoSearch: "Video Games & Interactive Media" },
-  { roomId: "BIGOLV", label: "Television & Streaming Services", defaultVideoSearch: "Television & Streaming Services" },
-  { roomId: "TANGOL", label: "Film & Theatrical Box Office", defaultVideoSearch: "Film & Theatrical Box Office" },
-  { roomId: "TIKTOK", label: "Recorded Music & Audio Streaming", defaultVideoSearch: "Recorded Music & Audio Streaming" },
-  { roomId: "INSTAL", label: "Live Concerts & Music Festivals", defaultVideoSearch: "Live Concerts & Music Festivals" },
-  { roomId: "SUPRLV", label: "Spectator Sports Events", defaultVideoSearch: "Spectator Sports Events" },
-  { roomId: "THEMEP", label: "Theme Parks & Amusement Attractions", defaultVideoSearch: "Theme Parks & Amusement Attractions" },
-  { roomId: "SOCIAL", label: "Social Media & Creator Economy Content", defaultVideoSearch: "Social Media & Creator Economy Content" },
-  { roomId: "PERFRM", label: "Performing Arts, Theater & Comedy Shows", defaultVideoSearch: "Performing Arts, Theater & Comedy Shows" },
+  {
+    roomId: "MUSIC1",
+    label: "Music",
+    defaultVideoSearch: "popular official music videos and new song releases",
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+  },
+  {
+    roomId: "GAMING",
+    label: "Gaming",
+    defaultVideoSearch: "popular video game gameplay highlights and new game trailers",
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+  },
+  {
+    roomId: "KIDS01",
+    label: "Kids",
+    defaultVideoSearch: "kid friendly family cartoons learning videos and nursery rhymes",
+    videoSearchPolicy: {
+      order: "viewCount",
+      publishedWithinDays: 30,
+      trustedChannelTitles: TRUSTED_KIDS_CHANNELS,
+    },
+  },
+  {
+    roomId: "COMEDY",
+    label: "Comedy",
+    defaultVideoSearch: "popular stand up comedy and clean comedy sketches",
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+  },
+  {
+    roomId: "VLOGS1",
+    label: "Vlogs",
+    defaultVideoSearch: "popular creator vlogs daily life and travel vlogs",
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+  },
   {
     roomId: "SPORTS",
     label: "Sports",
-    defaultVideoSearch: "recent sports highlights and sports news",
-    videoSearchPolicy: { order: "date", publishedWithinDays: 14 },
+    defaultVideoSearch: "popular recent sports highlights and sports news",
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 14 },
   },
   {
-    roomId: "WORLDNEWS",
-    label: "World News",
-    defaultVideoSearch: "recent world news coverage BBC News Reuters Associated Press",
+    roomId: "NEWS01",
+    label: "News",
+    defaultVideoSearch: "recent popular world news coverage BBC Reuters Associated Press",
     videoSearchPolicy: {
-      order: "date",
-      publishedWithinDays: 14,
-      trustedChannelTitles: TRUSTED_WORLD_NEWS_CHANNELS,
+      order: "viewCount",
+      publishedWithinDays: 7,
+      trustedChannelTitles: TRUSTED_NEWS_CHANNELS,
     },
+  },
+  {
+    roomId: "MOVIES",
+    label: "Movies",
+    defaultVideoSearch: "popular official movie trailers and box office news",
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+  },
+  {
+    roomId: "PODCAS",
+    label: "Podcasts",
+    defaultVideoSearch: "popular podcast clips interviews and conversations",
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+  },
+  {
+    roomId: "REACTS",
+    label: "Reactions",
+    defaultVideoSearch: "popular reaction videos music movies and internet trends",
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+  },
+  {
+    roomId: "PRANKS",
+    label: "Pranks",
+    defaultVideoSearch: "popular harmless clean prank videos and funny surprises",
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+  },
+  {
+    roomId: "FOOD01",
+    label: "Food",
+    defaultVideoSearch: "popular cooking recipes street food and food challenges",
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+  },
+  {
+    roomId: "BEAUTY",
+    label: "Beauty",
+    defaultVideoSearch: "popular makeup skincare beauty tutorials and trends",
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+  },
+  {
+    roomId: "HOWTO1",
+    label: "How-To",
+    defaultVideoSearch: "popular how to tutorials DIY tips and practical guides",
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+  },
+  {
+    roomId: "TECH01",
+    label: "Tech",
+    defaultVideoSearch: "popular technology reviews gadgets and product launches",
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+  },
+  {
+    roomId: "EDUCAT",
+    label: "Education",
+    defaultVideoSearch: "popular educational science history and learning videos",
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+  },
+  {
+    roomId: "FITNES",
+    label: "Fitness",
+    defaultVideoSearch: "popular fitness workouts training routines and exercise",
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+  },
+  {
+    roomId: "PETS01",
+    label: "Pets",
+    defaultVideoSearch: "popular cute pets dogs cats and animal videos",
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+  },
+  {
+    roomId: "TRAVEL",
+    label: "Travel",
+    defaultVideoSearch: "popular travel vlogs destination tours and travel tips",
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
+  },
+  {
+    roomId: "ASMR01",
+    label: "ASMR",
+    defaultVideoSearch: "popular ASMR relaxation whispering and soothing sounds",
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 30 },
   },
 ];
 

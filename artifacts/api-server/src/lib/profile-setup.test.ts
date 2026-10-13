@@ -36,21 +36,33 @@ test("real PostgreSQL profile setup, interruption, edit persistence and request 
   });
   await t.test("all ordered communities have room-specific default video searches", () => {
     assert.deepEqual(COMMUNITY_ROOMS.map(r => r.label), [
-      "Video Games & Interactive Media",
-      "Television & Streaming Services",
-      "Film & Theatrical Box Office",
-      "Recorded Music & Audio Streaming",
-      "Live Concerts & Music Festivals",
-      "Spectator Sports Events",
-      "Theme Parks & Amusement Attractions",
-      "Social Media & Creator Economy Content",
-      "Performing Arts, Theater & Comedy Shows",
+      "Music",
+      "Gaming",
+      "Kids",
+      "Comedy",
+      "Vlogs",
       "Sports",
-      "World News",
+      "News",
+      "Movies",
+      "Podcasts",
+      "Reactions",
+      "Pranks",
+      "Food",
+      "Beauty",
+      "How-To",
+      "Tech",
+      "Education",
+      "Fitness",
+      "Pets",
+      "Travel",
+      "ASMR",
     ]);
-    assert.equal(new Set(COMMUNITY_ROOMS.map(r => r.roomId)).size, 11);
-    assert.equal(new Set(COMMUNITY_ROOMS.map(r => r.defaultVideoSearch)).size, 11);
+    assert.equal(new Set(COMMUNITY_ROOMS.map(r => r.roomId)).size, 20);
+    assert.ok(COMMUNITY_ROOMS.every(r => /^[A-Z0-9]{6}$/.test(r.roomId)),
+      "every fixed room code remains joinable through the existing six-character route");
+    assert.equal(new Set(COMMUNITY_ROOMS.map(r => r.defaultVideoSearch)).size, 20);
     assert.ok(COMMUNITY_ROOMS.every(r => r.defaultVideoSearch.length > 8));
+    assert.ok(COMMUNITY_ROOMS.every(r => r.label.trim().split(/\s+/).length <= 2));
   });
   await t.test("unsaved and invalid setup never becomes complete", async () => {
     assert.equal(await getProfile(ids[0]!), null);

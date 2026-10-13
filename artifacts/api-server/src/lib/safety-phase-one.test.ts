@@ -130,21 +130,34 @@ test("real HTTP/DB/storage photo moderation and university overflow; synthetic C
     assert.equal((await db.select().from(profilePhotos).where(inArray(profilePhotos.id, photos))).length, 2);
   });
   await initializeCommunities();
+  await t.test("the directory contains only the 20 current rooms and retires the old public room IDs", async () => {
+    const directory = GetChatDirectoryResponse.parse(
+      await (await request(owner, "/account/chat/rooms")).json(),
+    );
+    assert.deepEqual(directory.map(room => room.label), [
+      "Music", "Gaming", "Kids", "Comedy", "Vlogs", "Sports", "News", "Movies", "Podcasts", "Reactions",
+      "Pranks", "Food", "Beauty", "How-To", "Tech", "Education", "Fitness", "Pets", "Travel", "ASMR",
+    ]);
+    assert.equal(directory.length, 20);
+    assert.equal(directory.some(room => room.roomId === "LIVEME" || room.roomId === "WORLDNEWS"), false);
+    const oldRoomJoin = await request(owner, "/account/rooms/LIVEME/join", { method: "POST" });
+    assert.equal(oldRoomJoin.status, 410, await oldRoomJoin.text());
+  });
   const sessions: { participantSessionId: string }[] = [];
   await t.test("25th member gets overflow, moderators can enter full base, empty overflow hidden", async () => {
     for (let i = 0; i < UNIVERSITY_MEMBER_CAP; i++) {
-      const response = await request(ids[i]!, "/account/rooms/LIVEME/join", { method: "POST" });
+      const response = await request(ids[i]!, "/account/rooms/MUSIC1/join", { method: "POST" });
       assert.equal(response.status, 201);
       sessions.push(JoinAccountRoomResponse.parse(await response.json()));
     }
-    const full = await request(ids[UNIVERSITY_MEMBER_CAP]!, "/account/rooms/LIVEME/join", { method: "POST" });
+    const full = await request(ids[UNIVERSITY_MEMBER_CAP]!, "/account/rooms/MUSIC1/join", { method: "POST" });
     assert.equal(full.status, 409);
     const offer = await full.json() as { error: string; overflow: { roomId: string; label: string } };
-    assert.equal(offer.overflow.label, "LiveMe 2");
+    assert.equal(offer.overflow.label, "Music 2");
     assert.match(offer.error, /is full/);
     const emptyDirectory = GetChatDirectoryResponse.parse(await (await request(owner, "/account/chat/rooms")).json());
     assert.ok(!emptyDirectory.some((r: { roomId: string }) => r.roomId === offer.overflow.roomId));
-    assert.equal(emptyDirectory.find(r => r.roomId === "LIVEME")?.headcount, UNIVERSITY_MEMBER_CAP);
+    assert.equal(emptyDirectory.find(r => r.roomId === "MUSIC1")?.headcount, UNIVERSITY_MEMBER_CAP);
     const publicDirectoryResponse = await fetch(`${base}/account/chat/rooms`);
     assert.equal(publicDirectoryResponse.status, 200);
     const publicDirectory = await publicDirectoryResponse.json() as Record<string, unknown>[];
@@ -153,12 +166,12 @@ test("real HTTP/DB/storage photo moderation and university overflow; synthetic C
     const joined = await request(ids[UNIVERSITY_MEMBER_CAP]!, `/account/rooms/${offer.overflow.roomId}/join`, { method: "POST" });
     assert.equal(joined.status, 201);
     const overflowSession = JoinAccountRoomResponse.parse(await joined.json());
-    assert.equal((await request(mod, "/account/rooms/LIVEME/join", { method: "POST" })).status, 201);
+    assert.equal((await request(mod, "/account/rooms/MUSIC1/join", { method: "POST" })).status, 201);
     const send = (actor: string, roomId: string, sessionId: string, text: string) => request(actor, `/account/rooms/${roomId}/messages`, {
       method: "POST", ...json({ text, kind: "text" }),
       headers: { "Content-Type": "application/json", "X-Room-Session": sessionId },
     });
-    assert.equal((await send(owner, "LIVEME", sessions[0]!.participantSessionId, `Base ${suffix}`)).status, 201);
+    assert.equal((await send(owner, "MUSIC1", sessions[0]!.participantSessionId, `Base ${suffix}`)).status, 201);
     assert.equal((await send(ids[UNIVERSITY_MEMBER_CAP]!, offer.overflow.roomId, overflowSession.participantSessionId, `Overflow ${suffix}`)).status, 201);
     const history = GetRoomMessagesResponse.parse(await (await request(ids[UNIVERSITY_MEMBER_CAP]!, `/account/rooms/${offer.overflow.roomId}/messages`, {
       headers: { "X-Room-Session": overflowSession.participantSessionId },
@@ -168,7 +181,7 @@ test("real HTTP/DB/storage photo moderation and university overflow; synthetic C
     const visibleDirectory = GetChatDirectoryResponse.parse(await (await request(owner, "/account/chat/rooms")).json());
     assert.ok(visibleDirectory.some((r: { roomId: string }) => r.roomId === offer.overflow.roomId));
     assert.equal(visibleDirectory.find(r => r.roomId === offer.overflow.roomId)?.headcount, 1);
-    assert.equal(visibleDirectory.find(r => r.roomId === "LIVEME")?.headcount, UNIVERSITY_MEMBER_CAP + 1,
+    assert.equal(visibleDirectory.find(r => r.roomId === "MUSIC1")?.headcount, UNIVERSITY_MEMBER_CAP + 1,
       "Presence includes the exempt moderator without changing the member cap");
     const overflowMessage = history.find(m => m.text === `Overflow ${suffix}`)!;
     const report = await request(ids[UNIVERSITY_MEMBER_CAP]!, "/account/chat/reports", {
@@ -183,10 +196,10 @@ test("real HTTP/DB/storage photo moderation and university overflow; synthetic C
     const thirdOffer = await request(ids[UNIVERSITY_MEMBER_CAP - 1]!, `/account/rooms/${offer.overflow.roomId}/join`, { method: "POST" });
     assert.equal(thirdOffer.status, 409);
     const third = await thirdOffer.json() as { overflow: { roomId: string; label: string } };
-    assert.equal(third.overflow.label, "LiveMe 3");
+    assert.equal(third.overflow.label, "Music 3");
     assert.notEqual(third.overflow.roomId, offer.overflow.roomId);
     assert.equal((await request(mod, `/account/rooms/${offer.overflow.roomId}/join`, { method: "POST" })).status, 201);
-    assert.equal((await request(owner, "/rooms/LIVEME/audio/events")).status, 410);
-    assert.equal((await request(owner, "/rooms/LIVEME/participants/anything/microphone", { method: "PUT" })).status, 410);
+    assert.equal((await request(owner, "/rooms/MUSIC1/audio/events")).status, 410);
+    assert.equal((await request(owner, "/rooms/MUSIC1/participants/anything/microphone", { method: "PUT" })).status, 410);
   });
 });

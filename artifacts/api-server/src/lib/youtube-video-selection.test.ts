@@ -35,3 +35,15 @@ test("World News selection only accepts configured trusted channel names", () =>
   ], ["BBC News", "Reuters"]);
   assert.deepEqual(result.videos.map(video => video.videoId), ["abc12345678"]);
 });
+
+test("Kids selection only accepts the approved family-channel list", () => {
+  const candidates = [
+    { videoId: "abc12345678", title: "Nursery rhyme", channelTitle: "Super Simple Songs - Kids Songs", description: null },
+    { videoId: "def12345678", title: "Cartoon compilation", channelTitle: "Random Cartoons", description: null },
+  ];
+  const result = selectPlayableYouTubeVideos(candidates, [
+    { videoId: "abc12345678", durationMs: 90_000, embeddable: true },
+    { videoId: "def12345678", durationMs: 90_000, embeddable: true },
+  ], ["Super Simple Songs - Kids Songs", "PBS KIDS"]);
+  assert.deepEqual(result.videos.map(video => video.videoId), ["abc12345678"]);
+});

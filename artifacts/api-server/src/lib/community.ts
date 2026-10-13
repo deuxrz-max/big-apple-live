@@ -23,20 +23,22 @@ export async function initializeCommunities() {
         .where(eq(chatRooms.roomId, overflow.roomId));
     }
   }
-  for (const entry of COMMUNITY_ROOMS) {
-    const [saved] = await db.select().from(chatRooms).where(eq(chatRooms.roomId, entry.roomId));
-    roomStore.registerCommunity(saved!);
+  const activeRoomIds = new Set(COMMUNITY_ROOMS.map(room => room.roomId));
+  const savedRooms = await db.select().from(chatRooms);
+  // Old room rows and their histories remain stored, but only the configured public set is activated.
+  for (const saved of savedRooms) {
+    const activeOverflow = saved.parentRoomId && activeRoomIds.has(saved.parentRoomId);
+    if (activeRoomIds.has(saved.roomId) || activeOverflow) roomStore.registerCommunity(saved);
   }
-  for (const saved of await db.select().from(chatRooms)) roomStore.registerCommunity(saved);
 }
 export async function communityDirectory() {
   const savedRooms = await db.select().from(chatRooms);
-  const overflow = savedRooms.filter(r =>
-    r.parentRoomId && roomStore.isCommunity(r.roomId) && roomStore.get(r.roomId).participants.length > 0);
-  const baseIds = new Set(COMMUNITY_ROOMS.map(room => room.roomId));
-  const extraRoots = savedRooms.filter(room => !room.parentRoomId && !baseIds.has(room.roomId));
-  const extraRootIds = new Set(extraRoots.map(room => room.roomId));
-  const otherOverflow = overflow.filter(room => room.parentRoomId && !baseIds.has(room.parentRoomId) && !extraRootIds.has(room.parentRoomId));
+  const activeRoomIds = new Set(COMMUNITY_ROOMS.map(room => room.roomId));
+  const overflow = savedRooms.filter(room =>
+    room.parentRoomId
+    && activeRoomIds.has(room.parentRoomId)
+    && roomStore.isCommunity(room.roomId)
+    && roomStore.get(room.roomId).participants.length > 0);
   return [
     ...COMMUNITY_ROOMS.flatMap(base => [
       { roomId: base.roomId, label: base.label },
@@ -44,13 +46,6 @@ export async function communityDirectory() {
       .sort((a, b) => Number(a.overflowNumber) - Number(b.overflowNumber))
       .map(r => ({ roomId: r.roomId, label: r.label })),
     ]),
-    ...extraRoots.flatMap(root => [
-      { roomId: root.roomId, label: root.label },
-      ...overflow.filter(room => room.parentRoomId === root.roomId)
-        .sort((a, b) => Number(a.overflowNumber) - Number(b.overflowNumber))
-        .map(room => ({ roomId: room.roomId, label: room.label })),
-    ]),
-    ...otherOverflow.map(room => ({ roomId: room.roomId, label: room.label })),
   ].map(r => ({ ...r, headcount: roomStore.get(r.roomId).participants.length }));
 }
 /** Stable identifiers and history rows survive empty rooms/restarts. No history is reused. */
