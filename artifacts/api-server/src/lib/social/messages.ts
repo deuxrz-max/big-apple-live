@@ -2,7 +2,7 @@ import { db, accountProfiles, socialMessages } from "@workspace/db";
 import { and, eq, or, desc, sql, inArray, isNull } from "drizzle-orm";
 import { RoomError } from "../room-store";
 import { assertContact, lockPair, pairBlocked, person, requireAccount, targetAccount } from "./core";
-import { monthlyPurchaseBadgeSummaries } from "./monthly-credit-badges";
+import { visibleMonthlyPurchaseBadgeSummaries } from "./monthly-credit-badges";
 
 const pair = (a: string, b: string) => or(and(eq(socialMessages.senderId, a), eq(socialMessages.recipientId, b)), and(eq(socialMessages.senderId, b), eq(socialMessages.recipientId, a)));
 const visible = (id: string) => or(and(eq(socialMessages.senderId, id), eq(socialMessages.senderHidden, false)), and(eq(socialMessages.recipientId, id), eq(socialMessages.recipientHidden, false)));
@@ -71,7 +71,7 @@ export async function inbox(id: string) {
   const entries = [...grouped].slice(0, 100);
   const profiles = entries.length ? await db.select().from(accountProfiles).where(inArray(accountProfiles.accountId, entries.map(([other]) => other))) : [];
   const profileById = new Map(profiles.map(profile => [profile.accountId, profile]));
-  const badgeSummaries = await monthlyPurchaseBadgeSummaries(profiles.map(profile => profile.accountId));
+  const badgeSummaries = await visibleMonthlyPurchaseBadgeSummaries(profiles.map(profile => profile.accountId));
   const conversations = [];
   for (const [other, entry] of entries) {
     const profile = profileById.get(other);

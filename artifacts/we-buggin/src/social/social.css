@@ -84,6 +84,14 @@
 .sc-note { padding: 10px 14px; border-left: 3px solid; font-size: 14px; display: flex; gap: 12px; align-items: center; justify-content: space-between; }
 .sc-note.is-err { border-color: #ff6b7a; color: #ff9aa5; background: #1a0b0e; }
 .sc-note.is-ok { border-color: #6fe3a1; color: #9df0c0; background: #0a1710; }
+.sc-entrance-settings { width: 100%; max-width: 620px; align-self: flex-start; }
+.sc-entrance-settings .sc-h2 { margin: 0; padding: 0; border: 0; font-size: 24px; }
+.sc-entrance-master { padding: 12px; border: 1px solid var(--bm-line); border-radius: 12px; align-items: center; }
+.sc-entrance-master span, .sc-entrance-option span { display: grid; gap: 3px; }
+.sc-entrance-master small, .sc-entrance-option small { display: block; color: var(--bm-mute); font-size: 12px; }
+.sc-entrance-list { display: grid; gap: 8px; width: 100%; }
+.sc-entrance-option { padding: 10px 12px; border: 1px solid var(--bm-line); border-radius: 10px; align-items: center; }
+.sc-entrance-option b, .sc-entrance-master b { color: var(--bm-ink); }
 .sc-empty { border: 1px dashed #444; padding: 40px 20px; text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; color: var(--bm-mute); }
 .sc-empty h2 { font-size: 36px; color: var(--bm-ink); }
 .sc-skel { display: grid; gap: 10px; } .sc-skel i { height: 72px; background: linear-gradient(90deg, #0d0d0d, #1a1a1a, #0d0d0d); background-size: 200% 100%; animation: sc-sh 1.4s linear infinite; }

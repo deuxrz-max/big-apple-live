@@ -47,7 +47,9 @@ export function ThreadPage({ username }: { username: string }) {
   const mine = me.data?.profile.username;
   return (
     <section className="sc-thread">
-      <Link href="/community/messages" className="bm-back">All messages</Link>
+      <h1 className="sc-thread-title">
+        <Link href="/community/messages" aria-label="Back to My Messages" data-testid="link-my-messages">My Messages</Link>
+      </h1>
       <header className="sc-thread-head">
         <Link href={`/community/people/${username}`} className="sc-row"><span className="sc-name" style={{ color: d.person.displayNameColor ?? '#FFFFFF' }}><BadgeMark id={d.person.badgeId} label={d.person.badgeName} imageUrl={d.person.badgeImage} size={18} compact />{d.person.username}</span></Link>
         <div className="sc-actions">

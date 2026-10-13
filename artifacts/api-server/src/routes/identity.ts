@@ -13,8 +13,8 @@ import { communityMembership, accessFor, offerOverflow } from "../lib/community"
 import { giftNameColorsForAccounts } from "../lib/social/gift-name-color-data";
 import { universityAudioBeamStore } from "../lib/university-audio-beam";
 import { coloredEmoji } from "../lib/emoji-library";
-import { claimRoomEntranceEffect, ROOM_ENTRANCE_EFFECT_DURATION_MS } from "../lib/room-entrance-effects";
-import { monthlyPurchaseBadgeSummary } from "../lib/social/monthly-credit-badges";
+import { claimRoomEntranceEffect } from "../lib/room-entrance-effects";
+import { accountEntranceEffectSelection } from "../lib/social/entrance-effect-preferences";
 
 const router: IRouter = Router();
 router.get("/emojis/:emojiId/:color/image", (req, res): void => {
@@ -101,14 +101,10 @@ router.post("/account/rooms/:roomId/join", async (req, res) => {
   roomStore.restoreParticipantId(params.data.roomId, id, member.participantId);
   if (!wasAlreadyInRoom) {
     try {
-      const monthlyBadge = await monthlyPurchaseBadgeSummary(id);
-      const assignedEffectId = monthlyBadge?.tier.entranceEffectId
-        ?? (profile.username.toLowerCase() === "vampsquad" ? "lion-entrance" : null);
-      const effectId = assignedEffectId ? await claimRoomEntranceEffect(id, assignedEffectId) : null;
-      if (effectId) roomStore.publishRoomEntranceEffect(
-        params.data.roomId, id, effectId,
-        monthlyBadge && effectId === monthlyBadge.tier.entranceEffectId
-          ? monthlyBadge.tier.durationMs : ROOM_ENTRANCE_EFFECT_DURATION_MS,
+      const selected = await accountEntranceEffectSelection(id);
+      const effectId = selected ? await claimRoomEntranceEffect(id, selected.effectId) : null;
+      if (effectId && selected) roomStore.publishRoomEntranceEffect(
+        params.data.roomId, id, effectId, selected.durationMs,
       );
     } catch {
       req.log.warn("Room entrance effect could not be started");

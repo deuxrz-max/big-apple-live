@@ -582,6 +582,8 @@ paths:
               schema: { $ref: "#/components/schemas/ChatReportReceipt" }
   /social/me:
     $ref: './social.openapi.json#/paths/~1social~1me'
+  /social/me/entrance-effects:
+    $ref: './social.openapi.json#/paths/~1social~1me~1entrance-effects'
   /social/me/passport:
     $ref: './social.openapi.json#/paths/~1social~1me~1passport'
   /social/me/passport/platforms:

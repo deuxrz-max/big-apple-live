@@ -6,7 +6,7 @@ import { DAILY_REWARD } from "./catalog";
 import { visibleProfilePhotos } from "../photo-visibility";
 import { hasDevelopmentUnlimitedCredits } from "./credits-policy";
 import { giftNameColorForSentCredits } from "./gift-name-color";
-import { monthlyPurchaseBadgeSummaries, monthlyPurchaseBadgeSummary, type MonthlyCreditBadgeSummary } from "./monthly-credit-badges";
+import { visibleMonthlyPurchaseBadgeSummary, type MonthlyCreditBadgeSummary } from "./monthly-credit-badges";
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type ProfileRow = typeof accountProfiles.$inferSelect;
@@ -76,7 +76,7 @@ export async function person(viewer: string, profile: ProfileRow, settings?: Set
     eq(socialRelations.ownerId, id), eq(socialRelations.targetId, id),
   ))) : [];
   const monthlyBadge = blocked ? null : monthlyBadgeOverride !== undefined
-    ? monthlyBadgeOverride : await monthlyPurchaseBadgeSummary(id);
+    ? monthlyBadgeOverride : await visibleMonthlyPurchaseBadgeSummary(id);
   return {
     username: profile.username, displayName: profile.displayName ?? profile.username,
     ...photos, identity: publicProfile(profile).identity,

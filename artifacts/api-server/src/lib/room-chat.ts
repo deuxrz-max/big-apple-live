@@ -9,7 +9,7 @@ import { BOT_WARNING_COOLDOWN_MS, publicViolation } from "./bot-policy";
 import { giftNameColorsForAccounts } from "./social/gift-name-color-data";
 import { giftNameColorForSentCredits } from "./social/gift-name-color";
 import { passportBadgeSummaries } from "./social/passport";
-import { monthlyPurchaseBadgeSummaries, monthlyPurchaseBadgeSummary } from "./social/monthly-credit-badges";
+import { visibleMonthlyPurchaseBadgeSummaries, visibleMonthlyPurchaseBadgeSummary } from "./social/monthly-credit-badges";
 
 function publicMessage(row: RoomMessageRow) {
   return GetRoomMessagesResponse.element.parse(row);
@@ -44,7 +44,7 @@ export async function getMessages(roomId: string, store: RoomStore = roomStore, 
   const authorIds = [...new Set(rows.map(row => row.message.authorAccountId).filter((id): id is string => !!id))];
   const nameColors = await giftNameColorsForAccounts(authorIds);
   const passports = await passportBadgeSummaries(authorIds);
-  const badgeSummaries = await monthlyPurchaseBadgeSummaries(authorIds);
+  const badgeSummaries = await visibleMonthlyPurchaseBadgeSummaries(authorIds);
   return rows.reverse().map(row => ({
     ...publicMessage(row.message), photoUrl: null,
     displayNameColor: row.message.authorAccountId ? nameColors.get(row.message.authorAccountId) ?? "#FFFFFF" : "#FFFFFF",
@@ -63,7 +63,7 @@ export async function acceptMessage(
   const sender = store.requireAccountMember(roomId, sessionId, accountId);
   const historyId = store.getHistoryId(roomId);
   const filter = store.isCommunity(roomId) ? await botSettings() : null;
-  const senderBadge = await monthlyPurchaseBadgeSummary(accountId);
+  const senderBadge = await visibleMonthlyPurchaseBadgeSummary(accountId);
   let rateLimited = false;
   const accepted = await db.transaction(async (tx) => {
     // Same lock as profile editing; serialize public sends and their spam checks.

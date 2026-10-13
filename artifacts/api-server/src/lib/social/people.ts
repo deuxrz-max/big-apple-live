@@ -5,7 +5,8 @@ import { RoomError } from "../room-store";
 import { assertContact, ensureSocial, lockAccounts, lockPair, pairBlocked, person, requireAccount, targetAccount, wallet } from "./core";
 import { COUNTRIES, COUNTRY_CODES, GIFTS, PRODUCTS } from "./catalog";
 import { roomStore } from "../room-store";
-import { monthlyPurchaseBadgeSummaries } from "./monthly-credit-badges";
+import { visibleMonthlyPurchaseBadgeSummaries } from "./monthly-credit-badges";
+import { getMyEntranceEffectSettings } from "./entrance-effect-preferences";
 
 export async function getMe(id: string) {
   const profile = await requireAccount(id);
@@ -15,7 +16,8 @@ export async function getMe(id: string) {
   return { profile: await person(id, profile, undefined, true), wallet: await wallet(id, db, profile.username), inventory: giftsOwned.map(g => g.giftId),
     giftQuantities: Object.fromEntries(giftsOwned.map(g => [g.giftId, g.quantity])),
      badgeExpirations: {},
-    loginStreak: streak?.consecutiveDays ?? 0, products: PRODUCTS, gifts: GIFTS, countries: COUNTRIES };
+      loginStreak: streak?.consecutiveDays ?? 0, products: PRODUCTS, gifts: GIFTS, countries: COUNTRIES,
+      entranceEffects: await getMyEntranceEffectSettings(id) };
 }
 export async function saveSocialProfile(id: string, input: SocialProfileInput) {
   const profile = await requireAccount(id);
@@ -58,7 +60,7 @@ export async function listPeople(id: string, input: PeopleQuery = {}, leaderboar
     .limit(leaderboard ? 10 : 24).offset(offset);
   const [count] = await db.select({ total: sql<number>`count(*)::int` }).from(accountProfiles)
     .innerJoin(socialSettings, eq(accountProfiles.accountId, socialSettings.accountId)).where(and(...conditions));
-  const badges = await monthlyPurchaseBadgeSummaries(rows.map(row => row.profile.accountId));
+  const badges = await visibleMonthlyPurchaseBadgeSummaries(rows.map(row => row.profile.accountId));
   return { people: await Promise.all(rows.map(row => person(id, row.profile, row.prefs, false,
     badges.get(row.profile.accountId) ?? null))), total: count?.total ?? 0 };
 }
@@ -84,7 +86,7 @@ export async function blocks(id: string) {
     .where(and(eq(socialRelations.ownerId, id), eq(socialRelations.kind, "block"),
       process.env.NODE_ENV === "production" ? eq(accountProfiles.isTestAccount, false) : undefined))
     .orderBy(accountProfiles.nameKey);
-  const badges = await monthlyPurchaseBadgeSummaries(rows.map(row => row.profile.accountId));
+  const badges = await visibleMonthlyPurchaseBadgeSummaries(rows.map(row => row.profile.accountId));
   return { people: await Promise.all(rows.map(r => person(id, r.profile, undefined, false,
     badges.get(r.profile.accountId) ?? null))), total: rows.length };
 }

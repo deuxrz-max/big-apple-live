@@ -1159,6 +1159,9 @@ export const ReviewChatReportResponse = zod.object({
 })
 
 
+export const getSocialMeResponseEntranceEffectsOwnerTestOneTiersMin = 5;
+export const getSocialMeResponseEntranceEffectsOwnerTestOneTiersMax = 5;
+
 export const getSocialMeResponseLoginStreakMin = 0;
 
 export const getSocialMeResponseProfileExternalHandleMax = 64;
@@ -1181,6 +1184,21 @@ export const getSocialMeResponseProfilePassportPlatformsItemColorRegExp = new Re
 
 
 export const GetSocialMeResponse = zod.object({
+  "entranceEffects": zod.object({
+  "eligible": zod.boolean(),
+  "enabled": zod.boolean(),
+  "badgeId": zod.union([zod.literal('monthly-tier-1'),zod.literal('monthly-tier-2'),zod.literal('monthly-tier-3'),zod.literal('monthly-tier-4'),zod.literal('monthly-tier-5'),zod.literal(null)]).nullable(),
+  "badgeName": zod.string().nullable(),
+  "ownerTest": zod.union([zod.object({
+  "selectedBadgeId": zod.enum(['monthly-tier-1', 'monthly-tier-2', 'monthly-tier-3', 'monthly-tier-4', 'monthly-tier-5']),
+  "tiers": zod.array(zod.object({
+  "badgeId": zod.enum(['monthly-tier-1', 'monthly-tier-2', 'monthly-tier-3', 'monthly-tier-4', 'monthly-tier-5']),
+  "name": zod.string(),
+  "enabled": zod.boolean()
+})).min(getSocialMeResponseEntranceEffectsOwnerTestOneTiersMin).max(getSocialMeResponseEntranceEffectsOwnerTestOneTiersMax),
+  "lionEffectEnabled": zod.boolean()
+}),zod.null()])
+}),
   "badgeExpirations": zod.record(zod.string(), zod.coerce.date()).optional(),
   "loginStreak": zod.number().int().min(getSocialMeResponseLoginStreakMin).optional(),
   "profile": zod.object({
@@ -1345,6 +1363,36 @@ export const SaveSocialProfileResponse = zod.object({
   "verified": zod.boolean(),
   "foundingLeague": zod.boolean()
 }).optional()
+})
+
+
+export const UpdateMyEntranceEffectSettingsBody = zod.object({
+  "enabled": zod.boolean().optional(),
+  "selectedBadgeId": zod.enum(['monthly-tier-1', 'monthly-tier-2', 'monthly-tier-3', 'monthly-tier-4', 'monthly-tier-5']).optional(),
+  "tierEffectId": zod.enum(['monthly-tier-1', 'monthly-tier-2', 'monthly-tier-3', 'monthly-tier-4', 'monthly-tier-5']).optional(),
+  "tierEffectEnabled": zod.boolean().optional(),
+  "lionEffectEnabled": zod.boolean().optional()
+})
+
+export const updateMyEntranceEffectSettingsResponseOwnerTestOneTiersMin = 5;
+export const updateMyEntranceEffectSettingsResponseOwnerTestOneTiersMax = 5;
+
+
+
+export const UpdateMyEntranceEffectSettingsResponse = zod.object({
+  "eligible": zod.boolean(),
+  "enabled": zod.boolean(),
+  "badgeId": zod.union([zod.literal('monthly-tier-1'),zod.literal('monthly-tier-2'),zod.literal('monthly-tier-3'),zod.literal('monthly-tier-4'),zod.literal('monthly-tier-5'),zod.literal(null)]).nullable(),
+  "badgeName": zod.string().nullable(),
+  "ownerTest": zod.union([zod.object({
+  "selectedBadgeId": zod.enum(['monthly-tier-1', 'monthly-tier-2', 'monthly-tier-3', 'monthly-tier-4', 'monthly-tier-5']),
+  "tiers": zod.array(zod.object({
+  "badgeId": zod.enum(['monthly-tier-1', 'monthly-tier-2', 'monthly-tier-3', 'monthly-tier-4', 'monthly-tier-5']),
+  "name": zod.string(),
+  "enabled": zod.boolean()
+})).min(updateMyEntranceEffectSettingsResponseOwnerTestOneTiersMin).max(updateMyEntranceEffectSettingsResponseOwnerTestOneTiersMax),
+  "lionEffectEnabled": zod.boolean()
+}),zod.null()])
 })
 
 

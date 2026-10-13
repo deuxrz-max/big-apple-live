@@ -9,6 +9,10 @@ export const socialSettings = pgTable('social_settings', {
   interests: jsonb('interests').$type<string[]>().notNull().default([]),
   discoverable: boolean('discoverable').notNull().default(false), badgeId: text('badge_id'),
   externalPlatform: text('external_platform'), externalHandle: text('external_handle'),
+  entranceEffectsEnabled: boolean('entrance_effects_enabled').notNull().default(true),
+  ownerTestBadgeTier: integer('owner_test_badge_tier').notNull().default(5),
+  ownerTierEntranceEffects: jsonb('owner_tier_entrance_effects').$type<Record<string, boolean>>().notNull().default(sql`'{}'::jsonb`),
+  ownerLionEntranceEnabled: boolean('owner_lion_entrance_enabled').notNull().default(true),
   updatedAt: timestamp('updated_at', {withTimezone:true}).notNull().defaultNow(),
 });
 export const insertSocialSettingsSchema = createInsertSchema(socialSettings);

@@ -2055,6 +2055,98 @@ export interface SocialGift {
   cost: number;
 }
 
+export type EntranceEffectSettingsInputSelectedBadgeId = typeof EntranceEffectSettingsInputSelectedBadgeId[keyof typeof EntranceEffectSettingsInputSelectedBadgeId];
+
+
+export const EntranceEffectSettingsInputSelectedBadgeId = {
+  'monthly-tier-1': 'monthly-tier-1',
+  'monthly-tier-2': 'monthly-tier-2',
+  'monthly-tier-3': 'monthly-tier-3',
+  'monthly-tier-4': 'monthly-tier-4',
+  'monthly-tier-5': 'monthly-tier-5',
+} as const;
+
+export type EntranceEffectSettingsInputTierEffectId = typeof EntranceEffectSettingsInputTierEffectId[keyof typeof EntranceEffectSettingsInputTierEffectId];
+
+
+export const EntranceEffectSettingsInputTierEffectId = {
+  'monthly-tier-1': 'monthly-tier-1',
+  'monthly-tier-2': 'monthly-tier-2',
+  'monthly-tier-3': 'monthly-tier-3',
+  'monthly-tier-4': 'monthly-tier-4',
+  'monthly-tier-5': 'monthly-tier-5',
+} as const;
+
+export interface EntranceEffectSettingsInput {
+  enabled?: boolean;
+  selectedBadgeId?: EntranceEffectSettingsInputSelectedBadgeId;
+  tierEffectId?: EntranceEffectSettingsInputTierEffectId;
+  tierEffectEnabled?: boolean;
+  lionEffectEnabled?: boolean;
+}
+
+export type EntranceEffectTierSettingBadgeId = typeof EntranceEffectTierSettingBadgeId[keyof typeof EntranceEffectTierSettingBadgeId];
+
+
+export const EntranceEffectTierSettingBadgeId = {
+  'monthly-tier-1': 'monthly-tier-1',
+  'monthly-tier-2': 'monthly-tier-2',
+  'monthly-tier-3': 'monthly-tier-3',
+  'monthly-tier-4': 'monthly-tier-4',
+  'monthly-tier-5': 'monthly-tier-5',
+} as const;
+
+export interface EntranceEffectTierSetting {
+  badgeId: EntranceEffectTierSettingBadgeId;
+  name: string;
+  enabled: boolean;
+}
+
+export type OwnerEntranceEffectSettingsSelectedBadgeId = typeof OwnerEntranceEffectSettingsSelectedBadgeId[keyof typeof OwnerEntranceEffectSettingsSelectedBadgeId];
+
+
+export const OwnerEntranceEffectSettingsSelectedBadgeId = {
+  'monthly-tier-1': 'monthly-tier-1',
+  'monthly-tier-2': 'monthly-tier-2',
+  'monthly-tier-3': 'monthly-tier-3',
+  'monthly-tier-4': 'monthly-tier-4',
+  'monthly-tier-5': 'monthly-tier-5',
+} as const;
+
+export interface OwnerEntranceEffectSettings {
+  selectedBadgeId: OwnerEntranceEffectSettingsSelectedBadgeId;
+  /**
+     * @minItems 5
+     * @maxItems 5
+     */
+  tiers: EntranceEffectTierSetting[];
+  lionEffectEnabled: boolean;
+}
+
+/**
+ * @nullable
+ */
+export type EntranceEffectSettingsBadgeId = typeof EntranceEffectSettingsBadgeId[keyof typeof EntranceEffectSettingsBadgeId] | null;
+
+
+export const EntranceEffectSettingsBadgeId = {
+  'monthly-tier-1': 'monthly-tier-1',
+  'monthly-tier-2': 'monthly-tier-2',
+  'monthly-tier-3': 'monthly-tier-3',
+  'monthly-tier-4': 'monthly-tier-4',
+  'monthly-tier-5': 'monthly-tier-5',
+} as const;
+
+export interface EntranceEffectSettings {
+  eligible: boolean;
+  enabled: boolean;
+  /** @nullable */
+  badgeId: EntranceEffectSettingsBadgeId;
+  /** @nullable */
+  badgeName: string | null;
+  ownerTest: OwnerEntranceEffectSettings | null;
+}
+
 export type SocialMeBadgeExpirations = {[key: string]: string};
 
 export type SocialMeGiftQuantities = {[key: string]: number};
@@ -2065,6 +2157,7 @@ export type SocialMeCountriesItem = {
 };
 
 export interface SocialMe {
+  entranceEffects: EntranceEffectSettings;
   badgeExpirations?: SocialMeBadgeExpirations;
   /** @minimum 0 */
   loginStreak?: number;

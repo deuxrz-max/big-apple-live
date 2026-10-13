@@ -4,7 +4,7 @@ import { requireAdult } from '../community';
 import { roomStore, RoomError } from '../room-store';
 import { giftNameColorsForAccounts } from './gift-name-color-data';
 import { passportBadgeSummaries } from './passport';
-import { monthlyPurchaseBadgeSummaries } from './monthly-credit-badges';
+import { visibleMonthlyPurchaseBadgeSummaries } from './monthly-credit-badges';
 
 export function validateGiftRoom(roomId: string, sessionId: string, senderId: string, recipientId: string) {
   if (!roomStore.isCommunity(roomId)) throw new RoomError(404, 'University not found');
@@ -29,7 +29,7 @@ export async function roomGiftEvents(id: string, roomId: string, sessionId: stri
     [row.senderId, row.recipientId].filter((accountId): accountId is string => !!accountId)));
   const passports = await passportBadgeSummaries(rows.flatMap(row =>
     [row.senderId, row.recipientId].filter((accountId): accountId is string => !!accountId)));
-  const badges = await monthlyPurchaseBadgeSummaries(rows.flatMap(row =>
+  const badges = await visibleMonthlyPurchaseBadgeSummaries(rows.flatMap(row =>
     [row.senderId, row.recipientId].filter((accountId): accountId is string => !!accountId)));
   const testIds = process.env.NODE_ENV === "production"
     ? new Set((await db.select({ id: accountProfiles.accountId }).from(accountProfiles)

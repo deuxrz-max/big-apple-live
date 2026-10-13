@@ -7,7 +7,7 @@ import { visibleProfilePhotos } from "./photo-visibility";
 import { botRotation } from "./moderator-bots";
 import { giftNameColorsForAccounts } from "./social/gift-name-color-data";
 import { passportBadgeSummaries } from "./social/passport";
-import { monthlyPurchaseBadgeSummaries } from "./social/monthly-credit-badges";
+import { visibleMonthlyPurchaseBadgeSummaries } from "./social/monthly-credit-badges";
 import type { UniversityPerson } from "@workspace/api-zod";
 
 export async function ignoredAccounts(id: string) {
@@ -55,7 +55,7 @@ export async function roomWhispers(id: string, roomId: string) {
   }
   const colors = await giftNameColorsForAccounts(result.map(row => row.accountId));
   const passports = await passportBadgeSummaries(result.map(row => row.accountId));
-  const badges = await monthlyPurchaseBadgeSummaries(result.map(row => row.accountId));
+  const badges = await visibleMonthlyPurchaseBadgeSummaries(result.map(row => row.accountId));
   return result.map(({ accountId, ...whisper }) => ({
     ...whisper, displayNameColor: colors.get(accountId) ?? "#FFFFFF",
     badgeId: badges.get(accountId)?.tier.id ?? null,
@@ -80,7 +80,7 @@ export async function universitySession(id: string, roomId: string, sessionId: s
   const blockedIds = new Set(blockedRelations.map(relation =>
     relation.ownerId === id ? relation.targetId : relation.ownerId));
   const passports = await passportBadgeSummaries(presentAccountIds.filter(accountId => accountId === id || !blockedIds.has(accountId)));
-  const badgeSummaries = await monthlyPurchaseBadgeSummaries(presentAccountIds);
+  const badgeSummaries = await visibleMonthlyPurchaseBadgeSummaries(presentAccountIds);
   const people: UniversityPerson[] = [];
   const seen = new Set<string>();
   for (const participant of snapshot.participants) {

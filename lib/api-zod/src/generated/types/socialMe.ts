@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { EntranceEffectSettings } from './entranceEffectSettings';
 import type { SocialGift } from './socialGift';
 import type { SocialMeBadgeExpirations } from './socialMeBadgeExpirations';
 import type { SocialMeCountriesItem } from './socialMeCountriesItem';
@@ -14,6 +15,7 @@ import type { SocialProduct } from './socialProduct';
 import type { SocialWallet } from './socialWallet';
 
 export interface SocialMe {
+  entranceEffects: EntranceEffectSettings;
   badgeExpirations?: SocialMeBadgeExpirations;
   /** @minimum 0 */
   loginStreak?: number;

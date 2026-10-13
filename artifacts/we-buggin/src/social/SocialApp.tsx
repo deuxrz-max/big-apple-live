@@ -31,6 +31,7 @@ function ThreadRoute() { const { username = '' } = useParams<{ username: string 
 
 export default function SocialApp({ userId: _userId }: { userId: string }) {
   const [path] = useLocation();
+  const isMessagesPath = path === '/community/messages' || path.startsWith('/community/messages/');
   const qc = useQueryClient();
   const me = useGetSocialMe();
   useEffect(() => { refreshSocial(qc); }, [path, qc]);
@@ -68,8 +69,8 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
           </details>
         </div>
       </nav>}
-      <div className={`sc-shell${path === '/community/messages' || path === '/community/favorites' ? ' is-inbox' : ''}`}>
-        {!bare && path !== '/community/messages' && path !== '/community/favorites' && <nav className="sc-nav" aria-label="Community">
+      <div className={`sc-shell${isMessagesPath || path === '/community/favorites' ? ' is-inbox' : ''}`}>
+        {!bare && !isMessagesPath && path !== '/community/favorites' && <nav className="sc-nav" aria-label="Community">
           {NAV.map(({ to, label, icon: I, exact }) => {
             const on = exact ? path === to : path === to || path.startsWith(to + '/');
             return <Link key={to} href={to} className={`sc-nav-item${on ? ' is-on' : ''}`} aria-current={on ? 'page' : undefined} data-testid={`nav-${label.toLowerCase().replace(/\s/g, '-')}`}><I size={18} /><span>{label}</span></Link>;

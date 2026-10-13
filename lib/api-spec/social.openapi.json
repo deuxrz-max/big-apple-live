@@ -195,6 +195,34 @@
         }
       }
     },
+    "/social/me/entrance-effects": {
+      "put": {
+        "operationId": "updateMyEntranceEffectSettings",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/EntranceEffectSettingsInput"}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved entrance-effect preferences",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/EntranceEffectSettings"}
+              }
+            }
+          },
+          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "An active badge or owner preview access is required"}
+        }
+      }
+    },
     "/social/people": {
       "get": {
         "operationId": "getSocialPeople",
@@ -1140,9 +1168,53 @@
           "cost"
         ]
       },
+      "EntranceEffectSettingsInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {"type": "boolean"},
+          "selectedBadgeId": {"type": "string", "enum": ["monthly-tier-1", "monthly-tier-2", "monthly-tier-3", "monthly-tier-4", "monthly-tier-5"]},
+          "tierEffectId": {"type": "string", "enum": ["monthly-tier-1", "monthly-tier-2", "monthly-tier-3", "monthly-tier-4", "monthly-tier-5"]},
+          "tierEffectEnabled": {"type": "boolean"},
+          "lionEffectEnabled": {"type": "boolean"}
+        }
+      },
+      "EntranceEffectTierSetting": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "badgeId": {"type": "string", "enum": ["monthly-tier-1", "monthly-tier-2", "monthly-tier-3", "monthly-tier-4", "monthly-tier-5"]},
+          "name": {"type": "string"},
+          "enabled": {"type": "boolean"}
+        },
+        "required": ["badgeId", "name", "enabled"]
+      },
+      "OwnerEntranceEffectSettings": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "selectedBadgeId": {"type": "string", "enum": ["monthly-tier-1", "monthly-tier-2", "monthly-tier-3", "monthly-tier-4", "monthly-tier-5"]},
+          "tiers": {"type": "array", "minItems": 5, "maxItems": 5, "items": {"$ref": "#/components/schemas/EntranceEffectTierSetting"}},
+          "lionEffectEnabled": {"type": "boolean"}
+        },
+        "required": ["selectedBadgeId", "tiers", "lionEffectEnabled"]
+      },
+      "EntranceEffectSettings": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "eligible": {"type": "boolean"},
+          "enabled": {"type": "boolean"},
+          "badgeId": {"type": ["string", "null"], "enum": ["monthly-tier-1", "monthly-tier-2", "monthly-tier-3", "monthly-tier-4", "monthly-tier-5", null]},
+          "badgeName": {"type": ["string", "null"]},
+          "ownerTest": {"anyOf": [{"$ref": "#/components/schemas/OwnerEntranceEffectSettings"}, {"type": "null"}]}
+        },
+        "required": ["eligible", "enabled", "badgeId", "badgeName", "ownerTest"]
+      },
       "SocialMe": {
         "type": "object",
         "properties": {
+          "entranceEffects": {"$ref": "#/components/schemas/EntranceEffectSettings"},
           "badgeExpirations": {
             "type": "object",
             "additionalProperties": { "type": "string", "format": "date-time" }
@@ -1198,7 +1270,8 @@
           "inventory",
           "products",
           "gifts",
-          "countries"
+          "countries",
+          "entranceEffects"
         ]
       },
       "SocialPeople": {

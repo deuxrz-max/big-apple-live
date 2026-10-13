@@ -5,6 +5,7 @@ import { Gift, MessageCircle, Search } from 'lucide-react';
 import {
   useGetSocialMe, useGetSocialPeople, useGetSocialPerson, useSetSocialRelationship, useGetSocialBlocks,
   useSaveSocialProfile, SocialProfileInputExternalPlatform, useSendSocialGift, getGetSocialPeopleQueryKey, getGetSocialPersonQueryKey,
+  useUpdateMyEntranceEffectSettings,
   type GetSocialPeopleParams,
   useGetFavoritesGallery, getGetFavoritesGalleryQueryKey, getFavoriteRoom,
 } from '@workspace/api-client-react';
@@ -127,6 +128,7 @@ export function MyProfilePage() {
   const qc = useQueryClient();
   const me = useGetSocialMe();
   const save = useSaveSocialProfile();
+  const saveEntranceSettings = useUpdateMyEntranceEffectSettings();
   const init = useRef(false);
   const [bio, setBio] = useState('');
   const [country, setCountry] = useState('');
@@ -135,6 +137,7 @@ export function MyProfilePage() {
   const [platform, setPlatform] = useState('');
   const [handle, setHandle] = useState('');
   const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null);
+  const [entranceMsg, setEntranceMsg] = useState<{ ok: boolean; t: string } | null>(null);
   useEffect(() => {
     const p = me.data?.profile;
     if (p && !init.current) {
@@ -153,6 +156,17 @@ export function MyProfilePage() {
     save.mutate({ data: { bio: bio.trim(), country: country || null, interests: list, discoverable, badgeId: null, externalPlatform: (platform || null) as SocialProfileInputExternalPlatform, externalHandle: platform && handle.trim() ? handle.trim() : null } }, {
       onSuccess: () => { setMsg({ ok: true, t: 'Profile saved.' }); refreshSocial(qc); },
       onError: (er) => setMsg({ ok: false, t: errMsg(er) }),
+    });
+  };
+  const updateEntranceSettings = (data: Parameters<typeof saveEntranceSettings.mutate>[0]["data"]) => {
+    setEntranceMsg(null);
+    saveEntranceSettings.mutate({ data }, {
+      onSuccess: () => {
+        setEntranceMsg({ ok: true, t: 'Entrance effect settings saved.' });
+        refreshSocial(qc);
+        void qc.invalidateQueries();
+      },
+      onError: (er) => setEntranceMsg({ ok: false, t: errMsg(er) }),
     });
   };
   return (
@@ -180,6 +194,55 @@ export function MyProfilePage() {
         {msg && <Msg ok={msg.ok}>{msg.t}</Msg>}
         <button type="submit" className="bm-btn bm-btn-primary" disabled={save.isPending} data-testid="button-save-profile">{save.isPending ? 'Saving...' : 'Save profile'}</button>
       </form>
+      <section className="sc-panel sc-entrance-settings" aria-labelledby="entrance-effects-title">
+        <h2 id="entrance-effects-title" className="sc-h2">Entrance effects</h2>
+        {d.entranceEffects.ownerTest ? (
+          <>
+            <p className="sc-sub">Preview-only owner controls. Only one effect plays on entry: Lion first, then the highest enabled tier.</p>
+            <label className="sc-field">
+              <span className="bm-label">Badge shown before your name</span>
+              <select className="sc-select" value={d.entranceEffects.ownerTest.selectedBadgeId}
+                disabled={saveEntranceSettings.isPending}
+                onChange={(e) => updateEntranceSettings({ selectedBadgeId: e.target.value as typeof d.entranceEffects.ownerTest.selectedBadgeId })}
+                data-testid="select-owner-test-badge">
+                {d.entranceEffects.ownerTest.tiers.map((tier) => <option key={tier.badgeId} value={tier.badgeId}>{tier.name}</option>)}
+              </select>
+            </label>
+            <label className="sc-check sc-entrance-master">
+              <input type="checkbox" checked={d.entranceEffects.enabled} disabled={saveEntranceSettings.isPending}
+                onChange={(e) => updateEntranceSettings({ enabled: e.target.checked })} data-testid="toggle-entrance-effects" />
+              <span><b>Enable entrance effects</b><small>Turn this off to keep the badge but silence all entrance effects.</small></span>
+            </label>
+            <div className="sc-entrance-list" aria-label="Owner entrance effect tests">
+              <label className="sc-check sc-entrance-option">
+                <input type="checkbox" checked={d.entranceEffects.ownerTest.lionEffectEnabled} disabled={saveEntranceSettings.isPending}
+                  onChange={(e) => updateEntranceSettings({ lionEffectEnabled: e.target.checked })} data-testid="toggle-lion-entrance-effect" />
+                <span><b>Lion entrance</b><small>Highest priority when enabled.</small></span>
+              </label>
+              {d.entranceEffects.ownerTest.tiers.map((tier) => (
+                <label className="sc-check sc-entrance-option" key={tier.badgeId}>
+                  <input type="checkbox" checked={tier.enabled} disabled={saveEntranceSettings.isPending}
+                    onChange={(e) => updateEntranceSettings({ tierEffectId: tier.badgeId, tierEffectEnabled: e.target.checked })}
+                    data-testid={`toggle-effect-${tier.badgeId}`} />
+                  <span><b>{tier.name}</b><small>{tier.enabled ? 'Enabled for the next room entry.' : 'Off.'}</small></span>
+                </label>
+              ))}
+            </div>
+          </>
+        ) : d.entranceEffects.eligible ? (
+          <>
+            <p className="sc-sub">Your active badge: <b>{d.entranceEffects.badgeName}</b>. This preference is saved to your account.</p>
+            <label className="sc-check sc-entrance-master">
+              <input type="checkbox" checked={d.entranceEffects.enabled} disabled={saveEntranceSettings.isPending}
+                onChange={(e) => updateEntranceSettings({ enabled: e.target.checked })} data-testid="toggle-entrance-effects" />
+              <span><b>Play my entrance effect</b><small>Your badge stays visible beside your name when this is off.</small></span>
+            </label>
+          </>
+        ) : (
+          <p className="sc-sub">An active monthly purchase badge is needed before an entrance effect can be turned on or off.</p>
+        )}
+        {entranceMsg && <Msg ok={entranceMsg.ok}>{entranceMsg.t}</Msg>}
+      </section>
     </section>
   );
 }

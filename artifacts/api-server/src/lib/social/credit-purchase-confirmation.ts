@@ -1,10 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { and, eq, sql } from "drizzle-orm";
-import { db, accountProfiles, socialCreditPurchases, socialLedger, socialWallets } from "@workspace/db";
+import { db, accountProfiles, socialCreditPurchases, socialLedger, socialSettings, socialWallets } from "@workspace/db";
 import { RoomError, roomStore } from "../room-store";
 import { lockAccounts, requireAccount } from "./core";
 import { monthlyPurchaseBadgeSummary } from "./monthly-credit-badges";
 import { claimRoomEntranceEffect } from "../room-entrance-effects";
+import { hasOwnerTierTestAccess } from "./owner-entrance-effects-policy";
 
 /**
  * Call only after the payment provider's signature and completed transaction
@@ -18,7 +19,10 @@ export async function recordConfirmedCreditPurchase(
   confirmedAt = new Date(),
 ) {
   await requireAccount(accountId);
-  const [profileFlags] = await db.select({ isTestAccount: accountProfiles.isTestAccount })
+  const [profileFlags] = await db.select({
+    isTestAccount: accountProfiles.isTestAccount,
+    username: accountProfiles.username,
+  })
     .from(accountProfiles).where(eq(accountProfiles.accountId, accountId));
   if (profileFlags?.isTestAccount) throw new RoomError(403, "Test accounts cannot create purchase-tier badges");
   if (!/^[a-z][a-z0-9_-]{1,39}$/i.test(provider)
@@ -57,7 +61,12 @@ export async function recordConfirmedCreditPurchase(
   const after = await monthlyPurchaseBadgeSummary(accountId, confirmedAt);
   const newlyReachedHigherTier = after && (!before || after.tier.rank > before.tier.rank);
   const activeRoomIds = roomStore.activeRoomIdsForAccount(accountId);
-  if (!saved.duplicate && newlyReachedHigherTier && activeRoomIds.length > 0) {
+  const [entrancePreferences] = await db.select({
+    enabled: socialSettings.entranceEffectsEnabled,
+  }).from(socialSettings).where(eq(socialSettings.accountId, accountId)).limit(1);
+  const ownerPreview = profileFlags ? hasOwnerTierTestAccess(profileFlags, process.env.NODE_ENV) : false;
+  if (!ownerPreview && entrancePreferences?.enabled !== false
+    && !saved.duplicate && newlyReachedHigherTier && activeRoomIds.length > 0) {
     const effect = await claimRoomEntranceEffect(accountId, after.tier.entranceEffectId, confirmedAt.getTime());
     if (effect) {
       for (const roomId of activeRoomIds) {

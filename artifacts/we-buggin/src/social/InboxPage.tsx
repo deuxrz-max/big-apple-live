@@ -30,7 +30,7 @@ export function InboxPage() {
 
   return (
     <section className="ib">
-      <h1 className="ib-title">Messages</h1>
+      <h1 className="ib-title">My Messages</h1>
       {q.isLoading && <div className="sc-skel" role="status" aria-label="Loading"><i /><i /><i /></div>}
       {q.isError && <ErrorBox error={q.error} retry={() => q.refetch()} />}
       {q.data && !q.isError && !fav.isError && live.length > 0 && (

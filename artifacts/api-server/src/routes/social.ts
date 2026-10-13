@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import {
   SaveSocialProfileBody, SaveSocialProfileResponse, GetSocialMeResponse, GetSocialPeopleResponse,
+  UpdateMyEntranceEffectSettingsBody, UpdateMyEntranceEffectSettingsResponse,
   GetSocialPersonResponse, SetSocialRelationshipBody, SendSocialGiftBody, PurchaseSocialProductBody,
   SendSocialMessageBody, SendSocialMessageResponse, GetSocialConversationResponse, GetSocialInboxResponse,
   GetSocialLedgerResponse, GetSocialPeopleQueryParams, GetSocialConversationQueryParams,
@@ -21,6 +22,7 @@ import {
   deletePassportPlatform, myStreamerPassport, passportReviewQueue, publicStreamerPassport,
   requestPassportVerification, reviewPassportRequest, savePassportPlatform, setFoundingLeague,
 } from "../lib/social/passport";
+import { getMyEntranceEffectSettings, saveMyEntranceEffectSettings } from "../lib/social/entrance-effect-preferences";
 
 const router: IRouter = Router();
 router.get('/gift-media/spirit-pup/v1/:filename', serveGiftMedia);
@@ -81,11 +83,18 @@ router.get("/social/favorites/gallery", async (req, res): Promise<void> => {
 router.get("/social/favorites/:username/room", async (req, res): Promise<void> => {
   res.json(GetFavoriteRoomResponse.parse(await favoriteRoom(accountId(req), name(req.params.username))));
 });
-router.get("/social/me", async (req, res): Promise<void> => { res.json(GetSocialMeResponse.parse(await getMe(accountId(req)))); });
+router.get("/social/me", async (req, res): Promise<void> => {
+  res.json(GetSocialMeResponse.parse(await getMe(accountId(req))));
+});
 router.put("/social/me", async (req, res): Promise<void> => {
   const input = SaveSocialProfileBody.safeParse(req.body);
   if (!input.success) throw new RoomError(400, "Use a bio up to 200 characters, a valid country and up to eight interests");
   res.json(SaveSocialProfileResponse.parse(await saveSocialProfile(accountId(req), input.data)));
+});
+router.put("/social/me/entrance-effects", async (req, res): Promise<void> => {
+  const input = UpdateMyEntranceEffectSettingsBody.safeParse(req.body);
+  if (!input.success) throw new RoomError(400, "Choose an entrance-effect setting");
+  res.json(UpdateMyEntranceEffectSettingsResponse.parse(await saveMyEntranceEffectSettings(accountId(req), input.data)));
 });
 router.get("/social/people", async (req, res): Promise<void> => {
   const input = GetSocialPeopleQueryParams.safeParse(req.query);
