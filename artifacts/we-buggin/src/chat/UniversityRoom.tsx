@@ -21,6 +21,8 @@ import { useRoomGifts } from '@/gifts/useRoomGifts';
 import { HeartAnimation } from '@/gifts/HeartAnimation';
 import { CosmicEncoreAnimation, MoonfoxAnimation, SpiritAnimation } from '@/gifts/SpiritPup';
 import { PassportSummaryBadge } from '@/passport/StreamerPassport';
+import { RoomEntranceEffectOverlay } from './RoomEntranceEffectOverlay';
+import type { RoomEntranceEffectEvent } from './useTextRoom';
 import './university-room.css';
 import './bot-moderation.css';
 
@@ -70,6 +72,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const [drawer, setDrawer] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [ignored, setIgnored] = useState<Set<string>>(new Set());
+  const [activeEntranceEffect, setActiveEntranceEffect] = useState<RoomEntranceEffectEvent | null>(null);
   const gifts = useRoomGifts(roomId, userId, sessionId, ignored);
   const ignoreBusy = useRef(0);
   const idem = useRef<{ username: string; body: string; key: string } | null>(null);
@@ -82,14 +85,34 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const rulesBox = useRef<HTMLDivElement>(null);
   const box = useRef<HTMLDivElement>(null);
   const near = useRef(true);
+  const handledEntranceEffects = useRef(new Set<string>());
 
   const session = uni.data;
   useEffect(() => {
     setText(''); setWhisperTo(null); setMenu(null); setDrawer(false); setRulesOpen(false);
     setGiftBag(null);
+    setActiveEntranceEffect(null);
+    handledEntranceEffects.current.clear();
     setIgnored(new Set()); setSendErr(null); setNote(null);
     autoRules.current = false; ignoreVersion.current = null; idem.current = null;
   }, [roomId, userId]);
+  useEffect(() => {
+    for (const effect of r.entranceEffects) {
+      if (effect.effectId !== 'lion-entrance' || handledEntranceEffects.current.has(effect.eventId)) continue;
+      handledEntranceEffects.current.add(effect.eventId);
+      const storageKey = `streamtalk-room-effect:${userId}:${effect.eventId}`;
+      try {
+        if (window.localStorage.getItem(storageKey)) continue;
+        window.localStorage.setItem(storageKey, 'seen');
+      } catch {
+        // The in-memory set still prevents duplicates if storage is unavailable.
+      }
+      if (Date.now() - effect.startedAt < effect.durationMs) setActiveEntranceEffect(effect);
+    }
+  }, [r.entranceEffects, userId]);
+  const finishEntranceEffect = useCallback((eventId: string) => {
+    setActiveEntranceEffect(current => current?.eventId === eventId ? null : current);
+  }, []);
   useEffect(() => {
     const openGifts = () => {
       setMenu(null);
@@ -603,6 +626,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           </div>
         </div>
       )}
+      <RoomEntranceEffectOverlay event={activeEntranceEffect} onFinish={finishEntranceEffect} />
     </div>
   );
 }

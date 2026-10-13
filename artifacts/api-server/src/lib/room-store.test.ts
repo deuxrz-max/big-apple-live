@@ -90,3 +90,26 @@ test("test-only university rooms never appear in public occupied or follower pre
   now += 1;
   assert.deepEqual(store.occupiedUniversities(), []);
 });
+
+test("room entrance effects are broadcast once and only replayed while recent", () => {
+  let now = 1_000;
+  const store = new RoomStore(() => now);
+  store.registerCommunity({
+    roomId: "MUSIC",
+    historyId: "MUSIC-HISTORY",
+    label: "Music",
+    createdAt: new Date(now),
+  });
+  const identity = { emojiId: "test", gender: "Male" as const, color: "#FFFFFF", hairColor: "#222222" };
+  const owner = store.join("MUSIC", "VAMPSQUAD", { accountId: "owner-account", identity });
+  const events: string[] = [];
+  store.subscribe("MUSIC", event => events.push(event.type));
+  assert.equal(store.hasAccountParticipant("MUSIC", "owner-account"), true);
+  const effect = store.publishRoomEntranceEffect("MUSIC", "owner-account", "lion-entrance", 6_066);
+  assert.deepEqual(events, ["room.entrance-effect"]);
+  assert.equal(effect.displayName, "VAMPSQUAD");
+  assert.equal(effect.participantId, owner.participantId);
+  assert.equal(store.recentRoomEntranceEffects("MUSIC").length, 1);
+  now += 60_001;
+  assert.deepEqual(store.recentRoomEntranceEffects("MUSIC"), []);
+});

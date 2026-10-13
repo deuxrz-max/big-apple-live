@@ -72,6 +72,9 @@ router.get("/account/rooms/:roomId/events", (req, res): void => {
   });
   res.flushHeaders();
   res.write(`event: room.snapshot\ndata: ${JSON.stringify(GetRoomResponse.parse(roomStore.get(roomId)))}\n\n`);
+  for (const effect of roomStore.recentRoomEntranceEffects(roomId)) {
+    res.write(`event: room.entrance-effect\ndata: ${JSON.stringify(effect)}\n\n`);
+  }
   const keepalive = setInterval(() => {
     void requireAdult(id).catch(() => res.end());
     try { roomStore.requireAccountMember(roomId, sessionId, id); }

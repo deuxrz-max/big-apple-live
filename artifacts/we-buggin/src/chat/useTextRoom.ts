@@ -12,12 +12,23 @@ const messageError = (error: unknown) => errMessage(error, "University request f
 const ordered = (messages: ChatMessage[]) => [...new Map(messages.map(m => [m.id, m])).values()]
   .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() || a.id.localeCompare(b.id));
 
+export type RoomEntranceEffectEvent = {
+  eventId: string;
+  roomId: string;
+  effectId: "lion-entrance";
+  participantId: string;
+  displayName: string;
+  startedAt: number;
+  durationMs: number;
+};
+
 /** Reuses the authenticated chat SSE and private membership header. No media SDK. */
 export function useTextRoom(roomId: string, userId: string) {
   const qc = useQueryClient();
   const [room, setRoom] = useState<RoomState | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [arrivals, setArrivals] = useState<{ id: string; participantId: string; displayName: string; at: number }[]>([]);
+  const [entranceEffects, setEntranceEffects] = useState<RoomEntranceEffectEvent[]>([]);
   const [creds, setCreds] = useState<RoomCreds | null>(null);
   const credential = useRef<RoomCreds | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,7 +76,7 @@ export function useTextRoom(roomId: string, userId: string) {
     let joining = false;
     let knownParticipantIds: Set<string> | null = null;
     const headers = () => ({ "X-Room-Session": credential.current!.participantSessionId });
-    setRoom(null); setMessages([]); setArrivals([]); setLoading(true); setError(null); setOverflow(null);
+    setRoom(null); setMessages([]); setArrivals([]); setEntranceEffects([]); setLoading(true); setError(null); setOverflow(null);
     credential.current = null; setCreds(null);
 
     async function history(replace = true) {
@@ -146,6 +157,13 @@ export function useTextRoom(roomId: string, userId: string) {
               setMessages(previous => ordered([...previous, accepted.message]));
             }
             if (type === "chat.refresh") await history();
+            if (type === "room.entrance-effect") {
+              const effect = JSON.parse(data) as RoomEntranceEffectEvent;
+              if (effect.roomId === roomId) {
+                setEntranceEffects(previous => previous.some(item => item.eventId === effect.eventId)
+                  ? previous : [...previous, effect].slice(-20));
+              }
+            }
           }
         }
         if (active) throw new Error("Connection interrupted; reconnecting…");
@@ -176,5 +194,5 @@ export function useTextRoom(roomId: string, userId: string) {
       // via the existing heartbeat lease; persisted history/membership remains.
     };
   }, [roomId, userId]);
-  return { room, messages, arrivals, creds, loading, connection, error, overflow, send, refresh, loadOlder, loadingOlder, hasOlder };
+  return { room, messages, arrivals, entranceEffects, creds, loading, connection, error, overflow, send, refresh, loadOlder, loadingOlder, hasOlder };
 }

@@ -14,9 +14,19 @@ export class RoomError extends Error {
 type RoomEvent =
   | { type: "chat.accepted"; data: ChatAccepted; senderAccountId?: string }
   | { type: "chat.refresh"; data: { roomId: string } }
+  | { type: "room.entrance-effect"; data: RoomEntranceEffectEvent }
   | { type: "room.snapshot"; data: RoomState }
   | { type: "room.expired"; data: { roomId: string } };
 type Listener = (event: RoomEvent) => void;
+export type RoomEntranceEffectEvent = {
+  eventId: string;
+  roomId: string;
+  effectId: "lion-entrance";
+  participantId: string;
+  displayName: string;
+  startedAt: number;
+  durationMs: number;
+};
 type ActiveSession = { participant: Participant; lastSeenAt: number; accountId?: string; capExempt?: boolean };
 type AccountIdentity = { accountId: string; identity: EmojiIdentity; photoUrl?: string | null; capExempt?: boolean; displayNameColor?: string };
 function copyParticipant(participant: Participant): Participant {
@@ -39,6 +49,7 @@ type Room = {
   community?: boolean;
   testOnly?: boolean;
   parentRoomId?: string | null;
+  entranceEffects: RoomEntranceEffectEvent[];
 };
 
 /** Single-process, ephemeral presence store. Session credentials are never in snapshots. */
@@ -59,7 +70,7 @@ export class RoomStore {
     this.rooms.set(input.roomId, { roomId: input.roomId, historyId: input.historyId,
       name: input.label, capacity: UNIVERSITY_MEMBER_CAP, createdAt: input.createdAt, hostParticipantId: randomUUID(),
       sessions: new Map(), listeners: new Set(), emptySince: null, community: true, testOnly: input.testOnly,
-      parentRoomId: input.parentRoomId });
+      parentRoomId: input.parentRoomId, entranceEffects: [] });
   }
   communityParentId(roomId: string) {
     const normalized = roomId.toUpperCase();
@@ -131,6 +142,7 @@ export class RoomStore {
       sessions: new Map(),
       listeners: new Set(),
       emptySince: null,
+      entranceEffects: [],
     };
     this.rooms.set(roomId, room);
     return this.addSession(room, displayName, account);
@@ -175,6 +187,36 @@ export class RoomStore {
       if (session.accountId && now - session.lastSeenAt < SESSION_TIMEOUT_MS) active.add(session.accountId);
     }
     return [...active];
+  }
+
+  hasAccountParticipant(roomId: string, accountId: string): boolean {
+    const room = this.requireRoom(roomId);
+    return [...room.sessions.values()].some(session => session.accountId === accountId);
+  }
+
+  publishRoomEntranceEffect(roomId: string, accountId: string, effectId: RoomEntranceEffectEvent["effectId"], durationMs: number): RoomEntranceEffectEvent {
+    const room = this.requireRoom(roomId);
+    const participant = [...room.sessions.values()].find(session => session.accountId === accountId)?.participant;
+    if (!participant) throw new RoomError(409, "The effect owner is no longer in the room");
+    const event: RoomEntranceEffectEvent = {
+      eventId: randomUUID(),
+      roomId: room.roomId,
+      effectId,
+      participantId: participant.participantId,
+      displayName: participant.displayName,
+      startedAt: this.now(),
+      durationMs,
+    };
+    room.entranceEffects = [...room.entranceEffects.filter(item => this.now() - item.startedAt < 60_000), event].slice(-20);
+    this.emit(room, { type: "room.entrance-effect", data: event });
+    return { ...event };
+  }
+
+  recentRoomEntranceEffects(roomId: string, maxAgeMs = 60_000): RoomEntranceEffectEvent[] {
+    const room = this.requireRoom(roomId);
+    const cutoff = this.now() - maxAgeMs;
+    room.entranceEffects = room.entranceEffects.filter(item => item.startedAt >= cutoff);
+    return room.entranceEffects.map(item => ({ ...item }));
   }
 
   /** Private incarnation identifier, never a reusable room-code history key. */

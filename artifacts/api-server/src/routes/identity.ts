@@ -13,6 +13,7 @@ import { communityMembership, accessFor, offerOverflow } from "../lib/community"
 import { giftNameColorsForAccounts } from "../lib/social/gift-name-color-data";
 import { universityAudioBeamStore } from "../lib/university-audio-beam";
 import { coloredEmoji } from "../lib/emoji-library";
+import { claimRoomEntranceEffect, ROOM_ENTRANCE_EFFECT_DURATION_MS } from "../lib/room-entrance-effects";
 
 const router: IRouter = Router();
 router.get("/emojis/:emojiId/:color/image", (req, res): void => {
@@ -90,12 +91,23 @@ router.post("/account/rooms/:roomId/join", async (req, res) => {
     res.status(409).json({ error: `${roomStore.get(params.data.roomId).name} is full — try ${overflow.label}`, overflow });
     return;
   }
+  const wasAlreadyInRoom = roomStore.hasAccountParticipant(params.data.roomId, id);
   const nameColors = await giftNameColorsForAccounts([id]);
   const session = roomStore.join(params.data.roomId, profile.displayName ?? profile.username, {
     accountId: id, identity: profile.identity, capExempt: access.moderator,
     displayNameColor: nameColors.get(id) ?? "#FFFFFF",
   });
   roomStore.restoreParticipantId(params.data.roomId, id, member.participantId);
+  if (!wasAlreadyInRoom) {
+    try {
+      const effectId = await claimRoomEntranceEffect(id);
+      if (effectId) roomStore.publishRoomEntranceEffect(
+        params.data.roomId, id, effectId, ROOM_ENTRANCE_EFFECT_DURATION_MS,
+      );
+    } catch {
+      req.log.warn("Room entrance effect could not be started");
+    }
+  }
   res.status(201).json(JoinAccountRoomResponse.parse({ ...session,
     participantId: member.participantId, room: roomStore.get(params.data.roomId) }));
 });

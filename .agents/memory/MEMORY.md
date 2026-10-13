@@ -20,7 +20,7 @@
 - [Photo visibility cache precedence](photo-visibility-cache-precedence.md) — never replace a fresh hidden-photo response with an older cached image.
 - [Sesame MCP handoff](sesame-mcp-handoff.md) — use official Replit MCP for Agent recommendations; do not publish Streamtalk to enable access.
 - [Gift-flow demos](gift-flow-demos.md) — show existing gift UI in an isolated phone-sized browser recording and disclose synthetic responses.
-- [Gift-media transparency](gift-media-transparency.md) — owner confirmed Moonfox stays transparent; keep alpha support and verify other gift assets separately.
+- [Transparent media assets](gift-media-transparency.md) — verify decoded per-frame alpha and composites; container alpha flags alone are not proof.
 - [Safe preview schema pushes](safe-preview-schema-pushes.md) — stop when Drizzle proposes truncating unrelated Passport rows; preserve data and apply only additive preview changes.
 - [Public topic-room ownership](public-topic-room-ownership.md) — public Beam TV is ownerless and control-free; server searches by the current room name and advances automatically.
 - [Beam TV video screening](beam-tv-video-screening.md) — English and widescreen filters use YouTube metadata and thumbnails as signals, not proof of audio language or source dimensions.
