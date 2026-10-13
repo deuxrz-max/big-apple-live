@@ -5,12 +5,10 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { EntranceEffectSettingsInputSelectedBadgeId } from './entranceEffectSettingsInputSelectedBadgeId';
 import type { EntranceEffectSettingsInputTierEffectId } from './entranceEffectSettingsInputTierEffectId';
 
 export interface EntranceEffectSettingsInput {
   enabled?: boolean;
-  selectedBadgeId?: EntranceEffectSettingsInputSelectedBadgeId;
   tierEffectId?: EntranceEffectSettingsInputTierEffectId;
   tierEffectEnabled?: boolean;
   lionEffectEnabled?: boolean;

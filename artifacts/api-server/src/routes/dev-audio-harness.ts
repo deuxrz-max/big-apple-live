@@ -7,12 +7,12 @@ import {
 } from "@workspace/api-zod";
 import { accountProfiles, db } from "@workspace/db";
 import { requireCompletedProfile } from "../lib/account-profiles";
-import { requireAdult } from "../lib/community";
+import { requireAdult, requireOwner } from "../lib/community";
 import { devAudioHarnessEnabled, DEV_AUDIO_HARNESS_ROOM, DEV_AUDIO_HARNESS_SESSION_TTL_MS, mayDriveDevAudioAccount } from "../lib/dev-audio-harness-policy";
 import { RoomError, roomStore } from "../lib/room-store";
 import { universityAudioBeamStore } from "../lib/university-audio-beam";
 import { universityAudioSignaling } from "../lib/university-audio-signaling";
-import { sameOrigin } from "./identity";
+import { accountId, sameOrigin } from "./identity";
 
 type HarnessActor = {
   tokenHash: string;
@@ -45,6 +45,12 @@ function assertDevOnly() {
   if (!devAudioHarnessEnabled(process.env.NODE_ENV))
     throw new RoomError(404, "Not found");
 }
+
+router.use(async (req, _res, next) => {
+  assertDevOnly();
+  await requireOwner(accountId(req));
+  next();
+});
 
 function forgetActor(actor: HarnessActor) {
   actorsByToken.delete(actor.tokenHash);

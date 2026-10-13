@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   chooseAccountEntranceEffect,
-  chooseOwnerEntranceEffect,
   hasOwnerTierTestAccess,
   isOwnerAccount,
 } from "./owner-entrance-effects-policy";
@@ -15,41 +14,50 @@ test("only the non-test Vampsquad account receives preview badge test access", (
   assert.equal(hasOwnerTierTestAccess({ username: "another_user", isTestAccount: false }, "development"), false);
 });
 
-test("owner entrance effects never stack and prioritize Lion before the highest enabled tier", () => {
-  assert.equal(chooseOwnerEntranceEffect({
+test("only the equipped owner badge's enabled entrance effect can play", () => {
+  assert.equal(chooseAccountEntranceEffect({
+    ownerPreview: true,
+    enabled: true,
+    equippedBadgeId: "lion-entrance",
     lionEnabled: true,
     enabledTierIds: ["monthly-tier-2", "monthly-tier-5"],
   }), "lion-entrance");
-  assert.equal(chooseOwnerEntranceEffect({
-    lionEnabled: false,
+  assert.equal(chooseAccountEntranceEffect({
+    ownerPreview: true,
+    enabled: true,
+    equippedBadgeId: "monthly-tier-4",
+    lionEnabled: true,
     enabledTierIds: ["monthly-tier-2", "monthly-tier-4"],
   }), "monthly-tier-4");
-  assert.equal(chooseOwnerEntranceEffect({ lionEnabled: false, enabledTierIds: [] }), null);
+  assert.equal(chooseAccountEntranceEffect({
+    ownerPreview: true,
+    enabled: true,
+    equippedBadgeId: "monthly-tier-3",
+    lionEnabled: true,
+    enabledTierIds: [],
+  }), null);
 });
 
-test("ordinary badge owners get only their own tier effect, and can disable it", () => {
+test("ordinary badge owners get only the equipped tier effect and can turn it off", () => {
   assert.equal(chooseAccountEntranceEffect({
     ownerPreview: false,
     enabled: true,
+    equippedBadgeId: "monthly-tier-3",
     lionEnabled: true,
-    enabledTierIds: ["monthly-tier-5"],
-    ownedTierEffectId: "monthly-tier-3",
-    ownerAccount: false,
+    enabledTierIds: [],
   }), "monthly-tier-3");
   assert.equal(chooseAccountEntranceEffect({
     ownerPreview: false,
     enabled: false,
+    equippedBadgeId: "monthly-tier-3",
     lionEnabled: true,
     enabledTierIds: [],
-    ownedTierEffectId: "monthly-tier-3",
-    ownerAccount: false,
   }), null);
   assert.equal(chooseAccountEntranceEffect({
     ownerPreview: false,
     enabled: true,
+    equippedBadgeId: null,
     lionEnabled: true,
     enabledTierIds: [],
-    ownedTierEffectId: null,
-    ownerAccount: true,
-  }), "lion-entrance");
+  }), null);
 });

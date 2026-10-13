@@ -9,5 +9,6 @@
 export interface ChatAccess4b96100 {
   adultConfirmed: boolean;
   moderator: boolean;
+  owner: boolean;
   suspended: boolean;
 }

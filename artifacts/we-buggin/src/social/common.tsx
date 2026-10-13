@@ -30,12 +30,15 @@ export function BadgeMark({ id, label, imageUrl, size = 14, compact = false }: {
 }) {
   if (!id) return null;
   const tier = /^monthly-tier-([1-5])$/.exec(id)?.[1];
-  if (!tier) return null;
-  const badgeName = label ?? `Monthly purchase tier ${tier}`;
+  if (!tier && id !== 'lion-entrance') return null;
+  const badgeName = label ?? (tier ? `Monthly purchase tier ${tier}` : 'Lion Entrance');
+  const fallbackImage = tier
+    ? `badges/monthly-credit-tiers/tier${tier}${['2', '3', '4'].includes(tier) ? '.png' : '.svg'}`
+    : 'badges/monthly-credit-tiers/lion-entrance.svg';
   return <span className={`sc-badge${compact ? ' sc-badge-compact' : ''}`} title={badgeName}
-    style={{ width: size, height: size }} data-badge-tier={tier}>
+    style={{ width: size, height: size }} data-badge-tier={tier ?? 'lion'}>
     <img src={imageUrl ? `${import.meta.env.BASE_URL}${imageUrl.replace(/^\/+/, '')}`
-      : `${import.meta.env.BASE_URL}badges/monthly-credit-tiers/tier${tier}${['2', '3', '4'].includes(tier) ? '.png' : '.svg'}`}
+      : `${import.meta.env.BASE_URL}${fallbackImage}`}
       width={size} height={size} alt="" aria-hidden="true" />
     <span className="sc-sr">{badgeName}</span>
   </span>;

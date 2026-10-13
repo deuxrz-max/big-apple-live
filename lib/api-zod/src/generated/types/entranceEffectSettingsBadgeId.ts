@@ -18,4 +18,5 @@ export const EntranceEffectSettingsBadgeId = {
   'monthly-tier-3': 'monthly-tier-3',
   'monthly-tier-4': 'monthly-tier-4',
   'monthly-tier-5': 'monthly-tier-5',
+  'lion-entrance': 'lion-entrance',
 } as const;

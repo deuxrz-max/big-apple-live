@@ -584,6 +584,8 @@ paths:
     $ref: './social.openapi.json#/paths/~1social~1me'
   /social/me/entrance-effects:
     $ref: './social.openapi.json#/paths/~1social~1me~1entrance-effects'
+  /social/me/equipped-badge:
+    $ref: './social.openapi.json#/paths/~1social~1me~1equipped-badge'
   /social/me/passport:
     $ref: './social.openapi.json#/paths/~1social~1me~1passport'
   /social/me/passport/platforms:
@@ -1275,10 +1277,11 @@ components:
           description: Current heartbeat-based presence count; no participant identities are exposed.
     ChatAccess:
       type: object
-      required: [adultConfirmed, moderator, suspended]
+      required: [adultConfirmed, moderator, owner, suspended]
       properties:
         adultConfirmed: { type: boolean }
         moderator: { type: boolean }
+        owner: { type: boolean }
         suspended: { type: boolean }
     AdultAttestationInput:
       type: object

@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
-import { db, accountProfiles, socialCreditPurchases, socialLedger, socialWallets } from "@workspace/db";
+import { db, accountProfiles, socialCreditPurchases, socialLedger, socialSettings, socialWallets } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { recordConfirmedCreditPurchase } from "./credit-purchase-confirmation";
+import { accountBadgeState, saveEquippedBadge } from "./monthly-credit-badges";
 
 test("confirmed credit purchases are idempotent and never count a duplicate twice", async t => {
   const suffix = randomUUID().replaceAll("-", "").slice(0, 12);
@@ -32,9 +33,19 @@ test("confirmed credit purchases are idempotent and never count a duplicate twic
   assert.equal(first.balance, 1_000);
   assert.equal(duplicate.balance, 1_000);
   assert.equal(first.badgeId, "monthly-tier-1");
+  const [settings] = await db.select().from(socialSettings).where(eq(socialSettings.accountId, accountId));
+  assert.equal(settings?.equippedBadgeId, "monthly-tier-1", "a newly earned tier equips automatically");
+  assert.equal(settings?.badgeEquipPreferenceSet, true);
   assert.equal((await db.select().from(socialCreditPurchases).where(eq(socialCreditPurchases.accountId, accountId))).length, 1);
   assert.equal((await db.select().from(socialLedger).where(eq(socialLedger.accountId, accountId))).length, 1);
   assert.equal((await db.select().from(socialWallets).where(eq(socialWallets.accountId, accountId)))[0]?.balance, 1_000);
+  await assert.rejects(saveEquippedBadge(accountId, "monthly-tier-5"), /do not have that active badge/i);
+  await saveEquippedBadge(accountId, null);
+  const unequipped = await accountBadgeState(accountId);
+  assert.equal(unequipped.equippedBadgeId, null, "users can explicitly have no badge equipped");
+  const [unequippedSettings] = await db.select().from(socialSettings).where(eq(socialSettings.accountId, accountId));
+  assert.equal(unequippedSettings?.equippedBadgeId, null);
+  assert.equal(unequippedSettings?.badgeEquipPreferenceSet, true);
   await assert.rejects(
     recordConfirmedCreditPurchase(accountId, "fixture", providerPurchaseId, 5_000),
     /already applied to a different purchase/,

@@ -1,11 +1,12 @@
 import { randomUUID } from "node:crypto";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, gte, lte, sql } from "drizzle-orm";
 import { db, accountProfiles, socialCreditPurchases, socialLedger, socialSettings, socialWallets } from "@workspace/db";
 import { RoomError, roomStore } from "../room-store";
 import { lockAccounts, requireAccount } from "./core";
 import { monthlyPurchaseBadgeSummary } from "./monthly-credit-badges";
+import { evaluateMonthlyPurchaseBadges } from "./monthly-credit-badge-policy";
 import { claimRoomEntranceEffect } from "../room-entrance-effects";
-import { hasOwnerTierTestAccess } from "./owner-entrance-effects-policy";
+import { accountEntranceEffectSelection } from "./entrance-effect-preferences";
 
 /**
  * Call only after the payment provider's signature and completed transaction
@@ -32,9 +33,19 @@ export async function recordConfirmedCreditPurchase(
     throw new RoomError(400, "Invalid confirmed credit-purchase record");
   }
 
-  const before = await monthlyPurchaseBadgeSummary(accountId, confirmedAt);
   const saved = await db.transaction(async tx => {
     await lockAccounts(tx, [accountId]);
+    const monthStart = new Date(Date.UTC(confirmedAt.getUTCFullYear(), confirmedAt.getUTCMonth(), 1));
+    const purchasesBefore = await tx.select({
+      accountId: socialCreditPurchases.accountId,
+      credits: socialCreditPurchases.credits,
+      confirmedAt: socialCreditPurchases.confirmedAt,
+    }).from(socialCreditPurchases).where(and(
+      eq(socialCreditPurchases.accountId, accountId),
+      gte(socialCreditPurchases.confirmedAt, monthStart),
+      lte(socialCreditPurchases.confirmedAt, confirmedAt),
+    ));
+    const badgesBefore = evaluateMonthlyPurchaseBadges(purchasesBefore, confirmedAt).result.get(accountId) ?? [];
     const [inserted] = await tx.insert(socialCreditPurchases).values({
       accountId, provider, providerPurchaseId, credits, confirmedAt,
     }).onConflictDoNothing().returning({ id: socialCreditPurchases.id });
@@ -45,7 +56,7 @@ export async function recordConfirmedCreditPurchase(
       ));
       if (!existing || existing.accountId !== accountId || existing.credits !== credits)
         throw new RoomError(409, "This payment reference was already applied to a different purchase");
-      return { duplicate: true };
+      return { duplicate: true, newlyEarned: null };
     }
 
     await tx.update(socialWallets).set({ balance: sql`${socialWallets.balance} + ${credits}` })
@@ -55,23 +66,40 @@ export async function recordConfirmedCreditPurchase(
       description: `Confirmed credit purchase · ${credits.toLocaleString("en-US")} credits`,
       requestKey: randomUUID(), refKey: `credit-purchase:${provider}:${providerPurchaseId}`,
     });
-    return { duplicate: false };
+    const purchasesAfter = await tx.select({
+      accountId: socialCreditPurchases.accountId,
+      credits: socialCreditPurchases.credits,
+      confirmedAt: socialCreditPurchases.confirmedAt,
+    }).from(socialCreditPurchases).where(and(
+      eq(socialCreditPurchases.accountId, accountId),
+      gte(socialCreditPurchases.confirmedAt, monthStart),
+      lte(socialCreditPurchases.confirmedAt, confirmedAt),
+    ));
+    const badgesAfter = evaluateMonthlyPurchaseBadges(purchasesAfter, confirmedAt).result.get(accountId) ?? [];
+    const newlyEarned = badgesAfter.filter(badge => !badgesBefore.some(previous =>
+      previous.tier.id === badge.tier.id && previous.earnedAt.getTime() === badge.earnedAt.getTime()))
+      .sort((a, b) => b.tier.rank - a.tier.rank)[0] ?? null;
+    if (newlyEarned) {
+      await tx.update(socialSettings).set({
+        equippedBadgeId: newlyEarned.tier.id,
+        badgeEquipPreferenceSet: true,
+        updatedAt: new Date(),
+      }).where(eq(socialSettings.accountId, accountId));
+    }
+    return { duplicate: false, newlyEarned };
   });
 
   const after = await monthlyPurchaseBadgeSummary(accountId, confirmedAt);
-  const newlyReachedHigherTier = after && (!before || after.tier.rank > before.tier.rank);
   const activeRoomIds = roomStore.activeRoomIdsForAccount(accountId);
-  const [entrancePreferences] = await db.select({
-    enabled: socialSettings.entranceEffectsEnabled,
-  }).from(socialSettings).where(eq(socialSettings.accountId, accountId)).limit(1);
-  const ownerPreview = profileFlags ? hasOwnerTierTestAccess(profileFlags, process.env.NODE_ENV) : false;
-  if (!ownerPreview && entrancePreferences?.enabled !== false
-    && !saved.duplicate && newlyReachedHigherTier && activeRoomIds.length > 0) {
-    const effect = await claimRoomEntranceEffect(accountId, after.tier.entranceEffectId, confirmedAt.getTime());
-    if (effect) {
+  if (!saved.duplicate && saved.newlyEarned && activeRoomIds.length > 0) {
+    const selectedEffect = await accountEntranceEffectSelection(accountId);
+    const effect = selectedEffect?.effectId === saved.newlyEarned.tier.entranceEffectId
+      ? await claimRoomEntranceEffect(accountId, selectedEffect.effectId, confirmedAt.getTime())
+      : null;
+    if (effect && selectedEffect) {
       for (const roomId of activeRoomIds) {
         try {
-          roomStore.publishRoomEntranceEffect(roomId, accountId, effect, after.tier.durationMs);
+          roomStore.publishRoomEntranceEffect(roomId, accountId, effect, selectedEffect.durationMs);
         } catch {
           // A session may expire between discovery and publish; remaining rooms still get the event.
         }

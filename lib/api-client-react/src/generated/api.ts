@@ -37,6 +37,8 @@ import type {
   EmojiOption,
   EntranceEffectSettings,
   EntranceEffectSettingsInput,
+  EquipMyBadgeInput,
+  EquippedBadgeState,
   ErrorResponse,
   ErrorResponse4b96100,
   FavoriteGalleryEntry,
@@ -3019,6 +3021,88 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getUpdateMyEntranceEffectSettingsMutationOptions(options));
+    }
+
+export const getEquipMyBadgeUrl = () => {
+
+
+
+
+  return `/api/social/me/equipped-badge`
+}
+
+export const equipMyBadge = async (equipMyBadgeInput: EquipMyBadgeInput, options?: Parameters<typeof customFetch>[1]): Promise<EquippedBadgeState> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<EquippedBadgeState>(getEquipMyBadgeUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(equipMyBadgeInput)
+  }
+);}
+
+
+
+
+
+export const getEquipMyBadgeMutationKey = () => ['equipMyBadge'] as const;
+
+export const getEquipMyBadgeMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof equipMyBadge>>, TError,EquipMyBadgeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof equipMyBadge>>, TError,EquipMyBadgeMutationVariables, TContext> => {
+
+const mutationKey = getEquipMyBadgeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof equipMyBadge>>, EquipMyBadgeMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  equipMyBadge(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EquipMyBadgeMutationResult = NonNullable<Awaited<ReturnType<typeof equipMyBadge>>>
+    export type EquipMyBadgeMutationBody = BodyType<EquipMyBadgeInput>
+    export type EquipMyBadgeMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type EquipMyBadgeMutationVariables = {data: BodyType<EquipMyBadgeInput>}
+
+    export const useEquipMyBadge = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof equipMyBadge>>, TError,EquipMyBadgeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof equipMyBadge>>,
+        TError,
+        EquipMyBadgeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getEquipMyBadgeMutationOptions(options));
     }
 
 export const getGetMyStreamerPassportUrl = () => {

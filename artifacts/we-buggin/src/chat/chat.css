@@ -4,6 +4,20 @@
 .ch-photo-card{min-width:0;display:flex;flex-direction:column;align-items:center;gap:8px;border:1px solid #555;padding:10px 4px}
 .ch-photo-card .bm-btn{max-width:100%;white-space:normal}
 .ch-photo-card [aria-pressed=true]{border-color:#f2f2ee;background:#222}
+.ch-my-badges{margin:16px 0 8px;padding:14px;border:1px solid #d8d4e8;border-radius:18px;background:#fff;color:#17151c;box-shadow:0 8px 22px #37206b12}
+.ch-my-badges-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.ch-my-badges-heading h2{margin:0;font-size:20px;font-weight:800}
+.ch-my-badges-heading>span{min-width:26px;text-align:center;border-radius:99px;background:#f0edfa;color:#514078;font-size:12px;font-weight:700;padding:3px 8px}
+.ch-my-badges-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:10px}
+.ch-my-badge{min-width:0;display:flex;flex-direction:column;align-items:center;gap:7px;padding:11px 8px;border:1px solid #e3dfed;border-radius:15px;background:#fcfbff;text-align:center}
+.ch-my-badge.is-equipped{border-color:#b197fc;box-shadow:0 0 0 2px #b197fc28}
+.ch-my-badge .sc-badge-art-slot{width:88px;height:88px}
+.ch-my-badge .sc-badge-art{width:88px;height:88px;object-fit:contain}
+.ch-my-badge-name{max-width:100%;font-size:14px;line-height:1.2;overflow-wrap:anywhere}
+.ch-my-badge-time{color:#6b6872;font-size:12px;line-height:1.2}
+.ch-my-badge .bm-btn{width:100%;min-height:34px;justify-content:center}
+.ch-my-badge-status{margin:2px 0 0;color:#35663a;font-size:13px}
+.ch-my-badges-empty{margin:0;color:#55515c;font-size:14px}
 .ch{--bm-ink:#f2f2ee;--bm-mute:#9b9b96;--bm-line:#333;--bm-acc:#3b5bff;--bm-display:'Barlow Condensed','Arial Narrow',sans-serif;min-height:100dvh;background:#050505;color:#f2f2ee;font-family:'Barlow',system-ui,sans-serif;padding:0 clamp(14px,4vw,40px) 40px}
 .ch-in{max-width:960px;margin:0 auto}
 .ch-top{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:16px 0;flex-wrap:wrap}

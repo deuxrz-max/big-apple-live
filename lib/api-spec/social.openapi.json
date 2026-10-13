@@ -223,6 +223,26 @@
         }
       }
     },
+    "/social/me/equipped-badge": {
+      "put": {
+        "operationId": "equipMyBadge",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "requestBody": {
+          "required": true,
+          "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EquipMyBadgeInput"}}}
+        },
+        "responses": {
+          "200": {
+            "description": "Saved the account's equipped badge choice",
+            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EquippedBadgeState"}}}
+          },
+          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "The account does not own the requested active badge"}
+        }
+      }
+    },
     "/social/people": {
       "get": {
         "operationId": "getSocialPeople",
@@ -1173,7 +1193,6 @@
         "additionalProperties": false,
         "properties": {
           "enabled": {"type": "boolean"},
-          "selectedBadgeId": {"type": "string", "enum": ["monthly-tier-1", "monthly-tier-2", "monthly-tier-3", "monthly-tier-4", "monthly-tier-5"]},
           "tierEffectId": {"type": "string", "enum": ["monthly-tier-1", "monthly-tier-2", "monthly-tier-3", "monthly-tier-4", "monthly-tier-5"]},
           "tierEffectEnabled": {"type": "boolean"},
           "lionEffectEnabled": {"type": "boolean"}
@@ -1193,11 +1212,10 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "selectedBadgeId": {"type": "string", "enum": ["monthly-tier-1", "monthly-tier-2", "monthly-tier-3", "monthly-tier-4", "monthly-tier-5"]},
           "tiers": {"type": "array", "minItems": 5, "maxItems": 5, "items": {"$ref": "#/components/schemas/EntranceEffectTierSetting"}},
           "lionEffectEnabled": {"type": "boolean"}
         },
-        "required": ["selectedBadgeId", "tiers", "lionEffectEnabled"]
+        "required": ["tiers", "lionEffectEnabled"]
       },
       "EntranceEffectSettings": {
         "type": "object",
@@ -1205,7 +1223,7 @@
         "properties": {
           "eligible": {"type": "boolean"},
           "enabled": {"type": "boolean"},
-          "badgeId": {"type": ["string", "null"], "enum": ["monthly-tier-1", "monthly-tier-2", "monthly-tier-3", "monthly-tier-4", "monthly-tier-5", null]},
+          "badgeId": {"type": ["string", "null"], "enum": ["monthly-tier-1", "monthly-tier-2", "monthly-tier-3", "monthly-tier-4", "monthly-tier-5", "lion-entrance", null]},
           "badgeName": {"type": ["string", "null"]},
           "ownerTest": {"anyOf": [{"$ref": "#/components/schemas/OwnerEntranceEffectSettings"}, {"type": "null"}]}
         },
@@ -1219,6 +1237,11 @@
             "type": "object",
             "additionalProperties": { "type": "string", "format": "date-time" }
           },
+          "badges": {
+            "type": "array",
+            "items": {"$ref": "#/components/schemas/MyOwnedBadge"}
+          },
+          "equippedBadgeId": {"type": ["string", "null"]},
           "loginStreak": { "type": "integer", "minimum": 0 },
           "profile": {
             "$ref": "#/components/schemas/SocialPerson"
@@ -1271,8 +1294,38 @@
           "products",
           "gifts",
           "countries",
-          "entranceEffects"
+          "entranceEffects",
+          "badges",
+          "equippedBadgeId"
         ]
+      },
+      "MyOwnedBadge": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "badgeImage": {"type": "string"},
+          "rank": {"type": "integer"},
+          "earnedAt": {"type": "string", "format": "date-time"},
+          "expiresAt": {"type": ["string", "null"], "format": "date-time"},
+          "daysLeft": {"type": ["integer", "null"], "minimum": 1},
+          "permanent": {"type": "boolean"},
+          "equipped": {"type": "boolean"}
+        },
+        "required": ["id", "name", "badgeImage", "rank", "earnedAt", "expiresAt", "daysLeft", "permanent", "equipped"]
+      },
+      "EquipMyBadgeInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {"badgeId": {"type": ["string", "null"]}},
+        "required": ["badgeId"]
+      },
+      "EquippedBadgeState": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {"equippedBadgeId": {"type": ["string", "null"]}},
+        "required": ["equippedBadgeId"]
       },
       "SocialPeople": {
         "type": "object",

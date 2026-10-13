@@ -198,16 +198,7 @@ export function MyProfilePage() {
         <h2 id="entrance-effects-title" className="sc-h2">Entrance effects</h2>
         {d.entranceEffects.ownerTest ? (
           <>
-            <p className="sc-sub">Preview-only owner controls. Only one effect plays on entry: Lion first, then the highest enabled tier.</p>
-            <label className="sc-field">
-              <span className="bm-label">Badge shown before your name</span>
-              <select className="sc-select" value={d.entranceEffects.ownerTest.selectedBadgeId}
-                disabled={saveEntranceSettings.isPending}
-                onChange={(e) => updateEntranceSettings({ selectedBadgeId: e.target.value as typeof d.entranceEffects.ownerTest.selectedBadgeId })}
-                data-testid="select-owner-test-badge">
-                {d.entranceEffects.ownerTest.tiers.map((tier) => <option key={tier.badgeId} value={tier.badgeId}>{tier.name}</option>)}
-              </select>
-            </label>
+            <p className="sc-sub">Preview-only owner controls. Equip a tier or Lion badge under My Badges on the profile photo page; only the equipped badge's effect can play.</p>
             <label className="sc-check sc-entrance-master">
               <input type="checkbox" checked={d.entranceEffects.enabled} disabled={saveEntranceSettings.isPending}
                 onChange={(e) => updateEntranceSettings({ enabled: e.target.checked })} data-testid="toggle-entrance-effects" />
@@ -217,21 +208,21 @@ export function MyProfilePage() {
               <label className="sc-check sc-entrance-option">
                 <input type="checkbox" checked={d.entranceEffects.ownerTest.lionEffectEnabled} disabled={saveEntranceSettings.isPending}
                   onChange={(e) => updateEntranceSettings({ lionEffectEnabled: e.target.checked })} data-testid="toggle-lion-entrance-effect" />
-                <span><b>Lion entrance</b><small>Highest priority when enabled.</small></span>
+                <span><b>Lion entrance</b><small>Plays only while the Lion badge is equipped.</small></span>
               </label>
               {d.entranceEffects.ownerTest.tiers.map((tier) => (
                 <label className="sc-check sc-entrance-option" key={tier.badgeId}>
                   <input type="checkbox" checked={tier.enabled} disabled={saveEntranceSettings.isPending}
                     onChange={(e) => updateEntranceSettings({ tierEffectId: tier.badgeId, tierEffectEnabled: e.target.checked })}
                     data-testid={`toggle-effect-${tier.badgeId}`} />
-                  <span><b>{tier.name}</b><small>{tier.enabled ? 'Enabled for the next room entry.' : 'Off.'}</small></span>
+                  <span><b>{tier.name}</b><small>{tier.enabled ? 'Plays when this badge is equipped.' : 'Off.'}</small></span>
                 </label>
               ))}
             </div>
           </>
         ) : d.entranceEffects.eligible ? (
           <>
-            <p className="sc-sub">Your active badge: <b>{d.entranceEffects.badgeName}</b>. This preference is saved to your account.</p>
+            <p className="sc-sub">Your equipped badge: <b>{d.entranceEffects.badgeName ?? 'none'}</b>. Choose a badge under My Badges on the profile photo page.</p>
             <label className="sc-check sc-entrance-master">
               <input type="checkbox" checked={d.entranceEffects.enabled} disabled={saveEntranceSettings.isPending}
                 onChange={(e) => updateEntranceSettings({ enabled: e.target.checked })} data-testid="toggle-entrance-effects" />
@@ -239,7 +230,7 @@ export function MyProfilePage() {
             </label>
           </>
         ) : (
-          <p className="sc-sub">An active monthly purchase badge is needed before an entrance effect can be turned on or off.</p>
+          <p className="sc-sub">An active tier badge is needed before an entrance effect can be turned on or off.</p>
         )}
         {entranceMsg && <Msg ok={entranceMsg.ok}>{entranceMsg.t}</Msg>}
       </section>

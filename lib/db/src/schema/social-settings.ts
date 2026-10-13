@@ -8,6 +8,8 @@ export const socialSettings = pgTable('social_settings', {
   bio: text('bio').notNull().default(''), country: text('country'),
   interests: jsonb('interests').$type<string[]>().notNull().default([]),
   discoverable: boolean('discoverable').notNull().default(false), badgeId: text('badge_id'),
+  equippedBadgeId: text('equipped_badge_id'),
+  badgeEquipPreferenceSet: boolean('badge_equip_preference_set').notNull().default(false),
   externalPlatform: text('external_platform'), externalHandle: text('external_handle'),
   entranceEffectsEnabled: boolean('entrance_effects_enabled').notNull().default(true),
   ownerTestBadgeTier: integer('owner_test_badge_tier').notNull().default(5),

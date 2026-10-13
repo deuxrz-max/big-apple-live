@@ -6,10 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { EntranceEffectTierSetting } from './entranceEffectTierSetting';
-import type { OwnerEntranceEffectSettingsSelectedBadgeId } from './ownerEntranceEffectSettingsSelectedBadgeId';
 
 export interface OwnerEntranceEffectSettings {
-  selectedBadgeId: OwnerEntranceEffectSettingsSelectedBadgeId;
   /**
      * @minItems 5
      * @maxItems 5

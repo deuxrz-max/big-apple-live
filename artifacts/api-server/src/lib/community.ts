@@ -1,8 +1,9 @@
 import { randomUUID, createHash } from "node:crypto";
 import { and, eq } from "drizzle-orm";
-import { db, chatRooms, chatAdmissions, chatModerators, chatMemberships } from "@workspace/db";
+import { db, accountProfiles, chatRooms, chatAdmissions, chatModerators, chatMemberships } from "@workspace/db";
 import { RoomError, roomStore } from "./room-store";
 import { COMMUNITY_ROOMS } from "./community-config";
+import { isOwnerAccount } from "./social/owner-entrance-effects-policy";
 export { COMMUNITY_ROOMS, communityDefaultVideoSearch } from "./community-config";
 export async function initializeCommunities() {
   for (const entry of COMMUNITY_ROOMS) {
@@ -70,10 +71,14 @@ export async function offerOverflow(roomId: string, accountId: string) {
   }
 }
 export async function accessFor(accountId: string) {
-  const [admission] = await db.select().from(chatAdmissions).where(eq(chatAdmissions.accountId, accountId));
-  const [moderator] = await db.select().from(chatModerators).where(eq(chatModerators.accountId, accountId));
+  const [[admission], [moderator], [profile]] = await Promise.all([
+    db.select().from(chatAdmissions).where(eq(chatAdmissions.accountId, accountId)),
+    db.select().from(chatModerators).where(eq(chatModerators.accountId, accountId)),
+    db.select({ username: accountProfiles.username, isTestAccount: accountProfiles.isTestAccount })
+      .from(accountProfiles).where(eq(accountProfiles.accountId, accountId)),
+  ]);
   return { adultConfirmed: !!admission && !admission.suspended, suspended: !!admission?.suspended,
-    moderator: !!moderator };
+    moderator: !!moderator, owner: profile ? isOwnerAccount(profile) : false };
 }
 export async function requireAdult(accountId: string) {
   if (!(await accessFor(accountId)).adultConfirmed)
@@ -82,6 +87,13 @@ export async function requireAdult(accountId: string) {
 export async function requireModerator(accountId: string) {
   await requireAdult(accountId);
   if (!(await accessFor(accountId)).moderator) throw new RoomError(403, "Moderator access required");
+}
+export async function requireOwner(accountId: string) {
+  const [profile] = await db.select({
+    username: accountProfiles.username,
+    isTestAccount: accountProfiles.isTestAccount,
+  }).from(accountProfiles).where(eq(accountProfiles.accountId, accountId));
+  if (!profile || !isOwnerAccount(profile)) throw new RoomError(403, "Owner access required");
 }
 export async function communityMembership(roomId: string, accountId: string) {
   const historyId = roomStore.getHistoryId(roomId);

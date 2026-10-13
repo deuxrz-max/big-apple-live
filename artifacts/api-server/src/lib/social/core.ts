@@ -6,7 +6,7 @@ import { DAILY_REWARD } from "./catalog";
 import { visibleProfilePhotos } from "../photo-visibility";
 import { hasDevelopmentUnlimitedCredits } from "./credits-policy";
 import { giftNameColorForSentCredits } from "./gift-name-color";
-import { visibleMonthlyPurchaseBadgeSummary, type MonthlyCreditBadgeSummary } from "./monthly-credit-badges";
+import { visibleMonthlyPurchaseBadgeSummary, type VisibleMonthlyBadgeSummary } from "./monthly-credit-badges";
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type ProfileRow = typeof accountProfiles.$inferSelect;
@@ -61,7 +61,7 @@ export async function assertContact(tx: Tx | typeof db, actor: string, target: s
   }
 }
 export async function person(viewer: string, profile: ProfileRow, settings?: SettingsRow | null, includeStats = false,
-  monthlyBadgeOverride?: MonthlyCreditBadgeSummary | null) {
+  monthlyBadgeOverride?: VisibleMonthlyBadgeSummary | null) {
   const id = profile.accountId;
   const [prefs] = settings ? [settings] : await db.select().from(socialSettings).where(eq(socialSettings.accountId, id));
   const [wallet] = await db.select().from(socialWallets).where(eq(socialWallets.accountId, id));

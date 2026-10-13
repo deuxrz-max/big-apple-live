@@ -5,7 +5,7 @@ import {
   streamerPassportAwards,
   streamerPassportLinks,
 } from "@workspace/db";
-import { requireModerator } from "../community";
+import { requireOwner } from "../community";
 import { RoomError } from "../room-store";
 import { pairBlocked, targetAccount } from "./core";
 import { privatePassportEntry as privateLink, parsePlatformValue, passportPlatformFor, type PassportBadgeSummary, PassportInputError, publicPassportEntry, reviewState, STREAMER_PASSPORT_PLATFORMS, verificationCode } from "./passport-policy";
@@ -145,7 +145,7 @@ export async function passportBadgeSummaries(accountIds: string[]): Promise<Map<
 }
 
 async function requirePassportModerator(accountId: string) {
-  await requireModerator(accountId);
+  await requireOwner(accountId);
 }
 
 export async function passportReviewQueue(accountId: string) {

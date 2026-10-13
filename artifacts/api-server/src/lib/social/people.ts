@@ -5,19 +5,26 @@ import { RoomError } from "../room-store";
 import { assertContact, ensureSocial, lockAccounts, lockPair, pairBlocked, person, requireAccount, targetAccount, wallet } from "./core";
 import { COUNTRIES, COUNTRY_CODES, GIFTS, PRODUCTS } from "./catalog";
 import { roomStore } from "../room-store";
-import { visibleMonthlyPurchaseBadgeSummaries } from "./monthly-credit-badges";
+import { accountBadgeState, myBadgeViews, visibleMonthlyPurchaseBadgeSummaries } from "./monthly-credit-badges";
 import { getMyEntranceEffectSettings } from "./entrance-effect-preferences";
 
 export async function getMe(id: string) {
   const profile = await requireAccount(id);
   await ensureSocial(id);
-  const [streak] = await db.select().from(socialLoginStreaks).where(eq(socialLoginStreaks.accountId, id));
-  const giftsOwned = await db.select().from(socialGiftBag).where(eq(socialGiftBag.accountId, id));
+  const [[streak], giftsOwned, badgeState, badges] = await Promise.all([
+    db.select().from(socialLoginStreaks).where(eq(socialLoginStreaks.accountId, id)),
+    db.select().from(socialGiftBag).where(eq(socialGiftBag.accountId, id)),
+    accountBadgeState(id),
+    myBadgeViews(id),
+  ]);
   return { profile: await person(id, profile, undefined, true), wallet: await wallet(id, db, profile.username), inventory: giftsOwned.map(g => g.giftId),
     giftQuantities: Object.fromEntries(giftsOwned.map(g => [g.giftId, g.quantity])),
-     badgeExpirations: {},
-      loginStreak: streak?.consecutiveDays ?? 0, products: PRODUCTS, gifts: GIFTS, countries: COUNTRIES,
-      entranceEffects: await getMyEntranceEffectSettings(id) };
+    badges,
+    equippedBadgeId: badgeState.equippedBadgeId,
+    badgeExpirations: Object.fromEntries(badges.filter(badge => badge.expiresAt)
+      .map(badge => [badge.id, badge.expiresAt!])),
+    loginStreak: streak?.consecutiveDays ?? 0, products: PRODUCTS, gifts: GIFTS, countries: COUNTRIES,
+    entranceEffects: await getMyEntranceEffectSettings(id) };
 }
 export async function saveSocialProfile(id: string, input: SocialProfileInput) {
   const profile = await requireAccount(id);

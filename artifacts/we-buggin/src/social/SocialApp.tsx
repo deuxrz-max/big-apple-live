@@ -64,7 +64,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
                 </Link>
               ))}
               {access.data?.moderator && <Link href="/community/moderation" onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}><Ban size={17} aria-hidden="true" /><span>Moderation</span></Link>}
-              {access.data?.moderator && <Link href="/community/passport-review" onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}><Stamp size={17} aria-hidden="true" /><span>Passport review</span></Link>}
+              {access.data?.owner && <Link href="/community/passport-review" onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}><Stamp size={17} aria-hidden="true" /><span>Passport review</span></Link>}
             </nav>
           </details>
         </div>
@@ -76,7 +76,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
             return <Link key={to} href={to} className={`sc-nav-item${on ? ' is-on' : ''}`} aria-current={on ? 'page' : undefined} data-testid={`nav-${label.toLowerCase().replace(/\s/g, '-')}`}><I size={18} /><span>{label}</span></Link>;
           })}
           {access.data?.moderator && <Link href="/community/moderation" className={`sc-nav-item${path === '/community/moderation' ? ' is-on' : ''}`} data-testid="nav-moderation"><Ban size={18} /><span>Moderation</span></Link>}
-          {access.data?.moderator && <Link href="/community/passport-review" className={`sc-nav-item${path === '/community/passport-review' ? ' is-on' : ''}`} data-testid="nav-passport-review"><Stamp size={18} /><span>Passport review</span></Link>}
+          {access.data?.owner && <Link href="/community/passport-review" className={`sc-nav-item${path === '/community/passport-review' ? ' is-on' : ''}`} data-testid="nav-passport-review"><Stamp size={18} /><span>Passport review</span></Link>}
         </nav>}
         <main className="sc-main">
           {me.isLoading ? <Loading /> : needsIdentity ? (
@@ -92,7 +92,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
               <Route path="/community/messages" component={InboxPage} />
               <Route path="/community/messages/:username" component={ThreadRoute} />
               <Route path="/community/moderation" component={ModerationQueue} />
-              <Route path="/community/passport-review">{() => access.data?.moderator
+              <Route path="/community/passport-review">{() => access.data?.owner
                 ? <StreamerPassportReview />
                 : <div className="sc-empty" role="status" data-testid="status-passport-review-access"><h2>Moderator access required</h2><p>This review desk is limited to authorized moderators.</p><Link href="/community" className="bm-btn">Back to People</Link></div>}</Route>
               <Route path="/community/rewards"><RewardsPage /></Route>

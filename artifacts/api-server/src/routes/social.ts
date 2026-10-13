@@ -7,6 +7,7 @@ import {
   GetSocialLedgerResponse, GetSocialPeopleQueryParams, GetSocialConversationQueryParams,
   GetFavoritesGalleryResponse, GetFavoriteRoomResponse, SaveMyStreamerPassportPlatformBody,
   ReviewStreamerPassportRequestBody, SetStreamerPassportFoundingLeagueBody,
+  EquipMyBadgeBody, EquipMyBadgeResponse,
 } from "@workspace/api-zod";
 import { accountId, sameOrigin } from "./identity";
 import { RoomError } from "../lib/room-store";
@@ -23,6 +24,7 @@ import {
   requestPassportVerification, reviewPassportRequest, savePassportPlatform, setFoundingLeague,
 } from "../lib/social/passport";
 import { getMyEntranceEffectSettings, saveMyEntranceEffectSettings } from "../lib/social/entrance-effect-preferences";
+import { saveEquippedBadge } from "../lib/social/monthly-credit-badges";
 
 const router: IRouter = Router();
 router.get('/gift-media/spirit-pup/v1/:filename', serveGiftMedia);
@@ -85,6 +87,11 @@ router.get("/social/favorites/:username/room", async (req, res): Promise<void> =
 });
 router.get("/social/me", async (req, res): Promise<void> => {
   res.json(GetSocialMeResponse.parse(await getMe(accountId(req))));
+});
+router.put("/social/me/equipped-badge", async (req, res): Promise<void> => {
+  const input = EquipMyBadgeBody.safeParse(req.body);
+  if (!input.success) throw new RoomError(400, "Choose a badge or choose none");
+  res.json(EquipMyBadgeResponse.parse(await saveEquippedBadge(accountId(req), input.data.badgeId)));
 });
 router.put("/social/me", async (req, res): Promise<void> => {
   const input = SaveSocialProfileBody.safeParse(req.body);

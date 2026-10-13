@@ -5,8 +5,9 @@ import { Link, useLocation } from 'wouter';
 import { useClerk } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
-  getGetChatAccessQueryKey, getGetMyProfileQueryKey, useConfirmChatAdult, useGetChatAccess, useGetChatDirectory,
-  useGetChatReports, useGetMyProfile, useGetSocialMe, useReviewChatReport, useSaveMyProfile,
+  getGetChatAccessQueryKey, getGetMyProfileQueryKey, getGetSocialMeQueryKey,
+  useConfirmChatAdult, useGetChatAccess, useGetChatDirectory,
+  useGetChatReports, useGetMyProfile, useGetSocialMe, useEquipMyBadge, useReviewChatReport, useSaveMyProfile,
   getGetChatReportsQueryKey, getGetChatDirectoryQueryKey, ChatReportReviewInputAction,
 } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
@@ -14,6 +15,7 @@ import { Wordmark } from '@/components/brand';
 import { errMessage } from '@/lib/errors';
 import { PhotoReviewQueue } from './PhotoReviewQueue';
 import { BotModerationPanel } from './BotModerationPanel';
+import { BadgeArt } from '@/social/BadgeArt';
 import './chat.css';
 
 const DISCLAIMER = 'Streamtalk is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
@@ -166,6 +168,8 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
   const qc = useQueryClient();
   const [, nav] = useLocation();
   const q = useGetMyProfile();
+  const me = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), enabled: !!q.data?.profile, refetchInterval: 60_000 } });
+  const equipBadge = useEquipMyBadge();
   const save = useSaveMyProfile();
   const profile = q.data?.profile ?? null;
   const [username, setUsername] = useState('');
@@ -178,6 +182,7 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
   const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [upErr, setUpErr] = useState<string | null>(null);
+  const [badgeMessage, setBadgeMessage] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   const pickPhoto = async (file: File | undefined) => {
@@ -217,6 +222,17 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
   const dn = shownDisplay.trim();
   const dnOk = dn.length >= 1 && dn.length <= 40;
   const bioOk = bio.length <= 280;
+  const setEquippedBadge = (badgeId: string | null) => {
+    setBadgeMessage(null);
+    equipBadge.mutate({ data: { badgeId } }, {
+      onSuccess: () => {
+        invalidateSocial(qc);
+        void me.refetch();
+        setBadgeMessage(badgeId ? 'Badge equipped.' : 'Badge unequipped.');
+      },
+      onError: (error) => setBadgeMessage(errMessage(error)),
+    });
+  };
   const submit = () => {
     setTried(true); setSaved(false);
     if (!nameOk || !dnOk || !bioOk || save.isPending || uploading) return;
@@ -290,6 +306,32 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
             </div>
             <input ref={fileRef} type="file" hidden accept="image/jpeg,image/png,image/webp" aria-label="Upload profile photo" disabled={uploading || save.isPending} onChange={(e) => pickPhoto(e.target.files?.[0])} data-testid="input-photo" />
             <p className="ch-note">Add up to 4 photos and choose one main photo. Only approved photos are visible to others. No sexual or explicit photos; keep your profile professional. JPEG, PNG or WebP, up to 5 MiB each. Save changes to apply.{photoUrls.length >= 4 ? ' At the limit: replace or remove a photo to change your collection.' : ''}</p>
+            {profile && <section className="ch-my-badges" aria-labelledby="my-badges-title" data-testid="section-my-badges">
+              <div className="ch-my-badges-heading">
+                <h2 id="my-badges-title">My Badges</h2>
+                <span>{me.data?.badges.length ?? 0}</span>
+              </div>
+              {me.isLoading ? <p role="status">Loading badges…</p> : me.isError
+                ? <p className="ch-fe" role="alert">Could not load your badges. <button type="button" onClick={() => me.refetch()}>Retry</button></p>
+                : me.data?.badges.length
+                  ? <div className="ch-my-badges-grid">
+                    {me.data.badges.map((badge) => (
+                      <article className={`ch-my-badge${badge.equipped ? ' is-equipped' : ''}`} key={badge.id} data-testid={`my-badge-${badge.id}`}>
+                        <BadgeArt id={badge.id} name={badge.name} imageUrl={badge.badgeImage} size={88} />
+                        <b className="ch-my-badge-name">{badge.name}</b>
+                        <span className="ch-my-badge-time">{badge.permanent ? 'Permanent' : `${badge.daysLeft ?? 1} ${badge.daysLeft === 1 ? 'day' : 'days'} left`}</span>
+                        <button type="button" className={`bm-btn bm-btn-sm${badge.equipped ? '' : ' bm-btn-primary'}`}
+                          aria-pressed={badge.equipped} disabled={equipBadge.isPending}
+                          onClick={() => setEquippedBadge(badge.equipped ? null : badge.id)}
+                          data-testid={`button-equip-${badge.id}`}>
+                          {equipBadge.isPending ? 'Saving…' : badge.equipped ? 'Unequip' : 'Equip'}
+                        </button>
+                      </article>
+                    ))}
+                  </div>
+                  : <p className="ch-my-badges-empty">No badges yet. Buy credits to earn one.</p>}
+              {badgeMessage && <p className={equipBadge.isError ? 'ch-fe' : 'ch-my-badge-status'} role={equipBadge.isError ? 'alert' : 'status'}>{badgeMessage}</p>}
+            </section>}
             {upErr && <div className="ch-err" role="alert">{upErr}</div>}
           </div>
           {save.isError && <div className="ch-err" role="alert">{errMessage(save.error)}</div>}

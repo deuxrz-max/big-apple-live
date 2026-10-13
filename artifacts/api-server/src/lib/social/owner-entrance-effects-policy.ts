@@ -15,29 +15,19 @@ export function hasOwnerTierTestAccess(
   return nodeEnv === "development" && isOwnerAccount(profile);
 }
 
-export function chooseOwnerEntranceEffect(input: {
-  lionEnabled: boolean;
-  enabledTierIds: string[];
-}): EntranceEffectChoice | null {
-  if (input.lionEnabled) return "lion-entrance";
-  return [...MONTHLY_CREDIT_BADGE_TIERS]
-    .sort((a, b) => b.rank - a.rank)
-    .find(tier => input.enabledTierIds.includes(tier.id))?.entranceEffectId ?? null;
-}
-
 export function chooseAccountEntranceEffect(input: {
   ownerPreview: boolean;
   enabled: boolean;
+  equippedBadgeId: string | null;
   lionEnabled: boolean;
   enabledTierIds: string[];
-  ownedTierEffectId: MonthlyTierEntranceEffectId | null;
-  ownerAccount: boolean;
 }): EntranceEffectChoice | null {
   if (!input.enabled) return null;
-  if (input.ownerPreview) return chooseOwnerEntranceEffect({
-    lionEnabled: input.lionEnabled,
-    enabledTierIds: input.enabledTierIds,
-  });
-  if (input.ownedTierEffectId) return input.ownedTierEffectId;
-  return input.ownerAccount && input.lionEnabled ? "lion-entrance" : null;
+  if (!input.equippedBadgeId) return null;
+  if (input.equippedBadgeId === "lion-entrance")
+    return input.ownerPreview && input.lionEnabled ? "lion-entrance" : null;
+  const equippedTier = MONTHLY_CREDIT_BADGE_TIERS.find(tier => tier.id === input.equippedBadgeId);
+  if (!equippedTier) return null;
+  if (input.ownerPreview && !input.enabledTierIds.includes(equippedTier.id)) return null;
+  return equippedTier.entranceEffectId;
 }
