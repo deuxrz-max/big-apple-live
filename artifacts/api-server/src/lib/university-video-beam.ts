@@ -115,6 +115,47 @@ export class UniversityVideoBeamStore {
     return this.toState(beam);
   }
 
+  refreshAutomaticDefaultTvQueue(
+    roomId: string,
+    query: string,
+    videos: UniversityVideoBeamTvVideoMetadata[],
+    durationMsByVideoId: Readonly<Record<string, number>>,
+    expectedCurrentVideoId: string,
+    expectedStartedAtMs: number,
+  ): UniversityVideoBeamState {
+    const beam = this.ensure(roomId);
+    const tv = beam.tv;
+    const normalize = (value: string) => value.trim().replace(/\s+/g, " ").toLocaleLowerCase("en-US");
+    if (!this.isOwnerlessTopicRoom(beam.roomId)
+      || !tv.enabled
+      || tv.sourceType !== "search"
+      || normalize(query) !== normalize(tv.defaultSearch)
+      || normalize(tv.sourceValue ?? "") !== normalize(tv.defaultSearch)
+      || tv.breakEndsAtMs !== null
+      || tv.currentVideoId !== expectedCurrentVideoId
+      || tv.startedAtMs !== expectedStartedAtMs) {
+      return this.toState(beam);
+    }
+
+    const validVideos = videos.filter(video => /^[A-Za-z0-9_-]{11}$/.test(video.videoId)).slice(0, 10);
+    const validIds = validVideos.map(video => video.videoId);
+    if (!validIds.length) throw new RoomError(400, "No playable YouTube videos were found.");
+
+    tv.queue = [...validIds];
+    tv.videoMetadata = validVideos;
+    beam.videoDurationsMs.clear();
+    for (const [videoId, durationMs] of Object.entries(durationMsByVideoId)) {
+      if (validIds.includes(videoId) && Number.isFinite(durationMs) && durationMs > 0) {
+        beam.videoDurationsMs.set(videoId, durationMs);
+      }
+    }
+    tv.currentVideoId = validIds[0]!;
+    tv.startedAtMs = this.now();
+    tv.breakEndsAtMs = null;
+    beam.skipVotes.clear();
+    return this.toState(beam);
+  }
+
   actOnTv(
     roomId: string,
     participantId: string,

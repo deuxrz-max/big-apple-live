@@ -4,29 +4,22 @@ export type CommunityVideoSearchPolicy = {
   trustedChannelTitles?: readonly string[];
 };
 
+export type CommunityLiveStreamPolicy = {
+  channelHandle: string;
+  channelTitle: string;
+  streamTitle: string;
+  liveSearchQuery: string;
+  fallbackSearch: string;
+  segmentDurationMs: number;
+};
+
 type CommunityRoomConfig = {
   roomId: string;
   label: string;
   defaultVideoSearch: string;
   videoSearchPolicy?: CommunityVideoSearchPolicy;
+  liveStreamPolicy?: CommunityLiveStreamPolicy;
 };
-
-const TRUSTED_NEWS_CHANNELS = [
-  "ABC News",
-  "Al Jazeera English",
-  "Associated Press",
-  "BBC News",
-  "CBS News",
-  "Channel 4 News",
-  "CNN",
-  "DW News",
-  "France 24 English",
-  "NBC News",
-  "PBS NewsHour",
-  "Reuters",
-  "Sky News",
-  "The Guardian",
-];
 
 const TRUSTED_KIDS_CHANNELS = [
   "BabyBus - Kids Songs and Cartoons",
@@ -87,11 +80,18 @@ export const COMMUNITY_ROOMS: CommunityRoomConfig[] = [
   {
     roomId: "NEWS01",
     label: "News",
-    defaultVideoSearch: "recent popular world news coverage BBC Reuters Associated Press",
+    defaultVideoSearch: "CNN Headlines: 24/7 Live News",
     videoSearchPolicy: {
-      order: "viewCount",
-      publishedWithinDays: 7,
-      trustedChannelTitles: TRUSTED_NEWS_CHANNELS,
+      order: "date",
+      trustedChannelTitles: ["CNN"],
+    },
+    liveStreamPolicy: {
+      channelHandle: "@CNN",
+      channelTitle: "CNN",
+      streamTitle: "CNN Headlines: 24/7 Live News",
+      liveSearchQuery: "CNN Headlines: 24/7 Live News",
+      fallbackSearch: "CNN latest news",
+      segmentDurationMs: 15 * 60_000,
     },
   },
   {
@@ -219,4 +219,15 @@ export function communityVideoSearchPolicy(
     ...(room.videoSearchPolicy.trustedChannelTitles
       ? { trustedChannelTitles: [...room.videoSearchPolicy.trustedChannelTitles] } : {}),
   };
+}
+
+export function communityLiveStreamPolicy(
+  roomId: string,
+  store?: CommunityParentLookup,
+): CommunityLiveStreamPolicy | null {
+  const normalizedId = roomId.toUpperCase();
+  const parentRoomId = store?.communityParentId(normalizedId)?.toUpperCase() ?? normalizedId;
+  const room = COMMUNITY_ROOMS.find(item => item.roomId === parentRoomId)
+    ?? COMMUNITY_ROOMS.find(item => item.roomId === normalizedId);
+  return room?.liveStreamPolicy ? { ...room.liveStreamPolicy } : null;
 }

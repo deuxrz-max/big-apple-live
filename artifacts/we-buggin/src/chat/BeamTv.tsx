@@ -87,6 +87,13 @@ function isAutomaticTopicQueue(tv: UniversityVideoBeamTvState) {
     && !tv.skipVotingEnabled;
 }
 
+function isCnnLiveStream(tv: UniversityVideoBeamTvState) {
+  const metadata = tv.videoMetadata.find(video => video.videoId === tv.currentVideoId);
+  const normalizedTitle = metadata?.title.toLocaleLowerCase("en-US").replace(/[^a-z0-9]+/g, " ").trim();
+  return metadata?.channelTitle?.trim().toLocaleLowerCase("en-US") === "cnn"
+    && normalizedTitle === "cnn headlines 24 7 live news";
+}
+
 export type BeamTvHandle = {
   activateSoundFromUserGesture: () => boolean;
 };
@@ -236,10 +243,13 @@ export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
             }
             const latest = tvRef.current;
             if (isAutomaticTopicQueue(latest) && latest.currentVideoId) {
-              event.target.loadVideoById({
-                videoId: latest.currentVideoId,
-                startSeconds: positionAt(latest.startedAtMs, serverClockOffsetMs.current),
-              });
+              const liveStream = isCnnLiveStream(latest);
+              event.target.loadVideoById(liveStream
+                ? { videoId: latest.currentVideoId }
+                : {
+                  videoId: latest.currentVideoId,
+                  startSeconds: positionAt(latest.startedAtMs, serverClockOffsetMs.current),
+                });
             } else if (latest.queue.length) {
               event.target.setLoop(true);
               event.target.loadPlaylist({
@@ -291,15 +301,18 @@ export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
       const instance = player.current;
       if (!current.enabled || !current.currentVideoId || current.breakEndsAtMs !== null || !instance) return;
       const desired = positionAt(current.startedAtMs, serverClockOffsetMs.current);
+      const liveStream = isCnnLiveStream(current);
       if (instance.getVideoData()?.video_id !== current.currentVideoId) {
-        instance.loadVideoById({ videoId: current.currentVideoId, startSeconds: desired });
+        instance.loadVideoById(liveStream
+          ? { videoId: current.currentVideoId }
+          : { videoId: current.currentVideoId, startSeconds: desired });
         if (soundUnlockedRef.current) {
           requestSound(instance);
         } else {
           instance.mute();
           instance.setVolume(0);
         }
-      } else if (Math.abs(instance.getCurrentTime() - desired) > 5) {
+      } else if (!liveStream && Math.abs(instance.getCurrentTime() - desired) > 5) {
         instance.seekTo(desired, true);
         instance.playVideo();
         if (!soundUnlockedRef.current) {

@@ -19,8 +19,14 @@ import { RoomError, roomStore } from "../lib/room-store";
 import { requireCompletedProfile } from "../lib/account-profiles";
 import { universityVideoBeamStore } from "../lib/university-video-beam";
 import { liveKitBeamService, publicLiveKitFailure } from "../lib/livekit";
-import { communityDefaultVideoSearch, communityVideoSearchPolicy } from "../lib/community-config";
+import {
+  communityDefaultVideoSearch,
+  communityLiveStreamPolicy,
+  communityVideoSearchPolicy,
+} from "../lib/community-config";
 import { selectPlayableYouTubeVideos } from "../lib/youtube-video-selection";
+import { resolveYouTubeChannelId, searchCnnLiveStream } from "../lib/cnn-live-news";
+import { logger } from "../lib/logger";
 import {
   postBeamTvVoteAnnouncement,
   scheduleBeamTvVideoStart,
@@ -63,12 +69,14 @@ async function searchYouTube(
   query: string,
   apiKey: string,
   policy: ReturnType<typeof communityVideoSearchPolicy> = null,
+  options: { channelId?: string; cacheTtlMs?: number } = {},
 ) {
   const cacheKey = [
     normalizeSearchQuery(query),
     policy?.order ?? "relevance",
     policy?.publishedWithinDays ?? "any-date",
     policy?.trustedChannelTitles?.map(normalizeSearchQuery).sort().join(",") ?? "all-channels",
+    options.channelId ?? "any-channel",
   ].join("|");
   const cached = youtubeSearchCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
@@ -99,6 +107,7 @@ async function searchYouTube(
       key: apiKey,
     });
     if (policy?.order) searchParams.set("order", policy.order);
+    if (options.channelId) searchParams.set("channelId", options.channelId);
     if (policy?.publishedWithinDays) {
       searchParams.set("publishedAfter", new Date(
         Date.now() - policy.publishedWithinDays * 24 * 60 * 60 * 1_000,
@@ -125,7 +134,8 @@ async function searchYouTube(
     const results = items.flatMap(item => {
       if (typeof item !== "object" || item === null) return [];
       const record = item as { id?: { videoId?: unknown }; snippet?: {
-        title?: unknown; channelTitle?: unknown; description?: unknown; liveBroadcastContent?: unknown;
+        title?: unknown; channelTitle?: unknown; channelId?: unknown;
+        description?: unknown; liveBroadcastContent?: unknown;
       } };
       const videoId = record.id?.videoId;
       if (typeof videoId !== "string" || !/^[A-Za-z0-9_-]{11}$/.test(videoId)) return [];
@@ -136,7 +146,9 @@ async function searchYouTube(
         ? record.snippet.description.slice(0, 500) : null;
       const liveBroadcastContent = typeof record.snippet?.liveBroadcastContent === "string"
         ? record.snippet.liveBroadcastContent : null;
-      return [{ videoId, title, channelTitle, description, liveBroadcastContent }];
+      const channelId = typeof record.snippet?.channelId === "string"
+        ? record.snippet.channelId : null;
+      return [{ videoId, title, channelTitle, description, liveBroadcastContent, channelId }];
     });
     if (results.length === 0) throw new RoomError(404, "No embeddable YouTube videos were found for that topic.");
 
@@ -192,7 +204,10 @@ async function searchYouTube(
   youtubeSearchInFlight.set(cacheKey, request);
   try {
     const result = await request;
-    youtubeSearchCache.set(cacheKey, { ...result, expiresAt: Date.now() + YOUTUBE_SEARCH_CACHE_MS });
+    youtubeSearchCache.set(cacheKey, {
+      ...result,
+      expiresAt: Date.now() + (options.cacheTtlMs ?? YOUTUBE_SEARCH_CACHE_MS),
+    });
     youtubeSearchFailureCache.delete(cacheKey);
     if (youtubeSearchCache.size > 100) {
       const oldestKey = youtubeSearchCache.keys().next().value;
@@ -218,6 +233,41 @@ async function searchYouTube(
   } finally {
     if (youtubeSearchInFlight.get(cacheKey) === request) youtubeSearchInFlight.delete(cacheKey);
   }
+}
+
+async function searchDefaultCommunityVideos(roomId: string, apiKey: string) {
+  const livePolicy = communityLiveStreamPolicy(roomId, roomStore);
+  if (!livePolicy) {
+    return searchYouTube(
+      communityDefaultVideoSearch(roomId, roomStore) ?? "popular videos",
+      apiKey,
+      communityVideoSearchPolicy(roomId, roomStore),
+    );
+  }
+
+  const channelId = await resolveYouTubeChannelId(apiKey, livePolicy.channelHandle, livePolicy.channelTitle);
+  try {
+    const liveVideo = await searchCnnLiveStream(apiKey, channelId, livePolicy);
+    if (liveVideo) {
+      return {
+        videoIds: [liveVideo.videoId],
+        titles: [liveVideo.title],
+        videos: [liveVideo],
+        durationMsByVideoId: { [liveVideo.videoId]: livePolicy.segmentDurationMs },
+      };
+    }
+  } catch (error) {
+    // A cached latest-video fallback can still serve the room when live search is temporarily unavailable.
+    logger.warn({ roomId, error: error instanceof Error ? error.message : "unknown" },
+      "CNN live search failed; trying the News fallback queue");
+  }
+
+  return searchYouTube(
+    livePolicy.fallbackSearch,
+    apiKey,
+    communityVideoSearchPolicy(roomId, roomStore),
+    { channelId, cacheTtlMs: 60 * 60_000 },
+  );
 }
 
 function requireMember(req: Request, roomId: string, id: string) {
@@ -249,6 +299,50 @@ async function reconcileState(roomId: string, viewerAccountId?: string) {
   return synchronized;
 }
 
+async function refreshNewsQueueAtTransition(
+  roomId: string,
+  state: UniversityVideoBeamState,
+  transitionAt: number,
+) {
+  const livePolicy = communityLiveStreamPolicy(roomId, roomStore);
+  const defaultSearch = communityDefaultVideoSearch(roomId, roomStore);
+  const tv = state.tv;
+  if (!livePolicy || !defaultSearch || !tv.enabled || tv.sourceType !== "search"
+    || normalizeSearchQuery(tv.sourceValue ?? "") !== normalizeSearchQuery(defaultSearch)
+    || tv.breakEndsAtMs !== null || tv.startedAtMs !== transitionAt || !tv.currentVideoId) {
+    return;
+  }
+
+  const apiKey = process.env.YOUTUBE_API_KEY?.trim();
+  if (!apiKey) return;
+  try {
+    const result = await searchDefaultCommunityVideos(roomId, apiKey);
+    const refreshed = universityVideoBeamStore.refreshAutomaticDefaultTvQueue(
+      roomId,
+      defaultSearch,
+      result.videos,
+      result.durationMsByVideoId,
+      tv.currentVideoId,
+      transitionAt,
+    );
+    if (refreshed.tv.currentVideoId !== tv.currentVideoId && refreshed.tv.currentVideoId) {
+      scheduleBeamTvVideoStart(
+        roomId,
+        refreshed.tv.currentVideoId,
+        refreshed.tv.videoMetadata.find(video => video.videoId === refreshed.tv.currentVideoId),
+        true,
+      );
+    }
+    const roomName = universityVideoBeamStore.getRoomName(roomId);
+    const identities = await refreshParticipantSnapshot(roomName);
+    await synchronizeSpeakerMediaPermissions(roomId, refreshed, identities);
+    schedulePublicPlaybackTransition(roomId);
+  } catch (error) {
+    logger.warn({ roomId, error: error instanceof Error ? error.message : "unknown" },
+      "Could not refresh the News room's automatic Beam TV queue");
+  }
+}
+
 function schedulePublicPlaybackTransition(roomId: string) {
   const dueAt = universityVideoBeamStore.getNextAutomaticPlaybackTransitionAt(roomId);
   const previous = publicPlaybackTimers.get(roomId);
@@ -261,7 +355,7 @@ function schedulePublicPlaybackTransition(roomId: string) {
     const current = publicPlaybackTimers.get(roomId);
     if (current?.dueAt !== dueAt) return;
     publicPlaybackTimers.delete(roomId);
-    void reconcileState(roomId).catch(() => {
+    void reconcileState(roomId).then(state => refreshNewsQueueAtTransition(roomId, state, dueAt)).catch(() => {
       const retryDueAt = Date.now() + 2_500;
       const retryTimer = setTimeout(() => {
         const retry = publicPlaybackTimers.get(roomId);
@@ -570,8 +664,9 @@ router.post("/account/rooms/:roomId/video-beam/tv/search", async (req, res) => {
   if (!apiKey) {
     throw new RoomError(503, "YouTube search is temporarily unavailable. A room-matched video will appear when it is available.");
   }
-  const policy = autoDefaultSearch ? communityVideoSearchPolicy(roomId, roomStore) : null;
-  const result = await searchYouTube(query, apiKey, policy);
+  const result = autoDefaultSearch
+    ? await searchDefaultCommunityVideos(roomId, apiKey)
+    : await searchYouTube(query, apiKey);
   if (autoDefaultSearch) {
     const before = universityVideoBeamStore.getState(roomId).tv.currentVideoId;
     const state = universityVideoBeamStore.initializeDefaultTvQueue(

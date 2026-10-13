@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { selectPlayableYouTubeVideos } from "./youtube-video-selection";
+import { selectExactLiveYouTubeVideo, selectPlayableYouTubeVideos } from "./youtube-video-selection";
 
 test("automatic Beam TV selection excludes non-embeddable, age-restricted and live videos", () => {
   const candidates = [
@@ -22,6 +22,44 @@ test("automatic Beam TV selection excludes non-embeddable, age-restricted and li
 
   assert.deepEqual(result.videos.map(video => video.videoId), ["dQw4w9WgXcQ"]);
   assert.deepEqual(result.durationMsByVideoId, { dQw4w9WgXcQ: 240_000 });
+});
+
+test("CNN News live selection accepts only the exact embeddable official live stream", () => {
+  const options = {
+    channelId: "UCupvZG-5ko_eiXAupbDfxWw",
+    channelTitle: "CNN",
+    streamTitle: "CNN Headlines: 24/7 Live News",
+    segmentDurationMs: 15 * 60_000,
+  };
+  const candidate = {
+    videoId: "GotlA1KKWoo",
+    title: "CNN Headlines: 24/7 Live News",
+    channelTitle: "CNN",
+    channelId: options.channelId,
+    description: "The latest headlines.",
+    liveBroadcastContent: "live",
+  };
+  const accepted = selectExactLiveYouTubeVideo([candidate], [
+    { videoId: candidate.videoId, durationMs: null, embeddable: true },
+  ], options);
+  assert.equal(accepted?.video.videoId, candidate.videoId);
+  assert.equal(accepted?.durationMs, 15 * 60_000);
+
+  assert.equal(selectExactLiveYouTubeVideo([{ ...candidate, title: "Other CNN live" }], [
+    { videoId: candidate.videoId, durationMs: null, embeddable: true },
+  ], options), null);
+  assert.equal(selectExactLiveYouTubeVideo([{ ...candidate, channelId: "UCnotCNN" }], [
+    { videoId: candidate.videoId, durationMs: null, embeddable: true },
+  ], options), null);
+  assert.equal(selectExactLiveYouTubeVideo([{
+    ...candidate, liveBroadcastContent: "upcoming",
+  }], [{ videoId: candidate.videoId, durationMs: null, embeddable: true }], options), null);
+  assert.equal(selectExactLiveYouTubeVideo([candidate], [
+    { videoId: candidate.videoId, durationMs: null, embeddable: false },
+  ], options), null);
+  assert.equal(selectExactLiveYouTubeVideo([candidate], [
+    { videoId: candidate.videoId, durationMs: null, embeddable: true, ytRating: "ytAgeRestricted" },
+  ], options), null);
 });
 
 test("World News selection only accepts configured trusted channel names", () => {

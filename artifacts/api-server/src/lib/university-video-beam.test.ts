@@ -8,6 +8,7 @@ import { LiveKitBeamService, type LiveKitSettings } from "./livekit";
 import {
   COMMUNITY_ROOMS,
   communityDefaultVideoSearch,
+  communityLiveStreamPolicy,
   communityVideoSearchPolicy,
   isPublicTopicRoom,
 } from "./community-config";
@@ -329,16 +330,25 @@ test("all 20 categories use recent popular searches across their overflow rooms"
     assert.equal(communityDefaultVideoSearch(overflowId, rooms), query,
       `${room.label} overflow inherits the same topic search`);
     const policy = communityVideoSearchPolicy(overflowId, rooms);
-    assert.equal(policy?.order, "viewCount", `${room.label} sorts recent results by popularity`);
-    assert.ok(policy?.publishedWithinDays && policy.publishedWithinDays > 0);
+    if (room.label === "News") {
+      assert.equal(policy?.order, "date", "News falls back to CNN's latest uploads");
+      assert.equal(policy?.publishedWithinDays, undefined);
+      assert.deepEqual(policy?.trustedChannelTitles, ["CNN"]);
+    } else {
+      assert.equal(policy?.order, "viewCount", `${room.label} sorts recent results by popularity`);
+      assert.ok(policy?.publishedWithinDays && policy.publishedWithinDays > 0);
+    }
     assert.equal(isPublicTopicRoom(overflowId, rooms), true);
   }
   assert.equal(COMMUNITY_ROOMS.length, 20);
   assert.equal(communityVideoSearchPolicy("KIDS01", rooms)?.trustedChannelTitles?.length, 12);
   const newsPolicy = communityVideoSearchPolicy("NEWS01", rooms);
-  assert.equal(newsPolicy?.publishedWithinDays, 7);
-  assert.ok(newsPolicy?.trustedChannelTitles?.includes("Reuters"));
-  assert.ok(newsPolicy?.trustedChannelTitles?.includes("BBC News"));
+  assert.equal(newsPolicy?.order, "date");
+  assert.equal(newsPolicy?.publishedWithinDays, undefined);
+  assert.deepEqual(newsPolicy?.trustedChannelTitles, ["CNN"]);
+  assert.equal(communityLiveStreamPolicy("NEWS01", rooms)?.streamTitle, "CNN Headlines: 24/7 Live News");
+  assert.equal(communityLiveStreamPolicy("NEWS012", rooms)?.streamTitle, "CNN Headlines: 24/7 Live News",
+    "News overflow inherits the parent live-stream setup");
 });
 
 test("a speaker muted by choice stays muted when a video ends and the break begins", () => {
@@ -588,4 +598,52 @@ test("LiveKit audience access is subscribe-only and tokens are room-scoped", asy
   assert.deepEqual(policyUpdates.map(update => update.muted), [true, false],
     "server-side media policy mutes during video and restores only the previously allowed state");
   assert.deepEqual(policyUpdates[0]?.sources, [TrackSource.CAMERA]);
+});
+
+test("CNN News plays 15-minute live segments, opens the three-minute mic break, then refreshes the queue", () => {
+  let now = 9_000_000;
+  const rooms = new RoomStore(() => now);
+  createRoom(rooms, "NEWS01", "history-news", undefined, "News");
+  const beam = new UniversityVideoBeamStore(rooms, () => now);
+  const defaultSearch = communityDefaultVideoSearch("NEWS01", rooms)!;
+  const liveVideoId = "GotlA1KKWoo";
+  const fallbackVideoId = "dQw4w9WgXcQ";
+
+  let state = beam.initializeDefaultTvQueue("NEWS01", defaultSearch, [{
+    videoId: liveVideoId,
+    title: "CNN Headlines: 24/7 Live News",
+    channelTitle: "CNN",
+    description: null,
+  }], { [liveVideoId]: 15 * 60_000 });
+  assert.equal(beam.getNextAutomaticPlaybackTransitionAt("NEWS01"), now + 15 * 60_000);
+
+  now += 15 * 60_000;
+  state = beam.getState("NEWS01");
+  assert.equal(state.tv.breakEndsAtMs, now + 3 * 60_000);
+  assert.equal(state.tv.micLockedDuringVideo, false);
+
+  now = state.tv.breakEndsAtMs!;
+  state = beam.getState("NEWS01");
+  assert.equal(state.tv.currentVideoId, liveVideoId);
+  assert.equal(state.tv.micLockedDuringVideo, true);
+  assert.equal(state.tv.startedAtMs, now);
+
+  state = beam.refreshAutomaticDefaultTvQueue("NEWS01", defaultSearch, [{
+    videoId: fallbackVideoId,
+    title: "Latest CNN headlines",
+    channelTitle: "CNN",
+    description: null,
+  }], { [fallbackVideoId]: 60_000 }, liveVideoId, now);
+  assert.equal(state.tv.currentVideoId, fallbackVideoId,
+    "the official latest-video fallback can replace the stream when it is no longer live");
+  assert.equal(beam.getNextAutomaticPlaybackTransitionAt("NEWS01"), now + 60_000);
+
+  const stale = beam.refreshAutomaticDefaultTvQueue("NEWS01", defaultSearch, [{
+    videoId: liveVideoId,
+    title: "CNN Headlines: 24/7 Live News",
+    channelTitle: "CNN",
+    description: null,
+  }], { [liveVideoId]: 15 * 60_000 }, fallbackVideoId, now - 1);
+  assert.equal(stale.tv.currentVideoId, fallbackVideoId,
+    "a stale segment refresh cannot overwrite a newer room state");
 });
