@@ -56,11 +56,12 @@ test("real PostgreSQL profile setup, interruption, edit persistence and request 
       "Pets",
       "Travel",
       "ASMR",
+      "Web Series",
     ]);
-    assert.equal(new Set(COMMUNITY_ROOMS.map(r => r.roomId)).size, 20);
+    assert.equal(new Set(COMMUNITY_ROOMS.map(r => r.roomId)).size, COMMUNITY_ROOMS.length);
     assert.ok(COMMUNITY_ROOMS.every(r => /^[A-Z0-9]{6}$/.test(r.roomId)),
       "every fixed room code remains joinable through the existing six-character route");
-    assert.equal(new Set(COMMUNITY_ROOMS.map(r => r.defaultVideoSearch)).size, 20);
+    assert.equal(new Set(COMMUNITY_ROOMS.map(r => r.defaultVideoSearch)).size, COMMUNITY_ROOMS.length);
     assert.ok(COMMUNITY_ROOMS.every(r => r.defaultVideoSearch.length > 8));
     assert.ok(COMMUNITY_ROOMS.every(r => r.label.trim().split(/\s+/).length <= 2));
   });

@@ -34,7 +34,7 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     await saveSocialProfile(a, { ...prefs, country: null, bio: "", interests: [] });
     assert.equal((await getMe(a)).profile.country, null);
     assert.equal((await getMe(a)).profile.bio, "");
-    await assert.rejects(saveSocialProfile(a, { ...prefs, badgeId: "beam-champion" }), /owned/);
+    await assert.rejects(saveSocialProfile(a, { ...prefs, badgeId: "beam-champion" }), /cannot be selected manually/);
     await assert.rejects(saveSocialProfile(a, { ...prefs, country: "XX" }), /country/);
   });
   await t.test("a concurrent daily claim pays exactly once per UTC day", async () => {
@@ -76,27 +76,23 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     assert.equal((await thread(a, names[1]!)).messages.length, 0);
     assert.equal((await thread(b, names[0]!)).messages.length, 1);
   });
-  await t.test("concurrent gifts cannot overdraw; transfers and store purchases are exact-once", async () => {
+  await t.test("concurrent gifts cannot overdraw; retired badge purchases do not spend credits", async () => {
     const results = await Promise.allSettled(Array.from({ length: 8 }, () => gift(a, names[1]!, "good-vibes", randomUUID())));
     assert.equal(results.filter(r => r.status === "fulfilled").length, 5);
     assert.equal((await getMe(a)).wallet.balance, 0);
     assert.equal((await getMe(b)).wallet.balance, 50);
-    const key = randomUUID();
-    await purchase(b, "good-neighbor", key);
-    await purchase(b, "good-neighbor", key);
+    await assert.rejects(purchase(b, "good-neighbor", randomUUID()), /confirmed credit purchases/);
     const me = await getMe(b);
-    assert.equal(me.wallet.balance, 10);
-    assert.deepEqual(me.inventory, ["good-neighbor"]);
-    assert.equal(me.profile.badgeId, "good-neighbor");
-    assert.equal(me.profile.badges?.[0]?.id, "good-neighbor");
-    assert.ok(!Number.isNaN(Date.parse(me.profile.badges![0]!.earnedAt)));
-    await assert.rejects(purchase(b, "night-owl", randomUUID()), /Not enough/);
-    await assert.rejects(purchase(b, "good-neighbor", randomUUID()), /already own/);
+    assert.equal(me.wallet.balance, 50);
+    assert.deepEqual(me.inventory, []);
+    assert.equal(me.profile.badgeId, null);
+    assert.deepEqual(me.profile.badges, []);
+    await assert.rejects(purchase(b, "night-owl", randomUUID()), /confirmed credit purchases/);
     const giftKey = randomUUID();
     await gift(b, names[0]!, "good-vibes", giftKey);
     await gift(b, names[0]!, "good-vibes", giftKey);
     assert.equal((await getMe(a)).wallet.balance, 5);
-    assert.equal((await getMe(b)).wallet.balance, 5);
+    assert.equal((await getMe(b)).wallet.balance, 45);
     await assert.rejects(gift(b, names[0]!, "big-love", giftKey), /retry key/);
     const [row] = await db.select().from(socialWallets).where(eq(socialWallets.accountId, b));
     assert.equal(row!.received, 25);
@@ -106,7 +102,7 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     assert.equal(publicStats.sentCredits, 5);
     const leader = await listPeople(b, { search: token }, true);
     assert.equal(leader.people[0]!.username, names[1]);
-    assert.equal((await ledger(b)).transactions.filter(r => r.kind === "purchase").length, 1);
+    assert.equal((await ledger(b)).transactions.filter(r => r.kind === "purchase").length, 0);
   });
   await t.test("blocking is bilateral and stops discovery, favorites, gifts and new messages without deleting other history", async () => {
     await relationship(a, names[1]!, "favorite", true);

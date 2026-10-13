@@ -44,5 +44,9 @@ export interface SocialPerson {
   blocked: boolean;
   receivedCredits: number;
   badgeId: string | null;
+  /** @nullable */
+  badgeName: string | null;
+  /** @nullable */
+  badgeImage: string | null;
   passport?: StreamerPassportBadgeSummary;
 }

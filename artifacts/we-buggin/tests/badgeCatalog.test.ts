@@ -119,15 +119,36 @@ function decodeBadgePng(
   return { width, height, alphaAt, rgbAt, hasAlpha: colorType === 6 };
 }
 
-test('Peak Presenter replaces the first listing without changing its saved ownership ID or price', () => {
-  assert.equal(PRODUCTS[0].id, 'good-neighbor');
-  assert.equal(PRODUCTS[0].name, 'Peak Presenter');
-  assert.equal(PRODUCTS[0].cost, 40);
-  assert.equal(PRODUCTS.some(p => String(p.name).toLowerCase() === 'good neighbor'), false);
-  assert.deepEqual(PRODUCTS.slice(1).map(p => [p.id, p.name, p.cost]), [
-    ['night-owl', 'Night Owl', 1000],
-    ['marathon-master', 'Marathon Master', 200],
+test('monthly purchase badges use five configured credit thresholds and tier artwork paths', () => {
+  assert.deepEqual(PRODUCTS.map(p => [p.id, p.name, p.cost, p.badgeImage]), [
+    ['monthly-tier-1', 'Tier 1', 1_000, '/badges/monthly-credit-tiers/tier1.svg'],
+    ['monthly-tier-2', 'Guardian of the Den', 5_000, '/badges/monthly-credit-tiers/tier2.png'],
+    ['monthly-tier-3', 'Guardian of the Night', 10_000, '/badges/monthly-credit-tiers/tier3.png'],
+    ['monthly-tier-4', 'King of Beasts', 25_000, '/badges/monthly-credit-tiers/tier4.png'],
+    ['monthly-tier-5', 'Tier 5', 50_000, '/badges/monthly-credit-tiers/tier5.svg'],
   ]);
+  assert.equal(PRODUCTS.some(p => ['Good Neighbor', 'Night Owl', 'Marathon Master', 'Peak Presenter'].includes(p.name)), false);
+});
+
+test('Guardian of the Den uses the uploaded square transparent badge art', () => {
+  const image = decodeBadgePng(join(BADGE_DIR, 'monthly-credit-tiers/tier2.png'), 1_600);
+  assert.equal(image.hasAlpha, true);
+  assert.equal(image.alphaAt(0, 0), 0);
+  assert.ok(image.alphaAt(800, 800) > 0);
+});
+
+test('Guardian of the Night uses the uploaded square transparent badge art', () => {
+  const image = decodeBadgePng(join(BADGE_DIR, 'monthly-credit-tiers/tier3.png'), 1_600);
+  assert.equal(image.hasAlpha, true);
+  assert.equal(image.alphaAt(0, 0), 0);
+  assert.ok(image.alphaAt(800, 800) > 0);
+});
+
+test('King of Beasts uses the uploaded square transparent badge art', () => {
+  const image = decodeBadgePng(join(BADGE_DIR, 'monthly-credit-tiers/tier4.png'), 1_600);
+  assert.equal(image.hasAlpha, true);
+  assert.equal(image.alphaAt(0, 0), 0);
+  assert.ok(image.alphaAt(800, 800) > 0);
 });
 
 test('badge artwork keeps its dimensions, transparency and circular framing', () => {

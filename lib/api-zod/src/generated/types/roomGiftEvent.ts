@@ -18,6 +18,18 @@ export interface RoomGiftEvent {
   senderNameColor?: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   recipientNameColor?: string;
+  /** @nullable */
+  senderBadgeId: string | null;
+  /** @nullable */
+  recipientBadgeId: string | null;
+  /** @nullable */
+  senderBadgeName: string | null;
+  /** @nullable */
+  recipientBadgeName: string | null;
+  /** @nullable */
+  senderBadgeImage: string | null;
+  /** @nullable */
+  recipientBadgeImage: string | null;
   senderPassport?: StreamerPassportBadgeSummary;
   recipientPassport?: StreamerPassportBadgeSummary;
   createdAt: Date;

@@ -4,7 +4,7 @@ import {
   useGetSocialInbox, useGetFavoritesGallery,
   getGetSocialInboxQueryKey, getGetFavoritesGalleryQueryKey,
 } from '@workspace/api-client-react';
-import { Avatar, Empty, ErrorBox } from './common';
+import { Avatar, BadgeMark, Empty, ErrorBox } from './common';
 import './inbox.css';
 
 function stamp(s: string): string {
@@ -43,7 +43,7 @@ export function InboxPage() {
                   <i className="ib-dot" aria-hidden="true" />
                   <b className="ib-count">{c.unreadCount}</b>
                 </span>
-                <span className="ib-live-name">{c.displayName || c.username}</span>
+                 <span className="ib-live-name"><BadgeMark id={c.badgeId} label={c.badgeName} imageUrl={c.badgeImage} size={16} compact />{c.displayName || c.username}</span>
               </Link>
             </li>
           ))}
@@ -61,7 +61,7 @@ export function InboxPage() {
                 </span>
                 <span className="ib-mid">
                   <span className="ib-heading">
-                    <span className="ib-name">{c.displayName || c.username}{c.blocked && <em className="ib-blocked">Blocked</em>}</span>
+                     <span className="ib-name"><BadgeMark id={c.badgeId} label={c.badgeName} imageUrl={c.badgeImage} size={18} compact />{c.displayName || c.username}{c.blocked && <em className="ib-blocked">Blocked</em>}</span>
                     {unread && <b className="ib-count ib-count-row" aria-label={`${c.unreadCount} unread`}>{c.unreadCount}</b>}
                   </span>
                   <span className="ib-prev">{c.lastMessageFromMe ? 'You: ' : ''}{c.lastMessage}</span>

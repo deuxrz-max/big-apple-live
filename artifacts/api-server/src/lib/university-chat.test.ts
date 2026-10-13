@@ -129,17 +129,17 @@ test("Phase 3 real database and authenticated HTTP privacy safeguards (synthetic
     await db.update(profilePhotos).set({ status: "approved" }).where(eq(profilePhotos.id, photoId));
     assert.equal((await feed(1)).people.find(p => p.username === names[0])!.photoUrl, `/api/photos/${photoId}`);
   });
-  await t.test("the selected active cosmetic badge is included for room people, history, and newly sent messages", async () => {
+  await t.test("legacy owned badges are ignored until a confirmed monthly purchase qualifies", async () => {
     await db.insert(socialInventory).values({
       accountId: ids[0]!, itemId: "night-owl", expiresAt: new Date(Date.now() + 3 * 86400000),
     });
     await db.update(socialSettings).set({ badgeId: "night-owl" }).where(eq(socialSettings.accountId, ids[0]!));
-    assert.equal((await feed(1)).people.find(p => p.username === names[0])!.badgeId, "night-owl");
+    assert.equal((await feed(1)).people.find(p => p.username === names[0])!.badgeId, null);
     const accepted = await acceptMessage(codes[0]!, sessions[0]!.participantSessionId, ids[0]!,
       { text: "Badge fixture message", kind: "text" });
-    assert.equal(accepted.message.badgeId, "night-owl");
+    assert.equal(accepted.message.badgeId, null);
     const history = await getMessages(codes[0]!, roomStore, ids[1]!);
-    assert.equal(history.find(m => m.text === "Badge fixture message")!.badgeId, "night-owl");
+    assert.equal(history.find(m => m.text === "Badge fixture message")!.badgeId, null);
   });
   await t.test("all university and overflow room topics are hidden, including saved topics", async () => {
     assert.equal((await feed(0)).topic, "");

@@ -227,6 +227,8 @@ export const GetFavoritesGalleryResponseItem = zod.object({
   "blocked": zod.boolean(),
   "receivedCredits": zod.number().int(),
   "badgeId": zod.union([zod.string(),zod.null()]),
+  "badgeName": zod.string().nullable(),
+  "badgeImage": zod.string().nullable(),
   "passport": zod.object({
   "platforms": zod.array(zod.object({
   "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
@@ -275,6 +277,8 @@ export const GetUniversitySessionResponse = zod.object({
   "people": zod.array(zod.object({
   "botId": zod.union([zod.literal('ghost'),zod.literal('vampire'),zod.literal('wolf'),zod.literal('zombie'),zod.literal(null)]).nullish(),
   "badgeId": zod.string().nullish(),
+  "badgeName": zod.string().nullish(),
+  "badgeImage": zod.string().nullish(),
   "participantId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
@@ -310,6 +314,9 @@ export const GetUniversitySessionResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "displayNameColor": zod.string().regex(getUniversitySessionResponseWhispersItemDisplayNameColorRegExp).optional(),
+  "badgeId": zod.string().nullable(),
+  "badgeName": zod.string().nullish(),
+  "badgeImage": zod.string().nullish(),
   "passport": zod.object({
   "platforms": zod.array(zod.object({
   "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
@@ -1044,6 +1051,8 @@ export const GetOlderRoomMessagesResponseItem = zod.object({
   "botId": zod.union([zod.literal('ghost'),zod.literal('vampire'),zod.literal('wolf'),zod.literal('zombie'),zod.literal(null)]).nullish(),
   "botMessageType": zod.union([zod.literal('chatter'),zod.literal('moderation'),zod.literal('visit'),zod.literal(null)]).nullish(),
   "badgeId": zod.string().nullish(),
+  "badgeName": zod.string().nullish(),
+  "badgeImage": zod.string().nullish(),
   "id": zod.string().uuid(),
   "roomId": zod.string(),
   "authorId": zod.string().uuid(),
@@ -1209,6 +1218,8 @@ export const GetSocialMeResponse = zod.object({
   "blocked": zod.boolean(),
   "receivedCredits": zod.number().int(),
   "badgeId": zod.union([zod.string(),zod.null()]),
+  "badgeName": zod.string().nullable(),
+  "badgeImage": zod.string().nullable(),
   "passport": zod.object({
   "platforms": zod.array(zod.object({
   "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
@@ -1232,6 +1243,7 @@ export const GetSocialMeResponse = zod.object({
   "products": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string(),
+  "badgeImage": zod.string(),
   "description": zod.string(),
   "cost": zod.number().int()
 })),
@@ -1322,6 +1334,8 @@ export const SaveSocialProfileResponse = zod.object({
   "blocked": zod.boolean(),
   "receivedCredits": zod.number().int(),
   "badgeId": zod.union([zod.string(),zod.null()]),
+  "badgeName": zod.string().nullable(),
+  "badgeImage": zod.string().nullable(),
   "passport": zod.object({
   "platforms": zod.array(zod.object({
   "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
@@ -1571,6 +1585,8 @@ export const GetSocialPeopleResponse = zod.object({
   "blocked": zod.boolean(),
   "receivedCredits": zod.number().int(),
   "badgeId": zod.union([zod.string(),zod.null()]),
+  "badgeName": zod.string().nullable(),
+  "badgeImage": zod.string().nullable(),
   "passport": zod.object({
   "platforms": zod.array(zod.object({
   "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
@@ -1642,6 +1658,8 @@ export const GetSocialPersonResponse = zod.object({
   "blocked": zod.boolean(),
   "receivedCredits": zod.number().int(),
   "badgeId": zod.union([zod.string(),zod.null()]),
+  "badgeName": zod.string().nullable(),
+  "badgeImage": zod.string().nullable(),
   "passport": zod.object({
   "platforms": zod.array(zod.object({
   "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
@@ -1722,6 +1740,8 @@ export const GetSocialBlocksResponse = zod.object({
   "blocked": zod.boolean(),
   "receivedCredits": zod.number().int(),
   "badgeId": zod.union([zod.string(),zod.null()]),
+  "badgeName": zod.string().nullable(),
+  "badgeImage": zod.string().nullable(),
   "passport": zod.object({
   "platforms": zod.array(zod.object({
   "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
@@ -1785,6 +1805,12 @@ export const GetRoomGiftEventsResponse = zod.object({
   "recipientName": zod.string(),
   "senderNameColor": zod.string().regex(getRoomGiftEventsResponseEventsItemSenderNameColorRegExp).optional(),
   "recipientNameColor": zod.string().regex(getRoomGiftEventsResponseEventsItemRecipientNameColorRegExp).optional(),
+  "senderBadgeId": zod.string().nullable(),
+  "recipientBadgeId": zod.string().nullable(),
+  "senderBadgeName": zod.string().nullable(),
+  "recipientBadgeName": zod.string().nullable(),
+  "senderBadgeImage": zod.string().nullable(),
+  "recipientBadgeImage": zod.string().nullable(),
   "senderPassport": zod.object({
   "platforms": zod.array(zod.object({
   "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
@@ -1890,6 +1916,8 @@ export const GetSocialLeaderboardResponse = zod.object({
   "blocked": zod.boolean(),
   "receivedCredits": zod.number().int(),
   "badgeId": zod.union([zod.string(),zod.null()]),
+  "badgeName": zod.string().nullable(),
+  "badgeImage": zod.string().nullable(),
   "passport": zod.object({
   "platforms": zod.array(zod.object({
   "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
@@ -1916,6 +1944,9 @@ export const GetSocialInboxResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "displayNameColor": zod.string().regex(getSocialInboxResponseConversationsItemDisplayNameColorRegExp).optional(),
+  "badgeId": zod.string().nullable(),
+  "badgeName": zod.string().nullable(),
+  "badgeImage": zod.string().nullable(),
   "photoUrl": zod.string().nullable(),
   "lastMessageFromMe": zod.boolean(),
   "lastUnreadAt": zod.coerce.date().nullable(),
@@ -1997,6 +2028,8 @@ export const GetSocialConversationResponse = zod.object({
   "blocked": zod.boolean(),
   "receivedCredits": zod.number().int(),
   "badgeId": zod.union([zod.string(),zod.null()]),
+  "badgeName": zod.string().nullable(),
+  "badgeImage": zod.string().nullable(),
   "passport": zod.object({
   "platforms": zod.array(zod.object({
   "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
@@ -2294,6 +2327,8 @@ export const GetRoomMessagesResponseItem = zod.object({
   "botId": zod.union([zod.literal('ghost'),zod.literal('vampire'),zod.literal('wolf'),zod.literal('zombie'),zod.literal(null)]).nullish(),
   "botMessageType": zod.union([zod.literal('chatter'),zod.literal('moderation'),zod.literal('visit'),zod.literal(null)]).nullish(),
   "badgeId": zod.string().nullish(),
+  "badgeName": zod.string().nullish(),
+  "badgeImage": zod.string().nullish(),
   "id": zod.string().uuid(),
   "roomId": zod.string(),
   "authorId": zod.string().uuid(),
@@ -2363,6 +2398,8 @@ export const SendRoomMessageResponse = zod.object({
   "botId": zod.union([zod.literal('ghost'),zod.literal('vampire'),zod.literal('wolf'),zod.literal('zombie'),zod.literal(null)]).nullish(),
   "botMessageType": zod.union([zod.literal('chatter'),zod.literal('moderation'),zod.literal('visit'),zod.literal(null)]).nullish(),
   "badgeId": zod.string().nullish(),
+  "badgeName": zod.string().nullish(),
+  "badgeImage": zod.string().nullish(),
   "id": zod.string().uuid(),
   "roomId": zod.string(),
   "authorId": zod.string().uuid(),

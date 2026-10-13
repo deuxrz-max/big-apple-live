@@ -9,6 +9,7 @@
 export interface SocialProduct {
   id: string;
   name: string;
+  badgeImage: string;
   description: string;
   cost: number;
 }

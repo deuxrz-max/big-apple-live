@@ -14,6 +14,10 @@ export interface UniversityPerson {
   botId?: UniversityPersonBotId;
   /** @nullable */
   badgeId?: string | null;
+  /** @nullable */
+  badgeName?: string | null;
+  /** @nullable */
+  badgeImage?: string | null;
   participantId: string;
   username: string;
   displayName: string;

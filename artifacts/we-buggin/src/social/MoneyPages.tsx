@@ -4,11 +4,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Coins, Send, RefreshCw, Trash2, Trophy } from 'lucide-react';
 import {
   useGetSocialMe, useGetSocialConversation, useSendSocialMessage, useDeleteSocialConversation,
-  useClaimSocialDailyReward, usePurchaseSocialProduct, useGetSocialLedger, useGetSocialLeaderboard,
+  useClaimSocialDailyReward, useGetSocialLedger, useGetSocialLeaderboard,
   getGetSocialMeQueryKey, getGetSocialConversationQueryKey,
 } from '@workspace/api-client-react';
-import { BadgeMark, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, fmt, iconFor, refreshSocial, useIdemKey } from './common';
-import { BadgeArt, BADGE_ART } from './BadgeArt';
+import { BadgeMark, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, fmt, refreshSocial, useIdemKey } from './common';
+import { BadgeArt } from './BadgeArt';
 
 export function ThreadPage({ username }: { username: string }) {
   const qc = useQueryClient();
@@ -49,7 +49,7 @@ export function ThreadPage({ username }: { username: string }) {
     <section className="sc-thread">
       <Link href="/community/messages" className="bm-back">All messages</Link>
       <header className="sc-thread-head">
-        <Link href={`/community/people/${username}`} className="sc-row"><span className="sc-name" style={{ color: d.person.displayNameColor ?? '#FFFFFF' }}>{d.person.username}<BadgeMark id={d.person.badgeId} /></span></Link>
+        <Link href={`/community/people/${username}`} className="sc-row"><span className="sc-name" style={{ color: d.person.displayNameColor ?? '#FFFFFF' }}><BadgeMark id={d.person.badgeId} label={d.person.badgeName} imageUrl={d.person.badgeImage} size={18} compact />{d.person.username}</span></Link>
         <div className="sc-actions">
           <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()} disabled={q.isFetching} data-testid="button-refresh"><RefreshCw size={14} /> Refresh</button>
           {confirmDel ? (
@@ -82,17 +82,10 @@ export function ThreadPage({ username }: { username: string }) {
 }
 
 export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
-  const [now, setNow] = useState(Date.now);
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
   const qc = useQueryClient();
   const me = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), refetchInterval: 10000 } });
   const ledger = useGetSocialLedger({ query: { queryKey: ['/api/social/wallet/transactions'], refetchInterval: 10000 } });
   const claim = useClaimSocialDailyReward();
-  const buy = usePurchaseSocialProduct();
-  const idem = useIdemKey();
   const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null);
   if (me.isLoading) return <Loading />;
   if (me.isError || !me.data) return <ErrorBox error={me.error} retry={() => me.refetch()} />;
@@ -100,13 +93,10 @@ export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
   const doClaim = () => { setMsg(null); claim.mutate(undefined, {
     onSuccess: () => { setMsg({ ok: true, t: `Claimed ${w.dailyReward} credits.` }); refreshSocial(qc); },
     onError: (e) => setMsg({ ok: false, t: errMsg(e) }) }); };
-  const doBuy = (id: string, name: string) => { setMsg(null); buy.mutate({ data: { itemId: id, idempotencyKey: idem.get(id) } }, {
-    onSuccess: () => { idem.clear(); setMsg({ ok: true, t: `${name} is yours.` }); refreshSocial(qc); },
-    onError: (e) => setMsg({ ok: false, t: errMsg(e) }) }); };
   return (
     <section>
       {embedded ? <h2 className="bm-h1 sc-h1">Rewards</h2> : <h1 className="bm-h1 sc-h1">Rewards</h1>}
-      <p className="bm-lede">Credits are earned, never bought, and have no cash value.</p>
+      <p className="bm-lede">Daily reward credits have no cash value. Purchase-tier badges count only completed credit purchases.</p>
       <div className="sc-wallet">
         <div className="sc-balance"><Coins size={28} /><b data-testid="text-balance">{w.unlimited ? 'Unlimited test' : w.balance}</b><span>credits</span></div>
         <dl><div><dt>Earned</dt><dd>{w.earned}</dd></div><div><dt>Received</dt><dd>{w.received}</dd></div><div><dt>Sent</dt><dd>{w.sent}</dd></div></dl>
@@ -115,37 +105,23 @@ export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
       </div>
       {msg && <Msg ok={msg.ok}>{msg.t}</Msg>}
       <h2 className="sc-h2">Badge store</h2>
-      <p className="sc-sub">Badges are cosmetic and do not verify who you are. New Marathon Master and Night Owl grants are time-limited; previous permanent purchases remain permanent. Pick one in <Link href="/community/profile" className="bm-link">your profile</Link>.</p>
+      <p className="sc-sub">Your highest qualifying tier is applied automatically. A tier earned in one UTC calendar month stays active through the end of the next month. Gift credits, daily rewards, and old badge purchases do not count.</p>
+      <p className="sc-sub" role="note">Credit checkout is currently unavailable, so no new purchase-tier badge can be earned in this preview. Only verified, completed real-money credit purchases will count when checkout is connected.</p>
       <div className="sc-gifts sc-store">{products.map((p) => {
-        const marathon = p.id === 'marathon-master';
-        const nightOwl = p.id === 'night-owl';
-        const timed = marathon || nightOwl;
-        const expiry = me.data.badgeExpirations?.[p.id];
-        const remaining = expiry ? Math.max(0, new Date(expiry).getTime() - now) : 0;
-        const own = inventory.includes(p.id) && (!expiry || remaining > 0);
-        const permanent = nightOwl && own && !expiry;
-        const enough = w.unlimited || w.balance >= p.cost;
-        const I = iconFor(p.id);
+        const earned = me.data.profile.badgeId === p.id;
         return (
         <div key={p.id} className="sc-gift sc-product" data-testid={`card-product-${p.id}`}>
-          {BADGE_ART[p.id]
-            ? <BadgeArt id={p.id} name={p.name} />
-            : <I size={30} />}<b>{p.name}</b>{timed && <strong>How to Earn</strong>}<span>{p.description}</span><span>{p.cost} credits</span>
-          {timed && <>
-            <span data-testid={marathon ? 'marathon-streak' : 'night-owl-streak'}>{me.data.loginStreak ?? 0} consecutive login days</span>
-            {own && expiry && <span data-testid={marathon ? 'marathon-time' : 'night-owl-time'}>Active · {Math.floor(remaining / 86400000)}d {Math.floor(remaining / 3600000) % 24}h {Math.floor(remaining / 60000) % 60}m {Math.floor(remaining / 1000) % 60}s remaining</span>}
-            {permanent ? <span>Owned permanently from an earlier purchase. No renewal needed.</span>
-              : <span>Each {marathon ? '7' : '30'}-day streak milestone adds {marathon ? '7' : '30'} days. Buying adds 3 days to any time remaining; expired badges restart from now.</span>}
-          </>}
-          <button type="button" className="bm-btn bm-btn-sm" disabled={(!timed && own) || permanent || buy.isPending || !enough} onClick={() => doBuy(p.id, p.name)} data-testid={`button-buy-${p.id}`}>
-            {permanent ? 'Owned permanently' : buy.isPending ? 'Buying...' : timed ? !enough ? 'Need more credits' : `Buy for ${p.cost} credits` : own ? 'Owned' : !enough ? 'Not enough credits' : 'Buy'}</button>
-          {timed && !permanent && !enough && <Link href="/community/credits" className="bm-link">Buy credits</Link>}
+          <BadgeArt id={p.id} name={p.name} imageUrl={p.badgeImage} /><b>{p.name}</b><strong>Monthly purchase threshold</strong>
+          <span>{p.cost.toLocaleString()} credits in completed credit purchases during one calendar month</span>
+          {earned
+            ? <span className="sc-tier-active" data-testid={`status-${p.id}`}>Your highest active tier</span>
+            : <span>Not currently active</span>}
           </div>); })}</div>
       <h2 className="sc-h2">Gifts</h2>
       <p className="sc-sub">Send these from anyone's profile.</p>
       <div className="sc-gifts">{gifts.map((g) => <div key={g.id} className="sc-gift"><GiftIcon id={g.id} size={26} /><b>{g.name}</b><span>{g.cost} credits</span></div>)}</div>
-      <h2 className="sc-h2">Inventory</h2>
-      {inventory.filter(id => !me.data.badgeExpirations?.[id] || new Date(me.data.badgeExpirations[id]).getTime() > now).length === 0 ? <p className="sc-sub">Nothing owned yet.</p> : <p className="sc-tags">{inventory.filter(id => !me.data.badgeExpirations?.[id] || new Date(me.data.badgeExpirations[id]).getTime() > now).map((id) => <i key={id}>{products.find((p) => p.id === id)?.name ?? id}</i>)}</p>}
+       <h2 className="sc-h2">Gift bag</h2>
+       {inventory.length === 0 ? <p className="sc-sub">No gifts in your bag yet.</p> : <p className="sc-tags">{inventory.map((id) => <i key={id}>{gifts.find((g) => g.id === id)?.name ?? id}</i>)}</p>}
       <h2 className="sc-h2">Ledger</h2>
       {ledger.isLoading && <Loading />}
       {ledger.isError && <ErrorBox error={ledger.error} retry={() => ledger.refetch()} />}

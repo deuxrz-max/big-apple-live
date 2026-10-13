@@ -19,6 +19,8 @@
     "test:profiles": "esbuild src/lib/profile-setup.test.ts --bundle --platform=node --format=esm --banner:js=\"import { createRequire as cr } from 'node:module'; const require=cr(import.meta.url);\" --outfile=.tests/profile-setup.test.mjs && node --test .tests/profile-setup.test.mjs",
     "test:community": "esbuild src/lib/community.test.ts --bundle --platform=node --format=esm --banner:js=\"import { createRequire as cr } from 'node:module'; const require=cr(import.meta.url);\" --outfile=.tests/community.test.mjs && node --test .tests/community.test.mjs",
     "test:social": "esbuild src/lib/social/social.test.ts --bundle --platform=node --format=esm --banner:js=\"import { createRequire as createTestRequire } from 'node:module'; const require = createTestRequire(import.meta.url);\" --outfile=.tests/social.test.mjs && node --test .tests/social.test.mjs",
+    "test:monthly-badges": "esbuild src/lib/social/monthly-credit-badges.test.ts --bundle --platform=node --format=esm --outfile=.tests/monthly-credit-badges.test.mjs && node --test .tests/monthly-credit-badges.test.mjs",
+    "test:credit-purchase-confirmation": "esbuild src/lib/social/credit-purchase-confirmation.test.ts --bundle --platform=node --format=esm --external:sharp --external:pino --banner:js=\"import { createRequire as cr } from 'node:module'; const require=cr(import.meta.url);\" --outfile=.tests/credit-purchase-confirmation.test.mjs && node --test .tests/credit-purchase-confirmation.test.mjs",
     "dev": "export NODE_ENV=development && pnpm run build && pnpm run start",
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",

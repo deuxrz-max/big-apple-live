@@ -18,6 +18,10 @@ export interface ChatMessage {
   botMessageType?: ChatMessageBotMessageType;
   /** @nullable */
   badgeId?: string | null;
+  /** @nullable */
+  badgeName?: string | null;
+  /** @nullable */
+  badgeImage?: string | null;
   id: string;
   roomId: string;
   authorId: string;

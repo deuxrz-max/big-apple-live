@@ -1207,6 +1207,8 @@ components:
       properties:
         botId: { type: [string, "null"], enum: [ghost, vampire, wolf, zombie, null] }
         badgeId: { type: [string, "null"] }
+        badgeName: { type: [string, "null"] }
+        badgeImage: { type: [string, "null"] }
         participantId: { type: string }
         username: { type: string }
         displayName: { type: string }
@@ -1220,12 +1222,15 @@ components:
         ignored: { type: boolean }
     UniversityWhisper:
       type: object
-      required: [id, username, displayName, outgoing, body, createdAt]
+      required: [id, username, displayName, badgeId, outgoing, body, createdAt]
       properties:
         id: { type: string }
         username: { type: string }
         displayName: { type: string }
         displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
+        badgeId: { type: [string, "null"] }
+        badgeName: { type: [string, "null"] }
+        badgeImage: { type: [string, "null"] }
         passport: { $ref: "./social.openapi.json#/components/schemas/StreamerPassportBadgeSummary" }
         outgoing: { type: boolean }
         body: { type: string }
@@ -1335,6 +1340,8 @@ components:
         botId: { type: [string, "null"], enum: [ghost, vampire, wolf, zombie, null] }
         botMessageType: { type: [string, "null"], enum: [chatter, moderation, visit, null] }
         badgeId: { type: [string, "null"] }
+        badgeName: { type: [string, "null"] }
+        badgeImage: { type: [string, "null"] }
         id: { type: string, format: uuid }
         roomId: { type: string }
         authorId: { type: string, format: uuid }

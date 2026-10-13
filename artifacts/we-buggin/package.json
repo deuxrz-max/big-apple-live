@@ -12,6 +12,7 @@
     "test:video-beam-grid": "esbuild tests/videoBeamGrid.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-video-beam-grid-tests.mjs && node --test /tmp/we-buggin-video-beam-grid-tests.mjs",
     "test:playlist": "esbuild tests/promoPlaylist.test.ts --bundle --platform=node --format=esm --outfile=/tmp/streamtalk-promo-tests.mjs && node --test /tmp/streamtalk-promo-tests.mjs",
     "test:badges": "esbuild tests/badgeCatalog.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-badge-tests.mjs && node --test /tmp/we-buggin-badge-tests.mjs",
+    "test:entrance-effects": "esbuild tests/entranceEffectAssets.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-entrance-effect-tests.mjs && node --test /tmp/we-buggin-entrance-effect-tests.mjs",
     "test:promo-browser": "tsc -p tests/browser/tsconfig.json --noEmit && node tests/browser/run.mjs",
     "test:audio-harness-browser": "pnpm exec playwright test --config tests/browser/audio-harness.live.config.ts",
     "test:live": "node --test tests/liveBeam.test.mjs"
@@ -89,6 +90,7 @@
     "@workspace/beam-identity": "workspace:*",
     "@workspace/room-audio": "workspace:*",
     "livekit-client": "^2.22.4",
+    "lottie-web": "^5.13.0",
     "socket.io-client": "^4.8.4"
   }
 }

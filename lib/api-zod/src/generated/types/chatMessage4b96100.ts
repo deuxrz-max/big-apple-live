@@ -18,6 +18,10 @@ export interface ChatMessage4b96100 {
   botMessageType?: ChatMessage4b96100BotMessageType;
   /** @nullable */
   badgeId?: string | null;
+  /** @nullable */
+  badgeName?: string | null;
+  /** @nullable */
+  badgeImage?: string | null;
   id: string;
   roomId: string;
   authorId: string;

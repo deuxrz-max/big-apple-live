@@ -1,4 +1,4 @@
-import { db, accountProfiles, chatRooms, chatModerators, socialMessages, socialInventory, socialSettings, socialRelations, universityIgnores, universityPreferences } from "@workspace/db";
+import { db, accountProfiles, chatRooms, chatModerators, socialMessages, socialSettings, socialRelations, universityIgnores, universityPreferences } from "@workspace/db";
 import { and, eq, inArray, notInArray, or, desc, sql } from "drizzle-orm";
 import { RoomError, roomStore } from "./room-store";
 import { targetAccount, pairBlocked } from "./social/core";
@@ -7,6 +7,7 @@ import { visibleProfilePhotos } from "./photo-visibility";
 import { botRotation } from "./moderator-bots";
 import { giftNameColorsForAccounts } from "./social/gift-name-color-data";
 import { passportBadgeSummaries } from "./social/passport";
+import { monthlyPurchaseBadgeSummaries } from "./social/monthly-credit-badges";
 import type { UniversityPerson } from "@workspace/api-zod";
 
 export async function ignoredAccounts(id: string) {
@@ -54,8 +55,12 @@ export async function roomWhispers(id: string, roomId: string) {
   }
   const colors = await giftNameColorsForAccounts(result.map(row => row.accountId));
   const passports = await passportBadgeSummaries(result.map(row => row.accountId));
+  const badges = await monthlyPurchaseBadgeSummaries(result.map(row => row.accountId));
   return result.map(({ accountId, ...whisper }) => ({
     ...whisper, displayNameColor: colors.get(accountId) ?? "#FFFFFF",
+    badgeId: badges.get(accountId)?.tier.id ?? null,
+    badgeName: badges.get(accountId)?.tier.name ?? null,
+    badgeImage: badges.get(accountId)?.tier.badgeImage ?? null,
     passport: passports.get(accountId),
   }));
 }
@@ -75,14 +80,7 @@ export async function universitySession(id: string, roomId: string, sessionId: s
   const blockedIds = new Set(blockedRelations.map(relation =>
     relation.ownerId === id ? relation.targetId : relation.ownerId));
   const passports = await passportBadgeSummaries(presentAccountIds.filter(accountId => accountId === id || !blockedIds.has(accountId)));
-  const selectedBadges = presentAccountIds.length ? await db.select({
-    accountId: socialSettings.accountId, badgeId: socialSettings.badgeId,
-  }).from(socialSettings).innerJoin(socialInventory, and(
-    eq(socialInventory.accountId, socialSettings.accountId),
-    eq(socialInventory.itemId, socialSettings.badgeId),
-    sql`(${socialInventory.expiresAt} IS NULL OR ${socialInventory.expiresAt} > CURRENT_TIMESTAMP)`,
-  )).where(inArray(socialSettings.accountId, presentAccountIds)) : [];
-  const badgeByAccount = new Map(selectedBadges.map(row => [row.accountId, row.badgeId]));
+  const badgeSummaries = await monthlyPurchaseBadgeSummaries(presentAccountIds);
   const people: UniversityPerson[] = [];
   const seen = new Set<string>();
   for (const participant of snapshot.participants) {
@@ -102,12 +100,16 @@ export async function universitySession(id: string, roomId: string, sessionId: s
       displayNameColor: nameColors.get(ownerId) ?? "#FFFFFF",
       photoStatus: photos.photoReviews?.find(r => r.photoUrl === photos.photoUrl)?.status ?? null,
       self: ownerId === id, moderator: moderators.has(ownerId), ignored: ignored.includes(ownerId), botId: null,
-      badgeId: badgeByAccount.get(ownerId) ?? null, passport: passports.get(ownerId) });
+       badgeId: badgeSummaries.get(ownerId)?.tier.id ?? null,
+       badgeName: badgeSummaries.get(ownerId)?.tier.name ?? null,
+       badgeImage: badgeSummaries.get(ownerId)?.tier.badgeImage ?? null,
+       passport: passports.get(ownerId) });
   }
   for (const bot of botRotation.people(roomId.toUpperCase())) people.push({
     participantId: bot.participantId, username: bot.name, displayName: bot.name, photoUrl: bot.avatarUrl,
     displayNameColor: "#FFFFFF",
-    photoStatus: "approved", self: false, moderator: true, ignored: false, botId: bot.id, badgeId: null,
+    photoStatus: "approved", self: false, moderator: true, ignored: false, botId: bot.id,
+    badgeId: null, badgeName: null, badgeImage: null,
   });
   const [prefs] = await db.select().from(universityPreferences).where(eq(universityPreferences.accountId, id));
   const ignoredNames = ignored.length

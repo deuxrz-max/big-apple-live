@@ -1,6 +1,7 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import type { Participant, RoomSession, RoomState, EmojiIdentity, ChatAccepted, AccountRoomInput } from "@workspace/api-zod";
 import { UNIVERSITY_MEMBER_CAP } from "./university-config";
+import { MONTHLY_CREDIT_BADGE_TIERS } from "./social/monthly-credit-badge-config";
 
 export const SESSION_TIMEOUT_MS = 90_000;
 export const EMPTY_ROOM_TIMEOUT_MS = 60 * 60 * 1000;
@@ -21,9 +22,12 @@ type Listener = (event: RoomEvent) => void;
 export type RoomEntranceEffectEvent = {
   eventId: string;
   roomId: string;
-  effectId: "lion-entrance";
+  effectId: "lion-entrance" | "monthly-tier-1" | "monthly-tier-2" | "monthly-tier-3" | "monthly-tier-4" | "monthly-tier-5";
   participantId: string;
   displayName: string;
+  effectName?: string;
+  badgeImage?: string;
+  assetFolder?: string;
   startedAt: number;
   durationMs: number;
 };
@@ -189,6 +193,16 @@ export class RoomStore {
     return [...active];
   }
 
+  activeRoomIdsForAccount(accountId: string): string[] {
+    const now = this.now();
+    const roomIds: string[] = [];
+    for (const room of this.rooms.values()) {
+      if ([...room.sessions.values()].some(session => session.accountId === accountId
+        && now - session.lastSeenAt < SESSION_TIMEOUT_MS)) roomIds.push(room.roomId);
+    }
+    return roomIds;
+  }
+
   hasAccountParticipant(roomId: string, accountId: string): boolean {
     const room = this.requireRoom(roomId);
     return [...room.sessions.values()].some(session => session.accountId === accountId);
@@ -198,12 +212,14 @@ export class RoomStore {
     const room = this.requireRoom(roomId);
     const participant = [...room.sessions.values()].find(session => session.accountId === accountId)?.participant;
     if (!participant) throw new RoomError(409, "The effect owner is no longer in the room");
+    const tier = MONTHLY_CREDIT_BADGE_TIERS.find(item => item.entranceEffectId === effectId);
     const event: RoomEntranceEffectEvent = {
       eventId: randomUUID(),
       roomId: room.roomId,
       effectId,
       participantId: participant.participantId,
       displayName: participant.displayName,
+      ...(tier ? { effectName: tier.name, badgeImage: tier.badgeImage, assetFolder: tier.entranceEffectFolder } : {}),
       startedAt: this.now(),
       durationMs,
     };

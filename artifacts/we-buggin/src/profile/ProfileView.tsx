@@ -4,7 +4,8 @@ import { ArrowLeft, Pencil, MoreVertical, Ban, Flag, Undo2 } from 'lucide-react'
 import type { SocialPerson } from '@workspace/api-client-react';
 import { UserPhoto, photoSrc } from '@/components/user-photo';
 import { BotShield } from '@/chat/BotShield';
-import { iconFor } from '@/social/common';
+import { BadgeMark } from '@/social/common';
+import { BadgeArt } from '@/social/BadgeArt';
 import './profile.css';
 import { approvedPhotos } from './profile-model';
 
@@ -96,15 +97,11 @@ export function ProfileMenu({ name, blocked, pending, onBlock }: { name: string;
   );
 }
 
-function Shield({ id, name, date, equipped }: { id: string; name: string; date: string | null; equipped: boolean }) {
-  const I = iconFor(id);
-  const nightOwl = id === 'night-owl';
+function Shield({ id, name, imageUrl, date, equipped }: { id: string; name: string; imageUrl?: string | null; date: string | null; equipped: boolean }) {
   return (
     <li className={`pf-badge${equipped ? ' is-equipped' : ''}`} data-testid={`badge-${id}`}>
-      <span className={`pf-shield${nightOwl ? ' pf-shield-night-owl' : ''}`} aria-hidden="true">
-        {nightOwl
-          ? <img className="pf-shield-art" src={`${import.meta.env.BASE_URL}badges/night-owl.png`} alt="" />
-          : <span><I size={22} /></span>}
+      <span className="pf-shield" aria-hidden="true">
+        <BadgeArt id={id} name={name} imageUrl={imageUrl} size={64} />
       </span>
       <b>{name}</b>
       {equipped && <small className="pf-equipped-label">Equipped</small>}
@@ -133,6 +130,7 @@ export function ProfileView({ person, own = false, countryName, products, backHr
       <section className="pf-panel">
         <h1 className="pf-name" data-testid="text-display-name">
           <span className="pf-name-emoji" aria-hidden="true">{emojiFromId(p.identity.emojiId)}</span>
+          <BadgeMark id={p.badgeId ?? null} label={p.badgeName} imageUrl={p.badgeImage} size={26} />
           <span className="pf-display-name">{name}</span>
         </h1>
         {own && <Link href="/user-portal/edit" className="pf-edit" data-testid="link-edit-profile">Edit your profile</Link>}
@@ -145,7 +143,7 @@ export function ProfileView({ person, own = false, countryName, products, backHr
         {p.interests.length > 0 && <ul className="pf-chips pf-interests" aria-label="Interests">{p.interests.map((i) => <li key={i} className="pf-chip pf-chip-soft">{i}</li>)}</ul>}
         {earned.length > 0 && <>
           <h2 className="pf-h2">Badges</h2>
-          <ul className="pf-badges">{earned.map((b) => <Shield key={b.id} id={b.id} name={nameOf(b.id)} date={dateOf(b.earnedAt)} equipped={b.id === p.badgeId} />)}</ul>
+          <ul className="pf-badges">{earned.map((b) => <Shield key={b.id} id={b.id} name={nameOf(b.id)} imageUrl={p.badgeImage} date={dateOf(b.earnedAt)} equipped={b.id === p.badgeId} />)}</ul>
         </>}
         {bio && <p className="pf-bio" data-testid="text-bio">{bio}</p>}
         <dl className="pf-stats">

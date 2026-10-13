@@ -1,12 +1,12 @@
-import { db, accountProfiles, socialSettings, socialWallets, socialRelations, socialInventory, socialLedger, socialMessages } from "@workspace/db";
+import { db, accountProfiles, socialSettings, socialWallets, socialRelations, socialLedger, socialMessages } from "@workspace/db";
 import { and, eq, or, sql } from "drizzle-orm";
 import { RoomError } from "../room-store";
 import { publicProfile } from "../account-profiles";
 import { DAILY_REWARD } from "./catalog";
 import { visibleProfilePhotos } from "../photo-visibility";
-import { TIMED_BADGES } from './marathon-policy';
 import { hasDevelopmentUnlimitedCredits } from "./credits-policy";
 import { giftNameColorForSentCredits } from "./gift-name-color";
+import { monthlyPurchaseBadgeSummaries, monthlyPurchaseBadgeSummary, type MonthlyCreditBadgeSummary } from "./monthly-credit-badges";
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type ProfileRow = typeof accountProfiles.$inferSelect;
@@ -60,7 +60,8 @@ export async function assertContact(tx: Tx | typeof db, actor: string, target: s
     if (!conversation && !favorite) throw new RoomError(404, "This person is not available in discovery");
   }
 }
-export async function person(viewer: string, profile: ProfileRow, settings?: SettingsRow | null, includeStats = false) {
+export async function person(viewer: string, profile: ProfileRow, settings?: SettingsRow | null, includeStats = false,
+  monthlyBadgeOverride?: MonthlyCreditBadgeSummary | null) {
   const id = profile.accountId;
   const [prefs] = settings ? [settings] : await db.select().from(socialSettings).where(eq(socialSettings.accountId, id));
   const [wallet] = await db.select().from(socialWallets).where(eq(socialWallets.accountId, id));
@@ -74,14 +75,8 @@ export async function person(viewer: string, profile: ProfileRow, settings?: Set
   }).from(socialRelations).where(and(eq(socialRelations.kind, "favorite"), or(
     eq(socialRelations.ownerId, id), eq(socialRelations.targetId, id),
   ))) : [];
-  const badges = includeStats && !blocked ? await db.select({
-    id: socialInventory.itemId, acquired: socialInventory.purchasedAt,
-  }).from(socialInventory).where(and(eq(socialInventory.accountId, id),
-    sql`(${socialInventory.expiresAt} IS NULL OR ${socialInventory.expiresAt} > CURRENT_TIMESTAMP)`)) : [];
-  const timedSelected = TIMED_BADGES.some(b => b.id === prefs?.badgeId);
-  const [activeSelected] = timedSelected && prefs?.badgeId ? await db.select({ id: socialInventory.itemId })
-    .from(socialInventory).where(and(eq(socialInventory.accountId, id), eq(socialInventory.itemId, prefs.badgeId),
-      sql`(${socialInventory.expiresAt} IS NULL OR ${socialInventory.expiresAt} > CURRENT_TIMESTAMP)`)) : [];
+  const monthlyBadge = blocked ? null : monthlyBadgeOverride !== undefined
+    ? monthlyBadgeOverride : await monthlyPurchaseBadgeSummary(id);
   return {
     username: profile.username, displayName: profile.displayName ?? profile.username,
     ...photos, identity: publicProfile(profile).identity,
@@ -91,11 +86,13 @@ export async function person(viewer: string, profile: ProfileRow, settings?: Set
     interests: blocked ? [] : prefs?.interests ?? [], discoverable: prefs?.discoverable ?? false,
     favorite: !!favorite, blocked, receivedCredits: wallet?.received ?? 0,
     displayNameColor: giftNameColorForSentCredits(wallet?.sent ?? 0),
-    badgeId: timedSelected && !activeSelected ? null : prefs?.badgeId ?? null,
+    badgeId: monthlyBadge?.tier.id ?? null,
+    badgeName: monthlyBadge?.tier.name ?? null,
+    badgeImage: monthlyBadge?.tier.badgeImage ?? null,
     ...(includeStats ? {
       followerCount: counts?.followerCount ?? 0, followingCount: counts?.followingCount ?? 0,
       sentCredits: wallet?.sent ?? 0,
-      badges: badges.map(b => ({ id: b.id, earnedAt: b.acquired.toISOString() })),
+       badges: monthlyBadge ? [{ id: monthlyBadge.tier.id, earnedAt: monthlyBadge.earnedAt.toISOString() }] : [],
     } : {}),
   };
 }
@@ -112,4 +109,3 @@ export async function replay(tx: Tx, id: string, key: string, ref: string) {
   if (row.refKey !== ref) throw new RoomError(409, "This retry key belongs to a different action");
   return true;
 }
-export const socialTables = { socialInventory };

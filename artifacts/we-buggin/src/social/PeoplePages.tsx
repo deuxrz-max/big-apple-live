@@ -8,7 +8,7 @@ import {
   type GetSocialPeopleParams,
   useGetFavoritesGallery, getGetFavoritesGalleryQueryKey, getFavoriteRoom,
 } from '@workspace/api-client-react';
-import { Avatar, BadgeMark, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, refreshSocial, useIdemKey, iconFor } from './common';
+import { Avatar, BadgeMark, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, refreshSocial, useIdemKey } from './common';
 import { ProfileView, ProfileMenu } from '@/profile/ProfileView';
 import { FavoritesGallery, type FavoriteEntry } from './FavoritesGallery';
 import { PublicStreamerPassport } from '@/passport/StreamerPassport';
@@ -132,7 +132,6 @@ export function MyProfilePage() {
   const [country, setCountry] = useState('');
   const [interests, setInterests] = useState('');
   const [discoverable, setDiscoverable] = useState(false);
-  const [badgeId, setBadgeId] = useState<string | null>(null);
   const [platform, setPlatform] = useState('');
   const [handle, setHandle] = useState('');
   const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null);
@@ -140,7 +139,7 @@ export function MyProfilePage() {
     const p = me.data?.profile;
     if (p && !init.current) {
       init.current = true;
-      setBio(p.bio); setCountry(p.country ?? ''); setInterests(p.interests.join(', ')); setDiscoverable(p.discoverable); setBadgeId(p.badgeId); setPlatform(p.externalPlatform ?? ''); setHandle(p.externalHandle ?? '');
+      setBio(p.bio); setCountry(p.country ?? ''); setInterests(p.interests.join(', ')); setDiscoverable(p.discoverable); setPlatform(p.externalPlatform ?? ''); setHandle(p.externalHandle ?? '');
     }
   }, [me.data]);
   if (me.isLoading) return <Loading />;
@@ -151,7 +150,7 @@ export function MyProfilePage() {
   const submit = (e: FormEvent) => {
     e.preventDefault(); setMsg(null);
     if (bad) { setMsg({ ok: false, t: 'Use up to 8 interests, 24 characters each.' }); return; }
-    save.mutate({ data: { bio: bio.trim(), country: country || null, interests: list, discoverable, badgeId, externalPlatform: (platform || null) as SocialProfileInputExternalPlatform, externalHandle: platform && handle.trim() ? handle.trim() : null } }, {
+    save.mutate({ data: { bio: bio.trim(), country: country || null, interests: list, discoverable, badgeId: null, externalPlatform: (platform || null) as SocialProfileInputExternalPlatform, externalHandle: platform && handle.trim() ? handle.trim() : null } }, {
       onSuccess: () => { setMsg({ ok: true, t: 'Profile saved.' }); refreshSocial(qc); },
       onError: (er) => setMsg({ ok: false, t: errMsg(er) }),
     });
@@ -159,7 +158,7 @@ export function MyProfilePage() {
   return (
     <section>
       <h1 className="bm-h1 sc-h1">My profile</h1>
-      <div className="sc-hero"><Avatar p={d.profile} size={110} /><div><p className="sc-name" style={{ color: d.profile.displayNameColor ?? '#FFFFFF' }}>{d.profile.username}<BadgeMark id={badgeId} /></p>
+      <div className="sc-hero"><Avatar p={d.profile} size={110} /><div><p className="sc-name" style={{ color: d.profile.displayNameColor ?? '#FFFFFF' }}><BadgeMark id={d.profile.badgeId} label={d.profile.badgeName} imageUrl={d.profile.badgeImage} size={18} compact />{d.profile.username}</p>
         <p className="sc-sub">Change your display name, photo and bio in <Link href="/user-portal/edit" className="bm-link">Edit profile</Link>.</p></div></div>
       <form className="sc-form" onSubmit={submit}>
         <label className="sc-field"><span className="bm-label">Bio ({bio.length}/200)</span>
@@ -175,15 +174,7 @@ export function MyProfilePage() {
         <label className="sc-field"><span className="bm-label">Handle on that platform</span>
           <input className="bm-input" maxLength={64} value={handle} disabled={!platform} onChange={(e) => setHandle(e.target.value)} data-testid="input-handle" />
           <small>Self-listed. Not ownership checked or officially verified.</small></label>
-        <fieldset className="sc-field sc-fs"><legend className="bm-label">Badge (cosmetic, not identity verification)</legend>
-          <div className="sc-gifts">
-            <button type="button" aria-pressed={badgeId === null} className={`sc-gift${badgeId === null ? ' is-on' : ''}`} onClick={() => setBadgeId(null)}><b>None</b></button>
-            {d.inventory.map((id) => { const I = iconFor(id); return (
-              <button key={id} type="button" aria-pressed={badgeId === id} className={`sc-gift${badgeId === id ? ' is-on' : ''}`} onClick={() => setBadgeId(id)} data-testid={`button-badge-${id}`}>
-                <I size={26} /><b>{d.products.find((p) => p.id === id)?.name ?? id}</b></button>); })}
-          </div>
-          {d.inventory.length === 0 && <p className="sc-sub">You own no badges. <Link href="/community/rewards" className="bm-link">Visit the store</Link>.</p>}
-        </fieldset>
+        <p className="sc-sub">Monthly purchase badges are applied automatically when a confirmed credit purchase qualifies. They cannot be selected manually.</p>
         <label className="sc-check"><input type="checkbox" checked={discoverable} onChange={(e) => setDiscoverable(e.target.checked)} data-testid="checkbox-discoverable" />
           <span>Show me in People discovery. Off by default; only you decide.</span></label>
         {msg && <Msg ok={msg.ok}>{msg.t}</Msg>}

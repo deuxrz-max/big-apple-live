@@ -13,6 +13,12 @@ export type SocialInboxConversationsItem = {
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
   /** @nullable */
+  badgeId: string | null;
+  /** @nullable */
+  badgeName: string | null;
+  /** @nullable */
+  badgeImage: string | null;
+  /** @nullable */
   photoUrl: string | null;
   lastMessageFromMe: boolean;
   /** @nullable */

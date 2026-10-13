@@ -13,6 +13,12 @@ export interface UniversityWhisper4b96100 {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /** @nullable */
+  badgeId: string | null;
+  /** @nullable */
+  badgeName?: string | null;
+  /** @nullable */
+  badgeImage?: string | null;
   passport?: StreamerPassportBadgeSummary;
   outgoing: boolean;
   body: string;

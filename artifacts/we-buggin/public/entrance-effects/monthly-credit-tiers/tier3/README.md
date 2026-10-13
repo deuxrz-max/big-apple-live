@@ -1,0 +1,1 @@
+Guardian of the Night uses the attached `entrance.mp4` and `tier3.png` badge art. Replace `entrance.mp4` to update the effect, or use `entrance.json` (Lottie), `entrance.webm`, `entrance.gif`, `entrance.webp`, or `entrance.apng`. The app uses the first supported file it finds; otherwise it shows a short badge placeholder.

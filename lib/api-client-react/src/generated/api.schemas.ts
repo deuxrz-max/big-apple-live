@@ -163,6 +163,10 @@ export interface SocialPerson {
   blocked: boolean;
   receivedCredits: number;
   badgeId: string | null;
+  /** @nullable */
+  badgeName: string | null;
+  /** @nullable */
+  badgeImage: string | null;
   passport?: StreamerPassportBadgeSummary;
 }
 
@@ -262,6 +266,10 @@ export interface UniversityPerson {
   botId?: UniversityPersonBotId;
   /** @nullable */
   badgeId?: string | null;
+  /** @nullable */
+  badgeName?: string | null;
+  /** @nullable */
+  badgeImage?: string | null;
   participantId: string;
   username: string;
   displayName: string;
@@ -284,6 +292,12 @@ export interface UniversityWhisper {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /** @nullable */
+  badgeId: string | null;
+  /** @nullable */
+  badgeName?: string | null;
+  /** @nullable */
+  badgeImage?: string | null;
   passport?: StreamerPassportBadgeSummary;
   outgoing: boolean;
   body: string;
@@ -503,6 +517,10 @@ export interface ChatMessage {
   botMessageType?: ChatMessageBotMessageType;
   /** @nullable */
   badgeId?: string | null;
+  /** @nullable */
+  badgeName?: string | null;
+  /** @nullable */
+  badgeImage?: string | null;
   id: string;
   roomId: string;
   authorId: string;
@@ -1099,6 +1117,10 @@ export interface UniversityPerson4b96100 {
   botId?: UniversityPerson4b96100BotId;
   /** @nullable */
   badgeId?: string | null;
+  /** @nullable */
+  badgeName?: string | null;
+  /** @nullable */
+  badgeImage?: string | null;
   participantId: string;
   username: string;
   displayName: string;
@@ -1121,6 +1143,12 @@ export interface UniversityWhisper4b96100 {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /** @nullable */
+  badgeId: string | null;
+  /** @nullable */
+  badgeName?: string | null;
+  /** @nullable */
+  badgeImage?: string | null;
   passport?: StreamerPassportBadgeSummary;
   outgoing: boolean;
   body: string;
@@ -1325,6 +1353,10 @@ export interface ChatMessage4b96100 {
   botMessageType?: ChatMessage4b96100BotMessageType;
   /** @nullable */
   badgeId?: string | null;
+  /** @nullable */
+  badgeName?: string | null;
+  /** @nullable */
+  badgeImage?: string | null;
   id: string;
   roomId: string;
   authorId: string;
@@ -2012,6 +2044,7 @@ export interface SocialWallet {
 export interface SocialProduct {
   id: string;
   name: string;
+  badgeImage: string;
   description: string;
   cost: number;
 }
@@ -2077,6 +2110,18 @@ export interface RoomGiftEvent {
   senderNameColor?: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   recipientNameColor?: string;
+  /** @nullable */
+  senderBadgeId: string | null;
+  /** @nullable */
+  recipientBadgeId: string | null;
+  /** @nullable */
+  senderBadgeName: string | null;
+  /** @nullable */
+  recipientBadgeName: string | null;
+  /** @nullable */
+  senderBadgeImage: string | null;
+  /** @nullable */
+  recipientBadgeImage: string | null;
   senderPassport?: StreamerPassportBadgeSummary;
   recipientPassport?: StreamerPassportBadgeSummary;
   createdAt: string;
@@ -2137,6 +2182,12 @@ export type SocialInboxConversationsItem = {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /** @nullable */
+  badgeId: string | null;
+  /** @nullable */
+  badgeName: string | null;
+  /** @nullable */
+  badgeImage: string | null;
   /** @nullable */
   photoUrl: string | null;
   lastMessageFromMe: boolean;

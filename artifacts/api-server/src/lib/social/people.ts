@@ -1,21 +1,20 @@
-import { db, accountProfiles, socialSettings, socialWallets, socialRelations, socialInventory, socialLoginStreaks, socialGiftBag } from "@workspace/db";
+import { db, accountProfiles, socialSettings, socialWallets, socialRelations, socialLoginStreaks, socialGiftBag } from "@workspace/db";
 import { and, eq, ne, or, ilike, desc, sql } from "drizzle-orm";
 import type { SocialProfileInput } from "@workspace/api-zod";
 import { RoomError } from "../room-store";
 import { assertContact, ensureSocial, lockAccounts, lockPair, pairBlocked, person, requireAccount, targetAccount, wallet } from "./core";
 import { COUNTRIES, COUNTRY_CODES, GIFTS, PRODUCTS } from "./catalog";
 import { roomStore } from "../room-store";
+import { monthlyPurchaseBadgeSummaries } from "./monthly-credit-badges";
 
 export async function getMe(id: string) {
   const profile = await requireAccount(id);
   await ensureSocial(id);
-  const items = await db.select().from(socialInventory).where(and(eq(socialInventory.accountId, id),
-    sql`(${socialInventory.expiresAt} IS NULL OR ${socialInventory.expiresAt} > CURRENT_TIMESTAMP)`));
   const [streak] = await db.select().from(socialLoginStreaks).where(eq(socialLoginStreaks.accountId, id));
   const giftsOwned = await db.select().from(socialGiftBag).where(eq(socialGiftBag.accountId, id));
-  return { profile: await person(id, profile, undefined, true), wallet: await wallet(id, db, profile.username), inventory: [...new Set([...items.map(i => i.itemId), ...giftsOwned.map(g => g.giftId)])],
+  return { profile: await person(id, profile, undefined, true), wallet: await wallet(id, db, profile.username), inventory: giftsOwned.map(g => g.giftId),
     giftQuantities: Object.fromEntries(giftsOwned.map(g => [g.giftId, g.quantity])),
-    badgeExpirations: Object.fromEntries(items.filter(i => i.expiresAt).map(i => [i.itemId, i.expiresAt!.toISOString()])),
+     badgeExpirations: {},
     loginStreak: streak?.consecutiveDays ?? 0, products: PRODUCTS, gifts: GIFTS, countries: COUNTRIES };
 }
 export async function saveSocialProfile(id: string, input: SocialProfileInput) {
@@ -24,15 +23,11 @@ export async function saveSocialProfile(id: string, input: SocialProfileInput) {
   const interests = [...new Set(input.interests.map(x => x.trim()).filter(Boolean))];
   await db.transaction(async tx => {
     await lockAccounts(tx, [id]);
-    if (input.badgeId) {
-      const [owned] = await tx.select().from(socialInventory).where(and(eq(socialInventory.accountId, id), eq(socialInventory.itemId, input.badgeId),
-        sql`(${socialInventory.expiresAt} IS NULL OR ${socialInventory.expiresAt} > CURRENT_TIMESTAMP)`));
-      if (!owned) throw new RoomError(403, "Only owned badges can be displayed");
-    }
+    if (input.badgeId) throw new RoomError(400, "Monthly purchase badges are automatic and cannot be selected manually");
     await tx.update(socialSettings).set({ bio: input.bio.trim(), country: input.country, interests,
       ...(input.externalPlatform !== undefined ? { externalPlatform: input.externalPlatform } : {}),
       ...(input.externalHandle !== undefined ? { externalHandle: input.externalHandle?.trim() || null } : {}),
-      discoverable: input.discoverable, badgeId: input.badgeId, updatedAt: new Date() }).where(eq(socialSettings.accountId, id));
+      discoverable: input.discoverable, badgeId: null, updatedAt: new Date() }).where(eq(socialSettings.accountId, id));
   });
   return person(id, profile);
 }
@@ -63,7 +58,9 @@ export async function listPeople(id: string, input: PeopleQuery = {}, leaderboar
     .limit(leaderboard ? 10 : 24).offset(offset);
   const [count] = await db.select({ total: sql<number>`count(*)::int` }).from(accountProfiles)
     .innerJoin(socialSettings, eq(accountProfiles.accountId, socialSettings.accountId)).where(and(...conditions));
-  return { people: await Promise.all(rows.map(row => person(id, row.profile, row.prefs))), total: count?.total ?? 0 };
+  const badges = await monthlyPurchaseBadgeSummaries(rows.map(row => row.profile.accountId));
+  return { people: await Promise.all(rows.map(row => person(id, row.profile, row.prefs, false,
+    badges.get(row.profile.accountId) ?? null))), total: count?.total ?? 0 };
 }
 export async function relationship(id: string, username: string, kind: "favorite" | "block", active: boolean) {
   const target = await targetAccount(username);
@@ -87,5 +84,7 @@ export async function blocks(id: string) {
     .where(and(eq(socialRelations.ownerId, id), eq(socialRelations.kind, "block"),
       process.env.NODE_ENV === "production" ? eq(accountProfiles.isTestAccount, false) : undefined))
     .orderBy(accountProfiles.nameKey);
-  return { people: await Promise.all(rows.map(r => person(id, r.profile))), total: rows.length };
+  const badges = await monthlyPurchaseBadgeSummaries(rows.map(row => row.profile.accountId));
+  return { people: await Promise.all(rows.map(r => person(id, r.profile, undefined, false,
+    badges.get(r.profile.accountId) ?? null))), total: rows.length };
 }

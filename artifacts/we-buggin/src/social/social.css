@@ -31,9 +31,8 @@
 .sc-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 0; }
 .sc-tags i, .sc-chip { font-style: normal; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; border: 1px solid var(--bm-line); padding: 2px 8px; color: var(--bm-mute); }
 .sc-chip { margin-left: 8px; }
-.sc-badge { display: inline-grid; place-items: center; width: 22px; height: 22px; background: var(--bm-acc); color: #fff; }
-.sc-badge-night-owl { background: transparent; }
-.sc-badge-night-owl img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.sc-badge { display: inline-grid; place-items: center; flex: 0 0 auto; background: transparent; color: #fff; vertical-align: middle; }
+.sc-badge img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .sc-badge-line { display: flex; align-items: center; gap: 8px; }
 .sc-badge-line small { color: var(--bm-mute); }
 .sc-pager { display: flex; gap: 10px; justify-content: center; margin-top: 8px; }
@@ -46,7 +45,8 @@
 .sc-gift { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 14px 10px; background: transparent; border: 1.5px solid #444; color: var(--bm-ink); font-size: 13px; }
 .sc-gift b { font-family: var(--bm-display); font-size: 20px; text-transform: uppercase; }
 .sc-store .sc-badge-art-slot { display: flex; align-items: center; justify-content: center; width: 80px; height: 80px; font-size: 11px; color: #fff; }
-.sc-store .sc-badge-art { display: block; width: 80px; height: 80px; object-fit: contain; }
+.sc-store .sc-badge-art { display: block; width: 100%; height: 100%; object-fit: contain; }
+.sc-tier-active { color: #a6ff00; font-weight: 800; }
 .sc-gift:hover:not(:disabled) { border-color: var(--bm-ink); }
 .sc-gift.is-on { border-color: var(--bm-acc); box-shadow: inset 0 0 0 1px var(--bm-acc); color: #8da1ff; }
 .sc-gift:disabled { opacity: .4; cursor: not-allowed; }

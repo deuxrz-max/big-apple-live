@@ -989,7 +989,9 @@
                 "type": "null"
               }
             ]
-          }
+          },
+          "badgeName": {"type": ["string", "null"]},
+          "badgeImage": {"type": ["string", "null"]}
           ,"passport": {"$ref": "#/components/schemas/StreamerPassportBadgeSummary"}
         },
         "required": [
@@ -1002,7 +1004,9 @@
           "favorite",
           "blocked",
           "receivedCredits",
-          "badgeId"
+          "badgeId",
+          "badgeName",
+          "badgeImage"
         ]
       },
       "SocialProfileInput": {
@@ -1101,6 +1105,7 @@
           "name": {
             "type": "string"
           },
+          "badgeImage": {"type": "string"},
           "description": {
             "type": "string"
           },
@@ -1111,6 +1116,7 @@
         "required": [
           "id",
           "name",
+          "badgeImage",
           "description",
           "cost"
         ]
@@ -1254,11 +1260,17 @@
           "recipientName": {"type": "string"},
           "senderNameColor": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
           "recipientNameColor": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+          "senderBadgeId": {"type": ["string", "null"]},
+          "recipientBadgeId": {"type": ["string", "null"]},
+          "senderBadgeName": {"type": ["string", "null"]},
+          "recipientBadgeName": {"type": ["string", "null"]},
+          "senderBadgeImage": {"type": ["string", "null"]},
+          "recipientBadgeImage": {"type": ["string", "null"]},
           "senderPassport": {"$ref": "#/components/schemas/StreamerPassportBadgeSummary"},
           "recipientPassport": {"$ref": "#/components/schemas/StreamerPassportBadgeSummary"},
           "createdAt": {"type": "string", "format": "date-time"}
         },
-        "required": ["id", "giftId", "senderUsername", "recipientUsername", "senderName", "recipientName", "createdAt"]
+        "required": ["id", "giftId", "senderUsername", "recipientUsername", "senderName", "recipientName", "senderBadgeId", "recipientBadgeId", "senderBadgeName", "recipientBadgeName", "senderBadgeImage", "recipientBadgeImage", "createdAt"]
       },
       "SocialGiftInput": {
         "type": "object",
@@ -1459,6 +1471,9 @@
                   "type": "string",
                   "pattern": "^#[0-9A-Fa-f]{6}$"
                 },
+                "badgeId": {"type": ["string", "null"]},
+                "badgeName": {"type": ["string", "null"]},
+                "badgeImage": {"type": ["string", "null"]},
                 "photoUrl": {
                   "type": ["string", "null"]
                 },
@@ -1489,6 +1504,9 @@
               "required": [
                 "username",
                 "displayName",
+                "badgeId",
+                "badgeName",
+                "badgeImage",
                 "photoUrl",
                 "lastMessageFromMe",
                 "lastUnreadAt",

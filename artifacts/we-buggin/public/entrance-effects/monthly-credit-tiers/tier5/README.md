@@ -1,0 +1,1 @@
+Place this tier's entrance effect here as `entrance.json` (Lottie), `entrance.webm`, `entrance.mp4`, `entrance.gif`, `entrance.webp`, or `entrance.apng`. The app uses the first supported file it finds; otherwise it shows a short badge placeholder.

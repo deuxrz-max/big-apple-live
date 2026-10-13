@@ -25,15 +25,19 @@ export function GiftIcon({ id, size = 22 }: { id: string; size?: number }) {
   const I = id.toLowerCase().includes('coin') ? Coins : iconFor(id + 'g') ?? Gift;
   return <I size={size} aria-hidden />;
 }
-export function BadgeMark({ id, label, size = 14, compact = false }: { id: string | null; label?: string; size?: number; compact?: boolean }) {
+export function BadgeMark({ id, label, imageUrl, size = 14, compact = false }: {
+  id: string | null; label?: string | null; imageUrl?: string | null; size?: number; compact?: boolean;
+}) {
   if (!id) return null;
-  const I = iconFor(id);
-  const nightOwl = id === 'night-owl';
-  return <span className={`sc-badge${compact ? ' sc-badge-compact' : ''}${nightOwl ? ' sc-badge-night-owl' : ''}`} title={label ?? 'Cosmetic badge'}>
-    {nightOwl
-      ? <img src={`${import.meta.env.BASE_URL}badges/night-owl-mark.png`} width={size} height={size} alt="" aria-hidden="true" />
-      : <I size={size} aria-hidden />}
-    <span className="sc-sr">{label ?? 'Badge'}</span>
+  const tier = /^monthly-tier-([1-5])$/.exec(id)?.[1];
+  if (!tier) return null;
+  const badgeName = label ?? `Monthly purchase tier ${tier}`;
+  return <span className={`sc-badge${compact ? ' sc-badge-compact' : ''}`} title={badgeName}
+    style={{ width: size, height: size }} data-badge-tier={tier}>
+    <img src={imageUrl ? `${import.meta.env.BASE_URL}${imageUrl.replace(/^\/+/, '')}`
+      : `${import.meta.env.BASE_URL}badges/monthly-credit-tiers/tier${tier}${['2', '3', '4'].includes(tier) ? '.png' : '.svg'}`}
+      width={size} height={size} alt="" aria-hidden="true" />
+    <span className="sc-sr">{badgeName}</span>
   </span>;
 }
 
@@ -61,7 +65,9 @@ export function PersonCard({ p, extra }: { p: SocialPerson; extra?: ReactNode })
       <Link href={`/community/people/${p.username}`} className="sc-card-main">
         <Avatar p={p} size={64} />
         <span className="sc-card-text">
-          <span className="sc-name" style={{ color: p.displayNameColor ?? '#FFFFFF' }}>{(p as PhotoPerson).displayName || p.username}<BadgeMark id={p.badgeId} /></span>
+          <span className="sc-name" style={{ color: p.displayNameColor ?? '#FFFFFF' }}>
+            <BadgeMark id={p.badgeId} label={p.badgeName} imageUrl={p.badgeImage} size={18} compact />{(p as PhotoPerson).displayName || p.username}
+          </span>
           <span className="sc-sub">@{p.username}{p.country ? ` / ${p.country}` : ''}</span>
           {p.bio && <span className="sc-bio">{p.bio}</span>}
           {p.interests.length > 0 && <span className="sc-tags">{p.interests.slice(0, 4).map((i) => <i key={i}>{i}</i>)}</span>}

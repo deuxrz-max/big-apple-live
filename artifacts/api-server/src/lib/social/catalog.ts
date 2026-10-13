@@ -1,15 +1,17 @@
-import { MARATHON, NIGHT_OWL } from './marathon-policy';
 import { HEART } from './heart-policy';
 import { MOONFOX } from './moonfox-policy';
 import { SPIRIT_PUP } from './spirit-pup-policy';
 import { COSMIC_ENCORE } from './cosmic-encore-policy';
+import { MONTHLY_CREDIT_BADGE_TIERS } from './monthly-credit-badge-config';
 
 export const DAILY_REWARD = 25;
-export const PRODUCTS = [
-  { id: "good-neighbor", name: "Peak Presenter", description: "A cosmetic badge for your social profile. No verification claims or cash value.", cost: 40 },
-  { id: NIGHT_OWL.id, name: "Night Owl", description: "Log in 30 days in a row to earn it free for 30 days, or buy it for 1000 credits for 3 days.", cost: NIGHT_OWL.cost },
-  { id: MARATHON.id, name: "Marathon Master", description: "Log in 7 days in a row to earn it free for 1 week, or buy it for 200 credits for 3 days.", cost: MARATHON.cost },
-] as const;
+export const PRODUCTS = MONTHLY_CREDIT_BADGE_TIERS.map(tier => ({
+  id: tier.id,
+  name: tier.name,
+  badgeImage: tier.badgeImage,
+  description: `Complete ${tier.monthlyCredits.toLocaleString("en-US")} credits in confirmed credit purchases during one UTC calendar month. Active through the end of the following month.`,
+  cost: tier.monthlyCredits,
+}));
 export const GIFTS = [
   { id: "good-vibes", name: "Good vibes", cost: 5 },
   { id: "big-love", name: "Big love", cost: 10 },

@@ -4,6 +4,7 @@ import { requireAdult } from '../community';
 import { roomStore, RoomError } from '../room-store';
 import { giftNameColorsForAccounts } from './gift-name-color-data';
 import { passportBadgeSummaries } from './passport';
+import { monthlyPurchaseBadgeSummaries } from './monthly-credit-badges';
 
 export function validateGiftRoom(roomId: string, sessionId: string, senderId: string, recipientId: string) {
   if (!roomStore.isCommunity(roomId)) throw new RoomError(404, 'University not found');
@@ -28,6 +29,8 @@ export async function roomGiftEvents(id: string, roomId: string, sessionId: stri
     [row.senderId, row.recipientId].filter((accountId): accountId is string => !!accountId)));
   const passports = await passportBadgeSummaries(rows.flatMap(row =>
     [row.senderId, row.recipientId].filter((accountId): accountId is string => !!accountId)));
+  const badges = await monthlyPurchaseBadgeSummaries(rows.flatMap(row =>
+    [row.senderId, row.recipientId].filter((accountId): accountId is string => !!accountId)));
   const testIds = process.env.NODE_ENV === "production"
     ? new Set((await db.select({ id: accountProfiles.accountId }).from(accountProfiles)
       .where(eq(accountProfiles.isTestAccount, true))).map(row => row.id))
@@ -38,6 +41,12 @@ export async function roomGiftEvents(id: string, roomId: string, sessionId: stri
     senderName: r.senderName, recipientName: r.recipientName,
     senderNameColor: r.senderId ? nameColors.get(r.senderId) ?? "#FFFFFF" : "#FFFFFF",
     recipientNameColor: r.recipientId ? nameColors.get(r.recipientId) ?? "#FFFFFF" : "#FFFFFF",
+    senderBadgeId: r.senderId ? badges.get(r.senderId)?.tier.id ?? null : null,
+    recipientBadgeId: r.recipientId ? badges.get(r.recipientId)?.tier.id ?? null : null,
+    senderBadgeName: r.senderId ? badges.get(r.senderId)?.tier.name ?? null : null,
+    recipientBadgeName: r.recipientId ? badges.get(r.recipientId)?.tier.name ?? null : null,
+    senderBadgeImage: r.senderId ? badges.get(r.senderId)?.tier.badgeImage ?? null : null,
+    recipientBadgeImage: r.recipientId ? badges.get(r.recipientId)?.tier.badgeImage ?? null : null,
     senderPassport: r.senderId ? passports.get(r.senderId) : undefined,
     recipientPassport: r.recipientId ? passports.get(r.recipientId) : undefined,
     createdAt: r.createdAt.toISOString(),

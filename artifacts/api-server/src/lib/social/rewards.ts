@@ -1,10 +1,8 @@
-import { db, socialWallets, socialLedger, socialInventory, socialSettings, socialGiftEvents, socialGiftBag } from "@workspace/db";
+import { db, socialWallets, socialLedger, socialGiftEvents, socialGiftBag } from "@workspace/db";
 import { desc, eq, sql } from "drizzle-orm";
 import { RoomError, roomStore } from "../room-store";
-import { DAILY_REWARD, GIFTS, PRODUCTS } from "./catalog";
+import { DAILY_REWARD, GIFTS } from "./catalog";
 import { assertContact, lockAccounts, lockPair, replay, requireAccount, targetAccount, wallet } from "./core";
-import { grantTimedBadge } from './marathon';
-import { TIMED_BADGES, NIGHT_OWL } from './marathon-policy';
 import { SPIRIT_PUP, spiritSplit } from './spirit-pup-policy';
 import { isRoomGift } from './room-gift-policy';
 import { validateGiftRoom } from './room-gifts';
@@ -78,29 +76,10 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
   return result;
 }
 export async function purchase(id: string, itemId: string, key: string) {
-  const profile = await requireAccount(id);
-  const item = PRODUCTS.find(p => p.id === itemId);
-  if (!item) throw new RoomError(400, "Choose a product from the catalog");
-  return db.transaction(async tx => {
-    await lockAccounts(tx, [id]);
-    if (await replay(tx, id, key, `purchase:${itemId}`)) return wallet(id, tx, profile.username);
-    const owned = await tx.select().from(socialInventory).where(eq(socialInventory.accountId, id));
-    const timed = TIMED_BADGES.find(p => p.id === itemId);
-    const existing = owned.find(p => p.itemId === itemId);
-    if (itemId === NIGHT_OWL.id && existing && !existing.expiresAt)
-      throw new RoomError(409, "You already own Night Owl permanently. No renewal is needed.");
-    if (!timed && existing) throw new RoomError(409, "You already own this badge");
-    const unlimited = hasDevelopmentUnlimitedCredits(profile.username);
-    const spend = planCreditSpend((await wallet(id, tx, profile.username)).balance, item.cost, unlimited);
-    if (!spend.allowed) throw new RoomError(409, "Not enough credits to buy this badge");
-    if (spend.debit > 0)
-      await tx.update(socialWallets).set({ balance: sql`${socialWallets.balance} - ${spend.debit}` }).where(eq(socialWallets.accountId, id));
-    if (timed) await grantTimedBadge(tx, id, timed, timed.boughtDays, new Date());
-    else await tx.insert(socialInventory).values({ accountId: id, itemId });
-    await tx.update(socialSettings).set({ badgeId: itemId }).where(eq(socialSettings.accountId, id));
-    await tx.insert(socialLedger).values({ accountId: id, delta: -spend.debit, kind: "purchase", description: `${item.name} badge${unlimited ? " (development unlimited credits)" : ""}`, requestKey: key, refKey: `purchase:${itemId}` });
-    return wallet(id, tx, profile.username);
-  });
+  await requireAccount(id);
+  void itemId;
+  void key;
+  throw new RoomError(410, "Badge tiers now come only from confirmed credit purchases recorded for a calendar month; direct badge purchases are disabled.");
 }
 export async function ledger(id: string) {
   const rows = await db.select().from(socialLedger).where(eq(socialLedger.accountId, id)).orderBy(desc(socialLedger.createdAt), desc(socialLedger.id)).limit(100);
