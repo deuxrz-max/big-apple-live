@@ -3,6 +3,7 @@ import type { CommunityLiveStreamPolicy } from "./community-config";
 import { RoomError } from "./room-store";
 import {
   selectExactLiveYouTubeVideo,
+  youtubeRegionAllowsCountry,
   youtubeThumbnailAspectRatios,
   YOUTUBE_VIDEO_FILTER_VERSION,
   type YouTubeVideoCandidate,
@@ -157,6 +158,7 @@ export async function searchCnnLiveStream(
         videoId,
         durationMs: null,
         embeddable: status?.embeddable === true,
+        availableInUS: youtubeRegionAllowsCountry(contentDetails?.regionRestriction),
         ytRating: asText(rating?.ytRating),
         defaultLanguage: asText(snippet?.defaultLanguage),
         defaultAudioLanguage: asText(snippet?.defaultAudioLanguage),

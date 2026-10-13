@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   selectExactLiveYouTubeVideo,
   selectPlayableYouTubeVideos,
+  youtubeRegionAllowsCountry,
   youtubeThumbnailAspectRatios,
 } from "./youtube-video-selection";
 
@@ -101,6 +102,31 @@ test("Kids selection only accepts the approved family-channel list", () => {
     { videoId: "def12345678", durationMs: 240_000, embeddable: true },
   ], ["Super Simple Songs - Kids Songs", "PBS KIDS"]);
   assert.deepEqual(result.videos.map(video => video.videoId), ["abc12345678"]);
+});
+
+test("US region restrictions reject blocked and non-allowed videos", () => {
+  assert.equal(youtubeRegionAllowsCountry({ blocked: ["US", "CA"] }), false);
+  assert.equal(youtubeRegionAllowsCountry({ allowed: ["CA", "GB"] }), false);
+  assert.equal(youtubeRegionAllowsCountry({ allowed: ["US", "CA"] }), true);
+  assert.equal(youtubeRegionAllowsCountry({}), true);
+
+  const candidate = {
+    videoId: "dQw4w9WgXcQ",
+    title: "English landscape music performance",
+    channelTitle: "Channel",
+    description: null,
+    defaultLanguage: "en",
+    thumbnailAspectRatios: [16 / 9],
+  };
+  const screened = selectPlayableYouTubeVideos([candidate], [{
+    videoId: candidate.videoId,
+    durationMs: 240_000,
+    embeddable: true,
+    availableInUS: false,
+    defaultLanguage: "en",
+    thumbnailAspectRatios: [16 / 9],
+  }]);
+  assert.equal(screened.videos.length, 0);
 });
 
 test("all room selections reject known non-English, Shorts, and non-widescreen videos", () => {

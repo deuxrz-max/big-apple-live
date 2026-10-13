@@ -8,6 +8,7 @@ import { initializeModeratorBots, startModeratorBotChatter, startModeratorBotRot
 import { startTestActorControl } from "./lib/test-actor-control";
 import { startWebSeriesDailySelection } from "./routes/university-video-beam";
 import { sanitizeAllSavedCommunityVideoPools } from "./lib/room-video-rotation";
+import { startCommunityVideoPoolRefillScheduler } from "./lib/community-video-pool-refill";
 
 const rawPort = process.env["PORT"];
 
@@ -35,6 +36,7 @@ try {
   logger.error({ error }, "Saved community video pool screening failed; per-room screening remains enabled");
 }
 startWebSeriesDailySelection();
+startCommunityVideoPoolRefillScheduler(roomStore);
 await initializeModeratorBots();
 startModeratorBotRotation((err, context) => logger.error({ err, ...context }, "Bot rotation failed"));
 startModeratorBotChatter((err, context) => logger.error({ err, ...context }, "Bot chatter failed"));

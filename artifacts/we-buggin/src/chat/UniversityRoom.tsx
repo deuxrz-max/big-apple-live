@@ -332,7 +332,8 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                 )}
               </div>
               <BeamTv ref={beamTvRef} roomName={r.room?.name ?? 'University'}
-                tv={videoBeam.beam.tv} search={videoBeam.searchTv} />
+                tv={videoBeam.beam.tv} search={videoBeam.searchTv}
+                reportPlaybackFailure={videoBeam.reportTvPlaybackFailure} />
               {videoBeam.error && <p className="ur-beam-error" role="alert">{videoBeam.error}</p>}
               {videoBeam.beam.beamActive && !videoBeam.ownSlot && beamSlots.every(slot => slot.participantId)
                 && <p className="ur-beam-full" role="status">Beam is full. You can still watch and chat; an open spot can be joined as soon as someone leaves.</p>}

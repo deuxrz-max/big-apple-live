@@ -232,6 +232,46 @@ export class UniversityVideoBeamStore {
     return this.toState(beam);
   }
 
+  advanceAutomaticVideoAfterPlayerFailure(
+    roomId: string,
+    videos: UniversityVideoBeamTvVideoMetadata[],
+    durationMsByVideoId: Readonly<Record<string, number>>,
+    expectedFailedVideoId: string,
+    selectedVideoId: string | null,
+  ): UniversityVideoBeamState {
+    const beam = this.ensure(roomId);
+    const tv = beam.tv;
+    if (!this.isOwnerlessTopicRoom(beam.roomId) || !tv.enabled
+      || tv.currentVideoId !== expectedFailedVideoId) return this.toState(beam);
+
+    const validVideos = videos.filter(video => /^[A-Za-z0-9_-]{11}$/.test(video.videoId)).slice(0, 50);
+    const chosen = selectedVideoId ? validVideos.find(video => video.videoId === selectedVideoId) : undefined;
+    if (selectedVideoId && !chosen) return this.toState(beam);
+
+    tv.queue = chosen
+      ? [chosen.videoId, ...validVideos.filter(video => video.videoId !== chosen.videoId).map(video => video.videoId)]
+      : [];
+    tv.videoMetadata = validVideos.map(video => this.normalizeMetadata(video));
+    beam.videoDurationsMs.clear();
+    for (const [videoId, durationMs] of Object.entries(durationMsByVideoId)) {
+      if (validVideos.some(video => video.videoId === videoId) && Number.isFinite(durationMs) && durationMs > 0) {
+        beam.videoDurationsMs.set(videoId, durationMs);
+      }
+    }
+    tv.currentVideoId = chosen?.videoId ?? null;
+    tv.startedAtMs = chosen ? this.now() : null;
+    tv.breakEndsAtMs = null;
+    tv.seriesTitle = null;
+    tv.seriesDate = null;
+    tv.seriesEpisodeNumber = null;
+    tv.skipSequence += 1;
+    beam.skipVotes.clear();
+    if (chosen) {
+      this.automaticVideoStartListener?.(beam.roomId, chosen.videoId, tv.videoMetadata[0]);
+    }
+    return this.toState(beam);
+  }
+
   advanceAutomaticDefaultTvVideo(
     roomId: string,
     videos: UniversityVideoBeamTvVideoMetadata[],

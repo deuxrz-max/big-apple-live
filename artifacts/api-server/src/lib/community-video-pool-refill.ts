@@ -1,0 +1,87 @@
+import {
+  COMMUNITY_ROOMS,
+  communityLiveStreamPolicy,
+  isCommunityDailyWebSeriesRoom,
+} from "./community-config";
+import { logger } from "./logger";
+import { roomStore, type RoomStore } from "./room-store";
+import {
+  canSpendGeneralYouTubeUnits,
+  getCommunityVideoPoolStats,
+  refreshCommunityVideoPoolIncrementally,
+} from "./room-video-rotation";
+
+const REFILL_INTERVAL_MS = 15 * 60_000;
+const FIRST_REFILL_DELAY_MS = 30_000;
+const REFILL_TARGET_SIZE = 50;
+const REFRESH_AFTER_MS = 6 * 60 * 60_000;
+
+let nextRoomIndex = 0;
+let refillInFlight = false;
+
+/** One bounded, server-side batch. Music is first; later calls rotate fairly. */
+export async function refillNextCommunityVideoPoolOnce(
+  rooms: RoomStore = roomStore,
+): Promise<{ roomId: string; count: number } | null> {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Community video pool refills are preview-only.");
+  }
+  const apiKey = process.env.YOUTUBE_API_KEY?.trim() ?? "";
+  if (!apiKey || !(await canSpendGeneralYouTubeUnits(102))) return null;
+
+  const orderedRooms = COMMUNITY_ROOMS
+    .filter(room => !room.liveStreamPolicy && !room.dailyWebSeries
+      && !communityLiveStreamPolicy(room.roomId, rooms)
+      && !isCommunityDailyWebSeriesRoom(room.roomId, rooms))
+    .sort((left, right) => {
+      if (left.roomId === "MUSIC1") return -1;
+      if (right.roomId === "MUSIC1") return 1;
+      return 0;
+    });
+  if (!orderedRooms.length) return null;
+
+  const stats = await getCommunityVideoPoolStats();
+  const byRoom = new Map(stats.map(item => [item.roomId.toUpperCase(), item]));
+  const now = Date.now();
+  for (let offset = 0; offset < orderedRooms.length; offset += 1) {
+    const index = (nextRoomIndex + offset) % orderedRooms.length;
+    const room = orderedRooms[index]!;
+    const stat = byRoom.get(room.roomId.toUpperCase());
+    const stale = stat?.refreshedAtMs === null || stat?.refreshedAtMs === undefined
+      || now - stat.refreshedAtMs >= REFRESH_AFTER_MS;
+    if ((stat?.count ?? 0) >= REFILL_TARGET_SIZE && !stale) continue;
+
+    nextRoomIndex = (index + 1) % orderedRooms.length;
+    const count = await refreshCommunityVideoPoolIncrementally(room.roomId, apiKey, rooms);
+    logger.info({ roomId: room.roomId, savedPlayableVideoCount: count },
+      "Refreshed one bounded room video-pool batch");
+    return { roomId: room.roomId, count };
+  }
+  return null;
+}
+
+export function startCommunityVideoPoolRefillScheduler(rooms: RoomStore = roomStore): void {
+  if (process.env.NODE_ENV === "production") {
+    logger.info("Preview-only room video pool refills are disabled in production");
+    return;
+  }
+  let stopped = false;
+  const tick = async () => {
+    if (stopped || refillInFlight) return;
+    refillInFlight = true;
+    try {
+      await refillNextCommunityVideoPoolOnce(rooms);
+    } catch (error) {
+      logger.warn({ error }, "Incremental community video pool refill failed; saved pools remain available");
+    } finally {
+      refillInFlight = false;
+    }
+  };
+  const initial = setTimeout(() => {
+    void tick();
+    const interval = setInterval(() => void tick(), REFILL_INTERVAL_MS);
+    interval.unref();
+  }, FIRST_REFILL_DELAY_MS);
+  initial.unref();
+  logger.info({ intervalMs: REFILL_INTERVAL_MS }, "Started preview-only paced community video pool refills");
+}

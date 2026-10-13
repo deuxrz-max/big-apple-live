@@ -121,6 +121,22 @@ export function useUniversityVideoBeam(
     });
   }, [headers]);
 
+  const reportTvPlaybackFailure = useCallback(async (videoId: string, errorCode: number) => {
+    const args = latest.current;
+    const response = await fetch(
+      `/api/account/rooms/${encodeURIComponent(args.roomId)}/video-beam/tv/playback-failed`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: { ...headers(args.roomSessionId), "Content-Type": "application/json" },
+        body: JSON.stringify({ videoId, errorCode }),
+      },
+    );
+    if (!response.ok) return;
+    const nextTv = await response.json() as UniversityVideoBeamState["tv"];
+    applyBeam({ ...beamRef.current, tv: nextTv });
+  }, [applyBeam, headers]);
+
   const clearRoom = useCallback((stopLocal: boolean) => {
     const room = roomRef.current;
     roomRef.current = null;
@@ -553,6 +569,7 @@ export function useUniversityVideoBeam(
     hostDisableCamera,
     kick,
     searchTv,
+    reportTvPlaybackFailure,
     resumePlayback,
     refresh,
   };

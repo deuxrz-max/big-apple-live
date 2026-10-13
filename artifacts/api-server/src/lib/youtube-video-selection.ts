@@ -16,6 +16,7 @@ export type YouTubeVideoEligibility = {
   videoId: string;
   durationMs: number | null;
   embeddable: boolean;
+  availableInUS?: boolean;
   ytRating?: string | null;
   defaultLanguage?: string | null;
   defaultAudioLanguage?: string | null;
@@ -45,6 +46,20 @@ export function youtubeThumbnailAspectRatios(value: unknown): number[] {
   });
 }
 
+export function youtubeRegionAllowsCountry(regionRestriction: unknown, countryCode = "US"): boolean {
+  if (typeof regionRestriction !== "object" || regionRestriction === null) return true;
+  const restriction = regionRestriction as { allowed?: unknown; blocked?: unknown };
+  const country = countryCode.toUpperCase();
+  if (Array.isArray(restriction.blocked)
+    && restriction.blocked.some(item => typeof item === "string" && item.toUpperCase() === country)) {
+    return false;
+  }
+  if (Array.isArray(restriction.allowed)) {
+    return restriction.allowed.some(item => typeof item === "string" && item.toUpperCase() === country);
+  }
+  return true;
+}
+
 function isEnglishLanguage(value: string): boolean {
   const normalized = value.trim().toLocaleLowerCase("en-US");
   return normalized === "english" || normalized === "eng" || normalized.split(/[-_]/)[0] === "en";
@@ -63,6 +78,7 @@ export type YouTubeVideoSafetyReasons = {
   nonEnglish: boolean;
   nonWidescreen: boolean;
   notEmbeddable: boolean;
+  notAvailableInUS: boolean;
   ageRestricted: boolean;
 };
 
@@ -112,6 +128,7 @@ export function youtubeVideoSafetyReasons(
       || CLEAR_NON_ENGLISH_LATIN.test(candidate.title),
     nonWidescreen,
     notEmbeddable: details?.embeddable !== true,
+    notAvailableInUS: details?.availableInUS === false,
     ageRestricted: details?.ytRating === "ytAgeRestricted",
   };
 }
@@ -151,7 +168,7 @@ export function selectExactLiveYouTubeVideo(
   if (!candidate || !Number.isFinite(options.segmentDurationMs) || options.segmentDurationMs <= 0) return null;
 
   const details = eligibilityById.get(candidate.videoId);
-  if (!details?.embeddable || details.ytRating === "ytAgeRestricted"
+  if (!details?.embeddable || details.availableInUS === false || details.ytRating === "ytAgeRestricted"
     || !passesEnglishAndWidescreen(candidate, details)) return null;
 
   return {
@@ -186,7 +203,8 @@ export function selectPlayableYouTubeVideos(
     if (!details || typeof details.durationMs !== "number") return false;
     const reasons = youtubeVideoSafetyReasons(candidate, details);
     if (reasons.shortsMarker || reasons.underThreeMinutes || reasons.nonEnglish
-      || reasons.nonWidescreen || reasons.notEmbeddable || reasons.ageRestricted) return false;
+      || reasons.nonWidescreen || reasons.notEmbeddable || reasons.notAvailableInUS
+      || reasons.ageRestricted) return false;
     durationMsByVideoId[candidate.videoId] = details.durationMs;
     return true;
   }).slice(0, Math.max(0, Math.min(300, resultLimit)));

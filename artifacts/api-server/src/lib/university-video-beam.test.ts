@@ -78,6 +78,29 @@ test("public topic playback waits for the durable rotation choice after the brea
   assert.equal(state.tv.breakEndsAtMs, null);
 });
 
+test("an official player failure immediately advances the ownerless topic room", () => {
+  let now = 1_000;
+  const rooms = new RoomStore(() => now);
+  createRoom(rooms);
+  const beam = new UniversityVideoBeamStore(rooms, () => now);
+  const defaultSearch = communityDefaultVideoSearch("MUSIC1", rooms)!;
+  const failed = { videoId: "aaa11111111", title: "Unavailable", channelTitle: "Music", description: null };
+  const next = { videoId: "bbb22222222", title: "Playable next", channelTitle: "Music", description: null };
+  beam.initializeDefaultTvQueue("MUSIC1", defaultSearch, [failed, next], {
+    [failed.videoId]: 1_000,
+    [next.videoId]: 2_000,
+  });
+  now += 1_000;
+
+  const state = beam.advanceAutomaticVideoAfterPlayerFailure(
+    "MUSIC1", [next], { [next.videoId]: 2_000 }, failed.videoId, next.videoId,
+  );
+  assert.equal(state.tv.currentVideoId, next.videoId);
+  assert.equal(state.tv.startedAtMs, now);
+  assert.equal(state.tv.breakEndsAtMs, null);
+  assert.deepEqual(state.tv.queue, [next.videoId]);
+});
+
 test("default Beam TV queue clips long YouTube descriptions before exposing state", () => {
   const rooms = new RoomStore();
   createRoom(rooms);

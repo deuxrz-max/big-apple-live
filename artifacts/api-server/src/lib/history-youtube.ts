@@ -5,6 +5,7 @@ import type { CommunityOfficialChannelSearchPolicy } from "./community-config";
 import { RoomError } from "./room-store";
 import {
   selectPlayableYouTubeVideos,
+  youtubeRegionAllowsCountry,
   youtubeThumbnailAspectRatios,
   YOUTUBE_VIDEO_FILTER_VERSION,
   type YouTubeVideoCandidate,
@@ -148,6 +149,7 @@ async function uncachedSearch(apiKey: string, policy: CommunityOfficialChannelSe
       videoId,
       durationMs: durationMs(content?.duration),
       embeddable: status?.embeddable === true,
+      availableInUS: youtubeRegionAllowsCountry(content?.regionRestriction),
       ytRating: text(rating?.ytRating),
       defaultLanguage: text(snippet?.defaultLanguage),
       defaultAudioLanguage: text(snippet?.defaultAudioLanguage),

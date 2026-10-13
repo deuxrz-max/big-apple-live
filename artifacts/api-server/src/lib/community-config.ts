@@ -31,6 +31,12 @@ export type CommunityOfficialChannelSearchPolicy = {
   cacheTtlMs: number;
 };
 
+export type CommunityVideoUploadChannel = {
+  channelHandle: string;
+  channelTitle: string;
+  titleTerms: readonly string[];
+};
+
 type CommunityRoomConfig = {
   roomId: string;
   label: string;
@@ -40,6 +46,7 @@ type CommunityRoomConfig = {
   liveStreamPolicy?: CommunityLiveStreamPolicy;
   wrestlingSearchPolicy?: CommunityWrestlingSearchPolicy;
   officialChannelSearchPolicy?: CommunityOfficialChannelSearchPolicy;
+  videoUploadChannels?: readonly CommunityVideoUploadChannel[];
   dailyWebSeries?: boolean;
 };
 
@@ -53,6 +60,11 @@ export const COMMUNITY_ROOMS: CommunityRoomConfig[] = [
       "new song official music video live performance English",
       "full live concert performance popular artists English",
       "popular music festival full performance English",
+    ],
+    videoUploadChannels: [
+      { channelHandle: "@nprmusic", channelTitle: "NPR Music", titleTerms: ["tiny desk", "live", "concert", "performance"] },
+      { channelHandle: "@kexp", channelTitle: "KEXP", titleTerms: ["live", "session", "performance", "concert"] },
+      { channelHandle: "@COLORSxSTUDIOS", channelTitle: "COLORS", titleTerms: ["live", "performance", "session"] },
     ],
     videoSearchPolicy: { order: "viewCount", publishedWithinDays: 90 },
   },
@@ -396,6 +408,17 @@ export function communityOfficialChannelSearchPolicy(
   const room = COMMUNITY_ROOMS.find(item => item.roomId === parentRoomId)
     ?? COMMUNITY_ROOMS.find(item => item.roomId === normalizedId);
   return room?.officialChannelSearchPolicy ? { ...room.officialChannelSearchPolicy } : null;
+}
+
+export function communityVideoUploadChannels(
+  roomId: string,
+  store?: CommunityParentLookup,
+): CommunityVideoUploadChannel[] {
+  const normalizedId = roomId.toUpperCase();
+  const parentRoomId = store?.communityParentId(normalizedId)?.toUpperCase() ?? normalizedId;
+  const room = COMMUNITY_ROOMS.find(item => item.roomId === parentRoomId)
+    ?? COMMUNITY_ROOMS.find(item => item.roomId === normalizedId);
+  return room?.videoUploadChannels?.map(channel => ({ ...channel, titleTerms: [...channel.titleTerms] })) ?? [];
 }
 
 export function isCommunityDailyWebSeriesRoom(

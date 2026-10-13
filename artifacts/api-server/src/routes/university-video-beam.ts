@@ -22,17 +22,20 @@ import { liveKitBeamService, publicLiveKitFailure } from "../lib/livekit";
 import {
   communityDefaultVideoSearch,
   isCommunityDailyWebSeriesRoom,
+  isPublicTopicRoom,
   communityLiveStreamPolicy,
   communityVideoSearchPolicy,
 } from "../lib/community-config";
 import {
   selectPlayableYouTubeVideos,
+  youtubeRegionAllowsCountry,
   youtubeThumbnailAspectRatios,
   YOUTUBE_VIDEO_FILTER_VERSION,
 } from "../lib/youtube-video-selection";
 import { resolveYouTubeChannelId, searchCnnLiveStream } from "../lib/cnn-live-news";
 import {
   getNextCommunityVideoSelection,
+  markCommunityVideoBad,
   recordCommunityVideoPlayed,
   reserveYouTubeApiUnits,
 } from "../lib/room-video-rotation";
@@ -225,7 +228,11 @@ async function searchYouTube(
           defaultLanguage?: unknown; defaultAudioLanguage?: unknown;
           thumbnails?: unknown; description?: unknown; tags?: unknown;
         };
-        contentDetails?: { duration?: unknown; contentRating?: { ytRating?: unknown } };
+        contentDetails?: {
+          duration?: unknown;
+          contentRating?: { ytRating?: unknown };
+          regionRestriction?: unknown;
+        };
         status?: { embeddable?: unknown };
       };
       if (typeof record.id !== "string") return [];
@@ -233,6 +240,7 @@ async function searchYouTube(
         videoId: record.id,
         durationMs: parseYouTubeDurationMs(record.contentDetails?.duration),
         embeddable: record.status?.embeddable === true,
+        availableInUS: youtubeRegionAllowsCountry(record.contentDetails?.regionRestriction),
         ytRating: typeof record.contentDetails?.contentRating?.ytRating === "string"
           ? record.contentDetails.contentRating.ytRating : null,
         defaultLanguage: typeof record.snippet?.defaultLanguage === "string"
@@ -327,13 +335,13 @@ async function searchDefaultCommunityVideos(roomId: string, apiKey: string) {
       apiKey,
       livePolicy.channelHandle,
       livePolicy.channelTitle,
-      units => reserveYouTubeApiUnits(roomId, units, 8_000),
+      units => reserveYouTubeApiUnits(roomId, units),
     );
     const liveVideo = await searchCnnLiveStream(
       apiKey,
       channelId,
       livePolicy,
-      units => reserveYouTubeApiUnits(roomId, units, 8_000),
+      units => reserveYouTubeApiUnits(roomId, units),
     );
     if (liveVideo) {
       return {
@@ -864,6 +872,58 @@ router.get("/account/rooms/:roomId/video-beam/tv", async (req, res) => {
   const state = await reconcileState(req.params.roomId, id);
   res.set("Cache-Control", "no-store")
     .json(GetUniversityVideoBeamTvStateResponse.parse(state.tv));
+});
+
+router.post("/account/rooms/:roomId/video-beam/tv/playback-failed", async (req, res): Promise<void> => {
+  sameOrigin(req);
+  const id = accountId(req);
+  const { participant } = requireMember(req, req.params.roomId, id);
+  const body = req.body as { videoId?: unknown; errorCode?: unknown } | null;
+  if (!body || typeof body.videoId !== "string" || !/^[A-Za-z0-9_-]{11}$/.test(body.videoId)
+    || ![2, 5, 100, 101, 150].includes(Number(body.errorCode))) {
+    throw new RoomError(400, "The player error could not be checked.");
+  }
+
+  const roomId = req.params.roomId;
+  if (!isPublicTopicRoom(roomId, roomStore)) {
+    throw new RoomError(403, "Automatic Beam TV recovery is only available in public topic rooms.");
+  }
+  const before = (await reconcileState(roomId, id)).tv;
+  if (before.currentVideoId !== body.videoId) {
+    res.set("Cache-Control", "no-store").json(PerformUniversityVideoBeamTvActionResponse.parse(before));
+    return;
+  }
+
+  await markCommunityVideoBad(roomId, body.videoId);
+  const selection = await getNextCommunityVideoSelection(
+    roomId, process.env.YOUTUBE_API_KEY?.trim() ?? "", roomStore,
+  );
+  const state = universityVideoBeamStore.advanceAutomaticVideoAfterPlayerFailure(
+    roomId,
+    selection.queue,
+    selection.durationMsByVideoId,
+    body.videoId,
+    selection.selected?.videoId ?? null,
+  );
+  if (state.tv.currentVideoId) {
+    await recordCommunityVideoPlayed(roomId, state.tv.currentVideoId);
+    scheduleBeamTvVideoStart(
+      roomId,
+      state.tv.currentVideoId,
+      state.tv.videoMetadata.find(video => video.videoId === state.tv.currentVideoId),
+    );
+  }
+  const identities = await refreshParticipantSnapshot(universityVideoBeamStore.getRoomName(roomId));
+  const synchronized = await synchronizeSpeakerMediaPermissions(roomId, state, identities, id);
+  schedulePublicPlaybackTransition(roomId);
+  req.log.warn({
+    roomId,
+    videoId: body.videoId,
+    errorCode: Number(body.errorCode),
+    nextVideoId: synchronized.tv.currentVideoId,
+  }, "Beam TV skipped a video that failed in the official YouTube player");
+  res.set("Cache-Control", "no-store")
+    .json(PerformUniversityVideoBeamTvActionResponse.parse(synchronized.tv));
 });
 
 router.post("/account/rooms/:roomId/video-beam/tv", async (req, res): Promise<void> => {

@@ -12,6 +12,7 @@ export type CommunityVideoPoolItem = {
   defaultAudioLanguage?: string | null;
   thumbnailAspectRatios?: number[];
   embeddable?: boolean;
+  availableInUS?: boolean;
   ageRestricted?: boolean;
 };
 
@@ -28,6 +29,7 @@ export type CommunityWebSeriesEpisode = {
   defaultAudioLanguage?: string | null;
   thumbnailAspectRatios?: number[];
   embeddable?: boolean;
+  availableInUS?: boolean;
   ageRestricted?: boolean;
   safetyFilterVersion?: string;
 };

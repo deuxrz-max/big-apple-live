@@ -13,19 +13,28 @@ import {
   getNextCommunityVideoSelection,
   recordCommunityVideoPlayed,
   screenCommunityVideoPoolItems,
+  youtubeQuotaDateKey,
 } from "./room-video-rotation";
 
-const item = (videoId: string): CommunityVideoPoolItem => ({
+const item = (videoId: string): CommunityVideoPoolItem & { availableInUS: boolean } => ({
   videoId,
   title: `Test title ${videoId}`,
   channelTitle: "Test channel",
   description: null,
   durationMs: 5 * 60_000,
   discoveredAtMs: Date.now(),
+  availableInUS: true,
   defaultLanguage: "en",
   defaultAudioLanguage: "en",
   thumbnailAspectRatios: [16 / 9],
   embeddable: true,
+});
+
+test("YouTube quota date rolls over at midnight Pacific, including daylight time", () => {
+  assert.equal(youtubeQuotaDateKey(new Date("2026-10-14T06:59:59.000Z")), "2026-10-13");
+  assert.equal(youtubeQuotaDateKey(new Date("2026-10-14T07:00:00.000Z")), "2026-10-14");
+  assert.equal(youtubeQuotaDateKey(new Date("2026-01-14T07:59:59.000Z")), "2026-01-13");
+  assert.equal(youtubeQuotaDateKey(new Date("2026-01-14T08:00:00.000Z")), "2026-01-14");
 });
 
 test("room rotation avoids recently played items, then permits a repeat after the pool is exhausted", () => {

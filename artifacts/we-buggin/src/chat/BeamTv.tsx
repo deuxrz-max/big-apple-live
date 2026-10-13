@@ -102,12 +102,14 @@ type BeamTvProps = {
   roomName: string;
   tv: UniversityVideoBeamTvState;
   search: (query: string) => Promise<UniversityVideoBeamTvSearchResponse>;
+  reportPlaybackFailure: (videoId: string, errorCode: number) => Promise<void>;
 };
 
 export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
   roomName,
   tv,
   search,
+  reportPlaybackFailure,
 }, ref) {
   const playerHost = useRef<HTMLDivElement>(null);
   const player = useRef<YtPlayer | null>(null);
@@ -120,6 +122,7 @@ export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
   const [playerReady, setPlayerReady] = useState(false);
   const [searchUnavailable, setSearchUnavailable] = useState(false);
   const [playerUnavailable, setPlayerUnavailable] = useState(false);
+  const reportedFailureVideoId = useRef<string | null>(null);
   const [soundHintDismissed, setSoundHintDismissed] = useState(false);
   const [now, setNow] = useState(Date.now());
   tvRef.current = tv;
@@ -291,8 +294,15 @@ export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
             if (soundUnlockedRef.current || roomGestureSeenRef.current) requestSound(event.target);
             setPlayerReady(true);
           },
-          onError: () => {
-            if (active) setPlayerUnavailable(true);
+          onError: event => {
+            if (active) {
+              setPlayerUnavailable(true);
+              const failedVideoId = tvRef.current.currentVideoId;
+              if (failedVideoId && reportedFailureVideoId.current !== failedVideoId) {
+                reportedFailureVideoId.current = failedVideoId;
+                void reportPlaybackFailure(failedVideoId, Number(event.data)).catch(() => undefined);
+              }
+            }
           },
         },
       });
@@ -338,7 +348,7 @@ export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
       }
     }, 4_000);
     return () => window.clearInterval(interval);
-  }, [playerReady, requestSound]);
+  }, [playerReady, requestSound, reportPlaybackFailure]);
 
   const hasPlayableVideo = videoIsPlaying && !searchUnavailable && !playerUnavailable;
   return (

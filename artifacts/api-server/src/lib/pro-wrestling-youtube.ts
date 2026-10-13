@@ -5,6 +5,7 @@ import type { CommunityWrestlingSearchPolicy } from "./community-config";
 import { RoomError } from "./room-store";
 import {
   selectPlayableYouTubeVideos,
+  youtubeRegionAllowsCountry,
   youtubeThumbnailAspectRatios,
   YOUTUBE_VIDEO_FILTER_VERSION,
   type YouTubeVideoCandidate,
@@ -149,6 +150,7 @@ async function uncachedSearch(apiKey: string, policy: CommunityWrestlingSearchPo
       videoId,
       durationMs: parseDurationMs(contentDetails?.duration),
       embeddable: status?.embeddable === true,
+      availableInUS: youtubeRegionAllowsCountry(contentDetails?.regionRestriction),
       ytRating: text(rating?.ytRating),
       defaultLanguage: text(snippet?.defaultLanguage),
       defaultAudioLanguage: text(snippet?.defaultAudioLanguage),

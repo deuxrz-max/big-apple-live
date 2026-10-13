@@ -9,6 +9,7 @@ import {
 } from "./room-video-rotation";
 import {
   selectPlayableYouTubeVideos,
+  youtubeRegionAllowsCountry,
   youtubeThumbnailAspectRatios,
   YOUTUBE_VIDEO_FILTER_VERSION,
   type YouTubeVideoCandidate,
@@ -219,6 +220,7 @@ function parseVideoEligibility(payload: unknown): {
       videoId,
       durationMs: durationMs(contentDetails?.duration),
       embeddable: status?.embeddable === true,
+      availableInUS: youtubeRegionAllowsCountry(contentDetails?.regionRestriction),
       ytRating: text(contentRating?.ytRating),
       defaultLanguage: text(snippet?.defaultLanguage),
       defaultAudioLanguage: text(snippet?.defaultAudioLanguage),
@@ -331,7 +333,7 @@ async function youtubeJson(
     WEB_SERIES_ROOM_ID,
     units,
     WEB_SERIES_DAILY_API_BUDGET,
-    9_500,
+    8_000,
   );
   if (!reserved) throw new Error("The reserved daily YouTube lookup budget is not available.");
   params.set("key", apiKey);
