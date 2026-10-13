@@ -4,7 +4,9 @@ import {
   chooseAccountEntranceEffect,
   hasOwnerTierTestAccess,
   isOwnerAccount,
+  isTierEntranceEffectEnabled,
 } from "./owner-entrance-effects-policy";
+import { MONTHLY_CREDIT_BADGE_TIERS } from "./monthly-credit-badge-config";
 
 test("only the non-test Vampsquad account receives preview badge test access", () => {
   assert.equal(isOwnerAccount({ username: "VAMPSQUAD", isTestAccount: false }), true);
@@ -14,7 +16,24 @@ test("only the non-test Vampsquad account receives preview badge test access", (
   assert.equal(hasOwnerTierTestAccess({ username: "another_user", isTestAccount: false }, "development"), false);
 });
 
+test("owner tier effect switches default to on but honor an explicit off", () => {
+  assert.equal(isTierEntranceEffectEnabled(undefined, "monthly-tier-4"), true);
+  assert.equal(isTierEntranceEffectEnabled({}, "monthly-tier-4"), true);
+  assert.equal(isTierEntranceEffectEnabled({ "monthly-tier-4": true }, "monthly-tier-4"), true);
+  assert.equal(isTierEntranceEffectEnabled({ "monthly-tier-4": false }, "monthly-tier-4"), false);
+});
+
 test("only the equipped owner badge's enabled entrance effect can play", () => {
+  const allEnabledTierIds = MONTHLY_CREDIT_BADGE_TIERS.map(tier => tier.id);
+  for (const tier of MONTHLY_CREDIT_BADGE_TIERS) {
+    assert.equal(chooseAccountEntranceEffect({
+      ownerPreview: true,
+      enabled: true,
+      equippedBadgeId: tier.id,
+      lionEnabled: true,
+      enabledTierIds: allEnabledTierIds,
+    }), tier.entranceEffectId);
+  }
   assert.equal(chooseAccountEntranceEffect({
     ownerPreview: true,
     enabled: true,

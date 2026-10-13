@@ -1,4 +1,5 @@
 import { Router, type IRouter, type Request } from "express";
+import { randomUUID } from "node:crypto";
 import { getAuth } from "@clerk/express";
 import {
   SaveMyProfileBody, SaveMyProfileResponse, GetMyProfileResponse,
@@ -92,23 +93,24 @@ router.post("/account/rooms/:roomId/join", async (req, res) => {
     res.status(409).json({ error: `${roomStore.get(params.data.roomId).name} is full — try ${overflow.label}`, overflow });
     return;
   }
-  const wasAlreadyInRoom = roomStore.hasAccountParticipant(params.data.roomId, id);
   const nameColors = await giftNameColorsForAccounts([id]);
   const session = roomStore.join(params.data.roomId, profile.displayName ?? profile.username, {
     accountId: id, identity: profile.identity, capExempt: access.moderator,
     displayNameColor: nameColors.get(id) ?? "#FFFFFF",
   });
   roomStore.restoreParticipantId(params.data.roomId, id, member.participantId);
-  if (!wasAlreadyInRoom) {
-    try {
-      const selected = await accountEntranceEffectSelection(id);
-      const effectId = selected ? await claimRoomEntranceEffect(id, selected.effectId) : null;
-      if (effectId && selected) roomStore.publishRoomEntranceEffect(
-        params.data.roomId, id, effectId, selected.durationMs,
-      );
-    } catch {
-      req.log.warn("Room entrance effect could not be started");
-    }
+  try {
+    const selected = await accountEntranceEffectSelection(id);
+    const requestedEntryId = req.get("X-Room-Entry-Id")?.trim();
+    const entryId = requestedEntryId && /^[A-Za-z0-9_-]{8,128}$/.test(requestedEntryId)
+      ? requestedEntryId
+      : randomUUID();
+    const effectId = selected ? await claimRoomEntranceEffect(id, selected.effectId, entryId) : null;
+    if (effectId && selected) roomStore.publishRoomEntranceEffect(
+      params.data.roomId, id, effectId, selected.durationMs,
+    );
+  } catch {
+    req.log.warn("Room entrance effect could not be started");
   }
   res.status(201).json(JoinAccountRoomResponse.parse({ ...session,
     participantId: member.participantId, room: roomStore.get(params.data.roomId) }));

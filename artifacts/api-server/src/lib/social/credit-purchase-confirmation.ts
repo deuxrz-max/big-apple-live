@@ -94,7 +94,8 @@ export async function recordConfirmedCreditPurchase(
   if (!saved.duplicate && saved.newlyEarned && activeRoomIds.length > 0) {
     const selectedEffect = await accountEntranceEffectSelection(accountId);
     const effect = selectedEffect?.effectId === saved.newlyEarned.tier.entranceEffectId
-      ? await claimRoomEntranceEffect(accountId, selectedEffect.effectId, confirmedAt.getTime())
+      ? await claimRoomEntranceEffect(accountId, selectedEffect.effectId,
+        `purchase_${provider}_${providerPurchaseId}`, confirmedAt.getTime())
       : null;
     if (effect && selectedEffect) {
       for (const roomId of activeRoomIds) {

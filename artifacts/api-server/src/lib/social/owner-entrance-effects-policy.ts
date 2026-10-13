@@ -4,6 +4,13 @@ export const OWNER_BADGE_TEST_USERNAME = "vampsquad";
 export type MonthlyTierEntranceEffectId = typeof MONTHLY_CREDIT_BADGE_TIERS[number]["entranceEffectId"];
 export type EntranceEffectChoice = "lion-entrance" | MonthlyTierEntranceEffectId;
 
+export function isTierEntranceEffectEnabled(
+  effects: Record<string, boolean> | null | undefined,
+  tierId: string,
+) {
+  return effects?.[tierId] !== false;
+}
+
 export function isOwnerAccount(profile: { username: string; isTestAccount: boolean }) {
   return !profile.isTestAccount && profile.username.trim().toLowerCase() === OWNER_BADGE_TEST_USERNAME;
 }

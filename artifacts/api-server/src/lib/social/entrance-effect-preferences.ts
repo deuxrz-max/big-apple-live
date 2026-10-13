@@ -4,7 +4,11 @@ import { db, socialSettings } from "@workspace/db";
 import { RoomError } from "../room-store";
 import { ensureSocial, lockAccounts, requireAccount } from "./core";
 import { MONTHLY_CREDIT_BADGE_TIERS } from "./monthly-credit-badge-config";
-import { chooseAccountEntranceEffect, hasOwnerTierTestAccess } from "./owner-entrance-effects-policy";
+import {
+  chooseAccountEntranceEffect,
+  hasOwnerTierTestAccess,
+  isTierEntranceEffectEnabled,
+} from "./owner-entrance-effects-policy";
 import { accountBadgeState } from "./monthly-credit-badges";
 import { ROOM_ENTRANCE_EFFECT_DURATION_MS } from "../room-entrance-effects";
 
@@ -12,7 +16,7 @@ const enabledTiersFrom = (value: Record<string, boolean> | null | undefined) =>
   MONTHLY_CREDIT_BADGE_TIERS.map(tier => ({
     badgeId: tier.id,
     name: tier.name,
-    enabled: value?.[tier.id] === true,
+    enabled: isTierEntranceEffectEnabled(value, tier.id),
   }));
 
 export async function getMyEntranceEffectSettings(accountId: string) {
@@ -98,7 +102,7 @@ export async function accountEntranceEffectSelection(accountId: string) {
     equippedBadgeId: equipped?.tier.id ?? null,
     lionEnabled: settings.lionEnabled,
     enabledTierIds: MONTHLY_CREDIT_BADGE_TIERS
-      .filter(tier => settings.tierEffects?.[tier.id] === true)
+      .filter(tier => isTierEntranceEffectEnabled(settings.tierEffects, tier.id))
       .map(tier => tier.id),
   });
   if (!effectId) return null;

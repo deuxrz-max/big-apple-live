@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   joinAccountRoom, getRoomMessages, getOlderRoomMessages, sendRoomMessage, heartbeatParticipant,
@@ -34,6 +34,9 @@ export type RoomEntranceEffectEvent = {
 /** Reuses the authenticated chat SSE and private membership header. No media SDK. */
 export function useTextRoom(roomId: string, userId: string) {
   const qc = useQueryClient();
+  const roomEntryId = useMemo(() => typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`, [roomId, userId]);
   const [room, setRoom] = useState<RoomState | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [arrivals, setArrivals] = useState<{ id: string; participantId: string; displayName: string; at: number }[]>([]);
@@ -101,7 +104,10 @@ export function useTextRoom(roomId: string, userId: string) {
       if (joining || !active) return;
       joining = true;
       try {
-        const session = await joinAccountRoom(roomId, { signal: controller.signal });
+        const session = await joinAccountRoom(roomId, {
+          signal: controller.signal,
+          headers: { "X-Room-Entry-Id": roomEntryId },
+        });
         if (!active) return;
         const c = { participantSessionId: session.participantSessionId, participantId: session.participantId };
         credential.current = c; setCreds(c); saveCreds(userId, roomId, c);
