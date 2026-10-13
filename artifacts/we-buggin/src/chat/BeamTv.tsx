@@ -114,6 +114,7 @@ export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
   const tvRef = useRef(tv);
   const serverClockOffsetMs = useRef(tv.serverNowMs - Date.now());
   const autoSearchRef = useRef("");
+  const [searchRetryNonce, setSearchRetryNonce] = useState(0);
   const soundUnlockedRef = useRef(false);
   const roomGestureSeenRef = useRef(false);
   const [playerReady, setPlayerReady] = useState(false);
@@ -179,25 +180,40 @@ export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
       if (!needsDefaultQueue) setSearchUnavailable(false);
       return;
     }
-    if (!tv.searchAvailable) {
-      setSearchUnavailable(true);
-      return;
-    }
     if (autoSearchRef.current === searchQuery) return;
     autoSearchRef.current = searchQuery;
     setSearchUnavailable(false);
     let active = true;
-    void search(searchQuery).catch(() => {
-      if (active) setSearchUnavailable(true);
+    let retryTimer: number | undefined;
+    const retryLater = () => {
+      retryTimer = window.setTimeout(() => {
+        if (!active) return;
+        autoSearchRef.current = "";
+        setSearchRetryNonce(value => value + 1);
+      }, 30_000);
+    };
+    void search(searchQuery).then(result => {
+      if (!active) return;
+      if (!result.videoIds.length) {
+        setSearchUnavailable(true);
+        retryLater();
+      }
+    }).catch(() => {
+      if (!active) return;
+      setSearchUnavailable(true);
+      retryLater();
     });
-    return () => { active = false; };
+    return () => {
+      active = false;
+      if (retryTimer !== undefined) window.clearTimeout(retryTimer);
+    };
   }, [
     search,
     searchQuery,
+    searchRetryNonce,
     tv.currentVideoId,
     tv.defaultSearch,
     tv.enabled,
-    tv.searchAvailable,
     tv.sourceType,
     tv.sourceValue,
     tv.queue.length,

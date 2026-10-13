@@ -112,7 +112,9 @@ export class UniversityVideoBeamStore {
       || normalize(tv.sourceValue ?? "") !== normalize(tv.defaultSearch)) {
       return this.toState(beam);
     }
-    const validVideos = videos.filter(video => /^[A-Za-z0-9_-]{11}$/.test(video.videoId)).slice(0, 50);
+    const validVideos = videos.filter(video => /^[A-Za-z0-9_-]{11}$/.test(video.videoId))
+      .slice(0, 50)
+      .map(video => this.normalizeMetadata(video));
     const validIds = validVideos.map(video => video.videoId);
     if (!validIds.length) throw new RoomError(400, "No playable YouTube videos were found.");
     tv.queue = [...validIds];
@@ -161,7 +163,7 @@ export class UniversityVideoBeamStore {
     tv.sourceValue = tv.defaultSearch;
     tv.playlistId = null;
     tv.queue = videoIds;
-    tv.videoMetadata = videos;
+    tv.videoMetadata = videos.map(video => this.normalizeMetadata(video));
     tv.seriesTitle = selection?.title ?? null;
     tv.seriesDate = utcDateFromKey(date);
     tv.seriesEpisodeNumber = videos.length ? 1 : null;

@@ -142,7 +142,7 @@ test("duration, title, description and tags all exclude Shorts, with an optional
     { ...base, videoId: "5qap5aO4i9A", title: "Short title: Shorts" },
     { ...base, videoId: "M7lc1UVf-VE", title: "Description marker" },
     { ...base, videoId: "aqz-KE-bpKQ", title: "Tag marker" },
-    { ...base, videoId: "ScMzIvxBSi4", title: "Below four minutes" },
+    { ...base, videoId: "ScMzIvxBSi4", title: "Below three minutes" },
     { ...base, videoId: "GotlA1KKWoo", title: "Portrait dimensions" },
   ];
   const result = selectPlayableYouTubeVideos(candidates, [
@@ -163,11 +163,47 @@ test("duration, title, description and tags all exclude Shorts, with an optional
       tags: ["shorts"],
     },
     {
-      videoId: "ScMzIvxBSi4", durationMs: 239_999, embeddable: true,
+      videoId: "ScMzIvxBSi4", durationMs: 179_999, embeddable: true,
     },
     {
       videoId: "GotlA1KKWoo", durationMs: 240_000, embeddable: true,
       width: 720, height: 1280,
+    },
+  ]);
+  assert.deepEqual(result.videos.map(video => video.videoId), ["dQw4w9WgXcQ"]);
+});
+
+test("automatic picks require English metadata and a landscape thumbnail, and reject Shorts links", () => {
+  const candidates = [
+    { videoId: "dQw4w9WgXcQ", title: "English episode", channelTitle: "English Channel", description: null },
+    { videoId: "5qap5aO4i9A", title: "Language not listed", channelTitle: "Channel", description: null },
+    { videoId: "M7lc1UVf-VE", title: "全新劇集", channelTitle: "Channel", description: null },
+    {
+      videoId: "aqz-KE-bpKQ", title: "A landscape title", channelTitle: "Channel",
+      description: "https://www.youtube.com/shorts/aqz-KE-bpKQ",
+    },
+    { videoId: "ScMzIvxBSi4", title: "Square video", channelTitle: "Channel", description: null },
+  ];
+  const result = selectPlayableYouTubeVideos(candidates, [
+    {
+      videoId: "dQw4w9WgXcQ", durationMs: 180_000, embeddable: true,
+      defaultLanguage: "en-US", thumbnailAspectRatios: [16 / 9],
+    },
+    {
+      videoId: "5qap5aO4i9A", durationMs: 180_000, embeddable: true,
+      thumbnailAspectRatios: [16 / 9],
+    },
+    {
+      videoId: "M7lc1UVf-VE", durationMs: 180_000, embeddable: true,
+      defaultAudioLanguage: "en", thumbnailAspectRatios: [16 / 9],
+    },
+    {
+      videoId: "aqz-KE-bpKQ", durationMs: 180_000, embeddable: true,
+      defaultAudioLanguage: "en", thumbnailAspectRatios: [16 / 9],
+    },
+    {
+      videoId: "ScMzIvxBSi4", durationMs: 180_000, embeddable: true,
+      defaultAudioLanguage: "en", thumbnailAspectRatios: [1],
     },
   ]);
   assert.deepEqual(result.videos.map(video => video.videoId), ["dQw4w9WgXcQ"]);

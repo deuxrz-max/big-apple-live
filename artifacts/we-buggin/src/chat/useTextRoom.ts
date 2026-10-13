@@ -8,7 +8,13 @@ import {
 import { saveCreds, type RoomCreds } from "@/lib/room-creds";
 import { errStatus, errMessage } from "@/lib/errors";
 
-const messageError = (error: unknown) => errMessage(error, "University request failed");
+const messageError = (error: unknown) => {
+  const message = errMessage(error, "University request failed");
+  if ((errStatus(error) ?? 0) >= 500 || /internal server error/i.test(message)) {
+    return "Room chat is reconnecting. Please keep this page open.";
+  }
+  return message;
+};
 const ordered = (messages: ChatMessage[]) => [...new Map(messages.map(m => [m.id, m])).values()]
   .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() || a.id.localeCompare(b.id));
 

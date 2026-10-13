@@ -17,7 +17,13 @@ import {
   type LocalVideoTrack,
   type RemoteTrack,
 } from "livekit-client";
-import { errMessage } from "@/lib/errors";
+import { errMessage, errStatus } from "@/lib/errors";
+
+function safeBeamError(error: unknown, fallback: string): string {
+  const message = errMessage(error, fallback);
+  if ((errStatus(error) ?? 0) >= 500 || /internal server error/i.test(message)) return fallback;
+  return message;
+}
 import type { RefObject } from "react";
 
 type BeamConnection = "idle" | "connecting" | "connected" | "error";
@@ -201,8 +207,9 @@ export function useUniversityVideoBeam(
       }
     } catch (failure) {
       if (activeRef.current) {
-        setConnection("error");
-        setError(errMessage(failure, "Could not connect to live video. You can keep chatting and try again."));
+        if (errStatus(failure) === null) setConnection("error");
+        else setConnection("idle");
+        setError(safeBeamError(failure, "Live audio is temporarily unavailable. You can keep chatting and try again."));
       }
     } finally {
       startingRef.current = false;
@@ -241,9 +248,8 @@ export function useUniversityVideoBeam(
           setConnection("idle");
         }
       } catch (failure) {
-        if (current) {
-          setConnection("error");
-          setError(errMessage(failure, "Could not load the video beam."));
+        if (current && (errStatus(failure) ?? 0) < 500) {
+          setError(safeBeamError(failure, "Room video status is reconnecting."));
         }
       } finally {
         refreshing = false;
@@ -398,8 +404,12 @@ export function useUniversityVideoBeam(
       speakerReadyRef.current = false;
       stopTracks(localTracks);
       tracksRef.current = [];
-      setConnection("error");
-      setError(errMessage(failure, "Could not start the live camera and microphone. You remain in the room."));
+      const failureName = (failure as { name?: string } | null)?.name;
+      const permissionFailure = ["NotAllowedError", "SecurityError", "NotFoundError", "OverconstrainedError"]
+        .includes(failureName ?? "");
+      if (!permissionFailure && errStatus(failure) === null) setConnection("error");
+      else setConnection("idle");
+      setError(safeBeamError(failure, "Could not start the live camera and microphone. You remain in the room."));
       try {
         await doAction(args, { action: "leave-slot" });
       } catch { /* the server may already have released a failed reservation */ }
@@ -432,7 +442,7 @@ export function useUniversityVideoBeam(
         setConnection("idle");
       }
     } catch (failure) {
-      setError(errMessage(failure, "That video beam action did not complete."));
+      setError(safeBeamError(failure, "That video beam action did not complete."));
     } finally {
       actionRef.current = false;
       setBusy(false);

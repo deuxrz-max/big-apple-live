@@ -11,6 +11,7 @@ import {
 import type { UniversityVideoBeamTvVideoMetadata } from "@workspace/api-zod";
 import {
   communityDefaultVideoSearch,
+  communityLiveStreamPolicy,
   communityOfficialChannelSearchPolicy,
   communityVideoSearchPolicy,
   communityVideoSearchTerms,
@@ -21,6 +22,7 @@ import {
 } from "./community-config";
 import {
   selectPlayableYouTubeVideos,
+  youtubeVideoSafetyReasons,
   youtubeThumbnailAspectRatios,
   type YouTubeVideoCandidate,
   type YouTubeVideoEligibility,
@@ -37,10 +39,6 @@ const MAX_SEARCH_PAGES_PER_REFRESH = 3;
 const MAX_UPLOAD_PAGES_PER_REFRESH = 20;
 const RECENT_PLAY_WINDOW_MS = 24 * 60 * 60_000;
 const HISTORY_MIN_DURATION_MS = 20 * 60_000;
-const CLEAR_NON_ENGLISH = /\b(?:hindi|tamil|telugu|bengali|urdu|punjabi|kannada|malayalam|marathi|spanish|portuguese|german|italian|japanese|korean|chinese|arabic|russian|français|noticias|resumen|nachrichten)\b/i;
-const SHORTS_MARKER = /shorts/i;
-const WIDE_THUMBNAIL_MIN = 1.7;
-const WIDE_THUMBNAIL_MAX = 1.85;
 
 type PoolRow = typeof communityVideoPools.$inferSelect;
 type RoomLookup = CommunityParentLookup;
@@ -91,32 +89,72 @@ function mergePool(
   existing: CommunityVideoPoolItem[],
   incoming: CommunityVideoPoolItem[],
   now: number,
+  roomId: string,
+  rooms?: RoomLookup,
 ): CommunityVideoPoolItem[] {
   const byId = new Map<string, CommunityVideoPoolItem>();
   for (const item of [...existing, ...incoming]) {
     if (!/^[A-Za-z0-9_-]{11}$/.test(item.videoId)) continue;
-    if (item.durationMs < 4 * 60_000 || item.embeddable === false || item.ageRestricted
-      || SHORTS_MARKER.test(`${item.title} ${item.description ?? ""} ${(item.tags ?? []).join(" ")}`)
-      || CLEAR_NON_ENGLISH.test(`${item.title} ${item.description ?? ""} ${(item.tags ?? []).join(" ")}`)
-      || [item.defaultLanguage, item.defaultAudioLanguage].some(language =>
-        language && !/^en(?:[-_]|$)|^english$|^eng$/i.test(language.trim()))) continue;
-    if (item.thumbnailAspectRatios?.length) {
-      const hasPortrait = item.thumbnailAspectRatios.some(ratio => ratio > 0 && ratio < 1);
-      const hasWide = item.thumbnailAspectRatios.some(
-        ratio => ratio >= WIDE_THUMBNAIL_MIN && ratio <= WIDE_THUMBNAIL_MAX,
-      );
-      if (hasPortrait || !hasWide) continue;
-    }
+    const reasons = poolVideoReasons(item);
+    if (reasons.shortsMarker || reasons.underThreeMinutes || reasons.nonEnglish
+      || reasons.nonWidescreen || reasons.notEmbeddable || reasons.ageRestricted
+      || !isAllowedRoomSource(roomId, item, rooms)) continue;
     byId.set(item.videoId, {
       ...item,
       channelTitle: item.channelTitle ?? null,
-      description: item.description ?? null,
+      description: item.description?.replace(/\s+/g, " ").trim().slice(0, 500) || null,
       discoveredAtMs: Number.isFinite(item.discoveredAtMs) ? item.discoveredAtMs : now,
     });
   }
   return [...byId.values()]
-    .sort((a, b) => b.discoveredAtMs - a.discoveredAtMs)
+    .sort((a, b) => englishChannelPreference(b.channelTitle) - englishChannelPreference(a.channelTitle)
+      || b.discoveredAtMs - a.discoveredAtMs)
     .slice(0, MAX_POOL_SIZE);
+}
+
+function isAllowedRoomSource(roomId: string, item: CommunityVideoPoolItem, rooms?: RoomLookup): boolean {
+  const wrestling = communityWrestlingSearchPolicy(roomId, rooms);
+  const official = communityOfficialChannelSearchPolicy(roomId, rooms);
+  const configured = communityVideoSearchPolicy(roomId, rooms);
+  const liveStream = communityLiveStreamPolicy(roomId, rooms);
+  const trustedTitles = wrestling?.channels.map(channel => channel.channelTitle)
+    ?? (official ? [official.channelTitle] : configured?.trustedChannelTitles)
+    ?? (liveStream ? [liveStream.channelTitle] : null);
+  if (!trustedTitles?.length) return true;
+  const channelTitle = (item.channelTitle ?? "").trim().replace(/\s+/g, " ").toLocaleLowerCase("en-US");
+  return trustedTitles.some(title => title.trim().replace(/\s+/g, " ").toLocaleLowerCase("en-US") === channelTitle);
+}
+
+function poolVideoReasons(item: CommunityVideoPoolItem) {
+  const candidate: YouTubeVideoCandidate = {
+    videoId: item.videoId,
+    title: item.title,
+    channelTitle: item.channelTitle,
+    description: item.description,
+    defaultLanguage: item.defaultLanguage,
+    defaultAudioLanguage: item.defaultAudioLanguage,
+    thumbnailAspectRatios: item.thumbnailAspectRatios,
+    tags: item.tags,
+  };
+  const details: YouTubeVideoEligibility = {
+    videoId: item.videoId,
+    durationMs: item.durationMs,
+    embeddable: item.embeddable === true,
+    ytRating: item.ageRestricted ? "ytAgeRestricted" : null,
+    defaultLanguage: item.defaultLanguage,
+    defaultAudioLanguage: item.defaultAudioLanguage,
+    thumbnailAspectRatios: item.thumbnailAspectRatios,
+    description: item.description,
+    tags: item.tags,
+  };
+  return youtubeVideoSafetyReasons(candidate, details);
+}
+
+function englishChannelPreference(channelTitle: string | null): number {
+  const letters = Array.from(channelTitle ?? "").filter(character => /\p{L}/u.test(character));
+  if (!letters.length) return 0;
+  const latin = letters.filter(character => /\p{Script=Latin}/u.test(character)).length;
+  return latin / letters.length >= 0.8 ? 1 : 0;
 }
 
 function shuffled<T>(values: T[]): T[] {
@@ -141,7 +179,9 @@ export function chooseUnplayedVideo(
   const cutoff = nowMs - RECENT_PLAY_WINDOW_MS;
   const fresh = pool.filter(item => (playedAtById.get(item.videoId) ?? 0) <= cutoff);
   const candidates = fresh.length ? fresh : pool;
-  return candidates.length ? candidates[randomIndex(candidates.length)] ?? null : null;
+  const likelyEnglishChannels = candidates.filter(item => englishChannelPreference(item.channelTitle) === 1);
+  const preferred = likelyEnglishChannels.length ? likelyEnglishChannels : candidates;
+  return preferred.length ? preferred[randomIndex(preferred.length)] ?? null : null;
 }
 
 function durationMap(videos: CommunityVideoPoolItem[]): Record<string, number> {
@@ -459,6 +499,81 @@ async function savePoolRow(
   return (await loadPoolRow(roomId)) ?? { ...current, ...patch, updatedAt: new Date() };
 }
 
+export async function sanitizeAllSavedCommunityVideoPools(rooms?: RoomLookup): Promise<{
+  poolsScanned: number;
+  entriesScanned: number;
+  entriesRemoved: number;
+  nonEnglishOrUnverifiedEntries: number;
+  shortsOrUnderThreeMinuteEntries: number;
+  nonWidescreenEntries: number;
+  untrustedSourceEntries: number;
+  poolsWithSafeVideos: number;
+  poolsEmptyAfterScreening: number;
+  safeVideoCountsByRoom: Array<{ roomId: string; count: number }>;
+}> {
+  const rows = await db.select().from(communityVideoPools);
+  const report = {
+    poolsScanned: rows.length,
+    entriesScanned: 0,
+    entriesRemoved: 0,
+    nonEnglishOrUnverifiedEntries: 0,
+    shortsOrUnderThreeMinuteEntries: 0,
+    nonWidescreenEntries: 0,
+    untrustedSourceEntries: 0,
+    poolsWithSafeVideos: 0,
+    poolsEmptyAfterScreening: 0,
+    safeVideoCountsByRoom: [] as Array<{ roomId: string; count: number }>,
+  };
+  const now = Date.now();
+  for (const row of rows) {
+    const saved = row.videos ?? [];
+    report.entriesScanned += saved.length;
+    const screened = screenCommunityVideoPoolItems(saved, now, row.roomId, rooms);
+    report.entriesRemoved += screened.entriesRemoved;
+    report.nonEnglishOrUnverifiedEntries += screened.nonEnglishOrUnverifiedEntries;
+    report.shortsOrUnderThreeMinuteEntries += screened.shortsOrUnderThreeMinuteEntries;
+    report.nonWidescreenEntries += screened.nonWidescreenEntries;
+    report.untrustedSourceEntries += screened.untrustedSourceEntries;
+    if (screened.videos.length > 0) report.poolsWithSafeVideos += 1;
+    else report.poolsEmptyAfterScreening += 1;
+    report.safeVideoCountsByRoom.push({ roomId: row.roomId, count: screened.videos.length });
+    if (JSON.stringify(screened.videos) !== JSON.stringify(saved)) {
+      await savePoolRow(row.roomId, row, { videos: screened.videos });
+    }
+  }
+  return report;
+}
+
+export function screenCommunityVideoPoolItems(
+  saved: CommunityVideoPoolItem[],
+  now = Date.now(),
+  roomId?: string,
+  rooms?: RoomLookup,
+) {
+  let nonEnglishOrUnverifiedEntries = 0;
+  let shortsOrUnderThreeMinuteEntries = 0;
+  let nonWidescreenEntries = 0;
+  let untrustedSourceEntries = 0;
+  for (const item of saved) {
+    const reasons = poolVideoReasons(item);
+    if (reasons.nonEnglish) nonEnglishOrUnverifiedEntries += 1;
+    if (reasons.shortsMarker || reasons.underThreeMinutes) shortsOrUnderThreeMinuteEntries += 1;
+    if (reasons.nonWidescreen) nonWidescreenEntries += 1;
+    if (roomId && !isAllowedRoomSource(roomId, item, rooms)) untrustedSourceEntries += 1;
+  }
+  const videos = roomId
+    ? mergePool([], saved, now, roomId, rooms)
+    : mergePool([], saved, now, "UNSPECIFIED", rooms);
+  return {
+    videos,
+    entriesRemoved: saved.length - videos.length,
+    nonEnglishOrUnverifiedEntries,
+    shortsOrUnderThreeMinuteEntries,
+    nonWidescreenEntries,
+    untrustedSourceEntries,
+  };
+}
+
 async function discoverNextBatch(
   roomId: string,
   apiKey: string,
@@ -489,13 +604,7 @@ async function discoverNextBatch(
       && (targetMet || additions.length + existing.length < TARGET_POOL_SIZE); count += 1) {
       const channel = resolved.channels[uploadIndex % resolved.channels.length]!;
       const cursorKey = `page:${channel.channelId}`;
-      let page: Awaited<ReturnType<typeof fetchUploadPage>>;
-      try {
-        page = await fetchUploadPage(roomId, apiKey, channel, cursors[cursorKey], Boolean(history));
-      } catch (error) {
-        if (error instanceof QuotaUnavailableError) break;
-        throw error;
-      }
+      const page = await fetchUploadPage(roomId, apiKey, channel, cursors[cursorKey], Boolean(history));
       additions.push(...page.videos);
       if (page.nextPageToken) cursors[cursorKey] = page.nextPageToken;
       else delete cursors[cursorKey];
@@ -511,13 +620,7 @@ async function discoverNextBatch(
     && (targetMet || additions.length + existing.length < TARGET_POOL_SIZE); pageNumber += 1) {
     const index = termIndex % terms.length;
     const term = terms[index] ?? communityDefaultVideoSearch(roomId, rooms);
-    let page: Awaited<ReturnType<typeof fetchSearchPage>>;
-    try {
-      page = await fetchSearchPage(roomId, apiKey, term, policy, pageTokens[term]);
-    } catch (error) {
-      if (error instanceof QuotaUnavailableError) break;
-      throw error;
-    }
+    const page = await fetchSearchPage(roomId, apiKey, term, policy, pageTokens[term]);
     additions.push(...page.videos);
     if (page.nextPageToken) pageTokens[term] = page.nextPageToken;
     else delete pageTokens[term];
@@ -541,7 +644,7 @@ async function refreshRoomPool(
   const current = (await loadPoolRow(roomId)) ?? row;
   try {
     const found = await discoverNextBatch(roomId, apiKey, rooms, current, pageLimit);
-    const merged = mergePool(current.videos ?? [], found.videos, now);
+    const merged = mergePool(current.videos ?? [], found.videos, now, roomId, rooms);
     if (found.videos.length === 0) {
       return savePoolRow(roomId, current, {
         videos: merged,
@@ -558,8 +661,14 @@ async function refreshRoomPool(
       ...(found.pageTokens ? { pageTokens: found.pageTokens } : {}),
       ...(found.sourceCursors ? { sourceCursors: found.sourceCursors } : {}),
     });
-  } catch {
-    // Use the durable last-known pool on API errors or when the daily budget is exhausted.
+  } catch (error) {
+    const savedPool = (await loadPoolRow(roomId)) ?? current;
+    console.warn({
+      roomId,
+      error: error instanceof Error ? error.message : "Unknown YouTube pool error",
+      savedVideoCount: savedPool.videos?.length ?? 0,
+      message: "Room video pool refresh failed; serving the filtered saved pool",
+    });
     return (await loadPoolRow(roomId)) ?? current;
   }
 }
@@ -572,10 +681,11 @@ async function getOrRefreshPool(
   pageLimit = MAX_SEARCH_PAGES_PER_REFRESH,
 ): Promise<PoolRow> {
   let existing = await ensurePoolRow(roomId);
-  const screenedVideos = mergePool(existing.videos ?? [], [], Date.now());
+  const screenedVideos = mergePool(existing.videos ?? [], [], Date.now(), roomId, rooms);
   if (JSON.stringify(screenedVideos) !== JSON.stringify(existing.videos ?? [])) {
     existing = await savePoolRow(roomId, existing, { videos: screenedVideos });
   }
+  if (!apiKey.trim()) return existing;
   const age = Date.now() - (existing.refreshedAt?.getTime() ?? 0);
   if (!forceRefresh && existing.videos.length > 0 && age < POOL_REFRESH_MS) return existing;
   const pending = refreshesInFlight.get(roomId);

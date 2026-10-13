@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { RoomEntranceEffectEvent } from "./useTextRoom";
 
 const media = `${import.meta.env.BASE_URL}api/room-entry-effects/lion`;
+const mediaUrl = (filename: string) => `${media}/${filename}?v=2`;
 
 export function RoomEntranceEffectOverlay({
   event,
@@ -22,7 +23,7 @@ export function RoomEntranceEffectOverlay({
       onFinish(event.eventId);
       return;
     }
-    const audio = new Audio(`${media}/audio.m4a`);
+    const audio = new Audio(mediaUrl("audio.m4a"));
     audioRef.current = audio;
     audio.preload = "auto";
     try { audio.currentTime = elapsed / 1000; } catch { /* Media may not have metadata yet. */ }
@@ -52,7 +53,7 @@ export function RoomEntranceEffectOverlay({
   return (
     <div className="ur-room-entry-effect" aria-hidden="true" data-testid="room-entrance-effect">
       <img
-        src={`${media}/${posterFallback ? "poster.png" : "animation.webp"}`}
+        src={mediaUrl(posterFallback ? "poster.png" : "animation.webp")}
         alt=""
         draggable={false}
         onLoad={startSound}

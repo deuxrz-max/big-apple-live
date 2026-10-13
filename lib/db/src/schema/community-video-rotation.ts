@@ -23,6 +23,13 @@ export type CommunityWebSeriesEpisode = {
   durationMs: number;
   publishedAtMs: number | null;
   episodeNumber: number;
+  tags?: string[];
+  defaultLanguage?: string | null;
+  defaultAudioLanguage?: string | null;
+  thumbnailAspectRatios?: number[];
+  embeddable?: boolean;
+  ageRestricted?: boolean;
+  safetyFilterVersion?: string;
 };
 
 export const communityVideoPools = pgTable("community_video_pools", {

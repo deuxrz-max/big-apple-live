@@ -10,9 +10,11 @@ import {
 import {
   selectPlayableYouTubeVideos,
   youtubeThumbnailAspectRatios,
+  YOUTUBE_VIDEO_FILTER_VERSION,
   type YouTubeVideoCandidate,
   type YouTubeVideoEligibility,
 } from "./youtube-video-selection";
+import { logger } from "./logger";
 
 export const WEB_SERIES_ROOM_ID = "WEBSER";
 export const WEB_SERIES_TIME_ZONE = "America/New_York";
@@ -189,6 +191,8 @@ function parsePlaylistEpisodes(payload: unknown): PlaylistEpisodeCandidate[] {
       defaultLanguage: text(snippet?.defaultLanguage),
       defaultAudioLanguage: text(snippet?.defaultAudioLanguage),
       thumbnailAspectRatios: youtubeThumbnailAspectRatios(thumbnails),
+      tags: Array.isArray(snippet?.tags)
+        ? snippet.tags.filter((tag): tag is string => typeof tag === "string") : [],
       position: number(snippet?.position) ?? 0,
     }];
   });
@@ -291,6 +295,15 @@ export function buildRankedWebSeries(
       durationMs: selected.durationMsByVideoId[item.video.videoId]!,
       publishedAtMs: publishedAtById.get(item.video.videoId) ?? null,
       episodeNumber: index + 1,
+      tags: eligibilityById.get(item.video.videoId)?.tags ?? item.source.tags ?? [],
+      defaultLanguage: eligibilityById.get(item.video.videoId)?.defaultLanguage ?? item.source.defaultLanguage ?? null,
+      defaultAudioLanguage: eligibilityById.get(item.video.videoId)?.defaultAudioLanguage
+        ?? item.source.defaultAudioLanguage ?? null,
+      thumbnailAspectRatios: eligibilityById.get(item.video.videoId)?.thumbnailAspectRatios
+        ?? item.source.thumbnailAspectRatios ?? [],
+      embeddable: eligibilityById.get(item.video.videoId)?.embeddable === true,
+      ageRestricted: eligibilityById.get(item.video.videoId)?.ytRating === "ytAgeRestricted",
+      safetyFilterVersion: YOUTUBE_VIDEO_FILTER_VERSION,
     }));
     if (episodes.length < WEB_SERIES_MIN_EPISODES) continue;
     const seriesTitle = (cleanWebSeriesTitle(playlist.title) || playlist.title).slice(0, 160);
@@ -339,6 +352,71 @@ function selectionFromRow(row: typeof communityWebSeriesDaily.$inferSelect): Web
     episodes: row.episodes,
     selectedAt: row.selectedAt,
   };
+}
+
+async function rescreenSavedWebSeries(
+  selection: WebSeriesDailySelection,
+  apiKey: string,
+): Promise<WebSeriesDailySelection | null> {
+  const candidates: YouTubeVideoCandidate[] = selection.episodes.map(episode => ({
+    videoId: episode.videoId,
+    title: episode.title,
+    channelTitle: episode.channelTitle,
+    description: episode.description,
+    defaultLanguage: episode.defaultLanguage,
+    defaultAudioLanguage: episode.defaultAudioLanguage,
+    thumbnailAspectRatios: episode.thumbnailAspectRatios,
+    tags: episode.tags,
+  }));
+  const ids = candidates.map(candidate => candidate.videoId);
+  const details = await youtubeJson("videos", new URLSearchParams({
+    part: "snippet,status,contentDetails",
+    id: ids.join(","),
+  }), apiKey, 1);
+  const screenedDetails = parseVideoEligibility(details);
+  const playable = selectPlayableYouTubeVideos(candidates, screenedDetails.eligibility, undefined, 50);
+  const playableById = new Map(playable.videos.map(video => [video.videoId, video]));
+  const eligibilityById = new Map(screenedDetails.eligibility.map(item => [item.videoId, item]));
+  const episodes = selection.episodes.flatMap(episode => {
+    const video = playableById.get(episode.videoId);
+    const videoEligibility = eligibilityById.get(episode.videoId);
+    if (!video || !videoEligibility || NON_EPISODE_CONTENT.test(episode.title)
+      || NON_EPISODE_CONTENT.test(episode.description ?? "")
+      || NON_EPISODE_CONTENT.test((videoEligibility.tags ?? []).join(" "))) return [];
+    return [{
+      ...episode,
+      title: video.title,
+      channelTitle: video.channelTitle,
+      description: video.description,
+      durationMs: playable.durationMsByVideoId[episode.videoId]!,
+      tags: videoEligibility.tags ?? [],
+      defaultLanguage: videoEligibility.defaultLanguage ?? null,
+      defaultAudioLanguage: videoEligibility.defaultAudioLanguage ?? null,
+      thumbnailAspectRatios: videoEligibility.thumbnailAspectRatios ?? [],
+      embeddable: videoEligibility.embeddable,
+      ageRestricted: videoEligibility.ytRating === "ytAgeRestricted",
+      safetyFilterVersion: YOUTUBE_VIDEO_FILTER_VERSION,
+    }];
+  });
+  const selectedAt = episodes.length >= WEB_SERIES_MIN_EPISODES ? selection.selectedAt : null;
+  await db.update(communityWebSeriesDaily).set({
+    episodes,
+    selectedAt,
+    ...(selectedAt ? {} : { lastAttemptAt: new Date() }),
+    updatedAt: new Date(),
+  }).where(and(
+    eq(communityWebSeriesDaily.roomId, selection.roomId),
+    eq(communityWebSeriesDaily.easternDate, selection.easternDate),
+  ));
+  const removed = selection.episodes.length - episodes.length;
+  logger.info({
+    roomId: selection.roomId,
+    savedEpisodesScanned: selection.episodes.length,
+    savedEpisodesRemoved: removed,
+    stillPlayable: episodes.length,
+  }, "Rescreened the saved Series of the Day before playback");
+  if (episodes.length < WEB_SERIES_MIN_EPISODES) return null;
+  return { ...selection, episodes };
 }
 
 async function saveDailyRow(
@@ -489,8 +567,28 @@ export async function getOrChooseWebSeries(
     eq(communityWebSeriesDaily.easternDate, easternDate),
   )).limit(1);
   if (existing) {
-    const selected = selectionFromRow(existing);
+    let selected = selectionFromRow(existing);
     if (selected) {
+      if (!selected.episodes.every(episode => episode.safetyFilterVersion === YOUTUBE_VIDEO_FILTER_VERSION)) {
+        if (!apiKey) {
+          dailyPickCache.set(key, { expiresAt: now.getTime() + 5 * 60_000, selection: null });
+          return null;
+        }
+        try {
+          selected = await rescreenSavedWebSeries(selected, apiKey);
+        } catch (error) {
+          logger.warn({
+            roomId: WEB_SERIES_ROOM_ID,
+            error: error instanceof Error ? error.message : "Unknown YouTube screening error",
+          }, "Could not revalidate the saved Series of the Day; it will not play until it passes screening");
+          dailyPickCache.set(key, { expiresAt: now.getTime() + 5 * 60_000, selection: null });
+          return null;
+        }
+        if (!selected) {
+          dailyPickCache.set(key, { expiresAt: now.getTime() + 5 * 60_000, selection: null });
+          return null;
+        }
+      }
       dailyPickCache.set(key, { expiresAt: nextEasternMidnightMs(now), selection: selected });
       return selected;
     }

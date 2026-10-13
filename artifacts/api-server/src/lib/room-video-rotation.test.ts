@@ -12,6 +12,7 @@ import {
   chooseUnplayedVideo,
   getNextCommunityVideoSelection,
   recordCommunityVideoPlayed,
+  screenCommunityVideoPoolItems,
 } from "./room-video-rotation";
 
 const item = (videoId: string): CommunityVideoPoolItem => ({
@@ -21,6 +22,10 @@ const item = (videoId: string): CommunityVideoPoolItem => ({
   description: null,
   durationMs: 5 * 60_000,
   discoveredAtMs: Date.now(),
+  defaultLanguage: "en",
+  defaultAudioLanguage: "en",
+  thumbnailAspectRatios: [16 / 9],
+  embeddable: true,
 });
 
 test("room rotation avoids recently played items, then permits a repeat after the pool is exhausted", () => {
@@ -69,4 +74,49 @@ test("a played-video marker survives a fresh pool read and prevents an immediate
     await db.delete(communityVideoPools)
       .where(eq(communityVideoPools.roomId, roomId));
   }
+});
+
+test("saved pools remove unverified-language, short, marked-Shorts and square videos", () => {
+  const safe = item("dQw4w9WgXcQ");
+  const screened = screenCommunityVideoPoolItems([
+    safe,
+    {
+      ...item("5qap5aO4i9A"),
+      durationMs: 179_999,
+    },
+    {
+      ...item("M7lc1UVf-VE"),
+      description: "https://youtube.com/shorts/M7lc1UVf-VE",
+    },
+    {
+      ...item("aqz-KE-bpKQ"),
+      defaultLanguage: null,
+      defaultAudioLanguage: null,
+    },
+    {
+      ...item("ScMzIvxBSi4"),
+      thumbnailAspectRatios: [1],
+    },
+  ]);
+  assert.deepEqual(screened.videos.map(video => video.videoId), [safe.videoId]);
+  assert.equal(screened.entriesRemoved, 4);
+  assert.equal(screened.nonEnglishOrUnverifiedEntries, 1);
+  assert.equal(screened.shortsOrUnderThreeMinuteEntries, 2);
+  assert.equal(screened.nonWidescreenEntries, 1);
+});
+
+test("saved History and Pro Wrestling pools retain only their approved channel titles", () => {
+  const history = screenCommunityVideoPoolItems([
+    { ...item("HIST0000001"), channelTitle: "HISTORY" },
+    { ...item("HIST0000002"), channelTitle: "HISTORY fan clips" },
+  ], Date.now(), "HIST01");
+  assert.deepEqual(history.videos.map(video => video.videoId), ["HIST0000001"]);
+  assert.equal(history.untrustedSourceEntries, 1);
+
+  const wrestling = screenCommunityVideoPoolItems([
+    { ...item("WWE00000001"), channelTitle: "WWE" },
+    { ...item("WWE00000002"), channelTitle: "WWE fan edits" },
+  ], Date.now(), "KIDS01");
+  assert.deepEqual(wrestling.videos.map(video => video.videoId), ["WWE00000001"]);
+  assert.equal(wrestling.untrustedSourceEntries, 1);
 });

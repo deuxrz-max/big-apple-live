@@ -7,6 +7,7 @@ import { startPhotoRetentionScheduler } from "./lib/profile-photo-retention";
 import { initializeModeratorBots, startModeratorBotChatter, startModeratorBotRotation } from "./lib/moderator-bots";
 import { startTestActorControl } from "./lib/test-actor-control";
 import { startWebSeriesDailySelection } from "./routes/university-video-beam";
+import { sanitizeAllSavedCommunityVideoPools } from "./lib/room-video-rotation";
 
 const rawPort = process.env["PORT"];
 
@@ -27,6 +28,12 @@ presenceSweep.unref();
 
 const server = createServer(app);
 await initializeCommunities();
+try {
+  const report = await sanitizeAllSavedCommunityVideoPools(roomStore);
+  logger.info(report, "Saved community video pools screened for English, landscape, non-Shorts playback");
+} catch (error) {
+  logger.error({ error }, "Saved community video pool screening failed; per-room screening remains enabled");
+}
 startWebSeriesDailySelection();
 await initializeModeratorBots();
 startModeratorBotRotation((err, context) => logger.error({ err, ...context }, "Bot rotation failed"));

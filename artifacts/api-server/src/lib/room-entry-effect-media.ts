@@ -22,7 +22,7 @@ function getFile(filename: string) {
   const match = /^\/([^/]+)\/(.+)$/.exec(process.env.PRIVATE_OBJECT_DIR ?? "");
   if (!match) throw new RoomError(503, "Room effect media storage is unavailable");
   const prefix = match[2]!.replace(/\/$/, "");
-  return storage.bucket(match[1]!).file(`${prefix}/room-effects/lion-entrance/v1/${filename}`);
+  return storage.bucket(match[1]!).file(`${prefix}/room-effects/lion-entrance/v2/${filename}`);
 }
 
 /** Serves only the fixed, non-personal room effect asset set from App Storage. */

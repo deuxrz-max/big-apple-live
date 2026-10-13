@@ -26,12 +26,11 @@ export type YouTubeVideoEligibility = {
   height?: number | null;
 };
 
-export const YOUTUBE_VIDEO_FILTER_VERSION = "medium-duration-shorts-metadata-en-us-v3";
-export const MIN_AUTOMATIC_VIDEO_DURATION_MS = 4 * 60 * 1_000;
+export const YOUTUBE_VIDEO_FILTER_VERSION = "english-landscape-no-shorts-3m-v4";
+export const MIN_AUTOMATIC_VIDEO_DURATION_MS = 3 * 60 * 1_000;
 
-const NON_ENGLISH_SCRIPTS = /[\p{Script=Cyrillic}\p{Script=Arabic}\p{Script=Hebrew}\p{Script=Devanagari}\p{Script=Bengali}\p{Script=Thai}\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Greek}\p{Script=Armenian}\p{Script=Georgian}]/u;
 const CLEAR_NON_ENGLISH_LATIN = /\b(?:lucha libre|resumen|noticias|en vivo|partido|últimos momentos|últimas noticias|melhores momentos|lutte professionnelle|résumé officiel|français|en direct|match complet|ao vivo|luta livre|nachrichten|zusammenfassung|in diretta|hindi|tamil|telugu|bengali|urdu|punjabi|kannada|malayalam|marathi|spanish|portuguese|german|italian|japanese|korean|chinese|arabic|russian)\b/i;
-const SHORTS_MARKER = /shorts/i;
+const SHORTS_MARKER = /(?:#\s*shorts?\b|\bshorts?\b|\/shorts\/)/i;
 const SIXTEEN_BY_NINE_MIN = 1.70;
 const SIXTEEN_BY_NINE_MAX = 1.85;
 
@@ -51,10 +50,27 @@ function isEnglishLanguage(value: string): boolean {
   return normalized === "english" || normalized === "eng" || normalized.split(/[-_]/)[0] === "en";
 }
 
-function passesEnglishAndWidescreen(
+function titleIsMostlyNonLatin(title: string): boolean {
+  const letters = Array.from(title).filter(character => /\p{L}/u.test(character));
+  if (letters.length === 0) return true;
+  const latinLetters = letters.filter(character => /\p{Script=Latin}/u.test(character)).length;
+  return latinLetters / letters.length < 0.55;
+}
+
+export type YouTubeVideoSafetyReasons = {
+  shortsMarker: boolean;
+  underThreeMinutes: boolean;
+  nonEnglish: boolean;
+  nonWidescreen: boolean;
+  notEmbeddable: boolean;
+  ageRestricted: boolean;
+};
+
+/** Shared strict screening for new picks and videos already saved in a room pool. */
+export function youtubeVideoSafetyReasons(
   candidate: YouTubeVideoCandidate,
   details: YouTubeVideoEligibility | undefined,
-): boolean {
+): YouTubeVideoSafetyReasons {
   const textToScreen = [
     candidate.title,
     candidate.description ?? "",
@@ -62,35 +78,50 @@ function passesEnglishAndWidescreen(
     details?.description ?? "",
     ...(details?.tags ?? []),
   ];
-  if (textToScreen.some(value => SHORTS_MARKER.test(value))
-    || NON_ENGLISH_SCRIPTS.test(candidate.title)
-    || CLEAR_NON_ENGLISH_LATIN.test(candidate.title)) return false;
-
-  const languageHints = [
-    candidate.defaultAudioLanguage,
-    candidate.defaultLanguage,
-    details?.defaultAudioLanguage,
-    details?.defaultLanguage,
-  ].filter((value): value is string => typeof value === "string" && value.trim().length > 0);
-  if (languageHints.some(language => !isEnglishLanguage(language))) return false;
-
+  const audioLanguage = details?.defaultAudioLanguage ?? candidate.defaultAudioLanguage;
+  const defaultLanguage = details?.defaultLanguage ?? candidate.defaultLanguage;
+  const languageVerified = audioLanguage?.trim()
+    ? isEnglishLanguage(audioLanguage)
+    : Boolean(defaultLanguage?.trim() && isEnglishLanguage(defaultLanguage));
   const sourceWidth = details?.width;
   const sourceHeight = details?.height;
+  let nonWidescreen: boolean;
   if (typeof sourceWidth === "number" && typeof sourceHeight === "number"
     && sourceWidth > 0 && sourceHeight > 0) {
     const ratio = sourceWidth / sourceHeight;
-    return sourceWidth > sourceHeight
-      && ratio >= SIXTEEN_BY_NINE_MIN && ratio <= SIXTEEN_BY_NINE_MAX;
+    nonWidescreen = sourceWidth <= sourceHeight
+      || ratio < SIXTEEN_BY_NINE_MIN || ratio > SIXTEEN_BY_NINE_MAX;
+  } else {
+    const ratios = details?.thumbnailAspectRatios?.length
+      ? details.thumbnailAspectRatios
+      : candidate.thumbnailAspectRatios ?? [];
+    const hasSquareOrPortraitVariant = ratios.some(
+      ratio => Number.isFinite(ratio) && ratio > 0 && ratio <= 1,
+    );
+    const hasSixteenByNineVariant = ratios.some(
+      ratio => Number.isFinite(ratio) && ratio >= SIXTEEN_BY_NINE_MIN && ratio <= SIXTEEN_BY_NINE_MAX,
+    );
+    nonWidescreen = hasSquareOrPortraitVariant || !hasSixteenByNineVariant;
   }
+  const duration = details?.durationMs;
+  return {
+    shortsMarker: textToScreen.some(value => SHORTS_MARKER.test(value)),
+    underThreeMinutes: typeof duration !== "number" || duration < MIN_AUTOMATIC_VIDEO_DURATION_MS,
+    nonEnglish: !languageVerified
+      || titleIsMostlyNonLatin(candidate.title)
+      || CLEAR_NON_ENGLISH_LATIN.test(candidate.title),
+    nonWidescreen,
+    notEmbeddable: details?.embeddable !== true,
+    ageRestricted: details?.ytRating === "ytAgeRestricted",
+  };
+}
 
-  const ratios = details?.thumbnailAspectRatios?.length
-    ? details.thumbnailAspectRatios
-    : candidate.thumbnailAspectRatios ?? [];
-  const hasPortraitVariant = ratios.some(ratio => Number.isFinite(ratio) && ratio > 0 && ratio < 1);
-  const hasSixteenByNineVariant = ratios.some(
-    ratio => Number.isFinite(ratio) && ratio >= SIXTEEN_BY_NINE_MIN && ratio <= SIXTEEN_BY_NINE_MAX,
-  );
-  return hasSixteenByNineVariant && !hasPortraitVariant;
+function passesEnglishAndWidescreen(
+  candidate: YouTubeVideoCandidate,
+  details: YouTubeVideoEligibility | undefined,
+): boolean {
+  const reasons = youtubeVideoSafetyReasons(candidate, details);
+  return !reasons.nonEnglish && !reasons.nonWidescreen;
 }
 
 function normalizeTitle(value: string): string {
@@ -152,13 +183,13 @@ export function selectPlayableYouTubeVideos(
     )) return false;
     if (candidate.liveBroadcastContent === "live" || candidate.liveBroadcastContent === "upcoming") return false;
     const details = eligibilityById.get(candidate.videoId);
-    if (!details?.embeddable || !details.durationMs || details.durationMs <= 0) return false;
-    if (details.durationMs < MIN_AUTOMATIC_VIDEO_DURATION_MS) return false;
-    if (details.ytRating === "ytAgeRestricted") return false;
-    if (!passesEnglishAndWidescreen(candidate, details)) return false;
+    if (!details || typeof details.durationMs !== "number") return false;
+    const reasons = youtubeVideoSafetyReasons(candidate, details);
+    if (reasons.shortsMarker || reasons.underThreeMinutes || reasons.nonEnglish
+      || reasons.nonWidescreen || reasons.notEmbeddable || reasons.ageRestricted) return false;
     durationMsByVideoId[candidate.videoId] = details.durationMs;
     return true;
-  }).slice(0, Math.max(0, Math.min(50, resultLimit)));
+  }).slice(0, Math.max(0, Math.min(300, resultLimit)));
 
   for (const videoId of Object.keys(durationMsByVideoId)) {
     if (!videos.some(video => video.videoId === videoId)) delete durationMsByVideoId[videoId];

@@ -308,13 +308,27 @@ async function searchDefaultCommunityVideos(roomId: string, apiKey: string) {
     };
   }
 
-  const channelId = await resolveYouTubeChannelId(
-    apiKey,
-    livePolicy.channelHandle,
-    livePolicy.channelTitle,
-    units => reserveYouTubeApiUnits(roomId, units, 8_000),
-  );
+  const savedFallback = async () => {
+    const selection = await getNextCommunityVideoSelection(roomId, apiKey, roomStore);
+    return {
+      videoIds: selection.queue.map(video => video.videoId),
+      titles: selection.queue.map(video => video.title),
+      videos: selection.queue,
+      durationMsByVideoId: selection.durationMsByVideoId,
+      selectedVideoId: selection.selected?.videoId,
+    };
+  };
+  if (!apiKey) {
+    logger.warn({ roomId }, "YouTube key unavailable; serving the saved News room queue");
+    return savedFallback();
+  }
   try {
+    const channelId = await resolveYouTubeChannelId(
+      apiKey,
+      livePolicy.channelHandle,
+      livePolicy.channelTitle,
+      units => reserveYouTubeApiUnits(roomId, units, 8_000),
+    );
     const liveVideo = await searchCnnLiveStream(
       apiKey,
       channelId,
@@ -329,18 +343,19 @@ async function searchDefaultCommunityVideos(roomId: string, apiKey: string) {
         durationMsByVideoId: { [liveVideo.videoId]: livePolicy.segmentDurationMs },
       };
     }
+    const latestFallback = await searchYouTube(
+      livePolicy.fallbackSearch,
+      apiKey,
+      communityVideoSearchPolicy(roomId, roomStore),
+      { channelId, cacheTtlMs: 60 * 60_000, roomId },
+    );
+    if (latestFallback.videos.length) return latestFallback;
   } catch (error) {
-    // A cached latest-video fallback can still serve the room when live search is temporarily unavailable.
     logger.warn({ roomId, error: error instanceof Error ? error.message : "unknown" },
-      "CNN live search failed; trying the News fallback queue");
+      "CNN live and latest-video lookup failed; using the saved filtered News queue");
   }
 
-  return searchYouTube(
-    livePolicy.fallbackSearch,
-    apiKey,
-    communityVideoSearchPolicy(roomId, roomStore),
-    { channelId, cacheTtlMs: 60 * 60_000, roomId },
-  );
+  return savedFallback();
 }
 
 function requireMember(req: Request, roomId: string, id: string) {
@@ -909,8 +924,8 @@ router.post("/account/rooms/:roomId/video-beam/tv/search", async (req, res) => {
     && normalizeSearchQuery(tv.sourceValue ?? "") === normalizeSearchQuery(defaultSearch)
     && normalizeSearchQuery(query) === normalizeSearchQuery(defaultSearch);
   if (!autoDefaultSearch) universityVideoBeamStore.assertTvHost(roomId, participant.participantId);
-  const apiKey = process.env.YOUTUBE_API_KEY?.trim();
-  if (!apiKey) {
+  const apiKey = process.env.YOUTUBE_API_KEY?.trim() ?? "";
+  if (!apiKey && !autoDefaultSearch) {
     throw new RoomError(503, "YouTube search is temporarily unavailable. A room-matched video will appear when it is available.");
   }
   if (autoDefaultSearch && dailyWebSeriesRoom) {
@@ -932,7 +947,7 @@ router.post("/account/rooms/:roomId/video-beam/tv/search", async (req, res) => {
         videoId: episode.videoId,
         title: episode.title,
         channelTitle: episode.channelTitle,
-        description: episode.description,
+        description: episode.description?.replace(/\s+/g, " ").trim().slice(0, 500) || null,
       })),
     }));
     return;
@@ -963,8 +978,15 @@ router.post("/account/rooms/:roomId/video-beam/tv/search", async (req, res) => {
     selectedVideoId: _selectedVideoId,
     ...publicResult
   } = result;
+  const safePublicResult = {
+    ...publicResult,
+    videos: publicResult.videos.map(video => ({
+      ...video,
+      description: video.description?.replace(/\s+/g, " ").trim().slice(0, 500) || null,
+    })),
+  };
   res.set("Cache-Control", "no-store")
-    .json(SearchYouTubeForVideoBeamResponse.parse(publicResult));
+    .json(SearchYouTubeForVideoBeamResponse.parse(safePublicResult));
 });
 
 export default router;

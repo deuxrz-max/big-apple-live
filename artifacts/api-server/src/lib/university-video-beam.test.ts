@@ -78,6 +78,25 @@ test("public topic playback waits for the durable rotation choice after the brea
   assert.equal(state.tv.breakEndsAtMs, null);
 });
 
+test("default Beam TV queue clips long YouTube descriptions before exposing state", () => {
+  const rooms = new RoomStore();
+  createRoom(rooms);
+  const beam = new UniversityVideoBeamStore(rooms);
+  const video = {
+    videoId: "dQw4w9WgXcQ",
+    title: "A long-description video",
+    channelTitle: "Channel",
+    description: "description ".repeat(100),
+  };
+  const state = beam.initializeDefaultTvQueue(
+    "MUSIC1",
+    communityDefaultVideoSearch("MUSIC1", rooms)!,
+    [video],
+    { [video.videoId]: 1_000 },
+  );
+  assert.equal(state.tv.videoMetadata[0]?.description?.length, 500);
+});
+
 test("video beam reserves exactly eight slots under simultaneous joins and keeps room scopes isolated", async () => {
   const rooms = new RoomStore();
   createRoom(rooms);
