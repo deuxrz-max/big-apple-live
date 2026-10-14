@@ -567,7 +567,7 @@ export class UniversityVideoBeamStore {
     // A person who first joins while a video is already playing starts muted.
     // Existing speakers keep their saved mic preference through the lock.
     slot.micMuted = this.isMicLocked(beam);
-    slot.cameraOff = false;
+    slot.cameraOff = true;
     slot.mutedByHost = false;
     slot.cameraDisabledByHost = false;
     if (!this.isOwnerlessTopicRoom(beam.roomId) && !beam.hostParticipantId) {
@@ -611,6 +611,9 @@ export class UniversityVideoBeamStore {
   assertSelfMedia(roomId: string, participantId: string, media: "mic" | "camera", enabled: boolean): void {
     const beam = this.ensure(roomId);
     this.requireSlot(beam, participantId);
+    if (media === "camera") {
+      throw new RoomError(410, "University beam seats are audio-only. Camera access is available through Go Live.");
+    }
     if (media === "mic" && enabled && this.isMicLocked(beam)) {
       throw new RoomError(409, "Microphones are off while a Beam TV video is playing.");
     }
@@ -638,6 +641,9 @@ export class UniversityVideoBeamStore {
   }
 
   hostDisableMedia(roomId: string, actorId: string, targetId: string, media: "mic" | "camera"): UniversityVideoBeamState {
+    if (media === "camera") {
+      throw new RoomError(410, "University beam seats are audio-only. Camera access is available through Go Live.");
+    }
     const beam = this.ensure(roomId);
     const slot = this.assertHostControl(roomId, actorId, targetId);
     if (media === "mic") {
@@ -664,6 +670,31 @@ export class UniversityVideoBeamStore {
   slotFor(roomId: string, participantId: string): UniversityVideoBeamState["slots"][number] {
     const slot = this.requireSlot(this.ensure(roomId), participantId);
     return this.toState(this.ensure(roomId)).slots[slot.slotNumber - 1]!;
+  }
+
+  isAccountMicrophoneActive(accountId: string): boolean {
+    for (const beam of this.beams.values()) {
+      if (this.isMicLocked(beam)) continue;
+      if (beam.slots.some(slot => slot.accountId === accountId && slot.connectedAt !== null
+        && !slot.micMuted && !slot.mutedByHost)) return true;
+    }
+    return false;
+  }
+
+  accountIdForParticipant(roomId: string, participantId: string): string | null {
+    return this.requireSlot(this.ensure(roomId), participantId).accountId;
+  }
+
+  muteAccountMicrophones(accountId: string): Array<{ roomId: string; participantId: string }> {
+    const muted: Array<{ roomId: string; participantId: string }> = [];
+    for (const beam of this.beams.values()) {
+      for (const slot of beam.slots) {
+        if (slot.accountId !== accountId || !slot.participantId) continue;
+        slot.micMuted = true;
+        muted.push({ roomId: beam.roomId, participantId: slot.participantId });
+      }
+    }
+    return muted;
   }
 
   private ensure(roomId: string): Beam {

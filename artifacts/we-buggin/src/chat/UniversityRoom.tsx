@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Camera, CameraOff, LockKeyhole, LogOut, Mic, MicOff, RotateCw, X } from 'lucide-react';
+import { LockKeyhole, LogOut, Mic, MicOff, X } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getGetMyProfileQueryKey, getGetUniversitySessionQueryKey, useAcknowledgeUniversityRules, useGetUniversitySession,
-  useReportChatMessage, useSendUniversityWhisper, useSetSocialRelationship, useSetUniversityIgnore,
-  ChatReportInputReason, type ChatMessage, type StreamerPassportBadgeSummary,
+  useGetChatAccess, useSendUniversityWhisper, useSetSocialRelationship, useSetUniversityIgnore,
+  type ChatMessage, type StreamerPassportBadgeSummary,
   type RoomGiftEvent,
 } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
@@ -13,7 +13,7 @@ import { errMessage, errStatus } from '@/lib/errors';
 import { IdentityAvatar } from '@/lib/identity';
 import { BadgeMark } from '@/social/common';
 import { useTextRoom } from './useTextRoom';
-import { VideoBeamMedia, useUniversityVideoBeam } from './useUniversityVideoBeam';
+import { BeamAudioTrack, useUniversityVideoBeam } from './useUniversityVideoBeam';
 import { BeamTv, type BeamTvHandle } from './BeamTv';
 import { BotShield } from './BotShield';
 import { GiftBag, OPEN_ROOM_GIFTS_EVENT } from '@/gifts';
@@ -22,6 +22,7 @@ import { HeartAnimation } from '@/gifts/HeartAnimation';
 import { CosmicEncoreAnimation, MoonfoxAnimation, SpiritAnimation } from '@/gifts/SpiritPup';
 import { PassportSummaryBadge } from '@/passport/StreamerPassport';
 import { RoomEntranceEffectOverlay } from './RoomEntranceEffectOverlay';
+import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
 import type { RoomEntranceEffectEvent } from './useTextRoom';
 import './university-room.css';
 import './bot-moderation.css';
@@ -29,6 +30,13 @@ import './bot-moderation.css';
 const RULES = "Stick to the room's topic. Be kind — no harassment or hate. Nothing sexual or explicit, in chat, names or photos. Don't share real names, phone numbers, addresses or other contact details. Don't hog the screen, no ALL CAPS, no ads or spam. Use Ignore on anyone bothering you, or Block and Report for anything serious. Public university chat is moderated by Streamtalk bots. Whispers and direct messages are private and are not scanned by these bots.";
 
 type Target = { username: string; displayName: string; displayNameColor?: string };
+type ReportTarget = {
+  targetType: 'user' | 'message';
+  targetUsername: string;
+  roomId: string;
+  messageId?: string;
+  messageText?: string;
+};
 type Item = { kind: 'room'; at: number; id: string; m: ChatMessage }
   | { kind: 'arrival'; at: number; id: string; displayName: string; participantId: string }
   | { kind: 'gift'; at: number; id: string; gift: RoomGiftEvent }
@@ -42,32 +50,33 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const r = useTextRoom(roomId, userId);
   const sessionId = r.creds?.participantSessionId ?? '';
   const participantId = r.creds?.participantId ?? '';
-  const videoBeam = useUniversityVideoBeam(roomId, sessionId, participantId);
   const beamTvRef = useRef<BeamTvHandle>(null);
-  const activateRoomAudio = useCallback(() => {
-    beamTvRef.current?.activateSoundFromUserGesture();
-    if (videoBeam.playbackBlocked) void videoBeam.resumePlayback();
-  }, [videoBeam.playbackBlocked, videoBeam.resumePlayback]);
-  const micsLockedDuringVideo = videoBeam.beam.tv.micLockedDuringVideo;
   const sessionKey = [...getGetUniversitySessionQueryKey(roomId), 'user', userId] as const;
   const headers = { 'X-Room-Session': sessionId };
   const uni = useGetUniversitySession(roomId, {
     request: { headers },
     query: { enabled: !!sessionId, refetchInterval: 3000, queryKey: sessionKey },
   });
+  const session = uni.data;
+  const blockedParticipantIds = useMemo(() => session?.people
+    .filter(person => person.blocked).map(person => person.participantId) ?? [], [session?.people]);
+  const videoBeam = useUniversityVideoBeam(roomId, sessionId, participantId, blockedParticipantIds);
+  const activateRoomAudio = useCallback(() => {
+    beamTvRef.current?.activateSoundFromUserGesture();
+    if (videoBeam.playbackBlocked) void videoBeam.resumePlayback();
+  }, [videoBeam.playbackBlocked, videoBeam.resumePlayback]);
+  const micsLockedDuringVideo = videoBeam.beam.tv.micLockedDuringVideo;
   const ignoreMut = useSetUniversityIgnore({ request: { headers } });
   const whisperMut = useSendUniversityWhisper({ request: { headers } });
   const ack = useAcknowledgeUniversityRules();
-  const report = useReportChatMessage({ request: { headers: { 'X-Room-Session': sessionId } } });
   const block = useSetSocialRelationship();
+  const chatAccess = useGetChatAccess();
 
   const [text, setText] = useState('');
   const [pending, setPending] = useState(false);
   const [sendErr, setSendErr] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
-  const [reporting, setReporting] = useState<ChatMessage | null>(null);
-  const [reason, setReason] = useState<string>(ChatReportInputReason.harassment);
-  const [details, setDetails] = useState('');
+  const [reporting, setReporting] = useState<ReportTarget | null>(null);
   const [whisperTo, setWhisperTo] = useState<Target | null>(null);
   const [menu, setMenu] = useState<Target | null>(null);
   const [giftBag, setGiftBag] = useState<{ recipient: Target | null } | null>(null);
@@ -87,9 +96,9 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const rulesBox = useRef<HTMLDivElement>(null);
   const box = useRef<HTMLDivElement>(null);
   const near = useRef(true);
+  const messageLongPress = useRef<number | null>(null);
   const handledEntranceEffects = useRef(new Set<string>());
 
-  const session = uni.data;
   useEffect(() => {
     setText(''); setWhisperTo(null); setMenu(null); setDrawer(false); setRulesOpen(false);
     setGiftBag(null);
@@ -300,6 +309,10 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
       onKeyDownCapture={activateRoomAudio}
       onWheelCapture={activateRoomAudio}>
       <div className="ch-in ur-in">
+        {chatAccess.data?.warning && <p className="ur-moderation-notice" role="alert">{chatAccess.data.warning}</p>}
+        {(chatAccess.data?.chatMuted || chatAccess.data?.reportsMuted) && (
+          <p className="ur-moderation-notice" role="status">Chat is temporarily muted while a moderator reviews reports.</p>
+        )}
         <div className="ur-head">
           <button type="button" ref={peopleBtn} className="bm-btn bm-btn-sm ur-people-btn" aria-haspopup="dialog" aria-expanded={drawer} onClick={() => setDrawer(true)} data-testid="button-people">People · {people.length}</button>
           <div className="ur-titlebox">
@@ -327,9 +340,9 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           <div className="ch-room">
             <section className={`ur-beam${videoBeam.beam.tv.enabled ? ' is-tv-on' : ''}`} aria-label="Eight-slot LiveKit video beam">
               <div className="ur-audio-status-row">
-                <span className={`ur-audio-status ur-audio-${videoBeam.connection}`} role="status">
+                  <span className={`ur-audio-status ur-audio-${videoBeam.connection}`} role="status">
                   <span className="ur-status-dot" aria-hidden="true" />
-                  {videoBeam.connection === 'connected' ? 'Live ready'
+                  {videoBeam.connection === 'connected' ? 'Audio ready'
                     : videoBeam.connection === 'connecting' ? 'Connecting'
                       : videoBeam.connection === 'error' ? 'Connection issue'
                         : videoBeam.beam.beamActive ? 'Joining live room' : 'Start the beam'}
@@ -349,7 +362,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
               {videoBeam.error && <p className="ur-beam-error" role="alert">{videoBeam.error}</p>}
               {videoBeam.beam.beamActive && !videoBeam.ownSlot && beamSlots.every(slot => slot.participantId)
                 && <p className="ur-beam-full" role="status">Beam is full. You can still watch and chat; an open spot can be joined as soon as someone leaves.</p>}
-              <div className="ur-slots" data-count={speakerCount} data-tv={videoBeam.beam.tv.enabled ? 'on' : 'off'}>
+                  <div className="ur-slots" data-count={speakerCount} data-tv={videoBeam.beam.tv.enabled ? 'on' : 'off'}>
                 {beamSlots.map((slot) => {
                   const person = slot.participantId
                     ? people.find((p) => p.participantId === slot.participantId)
@@ -357,8 +370,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                   const mine = slot.participantId === participantId;
                   const joinAvailable = !slot.participantId && !!sessionId && !!participantId && !videoBeam.ownSlot;
                   const isSpeaking = !!slot.participantId && videoBeam.speaking.has(slot.participantId);
-                  const media = slot.participantId ? videoBeam.media[slot.participantId] : undefined;
-                  const showVideo = !!person && !slot.cameraOff && !!media?.video;
+                    const media = slot.participantId ? videoBeam.media[slot.participantId] : undefined;
                   return (
                     <article className={`ur-slot${isSpeaking ? ' is-speaking' : ''}${slot.participantId ? ' is-occupied' : ''}`}
                       key={slot.slotNumber} aria-label={`Speaker slot ${slot.slotNumber}${slot.participantId ? `, ${person?.displayName ?? 'occupied'}` : ', empty'}`}>
@@ -373,11 +385,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                             void videoBeam.joinSpeaker();
                           }
                         } : undefined}>
-                        {showVideo && (
-                          <div className="ur-video-fill" aria-hidden="true">
-                            <VideoBeamMedia track={media?.video} kind="video" muted={mine} />
-                          </div>
-                        )}
+                        {person && <BeamAudioTrack track={media?.audio} />}
                         {person && (slot.micMuted || slot.mutedByHost || micsLockedDuringVideo) && (
                           <span className="ur-slot-mic-icon" role="img"
                             aria-label={micsLockedDuringVideo ? 'Microphone locked off during video' : 'Microphone muted'}
@@ -385,17 +393,44 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                             {micsLockedDuringVideo ? <LockKeyhole size={13} aria-hidden="true" /> : <MicOff size={13} aria-hidden="true" />}
                           </span>
                         )}
-                        {!showVideo && person?.identity && (
-                          <IdentityAvatar identity={person.identity} size={64} className="ur-slot-avatar ur-slot-art" />
+                        {person && !person.self && (person.photoUrl || person.identity) && (
+                          <button type="button" className="ur-slot-avatar-button"
+                            aria-label={`Actions for ${person.displayName}`}
+                            onClick={event => { event.stopPropagation(); openMenu(person.username, person.displayName, person.participantId, person.displayNameColor); }}>
+                            {person.photoUrl ? (
+                              <span className="ur-slot-avatar ur-slot-photo" aria-hidden="true">
+                                <UserPhoto username={person.username} displayName={person.displayName}
+                                  photoUrl={person.photoUrl} size={46} />
+                              </span>
+                            ) : person.identity ? (
+                              <IdentityAvatar identity={person.identity} size={46} className="ur-slot-avatar ur-slot-art" />
+                            ) : null}
+                          </button>
                         )}
-                        {!showVideo && person && !person.identity && (
+                        {person && !person.self && !person.identity && !person.photoUrl && (
+                          <button type="button" className="ur-slot-avatar ur-slot-initial ur-slot-avatar-button"
+                            aria-label={`Actions for ${person.displayName}`}
+                            onClick={event => { event.stopPropagation(); openMenu(person.username, person.displayName, person.participantId, person.displayNameColor); }}>
+                            {person.displayName.slice(0, 1)}
+                          </button>
+                        )}
+                        {person?.self && (person.photoUrl ? (
+                          <span className="ur-slot-avatar ur-slot-photo" aria-hidden="true">
+                            <UserPhoto username={person.username} displayName={person.displayName} photoUrl={person.photoUrl} size={46} />
+                          </span>
+                        ) : person.identity ? <IdentityAvatar identity={person.identity} size={46} className="ur-slot-avatar ur-slot-art" /> : (
                           <span className="ur-slot-avatar ur-slot-initial" aria-hidden="true">{person.displayName.slice(0, 1)}</span>
-                        )}
+                        ))}
                         {person ? (
                           <div className="ur-slot-copy">
                             <span className="ur-slot-name-line">
                               <BadgeMark id={person.badgeId ?? null} label={person.badgeName} imageUrl={person.badgeImage} size={16} compact />
-                              <span className="ur-slot-name" style={{ color: person.displayNameColor ?? '#F4F1F8' }}>{person.displayName}</span>
+                              {person.self ? <span className="ur-slot-name" style={{ color: person.displayNameColor ?? '#F4F1F8' }}>{person.displayName}</span>
+                                : <button type="button" className="ur-name ur-slot-name" style={{ color: person.displayNameColor ?? '#F4F1F8' }}
+                                  aria-label={`Actions for ${person.displayName}`}
+                                  onClick={event => { event.stopPropagation(); openMenu(person.username, person.displayName, person.participantId, person.displayNameColor); }}>
+                                  {person.displayName}
+                                </button>}
                             </span>
                           </div>
                         ) : slot.participantId ? (
@@ -423,11 +458,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                             onClick={() => void videoBeam.hostMuteMic(slot.participantId!)}>
                             {micsLockedDuringVideo ? <LockKeyhole size={16} /> : <MicOff size={16} />}
                           </button>
-                          <button type="button" className="ur-slot-action" disabled={videoBeam.busy || slot.cameraOff}
-                            aria-label={`Turn off ${person.displayName}'s camera`} title={`Turn off ${person.displayName}'s camera`}
-                            onClick={() => void videoBeam.hostDisableCamera(slot.participantId!)}>
-                            <CameraOff size={16} />
-                          </button>
                           <button type="button" className="ur-slot-action ur-slot-leave" disabled={videoBeam.busy}
                             aria-label={`Remove ${person.displayName} from the beam`} title={`Remove ${person.displayName} from the beam`}
                             onClick={() => void videoBeam.kick(slot.participantId!)}><X size={16} /></button>
@@ -451,19 +481,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                       : videoBeam.ownSlot.micMuted ? <MicOff size={16} /> : <Mic size={16} />}
                     {micsLockedDuringVideo ? 'Locked' : videoBeam.ownSlot.micMuted ? 'Unmute' : 'Mute'}
                   </button>
-                  <button type="button" className="ur-slot-action"
-                    disabled={videoBeam.busy}
-                    aria-pressed={!videoBeam.ownSlot.cameraOff}
-                    aria-label={videoBeam.ownSlot.cameraOff ? 'Turn camera on' : 'Turn camera off'}
-                    title={videoBeam.ownSlot.cameraOff ? 'Turn camera on' : 'Turn camera off'}
-                    onClick={() => void videoBeam.toggleCamera(videoBeam.ownSlot!.cameraOff)}>
-                    {videoBeam.ownSlot.cameraOff ? <CameraOff size={16} /> : <Camera size={16} />}
-                    {videoBeam.ownSlot.cameraOff ? 'Cam on' : 'Cam off'}
-                  </button>
-                  <button type="button" className="ur-slot-action" disabled={videoBeam.busy}
-                    onClick={() => void videoBeam.flipCamera()} aria-label="Flip camera" title="Flip camera">
-                    <RotateCw size={16} /> Flip
-                  </button>
                   <button type="button" className="ur-slot-action ur-slot-leave"
                     disabled={videoBeam.busy} onClick={() => void videoBeam.leaveSlot()}
                     aria-label="Leave beam" title="Leave beam">
@@ -484,13 +501,15 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
               {items.map((it) => {
                 if (it.kind === 'gift') {
                   return <div className="ch-msg" key={it.id} data-testid={`gift-notice-${it.gift.id}`}>
-                    <div><p><span className="ur-gift-person"><BadgeMark id={it.gift.senderBadgeId ?? null} label={it.gift.senderBadgeName} imageUrl={it.gift.senderBadgeImage} size={16} compact /><span style={{ color: it.gift.senderNameColor ?? '#FFFFFF' }}>{it.gift.senderName}</span><PassportSummaryBadge passport={it.gift.senderPassport} username={it.gift.senderUsername} context={`gift-sender-${it.gift.id}`} /></span> sent <span className="ur-gift-person"><BadgeMark id={it.gift.recipientBadgeId ?? null} label={it.gift.recipientBadgeName} imageUrl={it.gift.recipientBadgeImage} size={16} compact /><span style={{ color: it.gift.recipientNameColor ?? '#FFFFFF' }}>{it.gift.recipientName}</span><PassportSummaryBadge passport={it.gift.recipientPassport} username={it.gift.recipientUsername} context={`gift-recipient-${it.gift.id}`} /></span> a {it.gift.giftId === 'heart' ? 'Heart' : it.gift.giftId === 'moonfox' ? 'Moonfox' : it.gift.giftId === 'cosmic-encore' ? 'Cosmic Encore' : 'Spirit Pup'}.</p></div>
+                    <div><p><span className="ur-gift-person"><BadgeMark id={it.gift.senderBadgeId ?? null} label={it.gift.senderBadgeName} imageUrl={it.gift.senderBadgeImage} size={16} compact /><button type="button" className="ur-name" style={{ color: it.gift.senderNameColor ?? '#FFFFFF' }} onClick={() => openMenu(it.gift.senderUsername, it.gift.senderName, undefined, it.gift.senderNameColor)}>{it.gift.senderName}</button><PassportSummaryBadge passport={it.gift.senderPassport} username={it.gift.senderUsername} context={`gift-sender-${it.gift.id}`} /></span> sent <span className="ur-gift-person"><BadgeMark id={it.gift.recipientBadgeId ?? null} label={it.gift.recipientBadgeName} imageUrl={it.gift.recipientBadgeImage} size={16} compact /><button type="button" className="ur-name" style={{ color: it.gift.recipientNameColor ?? '#FFFFFF' }} onClick={() => openMenu(it.gift.recipientUsername, it.gift.recipientName, undefined, it.gift.recipientNameColor)}>{it.gift.recipientName}</button><PassportSummaryBadge passport={it.gift.recipientPassport} username={it.gift.recipientUsername} context={`gift-recipient-${it.gift.id}`} /></span> a {it.gift.giftId === 'heart' ? 'Heart' : it.gift.giftId === 'moonfox' ? 'Moonfox' : it.gift.giftId === 'cosmic-encore' ? 'Cosmic Encore' : 'Spirit Pup'}.</p></div>
                   </div>;
                 }
                 if (it.kind === 'arrival') {
                   const arrivalPerson = session?.people.find(person => person.participantId === it.participantId);
                   return <div className="ch-msg ur-arrival-line" key={it.id} data-testid="room-arrival">
-                    <div><BadgeMark id={arrivalPerson?.badgeId ?? null} label={arrivalPerson?.badgeName} imageUrl={arrivalPerson?.badgeImage} size={16} compact /><span>{it.displayName}</span> has <strong className="ur-arrived-word">arrived</strong></div>
+                    <div><BadgeMark id={arrivalPerson?.badgeId ?? null} label={arrivalPerson?.badgeName} imageUrl={arrivalPerson?.badgeImage} size={16} compact />{arrivalPerson
+                      ? <button type="button" className="ur-name" style={{ color: arrivalPerson.displayNameColor }} onClick={() => openMenu(arrivalPerson.username, it.displayName, it.participantId, arrivalPerson.displayNameColor)}>{it.displayName}</button>
+                      : <span>{it.displayName}</span>} has <strong className="ur-arrived-word">arrived</strong></div>
                   </div>;
                 }
                 if (it.kind === 'whisper') {
@@ -532,27 +551,48 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                 const badge = <BadgeMark id={badgeId ?? null} label={m.badgeName} imageUrl={m.badgeImage} size={16} compact />;
                 const passportBadge = <PassportSummaryBadge passport={currentPerson?.passport ?? m.passport} username={m.username} context={`message-${m.id}`} />;
                 return (
-                  <div className="ch-msg" key={m.id}>
+                  <div className="ch-msg" key={m.id}
+                    onContextMenu={event => {
+                      if (self) return;
+                      event.preventDefault();
+                      setReporting({ targetType: 'message', targetUsername: m.username, roomId,
+                        messageId: m.id, messageText: m.text });
+                    }}
+                    onTouchStart={() => {
+                      if (self) return;
+                      if (messageLongPress.current) window.clearTimeout(messageLongPress.current);
+                      messageLongPress.current = window.setTimeout(() => setReporting({
+                        targetType: 'message', targetUsername: m.username, roomId, messageId: m.id, messageText: m.text,
+                      }), 600);
+                    }}
+                    onTouchMove={() => {
+                      if (messageLongPress.current) window.clearTimeout(messageLongPress.current);
+                      messageLongPress.current = null;
+                    }}
+                    onTouchEnd={() => {
+                      if (messageLongPress.current) window.clearTimeout(messageLongPress.current);
+                      messageLongPress.current = null;
+                    }}
+                    onTouchCancel={() => {
+                      if (messageLongPress.current) window.clearTimeout(messageLongPress.current);
+                      messageLongPress.current = null;
+                    }}>
                     <div>
                        {self ? <span className="ch-sender" style={{ color: displayNameColor }}>{badge}{nm}{passportBadge}</span>
                           : <span className="ch-sender" style={{ color: displayNameColor }}><button type="button" className="ur-name" style={{ color: displayNameColor }} aria-haspopup="menu" aria-label={`Actions for ${nm}`} onClick={() => openMenu(m.username, nm, m.authorId, displayNameColor)}>{badge}{nm}</button>{passportBadge}</span>}
                       <p>{m.text}</p>
-                      <div className="ch-acts"><button type="button" onClick={() => { setReporting(m); setNote(null); }}>Report</button>
+                       {!self && <div className="ch-acts"><button type="button" onClick={() => { setReporting({
+                         targetType: 'message', targetUsername: m.username, roomId, messageId: m.id, messageText: m.text,
+                       }); setNote(null); }}>Report message</button>
                         <button type="button" disabled={block.isPending} onClick={() => block.mutate({ username: m.username, data: { kind: 'block', active: true } }, { onSuccess: () => { setNote(`Blocked ${m.username}.`); r.refresh(); }, onError: (e) => setNote(errMessage(e)) })}>Block</button></div>
+                       }
                     </div>
                   </div>
                 );
               })}
             </div>
-            {reporting && (
-              <div className="ch-comp" role="dialog" aria-label="Report message">
-                <span>Report {reporting.username}</span>
-                <select value={reason} onChange={(e) => setReason(e.target.value)}>{Object.values(ChatReportInputReason).map((x) => <option key={x}>{x}</option>)}</select>
-                <input type="text" maxLength={500} placeholder="Details (optional)" value={details} onChange={(e) => setDetails(e.target.value)} />
-                <button type="button" className="bm-btn bm-btn-sm bm-btn-primary" disabled={report.isPending} onClick={() => report.mutate({ data: { roomId, messageId: reporting.id, reason: reason as ChatReportInputReason, ...(details ? { details } : {}) } }, { onSuccess: (x) => { setNote(`Report queued (${x.status}).`); setReporting(null); setDetails(''); }, onError: (e) => setNote(errMessage(e)) })}>Send report</button>
-                <button type="button" className="bm-btn bm-btn-sm" onClick={() => setReporting(null)}>Cancel</button>
-              </div>
-            )}
+            {reporting && <SafetyReportDialog {...reporting} roomSessionId={sessionId}
+              onClose={() => setReporting(null)} onSubmitted={() => setNote(null)} />}
             {sendErr && <div className="ch-err" role="alert">{sendErr}</div>}
             {note && <p role="status">{note} <Link href="/community/blocks" className="bm-link">Blocked list</Link></p>}
             {whisperTo && (
@@ -577,12 +617,10 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
             <strong style={{ color: menu.displayNameColor ?? '#FFFFFF' }}>{menu.displayName}</strong>
             <button type="button" role="menuitem" onClick={() => { setGiftBag({ recipient: menu }); setMenu(null); setDrawer(false); }}>Gift</button>
             <button type="button" role="menuitem" onClick={() => { const u = menu.username; setMenu(null); nav(`/community/messages/${encodeURIComponent(u)}`); }}>Message</button>
-            <button type="button" role="menuitem" onClick={() => {
-              const message = [...r.messages].reverse().find(m => m.username === menu.username && !m.botId);
-              setMenu(null); setDrawer(false);
-              if (message) { setReporting(message); setDetails(''); }
-              else setNote('Reports need a public chat message. No reportable message from this person is loaded; nothing has been reported.');
-            }}>Report</button>
+             <button type="button" role="menuitem" onClick={() => {
+               setReporting({ targetType: 'user', targetUsername: menu.username, roomId });
+               setMenu(null); setDrawer(false);
+             }}>Report user</button>
             <button type="button" role="menuitem" disabled={block.isPending} onClick={() => {
               const target = menu;
               setMenu(null);
@@ -590,6 +628,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                 onSuccess: () => {
                   setNote(`Blocked ${target.displayName}.`);
                   qc.invalidateQueries({ predicate: q => String(q.queryKey[0]).startsWith('/api/social') });
+                  qc.invalidateQueries({ queryKey: getGetUniversitySessionQueryKey(roomId) });
                   r.refresh();
                 },
                 onError: e => setNote(errMessage(e)),

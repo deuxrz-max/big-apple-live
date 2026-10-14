@@ -17,6 +17,10 @@ export const chatAdmissions = pgTable("chat_admissions", {
   accountId: text("account_id").primaryKey(),
   adultConfirmedAt: timestamp("adult_confirmed_at", { withTimezone: true }).notNull().defaultNow(),
   suspended: boolean("suspended").notNull().default(false),
+  chatMuted: boolean("chat_muted").notNull().default(false),
+  reportsMuted: boolean("reports_muted").notNull().default(false),
+  moderationWarning: text("moderation_warning"),
+  warningAt: timestamp("warning_at", { withTimezone: true }),
 });
 export const chatModerators = pgTable("chat_moderators", { accountId: text("account_id").primaryKey() });
 export const universityPreferences = pgTable("university_preferences", {
@@ -36,13 +40,20 @@ export const chatMemberships = pgTable("chat_memberships", {
 }, t => [primaryKey({ columns: [t.historyId, t.accountId] })]);
 export const chatReports = pgTable("chat_reports", {
   id: uuid("id").primaryKey().defaultRandom(),
-  historyId: uuid("history_id").notNull(),
-  roomId: text("room_id").notNull(),
-  messageId: uuid("message_id").notNull(),
+  historyId: uuid("history_id"),
+  roomId: text("room_id"),
+  messageId: uuid("message_id"),
   reporterId: text("reporter_id").notNull(),
+  reporterUsername: text("reporter_username").notNull().default(""),
+  reportedAccountId: text("reported_account_id"),
+  reportedUsername: text("reported_username").notNull().default(""),
+  targetType: text("target_type", { enum: ["user", "message", "stream"] }).notNull().default("message"),
+  source: text("source", { enum: ["user", "moderator_bot"] }).notNull().default("user"),
+  streamId: text("stream_id"),
+  messageText: text("message_text").notNull().default(""),
   reason: text("reason").notNull(),
   details: text("details").notNull().default(""),
-  status: text("status", { enum: ["pending", "dismissed", "hidden", "muted", "restricted"] }).notNull().default("pending"),
+  status: text("status", { enum: ["pending", "reviewed", "warned", "dismissed", "hidden", "muted", "restricted", "banned"] }).notNull().default("pending"),
   reviewedBy: text("reviewed_by"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

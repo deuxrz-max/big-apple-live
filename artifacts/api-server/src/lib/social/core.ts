@@ -67,6 +67,8 @@ export async function person(viewer: string, profile: ProfileRow, settings?: Set
   const [wallet] = await db.select().from(socialWallets).where(eq(socialWallets.accountId, id));
   const [favorite] = await db.select().from(socialRelations).where(and(eq(socialRelations.ownerId, viewer), eq(socialRelations.targetId, id), eq(socialRelations.kind, "favorite")));
   const blocked = id !== viewer && await pairBlocked(viewer, id);
+  const [ownBlock] = id !== viewer ? await db.select({ id: socialRelations.ownerId }).from(socialRelations)
+    .where(and(eq(socialRelations.ownerId, viewer), eq(socialRelations.targetId, id), eq(socialRelations.kind, "block"))).limit(1) : [];
   const photos = blocked ? { photoUrl: null, photoUrls: [] } : await visibleProfilePhotos(id, viewer, profile);
   // Detail pages only: do not add per-person aggregate queries to discovery lists.
   const [counts] = includeStats ? await db.select({
@@ -84,7 +86,7 @@ export async function person(viewer: string, profile: ProfileRow, settings?: Set
     externalPlatform: blocked ? null : prefs?.externalPlatform ?? null,
     externalHandle: blocked ? null : prefs?.externalHandle ?? null,
     interests: blocked ? [] : prefs?.interests ?? [], discoverable: prefs?.discoverable ?? false,
-    favorite: !!favorite, blocked, receivedCredits: wallet?.received ?? 0,
+    favorite: !!favorite, blocked: !!ownBlock, receivedCredits: wallet?.received ?? 0,
     displayNameColor: giftNameColorForSentCredits(wallet?.sent ?? 0),
     badgeId: monthlyBadge?.tier.id ?? null,
     badgeName: monthlyBadge?.tier.name ?? null,

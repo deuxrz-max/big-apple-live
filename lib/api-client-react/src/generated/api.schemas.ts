@@ -284,6 +284,8 @@ export interface UniversityPerson {
   self: boolean;
   moderator: boolean;
   ignored: boolean;
+  /** Hidden from this viewer because either account has blocked the other */
+  blocked: boolean;
 }
 
 export interface UniversityWhisper {
@@ -376,25 +378,52 @@ export interface ChatAccess {
   moderator: boolean;
   owner: boolean;
   suspended: boolean;
+  chatMuted: boolean;
+  reportsMuted: boolean;
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  warning: string | null;
 }
 
 export interface AdultAttestationInput {
   adult: true;
 }
 
+export type ChatReportInputTargetType = typeof ChatReportInputTargetType[keyof typeof ChatReportInputTargetType];
+
+
+export const ChatReportInputTargetType = {
+  user: 'user',
+  message: 'message',
+  stream: 'stream',
+} as const;
+
 export type ChatReportInputReason = typeof ChatReportInputReason[keyof typeof ChatReportInputReason];
 
 
 export const ChatReportInputReason = {
   harassment: 'harassment',
-  minor: 'minor',
-  spam: 'spam',
+  hate_speech: 'hate_speech',
+  sexual_content: 'sexual_content',
+  spam_scams: 'spam_scams',
+  violence_threats: 'violence_threats',
+  underage_user: 'underage_user',
   other: 'other',
 } as const;
 
 export interface ChatReportInput {
-  roomId: string;
-  messageId: string;
+  targetType: ChatReportInputTargetType;
+  /** @maxLength 40 */
+  targetUsername?: string;
+  /** @maxLength 80 */
+  roomId?: string;
+  messageId?: string;
+  /** @pattern ^[a-f0-9]{32}$ */
+  streamId?: string;
+  /** @maxLength 1000 */
+  messageText?: string;
   reason: ChatReportInputReason;
   /** @maxLength 500 */
   details?: string;
@@ -405,10 +434,13 @@ export type ChatReportReceiptStatus = typeof ChatReportReceiptStatus[keyof typeo
 
 export const ChatReportReceiptStatus = {
   pending: 'pending',
+  reviewed: 'reviewed',
+  warned: 'warned',
   dismissed: 'dismissed',
   hidden: 'hidden',
   muted: 'muted',
   restricted: 'restricted',
+  banned: 'banned',
 } as const;
 
 export interface ChatReportReceipt {
@@ -416,23 +448,50 @@ export interface ChatReportReceipt {
   status: ChatReportReceiptStatus;
 }
 
-export type ChatReportRecord = ChatReportReceipt & {
-  roomId: string;
-  messageId: string;
+export type ChatReportRecordTargetType = typeof ChatReportRecordTargetType[keyof typeof ChatReportRecordTargetType];
+
+
+export const ChatReportRecordTargetType = {
+  user: 'user',
+  message: 'message',
+  stream: 'stream',
+} as const;
+
+export type ChatReportRecordSource = typeof ChatReportRecordSource[keyof typeof ChatReportRecordSource];
+
+
+export const ChatReportRecordSource = {
+  user: 'user',
+  moderator_bot: 'moderator_bot',
+} as const;
+
+export type ChatReportRecord = ChatReportReceipt & ({
+  targetType: ChatReportRecordTargetType;
+  source: ChatReportRecordSource;
+  /** @nullable */
+  roomId: string | null;
+  /** @nullable */
+  messageId: string | null;
+  /** @nullable */
+  streamId: string | null;
   reason: string;
   details: string;
   text: string;
-  username: string;
+  reporterUsername: string;
+  reportedUsername: string;
   createdAt: string;
-};
+});
 
 export type ChatReportReviewInputAction = typeof ChatReportReviewInputAction[keyof typeof ChatReportReviewInputAction];
 
 
 export const ChatReportReviewInputAction = {
+  reviewed: 'reviewed',
+  warn: 'warn',
+  mute: 'mute',
+  ban: 'ban',
   dismiss: 'dismiss',
   hide: 'hide',
-  mute: 'mute',
   restrict: 'restrict',
 } as const;
 
@@ -787,6 +846,68 @@ export interface UniversityAudioState {
   slots: UniversityAudioSlot[];
 }
 
+export interface LiveStreamEntry {
+  /** @pattern ^[a-f0-9]{32}$ */
+  streamId: string;
+  /** @maxLength 80 */
+  displayName: string;
+  /** @maxLength 40 */
+  username: string;
+  /** @minimum 0 */
+  viewerCount: number;
+}
+
+export interface LiveStreamList {
+  streams: LiveStreamEntry[];
+}
+
+export interface LiveStreamHostSession {
+  /** @pattern ^[a-f0-9]{32}$ */
+  streamId: string;
+  url: string;
+  token: string;
+  /** @maxLength 80 */
+  displayName: string;
+  /** @maxLength 40 */
+  username: string;
+}
+
+export interface LiveStreamViewerSession {
+  url: string;
+  token: string;
+  /** @maxLength 80 */
+  displayName: string;
+  /** @maxLength 40 */
+  username: string;
+  /** @maxLength 40 */
+  viewerUsername: string;
+}
+
+export interface LiveStreamChatInput {
+  /**
+     * @minLength 1
+     * @maxLength 280
+     */
+  text: string;
+}
+
+export interface LiveStreamChatMessage {
+  id: string;
+  /** @pattern ^[a-f0-9]{32}$ */
+  streamId: string;
+  /** @maxLength 40 */
+  username: string;
+  /** @maxLength 80 */
+  displayName: string;
+  /** @maxLength 280 */
+  text: string;
+  createdAt: string;
+}
+
+export interface LiveStreamEnded {
+  ended: boolean;
+}
+
 export type UniversityVideoBeamTokenInputRole = typeof UniversityVideoBeamTokenInputRole[keyof typeof UniversityVideoBeamTokenInputRole];
 
 
@@ -827,9 +948,7 @@ export const UniversityVideoBeamActionInputAction = {
   'speaker-connected': 'speaker-connected',
   'leave-slot': 'leave-slot',
   'set-self-mic': 'set-self-mic',
-  'set-self-camera': 'set-self-camera',
   'host-mute-mic': 'host-mute-mic',
-  'host-disable-camera': 'host-disable-camera',
   kick: 'kick',
 } as const;
 
@@ -1147,6 +1266,8 @@ export interface UniversityPerson4b96100 {
   self: boolean;
   moderator: boolean;
   ignored: boolean;
+  /** Hidden from this viewer because either account has blocked the other */
+  blocked: boolean;
 }
 
 export interface UniversityWhisper4b96100 {
@@ -1224,25 +1345,52 @@ export interface ChatAccess4b96100 {
   moderator: boolean;
   owner: boolean;
   suspended: boolean;
+  chatMuted: boolean;
+  reportsMuted: boolean;
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  warning: string | null;
 }
 
 export interface AdultAttestationInput4b96100 {
   adult: true;
 }
 
+export type ChatReportInput4b96100TargetType = typeof ChatReportInput4b96100TargetType[keyof typeof ChatReportInput4b96100TargetType];
+
+
+export const ChatReportInput4b96100TargetType = {
+  user: 'user',
+  message: 'message',
+  stream: 'stream',
+} as const;
+
 export type ChatReportInput4b96100Reason = typeof ChatReportInput4b96100Reason[keyof typeof ChatReportInput4b96100Reason];
 
 
 export const ChatReportInput4b96100Reason = {
   harassment: 'harassment',
-  minor: 'minor',
-  spam: 'spam',
+  hate_speech: 'hate_speech',
+  sexual_content: 'sexual_content',
+  spam_scams: 'spam_scams',
+  violence_threats: 'violence_threats',
+  underage_user: 'underage_user',
   other: 'other',
 } as const;
 
 export interface ChatReportInput4b96100 {
-  roomId: string;
-  messageId: string;
+  targetType: ChatReportInput4b96100TargetType;
+  /** @maxLength 40 */
+  targetUsername?: string;
+  /** @maxLength 80 */
+  roomId?: string;
+  messageId?: string;
+  /** @pattern ^[a-f0-9]{32}$ */
+  streamId?: string;
+  /** @maxLength 1000 */
+  messageText?: string;
   reason: ChatReportInput4b96100Reason;
   /** @maxLength 500 */
   details?: string;
@@ -1253,10 +1401,13 @@ export type ChatReportReceipt4b96100Status = typeof ChatReportReceipt4b96100Stat
 
 export const ChatReportReceipt4b96100Status = {
   pending: 'pending',
+  reviewed: 'reviewed',
+  warned: 'warned',
   dismissed: 'dismissed',
   hidden: 'hidden',
   muted: 'muted',
   restricted: 'restricted',
+  banned: 'banned',
 } as const;
 
 export interface ChatReportReceipt4b96100 {
@@ -1264,23 +1415,50 @@ export interface ChatReportReceipt4b96100 {
   status: ChatReportReceipt4b96100Status;
 }
 
-export type ChatReportRecord4b96100 = ChatReportReceipt4b96100 & {
-  roomId: string;
-  messageId: string;
+export type ChatReportRecord4b96100TargetType = typeof ChatReportRecord4b96100TargetType[keyof typeof ChatReportRecord4b96100TargetType];
+
+
+export const ChatReportRecord4b96100TargetType = {
+  user: 'user',
+  message: 'message',
+  stream: 'stream',
+} as const;
+
+export type ChatReportRecord4b96100Source = typeof ChatReportRecord4b96100Source[keyof typeof ChatReportRecord4b96100Source];
+
+
+export const ChatReportRecord4b96100Source = {
+  user: 'user',
+  moderator_bot: 'moderator_bot',
+} as const;
+
+export type ChatReportRecord4b96100 = ChatReportReceipt4b96100 & ({
+  targetType: ChatReportRecord4b96100TargetType;
+  source: ChatReportRecord4b96100Source;
+  /** @nullable */
+  roomId: string | null;
+  /** @nullable */
+  messageId: string | null;
+  /** @nullable */
+  streamId: string | null;
   reason: string;
   details: string;
   text: string;
-  username: string;
+  reporterUsername: string;
+  reportedUsername: string;
   createdAt: string;
-};
+});
 
 export type ChatReportReviewInput4b96100Action = typeof ChatReportReviewInput4b96100Action[keyof typeof ChatReportReviewInput4b96100Action];
 
 
 export const ChatReportReviewInput4b96100Action = {
+  reviewed: 'reviewed',
+  warn: 'warn',
+  mute: 'mute',
+  ban: 'ban',
   dismiss: 'dismiss',
   hide: 'hide',
-  mute: 'mute',
   restrict: 'restrict',
 } as const;
 
@@ -1635,6 +1813,68 @@ export interface UniversityAudioState4b96100 {
   slots: UniversityAudioSlot4b96100[];
 }
 
+export interface LiveStreamEntry4b96100 {
+  /** @pattern ^[a-f0-9]{32}$ */
+  streamId: string;
+  /** @maxLength 80 */
+  displayName: string;
+  /** @maxLength 40 */
+  username: string;
+  /** @minimum 0 */
+  viewerCount: number;
+}
+
+export interface LiveStreamList4b96100 {
+  streams: LiveStreamEntry4b96100[];
+}
+
+export interface LiveStreamHostSession4b96100 {
+  /** @pattern ^[a-f0-9]{32}$ */
+  streamId: string;
+  url: string;
+  token: string;
+  /** @maxLength 80 */
+  displayName: string;
+  /** @maxLength 40 */
+  username: string;
+}
+
+export interface LiveStreamViewerSession4b96100 {
+  url: string;
+  token: string;
+  /** @maxLength 80 */
+  displayName: string;
+  /** @maxLength 40 */
+  username: string;
+  /** @maxLength 40 */
+  viewerUsername: string;
+}
+
+export interface LiveStreamChatInput4b96100 {
+  /**
+     * @minLength 1
+     * @maxLength 280
+     */
+  text: string;
+}
+
+export interface LiveStreamChatMessage4b96100 {
+  id: string;
+  /** @pattern ^[a-f0-9]{32}$ */
+  streamId: string;
+  /** @maxLength 40 */
+  username: string;
+  /** @maxLength 80 */
+  displayName: string;
+  /** @maxLength 280 */
+  text: string;
+  createdAt: string;
+}
+
+export interface LiveStreamEnded4b96100 {
+  ended: boolean;
+}
+
 export type UniversityVideoBeamTokenInput4b96100Role = typeof UniversityVideoBeamTokenInput4b96100Role[keyof typeof UniversityVideoBeamTokenInput4b96100Role];
 
 
@@ -1675,9 +1915,7 @@ export const UniversityVideoBeamActionInput4b96100Action = {
   'speaker-connected': 'speaker-connected',
   'leave-slot': 'leave-slot',
   'set-self-mic': 'set-self-mic',
-  'set-self-camera': 'set-self-camera',
   'host-mute-mic': 'host-mute-mic',
-  'host-disable-camera': 'host-disable-camera',
   kick: 'kick',
 } as const;
 

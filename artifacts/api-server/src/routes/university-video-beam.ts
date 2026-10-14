@@ -19,6 +19,7 @@ import { RoomError, roomStore } from "../lib/room-store";
 import { requireCompletedProfile } from "../lib/account-profiles";
 import { universityVideoBeamStore } from "../lib/university-video-beam";
 import { liveKitBeamService, publicLiveKitFailure } from "../lib/livekit";
+import { isLiveStreamActiveOrStarting, isLiveStreamStarting } from "../lib/live-stream-policy";
 import {
   communityDefaultVideoSearch,
   isCommunityDailyWebSeriesRoom,
@@ -661,16 +662,11 @@ function sourcesForSlot(
   slot: UniversityVideoBeamState["slots"][number],
   micLockedDuringVideo: boolean,
   micOverride?: boolean,
-  cameraOverride?: boolean,
 ): { sources: TrackSource[]; microphoneEnabled: boolean } {
   const microphoneEnabled = !micLockedDuringVideo
     && (micOverride ?? (!slot.micMuted && !slot.mutedByHost));
-  const cameraEnabled = cameraOverride ?? (!slot.cameraOff && !slot.cameraDisabledByHost);
   return {
-    sources: [
-      microphoneEnabled ? TrackSource.MICROPHONE : null,
-      cameraEnabled ? TrackSource.CAMERA : null,
-    ].filter((source): source is TrackSource => source !== null),
+    sources: microphoneEnabled ? [TrackSource.MICROPHONE] : [],
     microphoneEnabled,
   };
 }
@@ -695,7 +691,15 @@ async function synchronizeSpeakerMediaPermissions(
   for (const slot of state.slots) {
     const participantId = slot.participantId;
     if (!participantId || !liveIdentities.has(participantId)) continue;
-    const policy = sourcesForSlot(slot, state.tv.micLockedDuringVideo);
+    let currentState = state;
+    if (!state.tv.micLockedDuringVideo && !slot.micMuted && !slot.mutedByHost) {
+      const accountId = universityVideoBeamStore.accountIdForParticipant(roomId, participantId);
+      if (accountId && isLiveStreamStarting(accountId)) {
+        currentState = universityVideoBeamStore.setSelfMedia(roomId, participantId, "mic", false);
+      }
+    }
+    const currentSlot = currentState.slots.find(candidate => candidate.participantId === participantId) ?? slot;
+    const policy = sourcesForSlot(currentSlot, currentState.tv.micLockedDuringVideo);
     const signature = `${policy.microphoneEnabled}:${policy.sources.join(",")}`;
     if (policies.get(participantId) === signature) continue;
     try {
@@ -741,6 +745,9 @@ router.post("/account/rooms/:roomId/video-beam/token", async (req, res) => {
   let slotNumber: number | null = null;
 
   if (input.data.role === "speaker") {
+    if (await isLiveStreamActiveOrStarting(id)) {
+      throw new RoomError(409, "End your Go Live stream before joining an audio beam seat.");
+    }
     universityVideoBeamStore.assertCanJoin(req.params.roomId, id);
     const reserved = universityVideoBeamStore.joinSlot(
       req.params.roomId, participant.participantId, id,
@@ -790,6 +797,9 @@ router.post("/account/rooms/:roomId/video-beam/actions", async (req, res) => {
   try {
     switch (input.data.action) {
       case "reserve-slot": {
+        if (await isLiveStreamActiveOrStarting(id)) {
+          throw new RoomError(409, "End your Go Live stream before joining an audio beam seat.");
+        }
         state = universityVideoBeamStore.joinSlot(
           roomId, participant.participantId, id,
         );
@@ -812,19 +822,16 @@ router.post("/account/rooms/:roomId/video-beam/actions", async (req, res) => {
         state = universityVideoBeamStore.leaveSlot(roomId, participant.participantId);
         break;
       }
-      case "set-self-mic":
-      case "set-self-camera": {
+      case "set-self-mic": {
         if (typeof input.data.enabled !== "boolean") throw new RoomError(400, "Choose whether the device is on or off.");
-        const media = input.data.action === "set-self-mic" ? "mic" : "camera";
+        const media = "mic";
+        if (input.data.enabled && (await isLiveStreamActiveOrStarting(id) || isLiveStreamStarting(id))) {
+          throw new RoomError(409, "End your Go Live stream before turning on your room microphone.");
+        }
         universityVideoBeamStore.assertSelfMedia(roomId, participant.participantId, media, input.data.enabled);
         const slot = universityVideoBeamStore.slotFor(roomId, participant.participantId);
         const current = universityVideoBeamStore.getState(roomId);
-        const policy = sourcesForSlot(
-          slot,
-          current.tv.micLockedDuringVideo,
-          media === "mic" ? input.data.enabled : undefined,
-          media === "camera" ? input.data.enabled : undefined,
-        );
+        const policy = sourcesForSlot(slot, current.tv.micLockedDuringVideo, input.data.enabled);
         await liveKitBeamService.setSelfTrackEnabled(
           roomName, participant.participantId, media, input.data.enabled, policy.sources,
         );
@@ -833,19 +840,13 @@ router.post("/account/rooms/:roomId/video-beam/actions", async (req, res) => {
         );
         break;
       }
-      case "host-mute-mic":
-      case "host-disable-camera": {
+      case "host-mute-mic": {
         if (!input.data.targetParticipantId) throw new RoomError(400, "Choose a speaker first.");
         const target = input.data.targetParticipantId;
-        const media = input.data.action === "host-mute-mic" ? "mic" : "camera";
+        const media = "mic";
         const slot = universityVideoBeamStore.assertHostControl(roomId, participant.participantId, target);
         const current = universityVideoBeamStore.getState(roomId);
-        const policy = sourcesForSlot(
-          slot,
-          current.tv.micLockedDuringVideo,
-          media === "mic" ? false : undefined,
-          media === "camera" ? false : undefined,
-        );
+        const policy = sourcesForSlot(slot, current.tv.micLockedDuringVideo, false);
         await liveKitBeamService.disableTrack(roomName, target, media, policy.sources);
         state = universityVideoBeamStore.hostDisableMedia(
           roomId, participant.participantId, target, media,

@@ -95,7 +95,10 @@ export async function accessFor(accountId: string) {
       .from(accountProfiles).where(eq(accountProfiles.accountId, accountId)),
   ]);
   return { adultConfirmed: !!admission && !admission.suspended, suspended: !!admission?.suspended,
-    moderator: !!moderator, owner: profile ? isOwnerAccount(profile) : false };
+    moderator: !!moderator, owner: profile ? isOwnerAccount(profile) : false,
+    chatMuted: !!admission?.chatMuted, reportsMuted: !!admission?.reportsMuted,
+    warning: admission?.warningAt && Date.now() - admission.warningAt.getTime() < 24 * 60 * 60_000
+      ? admission.moderationWarning ?? null : null };
 }
 export async function requireAdult(accountId: string) {
   if (!(await accessFor(accountId)).adultConfirmed)

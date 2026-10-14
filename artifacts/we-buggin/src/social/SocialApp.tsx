@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link, Route, Switch, useLocation, useParams } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
-import { Users, Heart, Ban, MessageCircle, Coins, Trophy, UserRound, House, Stamp, EllipsisVertical } from 'lucide-react';
+import { Users, Heart, Ban, Flag, MessageCircle, Coins, Trophy, UserRound, House, Stamp, EllipsisVertical } from 'lucide-react';
 import { useGetChatAccess, useGetSocialMe } from '@workspace/api-client-react';
 import '@/beam/beam.css';
 import './social.css';
@@ -14,6 +14,7 @@ import { BuyCreditsPage } from './BuyCreditsPage';
 import { InboxPage } from './InboxPage';
 import { LeaderboardPage, RewardsPage, ThreadPage } from './MoneyPages';
 import { StreamerPassportReview } from '@/passport/StreamerPassport';
+import { SafetyReportsPage } from '@/safety/SafetyReportsPage';
 
 const NAV = [
   { to: '/community', label: 'People', icon: Users, exact: true },
@@ -37,6 +38,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
   useEffect(() => { refreshSocial(qc); }, [path, qc]);
     useEffect(() => {
       document.title = path === '/community/moderation' ? 'Moderation — Streamtalk'
+        : path === '/community/reports' ? 'Safety reports — Streamtalk'
         : path === '/community/messages' ? 'Messages — Streamtalk'
           : path === '/community/favorites' ? 'Following — Streamtalk'
             : 'People — Streamtalk';
@@ -46,7 +48,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
   const bare = path.startsWith('/community/people/') || path.startsWith('/community/bots/');
   const needsIdentity = errStatus(me.error) === 409;
   return (
-      <div className={`beam-app sc${bare ? ' sc-profile-screen' : ''}${path === '/community/messages' ? ' sc-inbox-screen' : path === '/community/favorites' ? ' sc-following-screen' : path === '/community/moderation' ? ' sc-moderation-screen' : ''}`}>
+      <div className={`beam-app sc${bare ? ' sc-profile-screen' : ''}${path === '/community/messages' ? ' sc-inbox-screen' : path === '/community/favorites' ? ' sc-following-screen' : path === '/community/moderation' ? ' sc-moderation-screen' : path === '/community/reports' ? ' sc-reports-screen' : ''}`}>
       <div className="bm-bg" aria-hidden="true"><i /><i /><i /></div>
       {!bare && <nav className="bm-nav">
         <Wordmark href="/home" className="bm-logo" />
@@ -64,6 +66,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
                 </Link>
               ))}
               {access.data?.moderator && <Link href="/community/moderation" onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}><Ban size={17} aria-hidden="true" /><span>Moderation</span></Link>}
+              {access.data?.owner && <Link href="/community/reports" onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}><Flag size={17} aria-hidden="true" /><span>Safety reports</span></Link>}
               {access.data?.owner && <Link href="/community/passport-review" onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}><Stamp size={17} aria-hidden="true" /><span>Passport review</span></Link>}
             </nav>
           </details>
@@ -76,9 +79,14 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
             return <Link key={to} href={to} className={`sc-nav-item${on ? ' is-on' : ''}`} aria-current={on ? 'page' : undefined} data-testid={`nav-${label.toLowerCase().replace(/\s/g, '-')}`}><I size={18} /><span>{label}</span></Link>;
           })}
           {access.data?.moderator && <Link href="/community/moderation" className={`sc-nav-item${path === '/community/moderation' ? ' is-on' : ''}`} data-testid="nav-moderation"><Ban size={18} /><span>Moderation</span></Link>}
+          {access.data?.owner && <Link href="/community/reports" className={`sc-nav-item${path === '/community/reports' ? ' is-on' : ''}`} data-testid="nav-safety-reports"><Flag size={18} /><span>Reports</span></Link>}
           {access.data?.owner && <Link href="/community/passport-review" className={`sc-nav-item${path === '/community/passport-review' ? ' is-on' : ''}`} data-testid="nav-passport-review"><Stamp size={18} /><span>Passport review</span></Link>}
         </nav>}
         <main className="sc-main">
+          {access.data?.warning && <p className="sc-moderation-notice" role="alert">{access.data.warning}</p>}
+          {(access.data?.chatMuted || access.data?.reportsMuted) && (
+            <p className="sc-moderation-notice" role="status">Chat is temporarily muted while a moderator reviews reports.</p>
+          )}
           {me.isLoading ? <Loading /> : needsIdentity ? (
             <div className="sc-empty"><h2>Claim your name first</h2><p>Community needs your account identity.</p><Link href="/user-portal" className="bm-btn bm-btn-primary">Set up profile</Link></div>
           ) : me.isError ? <ErrorBox error={me.error} retry={() => me.refetch()} /> : (
@@ -92,6 +100,9 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
               <Route path="/community/messages" component={InboxPage} />
               <Route path="/community/messages/:username" component={ThreadRoute} />
               <Route path="/community/moderation" component={ModerationQueue} />
+              <Route path="/community/reports">{() => access.data?.owner
+                ? <SafetyReportsPage />
+                : <div className="sc-empty" role="status" data-testid="status-reports-access"><h2>Owner access required</h2><p>Safety reports are private to the Streamtalk owner.</p><Link href="/community" className="bm-btn">Back to People</Link></div>}</Route>
               <Route path="/community/passport-review">{() => access.data?.owner
                 ? <StreamerPassportReview />
                 : <div className="sc-empty" role="status" data-testid="status-passport-review-access"><h2>Moderator access required</h2><p>This review desk is limited to authorized moderators.</p><Link href="/community" className="bm-btn">Back to People</Link></div>}</Route>

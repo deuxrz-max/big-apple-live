@@ -48,6 +48,12 @@ import type {
   GetSocialPeopleParams,
   HealthStatus,
   InvalidInputResponse,
+  LiveStreamChatInput,
+  LiveStreamChatMessage,
+  LiveStreamEnded,
+  LiveStreamHostSession,
+  LiveStreamList,
+  LiveStreamViewerSession,
   MicrophoneAction,
   ModeratorBotChatterSettings,
   ModeratorBotFlag,
@@ -1117,6 +1123,471 @@ export const usePerformUniversityVideoBeamAction = <TError = ErrorType<InvalidIn
         TContext
       > => {
       return useMutation(getPerformUniversityVideoBeamActionMutationOptions(options));
+    }
+
+export const getGetLiveStreamsUrl = () => {
+
+
+
+
+  return `/api/account/live-streams`
+}
+
+/**
+ * @summary List active independent camera livestreams
+ */
+export const getLiveStreams = async ( options?: Parameters<typeof customFetch>[1]): Promise<LiveStreamList> => {
+
+  return customFetch<LiveStreamList>(getGetLiveStreamsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLiveStreamsQueryKey = () => {
+    return [
+    `/api/account/live-streams`
+    ] as const;
+    }
+
+
+export const getGetLiveStreamsQueryOptions = <TData = Awaited<ReturnType<typeof getLiveStreams>>, TError = ErrorType<SessionUnauthorizedResponse | void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLiveStreams>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLiveStreamsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLiveStreams>>> = ({ signal }) => getLiveStreams({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLiveStreams>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLiveStreamsQueryResult = NonNullable<Awaited<ReturnType<typeof getLiveStreams>>>
+export type GetLiveStreamsQueryError = ErrorType<SessionUnauthorizedResponse | void>
+
+
+/**
+ * @summary List active independent camera livestreams
+ */
+
+export function useGetLiveStreams<TData = Awaited<ReturnType<typeof getLiveStreams>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLiveStreams>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLiveStreamsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getStartLiveStreamUrl = () => {
+
+
+
+
+  return `/api/account/live-streams`
+}
+
+/**
+ * @summary Start a separate camera livestream for the signed-in account
+ */
+export const startLiveStream = async ( options?: Parameters<typeof customFetch>[1]): Promise<LiveStreamHostSession> => {
+
+  return customFetch<LiveStreamHostSession>(getStartLiveStreamUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getStartLiveStreamMutationKey = () => ['startLiveStream'] as const;
+
+export const getStartLiveStreamMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startLiveStream>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof startLiveStream>>, TError,void, TContext> => {
+
+const mutationKey = getStartLiveStreamMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startLiveStream>>, void> = () => {
+
+
+          return  startLiveStream(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StartLiveStreamMutationResult = NonNullable<Awaited<ReturnType<typeof startLiveStream>>>
+
+    export type StartLiveStreamMutationError = ErrorType<SessionUnauthorizedResponse | void>
+
+
+    /**
+ * @summary Start a separate camera livestream for the signed-in account
+ */
+export const useStartLiveStream = <TError = ErrorType<SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startLiveStream>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof startLiveStream>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getStartLiveStreamMutationOptions(options));
+    }
+
+export const getJoinLiveStreamUrl = (streamId: string,) => {
+
+
+
+
+  return `/api/account/live-streams/${streamId}/token`
+}
+
+/**
+ * @summary Join an active camera livestream as a viewer
+ */
+export const joinLiveStream = async (streamId: string, options?: Parameters<typeof customFetch>[1]): Promise<LiveStreamViewerSession> => {
+
+  return customFetch<LiveStreamViewerSession>(getJoinLiveStreamUrl(streamId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getJoinLiveStreamMutationKey = () => ['joinLiveStream'] as const;
+
+export const getJoinLiveStreamMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinLiveStream>>, TError,JoinLiveStreamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof joinLiveStream>>, TError,JoinLiveStreamMutationVariables, TContext> => {
+
+const mutationKey = getJoinLiveStreamMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof joinLiveStream>>, JoinLiveStreamMutationVariables> = (props) => {
+          const {streamId} = props ?? {};
+
+          return  joinLiveStream(streamId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type JoinLiveStreamMutationResult = NonNullable<Awaited<ReturnType<typeof joinLiveStream>>>
+
+    export type JoinLiveStreamMutationError = ErrorType<SessionUnauthorizedResponse | void>
+    export type JoinLiveStreamMutationVariables = {streamId: string}
+
+    /**
+ * @summary Join an active camera livestream as a viewer
+ */
+export const useJoinLiveStream = <TError = ErrorType<SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinLiveStream>>, TError,JoinLiveStreamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof joinLiveStream>>,
+        TError,
+        JoinLiveStreamMutationVariables,
+        TContext
+      > => {
+      return useMutation(getJoinLiveStreamMutationOptions(options));
+    }
+
+export const getStreamLiveStreamChatUrl = (streamId: string,) => {
+
+
+
+
+  return `/api/account/live-streams/${streamId}/chat/events`
+}
+
+/**
+ * @summary Receive block-filtered chat for a live camera stream
+ */
+export const streamLiveStreamChat = async (streamId: string, options?: Parameters<typeof customFetch>[1]): Promise<string> => {
+
+  return customFetch<string>(getStreamLiveStreamChatUrl(streamId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getStreamLiveStreamChatQueryKey = (streamId: string,) => {
+    return [
+    `/api/account/live-streams/${streamId}/chat/events`
+    ] as const;
+    }
+
+
+export const getStreamLiveStreamChatQueryOptions = <TData = Awaited<ReturnType<typeof streamLiveStreamChat>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(streamId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamLiveStreamChat>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getStreamLiveStreamChatQueryKey(streamId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof streamLiveStreamChat>>> = ({ signal }) => streamLiveStreamChat(streamId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: streamId !== null && streamId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof streamLiveStreamChat>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type StreamLiveStreamChatQueryResult = NonNullable<Awaited<ReturnType<typeof streamLiveStreamChat>>>
+export type StreamLiveStreamChatQueryError = ErrorType<SessionUnauthorizedResponse | void>
+
+
+/**
+ * @summary Receive block-filtered chat for a live camera stream
+ */
+
+export function useStreamLiveStreamChat<TData = Awaited<ReturnType<typeof streamLiveStreamChat>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ streamId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamLiveStreamChat>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getStreamLiveStreamChatQueryOptions(streamId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSendLiveStreamChatMessageUrl = (streamId: string,) => {
+
+
+
+
+  return `/api/account/live-streams/${streamId}/chat`
+}
+
+/**
+ * @summary Send a moderated live camera stream chat message
+ */
+export const sendLiveStreamChatMessage = async (streamId: string,
+    liveStreamChatInput: LiveStreamChatInput, options?: Parameters<typeof customFetch>[1]): Promise<LiveStreamChatMessage> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<LiveStreamChatMessage>(getSendLiveStreamChatMessageUrl(streamId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(liveStreamChatInput)
+  }
+);}
+
+
+
+
+
+export const getSendLiveStreamChatMessageMutationKey = () => ['sendLiveStreamChatMessage'] as const;
+
+export const getSendLiveStreamChatMessageMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendLiveStreamChatMessage>>, TError,SendLiveStreamChatMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendLiveStreamChatMessage>>, TError,SendLiveStreamChatMessageMutationVariables, TContext> => {
+
+const mutationKey = getSendLiveStreamChatMessageMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendLiveStreamChatMessage>>, SendLiveStreamChatMessageMutationVariables> = (props) => {
+          const {streamId,data} = props ?? {};
+
+          return  sendLiveStreamChatMessage(streamId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendLiveStreamChatMessageMutationResult = NonNullable<Awaited<ReturnType<typeof sendLiveStreamChatMessage>>>
+    export type SendLiveStreamChatMessageMutationBody = BodyType<LiveStreamChatInput>
+    export type SendLiveStreamChatMessageMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
+    export type SendLiveStreamChatMessageMutationVariables = {streamId: string;data: BodyType<LiveStreamChatInput>}
+
+    /**
+ * @summary Send a moderated live camera stream chat message
+ */
+export const useSendLiveStreamChatMessage = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendLiveStreamChatMessage>>, TError,SendLiveStreamChatMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendLiveStreamChatMessage>>,
+        TError,
+        SendLiveStreamChatMessageMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSendLiveStreamChatMessageMutationOptions(options));
+    }
+
+export const getEndLiveStreamUrl = (streamId: string,) => {
+
+
+
+
+  return `/api/account/live-streams/${streamId}`
+}
+
+/**
+ * @summary End the signed-in account's camera livestream
+ */
+export const endLiveStream = async (streamId: string, options?: Parameters<typeof customFetch>[1]): Promise<LiveStreamEnded> => {
+
+  return customFetch<LiveStreamEnded>(getEndLiveStreamUrl(streamId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getEndLiveStreamMutationKey = () => ['endLiveStream'] as const;
+
+export const getEndLiveStreamMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof endLiveStream>>, TError,EndLiveStreamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof endLiveStream>>, TError,EndLiveStreamMutationVariables, TContext> => {
+
+const mutationKey = getEndLiveStreamMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof endLiveStream>>, EndLiveStreamMutationVariables> = (props) => {
+          const {streamId} = props ?? {};
+
+          return  endLiveStream(streamId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EndLiveStreamMutationResult = NonNullable<Awaited<ReturnType<typeof endLiveStream>>>
+
+    export type EndLiveStreamMutationError = ErrorType<SessionUnauthorizedResponse | void>
+    export type EndLiveStreamMutationVariables = {streamId: string}
+
+    /**
+ * @summary End the signed-in account's camera livestream
+ */
+export const useEndLiveStream = <TError = ErrorType<SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof endLiveStream>>, TError,EndLiveStreamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof endLiveStream>>,
+        TError,
+        EndLiveStreamMutationVariables,
+        TContext
+      > => {
+      return useMutation(getEndLiveStreamMutationOptions(options));
     }
 
 export const getGetUniversityVideoBeamTvStateUrl = (roomId: string,) => {

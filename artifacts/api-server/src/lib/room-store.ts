@@ -58,6 +58,7 @@ type Room = {
 /** Single-process, ephemeral presence store. Session credentials are never in snapshots. */
 export class RoomStore {
   private readonly rooms = new Map<string, Room>();
+  private readonly entranceEffectOwners = new Map<string, { roomId: string; accountId: string }>();
   constructor(
     private readonly now: () => number = Date.now,
     private readonly allocateCode: (short: boolean) => string = short => randomBytes(short ? 3 : 6).toString("hex").toUpperCase(),
@@ -233,15 +234,28 @@ export class RoomStore {
       startedAt: this.now(),
       durationMs,
     };
+    this.entranceEffectOwners.set(event.eventId, { roomId: room.roomId, accountId });
     room.entranceEffects = [...room.entranceEffects.filter(item => this.now() - item.startedAt < 60_000), event].slice(-20);
+    const retained = new Set(room.entranceEffects.map(item => item.eventId));
+    for (const [eventId, owner] of this.entranceEffectOwners) {
+      if (owner.roomId === room.roomId && !retained.has(eventId)) this.entranceEffectOwners.delete(eventId);
+    }
     this.emit(room, { type: "room.entrance-effect", data: event });
     return { ...event };
+  }
+
+  entranceEffectOwnerAccountId(eventId: string): string | undefined {
+    return this.entranceEffectOwners.get(eventId)?.accountId;
   }
 
   recentRoomEntranceEffects(roomId: string, maxAgeMs = 60_000): RoomEntranceEffectEvent[] {
     const room = this.requireRoom(roomId);
     const cutoff = this.now() - maxAgeMs;
     room.entranceEffects = room.entranceEffects.filter(item => item.startedAt >= cutoff);
+    const retained = new Set(room.entranceEffects.map(item => item.eventId));
+    for (const [eventId, owner] of this.entranceEffectOwners) {
+      if (owner.roomId === room.roomId && !retained.has(eventId)) this.entranceEffectOwners.delete(eventId);
+    }
     return room.entranceEffects.map(item => ({ ...item }));
   }
 

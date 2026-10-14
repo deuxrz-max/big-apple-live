@@ -94,7 +94,7 @@ export function PersonPage({ username }: { username: string }) {
   const countryName = p.country ? (me.data?.countries.find((c) => c.code === p.country)?.name ?? p.country) : undefined;
   return (
     <ProfileView person={p} own={own} countryName={countryName} products={me.data?.products} backHref="/community"
-      menu={own ? null : <ProfileMenu name={p.displayName || p.username} blocked={p.blocked} pending={rel.isPending} onBlock={(a) => setRel('block', a)} />}
+      menu={own ? null : <ProfileMenu name={p.displayName || p.username} username={p.username} blocked={p.blocked} pending={rel.isPending} onBlock={(a) => setRel('block', a)} />}
       actions={own ? null : (
         <div className="pf-actions">
           <button type="button" className="pf-btn pf-btn-fill" aria-pressed={p.favorite} disabled={rel.isPending || p.blocked} onClick={() => setRel('favorite', !p.favorite)} data-testid="button-favorite">{p.favorite ? 'Following' : 'Follow'}</button>

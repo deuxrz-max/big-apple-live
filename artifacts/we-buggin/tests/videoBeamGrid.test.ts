@@ -59,15 +59,15 @@ test('empty slots remain full tiles that viewers can join by tapping or keyboard
   assert.doesNotMatch(roomComponent, /Camera and mic start only after you join/);
 });
 
-test('live video is forced to fill and crop inside every camera tile', () => {
-  assert.match(roomCss, /\.ur-live-video\{[^}]*position:absolute[^}]*inset:0[^}]*width:100%[^}]*height:100%[^}]*object-fit:cover/);
-  assert.match(beamHook, /objectFit:\s*"cover"/);
-  assert.match(beamHook, /minWidth:\s*"100%"/);
-  assert.match(beamHook, /minHeight:\s*"100%"/);
-  assert.match(roomComponent, /className="ur-video-fill"[\s\S]*?<VideoBeamMedia/);
-  assert.match(themeCss, /#root \.ur-slot\.is-occupied \.ur-slot-media\s*\{[^}]*flex:\s*1 1 0%/);
-  assert.match(themeCss, /#root \.ur-slot-media \.ur-video-fill > \.ur-live-video\s*\{[^}]*height:\s*100% !important[^}]*object-fit:\s*cover !important/);
-  assert.match(themeCss, /#root \.ur-slot\.is-occupied \.ur-slot-actions\s*\{[^}]*position:\s*absolute/);
+test('beam seats ask for microphone only and show an avatar instead of camera video', () => {
+  assert.match(beamHook, /createLocalTracks\(\{\s*audio:\s*\{/);
+  assert.match(beamHook, /video:\s*false/);
+  assert.doesNotMatch(beamHook, /facingMode|LocalVideoTrack/);
+  assert.match(roomComponent, /<BeamAudioTrack track={media\?\.audio}/);
+  assert.doesNotMatch(roomComponent, /VideoBeamMedia|Camera off|Cam off|Flip camera/);
+  assert.match(roomComponent, /<UserPhoto[\s\S]*?photoUrl={person\.photoUrl}/);
+  assert.match(roomComponent, /<IdentityAvatar identity={person\.identity}/);
+  assert.match(roomComponent, /ur-slot-initial/);
 });
 
 test('speaker names stay in a compact footer and mic status is isolated in a corner', () => {
@@ -77,7 +77,9 @@ test('speaker names stay in a compact footer and mic status is isolated in a cor
   assert.match(themeCss, /#root \.ur-slot\.is-occupied \.ur-slot-mic-icon\s*\{[^}]*position:\s*absolute/);
   assert.doesNotMatch(roomComponent, /ur-slot-mood/);
   assert.doesNotMatch(roomComponent, /context={`speaker-\$\{slot\.slotNumber\}`}/);
-  assert.match(roomComponent, /ur-slot-marks/);
+  assert.match(roomComponent, /<BadgeMark id={person\.badgeId/);
+  assert.match(roomComponent, /person\.displayNameColor/);
+  assert.match(roomComponent, /ur-slot-mic-icon/);
 });
 
 test('room title stays on one line and ellipsizes visually without changing its accessible name', () => {

@@ -11,4 +11,11 @@ export interface ChatAccess4b96100 {
   moderator: boolean;
   owner: boolean;
   suspended: boolean;
+  chatMuted: boolean;
+  reportsMuted: boolean;
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  warning: string | null;
 }

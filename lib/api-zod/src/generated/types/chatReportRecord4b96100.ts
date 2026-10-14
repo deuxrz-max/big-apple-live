@@ -6,13 +6,22 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ChatReportReceipt4b96100 } from './chatReportReceipt4b96100';
+import type { ChatReportRecord4b96100Source } from './chatReportRecord4b96100Source';
+import type { ChatReportRecord4b96100TargetType } from './chatReportRecord4b96100TargetType';
 
-export type ChatReportRecord4b96100 = ChatReportReceipt4b96100 & {
-  roomId: string;
-  messageId: string;
+export type ChatReportRecord4b96100 = ChatReportReceipt4b96100 & ({
+  targetType: ChatReportRecord4b96100TargetType;
+  source: ChatReportRecord4b96100Source;
+  /** @nullable */
+  roomId: string | null;
+  /** @nullable */
+  messageId: string | null;
+  /** @nullable */
+  streamId: string | null;
   reason: string;
   details: string;
   text: string;
-  username: string;
+  reporterUsername: string;
+  reportedUsername: string;
   createdAt: Date;
-};
+});

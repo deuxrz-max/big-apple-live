@@ -165,6 +165,26 @@ test("pending permission handoff survives briefly, connected speaker disconnects
     "a connected participant missing from LiveKit is released immediately");
 });
 
+test("Go Live exclusivity detects only a live beam mic and mutes the speaker slot", () => {
+  const rooms = new RoomStore();
+  createRoom(rooms);
+  const beam = new UniversityVideoBeamStore(rooms);
+  const speaker = addMember(rooms, "MUSIC1", "speaker");
+  beam.joinSlot("MUSIC1", speaker.participantId, "speaker");
+  assert.equal(beam.isAccountMicrophoneActive("speaker"), false);
+  beam.markConnected("MUSIC1", speaker.participantId);
+  assert.equal(beam.isAccountMicrophoneActive("speaker"), true);
+
+  beam.setSelfMedia("MUSIC1", speaker.participantId, "mic", true);
+  assert.equal(beam.isAccountMicrophoneActive("speaker"), true);
+  assert.deepEqual(beam.muteAccountMicrophones("speaker"), [{
+    roomId: "MUSIC1",
+    participantId: speaker.participantId,
+  }]);
+  assert.equal(beam.isAccountMicrophoneActive("speaker"), false);
+  assert.equal(beam.getState("MUSIC1").slots[0]?.micMuted, true);
+});
+
 test("no first joiner gets speaker moderation powers in a public topic room", () => {
   const rooms = new RoomStore();
   createRoom(rooms);
@@ -196,13 +216,14 @@ test("speaker controls are consent-based; host can only disable another speaker 
   beam.joinSlot("CHANNEL1", speaker.participantId, "speaker");
 
   beam.hostDisableMedia("CHANNEL1", host.participantId, speaker.participantId, "mic");
-  beam.hostDisableMedia("CHANNEL1", host.participantId, speaker.participantId, "camera");
   let state = beam.getState("CHANNEL1");
   let controlled = state.slots.find(slot => slot.participantId === speaker.participantId)!;
   assert.equal(controlled.micMuted, true);
   assert.equal(controlled.cameraOff, true);
   assert.equal(controlled.mutedByHost, true);
-  assert.equal(controlled.cameraDisabledByHost, true);
+  assert.equal(controlled.cameraDisabledByHost, false);
+  assert.throws(() => beam.hostDisableMedia("CHANNEL1", host.participantId, speaker.participantId, "camera"),
+    (error: unknown) => error instanceof RoomError && error.status === 410);
 
   assert.throws(() => beam.hostDisableMedia("CHANNEL1", speaker.participantId, host.participantId, "mic"),
     (error: unknown) => error instanceof RoomError && error.status === 403);
@@ -211,12 +232,13 @@ test("speaker controls are consent-based; host can only disable another speaker 
 
   // Only the speaker's own explicit action can restore their own media.
   state = beam.setSelfMedia("CHANNEL1", speaker.participantId, "mic", true);
-  state = beam.setSelfMedia("CHANNEL1", speaker.participantId, "camera", true);
   controlled = state.slots.find(slot => slot.participantId === speaker.participantId)!;
   assert.equal(controlled.micMuted, false);
-  assert.equal(controlled.cameraOff, false);
+  assert.equal(controlled.cameraOff, true);
   assert.equal(controlled.mutedByHost, false);
   assert.equal(controlled.cameraDisabledByHost, false);
+  assert.throws(() => beam.setSelfMedia("CHANNEL1", speaker.participantId, "camera", true),
+    (error: unknown) => error instanceof RoomError && error.status === 410);
 
   const kicked = beam.kick("CHANNEL1", host.participantId, speaker.participantId);
   assert.equal(kicked.accountId, "speaker");
@@ -566,6 +588,28 @@ test("a speaker muted by choice stays muted when a video ends and the break begi
   assert.equal(state.slots.find(slot => slot.participantId === speaker.participantId)?.micMuted, true);
 });
 
+test("Movies keeps the room microphone locked during playback and unlocks for the three-minute break", () => {
+  let now = 800_000;
+  const rooms = new RoomStore(() => now);
+  createRoom(rooms, "MOVIES", "history-movies", undefined, "Movies");
+  const beam = new UniversityVideoBeamStore(rooms, () => now);
+  const speaker = addMember(rooms, "MOVIES", "speaker");
+  beam.joinSlot("MOVIES", speaker.participantId, "speaker");
+  const state = beam.initializeDefaultTvQueue("MOVIES", communityDefaultVideoSearch("MOVIES", rooms), [
+    { videoId: "movie123456", title: "Feature film", channelTitle: "Licensed Movies", description: null },
+  ], { movie123456: 5_000 });
+  assert.equal(state.tv.micLockedDuringVideo, true);
+  assert.throws(
+    () => beam.setSelfMedia("MOVIES", speaker.participantId, "mic", true),
+    (error: unknown) => error instanceof RoomError && error.status === 409,
+  );
+
+  now += 5_000;
+  const breakState = beam.getState("MOVIES");
+  assert.equal(breakState.tv.micLockedDuringVideo, false);
+  assert.equal(breakState.tv.breakEndsAtMs, now + 180_000);
+});
+
 test("public Beam TV keeps its curated search independent of a room display label", () => {
   const rooms = new RoomStore();
   createRoom(rooms, "MUSIC1", "history-music", undefined, "Music");
@@ -769,8 +813,8 @@ test("LiveKit audience access is subscribe-only and tokens are room-scoped", asy
   const speakerClaims = JSON.parse(Buffer.from(speaker.token.split(".")[1]!, "base64url").toString("utf8"));
   assert.equal(speakerClaims.video.canPublish, true);
   assert.equal(speakerClaims.video.canSubscribe, true);
-  assert.deepEqual(speakerClaims.video.canPublishSources, ["camera"],
-    "speaker tokens do not initially grant microphone publishing");
+  assert.deepEqual(speakerClaims.video.canPublishSources, [],
+    "audio beam speaker tokens start with no media sources; server policy grants microphone only after validation");
   assert.equal(speaker.token.includes(fakeSettings.apiSecret), false);
 
   const policyUpdates: Array<{ sources: TrackSource[]; muted: boolean }> = [];
@@ -788,13 +832,33 @@ test("LiveKit audience access is subscribe-only and tokens are room-scoped", asy
     () => fakeSettings,
     () => policyClient as unknown as import("livekit-server-sdk").RoomServiceClient,
   );
-  await policyService.applySpeakerMediaPolicy("streamtalk-test-room", "speaker", [TrackSource.CAMERA], false);
-  await policyService.applySpeakerMediaPolicy(
-    "streamtalk-test-room", "speaker", [TrackSource.CAMERA, TrackSource.MICROPHONE], true,
-  );
+  await policyService.applySpeakerMediaPolicy("streamtalk-test-room", "speaker", [], false);
+  await policyService.applySpeakerMediaPolicy("streamtalk-test-room", "speaker", [TrackSource.MICROPHONE], true);
   assert.deepEqual(policyUpdates.map(update => update.muted), [true, false],
     "server-side media policy mutes during video and restores only the previously allowed state");
-  assert.deepEqual(policyUpdates[0]?.sources, [TrackSource.CAMERA]);
+  assert.deepEqual(policyUpdates[0]?.sources, []);
+  assert.deepEqual(policyUpdates[1]?.sources, [TrackSource.MICROPHONE]);
+});
+
+test("standalone Go Live tokens publish camera and mic only for the host", async () => {
+  const fakeSettings: LiveKitSettings = {
+    url: "wss://live.example.test", apiKey: "test-public-key", apiSecret: "test-only-secret",
+  };
+  const service = new LiveKitBeamService(() => fakeSettings);
+  const host = await service.createLiveStreamToken({
+    roomName: "st-live-test-hash", identity: "host", displayName: "Creator", role: "host",
+  });
+  const viewer = await service.createLiveStreamToken({
+    roomName: "st-live-test-hash", identity: "viewer-test", displayName: "Viewer", role: "viewer",
+  });
+  const hostClaims = JSON.parse(Buffer.from(host.token.split(".")[1]!, "base64url").toString("utf8"));
+  const viewerClaims = JSON.parse(Buffer.from(viewer.token.split(".")[1]!, "base64url").toString("utf8"));
+  assert.equal(hostClaims.video.canPublish, true);
+  assert.deepEqual(hostClaims.video.canPublishSources.sort(), ["camera", "microphone"]);
+  assert.equal(viewerClaims.video.canPublish, false);
+  assert.deepEqual(viewerClaims.video.canPublishSources, []);
+  assert.equal(viewerClaims.video.canPublishData, true);
+  assert.equal(host.token.includes(fakeSettings.apiSecret), false);
 });
 
 test("CNN News plays 15-minute live segments, opens the three-minute mic break, then refreshes the queue", () => {

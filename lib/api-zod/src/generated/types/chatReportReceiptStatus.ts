@@ -11,8 +11,11 @@ export type ChatReportReceiptStatus = typeof ChatReportReceiptStatus[keyof typeo
 
 export const ChatReportReceiptStatus = {
   pending: 'pending',
+  reviewed: 'reviewed',
+  warned: 'warned',
   dismissed: 'dismissed',
   hidden: 'hidden',
   muted: 'muted',
   restricted: 'restricted',
+  banned: 'banned',
 } as const;

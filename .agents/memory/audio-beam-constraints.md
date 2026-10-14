@@ -1,13 +1,13 @@
 ---
 name: University beam transport decisions
-description: The audio-only preference was explicitly superseded by an approved, real LiveKit video beam.
+description: Public room beam seats are audio-only; separate creator Go Live streams use LiveKit.
 ---
 
-The owner's current approved university-room beam is real four-slot audio/video via LiveKit, with the host included in the four slots. This explicitly replaces the earlier audio-only/P2P preference for this feature; use the server-side LiveKit integration and existing Replit Secrets, never expose the API secret to a browser. Audience tokens are subscribe-only; camera/microphone capture starts only after a person taps to join a speaker slot.
+The owner's current room beam is audio-only: speakers join one of eight microphone seats, and camera access is never requested there. Camera broadcasting is a separate Go Live feature, started only by an explicit user action with LiveKit media tokens made on the server. Viewers can subscribe to the creator stream and publish chat data, but cannot publish audio or video. A user must not transmit a beam microphone and creator-stream microphone at the same time: Go Live is blocked if their beam mic is active; when it starts while the beam mic is locked or muted, the beam mic is muted and must be manually re-enabled after Go Live ends.
 
-**Why:** on 2026-10-12 the owner explicitly changed the plan back to a real LiveKit-powered Video Beam and supplied the three LiveKit secret names. The latest feature decision takes precedence over the previous cost-avoidance/P2P choice.
+**Why:** the owner changed the beam to audio-only while retaining LiveKit solely for independent camera broadcasts, and required the two microphone paths not to clash.
 
-**How to apply:** preserve the four-person limit including the host; create signed tokens on the server only, enforce subscribe-only audience permissions, and make host media controls revoke publication server-side. Do not ask for any other paid-service credentials or purchase service plans.
+**How to apply:** never add camera capture or camera permission prompts to speaker seats. Keep Go Live consent-triggered, tokens server-only, viewers subscribe-only for A/V, and server-side checks around microphone exclusivity.
 
 The former P2P audio design and its connection-scoped speaker/listener signaling are historical only. If that older feature is explicitly restored later, keep a signaling connection's role fixed for its lifetime: a listener can reserve a slot before a microphone prompt, and the listener disconnect during handoff must not release the reservation.
 

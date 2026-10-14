@@ -1,4 +1,4 @@
-import { db, accountProfiles, roomMessages, socialRelations, socialSettings, socialWallets, chatMemberships, moderatorBotFlags, type RoomMessageRow } from "@workspace/db";
+import { db, accountProfiles, roomMessages, socialRelations, socialSettings, socialWallets, chatAdmissions, chatMemberships, chatReports, moderatorBotFlags, type RoomMessageRow } from "@workspace/db";
 import { eq, desc, sql, and, or, gte, notInArray, isNull, lt, inArray } from "drizzle-orm";
 import { GetRoomMessagesResponse, type ChatInput, type ChatAccepted } from "@workspace/api-zod";
 import { publicProfile } from "./account-profiles";
@@ -73,6 +73,12 @@ export async function acceptMessage(
     if (!row) throw new RoomError(409, "Complete your account profile first");
     let violation: string | null = null;
     if (filter) {
+      const [admission] = await tx.select().from(chatAdmissions)
+        .where(eq(chatAdmissions.accountId, accountId));
+      if (admission?.suspended) throw new RoomError(403, "Your account cannot access chat right now");
+      if (admission?.chatMuted || admission?.reportsMuted) {
+        throw new RoomError(403, "Chat is temporarily unavailable for this account while a moderator reviews reports");
+      }
       const [membership] = await tx.select().from(chatMemberships).where(and(
         eq(chatMemberships.historyId, historyId), eq(chatMemberships.accountId, accountId)));
       if (!membership || membership.muted) throw new RoomError(403, "You cannot send messages in this university");
@@ -116,6 +122,14 @@ export async function acceptMessage(
       await tx.insert(moderatorBotFlags).values({ messageId: original!.id, warningMessageId: message.id,
         roomId: roomId.toUpperCase(), accountId, username: profile.username,
         displayName: profile.displayName ?? profile.username, reason: violation });
+      await tx.insert(chatReports).values({
+        historyId, roomId: roomId.toUpperCase(), messageId: original!.id,
+        reporterId: `moderator-bot:${botRotation.people(roomId.toUpperCase())[0]?.id ?? "system"}`,
+        reporterUsername: botRotation.people(roomId.toUpperCase())[0]?.name ?? "Streamtalk moderator bot",
+        reportedAccountId: accountId, reportedUsername: profile.username, targetType: "message",
+        source: "moderator_bot", messageText: original!.text, reason: "other",
+        details: `Moderator bot flag: ${violation}`,
+      });
     }
     // A leave/expiry while the database was busy rolls back message, flag and warning.
     store.requireAccountMember(roomId, sessionId, accountId);

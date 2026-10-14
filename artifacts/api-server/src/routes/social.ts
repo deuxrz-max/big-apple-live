@@ -1,4 +1,6 @@
 import { Router, type IRouter } from "express";
+import { sql } from "drizzle-orm";
+import { accountProfiles, db } from "@workspace/db";
 import {
   SaveSocialProfileBody, SaveSocialProfileResponse, GetSocialMeResponse, GetSocialPeopleResponse,
   UpdateMyEntranceEffectSettingsBody, UpdateMyEntranceEffectSettingsResponse,
@@ -12,6 +14,7 @@ import {
 import { accountId, sameOrigin } from "./identity";
 import { RoomError } from "../lib/room-store";
 import { requireAccount } from "../lib/social/core";
+import { accessFor, requireAdult } from "../lib/community";
 import { blocks, getMe, getPerson, listPeople, relationship, saveSocialProfile } from "../lib/social/people";
 import { claimDaily, gift, ledger, purchase } from "../lib/social/rewards";
 import { roomGiftEvents } from '../lib/social/room-gifts';
@@ -19,6 +22,8 @@ import { serveGiftMedia, serveMoonfoxGiftMedia, serveCosmicEncoreGiftMedia } fro
 import { serveMonthlyCreditTierEntranceEffectMedia, serveRoomEntranceEffectMedia } from "../lib/room-entry-effect-media";
 import { clearThread, inbox, sendMessage, thread } from "../lib/social/messages";
 import { favoritesGallery, favoriteRoom } from "../lib/social/favorites";
+import { liveStreamIdForAccount, liveStreamRoomName } from "../lib/live-stream-policy";
+import { liveKitBeamService } from "../lib/livekit";
 import {
   deletePassportPlatform, myStreamerPassport, passportReviewQueue, publicStreamerPassport,
   requestPassportVerification, reviewPassportRequest, savePassportPlatform, setFoundingLeague,
@@ -115,7 +120,32 @@ router.get("/social/people/:username", async (req, res): Promise<void> => { res.
 router.put("/social/people/:username/relationship", async (req, res): Promise<void> => {
   const input = SetSocialRelationshipBody.safeParse(req.body);
   if (!input.success) throw new RoomError(400, "Choose favorite or block and an active status");
-  res.json(await relationship(accountId(req), name(req.params.username), input.data.kind, input.data.active));
+  const actorId = accountId(req);
+  const targetUsername = name(req.params.username);
+  const result = await relationship(actorId, targetUsername, input.data.kind, input.data.active);
+  if (input.data.kind === "block" && input.data.active) {
+    const [target] = await db.select({ accountId: accountProfiles.accountId }).from(accountProfiles)
+      .where(sql`lower(${accountProfiles.username}) = lower(${targetUsername})`).limit(1);
+    if (target) {
+      const livePairs = [
+        { ownerId: actorId, viewerId: target.accountId },
+        { ownerId: target.accountId, viewerId: actorId },
+      ];
+      for (const pair of livePairs) {
+        const roomName = liveStreamRoomName(liveStreamIdForAccount(pair.ownerId));
+        const viewerIdentity = `viewer-${liveStreamIdForAccount(pair.viewerId)}`;
+        try {
+          const participants = await liveKitBeamService.listParticipants(roomName);
+          if (participants.some(participant => participant.identity === viewerIdentity)) {
+            await liveKitBeamService.removeParticipant(roomName, viewerIdentity);
+          }
+        } catch (error) {
+          req.log.warn({ error }, "Blocked livestream viewer could not be disconnected immediately");
+        }
+      }
+    }
+  }
+  res.json(result);
 });
 router.get("/social/blocks", async (req, res): Promise<void> => { res.json(GetSocialPeopleResponse.parse(await blocks(accountId(req)))); });
 router.post("/social/wallet/claim", async (req, res): Promise<void> => { res.json(await claimDaily(accountId(req))); });
@@ -144,7 +174,13 @@ router.get("/social/messages/:username", async (req, res): Promise<void> => {
 router.post("/social/messages/:username", async (req, res): Promise<void> => {
   const input = SendSocialMessageBody.safeParse(req.body);
   if (!input.success) throw new RoomError(400, "Write up to 1000 characters and provide a valid retry key");
-  res.json(SendSocialMessageResponse.parse(await sendMessage(accountId(req), name(req.params.username), input.data.body, input.data.idempotencyKey)));
+  const senderId = accountId(req);
+  await requireAdult(senderId);
+  const chatAccess = await accessFor(senderId);
+  if (chatAccess.chatMuted || chatAccess.reportsMuted) {
+    throw new RoomError(403, "Chat is temporarily muted while a moderator reviews reports");
+  }
+  res.json(SendSocialMessageResponse.parse(await sendMessage(senderId, name(req.params.username), input.data.body, input.data.idempotencyKey)));
 });
 router.delete("/social/messages/:username", async (req, res): Promise<void> => { res.json(await clearThread(accountId(req), name(req.params.username))); });
 export default router;

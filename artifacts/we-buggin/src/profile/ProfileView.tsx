@@ -6,6 +6,7 @@ import { UserPhoto, photoSrc } from '@/components/user-photo';
 import { BotShield } from '@/chat/BotShield';
 import { BadgeMark } from '@/social/common';
 import { BadgeArt } from '@/social/BadgeArt';
+import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
 import './profile.css';
 import { approvedPhotos } from './profile-model';
 
@@ -54,45 +55,43 @@ export function BackButton({ href, label }: { href: string; label: string }) {
   return <Link href={href} className="pf-round" aria-label={label} data-testid="link-profile-back"><ArrowLeft size={20} aria-hidden /></Link>;
 }
 
-export function ProfileMenu({ name, blocked, pending, onBlock }: { name: string; blocked: boolean; pending: boolean; onBlock: (active: boolean) => void }) {
+export function ProfileMenu({ name, username, blocked, pending, onBlock }: { name: string; username: string; blocked: boolean; pending: boolean; onBlock: (active: boolean) => void }) {
   const [open, setOpen] = useState(false);
-  const [dlg, setDlg] = useState<null | 'block' | 'report'>(null);
+  const [dlg, setDlg] = useState<null | 'block'>(null);
+  const [reportOpen, setReportOpen] = useState(false);
   useEffect(() => {
-    if (!open && !dlg) return;
+    if (!open && !dlg && !reportOpen) return;
     const k = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); setDlg(null); } };
     window.addEventListener('keydown', k);
     return () => window.removeEventListener('keydown', k);
-  }, [open, dlg]);
+  }, [open, dlg, reportOpen]);
   return (
     <div className="pf-menu">
       <button type="button" className="pf-round" aria-label="More actions" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)} data-testid="button-profile-menu"><MoreVertical size={20} aria-hidden /></button>
       {open && <>
         <button type="button" className="pf-scrim" aria-label="Close menu" tabIndex={-1} onClick={() => setOpen(false)} />
         <div className="pf-menu-list" role="menu">
-          <button type="button" role="menuitem" autoFocus onClick={() => { setOpen(false); setDlg('report'); }} data-testid="button-report"><Flag size={16} aria-hidden /> Report</button>
+          <button type="button" role="menuitem" autoFocus onClick={() => { setOpen(false); setReportOpen(true); }} data-testid="button-report"><Flag size={16} aria-hidden /> Report</button>
           {blocked
             ? <button type="button" role="menuitem" disabled={pending} onClick={() => { setOpen(false); onBlock(false); }} data-testid="button-unblock"><Undo2 size={16} aria-hidden /> Unblock</button>
             : <button type="button" role="menuitem" onClick={() => { setOpen(false); setDlg('block'); }} data-testid="button-block"><Ban size={16} aria-hidden /> Block</button>}
         </div>
       </>}
-      {dlg && <div className="pf-modal">
+      {dlg === 'block' && <div className="pf-modal">
         <button type="button" className="pf-scrim pf-scrim-dim" aria-label="Close dialog" tabIndex={-1} onClick={() => setDlg(null)} />
         <div className="pf-dialog" role="dialog" aria-modal="true" aria-labelledby="pf-dlg-t">
-          {dlg === 'block' ? <>
+          <>
             <h2 id="pf-dlg-t">Block {name}?</h2>
-            <p>Blocked in either direction: no new gifts, messages or favorites. Past messages stay readable.</p>
+            <p>Blocking hides this person's messages, gifts, room audio and live streams from you. They are not notified.</p>
             <div className="pf-dlg-acts">
               <button type="button" className="pf-btn pf-btn-fill" autoFocus disabled={pending} onClick={() => { onBlock(true); setDlg(null); }} data-testid="button-confirm-block">Yes, block</button>
               <button type="button" className="pf-btn" onClick={() => setDlg(null)}>Cancel</button>
-            </div></> : <>
-            <h2 id="pf-dlg-t">Reporting {name}</h2>
-            <p>Profiles cannot be reported directly yet. Reports work on public room messages. If this person broke the rules in a room, open that room and use Report beside the message. Nothing is sent from here.</p>
-            <div className="pf-dlg-acts">
-              <Link href="/home" className="pf-btn pf-btn-fill" data-testid="link-report-rooms">Go to rooms</Link>
-              <button type="button" className="pf-btn" autoFocus onClick={() => setDlg(null)}>Close</button>
-            </div></>}
+            </div>
+          </>
         </div>
       </div>}
+      {reportOpen && <SafetyReportDialog targetType="user" targetUsername={username}
+        onClose={() => setReportOpen(false)} />}
     </div>
   );
 }

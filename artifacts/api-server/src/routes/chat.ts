@@ -40,7 +40,7 @@ router.post("/account/rooms/:roomId/messages", async (req, res): Promise<void> =
   res.set("Cache-Control", "no-store");
   res.status(201).json(SendRoomMessageResponse.parse(accepted));
 });
-router.get("/account/rooms/:roomId/events", (req, res): void => {
+router.get("/account/rooms/:roomId/events", async (req, res): Promise<void> => {
   const params = StreamAccountRoomEventsParams.safeParse(req.params);
   if (!params.success) throw new RoomError(400, "Invalid university code");
   const roomId = params.data.roomId;
@@ -54,6 +54,10 @@ router.get("/account/rooms/:roomId/events", (req, res): void => {
     try { roomStore.requireAccountMember(roomId, sessionId, id); }
     catch { res.end(); return; }
     try { await requireAdult(id); } catch { res.end(); return; }
+    if (event.type === "room.entrance-effect") {
+      const ownerId = roomStore.entranceEffectOwnerAccountId(event.data.eventId);
+      if (ownerId && await pairBlocked(id, ownerId)) return;
+    }
     if (event.type === "chat.accepted" && event.senderAccountId
       && (await pairBlocked(id, event.senderAccountId) || await isIgnored(id, event.senderAccountId))) return;
     if (event.type === "chat.accepted" && event.senderAccountId
@@ -73,6 +77,8 @@ router.get("/account/rooms/:roomId/events", (req, res): void => {
   res.flushHeaders();
   res.write(`event: room.snapshot\ndata: ${JSON.stringify(GetRoomResponse.parse(roomStore.get(roomId)))}\n\n`);
   for (const effect of roomStore.recentRoomEntranceEffects(roomId)) {
+    const ownerId = roomStore.entranceEffectOwnerAccountId(effect.eventId);
+    if (ownerId && await pairBlocked(id, ownerId)) continue;
     res.write(`event: room.entrance-effect\ndata: ${JSON.stringify(effect)}\n\n`);
   }
   const keepalive = setInterval(() => {

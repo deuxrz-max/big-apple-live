@@ -10,6 +10,7 @@ import { BottomNavigation } from '@/components/bottom-navigation';
 import NotFound from '@/pages/not-found';
 import { clearAllCreds } from '@/lib/room-creds';
 import { AdultGate, ChatDirectory, ChatProfile, ProfileGate, PublicChatLanding, TextChatRoom } from '@/chat/ChatApp';
+import { LiveStreamsDirectory, StartLiveStreamPage, WatchLiveStreamPage } from '@/chat/LiveStreamPages';
 import { EmailSignUp } from '@/components/email-signup';
 import '@/chat/chat.css';
 import { OwnProfile } from '@/profile/OwnProfile';
@@ -184,6 +185,37 @@ function DiscoveryRoute() {
   );
 }
 
+function LiveStreamsRoute() {
+  const { user } = useUser();
+  return (
+    <>
+      <Show when="signed-in">{user && <ProfileGate><LiveStreamsDirectory key={user.id} /></ProfileGate>}</Show>
+      <Show when="signed-out"><Redirect to="/sign-in" /></Show>
+    </>
+  );
+}
+
+function StartLiveStreamRoute() {
+  const { user } = useUser();
+  return (
+    <>
+      <Show when="signed-in">{user && <ProfileGate><StartLiveStreamPage key={user.id} /></ProfileGate>}</Show>
+      <Show when="signed-out"><Redirect to="/sign-in" /></Show>
+    </>
+  );
+}
+
+function WatchLiveStreamRoute() {
+  const { user } = useUser();
+  const { streamId = '' } = useParams<{ streamId: string }>();
+  return (
+    <>
+      <Show when="signed-in">{user && <ProfileGate><WatchLiveStreamPage key={`${user.id}:${streamId}`} streamId={streamId} /></ProfileGate>}</Show>
+      <Show when="signed-out"><Redirect to="/sign-in" /></Show>
+    </>
+  );
+}
+
 function CommunityRoute() {
   const { user } = useUser();
   return (
@@ -267,6 +299,9 @@ function ClerkProviderWithRoutes() {
             <Route path="/sign-in/*?" component={SignInPage} />
             <Route path="/sign-up/*?" component={SignUpPage} />
             <Route path="/home" component={DiscoveryRoute} />
+            <Route path="/live/start" component={StartLiveStreamRoute} />
+            <Route path="/live" component={LiveStreamsRoute} />
+            <Route path="/live/:streamId" component={WatchLiveStreamRoute} />
             <Route path="/community" component={CommunityRoute} />
             <Route path="/community/*?" component={CommunityRoute} />
             <Route path="/user-portal" component={OwnProfileRoute} />

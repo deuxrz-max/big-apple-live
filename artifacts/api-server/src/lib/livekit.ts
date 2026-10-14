@@ -42,9 +42,9 @@ export class LiveKitBeamService {
       room: input.roomName,
       canSubscribe: true,
       canPublish: input.role === "speaker",
-      // Speaker tokens start camera-only. The server grants microphone publishing
-      // only after it confirms the speaker slot and the room's current TV state.
-      canPublishSources: input.role === "speaker" ? [TrackSource.CAMERA] : [],
+      // Speaker tokens start with no media permission. The server grants only
+      // microphone publishing after validating the slot and Beam TV mic lock.
+      canPublishSources: [],
       canPublishData: false,
     });
     return { url: settings.url, token: await token.toJwt() };
@@ -56,6 +56,43 @@ export class LiveKitBeamService {
     const rooms = await client.listRooms([roomName]);
     if (!rooms.length) return [];
     return client.listParticipants(roomName);
+  }
+
+  async createLiveStreamToken(input: {
+    roomName: string;
+    identity: string;
+    displayName: string;
+    username?: string;
+    role: "host" | "viewer";
+  }): Promise<{ url: string; token: string }> {
+    const settings = this.getSettings();
+    const token = new AccessToken(settings.apiKey, settings.apiSecret, {
+      identity: input.identity,
+      name: input.displayName,
+      ...(input.username ? { metadata: JSON.stringify({ username: input.username }) } : {}),
+      ttl: "1h",
+    });
+    token.addGrant({
+      roomJoin: true,
+      room: input.roomName,
+      canSubscribe: true,
+      canPublish: input.role === "host",
+      canPublishSources: input.role === "host"
+        ? [TrackSource.CAMERA, TrackSource.MICROPHONE]
+        : [],
+      canPublishData: false,
+    });
+    return { url: settings.url, token: await token.toJwt() };
+  }
+
+  async listRooms(roomNames?: string[]) {
+    const settings = this.getSettings();
+    return this.clientFactory(settings).listRooms(roomNames);
+  }
+
+  async deleteRoom(roomName: string): Promise<void> {
+    const settings = this.getSettings();
+    await this.clientFactory(settings).deleteRoom(roomName);
   }
 
   async disableTrack(

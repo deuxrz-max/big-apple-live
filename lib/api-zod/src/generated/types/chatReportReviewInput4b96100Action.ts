@@ -10,8 +10,11 @@ export type ChatReportReviewInput4b96100Action = typeof ChatReportReviewInput4b9
 
 
 export const ChatReportReviewInput4b96100Action = {
+  reviewed: 'reviewed',
+  warn: 'warn',
+  mute: 'mute',
+  ban: 'ban',
   dismiss: 'dismiss',
   hide: 'hide',
-  mute: 'mute',
   restrict: 'restrict',
 } as const;

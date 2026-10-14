@@ -14,8 +14,6 @@ export const UniversityVideoBeamActionInput4b96100Action = {
   'speaker-connected': 'speaker-connected',
   'leave-slot': 'leave-slot',
   'set-self-mic': 'set-self-mic',
-  'set-self-camera': 'set-self-camera',
   'host-mute-mic': 'host-mute-mic',
-  'host-disable-camera': 'host-disable-camera',
   kick: 'kick',
 } as const;

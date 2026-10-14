@@ -11,8 +11,11 @@ export type ChatReportReceipt4b96100Status = typeof ChatReportReceipt4b96100Stat
 
 export const ChatReportReceipt4b96100Status = {
   pending: 'pending',
+  reviewed: 'reviewed',
+  warned: 'warned',
   dismissed: 'dismissed',
   hidden: 'hidden',
   muted: 'muted',
   restricted: 'restricted',
+  banned: 'banned',
 } as const;

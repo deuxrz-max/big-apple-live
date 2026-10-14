@@ -11,6 +11,7 @@ import profilePhotosRouter from "./profile-photos";
 import photoReviewRouter from "./photo-review";
 import universityAudioRouter from "./university-audio";
 import universityVideoBeamRouter from "./university-video-beam";
+import liveStreamsRouter from "./live-streams";
 import { accountId } from "./identity";
 import { requireAdult } from "../lib/community";
 import { requireCompletedProfile } from "../lib/account-profiles";
@@ -24,7 +25,7 @@ router.use(communityRouter);
 router.use(moderatorBotRouter);
 router.use(profilePhotosRouter);
 router.use(photoReviewRouter);
-router.use(["/account/rooms", "/social"], async (req, _res, next) => {
+router.use(["/account/rooms", "/account/live-streams", "/social"], async (req, _res, next) => {
   await requireAdult(accountId(req));
   await requireCompletedProfile(accountId(req));
   next();
@@ -35,6 +36,7 @@ router.use(chatRouter);
 router.use(universityChatRouter);
 router.use(universityAudioRouter);
 router.use(universityVideoBeamRouter);
+router.use(liveStreamsRouter);
 if (devAudioHarnessEnabled(process.env.NODE_ENV))
   router.use("/__dev/audio-harness", devAudioHarnessRouter);
 // Leave shared audio modules in place for rollback, but never mount signaling.

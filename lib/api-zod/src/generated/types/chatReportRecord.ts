@@ -6,13 +6,22 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ChatReportReceipt } from './chatReportReceipt';
+import type { ChatReportRecordSource } from './chatReportRecordSource';
+import type { ChatReportRecordTargetType } from './chatReportRecordTargetType';
 
-export type ChatReportRecord = ChatReportReceipt & {
-  roomId: string;
-  messageId: string;
+export type ChatReportRecord = ChatReportReceipt & ({
+  targetType: ChatReportRecordTargetType;
+  source: ChatReportRecordSource;
+  /** @nullable */
+  roomId: string | null;
+  /** @nullable */
+  messageId: string | null;
+  /** @nullable */
+  streamId: string | null;
   reason: string;
   details: string;
   text: string;
-  username: string;
+  reporterUsername: string;
+  reportedUsername: string;
   createdAt: Date;
-};
+});

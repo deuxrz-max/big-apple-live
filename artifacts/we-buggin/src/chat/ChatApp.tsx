@@ -2,19 +2,21 @@ import '@/beam/beam.css';
 import '@/social/social.css';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
+import { Radio, Users } from 'lucide-react';
 import { useClerk } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getGetChatAccessQueryKey, getGetMyProfileQueryKey, getGetSocialMeQueryKey,
   useConfirmChatAdult, useGetChatAccess, useGetChatDirectory,
-  useGetChatReports, useGetMyProfile, useGetSocialMe, useEquipMyBadge, useReviewChatReport, useSaveMyProfile,
-  getGetChatReportsQueryKey, getGetChatDirectoryQueryKey, ChatReportReviewInputAction,
+  useGetMyProfile, useGetSocialMe, useEquipMyBadge, useSaveMyProfile,
+  getGetChatDirectoryQueryKey, getGetLiveStreamsQueryKey, useGetLiveStreams,
 } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
 import { Wordmark } from '@/components/brand';
 import { errMessage } from '@/lib/errors';
 import { PhotoReviewQueue } from './PhotoReviewQueue';
 import { BotModerationPanel } from './BotModerationPanel';
+import { selectFeaturedRoom } from './directory-utils';
 import { BadgeArt } from '@/social/BadgeArt';
 import './chat.css';
 
@@ -87,7 +89,7 @@ function TopBar({ signedIn, query, setQuery }: { signedIn: boolean; query: strin
     <div className="st-topbar">
       <Wordmark href={signedIn ? '/home' : '/'} className="st-brand" />
       <input type="search" className="st-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search" aria-label="Search universities" />
-      {signedIn ? <CreditsChip /> : <Link href="/sign-in" className="bm-btn bm-btn-sm bm-btn-primary">Sign in</Link>}
+      {signedIn ? <><Link href="/live/start" className="st-topbar-live"><Radio size={15} /> Go Live</Link><CreditsChip /></> : <Link href="/sign-in" className="bm-btn bm-btn-sm bm-btn-primary">Sign in</Link>}
     </div>
   );
 }
@@ -132,8 +134,11 @@ export function ChatDirectory() {
   const { signOut } = useClerk();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('All');
-  const directory = useGetChatDirectory({ query: { queryKey: getGetChatDirectoryQueryKey(), refetchInterval: 15_000 } });
+  const directory = useGetChatDirectory({ query: { queryKey: getGetChatDirectoryQueryKey(), refetchInterval: 5_000 } });
   const me = useGetMyProfile({ query: { queryKey: getGetMyProfileQueryKey(), refetchInterval: 60_000 } });
+  const liveStreams = useGetLiveStreams({
+    query: { queryKey: getGetLiveStreamsQueryKey(), refetchInterval: 8_000 },
+  });
   const topics = ['Music', 'Movies', 'Sports', 'Pro Wrestling', 'Web Series', 'History', 'News'];
   type DirectoryRoom = { roomId: string; label: string; headcount: number; nowPlayingVideoId?: string | null; nowPlayingTitle?: string | null };
   const rooms = (directory.data ?? []) as DirectoryRoom[];
@@ -147,7 +152,7 @@ export function ChatDirectory() {
     if (filter === 'Popular') return true;
     return filter === 'All' || topicFor(room) === filter;
   }).sort((a, b) => filter === 'Popular' ? b.headcount - a.headcount : 0);
-  const featured = rooms.length ? [...rooms].sort((a, b) => b.headcount - a.headcount)[0] : undefined;
+  const featured = selectFeaturedRoom(rooms);
   const activeRoomCount = rooms.filter((room) => room.headcount > 0).length;
   return (
     <Shell className="st-directory">
@@ -159,6 +164,7 @@ export function ChatDirectory() {
           </div>
           <div className="st-dir-account">
             <span className="st-dir-unlimited">Unlimited</span>
+            <Link href="/live/start" className="st-dir-go-live"><Radio size={15} /> Go Live</Link>
             <Link href="/user-portal" className="st-dir-avatar" aria-label={`Profile${me.data?.profile?.username ? `: ${me.data.profile.username}` : ''}`}>
               <UserPhoto username={me.data?.profile?.username} displayName={me.data?.profile?.displayName} photoUrl={me.data?.profile?.photoUrl} size={38} />
               <i aria-hidden="true" />
@@ -182,6 +188,26 @@ export function ChatDirectory() {
         <div className="st-dir-kicker"><span className="st-dir-kicker-dot" /> THE CONVERSATION IS LIVE</div>
         <h1 id="st-dir-title">Find your <em>room.</em></h1>
         <p>Drop into what you love. The best conversations happen in real time.</p>
+      </section>
+
+      <section className="st-dir-creators" aria-label="Creator livestreams">
+        <div className="st-dir-section-head">
+          <div><span className="st-dir-overline">CREATOR STREAMS</span><h2>Go Live, or watch live</h2></div>
+          <Link href="/live" className="st-dir-feature-mark">Browse all →</Link>
+        </div>
+        {liveStreams.isError
+          ? <p className="st-dir-stream-note">Creator streams are temporarily unavailable.</p>
+          : liveStreams.data?.streams.length
+            ? <div className="st-dir-live-streams">
+              {liveStreams.data.streams.slice(0, 4).map(stream => (
+                <Link href={`/live/${stream.streamId}`} className="st-dir-live-stream" key={stream.streamId}>
+                  <span className="st-dir-live-stream-icon"><Radio size={17} /></span>
+                  <span className="st-dir-live-stream-copy"><strong>{stream.displayName}</strong><small><Users size={13} /> {stream.viewerCount} watching</small></span>
+                  <b>Watch</b>
+                </Link>
+              ))}
+            </div>
+            : <p className="st-dir-stream-note">{liveStreams.isLoading ? 'Checking for creator streams…' : 'No creator streams right now.'}</p>}
       </section>
 
       {!directory.isLoading && !directory.isError && featured && (
@@ -503,25 +529,16 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
 export { TextChatRoom } from './UniversityRoom';
 
 export function ModerationQueue() {
-  const qc = useQueryClient();
   const access = useGetChatAccess();
-  const q = useGetChatReports({ query: { queryKey: getGetChatReportsQueryKey(), enabled: !!access.data?.moderator } });
-  const review = useReviewChatReport();
   if (access.isLoading) return <p role="status">Loading...</p>;
   if (!access.data?.moderator) return <div className="sc-empty"><h2>Restricted</h2><p>Moderators only.</p></div>;
   return (
     <section className="ch">
       <h1 className="bm-h1 sc-h1">Moderation</h1>
+      {access.data.owner && <p><Link className="bm-btn bm-btn-primary" href="/community/reports">Open safety reports</Link></p>}
       <PhotoReviewQueue />
       <BotModerationPanel />
-      {q.isLoading && <p role="status">Loading reports...</p>}
-      {q.isError && <div className="ch-err" role="alert">Could not load. <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button></div>}
-      {review.isError && <div className="ch-err" role="alert">{errMessage(review.error)}</div>}
-      {q.data?.length === 0 && <p>Queue is empty.</p>}
-      <ul className="ch-list">{q.data?.map((x) => (
-        <li key={x.id}><div><b>{x.username}</b> in {x.roomId} ({x.reason}, {x.status})<p>{x.text}</p>{x.details && <p className="ch-note">{x.details}</p>}</div>
-          {x.status === 'pending' && <div>{Object.values(ChatReportReviewInputAction).map((a) => (
-            <button key={a} type="button" className="bm-btn bm-btn-sm" disabled={review.isPending} onClick={() => review.mutate({ reportId: x.id, data: { action: a } }, { onSuccess: () => qc.invalidateQueries({ queryKey: getGetChatReportsQueryKey() }) })}>{a}</button>))}</div>}</li>))}</ul>
+      <p className="ch-note">Safety reports are reviewed separately and visible only to the account owner.</p>
     </section>
   );
 }

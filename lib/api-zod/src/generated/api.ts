@@ -304,7 +304,8 @@ export const GetUniversitySessionResponse = zod.object({
   "photoStatus": zod.string().nullable(),
   "self": zod.boolean(),
   "moderator": zod.boolean(),
-  "ignored": zod.boolean()
+  "ignored": zod.boolean(),
+  "blocked": zod.boolean().describe('Hidden from this viewer because either account has blocked the other')
 })),
   "ignoredUsernames": zod.array(zod.string()),
   "topic": zod.string(),
@@ -506,7 +507,7 @@ export const PerformUniversityVideoBeamActionHeader = zod.object({
 })
 
 export const PerformUniversityVideoBeamActionBody = zod.object({
-  "action": zod.enum(['reserve-slot', 'speaker-connected', 'leave-slot', 'set-self-mic', 'set-self-camera', 'host-mute-mic', 'host-disable-camera', 'kick']),
+  "action": zod.enum(['reserve-slot', 'speaker-connected', 'leave-slot', 'set-self-mic', 'host-mute-mic', 'kick']),
   "enabled": zod.boolean().optional(),
   "targetParticipantId": zod.string().uuid().optional()
 })
@@ -588,6 +589,139 @@ export const PerformUniversityVideoBeamActionResponse = zod.object({
   "mutedByHost": zod.boolean(),
   "cameraDisabledByHost": zod.boolean()
 })).min(performUniversityVideoBeamActionResponseSlotsMin).max(performUniversityVideoBeamActionResponseSlotsMax)
+})
+
+
+/**
+ * @summary List active independent camera livestreams
+ */
+export const getLiveStreamsResponseStreamsItemStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+export const getLiveStreamsResponseStreamsItemDisplayNameMax = 80;
+
+export const getLiveStreamsResponseStreamsItemUsernameMax = 40;
+
+export const getLiveStreamsResponseStreamsItemViewerCountMin = 0;
+
+
+
+export const GetLiveStreamsResponse = zod.object({
+  "streams": zod.array(zod.object({
+  "streamId": zod.string().regex(getLiveStreamsResponseStreamsItemStreamIdRegExp),
+  "displayName": zod.string().max(getLiveStreamsResponseStreamsItemDisplayNameMax),
+  "username": zod.string().max(getLiveStreamsResponseStreamsItemUsernameMax),
+  "viewerCount": zod.number().int().min(getLiveStreamsResponseStreamsItemViewerCountMin)
+}))
+})
+
+
+/**
+ * @summary Start a separate camera livestream for the signed-in account
+ */
+export const startLiveStreamResponseStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+export const startLiveStreamResponseDisplayNameMax = 80;
+
+export const startLiveStreamResponseUsernameMax = 40;
+
+
+
+export const StartLiveStreamResponse = zod.object({
+  "streamId": zod.string().regex(startLiveStreamResponseStreamIdRegExp),
+  "url": zod.string().url(),
+  "token": zod.string(),
+  "displayName": zod.string().max(startLiveStreamResponseDisplayNameMax),
+  "username": zod.string().max(startLiveStreamResponseUsernameMax)
+})
+
+
+/**
+ * @summary Join an active camera livestream as a viewer
+ */
+export const joinLiveStreamPathStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+
+
+export const JoinLiveStreamParams = zod.object({
+  "streamId": zod.coerce.string().regex(joinLiveStreamPathStreamIdRegExp)
+})
+
+export const joinLiveStreamResponseDisplayNameMax = 80;
+
+export const joinLiveStreamResponseUsernameMax = 40;
+
+export const joinLiveStreamResponseViewerUsernameMax = 40;
+
+
+
+export const JoinLiveStreamResponse = zod.object({
+  "url": zod.string().url(),
+  "token": zod.string(),
+  "displayName": zod.string().max(joinLiveStreamResponseDisplayNameMax),
+  "username": zod.string().max(joinLiveStreamResponseUsernameMax),
+  "viewerUsername": zod.string().max(joinLiveStreamResponseViewerUsernameMax)
+})
+
+
+/**
+ * @summary Receive block-filtered chat for a live camera stream
+ */
+export const streamLiveStreamChatPathStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+
+
+export const StreamLiveStreamChatParams = zod.object({
+  "streamId": zod.coerce.string().regex(streamLiveStreamChatPathStreamIdRegExp)
+})
+
+export const StreamLiveStreamChatResponse = zod.unknown()
+
+
+/**
+ * @summary Send a moderated live camera stream chat message
+ */
+export const sendLiveStreamChatMessagePathStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+
+
+export const SendLiveStreamChatMessageParams = zod.object({
+  "streamId": zod.coerce.string().regex(sendLiveStreamChatMessagePathStreamIdRegExp)
+})
+
+export const sendLiveStreamChatMessageBodyTextMax = 280;
+
+
+
+export const SendLiveStreamChatMessageBody = zod.object({
+  "text": zod.string().min(1).max(sendLiveStreamChatMessageBodyTextMax)
+})
+
+export const sendLiveStreamChatMessageResponseStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+export const sendLiveStreamChatMessageResponseUsernameMax = 40;
+
+export const sendLiveStreamChatMessageResponseDisplayNameMax = 80;
+
+export const sendLiveStreamChatMessageResponseTextMax = 280;
+
+
+
+export const SendLiveStreamChatMessageResponse = zod.object({
+  "id": zod.string().uuid(),
+  "streamId": zod.string().regex(sendLiveStreamChatMessageResponseStreamIdRegExp),
+  "username": zod.string().max(sendLiveStreamChatMessageResponseUsernameMax),
+  "displayName": zod.string().max(sendLiveStreamChatMessageResponseDisplayNameMax),
+  "text": zod.string().max(sendLiveStreamChatMessageResponseTextMax),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary End the signed-in account's camera livestream
+ */
+export const endLiveStreamPathStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+
+
+export const EndLiveStreamParams = zod.object({
+  "streamId": zod.coerce.string().regex(endLiveStreamPathStreamIdRegExp)
+})
+
+export const EndLiveStreamResponse = zod.object({
+  "ended": zod.boolean()
 })
 
 
@@ -1100,11 +1234,18 @@ export const GetChatDirectoryResponseItem = zod.object({
 export const GetChatDirectoryResponse = zod.array(GetChatDirectoryResponseItem)
 
 
+export const getChatAccessResponseWarningMax = 300;
+
+
+
 export const GetChatAccessResponse = zod.object({
   "adultConfirmed": zod.boolean(),
   "moderator": zod.boolean(),
   "owner": zod.boolean(),
-  "suspended": zod.boolean()
+  "suspended": zod.boolean(),
+  "chatMuted": zod.boolean(),
+  "reportsMuted": zod.boolean(),
+  "warning": zod.string().max(getChatAccessResponseWarningMax).nullable()
 })
 
 
@@ -1112,41 +1253,63 @@ export const ConfirmChatAdultBody = zod.object({
   "adult": zod.literal(true)
 })
 
+export const confirmChatAdultResponseWarningMax = 300;
+
+
+
 export const ConfirmChatAdultResponse = zod.object({
   "adultConfirmed": zod.boolean(),
   "moderator": zod.boolean(),
   "owner": zod.boolean(),
-  "suspended": zod.boolean()
+  "suspended": zod.boolean(),
+  "chatMuted": zod.boolean(),
+  "reportsMuted": zod.boolean(),
+  "warning": zod.string().max(confirmChatAdultResponseWarningMax).nullable()
 })
 
+
+export const reportChatMessageBodyTargetUsernameMax = 40;
+
+export const reportChatMessageBodyRoomIdMax = 80;
+
+export const reportChatMessageBodyStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+export const reportChatMessageBodyMessageTextMax = 1000;
 
 export const reportChatMessageBodyDetailsMax = 500;
 
 
 
 export const ReportChatMessageBody = zod.object({
-  "roomId": zod.string(),
-  "messageId": zod.string().uuid(),
-  "reason": zod.enum(['harassment', 'minor', 'spam', 'other']),
+  "targetType": zod.enum(['user', 'message', 'stream']),
+  "targetUsername": zod.string().max(reportChatMessageBodyTargetUsernameMax).optional(),
+  "roomId": zod.string().max(reportChatMessageBodyRoomIdMax).optional(),
+  "messageId": zod.string().uuid().optional(),
+  "streamId": zod.string().regex(reportChatMessageBodyStreamIdRegExp).optional(),
+  "messageText": zod.string().max(reportChatMessageBodyMessageTextMax).optional(),
+  "reason": zod.enum(['harassment', 'hate_speech', 'sexual_content', 'spam_scams', 'violence_threats', 'underage_user', 'other']),
   "details": zod.string().max(reportChatMessageBodyDetailsMax).optional()
 })
 
 export const ReportChatMessageResponse = zod.object({
   "id": zod.string().uuid(),
-  "status": zod.enum(['pending', 'dismissed', 'hidden', 'muted', 'restricted'])
+  "status": zod.enum(['pending', 'reviewed', 'warned', 'dismissed', 'hidden', 'muted', 'restricted', 'banned'])
 })
 
 
 export const GetChatReportsResponseItem = zod.object({
   "id": zod.string().uuid(),
-  "status": zod.enum(['pending', 'dismissed', 'hidden', 'muted', 'restricted'])
+  "status": zod.enum(['pending', 'reviewed', 'warned', 'dismissed', 'hidden', 'muted', 'restricted', 'banned'])
 }).and(zod.object({
-  "roomId": zod.string(),
-  "messageId": zod.string().uuid(),
+  "targetType": zod.enum(['user', 'message', 'stream']),
+  "source": zod.enum(['user', 'moderator_bot']),
+  "roomId": zod.string().nullable(),
+  "messageId": zod.string().uuid().nullable(),
+  "streamId": zod.string().nullable(),
   "reason": zod.string(),
   "details": zod.string(),
   "text": zod.string(),
-  "username": zod.string(),
+  "reporterUsername": zod.string(),
+  "reportedUsername": zod.string(),
   "createdAt": zod.coerce.date()
 }))
 export const GetChatReportsResponse = zod.array(GetChatReportsResponseItem)
@@ -1157,12 +1320,12 @@ export const ReviewChatReportParams = zod.object({
 })
 
 export const ReviewChatReportBody = zod.object({
-  "action": zod.enum(['dismiss', 'hide', 'mute', 'restrict'])
+  "action": zod.enum(['reviewed', 'warn', 'mute', 'ban', 'dismiss', 'hide', 'restrict'])
 })
 
 export const ReviewChatReportResponse = zod.object({
   "id": zod.string().uuid(),
-  "status": zod.enum(['pending', 'dismissed', 'hidden', 'muted', 'restricted'])
+  "status": zod.enum(['pending', 'reviewed', 'warned', 'dismissed', 'hidden', 'muted', 'restricted', 'banned'])
 })
 
 

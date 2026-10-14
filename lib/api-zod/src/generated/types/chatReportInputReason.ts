@@ -11,7 +11,10 @@ export type ChatReportInputReason = typeof ChatReportInputReason[keyof typeof Ch
 
 export const ChatReportInputReason = {
   harassment: 'harassment',
-  minor: 'minor',
-  spam: 'spam',
+  hate_speech: 'hate_speech',
+  sexual_content: 'sexual_content',
+  spam_scams: 'spam_scams',
+  violence_threats: 'violence_threats',
+  underage_user: 'underage_user',
   other: 'other',
 } as const;

@@ -14,7 +14,6 @@ import {
   RoomEvent,
   Track,
   type LocalTrack,
-  type LocalVideoTrack,
   type RemoteTrack,
 } from "livekit-client";
 import { errMessage, errStatus } from "@/lib/errors";
@@ -27,7 +26,7 @@ function safeBeamError(error: unknown, fallback: string): string {
 import type { RefObject } from "react";
 
 type BeamConnection = "idle" | "connecting" | "connected" | "error";
-type MediaMap = Record<string, { audio?: RemoteTrack | LocalTrack; video?: RemoteTrack | LocalTrack }>;
+type MediaMap = Record<string, { audio?: RemoteTrack | LocalTrack }>;
 
 const emptyState = (roomId: string): UniversityVideoBeamState => ({
   roomId,
@@ -76,6 +75,7 @@ export function useUniversityVideoBeam(
   roomId: string,
   roomSessionId: string,
   participantId: string,
+  blockedParticipantIds: string[] = [],
 ) {
   const [beam, setBeam] = useState(() => emptyState(roomId));
   const [connection, setConnection] = useState<BeamConnection>("idle");
@@ -85,7 +85,6 @@ export function useUniversityVideoBeam(
   const [speaking, setSpeaking] = useState<Set<string>>(new Set());
   const [media, setMedia] = useState<MediaMap>({});
   const [mediaVersion, setMediaVersion] = useState(0);
-  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const roomRef = useRef<Room | null>(null);
   const roleRef = useRef<"audience" | "speaker" | null>(null);
   const speakerReadyRef = useRef(false);
@@ -94,8 +93,10 @@ export function useUniversityVideoBeam(
   const startingRef = useRef(false);
   const actionRef = useRef(false);
   const latest = useRef({ roomId, roomSessionId, participantId });
+  const blockedParticipantIdsRef = useRef(new Set(blockedParticipantIds));
   const beamRef = useRef(beam);
   latest.current = { roomId, roomSessionId, participantId };
+  blockedParticipantIdsRef.current = new Set(blockedParticipantIds);
   beamRef.current = beam;
 
   const headers = useCallback((session: string) => ({ "X-Room-Session": session }), []);
@@ -172,11 +173,14 @@ export function useUniversityVideoBeam(
       const refreshMedia = () => {
         const snapshot: MediaMap = {};
         for (const participant of room.remoteParticipants.values()) {
-          const entry: { audio?: RemoteTrack | LocalTrack; video?: RemoteTrack | LocalTrack } = {};
+          const entry: { audio?: RemoteTrack | LocalTrack } = {};
           for (const publication of participant.trackPublications.values()) {
+            if (publication.kind === Track.Kind.Audio && blockedParticipantIdsRef.current.has(participant.identity)) {
+              publication.setSubscribed(false);
+              continue;
+            }
             const track = publication.track;
             if (!track) continue;
-            if (track.kind === Track.Kind.Video) entry.video = track as RemoteTrack;
             if (track.kind === Track.Kind.Audio) entry.audio = track as RemoteTrack;
           }
           snapshot[participant.identity] = entry;
@@ -233,12 +237,22 @@ export function useUniversityVideoBeam(
   }, [headers]);
 
   useEffect(() => {
+    const room = roomRef.current;
+    if (!room) return;
+    for (const participant of room.remoteParticipants.values()) {
+      const blocked = blockedParticipantIdsRef.current.has(participant.identity);
+      for (const publication of participant.trackPublications.values()) {
+        if (publication.kind === Track.Kind.Audio) publication.setSubscribed(!blocked);
+      }
+    }
+  }, [blockedParticipantIds.join("|")]);
+
+  useEffect(() => {
     activeRef.current = true;
     applyBeam(emptyState(roomId));
     clearRoom(true);
     setConnection("idle");
     setError(null);
-    setFacingMode("user");
     if (!roomSessionId || !participantId) {
       activeRef.current = false;
       return;
@@ -321,7 +335,7 @@ export function useUniversityVideoBeam(
       const available = alreadyOwnsSpot || latestBeam.slots.some(slot => !slot.participantId);
       if (!available) throw new Error("All eight speaker spots are full. You can still watch and chat.");
       if (!navigator.mediaDevices?.getUserMedia) {
-        throw new Error("This browser cannot access a camera and microphone for live video.");
+        throw new Error("This browser cannot access a microphone for live audio.");
       }
 
       // Reserve before the browser prompt, so two people cannot claim the same
@@ -331,10 +345,8 @@ export function useUniversityVideoBeam(
 
       // Capture is requested only inside the explicit speaker-join click.
       localTracks = await createLocalTracks({
-        audio: reserved.tv.micLockedDuringVideo
-          ? false
-          : { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-        video: { facingMode: "user", resolution: { width: 640, height: 360 }, frameRate: 24 },
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        video: false,
       });
       tracksRef.current = localTracks;
       const token = await getUniversityVideoBeamToken(args.roomId, { role: "speaker" }, {
@@ -348,20 +360,18 @@ export function useUniversityVideoBeam(
       const refreshMedia = () => {
         const snapshot: MediaMap = {};
         for (const participant of room!.remoteParticipants.values()) {
-          const entry: { audio?: RemoteTrack | LocalTrack; video?: RemoteTrack | LocalTrack } = {};
+          const entry: { audio?: RemoteTrack | LocalTrack } = {};
           for (const publication of participant.trackPublications.values()) {
             const track = publication.track;
             if (!track) continue;
-            if (track.kind === Track.Kind.Video) entry.video = track as RemoteTrack;
             if (track.kind === Track.Kind.Audio) entry.audio = track as RemoteTrack;
           }
           snapshot[participant.identity] = entry;
         }
-        const self: { audio?: RemoteTrack | LocalTrack; video?: RemoteTrack | LocalTrack } = {};
+        const self: { audio?: RemoteTrack | LocalTrack } = {};
         for (const publication of room!.localParticipant.trackPublications.values()) {
           const track = publication.track;
           if (!track) continue;
-          if (track.kind === Track.Kind.Video) self.video = track as LocalTrack;
           if (track.kind === Track.Kind.Audio) self.audio = track as LocalTrack;
         }
         snapshot[args.participantId] = self;
@@ -392,11 +402,8 @@ export function useUniversityVideoBeam(
         void doAction(args, { action: "leave-slot" }).catch(() => undefined);
       });
       await room.connect(token.url, token.token, { autoSubscribe: true });
-      // The server gives speaker tokens camera-only permissions. It grants mic
-      // publishing after the slot is connected and re-checks the TV lock.
-      for (const track of localTracks) {
-        if (track.kind === Track.Kind.Video) await room.localParticipant.publishTrack(track);
-      }
+      // The server grants microphone publishing only after the speaker connects
+      // and re-checks the room's current Beam TV mic lock.
       const state = await doAction(args, { action: "speaker-connected" });
       applyBeam(state);
       speakerReadyRef.current = true;
@@ -425,7 +432,7 @@ export function useUniversityVideoBeam(
         .includes(failureName ?? "");
       if (!permissionFailure && errStatus(failure) === null) setConnection("error");
       else setConnection("idle");
-      setError(safeBeamError(failure, "Could not start the live camera and microphone. You remain in the room."));
+      setError(safeBeamError(failure, "Could not start live audio. You remain in the room."));
       try {
         await doAction(args, { action: "leave-slot" });
       } catch { /* the server may already have released a failed reservation */ }
@@ -516,26 +523,10 @@ export function useUniversityVideoBeam(
   ]);
 
   const toggleMic = useCallback((enabled: boolean) => runAction({ action: "set-self-mic", enabled }), [runAction]);
-  const toggleCamera = useCallback((enabled: boolean) => runAction({ action: "set-self-camera", enabled }), [runAction]);
   const hostMuteMic = useCallback((targetParticipantId: string) =>
     runAction({ action: "host-mute-mic", targetParticipantId }), [runAction]);
-  const hostDisableCamera = useCallback((targetParticipantId: string) =>
-    runAction({ action: "host-disable-camera", targetParticipantId }), [runAction]);
   const kick = useCallback((targetParticipantId: string) =>
     runAction({ action: "kick", targetParticipantId }), [runAction]);
-
-  const flipCamera = useCallback(async () => {
-    const track = roomRef.current?.localParticipant.getTrackPublication(Track.Source.Camera)?.track;
-    if (!track || !("restartTrack" in track)) return;
-    const next = facingMode === "user" ? "environment" : "user";
-    try {
-      await (track as LocalVideoTrack).restartTrack({ facingMode: next });
-      setFacingMode(next);
-      setError(null);
-    } catch (failure) {
-      setError(errMessage(failure, "Could not switch cameras on this device."));
-    }
-  }, [facingMode]);
 
   const resumePlayback = useCallback(async () => {
     try {
@@ -563,10 +554,7 @@ export function useUniversityVideoBeam(
     joinSpeaker,
     leaveSlot: () => runAction({ action: "leave-slot" }),
     toggleMic,
-    toggleCamera,
-    flipCamera,
     hostMuteMic,
-    hostDisableCamera,
     kick,
     searchTv,
     reportTvPlaybackFailure,
@@ -575,60 +563,19 @@ export function useUniversityVideoBeam(
   };
 }
 
-export function VideoBeamMedia({ track, kind, muted = false }: {
-  track?: RemoteTrack | LocalTrack;
-  kind: "audio" | "video";
-  muted?: boolean;
-}) {
-  const elementRef = useRef<HTMLVideoElement | HTMLAudioElement>(null);
+export function BeamAudioTrack({ track }: { track?: RemoteTrack | LocalTrack }) {
+  const elementRef = useRef<HTMLAudioElement>(null);
   useEffect(() => {
     const element = elementRef.current;
     if (!element || !track) return;
-    const attached = track.attach(element) as HTMLVideoElement | HTMLAudioElement;
-    if (attached instanceof HTMLVideoElement) {
-      attached.playsInline = true;
-      Object.assign(attached.style, {
-        position: "absolute",
-        inset: "0",
-        display: "block",
-        width: "100%",
-        height: "100%",
-        minWidth: "100%",
-        minHeight: "100%",
-        maxWidth: "none",
-        maxHeight: "none",
-        objectFit: "cover",
-      });
-    }
+    const attached = track.attach(element) as HTMLAudioElement;
     attached.autoplay = true;
-    attached.muted = muted;
     void attached.play().catch(() => undefined);
     return () => { track.detach(element); };
-  }, [track, muted]);
+  }, [track]);
   if (!track) return null;
-  return kind === "video"
-    ? createElement("video", {
-      ref: elementRef as RefObject<HTMLVideoElement>,
-      className: "ur-live-video",
-      autoPlay: true,
-      playsInline: true,
-      muted,
-      style: {
-        position: "absolute",
-        inset: 0,
-        display: "block",
-        width: "100%",
-        height: "100%",
-        minWidth: "100%",
-        minHeight: "100%",
-        maxWidth: "none",
-        maxHeight: "none",
-        objectFit: "cover",
-      },
-      "aria-label": muted ? "Your camera preview" : "Participant camera",
-    })
-    : createElement("audio", {
-      ref: elementRef as RefObject<HTMLAudioElement>,
-      autoPlay: true,
-    });
+  return createElement("audio", {
+    ref: elementRef as RefObject<HTMLAudioElement>,
+    autoPlay: true,
+  });
 }

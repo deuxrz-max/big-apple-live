@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { BEAM_TV_PLAYBACK_STATE_EVENT } from '@/chat/beam-tv-playback-events';
 import './gifts.css';
 
 const ASSET_BASE = `${import.meta.env.BASE_URL}gift-control/`;
@@ -27,15 +28,28 @@ export function GiftControl({
   );
   const [imageCycle, setImageCycle] = useState(0);
   const [imagePlaying, setImagePlaying] = useState(false);
+  const [beamVideoPlaying, setBeamVideoPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const imageEndTimer = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    const updateRoomPlayback = (event: Event) => {
+      setBeamVideoPlaying((event as CustomEvent<boolean>).detail === true);
+    };
+    window.addEventListener(BEAM_TV_PLAYBACK_STATE_EVENT, updateRoomPlayback);
+    return () => window.removeEventListener(BEAM_TV_PLAYBACK_STATE_EVENT, updateRoomPlayback);
+  }, []);
 
   useEffect(() => {
     if (mode === 'video') {
       const video = videoRef.current;
       if (!video) return;
+      if (beamVideoPlaying) {
+        video.pause();
+        return;
+      }
       const replay = async () => {
-        if (document.hidden || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
+        if (document.hidden || beamVideoPlaying || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
         try {
           video.currentTime = 0;
           await video.play();
@@ -59,7 +73,7 @@ export function GiftControl({
 
     if (mode === 'webp') {
       const replay = () => {
-        if (document.hidden) return;
+        if (document.hidden || beamVideoPlaying) return;
         setImageCycle(cycle => cycle + 1);
         setImagePlaying(true);
         if (imageEndTimer.current !== undefined) window.clearTimeout(imageEndTimer.current);
@@ -73,6 +87,11 @@ export function GiftControl({
           replay();
         }
       };
+      if (beamVideoPlaying) {
+        setImagePlaying(false);
+        if (imageEndTimer.current !== undefined) window.clearTimeout(imageEndTimer.current);
+        return;
+      }
       replay();
       const interval = window.setInterval(replay, REPLAY_INTERVAL_MS);
       document.addEventListener('visibilitychange', onVisibilityChange);
@@ -84,7 +103,7 @@ export function GiftControl({
     }
 
     return;
-  }, [mode]);
+  }, [beamVideoPlaying, mode]);
 
   const verifyVideoAlpha = (video: HTMLVideoElement) => {
     try {

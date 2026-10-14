@@ -212,6 +212,114 @@ paths:
           description: "Only the host may control another participant, and a host cannot enable another participant's media"
         "404": { description: The selected participant is not on the beam }
         "503": { description: LiveKit room control is unavailable }
+  /account/live-streams:
+    get:
+      operationId: getLiveStreams
+      tags: [video]
+      summary: List active independent camera livestreams
+      security:
+        - AccountSession: []
+      responses:
+        "200":
+          description: Active creator livestreams and current audience counts
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LiveStreamList" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "503": { description: LiveKit room service is unavailable }
+    post:
+      operationId: startLiveStream
+      tags: [video]
+      summary: Start a separate camera livestream for the signed-in account
+      security:
+        - AccountSession: []
+      responses:
+        "200":
+          description: Short-lived host token for an independent LiveKit room
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LiveStreamHostSession" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "409": { description: A room microphone is active or this account is already live }
+        "503": { description: LiveKit room service is unavailable }
+  /account/live-streams/{streamId}/token:
+    post:
+      operationId: joinLiveStream
+      tags: [video]
+      summary: Join an active camera livestream as a viewer
+      security:
+        - AccountSession: []
+      parameters:
+        - { $ref: "#/components/parameters/LiveStreamId" }
+      responses:
+        "200":
+          description: Short-lived subscribe-only LiveKit token
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LiveStreamViewerSession" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "404": { description: Livestream is no longer active }
+        "503": { description: LiveKit room service is unavailable }
+  /account/live-streams/{streamId}/chat/events:
+    get:
+      operationId: streamLiveStreamChat
+      tags: [video]
+      summary: Receive block-filtered chat for a live camera stream
+      security:
+        - AccountSession: []
+      parameters:
+        - { $ref: "#/components/parameters/LiveStreamId" }
+      responses:
+        "200":
+          description: Server-filtered chat event stream
+          content:
+            text/event-stream:
+              schema: { type: string }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "403": { description: Account is not an active viewer or speaker }
+        "404": { description: Livestream is no longer active }
+  /account/live-streams/{streamId}/chat:
+    post:
+      operationId: sendLiveStreamChatMessage
+      tags: [video]
+      summary: Send a moderated live camera stream chat message
+      security:
+        - AccountSession: []
+      parameters:
+        - { $ref: "#/components/parameters/LiveStreamId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LiveStreamChatInput" }
+      responses:
+        "201":
+          description: Message accepted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LiveStreamChatMessage" }
+        "400": { $ref: "#/components/responses/InvalidInput" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "403": { description: "Chat may be muted, account access may be restricted, or caller may not be in the stream" }
+        "404": { description: Livestream is no longer active }
+  /account/live-streams/{streamId}:
+    delete:
+      operationId: endLiveStream
+      tags: [video]
+      summary: End the signed-in account's camera livestream
+      security:
+        - AccountSession: []
+      parameters:
+        - { $ref: "#/components/parameters/LiveStreamId" }
+      responses:
+        "200":
+          description: Stream ended
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LiveStreamEnded" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "403": { description: Only the stream owner may end this livestream }
+        "503": { description: LiveKit room service is unavailable }
   /account/rooms/{roomId}/video-beam/tv:
     get:
       operationId: getUniversityVideoBeamTvState
@@ -1164,6 +1272,13 @@ components:
       schema:
         type: string
         format: uuid
+    LiveStreamId:
+      name: streamId
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: "^[a-f0-9]{32}$"
   schemas:
     FavoriteRoom:
       type: object
@@ -1207,7 +1322,7 @@ components:
         idempotencyKey: { type: string, format: uuid }
     UniversityPerson:
       type: object
-      required: [participantId, username, displayName, photoUrl, photoStatus, self, moderator, ignored]
+      required: [participantId, username, displayName, photoUrl, photoStatus, self, moderator, ignored, blocked]
       properties:
         botId: { type: [string, "null"], enum: [ghost, vampire, wolf, zombie, null] }
         badgeId: { type: [string, "null"] }
@@ -1224,6 +1339,7 @@ components:
         self: { type: boolean }
         moderator: { type: boolean }
         ignored: { type: boolean }
+        blocked: { type: boolean, description: Hidden from this viewer because either account has blocked the other }
     UniversityWhisper:
       type: object
       required: [id, username, displayName, badgeId, outgoing, body, createdAt]
@@ -1284,12 +1400,15 @@ components:
           maxLength: 200
     ChatAccess:
       type: object
-      required: [adultConfirmed, moderator, owner, suspended]
+      required: [adultConfirmed, moderator, owner, suspended, chatMuted, reportsMuted, warning]
       properties:
         adultConfirmed: { type: boolean }
         moderator: { type: boolean }
         owner: { type: boolean }
         suspended: { type: boolean }
+        chatMuted: { type: boolean }
+        reportsMuted: { type: boolean }
+        warning: { type: [string, "null"], maxLength: 300 }
     AdultAttestationInput:
       type: object
       required: [adult]
@@ -1297,36 +1416,46 @@ components:
         adult: { type: boolean, enum: [true] }
     ChatReportInput:
       type: object
-      required: [roomId, messageId, reason]
+      required: [targetType, reason]
       properties:
-        roomId: { type: string }
+        targetType: { type: string, enum: [user, message, stream] }
+        targetUsername: { type: string, maxLength: 40 }
+        roomId: { type: string, maxLength: 80 }
         messageId: { type: string, format: uuid }
-        reason: { type: string, enum: [harassment, minor, spam, other] }
+        streamId: { type: string, pattern: "^[a-f0-9]{32}$" }
+        messageText: { type: string, maxLength: 1000 }
+        reason:
+          type: string
+          enum: [harassment, hate_speech, sexual_content, spam_scams, violence_threats, underage_user, other]
         details: { type: string, maxLength: 500 }
     ChatReportReceipt:
       type: object
       required: [id, status]
       properties:
         id: { type: string, format: uuid }
-        status: { type: string, enum: [pending, dismissed, hidden, muted, restricted] }
+        status: { type: string, enum: [pending, reviewed, warned, dismissed, hidden, muted, restricted, banned] }
     ChatReportRecord:
       allOf:
         - $ref: "#/components/schemas/ChatReportReceipt"
         - type: object
-          required: [roomId, messageId, reason, details, text, username, createdAt]
+          required: [targetType, source, roomId, messageId, streamId, reason, details, text, reporterUsername, reportedUsername, createdAt]
           properties:
-            roomId: { type: string }
-            messageId: { type: string, format: uuid }
+            targetType: { type: string, enum: [user, message, stream] }
+            source: { type: string, enum: [user, moderator_bot] }
+            roomId: { type: [string, "null"] }
+            messageId: { type: [string, "null"], format: uuid }
+            streamId: { type: [string, "null"] }
             reason: { type: string }
             details: { type: string }
             text: { type: string }
-            username: { type: string }
+            reporterUsername: { type: string }
+            reportedUsername: { type: string }
             createdAt: { type: string, format: date-time }
     ChatReportReviewInput:
       type: object
       required: [action]
       properties:
-        action: { type: string, enum: [dismiss, hide, mute, restrict] }
+        action: { type: string, enum: [reviewed, warn, mute, ban, dismiss, hide, restrict] }
     MicrophoneAction:
       type: object
       additionalProperties: false
@@ -1568,6 +1697,59 @@ components:
           maxItems: 4
           items: { $ref: "#/components/schemas/UniversityAudioSlot" }
       required: [roomId, beamActive, hostParticipantId, slots]
+    LiveStreamEntry:
+      type: object
+      required: [streamId, displayName, username, viewerCount]
+      properties:
+        streamId: { type: string, pattern: "^[a-f0-9]{32}$" }
+        displayName: { type: string, maxLength: 80 }
+        username: { type: string, maxLength: 40 }
+        viewerCount: { type: integer, minimum: 0 }
+    LiveStreamList:
+      type: object
+      required: [streams]
+      properties:
+        streams:
+          type: array
+          items: { $ref: "#/components/schemas/LiveStreamEntry" }
+    LiveStreamHostSession:
+      type: object
+      required: [streamId, url, token, displayName, username]
+      properties:
+        streamId: { type: string, pattern: "^[a-f0-9]{32}$" }
+        url: { type: string, format: uri }
+        token: { type: string }
+        displayName: { type: string, maxLength: 80 }
+        username: { type: string, maxLength: 40 }
+    LiveStreamViewerSession:
+      type: object
+      required: [url, token, displayName, username, viewerUsername]
+      properties:
+        url: { type: string, format: uri }
+        token: { type: string }
+        displayName: { type: string, maxLength: 80 }
+        username: { type: string, maxLength: 40 }
+        viewerUsername: { type: string, maxLength: 40 }
+    LiveStreamChatInput:
+      type: object
+      required: [text]
+      properties:
+        text: { type: string, minLength: 1, maxLength: 280 }
+    LiveStreamChatMessage:
+      type: object
+      required: [id, streamId, username, displayName, text, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        streamId: { type: string, pattern: "^[a-f0-9]{32}$" }
+        username: { type: string, maxLength: 40 }
+        displayName: { type: string, maxLength: 80 }
+        text: { type: string, maxLength: 280 }
+        createdAt: { type: string, format: date-time }
+    LiveStreamEnded:
+      type: object
+      required: [ended]
+      properties:
+        ended: { type: boolean }
     UniversityVideoBeamTokenInput:
       type: object
       properties:
@@ -1590,7 +1772,7 @@ components:
       properties:
         action:
           type: string
-          enum: [reserve-slot, speaker-connected, leave-slot, set-self-mic, set-self-camera, host-mute-mic, host-disable-camera, kick]
+          enum: [reserve-slot, speaker-connected, leave-slot, set-self-mic, host-mute-mic, kick]
         enabled: { type: boolean }
         targetParticipantId: { type: string, format: uuid }
       required: [action]

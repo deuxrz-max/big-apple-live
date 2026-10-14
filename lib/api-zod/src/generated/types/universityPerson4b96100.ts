@@ -32,4 +32,6 @@ export interface UniversityPerson4b96100 {
   self: boolean;
   moderator: boolean;
   ignored: boolean;
+  /** Hidden from this viewer because either account has blocked the other */
+  blocked: boolean;
 }

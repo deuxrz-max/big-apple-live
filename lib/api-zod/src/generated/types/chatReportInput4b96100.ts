@@ -6,10 +6,19 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ChatReportInput4b96100Reason } from './chatReportInput4b96100Reason';
+import type { ChatReportInput4b96100TargetType } from './chatReportInput4b96100TargetType';
 
 export interface ChatReportInput4b96100 {
-  roomId: string;
-  messageId: string;
+  targetType: ChatReportInput4b96100TargetType;
+  /** @maxLength 40 */
+  targetUsername?: string;
+  /** @maxLength 80 */
+  roomId?: string;
+  messageId?: string;
+  /** @pattern ^[a-f0-9]{32}$ */
+  streamId?: string;
+  /** @maxLength 1000 */
+  messageText?: string;
   reason: ChatReportInput4b96100Reason;
   /** @maxLength 500 */
   details?: string;

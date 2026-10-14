@@ -1,10 +1,16 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { UniversityVideoBeamTvState, UniversityVideoBeamTvSearchResponse } from "@workspace/api-client-react";
+import {
+  BEAM_TV_SYNC_CHECK_MS,
+  shouldCorrectBeamTvDrift,
+} from "./beam-tv-sync";
+import { BEAM_TV_PLAYBACK_STATE_EVENT } from "./beam-tv-playback-events";
 
 type PlayerErrorEvent = { data: number };
 type PlayerReadyEvent = { target: YtPlayer };
 type YtPlayer = {
   destroy(): void;
+  stopVideo(): void;
   mute(): void;
   unMute(): void;
   isMuted(): boolean;
@@ -17,7 +23,7 @@ type YtPlayer = {
   setLoop(loop: boolean): void;
   seekTo(seconds: number, allowSeekAhead: boolean): void;
   getCurrentTime(): number;
-  getVideoData(): { video_id?: string };
+  getPlayerState(): number;
   unloadModule(moduleName: string): void;
 };
 type YtNamespace = {
@@ -105,7 +111,37 @@ type BeamTvProps = {
   reportPlaybackFailure: (videoId: string, errorCode: number) => Promise<void>;
 };
 
-export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
+function sameQueue(a: string[], b: string[]) {
+  return a === b || (a.length === b.length && a.every((videoId, index) => videoId === b[index]));
+}
+
+function currentVideoMetadata(tv: UniversityVideoBeamTvState) {
+  return tv.videoMetadata.find(video => video.videoId === tv.currentVideoId) ?? null;
+}
+
+export function beamTvPropsEqual(previous: BeamTvProps, next: BeamTvProps) {
+  const a = previous.tv;
+  const b = next.tv;
+  const previousMetadata = currentVideoMetadata(a);
+  const nextMetadata = currentVideoMetadata(b);
+  return previous.roomName === next.roomName
+    && previous.search === next.search
+    && previous.reportPlaybackFailure === next.reportPlaybackFailure
+    && a.enabled === b.enabled
+    && a.currentVideoId === b.currentVideoId
+    && a.playlistId === b.playlistId
+    && a.startedAtMs === b.startedAtMs
+    && a.breakEndsAtMs === b.breakEndsAtMs
+    && a.defaultSearch === b.defaultSearch
+    && a.sourceType === b.sourceType
+    && a.sourceValue === b.sourceValue
+    && a.skipVotingEnabled === b.skipVotingEnabled
+    && sameQueue(a.queue, b.queue)
+    && previousMetadata?.title === nextMetadata?.title
+    && previousMetadata?.channelTitle === nextMetadata?.channelTitle;
+}
+
+export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
   roomName,
   tv,
   search,
@@ -113,6 +149,8 @@ export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
 }, ref) {
   const playerHost = useRef<HTMLDivElement>(null);
   const player = useRef<YtPlayer | null>(null);
+  const loadedVideoId = useRef<string | null>(null);
+  const lastSyncCorrectionAtMs = useRef(0);
   const tvRef = useRef(tv);
   const serverClockOffsetMs = useRef(tv.serverNowMs - Date.now());
   const autoSearchRef = useRef("");
@@ -128,10 +166,16 @@ export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
   tvRef.current = tv;
 
   const searchQuery = tv.defaultSearch.trim();
-  const queueKey = tv.queue.join("|");
   const videoIsPlaying = tv.enabled
     && (Boolean(tv.currentVideoId) || Boolean(tv.playlistId))
     && tv.breakEndsAtMs === null;
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent(BEAM_TV_PLAYBACK_STATE_EVENT, { detail: videoIsPlaying }));
+    return () => {
+      window.dispatchEvent(new CustomEvent(BEAM_TV_PLAYBACK_STATE_EVENT, { detail: false }));
+    };
+  }, [videoIsPlaying]);
 
   const requestSound = useCallback((instance: YtPlayer) => {
     try {
@@ -157,7 +201,7 @@ export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
     if (soundUnlockedRef.current) return true;
     const instance = player.current;
     return instance && videoIsPlaying ? requestSound(instance) : false;
-  }, [requestSound, videoIsPlaying]);
+  }, [reportPlaybackFailure, requestSound, videoIsPlaying]);
 
   useImperativeHandle(ref, () => ({
     activateSoundFromUserGesture,
@@ -165,12 +209,13 @@ export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
 
   useEffect(() => {
     serverClockOffsetMs.current = tv.serverNowMs - Date.now();
-    setNow(tv.serverNowMs);
-  }, [tv.serverNowMs]);
+  }, [tv.currentVideoId, tv.startedAtMs, tv.breakEndsAtMs]);
 
   useEffect(() => {
     if (tv.breakEndsAtMs === null) return;
-    const timer = window.setInterval(() => setNow(Date.now() + serverClockOffsetMs.current), 1_000);
+    const updateCountdown = () => setNow(Date.now() + serverClockOffsetMs.current);
+    updateCountdown();
+    const timer = window.setInterval(updateCountdown, 1_000);
     return () => window.clearInterval(timer);
   }, [tv.breakEndsAtMs]);
 
@@ -235,11 +280,9 @@ export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
       const target = document.createElement("div");
       target.className = "ur-tv-player-target";
       stableHost.replaceChildren(target);
-      const current = tvRef.current;
       created = new YT.Player(target, {
         width: "100%",
         height: "100%",
-        ...(current.currentVideoId ? { videoId: current.currentVideoId } : {}),
         playerVars: {
           autoplay: 1,
           mute: 1,
@@ -269,6 +312,7 @@ export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
                   videoId: latest.currentVideoId,
                   startSeconds: positionAt(latest.startedAtMs, serverClockOffsetMs.current),
                 });
+              loadedVideoId.current = latest.currentVideoId;
             } else if (latest.queue.length) {
               event.target.setLoop(true);
               event.target.loadPlaylist({
@@ -276,6 +320,7 @@ export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
                 index: Math.max(0, latest.queue.indexOf(latest.currentVideoId ?? "")),
                 startSeconds: positionAt(latest.startedAtMs, serverClockOffsetMs.current),
               });
+              loadedVideoId.current = latest.currentVideoId;
             } else if (latest.playlistId) {
               event.target.setLoop(true);
               event.target.loadPlaylist({
@@ -284,12 +329,15 @@ export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
                 index: 0,
                 startSeconds: positionAt(latest.startedAtMs, serverClockOffsetMs.current),
               });
+              loadedVideoId.current = latest.currentVideoId;
             } else if (latest.currentVideoId) {
               event.target.loadVideoById({
                 videoId: latest.currentVideoId,
                 startSeconds: positionAt(latest.startedAtMs, serverClockOffsetMs.current),
               });
+              loadedVideoId.current = latest.currentVideoId;
             }
+            lastSyncCorrectionAtMs.current = Date.now();
             try { event.target.unloadModule("captions"); } catch { /* some embeds omit the captions module */ }
             if (soundUnlockedRef.current || roomGestureSeenRef.current) requestSound(event.target);
             setPlayerReady(true);
@@ -314,41 +362,63 @@ export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
     return () => {
       active = false;
       if (player.current === created) player.current = null;
+      try { created?.stopVideo(); } catch { /* player may already be unloading */ }
       try { created?.destroy(); } catch { /* player may already have unloaded */ }
+      loadedVideoId.current = null;
       stableHost.replaceChildren();
     };
-  }, [requestSound, tv.currentVideoId, tv.playlistId, queueKey, tv.breakEndsAtMs, tv.enabled, videoIsPlaying]);
+  }, [requestSound, videoIsPlaying]);
 
-  // The server's startedAt timestamp is authoritative for everyone in the room.
+  // Keep one iframe for the whole playback segment. Small drift is tolerated;
+  // only sustained, meaningful drift is corrected, and never while buffering.
   useEffect(() => {
     if (!playerReady) return;
-    const interval = window.setInterval(() => {
+    const syncPlayback = () => {
       const current = tvRef.current;
       const instance = player.current;
       if (!current.enabled || !current.currentVideoId || current.breakEndsAtMs !== null || !instance) return;
-      const desired = positionAt(current.startedAtMs, serverClockOffsetMs.current);
-      const liveStream = isCnnLiveStream(current);
-      if (instance.getVideoData()?.video_id !== current.currentVideoId) {
+
+      if (loadedVideoId.current !== current.currentVideoId) {
+        const desired = positionAt(current.startedAtMs, serverClockOffsetMs.current);
+        const liveStream = isCnnLiveStream(current);
         instance.loadVideoById(liveStream
           ? { videoId: current.currentVideoId }
           : { videoId: current.currentVideoId, startSeconds: desired });
+        loadedVideoId.current = current.currentVideoId;
+        lastSyncCorrectionAtMs.current = Date.now();
         if (soundUnlockedRef.current) {
           requestSound(instance);
         } else {
           instance.mute();
           instance.setVolume(0);
         }
-      } else if (!liveStream && Math.abs(instance.getCurrentTime() - desired) > 5) {
-        instance.seekTo(desired, true);
-        instance.playVideo();
-        if (!soundUnlockedRef.current) {
-          instance.mute();
-          instance.setVolume(0);
-        }
+        return;
       }
-    }, 4_000);
+
+      if (isCnnLiveStream(current)) return;
+      if (instance.getPlayerState() !== 1) return;
+      const desired = positionAt(current.startedAtMs, serverClockOffsetMs.current);
+      const driftSeconds = desired - instance.getCurrentTime();
+      const nowMs = Date.now();
+      const playerState = instance.getPlayerState();
+      if (!shouldCorrectBeamTvDrift({
+        driftSeconds,
+        playerState,
+        nowMs,
+        lastCorrectionAtMs: lastSyncCorrectionAtMs.current,
+      })) return;
+
+      // Avoid forcing a new buffer read. The currently playing video continues
+      // naturally; tiny differences are intentionally left alone.
+      instance.seekTo(desired, false);
+      lastSyncCorrectionAtMs.current = nowMs;
+    };
+    syncPlayback();
+    const interval = window.setInterval(() => {
+      syncPlayback();
+    }, BEAM_TV_SYNC_CHECK_MS);
     return () => window.clearInterval(interval);
-  }, [playerReady, requestSound, reportPlaybackFailure]);
+  }, [playerReady, requestSound, reportPlaybackFailure, tv.currentVideoId, videoIsPlaying]);
 
   const hasPlayableVideo = videoIsPlaying && !searchUnavailable && !playerUnavailable;
   return (
@@ -376,4 +446,4 @@ export const BeamTv = forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
       </div>
     </section>
   );
-});
+}), beamTvPropsEqual);

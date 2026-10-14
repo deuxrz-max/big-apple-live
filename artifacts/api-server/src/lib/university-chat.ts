@@ -99,7 +99,8 @@ export async function universitySession(id: string, roomId: string, sessionId: s
       },
       displayNameColor: nameColors.get(ownerId) ?? "#FFFFFF",
       photoStatus: photos.photoReviews?.find(r => r.photoUrl === photos.photoUrl)?.status ?? null,
-      self: ownerId === id, moderator: moderators.has(ownerId), ignored: ignored.includes(ownerId), botId: null,
+      self: ownerId === id, moderator: moderators.has(ownerId), ignored: ignored.includes(ownerId),
+      blocked: blockedIds.has(ownerId), botId: null,
        badgeId: badgeSummaries.get(ownerId)?.tier.id ?? null,
        badgeName: badgeSummaries.get(ownerId)?.tier.name ?? null,
        badgeImage: badgeSummaries.get(ownerId)?.tier.badgeImage ?? null,
@@ -108,7 +109,7 @@ export async function universitySession(id: string, roomId: string, sessionId: s
   for (const bot of botRotation.people(roomId.toUpperCase())) people.push({
     participantId: bot.participantId, username: bot.name, displayName: bot.name, photoUrl: bot.avatarUrl,
     displayNameColor: "#FFFFFF",
-    photoStatus: "approved", self: false, moderator: true, ignored: false, botId: bot.id,
+    photoStatus: "approved", self: false, moderator: true, ignored: false, blocked: false, botId: bot.id,
     badgeId: null, badgeName: null, badgeImage: null,
   });
   const [prefs] = await db.select().from(universityPreferences).where(eq(universityPreferences.accountId, id));
