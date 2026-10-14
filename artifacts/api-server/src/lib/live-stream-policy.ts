@@ -42,3 +42,16 @@ export async function isLiveStreamActiveOrStarting(accountId: string): Promise<b
   return participants.some(participant => participant.identity === "host");
 }
 
+export async function requireLiveStreamGiftAccess(senderId: string, recipientId: string, streamId: string): Promise<void> {
+  if (senderId === recipientId) throw new RoomError(409, "You cannot send a gift to your own stream.");
+  if (liveStreamIdForAccount(recipientId) !== streamId) throw new RoomError(404, "This livestream is no longer available.");
+  const participants = await liveKitBeamService.listParticipants(liveStreamRoomName(streamId));
+  if (!participants.some(participant => participant.identity === "host")) {
+    throw new RoomError(404, "This livestream is no longer available.");
+  }
+  const senderIdentity = `viewer-${liveStreamIdForAccount(senderId)}`;
+  if (!participants.some(participant => participant.identity === senderIdentity)) {
+    throw new RoomError(403, "Join this livestream before sending a gift.");
+  }
+}
+

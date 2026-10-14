@@ -10,5 +10,6 @@ export interface SocialGiftInput {
   recipient: string;
   giftId: string;
   roomId?: string;
+  streamId?: string;
   idempotencyKey: string;
 }

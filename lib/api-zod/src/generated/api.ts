@@ -696,6 +696,9 @@ export const sendLiveStreamChatMessageResponseUsernameMax = 40;
 
 export const sendLiveStreamChatMessageResponseDisplayNameMax = 80;
 
+export const sendLiveStreamChatMessageResponseDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const sendLiveStreamChatMessageResponseBadgeNameMax = 80;
+
 export const sendLiveStreamChatMessageResponseTextMax = 280;
 
 
@@ -705,6 +708,9 @@ export const SendLiveStreamChatMessageResponse = zod.object({
   "streamId": zod.string().regex(sendLiveStreamChatMessageResponseStreamIdRegExp),
   "username": zod.string().max(sendLiveStreamChatMessageResponseUsernameMax),
   "displayName": zod.string().max(sendLiveStreamChatMessageResponseDisplayNameMax),
+  "displayNameColor": zod.string().regex(sendLiveStreamChatMessageResponseDisplayNameColorRegExp),
+  "badgeName": zod.string().max(sendLiveStreamChatMessageResponseBadgeNameMax).nullable(),
+  "badgeImage": zod.string().nullable(),
   "text": zod.string().max(sendLiveStreamChatMessageResponseTextMax),
   "createdAt": zod.coerce.date()
 })
@@ -2008,6 +2014,7 @@ export const SendSocialGiftBody = zod.object({
   "recipient": zod.string(),
   "giftId": zod.string(),
   "roomId": zod.string().optional(),
+  "streamId": zod.string().optional(),
   "idempotencyKey": zod.string().uuid()
 })
 

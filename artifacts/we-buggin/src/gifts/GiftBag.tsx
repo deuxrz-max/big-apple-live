@@ -18,11 +18,12 @@ function giftIcon(id: string) {
   return isRoomGiftId(id) ? <RoomGiftIcon giftId={id} /> : <GiftIcon id={id} size={26} />;
 }
 
-export function GiftBag({ recipient, recipients = [], roomId, sessionId, onClose }: {
+export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamId, onClose }: {
   recipient?: Recipient;
   recipients?: Exclude<Recipient, null>[];
   roomId?: string;
   sessionId?: string;
+  streamId?: string;
   onClose: () => void;
 }) {
   const me = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), staleTime: 0, refetchOnMount: 'always', refetchOnWindowFocus: 'always', refetchInterval: 10000 } });
@@ -38,7 +39,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, onClose
   closeRef.current = onClose;
   const titleId = useId();
   useEffect(() => {
-    if (!roomId) return;
+    if (!roomId && !streamId) return;
     const video = document.createElement('video');
     video.preload = 'auto';
     video.muted = true;
@@ -52,27 +53,30 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, onClose
       video.removeAttribute('src');
       video.load();
     };
-  }, [roomId]);
+  }, [roomId, streamId]);
   const items = useMemo(() => (me.data ? ownedGiftItems(me.data) : []), [me.data]);
-  const catalog = roomId ? me.data?.gifts.filter(g => isRoomGiftId(g.id)) ?? [] : [];
+  const catalog = roomId || streamId ? me.data?.gifts.filter(g => isRoomGiftId(g.id)) ?? [] : [];
   const selected = catalog.find(i => i.id === sel) ?? items.find((i) => i.id === sel) ?? null;
   const price = me.data?.gifts.find(g => g.id === sel)?.cost ?? 0;
   const target = recipient ?? recipients.find(person => person.username === recipientUsername) ?? null;
-  const canSend = !!target && !!roomId && !!sessionId && !!sel && isRoomGiftId(sel);
+  const canSend = !!target && (!!streamId || (!!roomId && !!sessionId)) && !!sel && isRoomGiftId(sel);
   const unlimited = me.data?.wallet.unlimited === true;
   const enough = unlimited || (me.data?.wallet.balance ?? 0) >= price;
   const name = target ? (target.displayName || target.username) : null;
   async function send() {
-    if (!canSend || busy || !enough || !target || !roomId || !sessionId) return;
-    if (!retry.current || retry.current.recipient !== target.username || retry.current.giftId !== sel || retry.current.roomId !== roomId)
-      retry.current = { recipient: target.username, giftId: sel!, roomId, key: crypto.randomUUID() };
+    if (!canSend || busy || !enough || !target || (!streamId && (!roomId || !sessionId))) return;
+    const contextId = streamId ? `live:${streamId}` : roomId!;
+    if (!retry.current || retry.current.recipient !== target.username || retry.current.giftId !== sel || retry.current.roomId !== contextId)
+      retry.current = { recipient: target.username, giftId: sel!, roomId: contextId, key: crypto.randomUUID() };
     const attempt = retry.current;
     setBusy(true); setError(null);
     try {
-      await sendSocialGift({ recipient: attempt.recipient, giftId: attempt.giftId, roomId, idempotencyKey: attempt.key },
-        { headers: { 'X-Room-Session': sessionId } });
+      await sendSocialGift({
+        recipient: attempt.recipient, giftId: attempt.giftId, ...(roomId ? { roomId } : {}),
+        ...(streamId ? { streamId } : {}), idempotencyKey: attempt.key,
+      }, roomId && sessionId ? { headers: { 'X-Room-Session': sessionId } } : undefined);
       refreshSocial(qc);
-      void qc.invalidateQueries({ queryKey: getGetRoomGiftEventsQueryKey(roomId) });
+      if (roomId) void qc.invalidateQueries({ queryKey: getGetRoomGiftEventsQueryKey(roomId) });
       retry.current = null;
       onClose();
     } catch (e) { setError(errMsg(e)); }
@@ -98,13 +102,13 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, onClose
 
   return createPortal(
     <div className="gift-framework-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }} data-testid="gift-bag-backdrop">
-      <div ref={ref} className="gift-framework gift-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId} onKeyDown={onKey} data-testid="gift-bag">
+        <div ref={ref} className="gift-framework gift-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId} onKeyDown={onKey} data-testid="gift-bag">
         <div className="gift-head">
           <div>
             <h2 id={titleId} data-testid="gift-bag-title">{name
               ? <>Gift bag for <span style={{ color: target?.displayNameColor ?? '#FFFFFF' }}>{name}</span></>
-              : roomId ? 'Send a gift' : 'Your gift bag'}</h2>
-            <p className="gift-sub">{name ? 'Choose a gift. Sending costs credits.' : roomId ? 'Choose someone here and a gift to send.' : 'Gifts you own.'}</p>
+              : roomId || streamId ? 'Send a gift' : 'Your gift bag'}</h2>
+            <p className="gift-sub">{name ? 'Choose a gift. Sending costs credits.' : roomId || streamId ? 'Choose someone here and a gift to send.' : 'Gifts you own.'}</p>
           </div>
           <button type="button" className="gift-btn" onClick={onClose} aria-label="Close gift bag" data-testid="gift-bag-close"><X size={16} aria-hidden /></button>
         </div>

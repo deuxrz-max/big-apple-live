@@ -1737,12 +1737,15 @@ components:
         text: { type: string, minLength: 1, maxLength: 280 }
     LiveStreamChatMessage:
       type: object
-      required: [id, streamId, username, displayName, text, createdAt]
+      required: [id, streamId, username, displayName, displayNameColor, badgeName, badgeImage, text, createdAt]
       properties:
         id: { type: string, format: uuid }
         streamId: { type: string, pattern: "^[a-f0-9]{32}$" }
         username: { type: string, maxLength: 40 }
         displayName: { type: string, maxLength: 80 }
+        displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
+        badgeName: { type: ["string", "null"], maxLength: 80 }
+        badgeImage: { type: ["string", "null"] }
         text: { type: string, maxLength: 280 }
         createdAt: { type: string, format: date-time }
     LiveStreamEnded:

@@ -9,6 +9,7 @@ import { validateGiftRoom } from './room-gifts';
 import { requireAdult } from '../community';
 import { hasDevelopmentUnlimitedCredits, planCreditSpend } from "./credits-policy";
 import { giftNameColorForSentCredits } from "./gift-name-color";
+import { liveStreamIdForAccount, isLiveStreamActiveOrStarting } from "../live-stream-policy";
 
 export async function claimDaily(id: string) {
   const profile = await requireAccount(id);
@@ -23,26 +24,38 @@ export async function claimDaily(id: string) {
     return wallet(id, tx, profile.username);
   });
 }
-export async function gift(id: string, recipient: string, giftId: string, key: string, context?: { roomId: string; sessionId: string }) {
+export async function gift(id: string, recipient: string, giftId: string, key: string,
+  context?: { roomId: string; sessionId: string } | { streamId: string }) {
   const sender = await requireAccount(id);
   const target = await targetAccount(recipient);
   const item = GIFTS.find(g => g.id === giftId);
   if (!item) throw new RoomError(400, "Choose a gift from the catalog");
   const roomGift = isRoomGift(item.id);
+  const roomContext = context && "roomId" in context ? context : null;
+  const streamContext = context && "streamId" in context ? context : null;
   if (roomGift) {
-    if (!context) throw new RoomError(400, `Send ${item.name} from a university gift tab`);
+    if (!context) throw new RoomError(400, `Send ${item.name} from a room or livestream gift panel`);
     await requireAdult(id);
     await requireAdult(target.accountId);
+  }
+  if (streamContext) {
+    if (!roomGift) throw new RoomError(400, "Only room gifts are available during livestreams.");
+    if (liveStreamIdForAccount(target.accountId) !== streamContext.streamId
+      || !(await isLiveStreamActiveOrStarting(target.accountId))) {
+      throw new RoomError(404, "This livestream is no longer available.");
+    }
   }
   const result = await db.transaction(async tx => {
     await lockPair(tx, id, target.accountId);
     await assertContact(tx, id, target.accountId);
     await lockAccounts(tx, [id, target.accountId]);
-    const boundHistory = roomGift ? roomStore.getHistoryId(context!.roomId.toUpperCase()) : null;
-    const ref = `gift:${giftId}:${target.accountId}${roomGift ? ':' + boundHistory : ''}`;
-    if (await replay(tx, id, key, ref)) return wallet(id, tx, sender.username);
-    const historyId = roomGift ? validateGiftRoom(context!.roomId.toUpperCase(), context!.sessionId, id, target.accountId) : null;
-    if (roomGift && historyId !== boundHistory) throw new RoomError(409, 'This university changed. Re-enter before sending.');
+    const boundHistory = roomGift && roomContext ? roomStore.getHistoryId(roomContext.roomId.toUpperCase()) : null;
+    const ref = `gift:${giftId}:${target.accountId}${boundHistory ? ':' + boundHistory : streamContext ? ':live:' + streamContext.streamId : ''}`;
+    if (await replay(tx, id, key, ref)) return { wallet: await wallet(id, tx, sender.username), liveGiftEvent: null };
+    const historyId = roomGift && roomContext
+      ? validateGiftRoom(roomContext.roomId.toUpperCase(), roomContext.sessionId, id, target.accountId)
+      : null;
+    if (roomGift && roomContext && historyId !== boundHistory) throw new RoomError(409, 'This university changed. Re-enter before sending.');
     const current = await wallet(id, tx, sender.username);
     const unlimited = hasDevelopmentUnlimitedCredits(sender.username);
     const spend = planCreditSpend(current.balance, item.cost, unlimited);
@@ -58,7 +71,11 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
       { accountId: id, delta: -spend.debit, kind: "gift_sent", description: `${item.name} sent to ${target.username}${unlimited ? " (development unlimited credits)" : ""}`, peer: target.username, requestKey: key, refKey: ref },
       { accountId: target.accountId, delta: recipientCredits, kind: "gift_received", description: `${item.name} from ${sender.username}`, peer: sender.username },
     ]);
-    if (roomGift) {
+    let liveGiftEvent: {
+      streamId: string; senderAccountId: string; senderUsername: string; senderName: string;
+      recipientUsername: string; recipientName: string; giftId: string; giftName: string; cost: number;
+    } | null = null;
+    if (roomGift && roomContext) {
       await tx.insert(socialGiftEvents).values({
         historyId: historyId!, senderId: id, recipientId: target.accountId,
         senderUsername: sender.username, recipientUsername: target.username,
@@ -68,12 +85,21 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
       await tx.insert(socialGiftBag).values({ accountId: target.accountId, giftId: item.id, quantity: 1 })
         .onConflictDoUpdate({ target: [socialGiftBag.accountId, socialGiftBag.giftId], set: { quantity: sql`${socialGiftBag.quantity} + 1` } });
     }
-    return wallet(id, tx, sender.username);
+    if (roomGift && streamContext) {
+      await tx.insert(socialGiftBag).values({ accountId: target.accountId, giftId: item.id, quantity: 1 })
+        .onConflictDoUpdate({ target: [socialGiftBag.accountId, socialGiftBag.giftId], set: { quantity: sql`${socialGiftBag.quantity} + 1` } });
+      liveGiftEvent = {
+        streamId: streamContext.streamId, senderAccountId: id, senderUsername: sender.username,
+        senderName: sender.displayName ?? sender.username, recipientUsername: target.username,
+        recipientName: target.displayName ?? target.username, giftId: item.id, giftName: item.name, cost: item.cost,
+      };
+    }
+    return { wallet: await wallet(id, tx, sender.username), liveGiftEvent };
   });
   const [updatedWallet] = await db.select({ sent: socialWallets.sent }).from(socialWallets)
     .where(eq(socialWallets.accountId, id));
   roomStore.updateAccountNameColor(id, giftNameColorForSentCredits(updatedWallet?.sent ?? 0));
-  return result;
+  return streamContext ? { ...result.wallet, liveGiftEvent: result.liveGiftEvent } : result.wallet;
 }
 export async function purchase(id: string, itemId: string, key: string) {
   await requireAccount(id);

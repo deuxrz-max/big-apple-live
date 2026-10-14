@@ -6,13 +6,32 @@ export type LiveStreamChatMessage = {
   accountId: string;
   username: string;
   displayName: string;
+  displayNameColor: string;
+  badgeName: string | null;
+  badgeImage: string | null;
   text: string;
+  createdAt: string;
+};
+
+export type LiveStreamGiftEvent = {
+  id: string;
+  streamId: string;
+  senderAccountId: string;
+  senderUsername: string;
+  senderName: string;
+  recipientUsername: string;
+  recipientName: string;
+  giftId: string;
+  giftName: string;
+  cost: number;
   createdAt: string;
 };
 
 type RoomState = {
   messages: LiveStreamChatMessage[];
   listeners: Set<(message: LiveStreamChatMessage | null) => void>;
+  gifts: LiveStreamGiftEvent[];
+  giftListeners: Set<(gift: LiveStreamGiftEvent | null) => void>;
   ended: boolean;
 };
 
@@ -20,13 +39,13 @@ class LiveStreamChatHub {
   private readonly rooms = new Map<string, RoomState>();
 
   start(streamId: string): void {
-    this.rooms.set(streamId, { messages: [], listeners: new Set(), ended: false });
+    this.rooms.set(streamId, { messages: [], listeners: new Set(), gifts: [], giftListeners: new Set(), ended: false });
   }
 
   private state(streamId: string): RoomState {
     let state = this.rooms.get(streamId);
     if (!state) {
-      state = { messages: [], listeners: new Set(), ended: false };
+      state = { messages: [], listeners: new Set(), gifts: [], giftListeners: new Set(), ended: false };
       this.rooms.set(streamId, state);
     }
     return state;
@@ -46,6 +65,20 @@ class LiveStreamChatHub {
     return [...(this.rooms.get(streamId)?.messages ?? [])];
   }
 
+  publishGift(input: Omit<LiveStreamGiftEvent, "id" | "createdAt">): LiveStreamGiftEvent {
+    const state = this.state(input.streamId);
+    const gift = { ...input, id: randomUUID(), createdAt: new Date().toISOString() };
+    if (state.ended) return gift;
+    state.gifts.push(gift);
+    if (state.gifts.length > 100) state.gifts.splice(0, state.gifts.length - 100);
+    for (const listener of state.giftListeners) listener(gift);
+    return gift;
+  }
+
+  recentGifts(streamId: string): LiveStreamGiftEvent[] {
+    return [...(this.rooms.get(streamId)?.gifts ?? [])];
+  }
+
   find(streamId: string, messageId: string): LiveStreamChatMessage | undefined {
     return this.rooms.get(streamId)?.messages.find(message => message.id === messageId);
   }
@@ -57,11 +90,20 @@ class LiveStreamChatHub {
     return () => state.listeners.delete(listener);
   }
 
+  subscribeGifts(streamId: string, listener: (gift: LiveStreamGiftEvent | null) => void): () => void {
+    const state = this.state(streamId);
+    state.giftListeners.add(listener);
+    if (state.ended) listener(null);
+    return () => state.giftListeners.delete(listener);
+  }
+
   end(streamId: string): void {
     const state = this.state(streamId);
     state.ended = true;
     for (const listener of state.listeners) listener(null);
     state.listeners.clear();
+    for (const listener of state.giftListeners) listener(null);
+    state.giftListeners.clear();
     setTimeout(() => {
       if (this.rooms.get(streamId) === state && state.listeners.size === 0) this.rooms.delete(streamId);
     }, 5 * 60_000).unref();

@@ -21,6 +21,8 @@ import { universityVideoBeamStore } from "../lib/university-video-beam";
 import { requireAdult } from "../lib/community";
 import { liveStreamChatHub } from "../lib/live-stream-chat";
 import { pairBlocked } from "../lib/social/core";
+import { visibleMonthlyPurchaseBadgeSummary } from "../lib/social/monthly-credit-badges";
+import { giftNameColorsForAccounts } from "../lib/social/gift-name-color-data";
 import { accountId, sameOrigin } from "./identity";
 
 const router = Router();
@@ -189,19 +191,32 @@ router.get("/account/live-streams/:streamId/chat/events", async (req, res) => {
     const { accountId: _privateAccountId, ...publicMessage } = message;
     if (!res.destroyed && !res.writableEnded) res.write(`event: message\ndata: ${JSON.stringify(publicMessage)}\n\n`);
   };
+  const writeGift = async (gift: ReturnType<typeof liveStreamChatHub.recentGifts>[number], eventName = "gift") => {
+    if (await pairBlocked(id, gift.senderAccountId)) return;
+    const { senderAccountId: _privateAccountId, ...publicGift } = gift;
+    if (!res.destroyed && !res.writableEnded) res.write(`event: ${eventName}\ndata: ${JSON.stringify(publicGift)}\n\n`);
+  };
   const unsubscribe = liveStreamChatHub.subscribe(params.data.streamId, message => {
     if (!message) { res.end(); return; }
     void writeMessage(message).catch(error => {
       req.log.warn({ error }, "Live stream chat event could not be delivered");
     });
   });
+  const unsubscribeGifts = liveStreamChatHub.subscribeGifts(params.data.streamId, gift => {
+    if (!gift) { res.end(); return; }
+    void writeGift(gift).catch(error => {
+      req.log.warn({ error }, "Live stream gift event could not be delivered");
+    });
+  });
   for (const message of liveStreamChatHub.recent(params.data.streamId)) await writeMessage(message);
+  const gifts = liveStreamChatHub.recentGifts(params.data.streamId);
+  for (const gift of gifts) await writeGift(gift, "gift-history-item");
   const keepalive = setInterval(() => {
     void requireLiveParticipant(id, params.data.streamId).catch(() => res.end());
     if (!res.destroyed && !res.writableEnded) res.write(": keepalive\n\n");
   }, 15_000);
   keepalive.unref();
-  res.on("close", () => { clearInterval(keepalive); unsubscribe(); });
+  res.on("close", () => { clearInterval(keepalive); unsubscribe(); unsubscribeGifts(); });
 });
 
 router.post("/account/live-streams/:streamId/chat", async (req, res) => {
@@ -219,11 +234,18 @@ router.post("/account/live-streams/:streamId/chat", async (req, res) => {
   }
   const body = input.data.text.trim();
   if (!body || body.length > 280) throw new RoomError(400, "Write 1–280 characters");
+  const [nameColors, equippedBadge] = await Promise.all([
+    giftNameColorsForAccounts([id]),
+    visibleMonthlyPurchaseBadgeSummary(id),
+  ]);
   const message = liveStreamChatHub.publish({
     streamId: params.data.streamId,
     accountId: id,
     username: profile.username,
     displayName: profile.displayName?.trim() || profile.username,
+    displayNameColor: nameColors.get(id) ?? "#FFFFFF",
+    badgeName: equippedBadge?.tier.name ?? null,
+    badgeImage: equippedBadge?.tier.badgeImage ?? null,
     text: body,
   });
   const { accountId: _privateAccountId, ...publicMessage } = message;

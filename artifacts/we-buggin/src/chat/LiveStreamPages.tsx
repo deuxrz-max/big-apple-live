@@ -1,20 +1,37 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Ban, Flag, Radio, Send, StopCircle, Users, Video, X } from "lucide-react";
+import { ArrowLeft, Ban, Eye, Flag, FlipHorizontal, Gift, Mic, MicOff, Radio, Send, Users, Video, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Room, RoomEvent, Track, createLocalTracks, type LocalTrack, type RemoteTrack } from "livekit-client";
 import {
-  endLiveStream, getGetSocialBlocksQueryKey, getLiveStreams, joinLiveStream, sendLiveStreamChatMessage,
-  startLiveStream, useGetSocialBlocks, useSetSocialRelationship,
+  endLiveStream, getGetSocialBlocksQueryKey, getGetSocialPersonQueryKey, getLiveStreams, joinLiveStream,
+  getGetSocialMeQueryKey, sendLiveStreamChatMessage, startLiveStream, useGetSocialBlocks,
+  useGetSocialMe, useGetSocialPerson, useSetSocialRelationship,
 } from "@workspace/api-client-react";
 import type { LiveStreamEntry, LiveStreamChatMessage } from "@workspace/api-client-react";
+import { GiftBag } from "@/gifts";
+import { CosmicEncoreAnimation, MoonfoxAnimation, SpiritAnimation } from "@/gifts/SpiritPup";
+import { HeartAnimation } from "@/gifts/HeartAnimation";
 import { SafetyReportDialog } from "@/safety/SafetyReportDialog";
 import "./live-stream.css";
 
 type LiveChatActionTarget = { username: string; displayName: string };
 type LiveChatReportTarget = { targetType: "message" | "stream" | "user"; targetUsername: string; messageId?: string; messageText?: string; streamId?: string };
+type LiveStreamGiftNotice = {
+  id: string;
+  streamId: string;
+  senderUsername: string;
+  senderName: string;
+  recipientUsername: string;
+  recipientName: string;
+  giftId: "heart" | "spirit-pup" | "moonfox" | "cosmic-encore";
+  giftName: string;
+  cost: number;
+  createdAt: string;
+};
 type HostStartSession = Awaited<ReturnType<typeof startLiveStream>>;
 let pendingLiveHostStart: { session: HostStartSession; tracks: LocalTrack[] } | null = null;
+const NO_HOST_TRACKS: LocalTrack[] = [];
 
 export function GoLiveButton({ className, children }: { className: string; children: ReactNode }) {
   const [, navigate] = useLocation();
@@ -30,7 +47,7 @@ export function GoLiveButton({ className, children }: { className: string; child
       // Request permission directly from the tap on Go Live.
       tracks = await createLocalTracks({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-        video: { facingMode: "user", resolution: { width: 1280, height: 720 }, frameRate: 30 },
+        video: { facingMode: "user", resolution: { width: 720, height: 1280 }, frameRate: 30 },
       });
       const session = await startLiveStream({ credentials: "include" });
       pendingLiveHostStart = { session, tracks };
@@ -91,18 +108,20 @@ function StreamTrack({ track, kind, muted = false, onPlaybackBlocked }: {
 }
 
 function LiveChat({ room, streamId, ownUsername, blockedUsernames,
-  onProfile, onReportMessage }: {
+  onProfile, onReportMessage, onGift }: {
   room: Room | null;
   streamId: string;
   ownUsername: string;
   blockedUsernames: string[];
   onProfile: (target: LiveChatActionTarget) => void;
   onReportMessage: (target: LiveChatReportTarget) => void;
+  onGift: (gift: LiveStreamGiftNotice, animate: boolean) => void;
 }) {
   const [text, setText] = useState("");
   const [messages, setMessages] = useState<LiveStreamChatMessage[]>([]);
   const [error, setError] = useState("");
   const logRef = useRef<HTMLDivElement>(null);
+  const pinnedToLatest = useRef(true);
   const longPress = useRef<number | null>(null);
 
   useEffect(() => {
@@ -121,10 +140,22 @@ function LiveChat({ room, streamId, ownUsername, blockedUsernames,
         // Ignore malformed chat events.
       }
     };
+    const receiveGift = (event: MessageEvent<string>, animate: boolean) => {
+      try {
+        const parsed = JSON.parse(event.data) as LiveStreamGiftNotice;
+        if (!parsed.id || !parsed.senderUsername || !parsed.giftId) return;
+        const blocked = new Set(blockedUsernames.map(name => name.toLowerCase()));
+        if (!blocked.has(parsed.senderUsername.toLowerCase())) onGift(parsed, animate);
+      } catch {
+        // Ignore malformed gift events.
+      }
+    };
     source.addEventListener("message", receive as EventListener);
+    source.addEventListener("gift", (event => receiveGift(event as MessageEvent<string>, true)) as EventListener);
+    source.addEventListener("gift-history-item", (event => receiveGift(event as MessageEvent<string>, false)) as EventListener);
     source.onerror = () => setError("Live chat is reconnecting.");
     return () => { source.close(); };
-  }, [blockedUsernames, room, streamId]);
+  }, [blockedUsernames, onGift, room, streamId]);
 
   useEffect(() => {
     const blocked = new Set(blockedUsernames.map(name => name.toLowerCase()));
@@ -133,8 +164,14 @@ function LiveChat({ room, streamId, ownUsername, blockedUsernames,
 
   useEffect(() => {
     const log = logRef.current;
-    if (log) log.scrollTop = log.scrollHeight;
+    if (log && pinnedToLatest.current) log.scrollTop = log.scrollHeight;
   }, [messages]);
+
+  const updateScrollPin = () => {
+    const log = logRef.current;
+    if (!log) return;
+    pinnedToLatest.current = log.scrollHeight - log.scrollTop - log.clientHeight < 28;
+  };
 
   const send = async (event: FormEvent) => {
     event.preventDefault();
@@ -152,7 +189,7 @@ function LiveChat({ room, streamId, ownUsername, blockedUsernames,
   return (
     <section className="st-live-chat" aria-label="Livestream chat">
       <h2>Live chat</h2>
-      <div className="st-live-chat-log" role="log" aria-live="polite" ref={logRef}>
+      <div className="st-live-chat-log" role="log" aria-live="polite" ref={logRef} onScroll={updateScrollPin}>
         {messages.length === 0 && <p className="st-live-muted">Say hello while the creator is live.</p>}
         {messages.map(message => (
           <p className="st-live-chat-line" key={message.id}
@@ -172,23 +209,40 @@ function LiveChat({ room, streamId, ownUsername, blockedUsernames,
             onTouchMove={() => { if (longPress.current) window.clearTimeout(longPress.current); longPress.current = null; }}
             onTouchEnd={() => { if (longPress.current) window.clearTimeout(longPress.current); longPress.current = null; }}
             onTouchCancel={() => { if (longPress.current) window.clearTimeout(longPress.current); longPress.current = null; }}>
-            {message.username === ownUsername
-              ? <strong>{message.displayName}</strong>
-              : <button type="button" className="st-live-chat-name" onClick={() => onProfile({
-                username: message.username, displayName: message.displayName,
-              })}>{message.displayName}</button>}
-            <span>{message.text}</span>
+            <span className="st-live-chat-author">
+              {message.badgeImage && <img className="st-live-chat-badge" src={message.badgeImage}
+                alt={message.badgeName ? `${message.badgeName} badge` : "User badge"} />}
+              {message.username === ownUsername
+                ? <strong style={{ color: message.displayNameColor }} title={`@${message.username}`}>{message.displayName}</strong>
+                : <button type="button" className="st-live-chat-name" style={{ color: message.displayNameColor }}
+                  onClick={() => onProfile({ username: message.username, displayName: message.displayName })}
+                  title={`@${message.username}`} data-testid={`live-chat-profile-${message.id}`}>{message.displayName}</button>}
+            </span>
+            <span className="st-live-chat-text">{message.text}</span>
           </p>
         ))}
       </div>
+      {error && <p className="st-live-error" role="alert">{error}</p>}
       <form className="st-live-chat-form" onSubmit={send}>
         <label className="st-live-sr" htmlFor="st-live-chat-input">Write a chat message</label>
         <input id="st-live-chat-input" value={text} onChange={event => setText(event.target.value)}
+          data-testid="live-chat-input"
           maxLength={280} placeholder="Say something…" disabled={!room} />
-        <button type="submit" disabled={!room || !text.trim()} aria-label="Send message"><Send size={17} /></button>
+        <button type="submit" disabled={!room || !text.trim()} aria-label="Send message" data-testid="live-chat-send"><Send size={17} /></button>
       </form>
-      {error && <p className="st-live-error" role="alert">{error}</p>}
     </section>
+  );
+}
+
+function LiveGifterAvatar({ username, name, credits }: { username: string; name: string; credits: number }) {
+  const person = useGetSocialPerson(username, {
+    query: { queryKey: getGetSocialPersonQueryKey(username), enabled: !!username },
+  });
+  const photoUrl = person.data?.photoUrl;
+  return (
+    <span className="st-live-gifter-avatar" title={`${name} · ${credits} credits`} data-testid={`live-top-gifter-${username}`}>
+      {photoUrl ? <img src={photoUrl} alt="" /> : [...name][0]?.toUpperCase() ?? "?"}
+    </span>
   );
 }
 
@@ -227,23 +281,32 @@ function attachRoomEvents(room: Room, setVideo: (track: LocalTrack | RemoteTrack
   });
 }
 
-function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = [], onEnded }: {
+function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TRACKS, onEnded, onLeave }: {
   streamId: string;
   hostMode: boolean;
   hostSession?: { url: string; token: string; displayName: string; username: string; viewerUsername?: string };
   hostTracks?: LocalTrack[];
   onEnded?: () => void;
+  onLeave?: () => void;
 }) {
   const queryClient = useQueryClient();
   const blocks = useGetSocialBlocks({ query: { queryKey: getGetSocialBlocksQueryKey(), refetchInterval: 10_000 } });
   const setRelationship = useSetSocialRelationship();
   const roomRef = useRef<Room | null>(null);
   const localTracksRef = useRef<LocalTrack[]>(hostTracks);
+  const leavingRef = useRef(false);
   const [room, setRoom] = useState<Room | null>(null);
   const [videoTrack, setVideoTrack] = useState<LocalTrack | RemoteTrack | null>(null);
   const [audioTrack, setAudioTrack] = useState<LocalTrack | RemoteTrack | null>(null);
   const [status, setStatus] = useState("connecting");
   const [audioEnabled, setAudioEnabled] = useState(false);
+  const [cameraFacing, setCameraFacing] = useState<"user" | "environment">("user");
+  const [viewerCount, setViewerCount] = useState(0);
+  const [liveGiftEvents, setLiveGiftEvents] = useState<LiveStreamGiftNotice[]>([]);
+  const [activeGift, setActiveGift] = useState<LiveStreamGiftNotice | null>(null);
+  const [giftOpen, setGiftOpen] = useState(false);
+  const joinNoticeTimer = useRef<number | undefined>(undefined);
+  const [visibleJoinNotice, setVisibleJoinNotice] = useState("");
   const [error, setError] = useState("");
   const [displayName, setDisplayName] = useState(hostSession?.displayName ?? "Live creator");
   const [hostUsername, setHostUsername] = useState(hostSession?.username ?? "");
@@ -251,13 +314,65 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = [], onEnde
   const [profileAction, setProfileAction] = useState<LiveChatActionTarget | null>(null);
   const [reportTarget, setReportTarget] = useState<LiveChatReportTarget | null>(null);
   const blockedUsernames = useMemo(() => blocks.data?.people.map(person => person.username) ?? [], [blocks.data?.people]);
+  const hostPerson = useGetSocialPerson(hostUsername, {
+    query: { queryKey: getGetSocialPersonQueryKey(hostUsername), enabled: !!hostUsername && !hostMode },
+  });
+  const ownProfile = useGetSocialMe({
+    query: { queryKey: getGetSocialMeQueryKey(), enabled: hostMode },
+  });
+  const hostAvatarUrl = hostMode ? ownProfile.data?.profile.photoUrl : hostPerson.data?.photoUrl;
+  const following = hostPerson.data?.favorite ?? false;
+  const gifterTotals = useMemo(() => {
+    const totals = new Map<string, { username: string; name: string; credits: number }>();
+    const blocked = new Set(blockedUsernames.map(name => name.toLowerCase()));
+    for (const gift of liveGiftEvents) {
+      if (blocked.has(gift.senderUsername.toLowerCase())) continue;
+      const current = totals.get(gift.senderUsername) ?? {
+        username: gift.senderUsername, name: gift.senderName, credits: 0,
+      };
+      current.credits += gift.cost;
+      totals.set(gift.senderUsername, current);
+    }
+    return [...totals.values()].sort((a, b) => b.credits - a.credits).slice(0, 3);
+  }, [blockedUsernames, liveGiftEvents]);
+
+  useEffect(() => {
+    document.body.classList.add("streamtalk-live-screen");
+    return () => document.body.classList.remove("streamtalk-live-screen");
+  }, []);
+
+  useEffect(() => {
+    const openGiftPanel = (event: Event) => {
+      const detail = (event as CustomEvent<{ streamId?: unknown }>).detail;
+      if (detail?.streamId === streamId) setGiftOpen(true);
+    };
+    window.addEventListener("streamtalk:open-live-gifts", openGiftPanel);
+    return () => window.removeEventListener("streamtalk:open-live-gifts", openGiftPanel);
+  }, [streamId]);
+
+  const receiveLiveGift = useCallback((gift: LiveStreamGiftNotice, animate: boolean) => {
+    setLiveGiftEvents(current => current.some(item => item.id === gift.id)
+      ? current : [...current, gift].slice(-100));
+    if (animate) setActiveGift(gift);
+  }, []);
+  const finishLiveGift = useCallback((giftId: string) => {
+    setActiveGift(current => current?.id === giftId ? null : current);
+  }, []);
+  const closeLiveGiftPanel = useCallback(() => setGiftOpen(false), []);
 
   const blockSelectedUser = () => {
     if (!profileAction) return;
+    const blockedUsername = profileAction.username;
     setRelationship.mutate({ username: profileAction.username, data: { kind: "block", active: true } }, {
       onSuccess: () => {
         void queryClient.invalidateQueries({ queryKey: getGetSocialBlocksQueryKey() });
         setProfileAction(null);
+        if (!hostMode && blockedUsername.toLowerCase() === hostUsername.toLowerCase()) {
+          leavingRef.current = true;
+          const currentRoom = roomRef.current;
+          if (currentRoom) void currentRoom.disconnect().finally(() => onLeave?.());
+          else onLeave?.();
+        }
       },
       onError: () => setError("That account could not be blocked right now. Try again."),
     });
@@ -289,6 +404,21 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = [], onEnde
       }
       setRoom(liveRoom);
       setStatus("connected");
+      const updateViewerCount = () => setViewerCount(Math.max(0,
+        liveRoom.remoteParticipants.size + (hostMode ? 0 : 1)));
+      updateViewerCount();
+      liveRoom.on(RoomEvent.ParticipantConnected, updateViewerCount);
+      liveRoom.on(RoomEvent.ParticipantDisconnected, updateViewerCount);
+      liveRoom.on(RoomEvent.ParticipantConnected, participant => {
+        if (participant.identity === "host") return;
+        const name = participant.name?.trim() || "Someone";
+        setVisibleJoinNotice(name);
+        if (joinNoticeTimer.current) window.clearTimeout(joinNoticeTimer.current);
+        joinNoticeTimer.current = window.setTimeout(() => setVisibleJoinNotice(""), 2800);
+      });
+      liveRoom.on(RoomEvent.Disconnected, () => {
+        if (!hostMode && !cancelled && !leavingRef.current) onEnded?.();
+      });
       for (const participant of liveRoom.remoteParticipants.values()) {
         for (const publication of participant.trackPublications.values()) {
           if (publication.track?.kind === Track.Kind.Video) setVideoTrack(publication.track as RemoteTrack);
@@ -310,11 +440,11 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = [], onEnde
       if (!cancelled) {
         setStatus("disconnected");
         setError("The livestream connection failed. Try opening it again.");
-        if (!hostMode) onEnded?.();
       }
     });
     return () => {
       cancelled = true;
+      if (joinNoticeTimer.current) window.clearTimeout(joinNoticeTimer.current);
       const current = roomRef.current;
       roomRef.current = null;
       if (current) void current.disconnect();
@@ -348,8 +478,50 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = [], onEnde
     }
   };
 
+  const toggleFollow = () => {
+    if (!hostUsername || setRelationship.isPending) return;
+    const next = !Boolean(hostPerson.data?.favorite);
+    setRelationship.mutate({ username: hostUsername, data: { kind: "favorite", active: next } }, {
+      onSuccess: () => void queryClient.invalidateQueries({ queryKey: getGetSocialPersonQueryKey(hostUsername) }),
+      onError: () => setError("Could not update your follow right now. Try again."),
+    });
+  };
+
+  const flipCamera = async () => {
+    const track = localTracksRef.current.find(item => item.kind === Track.Kind.Video) as
+      (LocalTrack & { restartTrack?: (options: { facingMode: string }) => Promise<void> }) | undefined;
+    if (!track?.restartTrack) return;
+    const next = cameraFacing === "user" ? "environment" : "user";
+    try {
+      await track.restartTrack({ facingMode: next });
+      setCameraFacing(next);
+    } catch {
+      setError("The camera could not be switched.");
+    }
+  };
+
+  const toggleHostMic = async () => {
+    const next = !audioEnabled;
+    try {
+      await roomRef.current?.localParticipant.setMicrophoneEnabled(next);
+      setAudioEnabled(next);
+    } catch {
+      setError("The microphone could not be updated.");
+    }
+  };
+
+  const openLiveGiftFlow = () => {
+    window.dispatchEvent(new CustomEvent("streamtalk:open-live-gifts", { detail: { streamId } }));
+  };
+
+  const leave = async () => {
+    leavingRef.current = true;
+    await roomRef.current?.disconnect();
+    onLeave?.();
+  };
+
   return (
-    <div className="st-live-room">
+    <div className={`st-live-room${hostMode ? " is-host" : " is-viewer"}${hostMode && cameraFacing === "user" ? " is-front-camera" : ""}`} data-testid="live-room">
       <div className="st-live-player">
         {videoTrack ? <StreamTrack track={videoTrack} kind="video" muted={hostMode} /> : (
           <div className="st-live-player-empty">
@@ -360,36 +532,75 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = [], onEnde
         )}
         {audioTrack && !hostMode && <StreamTrack track={audioTrack} kind="audio"
           onPlaybackBlocked={() => setAudioEnabled(false)} />}
-        <span className={`st-live-state ${status === "connected" ? "is-live" : ""}`}>
-          <i />{status === "connected" ? "LIVE" : status === "reconnecting" ? "Reconnecting" : status === "ended" ? "Ended" : "Connecting"}
-        </span>
+        <div className="st-live-topbar">
+          <div className="st-live-creator">
+            <button type="button" className="st-live-creator-profile" disabled={hostMode || !hostUsername}
+              onClick={() => !hostMode && hostUsername && setProfileAction({ username: hostUsername, displayName })}
+              data-testid="live-creator-profile">
+              <span className="st-live-creator-avatar" aria-hidden="true">
+                {hostAvatarUrl ? <img src={hostAvatarUrl} alt="" /> : [...displayName][0]?.toUpperCase() ?? "S"}
+              </span>
+              <span className="st-live-creator-copy"><strong>{displayName}</strong>
+                <small><i className={status === "connected" ? "is-live" : ""} />{status === "connected" ? "LIVE NOW" : status === "reconnecting" ? "Reconnecting" : "Connecting"}</small>
+              </span>
+            </button>
+            {!hostMode && <button type="button" className={`st-live-follow${following ? " is-following" : ""}`}
+              onClick={toggleFollow} disabled={!hostUsername || setRelationship.isPending}
+              data-testid="live-follow">{following ? "Following" : "Follow"}</button>}
+          </div>
+          <div className="st-live-top-actions">
+            <div className="st-live-viewers" data-testid="live-viewer-count"><Eye size={15} aria-hidden="true" /><span>{viewerCount.toLocaleString()}</span></div>
+            <div className="st-live-gifters" aria-label="Top gifters" data-testid="live-top-gifters">
+              {gifterTotals.length ? gifterTotals.map(gifter => <LiveGifterAvatar key={gifter.username} {...gifter} />)
+                : <small>Top gifters</small>}
+            </div>
+            {hostMode
+              ? <button type="button" className="st-live-close-button st-live-end" disabled={status === "ending" || status === "ended"}
+                onClick={() => void end()} aria-label="End stream" data-testid="live-end-stream"><X size={18} /><span>End</span></button>
+              : <button type="button" className="st-live-close-button" onClick={() => void leave()} aria-label="Leave live stream" data-testid="live-leave"><X size={19} /></button>}
+          </div>
+        </div>
         {!hostMode && audioTrack && !audioEnabled && (
-          <button type="button" className="st-live-audio-enable" onClick={() => void enableAudio()}>Tap to hear stream</button>
+          <button type="button" className="st-live-audio-enable" onClick={() => void enableAudio()} data-testid="live-enable-audio">Tap to hear stream</button>
         )}
+        {!hostMode && <button type="button" className="st-live-report-stream" onClick={openStreamReport}
+          aria-label="Report stream" data-testid="live-report-stream"><Flag size={16} /></button>}
+        {error && <p className="st-live-error" role="alert" data-testid="live-error">{error}</p>}
+        <div className="st-live-chat-overlay">
+          {visibleJoinNotice && <div className="st-live-join-banner" role="status" data-testid="live-join-banner">
+            <strong>{visibleJoinNotice}</strong> joined
+          </div>}
+          <LiveChat room={room} streamId={streamId} ownUsername={ownUsername} blockedUsernames={blockedUsernames}
+            onProfile={target => setProfileAction(target)}
+            onReportMessage={target => setReportTarget({ ...target, streamId })}
+            onGift={receiveLiveGift} />
+        </div>
+        <div className="st-live-bottom-controls">
+          {!hostMode && <button type="button" className="st-live-gift-button" onClick={openLiveGiftFlow}
+            aria-label="Open live gifts" data-testid="live-open-gifts"><Gift size={22} /><span>Gift</span></button>
+          }
+          {hostMode && <div className="st-live-host-controls">
+            <button type="button" onClick={() => void flipCamera()} aria-label="Flip camera"
+              data-testid="live-flip-camera"><FlipHorizontal size={20} /><span>Flip</span></button>
+            <button type="button" onClick={() => void toggleHostMic()} aria-label={audioEnabled ? "Mute microphone" : "Unmute microphone"}
+              data-testid="live-toggle-mic">{audioEnabled ? <Mic size={20} /> : <MicOff size={20} />}<span>{audioEnabled ? "Mic on" : "Mic off"}</span></button>
+          </div>}
+        </div>
       </div>
-      <div className="st-live-room-toolbar">
-        <button type="button" className="st-live-profile-trigger" disabled={hostMode || !hostUsername}
-          onClick={() => !hostMode && hostUsername && setProfileAction({ username: hostUsername, displayName })}>
-          <Radio size={17} /> {hostMode ? "Your live camera stream" : `${displayName} is live`}
-        </button>
-        {!hostMode && <button type="button" className="st-live-report-stream" onClick={openStreamReport}>
-          <Flag size={15} /> Report stream
-        </button>}
-        {hostMode && <button type="button" className="st-live-end" disabled={status === "ending" || status === "ended"}
-          onClick={() => void end()}><StopCircle size={17} /> End stream</button>}
-      </div>
-      {error && <p className="st-live-error" role="alert">{error}</p>}
-      <LiveChat room={room} streamId={streamId} ownUsername={ownUsername} blockedUsernames={blockedUsernames}
-        onProfile={target => setProfileAction(target)}
-        onReportMessage={target => setReportTarget({ ...target, streamId })} />
+      {giftOpen && !hostMode && hostUsername && <GiftBag recipient={{ username: hostUsername, displayName }}
+        streamId={streamId} onClose={closeLiveGiftPanel} />}
+      {activeGift && activeGift.giftId === "heart" && <HeartAnimation key={activeGift.id} onFinish={() => finishLiveGift(activeGift.id)} />}
+      {activeGift && activeGift.giftId === "spirit-pup" && <SpiritAnimation key={activeGift.id} onFinish={() => finishLiveGift(activeGift.id)} />}
+      {activeGift && activeGift.giftId === "moonfox" && <MoonfoxAnimation key={activeGift.id} onFinish={() => finishLiveGift(activeGift.id)} />}
+      {activeGift && activeGift.giftId === "cosmic-encore" && <CosmicEncoreAnimation key={activeGift.id} onFinish={() => finishLiveGift(activeGift.id)} />}
       {profileAction && <div className="st-live-action-scrim" onClick={() => setProfileAction(null)}>
         <section className="st-live-action-sheet" role="dialog" aria-modal="true"
           aria-label={`Actions for ${profileAction.displayName}`} onClick={event => event.stopPropagation()}>
-          <button type="button" className="st-live-action-close" aria-label="Close" onClick={() => setProfileAction(null)}><X size={18} /></button>
+          <button type="button" className="st-live-action-close" aria-label="Close" onClick={() => setProfileAction(null)} data-testid="live-profile-close"><X size={18} /></button>
           <span className="st-live-action-avatar" aria-hidden="true">{[...profileAction.displayName][0]?.toUpperCase() ?? "S"}</span>
           <h2>{profileAction.displayName}</h2>
           <button type="button" onClick={() => { setReportTarget({ targetType: "user", targetUsername: profileAction.username, streamId }); setProfileAction(null); }}>
-            <Flag size={16} /> Report user
+             <Flag size={16} /> Report user
           </button>
           {!hostMode && <button type="button" onClick={() => { openStreamReport(); setProfileAction(null); }}>
             <Flag size={16} /> Report stream
@@ -479,8 +690,6 @@ export function StartLiveStreamPage() {
 
   return (
     <main className="st-live-page st-live-host-page">
-      <p className="st-live-share">Share this link: <a href={`/live/${session.streamId}`}>
-        {window.location.origin}{import.meta.env.BASE_URL.replace(/\/$/, "")}/live/{session.streamId}</a></p>
       <LiveRoomView streamId={session.streamId} hostMode hostSession={session}
         hostTracks={hostTracks} onEnded={ended} />
     </main>
@@ -489,15 +698,12 @@ export function StartLiveStreamPage() {
 
 export function WatchLiveStreamPage({ streamId }: { streamId: string }) {
   const [closed, setClosed] = useState(false);
+  const [, navigate] = useLocation();
   return (
     <main className="st-live-page">
-      <header className="st-live-page-head">
-        <Link href="/live" className="st-live-back"><ArrowLeft size={18} /> Live creators</Link>
-        <h1>Live stream</h1>
-        <p>Watch and chat with the creator.</p>
-      </header>
       {closed ? <section className="st-live-empty"><strong>This stream has ended</strong><Link href="/live">Browse live creators</Link></section>
-        : <LiveRoomView key={streamId} streamId={streamId} hostMode={false} onEnded={() => setClosed(true)} />}
+        : <LiveRoomView key={streamId} streamId={streamId} hostMode={false}
+          onEnded={() => setClosed(true)} onLeave={() => navigate("/live")} />}
     </main>
   );
 }

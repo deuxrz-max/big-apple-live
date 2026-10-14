@@ -14,6 +14,15 @@ export interface LiveStreamChatMessage4b96100 {
   username: string;
   /** @maxLength 80 */
   displayName: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor: string;
+  /**
+     * @maxLength 80
+     * @nullable
+     */
+  badgeName: string | null;
+  /** @nullable */
+  badgeImage: string | null;
   /** @maxLength 280 */
   text: string;
   createdAt: Date;

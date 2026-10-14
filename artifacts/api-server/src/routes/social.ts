@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { accountProfiles, db } from "@workspace/db";
 import {
   SaveSocialProfileBody, SaveSocialProfileResponse, GetSocialMeResponse, GetSocialPeopleResponse,
@@ -22,8 +22,9 @@ import { serveGiftMedia, serveMoonfoxGiftMedia, serveCosmicEncoreGiftMedia } fro
 import { serveMonthlyCreditTierEntranceEffectMedia, serveRoomEntranceEffectMedia } from "../lib/room-entry-effect-media";
 import { clearThread, inbox, sendMessage, thread } from "../lib/social/messages";
 import { favoritesGallery, favoriteRoom } from "../lib/social/favorites";
-import { liveStreamIdForAccount, liveStreamRoomName } from "../lib/live-stream-policy";
+import { liveStreamIdForAccount, liveStreamRoomName, requireLiveStreamGiftAccess } from "../lib/live-stream-policy";
 import { liveKitBeamService } from "../lib/livekit";
+import { liveStreamChatHub } from "../lib/live-stream-chat";
 import {
   deletePassportPlatform, myStreamerPassport, passportReviewQueue, publicStreamerPassport,
   requestPassportVerification, reviewPassportRequest, savePassportPlatform, setFoundingLeague,
@@ -155,7 +156,26 @@ router.get("/social/gifts/rooms/:roomId", async (req, res) => {
 router.post("/social/gifts", async (req, res): Promise<void> => {
   const input = SendSocialGiftBody.safeParse(req.body);
   if (!input.success) throw new RoomError(400, "Choose a gift, recipient and valid retry key");
-  res.json(await gift(accountId(req), input.data.recipient, input.data.giftId, input.data.idempotencyKey,
+  if (input.data.roomId && input.data.streamId) throw new RoomError(400, "Choose either a room or a livestream.");
+  const senderId = accountId(req);
+  if (input.data.streamId) {
+    sameOrigin(req);
+    const [recipient] = await db.select({ accountId: accountProfiles.accountId })
+      .from(accountProfiles).where(eq(accountProfiles.username, input.data.recipient));
+    if (!recipient) throw new RoomError(404, "This livestream is no longer available.");
+    await requireLiveStreamGiftAccess(senderId, recipient.accountId, input.data.streamId);
+    const result = await gift(senderId, input.data.recipient, input.data.giftId, input.data.idempotencyKey,
+      { streamId: input.data.streamId });
+    if ("liveGiftEvent" in result && result.liveGiftEvent) liveStreamChatHub.publishGift(result.liveGiftEvent);
+    if ("liveGiftEvent" in result) {
+      const { liveGiftEvent: _liveGiftEvent, ...wallet } = result;
+      res.json(wallet);
+    } else {
+      res.json(result);
+    }
+    return;
+  }
+  res.json(await gift(senderId, input.data.recipient, input.data.giftId, input.data.idempotencyKey,
     input.data.roomId ? { roomId: input.data.roomId, sessionId: req.get('X-Room-Session') ?? '' } : undefined));
 });
 router.post("/social/store/purchase", async (req, res): Promise<void> => {
