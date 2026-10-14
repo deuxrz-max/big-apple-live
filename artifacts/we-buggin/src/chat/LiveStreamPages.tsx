@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Ban, Flag, Radio, Send, StopCircle, Users, Video, X } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Room, RoomEvent, Track, createLocalTracks, type LocalTrack, type RemoteTrack } from "livekit-client";
 import {
   endLiveStream, getGetSocialBlocksQueryKey, getLiveStreams, joinLiveStream, sendLiveStreamChatMessage,
@@ -13,6 +13,51 @@ import "./live-stream.css";
 
 type LiveChatActionTarget = { username: string; displayName: string };
 type LiveChatReportTarget = { targetType: "message" | "stream" | "user"; targetUsername: string; messageId?: string; messageText?: string; streamId?: string };
+type HostStartSession = Awaited<ReturnType<typeof startLiveStream>>;
+let pendingLiveHostStart: { session: HostStartSession; tracks: LocalTrack[] } | null = null;
+
+export function GoLiveButton({ className, children }: { className: string; children: ReactNode }) {
+  const [, navigate] = useLocation();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const start = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    let tracks: LocalTrack[] = [];
+    try {
+      // Request permission directly from the tap on Go Live.
+      tracks = await createLocalTracks({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        video: { facingMode: "user", resolution: { width: 1280, height: 720 }, frameRate: 30 },
+      });
+      const session = await startLiveStream({ credentials: "include" });
+      pendingLiveHostStart = { session, tracks };
+      tracks = [];
+      navigate("/live/start");
+    } catch (failure) {
+      for (const track of tracks) track.stop();
+      const name = failure instanceof Error ? failure.name : "";
+      setError(name === "NotAllowedError" || name === "PermissionDeniedError"
+        ? "Camera or microphone access was denied. Re-enable it in your browser or phone settings, then try Go Live again."
+        : failure instanceof Error && !/internal server|status code 5\d\d/i.test(failure.message)
+          ? failure.message
+          : "Could not start the live stream. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <span className="st-live-start-control">
+      <button type="button" className={className} disabled={busy} onClick={() => void start()}>
+        {busy ? "Starting…" : children}
+      </button>
+      {error && <span className="st-live-start-error" role="alert">{error}</span>}
+    </span>
+  );
+}
 
 function usernameFromMetadata(metadata?: string): string | undefined {
   if (!metadata) return;
@@ -331,7 +376,7 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = [], onEnde
           <Flag size={15} /> Report stream
         </button>}
         {hostMode && <button type="button" className="st-live-end" disabled={status === "ending" || status === "ended"}
-          onClick={() => void end()}><StopCircle size={17} /> End live</button>}
+          onClick={() => void end()}><StopCircle size={17} /> End stream</button>}
       </div>
       {error && <p className="st-live-error" role="alert">{error}</p>}
       <LiveChat room={room} streamId={streamId} ownUsername={ownUsername} blockedUsernames={blockedUsernames}
@@ -410,69 +455,34 @@ export function LiveStreamsDirectory() {
 }
 
 export function StartLiveStreamPage() {
-  const [session, setSession] = useState<{ streamId: string; url: string; token: string; displayName: string; username: string } | null>(null);
-  const [hostTracks, setHostTracks] = useState<LocalTrack[]>([]);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-
-  const start = async () => {
-    if (busy) return;
-    setBusy(true);
-    setError("");
-    let tracks: LocalTrack[] = [];
-    try {
-      // The permission prompt is tied directly to this explicit user action.
-      tracks = await createLocalTracks({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-        video: { facingMode: "user", resolution: { width: 1280, height: 720 }, frameRate: 30 },
-      });
-      const result = await startLiveStream({ credentials: "include" });
-      setSession(result);
-      setHostTracks(tracks);
-      tracks = [];
-    } catch (failure) {
-      for (const track of tracks) track.stop();
-      const name = failure instanceof Error ? failure.name : "";
-      setError(name === "NotAllowedError" || name === "PermissionDeniedError"
-        ? "Camera and microphone access was denied. Allow both to start your live stream."
-        : failure instanceof Error ? failure.message : "Could not start the live stream. Try again.");
-      setSession(null);
-    } finally {
-      setBusy(false);
-    }
-  };
-
+  const [session, setSession] = useState<HostStartSession | null>(() => pendingLiveHostStart?.session ?? null);
+  const [hostTracks, setHostTracks] = useState<LocalTrack[]>(() => pendingLiveHostStart?.tracks ?? []);
+  const [finished, setFinished] = useState(false);
+  useEffect(() => { pendingLiveHostStart = null; }, []);
   const ended = () => {
+    for (const track of hostTracks) track.stop();
     setSession(null);
     setHostTracks([]);
+    setFinished(true);
   };
 
-  return (
-    <main className="st-live-page">
-      <header className="st-live-page-head">
+  if (!session) {
+    return (
+      <main className="st-live-page st-live-start-fallback">
         <Link href="/home" className="st-live-back"><ArrowLeft size={18} /> Directory</Link>
-        <h1>Go Live</h1>
-        <p>Your camera stream is separate from room audio seats. Mute your room mic first if it is currently live.</p>
-      </header>
-      {error && <p className="st-live-error" role="alert">{error}</p>}
-      {session ? (
-        <>
-          <p className="st-live-share">Share this link: <a href={`/live/${session.streamId}`}>
-            {window.location.origin}{import.meta.env.BASE_URL.replace(/\/$/, "")}/live/{session.streamId}</a></p>
-          <LiveRoomView streamId={session.streamId} hostMode hostSession={session}
-            hostTracks={hostTracks} onEnded={ended} />
-        </>
-      ) : (
-        <section className="st-live-start-card">
-          <span className="st-live-start-icon"><Video size={31} /></span>
-          <strong>Start a camera livestream</strong>
-          <p>Only tapping the button below will request camera and microphone access. Your room speaker microphone must be muted to avoid duplicate audio.</p>
-          <button type="button" className="st-live-start-button" disabled={busy} onClick={() => void start()}>
-            <Radio size={18} /> {busy ? "Starting…" : "Start camera stream"}
-          </button>
-          <Link href="/live" className="st-live-secondary-link">Browse live creators</Link>
-        </section>
-      )}
+        <h1>{finished ? "Your stream has ended" : "Start Go Live from Streamtalk"}</h1>
+        {!finished && <p>Use the Go Live button in the header or Directory to request camera and microphone access and start broadcasting.</p>}
+        <Link href="/home" className="st-live-start-button">Back to Directory</Link>
+      </main>
+    );
+  }
+
+  return (
+    <main className="st-live-page st-live-host-page">
+      <p className="st-live-share">Share this link: <a href={`/live/${session.streamId}`}>
+        {window.location.origin}{import.meta.env.BASE_URL.replace(/\/$/, "")}/live/{session.streamId}</a></p>
+      <LiveRoomView streamId={session.streamId} hostMode hostSession={session}
+        hostTracks={hostTracks} onEnded={ended} />
     </main>
   );
 }

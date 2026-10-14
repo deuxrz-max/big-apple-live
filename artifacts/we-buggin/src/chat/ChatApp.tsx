@@ -18,6 +18,7 @@ import { PhotoReviewQueue } from './PhotoReviewQueue';
 import { BotModerationPanel } from './BotModerationPanel';
 import { selectFeaturedRoom } from './directory-utils';
 import { BadgeArt } from '@/social/BadgeArt';
+import { GoLiveButton } from './LiveStreamPages';
 import './chat.css';
 
 const DISCLAIMER = 'Streamtalk is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
@@ -89,7 +90,7 @@ function TopBar({ signedIn, query, setQuery }: { signedIn: boolean; query: strin
     <div className="st-topbar">
       <Wordmark href={signedIn ? '/home' : '/'} className="st-brand" />
       <input type="search" className="st-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search" aria-label="Search universities" />
-      {signedIn ? <><Link href="/live/start" className="st-topbar-live"><Radio size={15} /> Go Live</Link><CreditsChip /></> : <Link href="/sign-in" className="bm-btn bm-btn-sm bm-btn-primary">Sign in</Link>}
+      {signedIn ? <><GoLiveButton className="st-topbar-live"><Radio size={15} /> Go Live</GoLiveButton><CreditsChip /></> : <Link href="/sign-in" className="bm-btn bm-btn-sm bm-btn-primary">Sign in</Link>}
     </div>
   );
 }
@@ -164,7 +165,7 @@ export function ChatDirectory() {
           </div>
           <div className="st-dir-account">
             <span className="st-dir-unlimited">Unlimited</span>
-            <Link href="/live/start" className="st-dir-go-live"><Radio size={15} /> Go Live</Link>
+            <GoLiveButton className="st-dir-go-live"><Radio size={15} /> Go Live</GoLiveButton>
             <Link href="/user-portal" className="st-dir-avatar" aria-label={`Profile${me.data?.profile?.username ? `: ${me.data.profile.username}` : ''}`}>
               <UserPhoto username={me.data?.profile?.username} displayName={me.data?.profile?.displayName} photoUrl={me.data?.profile?.photoUrl} size={38} />
               <i aria-hidden="true" />

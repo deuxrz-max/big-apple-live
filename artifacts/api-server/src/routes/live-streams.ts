@@ -102,21 +102,17 @@ router.post("/account/live-streams", async (req, res) => {
   const profile = await requireCompletedProfile(id);
   await requireAdult(id);
   const displayName = profile.displayName?.trim() || profile.username;
-  if (universityVideoBeamStore.isAccountMicrophoneActive(id)) {
-    throw new RoomError(409, "Mute your room microphone before starting Go Live so the audio does not double up.");
-  }
   const streamId = liveStreamIdForAccount(id);
   const roomName = liveStreamRoomName(streamId);
   try {
     if (await isLiveStreamActiveOrStarting(id) || isLiveStreamStarting(id)) {
       throw new RoomError(409, "You are already live or a Go Live session is still starting.");
     }
-    // Recheck after the asynchronous LiveKit lookup to close the mic-start race.
-    if (universityVideoBeamStore.isAccountMicrophoneActive(id)) {
-      throw new RoomError(409, "Mute your room microphone before starting Go Live so the audio does not double up.");
-    }
     reserveLiveStreamStart(id);
     try {
+      const token = await liveKitBeamService.createLiveStreamToken({
+        roomName, identity: "host", displayName, username: profile.username, role: "host",
+      });
       const beamSpeakers = universityVideoBeamStore.muteAccountMicrophones(id);
       for (const speaker of beamSpeakers) {
         const beamRoomName = universityVideoBeamStore.getRoomName(speaker.roomId);
@@ -132,9 +128,6 @@ router.post("/account/live-streams", async (req, res) => {
           throw failure;
         }
       }
-      const token = await liveKitBeamService.createLiveStreamToken({
-        roomName, identity: "host", displayName, username: profile.username, role: "host",
-      });
       liveStreamChatHub.start(streamId);
       res.set("Cache-Control", "no-store").json(StartLiveStreamResponse.parse({
         streamId, ...token, displayName, username: profile.username,
