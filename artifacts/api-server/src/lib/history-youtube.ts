@@ -106,7 +106,7 @@ async function uncachedSearch(apiKey: string, policy: CommunityOfficialChannelSe
     order: "date",
     videoDuration: "long",
     videoEmbeddable: "true",
-    safeSearch: "strict",
+    safeSearch: "none",
     relevanceLanguage: "en",
     regionCode: "US",
     maxResults: "25",

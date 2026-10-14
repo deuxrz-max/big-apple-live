@@ -470,7 +470,7 @@ async function discoverAndSaveToday(
         q: query,
         type: "playlist",
         maxResults: "20",
-        safeSearch: "strict",
+        safeSearch: "none",
         relevanceLanguage: "en",
         regionCode: "US",
         order: "relevance",

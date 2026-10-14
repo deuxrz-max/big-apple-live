@@ -89,10 +89,10 @@ test("World News selection only accepts configured trusted channel names", () =>
   assert.deepEqual(result.videos.map(video => video.videoId), ["abc12345678"]);
 });
 
-test("Kids selection only accepts the approved family-channel list", () => {
+test("room-specific channel allowlists still exclude unrelated sources", () => {
   const candidates = [
-    { videoId: "abc12345678", title: "Nursery rhyme", channelTitle: "Super Simple Songs - Kids Songs", description: null },
-    { videoId: "def12345678", title: "Cartoon compilation", channelTitle: "Random Cartoons", description: null },
+    { videoId: "abc12345678", title: "Official match highlights", channelTitle: "Official Promotion", description: null },
+    { videoId: "def12345678", title: "Fan compilation", channelTitle: "Unrelated Channel", description: null },
   ];
   const result = selectPlayableYouTubeVideos(candidates, [
     {
@@ -100,7 +100,26 @@ test("Kids selection only accepts the approved family-channel list", () => {
       defaultAudioLanguage: "en", thumbnailAspectRatios: [16 / 9],
     },
     { videoId: "def12345678", durationMs: 240_000, embeddable: true },
-  ], ["Super Simple Songs - Kids Songs", "PBS KIDS"]);
+  ], ["Official Promotion"]);
+  assert.deepEqual(result.videos.map(video => video.videoId), ["abc12345678"]);
+});
+
+test("topic-matching mature videos remain eligible unless YouTube marks them age-restricted", () => {
+  const result = selectPlayableYouTubeVideos([
+    {
+      videoId: "abc12345678",
+      title: "Late Night Adult Comedy Special",
+      channelTitle: "Comedy Channel",
+      description: "A mature stand-up performance.",
+    },
+  ], [{
+    videoId: "abc12345678",
+    durationMs: 45 * 60_000,
+    embeddable: true,
+    defaultAudioLanguage: "en",
+    thumbnailAspectRatios: [16 / 9],
+    ytRating: "ytGeneral",
+  }]);
   assert.deepEqual(result.videos.map(video => video.videoId), ["abc12345678"]);
 });
 

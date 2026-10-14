@@ -86,7 +86,7 @@ test("Pro Wrestling queries only the three official channels and globally orders
     assert.equal(requested.filter(url => url.pathname.endsWith("/search")).length, 3);
     for (const url of requested.filter(item => item.pathname.endsWith("/search"))) {
       assert.equal(url.searchParams.get("order"), "date");
-      assert.equal(url.searchParams.get("safeSearch"), "strict");
+      assert.equal(url.searchParams.get("safeSearch"), "none");
       assert.equal(url.searchParams.get("videoEmbeddable"), "true");
       assert.equal(url.searchParams.get("relevanceLanguage"), "en");
       assert.equal(url.searchParams.get("regionCode"), "US");

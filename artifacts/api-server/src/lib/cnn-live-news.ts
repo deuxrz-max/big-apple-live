@@ -109,7 +109,7 @@ export async function searchCnnLiveStream(
       eventType: "live",
       channelId,
       videoEmbeddable: "true",
-      safeSearch: "strict",
+      safeSearch: "none",
       relevanceLanguage: "en",
       regionCode: "US",
       maxResults: "10",

@@ -127,7 +127,7 @@ async function searchYouTube(
       part: "snippet",
       type: "video",
       videoEmbeddable: "true",
-      safeSearch: "strict",
+      safeSearch: "none",
       relevanceLanguage: "en",
       regionCode: "US",
       videoDuration: "medium",

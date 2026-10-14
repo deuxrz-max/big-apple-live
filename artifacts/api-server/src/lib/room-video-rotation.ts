@@ -377,7 +377,7 @@ async function fetchSearchPage(
     part: "snippet",
     type: "video",
     videoEmbeddable: "true",
-    safeSearch: "strict",
+    safeSearch: "none",
     relevanceLanguage: "en",
     regionCode: "US",
     maxResults: "50",

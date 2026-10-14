@@ -82,6 +82,7 @@ test("History searches resolve the official handle, keep long official English l
     assert.equal(searchUrl.searchParams.get("forHandle"), null);
     assert.equal(searchUrl.searchParams.get("channelId"), channelId);
     assert.equal(searchUrl.searchParams.get("videoDuration"), "long");
+    assert.equal(searchUrl.searchParams.get("safeSearch"), "none");
     assert.equal(searchUrl.searchParams.get("order"), "date");
     assert.equal(searchUrl.searchParams.get("relevanceLanguage"), "en");
     assert.equal(searchUrl.searchParams.get("regionCode"), "US");

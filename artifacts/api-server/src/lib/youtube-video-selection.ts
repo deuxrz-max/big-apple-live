@@ -27,7 +27,7 @@ export type YouTubeVideoEligibility = {
   height?: number | null;
 };
 
-export const YOUTUBE_VIDEO_FILTER_VERSION = "english-landscape-no-shorts-3m-v4";
+export const YOUTUBE_VIDEO_FILTER_VERSION = "english-landscape-no-shorts-3m-no-safe-search-v5";
 export const MIN_AUTOMATIC_VIDEO_DURATION_MS = 3 * 60 * 1_000;
 
 const CLEAR_NON_ENGLISH_LATIN = /\b(?:lucha libre|resumen|noticias|en vivo|partido|últimos momentos|últimas noticias|melhores momentos|lutte professionnelle|résumé officiel|français|en direct|match complet|ao vivo|luta livre|nachrichten|zusammenfassung|in diretta|hindi|tamil|telugu|bengali|urdu|punjabi|kannada|malayalam|marathi|spanish|portuguese|german|italian|japanese|korean|chinese|arabic|russian)\b/i;
