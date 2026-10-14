@@ -1,6 +1,5 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import type { Participant, RoomSession, RoomState, EmojiIdentity, ChatAccepted, AccountRoomInput } from "@workspace/api-zod";
-import { UNIVERSITY_MEMBER_CAP } from "./university-config";
 import { MONTHLY_CREDIT_BADGE_TIERS } from "./social/monthly-credit-badge-config";
 
 export const SESSION_TIMEOUT_MS = 90_000;
@@ -72,7 +71,9 @@ export class RoomStore {
       return;
     }
     this.rooms.set(input.roomId, { roomId: input.roomId, historyId: input.historyId,
-      name: input.label, capacity: UNIVERSITY_MEMBER_CAP, createdAt: input.createdAt, hostParticipantId: randomUUID(),
+      // Public topic rooms have no audience cap. Capacity 0 is the API's
+      // explicit unlimited value; the eight camera seats are tracked separately.
+      name: input.label, capacity: 0, createdAt: input.createdAt, hostParticipantId: randomUUID(),
       sessions: new Map(), listeners: new Set(), emptySince: null, community: true, testOnly: input.testOnly,
       parentRoomId: input.parentRoomId, entranceEffects: [] });
   }
@@ -129,10 +130,10 @@ export class RoomStore {
     for (const room of this.rooms.values()) if (room.community && !room.testOnly)
       this.emit(room, { type: "chat.refresh", data: { roomId: room.roomId } });
   }
-  hasUniversitySeat(roomId: string, accountId: string, exempt = false) {
-    const room = this.requireRoom(roomId);
-    return exempt || [...room.sessions.values()].some(s => s.accountId === accountId)
-      || [...room.sessions.values()].filter(s => !s.capExempt).length < UNIVERSITY_MEMBER_CAP;
+  hasUniversitySeat(roomId: string, _accountId: string, _exempt = false) {
+    this.requireRoom(roomId);
+    // Community audiences are unlimited; beam slots are tracked separately.
+    return true;
   }
 
   create(displayName: string, account?: AccountIdentity, beam?: AccountRoomInput): RoomSession {

@@ -1267,7 +1267,7 @@ components:
         status: { type: string, enum: [pending, approved, rejected, flagged] }
     ChatDirectoryRoom:
       type: object
-      required: [roomId, label, headcount]
+      required: [roomId, label, headcount, nowPlayingVideoId, nowPlayingTitle]
       properties:
         roomId: { type: string }
         label: { type: string }
@@ -1275,6 +1275,13 @@ components:
           type: integer
           minimum: 0
           description: Current heartbeat-based presence count; no participant identities are exposed.
+        nowPlayingVideoId:
+          type: [string, "null"]
+          pattern: "^[A-Za-z0-9_-]{11}$"
+          description: Video currently playing in Beam TV, when a verified title is available.
+        nowPlayingTitle:
+          type: [string, "null"]
+          maxLength: 200
     ChatAccess:
       type: object
       required: [adultConfirmed, moderator, owner, suspended]

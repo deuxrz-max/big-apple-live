@@ -8,6 +8,7 @@ export type CommunityVideoPoolItem = {
   durationMs: number;
   discoveredAtMs: number;
   tags?: string[];
+  categoryId?: string | null;
   defaultLanguage?: string | null;
   defaultAudioLanguage?: string | null;
   thumbnailAspectRatios?: number[];

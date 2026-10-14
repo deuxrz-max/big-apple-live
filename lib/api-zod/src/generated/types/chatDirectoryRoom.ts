@@ -14,4 +14,15 @@ export interface ChatDirectoryRoom {
      * @minimum 0
      */
   headcount: number;
+  /**
+     * Video currently playing in Beam TV, when a verified title is available.
+     * @nullable
+     * @pattern ^[A-Za-z0-9_-]{11}$
+     */
+  nowPlayingVideoId: string | null;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  nowPlayingTitle: string | null;
 }

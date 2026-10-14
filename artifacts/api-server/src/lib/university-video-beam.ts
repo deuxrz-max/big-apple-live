@@ -76,6 +76,18 @@ export class UniversityVideoBeamStore {
     return this.toState(this.ensure(roomId), viewerAccountId);
   }
 
+  /** Read currently playing metadata for directory cards without initializing playback. */
+  getDirectoryNowPlaying(roomId: string): { videoId: string; title: string } | null {
+    const id = roomId.toUpperCase();
+    if (!this.rooms.isCommunity(id)) return null;
+    const key = `${id}:${this.rooms.getHistoryId(id)}`;
+    const beam = this.beams.get(key);
+    const videoId = beam?.tv.currentVideoId;
+    if (!beam || !videoId || beam.tv.breakEndsAtMs !== null) return null;
+    const metadata = beam.tv.videoMetadata.find(video => video.videoId === videoId);
+    return metadata ? { videoId, title: metadata.title } : null;
+  }
+
   getNextAutomaticPlaybackTransitionAt(roomId: string): number | null {
     const beam = this.ensure(roomId);
     this.advanceOwnerlessTopicPlayback(beam);

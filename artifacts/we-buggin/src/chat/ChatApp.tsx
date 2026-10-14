@@ -131,18 +131,172 @@ export function AdultGate({ children }: { children: ReactNode }) {
 export function ChatDirectory() {
   const { signOut } = useClerk();
   const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState('All');
+  const directory = useGetChatDirectory({ query: { queryKey: getGetChatDirectoryQueryKey(), refetchInterval: 15_000 } });
+  const me = useGetMyProfile({ query: { queryKey: getGetMyProfileQueryKey(), refetchInterval: 60_000 } });
+  const topics = ['Music', 'Movies', 'Sports', 'Pro Wrestling', 'Web Series', 'History', 'News'];
+  type DirectoryRoom = { roomId: string; label: string; headcount: number; nowPlayingVideoId?: string | null; nowPlayingTitle?: string | null };
+  const rooms = (directory.data ?? []) as DirectoryRoom[];
+  const topicFor = (room: DirectoryRoom) => {
+    const source = `${room.label} ${room.roomId}`.toLowerCase().replace(/[^a-z0-9]+/g, ' ');
+    return topics.find((topic) => source.includes(topic.toLowerCase())) ?? room.label;
+  };
+  const searched = rooms.filter((room) => `${room.label} ${topicFor(room)} ${room.nowPlayingTitle ?? ''}`.toLowerCase().includes(query.trim().toLowerCase()));
+  const visible = searched.filter((room) => {
+    if (filter === 'Live Now') return room.headcount > 0;
+    if (filter === 'Popular') return true;
+    return filter === 'All' || topicFor(room) === filter;
+  }).sort((a, b) => filter === 'Popular' ? b.headcount - a.headcount : 0);
+  const featured = rooms.length ? [...rooms].sort((a, b) => b.headcount - a.headcount)[0] : undefined;
+  const activeRoomCount = rooms.filter((room) => room.headcount > 0).length;
   return (
-    <Shell>
-      <TopBar signedIn query={query} setQuery={setQuery} />
-      <div className="ch-top">
-        <span />
-        <span><button type="button" className="bm-btn bm-btn-sm" onClick={() => signOut({ redirectUrl: import.meta.env.BASE_URL || '/' })}>Sign out</button></span>
-      </div>
-      <h1 aria-label="Streamtalk directory" style={{ color: '#A6FF00', fontWeight: 800, fontFamily: "'Montserrat', sans-serif" }}>STREAMTALK</h1>
-      <List query={query} />
-      <p className="ch-note">{DISCLAIMER}</p>
+    <Shell className="st-directory">
+      <header className="st-dir-header">
+        <div className="st-dir-topline">
+          <div className="st-dir-lockup">
+            <Wordmark href="/home" className="st-brand" />
+            <span className="st-dir-livehub">LIVE HUB</span>
+          </div>
+          <div className="st-dir-account">
+            <span className="st-dir-unlimited">Unlimited</span>
+            <Link href="/user-portal" className="st-dir-avatar" aria-label={`Profile${me.data?.profile?.username ? `: ${me.data.profile.username}` : ''}`}>
+              <UserPhoto username={me.data?.profile?.username} displayName={me.data?.profile?.displayName} photoUrl={me.data?.profile?.photoUrl} size={38} />
+              <i aria-hidden="true" />
+            </Link>
+            <details className="st-dir-menu">
+              <summary aria-label="Open account menu">⋯</summary>
+              <button type="button" onClick={() => signOut({ redirectUrl: import.meta.env.BASE_URL || '/' })}>Sign out</button>
+            </details>
+          </div>
+        </div>
+        <label className="st-dir-search-wrap">
+          <span className="st-dir-search-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.5" /><path d="m16 16 4.2 4.2" /></svg>
+          </span>
+          <input type="search" className="st-search st-dir-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search channels, topics, streams…" aria-label="Search channels, topics and streams" />
+          {query && <button type="button" className="st-dir-clear" onClick={() => setQuery('')} aria-label="Clear search">×</button>}
+        </label>
+      </header>
+
+      <section className="st-dir-intro" aria-labelledby="st-dir-title">
+        <div className="st-dir-kicker"><span className="st-dir-kicker-dot" /> THE CONVERSATION IS LIVE</div>
+        <h1 id="st-dir-title">Find your <em>room.</em></h1>
+        <p>Drop into what you love. The best conversations happen in real time.</p>
+      </section>
+
+      {!directory.isLoading && !directory.isError && featured && (
+        <section className="st-dir-feature" aria-label="Most occupied room">
+          <div className="st-dir-section-head">
+              <div><span className="st-dir-overline">FEATURED LIVE</span><h2>The room everyone's heading to tonight</h2></div>
+              <a className="st-dir-feature-mark" href="#live-channels">All rooms →</a>
+          </div>
+            <DirectoryRoomCard room={featured} topic={topicFor(featured)} featured />
+        </section>
+      )}
+
+      <section className="st-dir-explore" id="live-channels" aria-labelledby="st-dir-explore-title">
+        <div className="st-dir-section-head st-dir-explore-heading">
+          <div><span className="st-dir-overline">LIVE CHANNELS</span><h2 id="st-dir-explore-title">Find your next room</h2></div>
+          {!directory.isLoading && !directory.isError && <span className="st-dir-total">{activeRoomCount} Active {activeRoomCount === 1 ? 'Room' : 'Rooms'}</span>}
+        </div>
+        <div className="st-dir-filters" role="group" aria-label="Filter rooms">
+          {['All', 'Live Now', 'Popular', ...topics].map((item) => (
+            <button key={item} type="button" className={`st-dir-filter${filter === item ? ' is-active' : ''}`} aria-pressed={filter === item} onClick={() => setFilter(item)}>
+              {item === 'Live Now' && <span className="st-dir-filter-dot" aria-hidden="true" />}{item}
+            </button>
+          ))}
+        </div>
+
+        {directory.isLoading && <ul className="st-dir-grid" aria-label="Loading rooms" aria-busy="true">{[0, 1, 2, 3].map((n) => <li className="st-dir-skeleton" key={n}><span /><div><i /><i /></div></li>)}</ul>}
+        {directory.isError && <div className="st-dir-state st-dir-error" role="alert"><div className="st-dir-state-mark">!</div><h3>Rooms aren’t loading</h3><p>We couldn’t reach the directory. Give it another try.</p><button type="button" onClick={() => directory.refetch()}>Retry directory</button></div>}
+        {directory.data && rooms.length === 0 && <div className="st-dir-state"><div className="st-dir-state-mark">—</div><h3>Quiet for a moment</h3><p>There are no rooms in the directory right now. Check back soon.</p></div>}
+        {directory.data && rooms.length > 0 && visible.length === 0 && <div className="st-dir-state"><div className="st-dir-state-mark">⌕</div><h3>No rooms found</h3><p>Try another search or switch to a different topic.</p><button type="button" onClick={() => { setQuery(''); setFilter('All'); }}>Clear filters</button></div>}
+        {directory.data && visible.length > 0 && <ul className="st-dir-grid">
+          {visible.map((room) => <li key={room.roomId}><DirectoryRoomCard room={room} topic={topicFor(room)} /></li>)}
+        </ul>}
+      </section>
+      <footer className="st-dir-footer"><span>STREAMTALK · FIND YOUR PEOPLE</span><p>{DISCLAIMER}</p></footer>
     </Shell>
   );
+}
+
+function DirectoryRoomCard({ room, topic, featured = false }: {
+  room: { roomId: string; label: string; headcount: number; nowPlayingVideoId?: string | null; nowPlayingTitle?: string | null };
+  topic: string;
+  featured?: boolean;
+}) {
+  const [thumbnailFailed, setThumbnailFailed] = useState(false);
+  const [topicPhotoFailed, setTopicPhotoFailed] = useState(false);
+  const videoId = room.nowPlayingVideoId;
+  const hasThumbnail = !!videoId && !thumbnailFailed;
+  const hasTopicPhoto = !hasThumbnail && !topicPhotoFailed;
+  const displayTitle = room.nowPlayingTitle?.trim();
+  return (
+    <Link href={`/rooms/${encodeURIComponent(room.roomId)}`} className={`st-dir-card${featured ? ' is-featured' : ''}`} aria-label={`Enter ${room.label}, ${room.headcount} ${room.headcount === 1 ? 'person' : 'people'} here`}>
+      <div className={`st-dir-art st-dir-art-${topicClass(topic)}${hasThumbnail ? ' has-video' : ''}`}>
+        {hasThumbnail
+          ? <img src={`https://img.youtube.com/vi/${encodeURIComponent(videoId!)}/hqdefault.jpg`} alt="" loading={featured ? 'eager' : 'lazy'} onError={() => setThumbnailFailed(true)} />
+          : hasTopicPhoto
+            ? <img className="st-dir-topic-photo" src={topicPhotoUrl(topic)} alt="" loading={featured ? 'eager' : 'lazy'} onError={() => setTopicPhotoFailed(true)} />
+            : <div className="st-dir-art-fallback" aria-hidden="true"><span className="st-dir-art-index">{topicInitial(topic)}</span><span className="st-dir-art-word">{topic.toUpperCase()}</span><span className="st-dir-art-lines" /></div>}
+        <span className={`st-dir-live${room.headcount > 0 ? ' is-live' : ''}`}><i />{room.headcount > 0 ? 'LIVE NOW' : 'OPEN ROOM'}</span>
+        <span className="st-dir-count"><b aria-hidden="true">◉</b><span>{room.headcount} watching</span></span>
+        <span className="st-dir-video-tag">{displayTitle || `${topic} community`}</span>
+        <span className="st-dir-art-shade" />
+        {featured && (
+          <span className="st-dir-featured-copy">
+            <span className="st-dir-featured-title">{room.label}</span>
+            <span className="st-dir-featured-description">{topicDescription(topic)}</span>
+            <span className="st-dir-featured-meta">
+              <span className="st-dir-topic-avatar" aria-hidden="true">{topicInitial(topic)}</span>
+              <span>Community in {topic}</span>
+              <span className="st-dir-featured-enter">Enter room</span>
+            </span>
+          </span>
+        )}
+      </div>
+      {!featured && <div className="st-dir-card-copy">
+        <div className="st-dir-card-titles"><h3>{room.label}</h3><p>{displayTitle || topicDescription(topic)}</p></div>
+        <span className="st-dir-enter" aria-hidden="true">▶ Enter</span>
+      </div>}
+    </Link>
+  );
+}
+
+function topicDescription(topic: string) {
+  const descriptions: Record<string, string> = {
+    Music: 'Live sets, new releases and late-night listening.',
+    Movies: 'Trailers, film talk and box-office picks.',
+    Sports: 'Highlights, big games and fan conversation.',
+    'Pro Wrestling': 'Promos, matches and wrestling talk.',
+    'Web Series': 'Today’s series, episode by episode.',
+    History: 'Documentaries and stories from the past.',
+    News: 'Live headlines and current events.',
+  };
+  return descriptions[topic] ?? `Live conversation about ${topic}.`;
+}
+
+function topicClass(topic: string) {
+  return topic.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+}
+
+function topicInitial(topic: string) {
+  const initials: Record<string, string> = { 'Pro Wrestling': 'PW', 'Web Series': 'WS' };
+  return initials[topic] ?? topic.slice(0, 1).toUpperCase();
+}
+
+function topicPhotoUrl(topic: string) {
+  const photoIds: Record<string, string> = {
+    Music: 'photo-1492684223066-81342ee5ff30',
+    Movies: 'photo-1489599849927-2ee91cede3ba',
+    Sports: 'photo-1508098682722-e99c43a406b2',
+    'Pro Wrestling': 'photo-1540747913346-19e32dc3e97e',
+    'Web Series': 'photo-1485846234645-a62644f84728',
+    History: 'photo-1461360370896-922624d12aa1',
+    News: 'photo-1504711434969-e33886168f5c',
+  };
+  const id = photoIds[topic];
+  return id ? `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1200&q=72` : '';
 }
 
 const invalidateSocial = (qc: ReturnType<typeof useQueryClient>) =>

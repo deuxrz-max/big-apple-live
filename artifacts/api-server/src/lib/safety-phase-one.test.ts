@@ -8,32 +8,31 @@ import { db, accountProfiles, chatRooms, chatAdmissions, chatModerators, profile
 import router from "../routes";
 import { initializeCommunities } from "./community";
 import { RoomStore, SESSION_TIMEOUT_MS } from "./room-store";
-import { UNIVERSITY_MEMBER_CAP } from "./university-config";
 import { deleteFixturePhoto } from "./profile-photo-storage";
 import { person } from "./social/core";
 import { GetMyProfileResponse, GetPhotoReviewQueueResponse, JoinAccountRoomResponse, GetChatDirectoryResponse, GetRoomMessagesResponse } from "@workspace/api-zod";
 
-test("24-seat setting, moderator exemption, reconnect and expired seats", () => {
+test("public community rooms allow more than 24 audience members and reconnects", () => {
   let now = 0;
   const store = new RoomStore(() => now);
   store.registerCommunity({ roomId: "LIVEME", label: "LiveMe", historyId: randomUUID(), createdAt: new Date() });
   const identity = { emojiId: "1F600", gender: "Female" as const, color: "#FFFFFF", hairColor: "#000000" };
-  const sessions = Array.from({ length: UNIVERSITY_MEMBER_CAP }, (_, i) =>
+  const sessions = Array.from({ length: 32 }, (_, i) =>
     store.join("LIVEME", `Member ${i}`, { accountId: `member-${i}`, identity }));
-  assert.equal(store.get("LIVEME").capacity, UNIVERSITY_MEMBER_CAP);
-  assert.equal(store.hasUniversitySeat("LIVEME", "next"), false);
-  assert.throws(() => store.join("LIVEME", "Next", { accountId: "next", identity }), /capacity/);
+  assert.equal(store.get("LIVEME").capacity, 0, "zero represents unlimited community capacity");
+  assert.equal(store.hasUniversitySeat("LIVEME", "next"), true);
+  assert.equal(store.join("LIVEME", "Next", { accountId: "next", identity }).room.participants.length, 33);
   assert.equal(store.join("LIVEME", "Member 0", { accountId: "member-0", identity }).participantSessionId, sessions[0]!.participantSessionId);
   store.join("LIVEME", "Moderator", { accountId: "moderator", identity, capExempt: true });
-  assert.equal(store.get("LIVEME").participants.length, UNIVERSITY_MEMBER_CAP + 1);
-  assert.equal(store.hasUniversitySeat("LIVEME", "next"), false);
+  assert.equal(store.get("LIVEME").participants.length, 34);
+  assert.equal(store.hasUniversitySeat("LIVEME", "next"), true);
   now = SESSION_TIMEOUT_MS;
   assert.equal(store.hasUniversitySeat("LIVEME", "next"), true);
 });
 
-test("real HTTP/DB/storage photo moderation and university overflow; synthetic Clerk identities only", async t => {
+test("real HTTP/DB/storage photo moderation and unlimited public rooms; synthetic Clerk identities only", async t => {
   const suffix = randomUUID().replaceAll("-", "").slice(0, 8);
-  const ids = Array.from({ length: UNIVERSITY_MEMBER_CAP + 2 }, (_, i) => `safety-fixture-${suffix}-${i}`);
+  const ids = Array.from({ length: 32 }, (_, i) => `safety-fixture-${suffix}-${i}`);
   const photos: string[] = [];
   const app = express();
   app.use((req, _res, next) => {
@@ -148,61 +147,40 @@ test("real HTTP/DB/storage photo moderation and university overflow; synthetic C
       "hidden room rows remain stored");
   });
   const sessions: { participantSessionId: string }[] = [];
-  await t.test("25th member gets overflow, moderators can enter full base, empty overflow hidden", async () => {
-    for (let i = 0; i < UNIVERSITY_MEMBER_CAP; i++) {
+  await t.test("audience beyond 24 stays in the same room with chat and moderation intact", async () => {
+    for (let i = 0; i < 30; i++) {
       const response = await request(ids[i]!, "/account/rooms/MUSIC1/join", { method: "POST" });
       assert.equal(response.status, 201);
       sessions.push(JoinAccountRoomResponse.parse(await response.json()));
     }
-    const full = await request(ids[UNIVERSITY_MEMBER_CAP]!, "/account/rooms/MUSIC1/join", { method: "POST" });
-    assert.equal(full.status, 409);
-    const offer = await full.json() as { error: string; overflow: { roomId: string; label: string } };
-    assert.equal(offer.overflow.label, "Music 2");
-    assert.match(offer.error, /is full/);
-    const emptyDirectory = GetChatDirectoryResponse.parse(await (await request(owner, "/account/chat/rooms")).json());
-    assert.ok(!emptyDirectory.some((r: { roomId: string }) => r.roomId === offer.overflow.roomId));
-    assert.equal(emptyDirectory.find(r => r.roomId === "MUSIC1")?.headcount, UNIVERSITY_MEMBER_CAP);
+    const directoryAtThirty = GetChatDirectoryResponse.parse(await (await request(owner, "/account/chat/rooms")).json());
+    assert.equal(directoryAtThirty.find((r: { roomId: string }) => r.roomId === "MUSIC1")?.headcount, 30);
     const publicDirectoryResponse = await fetch(`${base}/account/chat/rooms`);
     assert.equal(publicDirectoryResponse.status, 200);
     const publicDirectory = await publicDirectoryResponse.json() as Record<string, unknown>[];
-    assert.ok(publicDirectory.every(r => Object.keys(r).sort().join(",") === "headcount,label,roomId"),
+    assert.ok(publicDirectory.every(r => Object.keys(r).sort().join(",") === "headcount,label,nowPlayingTitle,nowPlayingVideoId,roomId"),
       "Public headcounts must not disclose participants or chat");
-    const joined = await request(ids[UNIVERSITY_MEMBER_CAP]!, `/account/rooms/${offer.overflow.roomId}/join`, { method: "POST" });
-    assert.equal(joined.status, 201);
-    const overflowSession = JoinAccountRoomResponse.parse(await joined.json());
-    assert.equal((await request(mod, "/account/rooms/MUSIC1/join", { method: "POST" })).status, 201);
+    const beyondOldCap = await request(ids[30]!, "/account/rooms/MUSIC1/join", { method: "POST" });
+    assert.equal(beyondOldCap.status, 201, "the 31st audience member joins the same room");
+    const extraSession = JoinAccountRoomResponse.parse(await beyondOldCap.json());
+    assert.equal(extraSession.room.participants.length, 31);
     const send = (actor: string, roomId: string, sessionId: string, text: string) => request(actor, `/account/rooms/${roomId}/messages`, {
       method: "POST", ...json({ text, kind: "text" }),
       headers: { "Content-Type": "application/json", "X-Room-Session": sessionId },
     });
     assert.equal((await send(owner, "MUSIC1", sessions[0]!.participantSessionId, `Base ${suffix}`)).status, 201);
-    assert.equal((await send(ids[UNIVERSITY_MEMBER_CAP]!, offer.overflow.roomId, overflowSession.participantSessionId, `Overflow ${suffix}`)).status, 201);
-    const history = GetRoomMessagesResponse.parse(await (await request(ids[UNIVERSITY_MEMBER_CAP]!, `/account/rooms/${offer.overflow.roomId}/messages`, {
-      headers: { "X-Room-Session": overflowSession.participantSessionId },
+    assert.equal((await send(ids[30]!, "MUSIC1", extraSession.participantSessionId, `Beyond the old cap ${suffix}`)).status, 201);
+    const history = GetRoomMessagesResponse.parse(await (await request(ids[30]!, "/account/rooms/MUSIC1/messages", {
+      headers: { "X-Room-Session": extraSession.participantSessionId },
     })).json());
-    assert.ok(history.some((m: { text: string }) => m.text === `Overflow ${suffix}`));
-    assert.ok(!history.some((m: { text: string }) => m.text === `Base ${suffix}`));
-    const visibleDirectory = GetChatDirectoryResponse.parse(await (await request(owner, "/account/chat/rooms")).json());
-    assert.ok(visibleDirectory.some((r: { roomId: string }) => r.roomId === offer.overflow.roomId));
-    assert.equal(visibleDirectory.find(r => r.roomId === offer.overflow.roomId)?.headcount, 1);
-    assert.equal(visibleDirectory.find(r => r.roomId === "MUSIC1")?.headcount, UNIVERSITY_MEMBER_CAP + 1,
-      "Presence includes the exempt moderator without changing the member cap");
-    const overflowMessage = history.find(m => m.text === `Overflow ${suffix}`)!;
-    const report = await request(ids[UNIVERSITY_MEMBER_CAP]!, "/account/chat/reports", {
-      method: "POST", headers: { "Content-Type": "application/json", "X-Room-Session": overflowSession.participantSessionId },
-      body: JSON.stringify({ roomId: offer.overflow.roomId, messageId: overflowMessage.id, reason: "harassment" }),
+    assert.ok(history.some((m: { text: string }) => m.text === `Beyond the old cap ${suffix}`));
+    assert.ok(history.some((m: { text: string }) => m.text === `Base ${suffix}`));
+    const beyondOldCapMessage = history.find(m => m.text === `Beyond the old cap ${suffix}`)!;
+    const report = await request(ids[24]!, "/account/chat/reports", {
+      method: "POST", headers: { "Content-Type": "application/json", "X-Room-Session": sessions[24]!.participantSessionId },
+      body: JSON.stringify({ roomId: "MUSIC1", messageId: beyondOldCapMessage.id, reason: "harassment" }),
     });
-    assert.equal(report.status, 201, "Overflow supports the same report system");
-    // Existing base members may also visit overflow; each university counts independently.
-    for (let i = 0; i < UNIVERSITY_MEMBER_CAP - 1; i++) {
-      assert.equal((await request(ids[i]!, `/account/rooms/${offer.overflow.roomId}/join`, { method: "POST" })).status, 201);
-    }
-    const thirdOffer = await request(ids[UNIVERSITY_MEMBER_CAP - 1]!, `/account/rooms/${offer.overflow.roomId}/join`, { method: "POST" });
-    assert.equal(thirdOffer.status, 409);
-    const third = await thirdOffer.json() as { overflow: { roomId: string; label: string } };
-    assert.equal(third.overflow.label, "Music 3");
-    assert.notEqual(third.overflow.roomId, offer.overflow.roomId);
-    assert.equal((await request(mod, `/account/rooms/${offer.overflow.roomId}/join`, { method: "POST" })).status, 201);
+    assert.equal(report.status, 201, "reports continue to work in an unlimited room");
     assert.equal((await request(owner, "/rooms/MUSIC1/audio/events")).status, 410);
     assert.equal((await request(owner, "/rooms/MUSIC1/participants/anything/microphone", { method: "PUT" })).status, 410);
   });

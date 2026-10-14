@@ -358,6 +358,17 @@ export interface ChatDirectoryRoom {
      * @minimum 0
      */
   headcount: number;
+  /**
+     * Video currently playing in Beam TV, when a verified title is available.
+     * @nullable
+     * @pattern ^[A-Za-z0-9_-]{11}$
+     */
+  nowPlayingVideoId: string | null;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  nowPlayingTitle: string | null;
 }
 
 export interface ChatAccess {
@@ -1195,6 +1206,17 @@ export interface ChatDirectoryRoom4b96100 {
      * @minimum 0
      */
   headcount: number;
+  /**
+     * Video currently playing in Beam TV, when a verified title is available.
+     * @nullable
+     * @pattern ^[A-Za-z0-9_-]{11}$
+     */
+  nowPlayingVideoId: string | null;
+  /**
+     * @maxLength 200
+     * @nullable
+     */
+  nowPlayingTitle: string | null;
 }
 
 export interface ChatAccess4b96100 {

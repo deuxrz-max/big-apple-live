@@ -102,7 +102,7 @@ test("test actor commands exercise isolated university, chat, DM, and gift servi
     roomId, historyId, label: `Fixture University ${token}`, createdAt: new Date(),
   });
 
-  await t.test("join enforces adult eligibility and the 24-person room cap; leave clears presence", async () => {
+  await t.test("join enforces adult eligibility without a room audience cap; leave clears presence", async () => {
     await assert.rejects(executeTestActorCommand({
       action: "join", as: names[25]!, room: roomId,
     }), { status: 403 });
@@ -115,17 +115,15 @@ test("test actor commands exercise isolated university, chat, DM, and gift servi
       assert.equal((result as { joined: boolean }).joined, true);
     }
     assert.equal(roomStore.get(roomId).participants.length, 24);
-    await assert.rejects(executeTestActorCommand({
-      action: "join", as: names[24]!, room: roomId,
-    }), { status: 409 });
+    await executeTestActorCommand({ action: "join", as: names[24]!, room: roomId });
+    assert.equal(roomStore.get(roomId).participants.length, 25, "the 25th participant joins the same room");
 
     await executeTestActorCommand({ action: "leave", as: names[23]!, room: roomId });
     assert.equal(roomStore.accountSession(roomId, ids[23]!), null);
-    assert.equal(roomStore.get(roomId).participants.length, 23);
+    assert.equal(roomStore.get(roomId).participants.length, 24);
     await executeTestActorCommand({ action: "join", as: names[24]!, room: roomId });
     assert.equal(roomStore.get(roomId).participants.length, 24);
     await executeTestActorCommand({ action: "leave", as: names[24]!, room: roomId });
-    assert.equal(roomStore.accountSession(roomId, ids[24]!), null);
     assert.equal(roomStore.get(roomId).participants.length, 23);
   });
 

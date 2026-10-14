@@ -2,6 +2,7 @@ export type CommunityVideoSearchPolicy = {
   order?: "date" | "viewCount";
   publishedWithinDays?: number;
   trustedChannelTitles?: readonly string[];
+  videoCategoryId?: string;
 };
 
 export type CommunityLiveStreamPolicy = {
@@ -37,6 +38,14 @@ export type CommunityVideoUploadChannel = {
   titleTerms: readonly string[];
 };
 
+const MOVIE_UPLOAD_CHANNELS: readonly CommunityVideoUploadChannel[] = [
+  { channelHandle: "@FilmRiseMovies", channelTitle: "FilmRise Movies", titleTerms: ["full movie", "full film", "full-length movie"] },
+  { channelHandle: "@Popcornflix", channelTitle: "Popcornflix", titleTerms: ["full movie", "full film", "full-length movie"] },
+  { channelHandle: "@ParamountMovies", channelTitle: "Paramount Movies", titleTerms: ["full movie", "full film", "full-length movie"] },
+  { channelHandle: "@ShoutFactory", channelTitle: "Shout! Studios", titleTerms: ["full movie", "full film", "full-length movie"] },
+  { channelHandle: "@LionsgateMovies", channelTitle: "Lionsgate Movies", titleTerms: ["full movie", "full film", "full-length movie"] },
+];
+
 type CommunityRoomConfig = {
   roomId: string;
   label: string;
@@ -54,19 +63,13 @@ export const COMMUNITY_ROOMS: CommunityRoomConfig[] = [
   {
     roomId: "MUSIC1",
     label: "Music",
-    defaultVideoSearch: "popular official music videos and new song releases",
+    defaultVideoSearch: "popular official artist music videos",
     videoSearchTerms: [
-      "popular official English music videos full song",
-      "new song official music video live performance English",
-      "full live concert performance popular artists English",
-      "popular music festival full performance English",
+      "popular official music video artist",
+      "new official music video VEVO",
+      "popular artist official video music",
     ],
-    videoUploadChannels: [
-      { channelHandle: "@nprmusic", channelTitle: "NPR Music", titleTerms: ["tiny desk", "live", "concert", "performance"] },
-      { channelHandle: "@kexp", channelTitle: "KEXP", titleTerms: ["live", "session", "performance", "concert"] },
-      { channelHandle: "@COLORSxSTUDIOS", channelTitle: "COLORS", titleTerms: ["live", "performance", "session"] },
-    ],
-    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 90 },
+    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 90, videoCategoryId: "10" },
   },
   {
     roomId: "GAMING",
@@ -154,14 +157,19 @@ export const COMMUNITY_ROOMS: CommunityRoomConfig[] = [
   {
     roomId: "MOVIES",
     label: "Movies",
-    defaultVideoSearch: "popular official movie trailers and box office news",
+    defaultVideoSearch: "complete full-length movies from official licensed movie channels",
     videoSearchTerms: [
-      "popular official Hollywood movie trailers English full length",
-      "new English movie trailer official studio",
-      "box office news analysis full episode English",
-      "movie behind the scenes featurette English full video",
+      "FilmRise full movie English",
+      "Popcornflix full movie English",
+      "Paramount Movies full movie English",
+      "Shout Studios full movie English",
+      "Lionsgate Movies full movie English",
     ],
-    videoSearchPolicy: { order: "viewCount", publishedWithinDays: 90 },
+    videoSearchPolicy: {
+      order: "viewCount",
+      trustedChannelTitles: MOVIE_UPLOAD_CHANNELS.map(channel => channel.channelTitle),
+    },
+    videoUploadChannels: MOVIE_UPLOAD_CHANNELS,
   },
   {
     roomId: "PODCAS",

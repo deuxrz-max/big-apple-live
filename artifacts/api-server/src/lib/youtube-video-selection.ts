@@ -16,6 +16,7 @@ export type YouTubeVideoEligibility = {
   videoId: string;
   durationMs: number | null;
   embeddable: boolean;
+  categoryId?: string | null;
   availableInUS?: boolean;
   ytRating?: string | null;
   defaultLanguage?: string | null;

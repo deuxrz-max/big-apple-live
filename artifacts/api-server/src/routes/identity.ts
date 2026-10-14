@@ -10,7 +10,7 @@ import { getProfile, saveProfile, requireCompletedProfile } from "../lib/account
 import { recordDailyLogin } from '../lib/social/marathon';
 import { roomStore, RoomError } from "../lib/room-store";
 import { getClerkProxyHost } from "../middlewares/clerkProxyMiddleware";
-import { communityMembership, accessFor, offerOverflow } from "../lib/community";
+import { communityMembership, accessFor } from "../lib/community";
 import { giftNameColorsForAccounts } from "../lib/social/gift-name-color-data";
 import { universityAudioBeamStore } from "../lib/university-audio-beam";
 import { coloredEmoji } from "../lib/emoji-library";
@@ -81,18 +81,7 @@ router.post("/account/rooms/:roomId/join", async (req, res) => {
   universityAudioBeamStore.assertCanJoin(params.data.roomId, id);
   const profile = await requireCompletedProfile(id);
   const access = await accessFor(id);
-  if (!roomStore.hasUniversitySeat(params.data.roomId, id, access.moderator)) {
-    const overflow = await offerOverflow(params.data.roomId, id);
-    res.status(409).json({ error: `${roomStore.get(params.data.roomId).name} is full — try ${overflow.label}`, overflow });
-    return;
-  }
   const member = await communityMembership(params.data.roomId, id);
-  // No await between the final seat check and join; competing joins cannot oversubscribe.
-  if (!roomStore.hasUniversitySeat(params.data.roomId, id, access.moderator)) {
-    const overflow = await offerOverflow(params.data.roomId, id);
-    res.status(409).json({ error: `${roomStore.get(params.data.roomId).name} is full — try ${overflow.label}`, overflow });
-    return;
-  }
   const nameColors = await giftNameColorsForAccounts([id]);
   const session = roomStore.join(params.data.roomId, profile.displayName ?? profile.username, {
     accountId: id, identity: profile.identity, capExempt: access.moderator,

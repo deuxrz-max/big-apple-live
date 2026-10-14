@@ -29,7 +29,9 @@ export async function refillNextCommunityVideoPoolOnce(
   if (!apiKey || !(await canSpendGeneralYouTubeUnits(102))) return null;
 
   const orderedRooms = [...COMMUNITY_VIDEO_POOL_ROOMS]
-    .sort((left, right) => Number(right.roomId === "MUSIC1") - Number(left.roomId === "MUSIC1"));
+    .sort((left, right) =>
+      Number(right.roomId === "MOVIES") - Number(left.roomId === "MOVIES")
+      || Number(right.roomId === "MUSIC1") - Number(left.roomId === "MUSIC1"));
   if (!orderedRooms.length) return null;
 
   const stats = await getCommunityVideoPoolStats();

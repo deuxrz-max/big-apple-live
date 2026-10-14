@@ -20,3 +20,15 @@ For nonrepeating topic playback, persist each room's search cursors, candidate p
 **Why:** Rebuilding only the queue after a restart repeats the same popular results and loses the history needed to avoid them.
 
 **How to apply:** Keep selection and refresh server-side, read durable play history before each pick, and fall back to the saved pool when the YouTube quota budget is exhausted.
+
+The Music room only accepts YouTube Music-category results with an official-video title marker and a VEVO channel or artist/channel-name match; reactions, reviews, interviews, tutorials, podcasts, lyric/audio uploads, compilations, covers, and live performances are excluded.
+
+**Why:** The owner wants official artist music videos, not general music-related content. YouTube's public video API does not expose a reliable verified-artist flag, so this is a strict best-effort provenance check rather than proof of channel ownership.
+
+**How to apply:** Keep the category and title/channel checks on both new results and saved Music entries. Describe channel provenance as screened by metadata, not independently verified.
+
+The Movies room must use only configured official/licensed distributor channels and complete-film titles with a runtime of at least 60 minutes. Never fall back to generic trailers, clips, commentary, recaps, or explained videos.
+
+**Why:** The owner wants full movies, not movie-related discussion or promotional material, and specifically wants to avoid likely pirated re-uploads.
+
+**How to apply:** Enforce the trusted channel allow-list and full-film/runtime checks for both newly found videos and persisted pools. Fallback searches must still be limited to the approved channels.

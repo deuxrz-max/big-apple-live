@@ -8,6 +8,7 @@ import {
   DIRECTORY_COMMUNITY_ROOMS,
 } from "./community-config";
 import { isOwnerAccount } from "./social/owner-entrance-effects-policy";
+import { universityVideoBeamStore } from "./university-video-beam";
 export { COMMUNITY_ROOMS, communityDefaultVideoSearch } from "./community-config";
 export async function initializeCommunities() {
   for (const entry of COMMUNITY_ROOMS) {
@@ -55,7 +56,15 @@ export async function communityDirectory() {
       .sort((a, b) => Number(a.overflowNumber) - Number(b.overflowNumber))
       .map(r => ({ roomId: r.roomId, label: r.label })),
     ]),
-  ].map(r => ({ ...r, headcount: roomStore.get(r.roomId).participants.length }));
+  ].map(r => {
+    const nowPlaying = universityVideoBeamStore.getDirectoryNowPlaying(r.roomId);
+    return {
+      ...r,
+      headcount: roomStore.get(r.roomId).participants.length,
+      nowPlayingVideoId: nowPlaying?.videoId ?? null,
+      nowPlayingTitle: nowPlaying?.title ?? null,
+    };
+  });
 }
 /** Stable identifiers and history rows survive empty rooms/restarts. No history is reused. */
 export async function offerOverflow(roomId: string, accountId: string) {

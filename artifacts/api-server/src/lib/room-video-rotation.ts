@@ -31,6 +31,8 @@ import {
   type YouTubeVideoCandidate,
   type YouTubeVideoEligibility,
 } from "./youtube-video-selection";
+import { isOfficialMusicVideo } from "./music-video-policy";
+import { isCompleteFeatureFilm, MIN_FEATURE_FILM_DURATION_MS } from "./movies-video-policy";
 
 const DIRECTORY_COMMUNITY_ROOM_ID_SET = new Set<string>(DIRECTORY_COMMUNITY_ROOM_IDS);
 
@@ -54,7 +56,10 @@ const MAX_UPLOAD_PAGES_PER_REFRESH = 1;
 const RECENT_PLAY_WINDOW_MS = 24 * 60 * 60_000;
 const HISTORY_MIN_DURATION_MS = 20 * 60_000;
 
-type PoolItem = CommunityVideoPoolItem & { availableInUS?: boolean };
+type PoolItem = CommunityVideoPoolItem & {
+  availableInUS?: boolean;
+  categoryId?: string | null;
+};
 type PoolRow = Omit<typeof communityVideoPools.$inferSelect, "videos"> & { videos: PoolItem[] };
 type RoomLookup = CommunityParentLookup;
 type DiscoverResult = {
@@ -135,6 +140,9 @@ function mergePool(
 }
 
 function isAllowedRoomSource(roomId: string, item: PoolItem, rooms?: RoomLookup): boolean {
+  const parentRoomId = rooms?.communityParentId(roomId.toUpperCase())?.toUpperCase() ?? roomId.toUpperCase();
+  if (parentRoomId === "MUSIC1" && !isOfficialMusicVideo(item)) return false;
+  if (parentRoomId === "MOVIES" && !isCompleteFeatureFilm(item)) return false;
   const wrestling = communityWrestlingSearchPolicy(roomId, rooms);
   const official = communityOfficialChannelSearchPolicy(roomId, rooms);
   const configured = communityVideoSearchPolicy(roomId, rooms);
@@ -356,6 +364,7 @@ function readEligibility(payload: unknown): YouTubeVideoEligibility[] {
       embeddable: status?.embeddable === true,
       availableInUS: youtubeRegionAllowsCountry(contentDetails?.regionRestriction),
       ytRating: asText(rating?.ytRating),
+      categoryId: asText(snippet?.categoryId),
       defaultLanguage: asText(snippet?.defaultLanguage),
       defaultAudioLanguage: asText(snippet?.defaultAudioLanguage),
       description: asText(snippet?.description),
@@ -384,6 +393,7 @@ async function fetchSearchPage(
     order: policy?.order ?? "viewCount",
     q: query,
   });
+  if (policy?.videoCategoryId) params.set("videoCategoryId", policy.videoCategoryId);
   if (policy?.publishedWithinDays) {
     params.set("publishedAfter", new Date(Date.now() - policy.publishedWithinDays * 86_400_000).toISOString());
   }
@@ -401,8 +411,20 @@ async function fetchSearchPage(
     policy?.trustedChannelTitles,
     50,
   );
-  const eligibilityById = new Map(readEligibility(detailPayload).map(item => [item.videoId, item]));
-  const videos = eligible.videos.map(item => {
+  const details = readEligibility(detailPayload);
+  const eligibilityById = new Map(details.map(item => [item.videoId, item]));
+  const isMusicRoom = policy?.videoCategoryId === "10";
+  const videos = eligible.videos.filter(item => {
+    if (!isMusicRoom) return true;
+    const detail = eligibilityById.get(item.videoId);
+    return isOfficialMusicVideo({
+      title: item.title,
+      channelTitle: item.channelTitle,
+      description: detail?.description ?? item.description,
+      tags: detail?.tags ?? item.tags,
+      categoryId: detail?.categoryId,
+    });
+  }).map(item => {
     const detail = eligibilityById.get(item.videoId);
     return {
     videoId: item.videoId,
@@ -412,6 +434,7 @@ async function fetchSearchPage(
     durationMs: eligible.durationMsByVideoId[item.videoId] ?? 0,
     discoveredAtMs: Date.now(),
     tags: detail?.tags ?? item.tags ?? [],
+    categoryId: detail?.categoryId ?? null,
     defaultLanguage: detail?.defaultLanguage ?? item.defaultLanguage ?? null,
     defaultAudioLanguage: detail?.defaultAudioLanguage ?? item.defaultAudioLanguage ?? null,
     thumbnailAspectRatios: detail?.thumbnailAspectRatios ?? item.thumbnailAspectRatios ?? [],
@@ -481,7 +504,7 @@ async function resolveUploadChannels(
   return { channels, sourceCursors: cursors };
 }
 
-async function resolveMusicUploadChannels(
+async function resolveConfiguredUploadChannels(
   roomId: string,
   apiKey: string,
   specs: CommunityVideoUploadChannel[],
@@ -489,7 +512,7 @@ async function resolveMusicUploadChannels(
 ): Promise<{ channels: Array<UploadChannel & { titleTerms: readonly string[] }>; sourceCursors: Record<string, string> }> {
   const cursors = { ...savedCursors };
   for (const [index, spec] of specs.entries()) {
-    const cursorKey = `music:${index}`;
+    const cursorKey = `configured:${index}`;
     if (cursors[`uploads:${cursorKey}`]) continue;
     const payload = await youtubeJson("channels", new URLSearchParams({
       part: "snippet,contentDetails",
@@ -503,13 +526,13 @@ async function resolveMusicUploadChannels(
     const related = asObject(asObject(row?.contentDetails)?.relatedPlaylists);
     const playlistId = asText(related?.uploads);
     if (channelId && playlistId) {
-      cursors[`__musicChannelId:${index}`] = channelId;
+      cursors[`__configuredChannelId:${index}`] = channelId;
       cursors[`uploads:${cursorKey}`] = playlistId;
     }
   }
   const channels = specs.flatMap((spec, index) => {
-    const channelId = cursors[`__musicChannelId:${index}`];
-    const playlistId = cursors[`uploads:music:${index}`];
+    const channelId = cursors[`__configuredChannelId:${index}`];
+    const playlistId = cursors[`uploads:configured:${index}`];
     return channelId && playlistId
       ? [{ channelId, channelTitle: spec.channelTitle, playlistId, titleTerms: spec.titleTerms }]
       : [];
@@ -559,9 +582,16 @@ async function fetchUploadPage(
   const eligibility = readEligibility(details);
   const accepted = selectPlayableYouTubeVideos(topicCandidates, eligibility, [channel.channelTitle], 50);
   const eligibilityById = new Map(eligibility.map(item => [item.videoId, item]));
-  const minimumDuration = isHistory ? HISTORY_MIN_DURATION_MS : 0;
+  const isMovieRoom = roomId.toUpperCase() === "MOVIES";
+  const minimumDuration = isMovieRoom
+    ? MIN_FEATURE_FILM_DURATION_MS
+    : isHistory ? HISTORY_MIN_DURATION_MS : 0;
   const videos = accepted.videos
     .filter(video => (accepted.durationMsByVideoId[video.videoId] ?? 0) >= minimumDuration)
+    .filter(video => !isMovieRoom || isCompleteFeatureFilm({
+      title: video.title,
+      durationMs: accepted.durationMsByVideoId[video.videoId] ?? 0,
+    }))
     .map(video => ({
       videoId: video.videoId,
       title: video.title,
@@ -570,6 +600,7 @@ async function fetchUploadPage(
       durationMs: accepted.durationMsByVideoId[video.videoId] ?? 0,
       discoveredAtMs: Date.now(),
       tags: eligibilityById.get(video.videoId)?.tags ?? video.tags ?? [],
+      categoryId: eligibilityById.get(video.videoId)?.categoryId ?? null,
       defaultLanguage: eligibilityById.get(video.videoId)?.defaultLanguage ?? video.defaultLanguage ?? null,
       defaultAudioLanguage: eligibilityById.get(video.videoId)?.defaultAudioLanguage ?? video.defaultAudioLanguage ?? null,
       thumbnailAspectRatios: eligibilityById.get(video.videoId)?.thumbnailAspectRatios
@@ -645,7 +676,15 @@ export async function sanitizeAllSavedCommunityVideoPools(rooms?: RoomLookup): P
     else report.poolsEmptyAfterScreening += 1;
     report.safeVideoCountsByRoom.push({ roomId: row.roomId, count: screened.videos.length });
     if (JSON.stringify(screened.videos) !== JSON.stringify(saved)) {
-      await savePoolRow(row.roomId, row, { videos: screened.videos });
+      const parentRoomId = rooms?.communityParentId(row.roomId.toUpperCase())?.toUpperCase()
+        ?? row.roomId.toUpperCase();
+      const refreshRoomSearch = parentRoomId === "MUSIC1" || parentRoomId === "MOVIES";
+      await savePoolRow(row.roomId, row, {
+        videos: screened.videos,
+        ...(refreshRoomSearch
+          ? { termIndex: 0, pageTokens: {}, sourceCursors: {}, refreshedAt: null }
+          : {}),
+      });
     }
   }
   return report;
@@ -691,7 +730,7 @@ async function discoverNextBatch(
   const policy = communityVideoSearchPolicy(roomId, rooms);
   const wrestling = communityWrestlingSearchPolicy(roomId, rooms);
   const history = communityOfficialChannelSearchPolicy(roomId, rooms);
-  const musicUploads = communityVideoUploadChannels(roomId, rooms);
+  const configuredUploads = communityVideoUploadChannels(roomId, rooms);
   const cursors = { ...(row.sourceCursors ?? {}) };
   let termIndex = row.termIndex;
   const pageTokens = { ...(row.pageTokens ?? {}) };
@@ -699,8 +738,8 @@ async function discoverNextBatch(
   const additions: PoolItem[] = [];
   const targetMet = existing.length >= TARGET_POOL_SIZE;
 
-  if (musicUploads.length) {
-    const resolved = await resolveMusicUploadChannels(roomId, apiKey, musicUploads, cursors);
+  if (configuredUploads.length) {
+    const resolved = await resolveConfiguredUploadChannels(roomId, apiKey, configuredUploads, cursors);
     Object.assign(cursors, resolved.sourceCursors);
     const activeChannels = resolved.channels.filter(channel =>
       cursors[`__musicExhausted:${channel.channelId}`] !== "yes");

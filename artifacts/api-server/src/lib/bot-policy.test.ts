@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { BOT_ACCOUNTS, BOT_VISIT_MS, BotRotation, publicViolation } from "./bot-policy";
 import { RoomStore } from "./room-store";
-import { UNIVERSITY_MEMBER_CAP } from "./university-config";
 
 test("four distinct system identities; one minute visits, 45-second breaks and no simultaneous visits", () => {
   assert.equal(new Set(BOT_ACCOUNTS.map(b => b.id)).size, 4);
@@ -45,19 +44,19 @@ test("moderator-edited bot names update the visible visitor without resetting it
   const leave = rotation.tick(["LIVEME"], BOT_VISIT_MS).find(event => event.bot.id === "ghost");
   assert.equal(leave?.bot.departure, "Night Ghost slips quietly away.");
 });
-test("a bot never consumes a seat or creates overflow even with 24 real participants", () => {
+test("a bot never consumes an audience session in an unlimited public room", () => {
   const store = new RoomStore(() => 0);
   store.registerCommunity({ roomId: "FULL", historyId: randomUUID(), label: "Bigo Live 2", createdAt: new Date() });
   const identity = { emojiId: "neutral", gender: "Male" as const, color: "#000000", hairColor: "#000000" };
-  for (let n = 0; n < UNIVERSITY_MEMBER_CAP; n++)
+  for (let n = 0; n < 32; n++)
     store.join("FULL", `Member ${n}`, { accountId: `member-${n}`, identity });
   const rotation = new BotRotation(0, () => 0);
   rotation.tick(store.occupiedUniversities(), 0);
   assert.equal(rotation.people("FULL").length, 1);
-  assert.equal(store.get("FULL").participants.length, UNIVERSITY_MEMBER_CAP);
-  assert.equal(store.hasUniversitySeat("FULL", "member-25"), false);
+  assert.equal(store.get("FULL").participants.length, 32);
+  assert.equal(store.hasUniversitySeat("FULL", "member-32"), true);
   assert.equal(store.hasUniversitySeat("FULL", "member-0"), true);
-  assert.throws(() => store.join("FULL", "Extra", { accountId: "member-25", identity }));
+  assert.equal(store.join("FULL", "Extra", { accountId: "member-32", identity }).room.participants.length, 33);
   assert.equal(store.latestUniversityForAccount("ghost"), null);
 });
 test("editable words/phrases use normalized word boundaries, not innocent substrings", () => {

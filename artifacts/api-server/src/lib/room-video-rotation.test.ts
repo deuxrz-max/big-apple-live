@@ -16,6 +16,13 @@ import {
   screenCommunityVideoPoolItems,
   youtubeQuotaDateKey,
 } from "./room-video-rotation";
+import { isOfficialMusicVideo } from "./music-video-policy";
+import {
+  communityVideoSearchPolicy,
+  communityVideoSearchTerms,
+  communityVideoUploadChannels,
+} from "./community-config";
+import { isCompleteFeatureFilm, MIN_FEATURE_FILM_DURATION_MS } from "./movies-video-policy";
 
 const item = (videoId: string): CommunityVideoPoolItem & { availableInUS: boolean } => ({
   videoId,
@@ -137,4 +144,125 @@ test("saved History and Pro Wrestling pools retain only their approved channel t
   ], Date.now(), "KIDS01");
   assert.deepEqual(wrestling.videos.map(video => video.videoId), ["WWE00000001"]);
   assert.equal(wrestling.untrustedSourceEntries, 1);
+});
+
+test("Music keeps only English Music-category official artist videos and VEVO uploads", () => {
+  const screened = screenCommunityVideoPoolItems([
+    {
+      ...item("MUSIC000001"),
+      title: "Artist One - Night Drive (Official Music Video)",
+      channelTitle: "Artist One",
+      categoryId: "10",
+    },
+    {
+      ...item("MUSIC000002"),
+      title: "Artist Two - Blue Hour (Official Video)",
+      channelTitle: "ArtistTwoVEVO",
+      categoryId: "10",
+    },
+    {
+      ...item("MUSIC000003"),
+      title: "Artist One - Night Drive (Official Music Video)",
+      channelTitle: "Fan Uploads",
+      categoryId: "10",
+    },
+    {
+      ...item("MUSIC000004"),
+      title: "Artist One - Night Drive (Official Music Video)",
+      channelTitle: "Artist One",
+      categoryId: "10",
+      description: "Lyrics and reaction podcast",
+    },
+    {
+      ...item("MUSIC000005"),
+      title: "Artist One - Night Drive (Official Music Video)",
+      channelTitle: "Artist One",
+      categoryId: "20",
+    },
+    {
+      ...item("MUSIC000006"),
+      title: "Artist One - Night Drive (Lyric Video)",
+      channelTitle: "Artist One",
+      categoryId: "10",
+    },
+  ], Date.now(), "MUSIC1");
+
+  assert.deepEqual(screened.videos.map(video => video.videoId), ["MUSIC000001", "MUSIC000002"]);
+  assert.equal(screened.entriesRemoved, 4);
+});
+
+test("official Music video predicate rejects uploads without Music category or artist provenance", () => {
+  assert.equal(isOfficialMusicVideo({
+    title: "Artist - Track (Official Music Video)",
+    channelTitle: "Artist",
+    categoryId: "10",
+  }), true);
+  assert.equal(isOfficialMusicVideo({
+    title: "Artist - Track (Official Music Video)",
+    channelTitle: "Fan Channel",
+    categoryId: "10",
+  }), false);
+  assert.equal(isOfficialMusicVideo({
+    title: "Artist - Track (Official Music Video)",
+    channelTitle: "Artist",
+    categoryId: "20",
+  }), false);
+});
+
+test("Music searches use YouTube's Music category and official-video-only query terms", () => {
+  assert.equal(communityVideoSearchPolicy("MUSIC1")?.videoCategoryId, "10");
+  const terms = communityVideoSearchTerms("MUSIC1");
+  assert.ok(terms.every(term => /official/i.test(term)));
+  assert.ok(terms.every(term => !/\b(?:live|performance|concert|reaction|cover|lyrics?)\b/i.test(term)));
+});
+
+test("Movies retains only 60-minute full films from the approved distributor channels", () => {
+  const screened = screenCommunityVideoPoolItems([
+    {
+      ...item("MOVIE000001"),
+      title: "The Feature (Full Movie)",
+      channelTitle: "FilmRise Movies",
+      durationMs: MIN_FEATURE_FILM_DURATION_MS + 1,
+    },
+    {
+      ...item("MOVIE000002"),
+      title: "The Feature (Full Movie)",
+      channelTitle: "FilmRise Movies",
+      durationMs: MIN_FEATURE_FILM_DURATION_MS - 1,
+    },
+    {
+      ...item("MOVIE000003"),
+      title: "The Feature (Full Movie Trailer)",
+      channelTitle: "Lionsgate Movies",
+      durationMs: 90 * 60_000,
+    },
+    {
+      ...item("MOVIE000004"),
+      title: "The Feature Explained (Full Movie)",
+      channelTitle: "Popcornflix",
+      durationMs: 90 * 60_000,
+    },
+    {
+      ...item("MOVIE000005"),
+      title: "The Feature (Full Movie)",
+      channelTitle: "Random Reuploads",
+      durationMs: 90 * 60_000,
+    },
+  ], Date.now(), "MOVIES");
+
+  assert.deepEqual(screened.videos.map(video => video.videoId), ["MOVIE000001"]);
+  assert.equal(screened.entriesRemoved, 4);
+});
+
+test("Movies searches and channel uploads stay limited to complete-film sources", () => {
+  const policy = communityVideoSearchPolicy("MOVIES");
+  const channels = communityVideoUploadChannels("MOVIES");
+  const terms = communityVideoSearchTerms("MOVIES");
+  assert.deepEqual(policy?.trustedChannelTitles, channels.map(channel => channel.channelTitle));
+  assert.equal(channels.length, 5);
+  assert.ok(terms.every(term => /full movie/i.test(term)));
+  assert.equal(isCompleteFeatureFilm({
+    title: "A Complete Feature Film",
+    durationMs: MIN_FEATURE_FILM_DURATION_MS,
+  }), true);
 });
