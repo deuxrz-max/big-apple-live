@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Ban, Eye, Flag, FlipHorizontal, Gift, Mic, MicOff, Radio, Send, Users, Video, X } from "lucide-react";
+import { ArrowLeft, Ban, Eye, Flag, FlipHorizontal, Gift, Mic, MicOff, Radio, Send, Share2, Users, Video, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Room, RoomEvent, Track, createLocalTracks, type LocalTrack, type RemoteTrack } from "livekit-client";
 import {
@@ -82,6 +82,11 @@ function usernameFromMetadata(metadata?: string): string | undefined {
     const parsed = JSON.parse(metadata) as { username?: unknown };
     return typeof parsed.username === "string" ? parsed.username : undefined;
   } catch { return; }
+}
+
+function leadingEmoji(value: string): string | undefined {
+  const first = [...value.trim()][0];
+  return first && /\p{Extended_Pictographic}/u.test(first) ? first : undefined;
 }
 
 function StreamTrack({ track, kind, muted = false, onPlaybackBlocked }: {
@@ -308,6 +313,8 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
   const joinNoticeTimer = useRef<number | undefined>(undefined);
   const [visibleJoinNotice, setVisibleJoinNotice] = useState("");
   const [error, setError] = useState("");
+  const [shareNotice, setShareNotice] = useState("");
+  const shareNoticeTimer = useRef<number | undefined>(undefined);
   const [displayName, setDisplayName] = useState(hostSession?.displayName ?? "Live creator");
   const [hostUsername, setHostUsername] = useState(hostSession?.username ?? "");
   const [ownUsername, setOwnUsername] = useState(hostMode ? hostSession?.username ?? "" : "");
@@ -321,6 +328,7 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
     query: { queryKey: getGetSocialMeQueryKey(), enabled: hostMode },
   });
   const hostAvatarUrl = hostMode ? ownProfile.data?.profile.photoUrl : hostPerson.data?.photoUrl;
+  const hostAvatarEmoji = leadingEmoji(displayName);
   const following = hostPerson.data?.favorite ?? false;
   const gifterTotals = useMemo(() => {
     const totals = new Map<string, { username: string; name: string; credits: number }>();
@@ -445,6 +453,7 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
     return () => {
       cancelled = true;
       if (joinNoticeTimer.current) window.clearTimeout(joinNoticeTimer.current);
+      if (shareNoticeTimer.current) window.clearTimeout(shareNoticeTimer.current);
       const current = roomRef.current;
       roomRef.current = null;
       if (current) void current.disconnect();
@@ -514,6 +523,24 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
     window.dispatchEvent(new CustomEvent("streamtalk:open-live-gifts", { detail: { streamId } }));
   };
 
+  const shareLiveStream = async () => {
+    const basePath = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
+    const url = new URL(`${basePath}live/${encodeURIComponent(streamId)}`, window.location.origin).toString();
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `${displayName} is live on Streamtalk`, text: "Join my live stream", url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setShareNotice("Stream link copied");
+      if (shareNoticeTimer.current) window.clearTimeout(shareNoticeTimer.current);
+      shareNoticeTimer.current = window.setTimeout(() => setShareNotice(""), 2400);
+    } catch (failure) {
+      if (failure instanceof DOMException && failure.name === "AbortError") return;
+      setError("Could not share the stream link.");
+    }
+  };
+
   const leave = async () => {
     leavingRef.current = true;
     await roomRef.current?.disconnect();
@@ -538,7 +565,7 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
               onClick={() => !hostMode && hostUsername && setProfileAction({ username: hostUsername, displayName })}
               data-testid="live-creator-profile">
               <span className="st-live-creator-avatar" aria-hidden="true">
-                {hostAvatarUrl ? <img src={hostAvatarUrl} alt="" /> : [...displayName][0]?.toUpperCase() ?? "S"}
+                {hostAvatarEmoji ?? (hostAvatarUrl ? <img src={hostAvatarUrl} alt="" /> : [...displayName][0]?.toUpperCase() ?? "S")}
               </span>
               <span className="st-live-creator-copy"><strong>{displayName}</strong>
                 <small><i className={status === "connected" ? "is-live" : ""} />{status === "connected" ? "LIVE NOW" : status === "reconnecting" ? "Reconnecting" : "Connecting"}</small>
@@ -566,6 +593,7 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
         {!hostMode && <button type="button" className="st-live-report-stream" onClick={openStreamReport}
           aria-label="Report stream" data-testid="live-report-stream"><Flag size={16} /></button>}
         {error && <p className="st-live-error" role="alert" data-testid="live-error">{error}</p>}
+        {shareNotice && <div className="st-live-share-status" role="status">{shareNotice}</div>}
         <div className="st-live-chat-overlay">
           {visibleJoinNotice && <div className="st-live-join-banner" role="status" data-testid="live-join-banner">
             <strong>{visibleJoinNotice}</strong> joined
@@ -576,14 +604,16 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
             onGift={receiveLiveGift} />
         </div>
         <div className="st-live-bottom-controls">
-          {!hostMode && <button type="button" className="st-live-gift-button" onClick={openLiveGiftFlow}
-            aria-label="Open live gifts" data-testid="live-open-gifts"><Gift size={22} /><span>Gift</span></button>
-          }
-          {hostMode && <div className="st-live-host-controls">
+          {!hostMode ? <button type="button" className="st-live-gift-button" onClick={openLiveGiftFlow}
+            aria-label="Open live gifts" data-testid="live-open-gifts"><Gift size={20} /><span>Gift</span></button>
+            : <div className="st-live-host-controls">
             <button type="button" onClick={() => void flipCamera()} aria-label="Flip camera"
               data-testid="live-flip-camera"><FlipHorizontal size={20} /><span>Flip</span></button>
-            <button type="button" onClick={() => void toggleHostMic()} aria-label={audioEnabled ? "Mute microphone" : "Unmute microphone"}
+            <button type="button" className={audioEnabled ? "is-mic-on" : "is-mic-off"} onClick={() => void toggleHostMic()}
+              aria-label={audioEnabled ? "Mute microphone" : "Unmute microphone"} aria-pressed={audioEnabled}
               data-testid="live-toggle-mic">{audioEnabled ? <Mic size={20} /> : <MicOff size={20} />}<span>{audioEnabled ? "Mic on" : "Mic off"}</span></button>
+            <button type="button" onClick={() => void shareLiveStream()} aria-label="Share stream link"
+              data-testid="live-share-stream"><Share2 size={19} /><span>Share</span></button>
           </div>}
         </div>
       </div>

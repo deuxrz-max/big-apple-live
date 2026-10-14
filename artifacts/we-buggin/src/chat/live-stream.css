@@ -254,8 +254,8 @@ body.streamtalk-live-screen .site-header {
   content: "";
   pointer-events: none;
   background:
-    linear-gradient(180deg, rgba(12, 11, 10, .60) 0%, rgba(12, 11, 10, .12) 22%, transparent 40%),
-    linear-gradient(0deg, rgba(12, 11, 10, .80) 0%, rgba(12, 11, 10, .48) 22%, transparent 56%);
+    linear-gradient(180deg, rgba(8, 8, 14, .54) 0%, rgba(8, 8, 14, .16) 10%, transparent 19%),
+    linear-gradient(0deg, rgba(8, 8, 14, .66) 0%, rgba(8, 8, 14, .18) 11%, transparent 20%);
 }
 .st-live-player > .st-live-video {
   position: absolute;
@@ -281,9 +281,9 @@ body.streamtalk-live-screen .site-header {
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, .78);
   border-radius: 50%;
-  background: #c7a67e;
-  color: #231c16;
-  font-size: 16px;
+  background: linear-gradient(140deg, #714de2, #211a3a);
+  color: #fff;
+  font-size: 20px;
   font-weight: 800;
 }
 .st-live-creator-avatar img,
@@ -335,9 +335,11 @@ body.streamtalk-live-screen .site-header {
 .st-live-creator-copy strong {
   max-width: 34vw;
   overflow: hidden;
-  color: #fff;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
   font-size: 14px;
   font-weight: 750;
+  text-shadow: 0 1px 4px rgba(0,0,0,.92);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -345,10 +347,12 @@ body.streamtalk-live-screen .site-header {
   display: flex;
   align-items: center;
   gap: 5px;
-  color: rgba(255, 255, 255, .82);
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
   font-size: 9px;
   font-weight: 750;
   letter-spacing: .09em;
+  text-shadow: 0 1px 4px rgba(0,0,0,.92);
 }
 .st-live-creator-copy small i {
   width: 6px;
@@ -383,13 +387,16 @@ body.streamtalk-live-screen .site-header {
   justify-content: center;
   gap: 6px;
   padding: 0 10px;
-  border: 1px solid rgba(255, 255, 255, .2);
+  border: 1px solid rgba(255, 255, 255, .38);
   border-radius: 999px;
-  background: rgba(22, 21, 20, .43);
-  color: #fff;
+  background: rgba(7, 7, 12, .67);
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
   backdrop-filter: blur(12px);
+  text-shadow: 0 1px 3px rgba(0,0,0,.85);
 }
 .st-live-viewers { font-size: 12px; font-weight: 750; }
+.st-live-viewers svg { color: #fff !important; stroke: currentColor; }
 .st-live-gifters { padding: 0 8px; }
 .st-live-gifters small { color: rgba(255, 255, 255, .87); font-size: 9px; white-space: nowrap; }
 .st-live-gifter-avatar {
@@ -482,7 +489,7 @@ body.streamtalk-live-screen .site-header {
   padding: 7px 10px;
   border-radius: 13px;
   background: rgba(12, 10, 18, .56);
-  color: rgba(255,255,255,.92);
+  color: #fff !important;
   font-size: 14px;
   text-shadow: 0 1px 3px rgba(0,0,0,.9);
 }
@@ -537,35 +544,51 @@ body.streamtalk-live-screen .site-header {
 .st-live-chat-text { color: #fff; }
 .st-live-chat-form {
   position: absolute;
-  right: 98px;
+  right: 78px;
   bottom: max(13px, env(safe-area-inset-bottom));
   left: 14px;
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 5px;
   width: auto;
+  height: 46px;
+  padding: 4px 5px 4px 13px;
+  border: 1px solid rgba(255,255,255,.36);
+  border-radius: 999px;
+  background: rgba(10, 10, 16, .72);
+  box-shadow: 0 3px 14px rgba(0,0,0,.22);
+  backdrop-filter: blur(10px);
   pointer-events: auto;
 }
-.st-live-room.is-host .st-live-chat-form { right: 178px; }
+.st-live-room.is-host .st-live-chat-form { right: 194px; }
 .st-live-chat-form input {
   flex: 1 1 auto;
   min-width: 0;
-  height: 42px;
-  padding: 0 15px;
-  border: 1px solid rgba(255,255,255,.2);
-  border-radius: 999px;
-  background: rgba(20,19,18,.54);
-  color: #fff;
+  height: 36px;
+  padding: 0 2px;
+  border: 0 !important;
+  border-radius: 0;
+  outline: 0;
+  background: transparent !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
   font-size: 13px;
-  backdrop-filter: blur(14px);
 }
-.st-live-chat-form input::placeholder { color: rgba(255,255,255,.73); }
-.st-live-chat-form input:focus { outline: 2px solid #e3bd91; outline-offset: 1px; }
+.st-live-chat-form input::placeholder { color: rgba(255,255,255,.78) !important; -webkit-text-fill-color: rgba(255,255,255,.78); }
+.st-live-chat-form input:focus { outline: 0; }
 .st-live-chat-form button {
-  flex: 0 0 42px;
-  width: 42px;
-  height: 42px;
-  background: #e6c49d;
-  color: #251e18;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 50%;
+  background: rgba(255,255,255,.15);
+  color: #fff !important;
+}
+.st-live-chat-form button svg { color: #fff; stroke: currentColor; }
+.st-live-chat-form button:disabled { opacity: .5; }
+.st-live-room.is-host .st-live-chat-form {
+  right: 194px;
 }
 .st-live-bottom-controls {
   position: absolute;
@@ -605,37 +628,73 @@ body.streamtalk-live-screen .site-header {
   align-items: center;
   justify-content: center;
   gap: 7px;
-  min-height: 48px;
+  width: 56px;
+  min-width: 56px;
+  height: 56px;
+  min-height: 56px;
   border: 1px solid rgba(255,255,255,.27);
-  border-radius: 999px;
-  background: rgba(22,21,20,.55);
-  color: #fff;
+  border-radius: 50%;
+  background: rgba(8, 8, 14, .72);
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
   font: inherit;
-  font-size: 12px;
+  font-size: 9px;
   font-weight: 800;
-  backdrop-filter: blur(14px);
+  box-shadow: 0 3px 15px rgba(0,0,0,.22);
+  backdrop-filter: blur(10px);
   pointer-events: auto;
 }
 .st-live-gift-button {
-  min-width: 76px;
-  min-height: 52px;
-  padding: 0 17px;
-  border-color: rgba(247, 213, 176, .72);
-  background: linear-gradient(145deg, rgba(235,199,158,.96), rgba(178,132,91,.93));
-  color: #2b2018;
-  box-shadow: 0 5px 20px rgba(12,10,8,.24);
-  font-size: 13px;
-}
-.st-live-gift-button svg { width: 23px; height: 23px; }
-.st-live-host-controls { display: flex; gap: 8px; }
-.st-live-host-controls button {
-  min-width: 72px;
   flex-direction: column;
-  gap: 3px;
-  padding: 6px 12px;
-  font-size: 10px;
+  gap: 2px;
+  padding: 3px;
+  border-color: rgba(255,255,255,.36);
+  font-size: 9px;
 }
-.st-live-host-controls button svg { width: 19px; height: 19px; }
+.st-live-gift-button svg { width: 19px; height: 19px; color: #fff; }
+.st-live-host-controls { display: flex; gap: 6px; }
+.st-live-host-controls button {
+  flex: 0 0 56px;
+  flex-direction: column;
+  gap: 2px;
+  padding: 3px;
+  line-height: 1;
+}
+.st-live-host-controls button svg {
+  width: 19px;
+  height: 19px;
+  color: #fff !important;
+  stroke: currentColor;
+}
+.st-live-host-controls button span {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
+  font-size: 8px;
+  line-height: 1.1;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0,0,0,.8);
+}
+.st-live-host-controls button.is-mic-on {
+  border-color: rgba(125, 255, 190, .72);
+  background: rgba(10, 68, 48, .76);
+}
+.st-live-host-controls button.is-mic-off {
+  border-color: rgba(255, 130, 150, .72);
+  background: rgba(78, 25, 39, .78);
+}
+.st-live-share-status {
+  position: absolute;
+  z-index: 6;
+  right: 14px;
+  bottom: calc(max(13px, env(safe-area-inset-bottom)) + 64px);
+  padding: 7px 10px;
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 999px;
+  background: rgba(8,8,14,.82);
+  color: #fff;
+  font-size: 11px;
+  text-shadow: 0 1px 3px #000;
+}
 .st-live-audio-enable {
   position: absolute;
   z-index: 4;
@@ -715,11 +774,10 @@ body.streamtalk-live-screen .site-header {
   .st-live-creator-copy strong { max-width: 31vw; font-size: 13px; }
   .st-live-follow { padding: 0 10px; }
   .st-live-chat-log { left: 10px; width: min(75%, 520px); }
-  .st-live-chat-form { right: 86px; left: 10px; }
-  .st-live-room.is-host .st-live-chat-form { right: 150px; }
+  .st-live-chat-form { right: 72px; left: 10px; }
+  .st-live-room.is-host .st-live-chat-form { right: 194px; }
   .st-live-join-banner { left: 10px; }
-  .st-live-host-controls { gap: 5px; }
-  .st-live-host-controls button { min-width: 62px; padding-inline: 8px; }
+  .st-live-host-controls { gap: 6px; }
 }
 @media (max-height: 620px) {
   .st-live-chat-log {
@@ -728,7 +786,7 @@ body.streamtalk-live-screen .site-header {
     max-height: min(30dvh, 190px);
   }
   .st-live-chat-form { bottom: max(10px, env(safe-area-inset-bottom)); }
-  .st-live-room.is-host .st-live-chat-form { right: 166px; }
+  .st-live-room.is-host .st-live-chat-form { right: 194px; }
   .st-live-join-banner {
     bottom: calc(max(10px, env(safe-area-inset-bottom)) + 58px + min(30dvh, 190px) + 8px);
   }
