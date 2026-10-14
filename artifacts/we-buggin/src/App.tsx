@@ -248,17 +248,19 @@ function ClerkProviderWithRoutes() {
   const [location, setLocation] = useLocation();
   const currentPath = stripBase(location);
   const isBeamRoomScreen = /^\/rooms\/[^/]+\/?$/.test(currentPath);
+  const isLiveScreen = currentPath === '/live/start' || /^\/live\/[^/]+\/?$/.test(currentPath);
   const isModerationScreen = currentPath === '/community/moderation';
   const isDirectoryScreen = currentPath === '/home';
-  const isLightScreen = !isBeamRoomScreen && !isModerationScreen && !isDirectoryScreen;
+  const isLightScreen = !isBeamRoomScreen && !isLiveScreen && !isModerationScreen && !isDirectoryScreen;
   useLayoutEffect(() => {
     document.body.classList.toggle('streamtalk-beam-screen', isBeamRoomScreen);
     document.body.classList.toggle('streamtalk-light-screen', isLightScreen);
     document.body.classList.toggle('streamtalk-directory-screen', isDirectoryScreen);
+    document.body.classList.toggle('streamtalk-live-screen', isLiveScreen);
     return () => {
-      document.body.classList.remove('streamtalk-beam-screen', 'streamtalk-light-screen', 'streamtalk-directory-screen');
+      document.body.classList.remove('streamtalk-beam-screen', 'streamtalk-light-screen', 'streamtalk-directory-screen', 'streamtalk-live-screen');
     };
-  }, [isBeamRoomScreen, isLightScreen, isDirectoryScreen]);
+  }, [isBeamRoomScreen, isLightScreen, isDirectoryScreen, isLiveScreen]);
   const clerkPubKey = publishableKeyFromHost(
     window.location.hostname,
     import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
@@ -283,7 +285,7 @@ function ClerkProviderWithRoutes() {
     >
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
-        <div className={`app-page ${isBeamRoomScreen ? 'is-beam-screen' : isModerationScreen ? 'is-moderation-screen' : isDirectoryScreen ? 'is-directory-screen' : 'is-light-screen'}`}><RoutedErrorBoundary>
+        <div className={`app-page ${isLiveScreen ? 'is-live-screen' : isBeamRoomScreen ? 'is-beam-screen' : isModerationScreen ? 'is-moderation-screen' : isDirectoryScreen ? 'is-directory-screen' : 'is-light-screen'}`}><RoutedErrorBoundary>
           <Switch>
             {DevAudioHarnessPage && (
               <Route path="/__dev/audio-harness">

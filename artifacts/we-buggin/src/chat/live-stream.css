@@ -229,7 +229,22 @@
 /* Live rooms are a separate, edge-to-edge camera surface: no site chrome, cards, or page gutters. */
 body.streamtalk-live-screen {
   overflow: hidden;
-  background: #11100f;
+  background: #000 !important;
+}
+body.streamtalk-live-screen #root {
+  width: 100%;
+  min-height: 100dvh;
+  background: #000;
+}
+#root .app-page.is-live-screen {
+  width: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #000 !important;
+  color: #fff;
 }
 body.streamtalk-live-screen .app-page {
   width: 100%;
@@ -237,7 +252,7 @@ body.streamtalk-live-screen .app-page {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background: #11100f;
+  background: #000 !important;
 }
 body.streamtalk-live-screen .app-bottom-nav,
 body.streamtalk-live-screen .app-header,
@@ -260,7 +275,7 @@ body.streamtalk-live-screen .site-header {
   height: 100dvh;
   min-height: 100dvh;
   overflow: hidden;
-  background: #181715;
+  background: #000;
   color: #fff;
   isolation: isolate;
 }
@@ -275,7 +290,7 @@ body.streamtalk-live-screen .site-header {
   overflow: hidden;
   border: 0;
   border-radius: 0;
-  background: #171614;
+  background: #000;
   box-shadow: none;
 }
 .st-live-player::after {
@@ -300,7 +315,13 @@ body.streamtalk-live-screen .site-header {
   position: absolute;
   inset: 0;
   align-content: center;
-  background: radial-gradient(ellipse at 50% 35%, #39362f, #171614 74%);
+   background: #000;
+}
+.st-live-player-empty .st-live-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
 }
 .st-live-creator-avatar,
 .st-live-action-avatar {
@@ -328,7 +349,7 @@ body.streamtalk-live-screen .site-header {
 .st-live-room.is-front-camera .st-live-video { transform: scaleX(-1); }
 .st-live-topbar {
   position: absolute;
-  z-index: 3;
+  z-index: 5;
   inset: max(12px, env(safe-area-inset-top)) 14px auto;
   display: flex;
   align-items: flex-start;
@@ -619,7 +640,7 @@ body.streamtalk-live-screen .site-header {
 .st-live-chat-form button svg { color: #fff; stroke: currentColor; }
 .st-live-chat-form button:disabled { opacity: .5; }
 .st-live-room.is-host .st-live-chat-form {
-  right: 194px;
+  right: 166px;
 }
 .st-live-bottom-controls {
   position: absolute;
@@ -685,10 +706,14 @@ body.streamtalk-live-screen .site-header {
 .st-live-gift-button svg { width: 19px; height: 19px; color: #fff; }
 .st-live-host-controls { display: flex; gap: 6px; }
 .st-live-host-controls button {
-  flex: 0 0 56px;
+  flex: 0 0 44px;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
   flex-direction: column;
-  gap: 2px;
-  padding: 3px;
+  gap: 1px;
+  padding: 2px;
   line-height: 1;
 }
 .st-live-host-controls button svg {
@@ -700,11 +725,51 @@ body.streamtalk-live-screen .site-header {
 .st-live-host-controls button span {
   color: #fff !important;
   -webkit-text-fill-color: #fff;
-  font-size: 8px;
+  font-size: 7px;
   line-height: 1.1;
   white-space: nowrap;
   text-shadow: 0 1px 2px rgba(0,0,0,.8);
 }
+.st-live-camera-recovery {
+  position: absolute;
+  z-index: 4;
+  inset: 50% auto auto 50%;
+  display: flex;
+  width: min(320px, calc(100% - 36px));
+  transform: translate(-50%, -50%);
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  padding: 16px;
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 18px;
+  background: rgba(7,7,12,.76);
+  color: #fff;
+  text-align: center;
+  backdrop-filter: blur(8px);
+}
+.st-live-camera-recovery strong {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+}
+.st-live-camera-recovery span {
+  color: rgba(255,255,255,.82);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.st-live-camera-recovery button {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid rgba(255,255,255,.44);
+  border-radius: 999px;
+  background: #a51f37;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+}
+.st-live-camera-recovery button:disabled { opacity: .65; }
 .st-live-host-controls button.is-mic-on {
   border-color: rgba(125, 255, 190, .72);
   background: rgba(10, 68, 48, .76);
@@ -806,8 +871,16 @@ body.streamtalk-live-screen .site-header {
   .st-live-follow { padding: 0 10px; }
   .st-live-chat-log { left: 10px; width: min(75%, 520px); }
   .st-live-chat-form { right: 72px; left: 10px; }
-  .st-live-room.is-host .st-live-chat-form { right: 194px; }
+  .st-live-room.is-host .st-live-chat-form { right: 166px; }
+  .st-live-room.is-host .st-live-chat-form { gap: 3px; padding-right: 3px; padding-left: 10px; }
+  .st-live-room.is-host .st-live-chat-form input { font-size: 11px; }
+  .st-live-room.is-host .st-live-chat-form button { flex-basis: 32px; width: 32px; height: 32px; }
   .st-live-join-banner { left: 10px; }
+  .st-live-host-controls { gap: 4px; }
+}
+@media (max-width: 600px) {
+  .st-live-room.is-host .st-live-gifters { display: none; }
+  .st-live-room.is-host .st-live-chat-form { right: 166px; }
   .st-live-host-controls { gap: 6px; }
 }
 @media (max-height: 620px) {
@@ -817,7 +890,7 @@ body.streamtalk-live-screen .site-header {
     max-height: min(30dvh, 190px);
   }
   .st-live-chat-form { bottom: max(10px, env(safe-area-inset-bottom)); }
-  .st-live-room.is-host .st-live-chat-form { right: 194px; }
+  .st-live-room.is-host .st-live-chat-form { right: 166px; }
   .st-live-join-banner {
     bottom: calc(max(10px, env(safe-area-inset-bottom)) + 58px + min(30dvh, 190px) + 8px);
   }

@@ -148,23 +148,47 @@ function leadingEmoji(value: string): string | undefined {
   return first && /\p{Extended_Pictographic}/u.test(first) ? first : undefined;
 }
 
-function StreamTrack({ track, kind, muted = false, onPlaybackBlocked }: {
+function StreamTrack({ track, kind, muted = false, onPlaybackBlocked, onVideoElement }: {
   track?: LocalTrack | RemoteTrack;
   kind: "audio" | "video";
   muted?: boolean;
-  onPlaybackBlocked?: () => void;
+  onPlaybackBlocked?: (blocked: boolean) => void;
+  onVideoElement?: (element: HTMLVideoElement | null) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const onPlaybackBlockedRef = useRef(onPlaybackBlocked);
+  const onVideoElementRef = useRef(onVideoElement);
+  onPlaybackBlockedRef.current = onPlaybackBlocked;
+  onVideoElementRef.current = onVideoElement;
   useEffect(() => {
     const element = kind === "video" ? videoRef.current : audioRef.current;
     if (!element || !track) return;
-    const attached = track.attach(element);
-    if (attached instanceof HTMLVideoElement) attached.playsInline = true;
-    attached.autoplay = true;
-    void attached.play().catch(() => onPlaybackBlocked?.());
-    return () => { track.detach(element); };
-  }, [kind, track]);
+    try {
+      const attached = track.attach(element);
+      attached.autoplay = true;
+      if (attached instanceof HTMLVideoElement) {
+        attached.muted = muted;
+        attached.defaultMuted = muted;
+        attached.playsInline = true;
+        onVideoElementRef.current?.(attached);
+      }
+      if (kind === "video") {
+        void attached.play()
+          .then(() => onPlaybackBlockedRef.current?.(false))
+          .catch(() => onPlaybackBlockedRef.current?.(true));
+      } else {
+        void attached.play().catch(() => onPlaybackBlockedRef.current?.(true));
+      }
+      return () => {
+        if (element instanceof HTMLVideoElement) onVideoElementRef.current?.(null);
+        track.detach(element);
+      };
+    } catch {
+      onPlaybackBlockedRef.current?.(true);
+      return;
+    }
+  }, [kind, muted, track]);
   if (!track) return null;
   return kind === "video"
     ? <video ref={videoRef} className="st-live-video" autoPlay playsInline muted={muted} aria-label="Live camera stream" />
@@ -358,6 +382,7 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
   const setRelationship = useSetSocialRelationship();
   const roomRef = useRef<Room | null>(null);
   const localTracksRef = useRef<LocalTrack[]>(hostTracks);
+  const localVideoElementRef = useRef<HTMLVideoElement | null>(null);
   const leavingRef = useRef(false);
   const sessionEndedRef = useRef(false);
   const endBeaconSentRef = useRef(false);
@@ -368,6 +393,8 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
   const [audioTrack, setAudioTrack] = useState<LocalTrack | RemoteTrack | null>(null);
   const [status, setStatus] = useState("connecting");
   const [audioEnabled, setAudioEnabled] = useState(false);
+  const [cameraPlaybackBlocked, setCameraPlaybackBlocked] = useState(false);
+  const [cameraRetrying, setCameraRetrying] = useState(false);
   const [cameraFacing, setCameraFacing] = useState<"user" | "environment">("user");
   const [viewerCount, setViewerCount] = useState(0);
   const [liveGiftEvents, setLiveGiftEvents] = useState<LiveStreamGiftNotice[]>([]);
@@ -406,11 +433,6 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
     }
     return [...totals.values()].sort((a, b) => b.credits - a.credits).slice(0, 3);
   }, [blockedUsernames, liveGiftEvents]);
-
-  useEffect(() => {
-    document.body.classList.add("streamtalk-live-screen");
-    return () => document.body.classList.remove("streamtalk-live-screen");
-  }, []);
 
   useEffect(() => {
     if (!hostMode) return;
@@ -527,12 +549,16 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
       const liveRoom = new Room({ adaptiveStream: true, dynacast: true });
       roomRef.current = liveRoom;
       attachRoomEvents(liveRoom, setVideoTrack, setAudioTrack, setStatus);
+      if (hostMode) {
+        const localCamera = hostTracks.find(track => track.kind === Track.Kind.Video);
+        if (localCamera) setVideoTrack(localCamera);
+      }
       await liveRoom.connect(session.url, session.token);
       if (cancelled) { await liveRoom.disconnect(); return; }
       if (hostMode) {
         for (const track of hostTracks) {
-          await liveRoom.localParticipant.publishTrack(track);
           if (track.kind === Track.Kind.Video) setVideoTrack(track);
+          await liveRoom.localParticipant.publishTrack(track);
           if (track.kind === Track.Kind.Audio) setAudioTrack(track);
         }
       }
@@ -636,6 +662,52 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
     }
   };
 
+  const startCameraFromTap = async () => {
+    setCameraRetrying(true);
+    setCameraPlaybackBlocked(false);
+    setError("");
+    let acquiredTracks: LocalTrack[] = [];
+    try {
+      const currentVideo = localVideoElementRef.current;
+      if (currentVideo && videoTrack && currentVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
+        && currentVideo.videoWidth > 0) {
+        try {
+          await currentVideo.play();
+          return;
+        } catch {
+          // If playback is still blocked, reacquire the camera from this tap.
+        }
+      }
+      acquiredTracks = await createLocalTracks({
+        audio: false,
+        video: { facingMode: cameraFacing, resolution: { width: 720, height: 1280 }, frameRate: 30 },
+      });
+      const nextVideoTrack = acquiredTracks.find(track => track.kind === Track.Kind.Video);
+      if (!nextVideoTrack) throw new Error("No camera track was created.");
+      const previousVideo = localTracksRef.current.find(track => track.kind === Track.Kind.Video);
+      if (previousVideo) {
+        try { await roomRef.current?.localParticipant.unpublishTrack(previousVideo); } catch { /* It may not be published yet. */ }
+        previousVideo.stop();
+      }
+      localTracksRef.current = [...localTracksRef.current.filter(track => track !== previousVideo), nextVideoTrack];
+      acquiredTracks = [];
+      setVideoTrack(nextVideoTrack);
+      const currentRoom = roomRef.current;
+      if (currentRoom?.state === "connected") {
+        await currentRoom.localParticipant.publishTrack(nextVideoTrack);
+      }
+      await localVideoElementRef.current?.play();
+    } catch {
+      setCameraPlaybackBlocked(true);
+      setError("Camera access is unavailable. Check your browser permissions and try again.");
+    } finally {
+      for (const track of acquiredTracks) {
+        if (!localTracksRef.current.includes(track)) track.stop();
+      }
+      setCameraRetrying(false);
+    }
+  };
+
   const toggleHostMic = async () => {
     const next = !audioEnabled;
     try {
@@ -677,11 +749,23 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
   return (
     <div className={`st-live-room${hostMode ? " is-host" : " is-viewer"}${hostMode && cameraFacing === "user" ? " is-front-camera" : ""}`} data-testid="live-room">
       <div className="st-live-player">
-        {videoTrack ? <StreamTrack track={videoTrack} kind="video" muted={hostMode} /> : (
-          <div className="st-live-player-empty">
-            <span className="st-live-avatar">{[...displayName][0]?.toUpperCase() ?? "S"}</span>
+        {videoTrack ? <StreamTrack track={videoTrack} kind="video" muted={hostMode}
+          onPlaybackBlocked={hostMode ? blocked => setCameraPlaybackBlocked(blocked) : undefined}
+          onVideoElement={element => { localVideoElementRef.current = element; }} /> : (
+          !hostMode && <div className="st-live-player-empty">
+            <span className="st-live-avatar">
+              {hostAvatarEmoji ?? (hostAvatarUrl ? <img src={hostAvatarUrl} alt="" /> : [...displayName][0]?.toUpperCase() ?? "S")}
+            </span>
             <strong>{displayName}</strong>
-            <span>{status === "connecting" ? "Connecting…" : "Waiting for camera video…"}</span>
+            <span>{status === "connecting" ? "Starting your camera…" : "Your camera preview is unavailable."}</span>
+          </div>
+        )}
+        {hostMode && (cameraPlaybackBlocked || (!videoTrack && !["connecting", "reconnecting", "ending", "ended"].includes(status))) && (
+          <div className="st-live-camera-recovery" data-testid="live-camera-recovery">
+            <strong>{cameraPlaybackBlocked ? "Camera is not playing" : "Camera is not ready"}</strong>
+            <span>Allow camera access to show your live video.</span>
+            <button type="button" onClick={() => void startCameraFromTap()} disabled={cameraRetrying}
+              data-testid="live-start-camera">{cameraRetrying ? "Starting camera…" : "Tap to start camera"}</button>
           </div>
         )}
         {audioTrack && !hostMode && <StreamTrack track={audioTrack} kind="audio"
@@ -735,12 +819,12 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
             aria-label="Open live gifts" data-testid="live-open-gifts"><Gift size={20} /><span>Gift</span></button>
             : <div className="st-live-host-controls">
             <button type="button" onClick={() => void flipCamera()} aria-label="Flip camera"
-              data-testid="live-flip-camera"><FlipHorizontal size={20} /><span>Flip</span></button>
+              data-testid="live-flip-camera"><FlipHorizontal size={18} /><span>Flip</span></button>
             <button type="button" className={audioEnabled ? "is-mic-on" : "is-mic-off"} onClick={() => void toggleHostMic()}
               aria-label={audioEnabled ? "Mute microphone" : "Unmute microphone"} aria-pressed={audioEnabled}
-              data-testid="live-toggle-mic">{audioEnabled ? <Mic size={20} /> : <MicOff size={20} />}<span>{audioEnabled ? "Mic on" : "Mic off"}</span></button>
+              data-testid="live-toggle-mic">{audioEnabled ? <Mic size={18} /> : <MicOff size={18} />}<span>{audioEnabled ? "Mic on" : "Mic off"}</span></button>
             <button type="button" onClick={() => void shareLiveStream()} aria-label="Share stream link"
-              data-testid="live-share-stream"><Share2 size={19} /><span>Share</span></button>
+              data-testid="live-share-stream"><Share2 size={18} /><span>Share</span></button>
           </div>}
         </div>
       </div>
