@@ -16,7 +16,7 @@ import { blocks, getMe, getPerson, listPeople, relationship, saveSocialProfile }
 import { claimDaily, gift, ledger, purchase } from "../lib/social/rewards";
 import { roomGiftEvents } from '../lib/social/room-gifts';
 import { serveGiftMedia, serveMoonfoxGiftMedia, serveCosmicEncoreGiftMedia } from '../lib/gift-media';
-import { serveRoomEntranceEffectMedia } from "../lib/room-entry-effect-media";
+import { serveMonthlyCreditTierEntranceEffectMedia, serveRoomEntranceEffectMedia } from "../lib/room-entry-effect-media";
 import { clearThread, inbox, sendMessage, thread } from "../lib/social/messages";
 import { favoritesGallery, favoriteRoom } from "../lib/social/favorites";
 import {
@@ -31,6 +31,7 @@ router.get('/gift-media/spirit-pup/v1/:filename', serveGiftMedia);
 router.get('/gift-media/moonfox/v1/:filename', serveMoonfoxGiftMedia);
 router.get('/gift-media/cosmic-encore/v1/:filename', serveCosmicEncoreGiftMedia);
 router.get('/room-entry-effects/lion/:filename', serveRoomEntranceEffectMedia);
+router.get('/room-entry-effects/monthly-credit-tiers/:tier/:filename', serveMonthlyCreditTierEntranceEffectMedia);
 router.use("/social", async (req, res, next) => {
   const id = accountId(req);
   if (req.method !== "GET") sameOrigin(req);

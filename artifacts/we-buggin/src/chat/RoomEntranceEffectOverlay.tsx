@@ -1,18 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import type { RoomEntranceEffectEvent } from "./useTextRoom";
-import { isSupportedEntranceEffectContentType, type EntranceEffectAssetKind } from "./entrance-effect-assets";
 
-type EffectAsset = { kind: "lion" | "video" | "image" | "lottie" | "placeholder"; src?: string };
+type EffectAsset = { webmSrc: string; webpSrc: string };
 const BASE = import.meta.env.BASE_URL;
-const lionUrl = (filename: string) => `${BASE}api/room-entry-effects/lion/${filename}?v=2`;
+const lionUrl = (filename: string) => `${BASE}api/room-entry-effects/lion/${filename}?v=4`;
+const tierUrl = (tier: string, filename: string) =>
+  `${BASE}api/room-entry-effects/monthly-credit-tiers/${tier}/${filename}?v=2`;
 const tierNumber = (effectId: string) => /^monthly-tier-([1-5])$/.exec(effectId)?.[1] ?? null;
-const tierLabel = (event: RoomEntranceEffectEvent) => event.effectName || `Tier ${tierNumber(event.effectId) ?? ""}`;
-const tierFolder = (event: RoomEntranceEffectEvent) => event.assetFolder
-  ? `${BASE}${event.assetFolder.replace(/^\/+/, "")}`
-  : `${BASE}entrance-effects/monthly-credit-tiers/tier${tierNumber(event.effectId)}`;
-const badgeImage = (event: RoomEntranceEffectEvent) => event.badgeImage
-  ? `${BASE}${event.badgeImage.replace(/^\/+/, "")}`
-  : `${BASE}badges/monthly-credit-tiers/tier${tierNumber(event.effectId)}.svg`;
+const HOLD_LAST_FRAME_MS = 2_000;
+const FADE_OUT_MS = 500;
+
+function shouldUseAnimatedWebp() {
+  const ua = navigator.userAgent;
+  const appleMobile = /iPhone|iPad|iPod/i.test(ua)
+    || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const safari = /Safari/i.test(ua) && !/Chrome|Chromium|CriOS|Edg|OPR/i.test(ua);
+  if (appleMobile || safari) return true;
+  const video = document.createElement("video");
+  return !video.canPlayType('video/webm; codecs="vp9"');
+}
 
 export function RoomEntranceEffectOverlay({
   event,
@@ -21,145 +27,132 @@ export function RoomEntranceEffectOverlay({
   event: RoomEntranceEffectEvent | null;
   onFinish: (eventId: string) => void;
 }) {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const lottieContainerRef = useRef<HTMLDivElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const mediaEndTimerRef = useRef<number | null>(null);
+  const holdTimerRef = useRef<number | null>(null);
+  const fadeTimerRef = useRef<number | null>(null);
+  const beginHoldRef = useRef<() => void>(() => {});
   const [asset, setAsset] = useState<EffectAsset | null>(null);
-  const [posterFallback, setPosterFallback] = useState(false);
+  const [useWebp, setUseWebp] = useState(false);
+  const [unavailable, setUnavailable] = useState(false);
+  const [fading, setFading] = useState(false);
 
   useEffect(() => {
     setAsset(null);
-    setPosterFallback(false);
+    setUnavailable(false);
+    setFading(false);
+    beginHoldRef.current = () => {};
     if (!event) return;
-    let cancelled = false;
     const elapsed = Math.max(0, Date.now() - event.startedAt);
     const remaining = Math.max(0, event.durationMs - elapsed);
     if (!remaining) {
       onFinish(event.eventId);
       return;
     }
-    const finishTimer = window.setTimeout(() => onFinish(event.eventId), remaining);
+
+    let holding = false;
+    const beginHoldAndFade = () => {
+      if (holding) return;
+      holding = true;
+      if (mediaEndTimerRef.current !== null) window.clearTimeout(mediaEndTimerRef.current);
+      holdTimerRef.current = window.setTimeout(() => {
+        setFading(true);
+        fadeTimerRef.current = window.setTimeout(() => onFinish(event.eventId), FADE_OUT_MS);
+      }, HOLD_LAST_FRAME_MS);
+    };
+    beginHoldRef.current = beginHoldAndFade;
+
+    let webmSrc: string | null = null;
+    let webpSrc: string | null = null;
     if (event.effectId === "lion-entrance") {
-      const audio = new Audio(lionUrl("audio.m4a"));
-      audioRef.current = audio;
-      audio.preload = "auto";
-      try { audio.currentTime = elapsed / 1000; } catch { /* Audio may not have metadata yet. */ }
-      setAsset({ kind: "lion", src: lionUrl("animation.webp") });
-      return () => {
-        cancelled = true;
-        window.clearTimeout(finishTimer);
-        audio.pause();
-        audio.removeAttribute("src");
-        audio.load();
-        if (audioRef.current === audio) audioRef.current = null;
-      };
+      webmSrc = lionUrl("animation.webm");
+      webpSrc = lionUrl("animation.webp");
+    } else {
+      const tier = tierNumber(event.effectId);
+      if (tier && ["2", "3", "4"].includes(tier)) {
+        webmSrc = tierUrl(tier, "animation.webm");
+        webpSrc = tierUrl(tier, "animation.webp");
+      }
     }
 
-    const directory = tierFolder(event);
-    const candidates: Array<[EntranceEffectAssetKind, string]> = [
-      ["lottie", `${directory}/entrance.json`],
-      ["video", `${directory}/entrance.webm`],
-      ["video", `${directory}/entrance.mp4`],
-      ["image", `${directory}/entrance.gif`],
-      ["image", `${directory}/entrance.webp`],
-      ["image", `${directory}/entrance.apng`],
-    ];
-    void (async () => {
-      for (const [kind, src] of candidates) {
-        try {
-          const response = await fetch(src, { method: "HEAD", cache: "no-store" });
-          if (response.ok && isSupportedEntranceEffectContentType(kind, response.headers.get("content-type"))) {
-            if (!cancelled) setAsset({ kind, src });
-            return;
-          }
-        } catch { /* Try the next supported extension. */ }
-      }
-      if (!cancelled) setAsset({ kind: "placeholder" });
-    })();
+    // Tier 1 and 5 do not have uploaded entrance animations yet. Never substitute
+    // their badge art here; badge art is reserved for username/profile display.
+    if (!webmSrc || !webpSrc) {
+      onFinish(event.eventId);
+      return;
+    }
+
+    setUseWebp(shouldUseAnimatedWebp());
+    setAsset({ webmSrc, webpSrc });
+    // A safety timer covers a media element that never reaches its ended event.
+    mediaEndTimerRef.current = window.setTimeout(beginHoldAndFade, remaining + 5_000);
     return () => {
-      cancelled = true;
-      window.clearTimeout(finishTimer);
+      if (mediaEndTimerRef.current !== null) window.clearTimeout(mediaEndTimerRef.current);
+      if (holdTimerRef.current !== null) window.clearTimeout(holdTimerRef.current);
+      if (fadeTimerRef.current !== null) window.clearTimeout(fadeTimerRef.current);
+      mediaEndTimerRef.current = null;
+      holdTimerRef.current = null;
+      fadeTimerRef.current = null;
+      videoRef.current?.pause();
+      videoRef.current = null;
     };
   }, [event?.eventId, event?.effectId, event?.startedAt, event?.durationMs, onFinish]);
 
-  useEffect(() => {
-    if (!event || asset?.kind !== "lottie" || !asset.src || !lottieContainerRef.current) return;
-    let animation: import("lottie-web").AnimationItem | null = null;
-    let cancelled = false;
-    void import("lottie-web").then(({ default: lottie }) => {
-      if (cancelled || !lottieContainerRef.current) return;
-      animation = lottie.loadAnimation({
-        container: lottieContainerRef.current,
-        renderer: "svg",
-        loop: false,
-        autoplay: false,
-        path: asset.src,
-      });
-      animation.addEventListener("DOMLoaded", () => {
-        if (!animation || !event) return;
-        const progress = Math.min(0.99, Math.max(0, (Date.now() - event.startedAt) / event.durationMs));
-        animation.goToAndPlay(Math.floor(progress * animation.totalFrames), true);
-      });
-      animation.addEventListener("complete", () => onFinish(event.eventId));
-    }).catch(() => {
-      if (!cancelled) setAsset({ kind: "placeholder" });
-    });
-    return () => {
-      cancelled = true;
-      animation?.destroy();
-    };
-  }, [asset?.kind, asset?.src, event?.eventId, event?.startedAt, event?.durationMs, onFinish]);
-
-  if (!event || !asset) return null;
-  const startLionSound = () => {
-    const audio = audioRef.current;
-    if (!audio || !audio.paused) return;
-    void audio.play().catch(() => {
-      audio.muted = true;
-      void audio.play().catch(() => {});
-    });
-  };
-  const syncVideo = (video: HTMLVideoElement) => {
-    const elapsed = Math.max(0, Date.now() - event.startedAt);
-    if (Number.isFinite(video.duration) && video.duration > 0)
-      video.currentTime = Math.min(elapsed / 1000, Math.max(0, video.duration - 0.1));
-    void video.play().catch(() => {
-      video.muted = true;
-      void video.play().catch(() => {});
-    });
+  if (!event || !asset || unavailable) return null;
+  const elapsed = Math.max(0, Date.now() - event.startedAt);
+  const fallbackToAnimationImage = () => setUseWebp(true);
+  const startWebpHoldTimer = () => {
+    if (mediaEndTimerRef.current !== null) window.clearTimeout(mediaEndTimerRef.current);
+    mediaEndTimerRef.current = window.setTimeout(
+      () => beginHoldRef.current(),
+      event.durationMs,
+    );
   };
 
   return (
-    <div className="ur-room-entry-effect" aria-hidden="true" data-testid="room-entrance-effect" data-effect-id={event.effectId}>
-      {asset.kind === "lion" && <img
-        src={posterFallback ? lionUrl("poster.png") : asset.src}
-        alt=""
-        draggable={false}
-        onLoad={startLionSound}
-        onError={() => { if (!posterFallback) setPosterFallback(true); }}
-      />}
-      {asset.kind === "video" && asset.src && <video
-        key={asset.src}
-        src={asset.src}
-        autoPlay
-        playsInline
-        preload="auto"
-        onLoadedMetadata={e => {
-          const video = e.currentTarget;
-          if (video.videoWidth > 0 && video.videoHeight > 0)
-            video.style.aspectRatio = `${video.videoWidth} / ${video.videoHeight}`;
-          syncVideo(video);
-        }}
-        onEnded={() => onFinish(event.eventId)}
-        onError={() => setAsset({ kind: "placeholder" })}
-        aria-hidden="true"
-      />}
-      {asset.kind === "image" && asset.src && <img src={asset.src} alt="" draggable={false}
-        onError={() => setAsset({ kind: "placeholder" })} />}
-      {asset.kind === "lottie" && <div className="ur-tier-lottie" ref={lottieContainerRef} />}
-      {asset.kind === "placeholder" && <div className="ur-tier-effect-placeholder">
-        <img src={badgeImage(event)} alt="" />
-        <b>{tierLabel(event)}</b>
-      </div>}
+    <div
+      className={`ur-room-entry-effect${fading ? " is-fading" : ""}`}
+      aria-hidden="true"
+      data-testid="room-entrance-effect"
+      data-effect-id={event.effectId}
+    >
+      {useWebp ? (
+        <img
+          className="ur-entry-effect-webp"
+          src={asset.webpSrc}
+          alt=""
+          draggable={false}
+          onLoad={startWebpHoldTimer}
+          onError={() => {
+            setUnavailable(true);
+            if (mediaEndTimerRef.current !== null) window.clearTimeout(mediaEndTimerRef.current);
+            if (holdTimerRef.current !== null) window.clearTimeout(holdTimerRef.current);
+            if (fadeTimerRef.current !== null) window.clearTimeout(fadeTimerRef.current);
+            onFinish(event.eventId);
+          }}
+        />
+      ) : (
+        <video
+          ref={videoRef}
+          className="ur-entry-effect-video"
+          src={asset.webmSrc}
+          autoPlay
+          muted
+          playsInline
+          preload="auto"
+          controls={false}
+          disablePictureInPicture
+          onLoadedMetadata={video => {
+            const current = video.currentTarget;
+            if (elapsed > 0 && Number.isFinite(current.duration) && elapsed / 1000 < current.duration) {
+              try { current.currentTime = elapsed / 1000; } catch { /* Wait for playable data. */ }
+            }
+            void current.play().catch(fallbackToAnimationImage);
+          }}
+          onError={fallbackToAnimationImage}
+          onEnded={() => beginHoldRef.current()}
+        />
+      )}
     </div>
   );
 }

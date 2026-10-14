@@ -11,7 +11,7 @@ test("each threshold crossed in a UTC calendar month earns a separate 30-day bad
   assert.equal(guardianTier?.name, "Guardian of the Den");
   assert.equal(guardianTier?.badgeImage, "/badges/monthly-credit-tiers/tier2.png");
   assert.equal(guardianTier?.entranceEffectFolder, "/entrance-effects/monthly-credit-tiers/tier2");
-  assert.equal(guardianTier?.durationMs, 6_500);
+  assert.equal(guardianTier?.durationMs, 6_083);
   const rows = [
     { accountId: "split", credits: 600, confirmedAt: new Date("2090-01-02T12:00:00Z") },
     { accountId: "split", credits: 400, confirmedAt: new Date("2090-01-20T12:00:00Z") },

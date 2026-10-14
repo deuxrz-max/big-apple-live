@@ -11,7 +11,7 @@ export const MONTHLY_CREDIT_BADGE_TIERS = [
     badgeImage: "/badges/monthly-credit-tiers/tier1.svg",
     entranceEffectId: "monthly-tier-1",
     entranceEffectFolder: "/entrance-effects/monthly-credit-tiers/tier1",
-    durationMs: 4_500,
+    durationMs: 6_083,
   },
   {
     id: "monthly-tier-2",
@@ -21,7 +21,7 @@ export const MONTHLY_CREDIT_BADGE_TIERS = [
     badgeImage: "/badges/monthly-credit-tiers/tier2.png",
     entranceEffectId: "monthly-tier-2",
     entranceEffectFolder: "/entrance-effects/monthly-credit-tiers/tier2",
-    durationMs: 6_500,
+    durationMs: 6_083,
   },
   {
     id: "monthly-tier-3",
@@ -31,7 +31,7 @@ export const MONTHLY_CREDIT_BADGE_TIERS = [
     badgeImage: "/badges/monthly-credit-tiers/tier3.png",
     entranceEffectId: "monthly-tier-3",
     entranceEffectFolder: "/entrance-effects/monthly-credit-tiers/tier3",
-    durationMs: 6_500,
+    durationMs: 6_083,
   },
   {
     id: "monthly-tier-4",
@@ -41,7 +41,7 @@ export const MONTHLY_CREDIT_BADGE_TIERS = [
     badgeImage: "/badges/monthly-credit-tiers/tier4.png",
     entranceEffectId: "monthly-tier-4",
     entranceEffectFolder: "/entrance-effects/monthly-credit-tiers/tier4",
-    durationMs: 6_500,
+    durationMs: 6_083,
   },
   {
     id: "monthly-tier-5",
@@ -51,7 +51,7 @@ export const MONTHLY_CREDIT_BADGE_TIERS = [
     badgeImage: "/badges/monthly-credit-tiers/tier5.svg",
     entranceEffectId: "monthly-tier-5",
     entranceEffectFolder: "/entrance-effects/monthly-credit-tiers/tier5",
-    durationMs: 4_500,
+    durationMs: 6_083,
   },
 ] as const;
 

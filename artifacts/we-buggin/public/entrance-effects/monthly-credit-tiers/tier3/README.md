@@ -1,1 +1,1 @@
-Guardian of the Night uses the attached `entrance.mp4` and `tier3.png` badge art. Replace `entrance.mp4` to update the effect, or use `entrance.json` (Lottie), `entrance.webm`, `entrance.gif`, `entrance.webp`, or `entrance.apng`. The app uses the first supported file it finds; otherwise it shows a short badge placeholder.
+Guardian of the Night uses the uploaded animation with its black backdrop removed. App Storage serves alpha WebM (VP9) for Chrome/Android and a one-play animated WebP for Safari. Playback is muted; badge artwork is never used as an entrance fallback.
