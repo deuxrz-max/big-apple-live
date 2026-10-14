@@ -609,8 +609,13 @@ async function refreshTopicQueueAtTransition(
 }
 
 function schedulePublicPlaybackTransition(roomId: string) {
-  const dueAt = universityVideoBeamStore.getNextAutomaticPlaybackTransitionAt(roomId);
   const previous = publicPlaybackTimers.get(roomId);
+  if (!isPublicTopicRoom(roomId, roomStore)) {
+    if (previous) clearTimeout(previous.timer);
+    publicPlaybackTimers.delete(roomId);
+    return;
+  }
+  const dueAt = universityVideoBeamStore.getNextAutomaticPlaybackTransitionAt(roomId);
   if (previous?.dueAt === dueAt) return;
   if (previous) clearTimeout(previous.timer);
   publicPlaybackTimers.delete(roomId);
@@ -620,6 +625,7 @@ function schedulePublicPlaybackTransition(roomId: string) {
     const current = publicPlaybackTimers.get(roomId);
     if (current?.dueAt !== dueAt) return;
     publicPlaybackTimers.delete(roomId);
+    if (!isPublicTopicRoom(roomId, roomStore)) return;
     void reconcileState(roomId).then(async state => {
       if (communityLiveStreamPolicy(roomId, roomStore)) {
         await refreshNewsQueueAtTransition(roomId, state, dueAt);
@@ -627,6 +633,7 @@ function schedulePublicPlaybackTransition(roomId: string) {
         await refreshTopicQueueAtTransition(roomId, state);
       }
     }).catch(() => {
+      if (!isPublicTopicRoom(roomId, roomStore)) return;
       const retryDueAt = Date.now() + 2_500;
       const retryTimer = setTimeout(() => {
         const retry = publicPlaybackTimers.get(roomId);

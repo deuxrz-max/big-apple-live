@@ -315,6 +315,29 @@ export const COMMUNITY_ROOMS: CommunityRoomConfig[] = [
   },
 ];
 
+/** Room order and visibility for the public Directory. Hidden room configuration stays above. */
+export const DIRECTORY_COMMUNITY_ROOM_IDS = [
+  "MUSIC1",
+  "MOVIES",
+  "SPORTS",
+  "KIDS01",
+  "WEBSER",
+  "HIST01",
+  "NEWS01",
+] as const;
+
+const DIRECTORY_ROOM_ID_SET = new Set<string>(DIRECTORY_COMMUNITY_ROOM_IDS);
+
+export const DIRECTORY_COMMUNITY_ROOMS: CommunityRoomConfig[] = DIRECTORY_COMMUNITY_ROOM_IDS.map(roomId => {
+  const room = COMMUNITY_ROOMS.find(item => item.roomId === roomId);
+  if (!room) throw new Error(`Directory room configuration is missing: ${roomId}`);
+  return room;
+});
+
+/** Active rooms that use the rotating topic-video pool rather than a special stream/series flow. */
+export const COMMUNITY_VIDEO_POOL_ROOMS = DIRECTORY_COMMUNITY_ROOMS
+  .filter(room => !room.liveStreamPolicy && !room.dailyWebSeries);
+
 export interface CommunityParentLookup {
   communityParentId(roomId: string): string | null;
   communityLabel?(roomId: string): string | null;
@@ -327,7 +350,7 @@ export function isPublicTopicRoom(roomId: string, store: CommunityParentLookup):
   if (store.isCommunity && !store.isCommunity(normalizedId)) return false;
   if (store.isTestOnly?.(normalizedId)) return false;
   const parentId = store.communityParentId(normalizedId)?.toUpperCase() ?? normalizedId;
-  return COMMUNITY_ROOMS.some(room => room.roomId === parentId);
+  return DIRECTORY_ROOM_ID_SET.has(parentId);
 }
 
 export function communityDefaultVideoSearch(roomId: string, store?: CommunityParentLookup): string {

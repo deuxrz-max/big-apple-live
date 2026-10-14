@@ -53,6 +53,22 @@ test("membership changes and expiry notify only the appropriate room subscribers
   unsubscribe();
 });
 
+test("deactivating a community room redirects its subscribers without deleting stored history", () => {
+  const store = new RoomStore();
+  store.registerCommunity({
+    roomId: "HIDDEN1", historyId: "HIDDEN1-HISTORY", label: "Hidden topic", createdAt: new Date(0),
+  });
+  store.join("HIDDEN1", "Member");
+  const events: string[] = [];
+  store.subscribe("HIDDEN1", event => events.push(event.type));
+
+  store.deactivateCommunity("HIDDEN1");
+
+  assert.deepEqual(events, ["room.expired"]);
+  assert.equal(store.isCommunity("HIDDEN1"), false);
+  assert.throws(() => store.get("HIDDEN1"), RoomError);
+});
+
 test("returned snapshots cannot mutate stored membership", () => {
   const store = new RoomStore();
   const creator = store.create("Creator");

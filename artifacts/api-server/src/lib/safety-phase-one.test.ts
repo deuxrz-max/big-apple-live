@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import express, { type Request, type ErrorRequestHandler } from "express";
 import sharp from "sharp";
 import { eq, inArray, and } from "drizzle-orm";
-import { db, accountProfiles, chatAdmissions, chatModerators, profilePhotos, chatMemberships, roomMessages, chatReports, socialRelations } from "@workspace/db";
+import { db, accountProfiles, chatRooms, chatAdmissions, chatModerators, profilePhotos, chatMemberships, roomMessages, chatReports, socialRelations } from "@workspace/db";
 import router from "../routes";
 import { initializeCommunities } from "./community";
 import { RoomStore, SESSION_TIMEOUT_MS } from "./room-store";
@@ -130,18 +130,22 @@ test("real HTTP/DB/storage photo moderation and university overflow; synthetic C
     assert.equal((await db.select().from(profilePhotos).where(inArray(profilePhotos.id, photos))).length, 2);
   });
   await initializeCommunities();
-  await t.test("the directory contains only the 20 current rooms and retires the old public room IDs", async () => {
+  await t.test("the directory contains the seven selected rooms and hides old public rooms without deleting them", async () => {
     const directory = GetChatDirectoryResponse.parse(
       await (await request(owner, "/account/chat/rooms")).json(),
     );
     assert.deepEqual(directory.map(room => room.label), [
-      "Music", "Gaming", "Pro Wrestling", "Comedy", "Vlogs", "Sports", "News", "Movies", "Podcasts", "Reactions",
-      "Pranks", "Food", "Beauty", "History", "Tech", "Education", "Fitness", "Pets", "Travel", "ASMR",
+      "Music", "Movies", "Sports", "Pro Wrestling", "Web Series", "History", "News",
     ]);
-    assert.equal(directory.length, 20);
+    assert.equal(directory.length, 7);
     assert.equal(directory.some(room => room.roomId === "LIVEME" || room.roomId === "WORLDNEWS"), false);
     const oldRoomJoin = await request(owner, "/account/rooms/LIVEME/join", { method: "POST" });
     assert.equal(oldRoomJoin.status, 410, await oldRoomJoin.text());
+    const hiddenRoomJoin = await request(owner, "/account/rooms/GAMING/join", { method: "POST" });
+    assert.equal(hiddenRoomJoin.status, 410, await hiddenRoomJoin.text());
+    assert.equal(directory.some(room => room.roomId === "GAMING"), false);
+    assert.equal((await db.select().from(chatRooms).where(eq(chatRooms.roomId, "GAMING"))).length, 1,
+      "hidden room rows remain stored");
   });
   const sessions: { participantSessionId: string }[] = [];
   await t.test("25th member gets overflow, moderators can enter full base, empty overflow hidden", async () => {

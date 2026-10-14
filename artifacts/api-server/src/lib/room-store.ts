@@ -90,6 +90,15 @@ export class RoomStore {
     if (room.sessions.size) throw new RoomError(409, "A university room with active participants cannot be unregistered");
     this.rooms.delete(room.roomId);
   }
+  /** Hide a community room without touching its persisted room or chat history. */
+  deactivateCommunity(roomId: string): void {
+    const id = roomId.toUpperCase();
+    const room = this.rooms.get(id);
+    if (!room?.community) return;
+    this.emit(room, { type: "room.expired", data: { roomId: id } });
+    room.listeners.clear();
+    this.rooms.delete(id);
+  }
   isCommunity(roomId: string) { return !!this.rooms.get(roomId.toUpperCase())?.community; }
   isTestOnly(roomId: string) { return !!this.rooms.get(roomId.toUpperCase())?.testOnly; }
   /** Bots use this read-only list, never a participant session or a real seat. */

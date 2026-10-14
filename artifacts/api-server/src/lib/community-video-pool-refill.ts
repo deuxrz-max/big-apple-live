@@ -1,7 +1,5 @@
 import {
-  COMMUNITY_ROOMS,
-  communityLiveStreamPolicy,
-  isCommunityDailyWebSeriesRoom,
+  COMMUNITY_VIDEO_POOL_ROOMS,
 } from "./community-config";
 import { logger } from "./logger";
 import { roomStore, type RoomStore } from "./room-store";
@@ -13,7 +11,8 @@ import {
 
 const REFILL_INTERVAL_MS = 15 * 60_000;
 const FIRST_REFILL_DELAY_MS = 30_000;
-const REFILL_TARGET_SIZE = 50;
+// Seven public rooms now share the topic-pool budget instead of the former 20+ rooms.
+const REFILL_TARGET_SIZE = 150;
 const REFRESH_AFTER_MS = 6 * 60 * 60_000;
 
 let nextRoomIndex = 0;
@@ -29,15 +28,8 @@ export async function refillNextCommunityVideoPoolOnce(
   const apiKey = process.env.YOUTUBE_API_KEY?.trim() ?? "";
   if (!apiKey || !(await canSpendGeneralYouTubeUnits(102))) return null;
 
-  const orderedRooms = COMMUNITY_ROOMS
-    .filter(room => !room.liveStreamPolicy && !room.dailyWebSeries
-      && !communityLiveStreamPolicy(room.roomId, rooms)
-      && !isCommunityDailyWebSeriesRoom(room.roomId, rooms))
-    .sort((left, right) => {
-      if (left.roomId === "MUSIC1") return -1;
-      if (right.roomId === "MUSIC1") return 1;
-      return 0;
-    });
+  const orderedRooms = [...COMMUNITY_VIDEO_POOL_ROOMS]
+    .sort((left, right) => Number(right.roomId === "MUSIC1") - Number(left.roomId === "MUSIC1"));
   if (!orderedRooms.length) return null;
 
   const stats = await getCommunityVideoPoolStats();

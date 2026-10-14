@@ -48,6 +48,7 @@ export function useTextRoom(roomId: string, userId: string) {
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [connection, setConnection] = useState("Connecting…");
   const [error, setError] = useState<string | null>(null);
+  const [roomUnavailable, setRoomUnavailable] = useState(false);
   const [overflow, setOverflow] = useState<{ roomId: string; label: string } | null>(null);
   const refreshAction = useRef<() => Promise<void>>(async () => {});
   const alive = useRef(false);
@@ -88,7 +89,8 @@ export function useTextRoom(roomId: string, userId: string) {
     let joining = false;
     let knownParticipantIds: Set<string> | null = null;
     const headers = () => ({ "X-Room-Session": credential.current!.participantSessionId });
-    setRoom(null); setMessages([]); setArrivals([]); setEntranceEffects([]); setLoading(true); setError(null); setOverflow(null);
+    setRoom(null); setMessages([]); setArrivals([]); setEntranceEffects([]); setLoading(true); setError(null);
+    setRoomUnavailable(false); setOverflow(null);
     credential.current = null; setCreds(null);
 
     async function history(replace = true) {
@@ -152,6 +154,13 @@ export function useTextRoom(roomId: string, userId: string) {
             const type = /^event: (.+)$/m.exec(frame)?.[1];
             const data = /^data: (.+)$/m.exec(frame)?.[1];
             if (!data || !active) continue;
+            if (type === "room.expired") {
+              active = false;
+              controller.abort();
+              setRoomUnavailable(true);
+              setConnection("Not connected");
+              return;
+            }
             if (type === "room.snapshot") {
               const snapshot = JSON.parse(data) as RoomState;
               const nextIds = new Set(snapshot.participants.map(participant => participant.participantId));
@@ -185,6 +194,13 @@ export function useTextRoom(roomId: string, userId: string) {
       } catch (e) {
         if (!active) return;
         const status = errStatus(e);
+        if (status === 404 || status === 410) {
+          setRoomUnavailable(true);
+          setLoading(false);
+          setConnection("Not connected");
+          setError(null);
+          return;
+        }
         const offer = (e as { data?: { overflow?: { roomId: string; label: string } } })?.data?.overflow;
         if (offer) setOverflow(offer);
         setError(messageError(e)); setLoading(false);
@@ -209,5 +225,6 @@ export function useTextRoom(roomId: string, userId: string) {
       // via the existing heartbeat lease; persisted history/membership remains.
     };
   }, [roomId, userId]);
-  return { room, messages, arrivals, entranceEffects, creds, loading, connection, error, overflow, send, refresh, loadOlder, loadingOlder, hasOlder };
+  return { room, messages, arrivals, entranceEffects, creds, loading, connection, error, roomUnavailable,
+    overflow, send, refresh, loadOlder, loadingOlder, hasOlder };
 }

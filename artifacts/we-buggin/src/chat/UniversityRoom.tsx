@@ -99,6 +99,9 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
     autoRules.current = false; ignoreVersion.current = null; idem.current = null;
   }, [roomId, userId]);
   useEffect(() => {
+    if (r.roomUnavailable) nav('/community');
+  }, [r.roomUnavailable, nav]);
+  useEffect(() => {
     for (const effect of r.entranceEffects) {
       if (handledEntranceEffects.current.has(effect.eventId)) continue;
       handledEntranceEffects.current.add(effect.eventId);
@@ -283,6 +286,13 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
       </ul>
     </>
   );
+
+  if (r.roomUnavailable) {
+    return <main className="ch ch-university ur" role="status">
+      <p>This room is no longer available. Returning to the Directory.</p>
+      <Link className="bm-btn bm-btn-primary" href="/community">Go to Directory</Link>
+    </main>;
+  }
 
   return (
     <div className="ch ch-university ur"

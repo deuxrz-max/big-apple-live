@@ -7,6 +7,9 @@ import { UniversityVideoBeamStore } from "./university-video-beam";
 import { LiveKitBeamService, type LiveKitSettings } from "./livekit";
 import {
   COMMUNITY_ROOMS,
+  COMMUNITY_VIDEO_POOL_ROOMS,
+  DIRECTORY_COMMUNITY_ROOMS,
+  DIRECTORY_COMMUNITY_ROOM_IDS,
   communityDefaultVideoSearch,
   communityOfficialChannelSearchPolicy,
   communityLiveStreamPolicy,
@@ -45,13 +48,22 @@ test("public topic rooms and their overflow rooms use the ownerless policy", () 
   });
 
   for (const item of COMMUNITY_ROOMS) {
-    assert.equal(isPublicTopicRoom(item.roomId, rooms), true, `${item.roomId} is a public topic room`);
+    assert.equal(isPublicTopicRoom(item.roomId, rooms), DIRECTORY_COMMUNITY_ROOM_IDS.includes(item.roomId as typeof DIRECTORY_COMMUNITY_ROOM_IDS[number]),
+      `${item.roomId} public visibility follows the shortened Directory`);
   }
   assert.equal(isPublicTopicRoom("MUSIC12", rooms), true, "overflow inherits the public room policy");
+  createRoom(rooms, "GAMING12", "history-gaming-2", "GAMING", "Gaming 2");
+  assert.equal(isPublicTopicRoom("GAMING12", rooms), false, "hidden-topic overflow rooms cannot be entered");
   assert.equal(isPublicTopicRoom("MUSIC_TEST", rooms), false, "test-only rooms keep their own controls");
   createRoom(rooms, "LIVEME", "history-retired", undefined, "Video Games & Interactive Media");
   assert.equal(isPublicTopicRoom("LIVEME", rooms), false, "retired room IDs are no longer public topics");
   assert.equal(isPublicTopicRoom("NOT_A_ROOM", rooms), false);
+  assert.deepEqual(DIRECTORY_COMMUNITY_ROOMS.map(room => room.label), [
+    "Music", "Movies", "Sports", "Pro Wrestling", "Web Series", "History", "News",
+  ]);
+  assert.deepEqual(COMMUNITY_VIDEO_POOL_ROOMS.map(room => room.label), [
+    "Music", "Movies", "Sports", "Pro Wrestling", "History",
+  ], "hidden rooms and the special News/Web Series sources are not scheduled for topic-pool searches");
 });
 
 test("public topic playback waits for the durable rotation choice after the break", () => {
@@ -436,7 +448,11 @@ test("all configured categories use their settings across overflow rooms", () =>
       assert.equal(policy?.order, "viewCount", `${room.label} sorts recent results by popularity`);
       assert.ok(policy?.publishedWithinDays && policy.publishedWithinDays > 0);
     }
-    assert.equal(isPublicTopicRoom(overflowId, rooms), true);
+    assert.equal(
+      isPublicTopicRoom(overflowId, rooms),
+      DIRECTORY_COMMUNITY_ROOM_IDS.includes(room.roomId as typeof DIRECTORY_COMMUNITY_ROOM_IDS[number]),
+      `${room.label} overflow visibility follows the shortened Directory`,
+    );
   }
   assert.equal(COMMUNITY_ROOMS.length, 21);
   const wrestlingPolicy = communityWrestlingSearchPolicy("KIDS01", rooms);

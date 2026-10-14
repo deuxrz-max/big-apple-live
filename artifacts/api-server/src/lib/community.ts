@@ -2,7 +2,11 @@ import { randomUUID, createHash } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 import { db, accountProfiles, chatRooms, chatAdmissions, chatModerators, chatMemberships } from "@workspace/db";
 import { RoomError, roomStore } from "./room-store";
-import { COMMUNITY_ROOMS } from "./community-config";
+import {
+  COMMUNITY_ROOMS,
+  DIRECTORY_COMMUNITY_ROOM_IDS,
+  DIRECTORY_COMMUNITY_ROOMS,
+} from "./community-config";
 import { isOwnerAccount } from "./social/owner-entrance-effects-policy";
 export { COMMUNITY_ROOMS, communityDefaultVideoSearch } from "./community-config";
 export async function initializeCommunities() {
@@ -24,24 +28,28 @@ export async function initializeCommunities() {
         .where(eq(chatRooms.roomId, overflow.roomId));
     }
   }
-  const activeRoomIds = new Set(COMMUNITY_ROOMS.map(room => room.roomId));
+  const activeRoomIds = new Set<string>(DIRECTORY_COMMUNITY_ROOM_IDS);
   const savedRooms = await db.select().from(chatRooms);
-  // Old room rows and their histories remain stored, but only the configured public set is activated.
+  // Deactivate hidden rooms in memory while preserving their database rows, settings, histories and pools.
   for (const saved of savedRooms) {
     const activeOverflow = saved.parentRoomId && activeRoomIds.has(saved.parentRoomId);
-    if (activeRoomIds.has(saved.roomId) || activeOverflow) roomStore.registerCommunity(saved);
+    if (activeRoomIds.has(saved.roomId) || activeOverflow) {
+      roomStore.registerCommunity(saved);
+    } else if (roomStore.isCommunity(saved.roomId)) {
+      roomStore.deactivateCommunity(saved.roomId);
+    }
   }
 }
 export async function communityDirectory() {
   const savedRooms = await db.select().from(chatRooms);
-  const activeRoomIds = new Set(COMMUNITY_ROOMS.map(room => room.roomId));
+  const activeRoomIds = new Set<string>(DIRECTORY_COMMUNITY_ROOM_IDS);
   const overflow = savedRooms.filter(room =>
     room.parentRoomId
     && activeRoomIds.has(room.parentRoomId)
     && roomStore.isCommunity(room.roomId)
     && roomStore.get(room.roomId).participants.length > 0);
   return [
-    ...COMMUNITY_ROOMS.flatMap(base => [
+    ...DIRECTORY_COMMUNITY_ROOMS.flatMap(base => [
       { roomId: base.roomId, label: base.label },
       ...overflow.filter(r => r.parentRoomId === base.roomId)
       .sort((a, b) => Number(a.overflowNumber) - Number(b.overflowNumber))
@@ -54,7 +62,7 @@ export async function offerOverflow(roomId: string, accountId: string) {
   const [current] = await db.select().from(chatRooms).where(eq(chatRooms.roomId, roomId.toUpperCase()));
   if (!current) throw new RoomError(404, "University not found");
   const parent = current.parentRoomId ?? current.roomId;
-  const base = COMMUNITY_ROOMS.find(r => r.roomId === parent);
+  const base = DIRECTORY_COMMUNITY_ROOMS.find(r => r.roomId === parent);
   if (!base) throw new RoomError(404, "University not found");
   let number = Number(current.overflowNumber ?? 1) + 1;
   for (;;) {

@@ -25,3 +25,4 @@
 - [Safe preview schema pushes](safe-preview-schema-pushes.md) — stop when Drizzle proposes truncating unrelated Passport rows; preserve data and apply only additive preview changes.
 - [Public topic-room ownership](public-topic-room-ownership.md) — public Beam TV is ownerless and control-free; server searches by the current room name and advances automatically.
 - [Beam TV video screening](beam-tv-video-screening.md) — English/widescreen checks are best-effort; persist pools, cursors and play history to avoid repeats after restart.
+- [Hidden topic rooms](hidden-topic-rooms.md) — hide rooms through an explicit Directory allowlist; preserve stored histories and pools, and refill/sanitize only visible rooms.

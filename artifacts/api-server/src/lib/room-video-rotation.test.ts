@@ -11,6 +11,7 @@ import {
 import {
   chooseUnplayedVideo,
   getNextCommunityVideoSelection,
+  isDirectoryCommunityPoolRoom,
   recordCommunityVideoPlayed,
   screenCommunityVideoPoolItems,
   youtubeQuotaDateKey,
@@ -35,6 +36,14 @@ test("YouTube quota date rolls over at midnight Pacific, including daylight time
   assert.equal(youtubeQuotaDateKey(new Date("2026-10-14T07:00:00.000Z")), "2026-10-14");
   assert.equal(youtubeQuotaDateKey(new Date("2026-01-14T07:59:59.000Z")), "2026-01-13");
   assert.equal(youtubeQuotaDateKey(new Date("2026-01-14T08:00:00.000Z")), "2026-01-14");
+});
+
+test("saved-pool maintenance is limited to visible rooms and their overflow children", () => {
+  const rooms = { communityParentId: (roomId: string) => roomId === "MUSIC12" ? "MUSIC1" : roomId };
+  assert.equal(isDirectoryCommunityPoolRoom("MUSIC1", rooms), true);
+  assert.equal(isDirectoryCommunityPoolRoom("MUSIC12", rooms), true);
+  assert.equal(isDirectoryCommunityPoolRoom("GAMING", rooms), false);
+  assert.equal(isDirectoryCommunityPoolRoom("WORLDNEWS", rooms), false);
 });
 
 test("room rotation avoids recently played items, then permits a repeat after the pool is exhausted", () => {

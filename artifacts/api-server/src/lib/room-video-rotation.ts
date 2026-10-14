@@ -10,6 +10,7 @@ import {
 } from "@workspace/db";
 import type { UniversityVideoBeamTvVideoMetadata } from "@workspace/api-zod";
 import {
+  DIRECTORY_COMMUNITY_ROOM_IDS,
   communityDefaultVideoSearch,
   communityLiveStreamPolicy,
   communityOfficialChannelSearchPolicy,
@@ -30,6 +31,14 @@ import {
   type YouTubeVideoCandidate,
   type YouTubeVideoEligibility,
 } from "./youtube-video-selection";
+
+const DIRECTORY_COMMUNITY_ROOM_ID_SET = new Set<string>(DIRECTORY_COMMUNITY_ROOM_IDS);
+
+export function isDirectoryCommunityPoolRoom(roomId: string, rooms?: CommunityParentLookup): boolean {
+  const normalizedId = roomId.toUpperCase();
+  const parentId = rooms?.communityParentId(normalizedId)?.toUpperCase() ?? normalizedId;
+  return DIRECTORY_COMMUNITY_ROOM_ID_SET.has(parentId);
+}
 
 // Leave a separate 500-unit allowance for the daily Web Series selection and
 // keep the combined tracked ceiling at 8,000 units, well below YouTube's 10k cap.
@@ -607,7 +616,9 @@ export async function sanitizeAllSavedCommunityVideoPools(rooms?: RoomLookup): P
   poolsEmptyAfterScreening: number;
   safeVideoCountsByRoom: Array<{ roomId: string; count: number }>;
 }> {
-  const rows = await db.select().from(communityVideoPools);
+  const rows = (await db.select().from(communityVideoPools)).filter(row => {
+    return isDirectoryCommunityPoolRoom(row.roomId, rooms);
+  });
   const report = {
     poolsScanned: rows.length,
     entriesScanned: 0,
