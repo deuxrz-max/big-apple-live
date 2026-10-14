@@ -51,8 +51,10 @@ import type {
   LiveStreamChatInput,
   LiveStreamChatMessage,
   LiveStreamEnded,
+  LiveStreamHeartbeat,
   LiveStreamHostSession,
   LiveStreamList,
+  LiveStreamStartInput,
   LiveStreamViewerSession,
   MicrophoneAction,
   ModeratorBotChatterSettings,
@@ -1213,9 +1215,97 @@ export const getStartLiveStreamUrl = () => {
 /**
  * @summary Start a separate camera livestream for the signed-in account
  */
-export const startLiveStream = async ( options?: Parameters<typeof customFetch>[1]): Promise<LiveStreamHostSession> => {
+export const startLiveStream = async (liveStreamStartInput?: LiveStreamStartInput, options?: Parameters<typeof customFetch>[1]): Promise<LiveStreamHostSession> => {
 
-  return customFetch<LiveStreamHostSession>(getStartLiveStreamUrl(),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<LiveStreamHostSession>(getStartLiveStreamUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(liveStreamStartInput)
+  }
+);}
+
+
+
+
+
+export const getStartLiveStreamMutationKey = () => ['startLiveStream'] as const;
+
+export const getStartLiveStreamMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startLiveStream>>, TError,StartLiveStreamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof startLiveStream>>, TError,StartLiveStreamMutationVariables, TContext> => {
+
+const mutationKey = getStartLiveStreamMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startLiveStream>>, StartLiveStreamMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  startLiveStream(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StartLiveStreamMutationResult = NonNullable<Awaited<ReturnType<typeof startLiveStream>>>
+    export type StartLiveStreamMutationBody = BodyType<LiveStreamStartInput> | undefined
+    export type StartLiveStreamMutationError = ErrorType<SessionUnauthorizedResponse | void>
+    export type StartLiveStreamMutationVariables = {data?: BodyType<LiveStreamStartInput>}
+
+    /**
+ * @summary Start a separate camera livestream for the signed-in account
+ */
+export const useStartLiveStream = <TError = ErrorType<SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startLiveStream>>, TError,StartLiveStreamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof startLiveStream>>,
+        TError,
+        StartLiveStreamMutationVariables,
+        TContext
+      > => {
+      return useMutation(getStartLiveStreamMutationOptions(options));
+    }
+
+export const getHeartbeatLiveStreamUrl = (streamId: string,) => {
+
+
+
+
+  return `/api/account/live-streams/${streamId}/heartbeat`
+}
+
+/**
+ * @summary Keep the signed-in creator livestream active
+ */
+export const heartbeatLiveStream = async (streamId: string, options?: Parameters<typeof customFetch>[1]): Promise<LiveStreamHeartbeat> => {
+
+  return customFetch<LiveStreamHeartbeat>(getHeartbeatLiveStreamUrl(streamId),
   {
     ...options,
     method: 'POST'
@@ -1228,13 +1318,13 @@ export const startLiveStream = async ( options?: Parameters<typeof customFetch>[
 
 
 
-export const getStartLiveStreamMutationKey = () => ['startLiveStream'] as const;
+export const getHeartbeatLiveStreamMutationKey = () => ['heartbeatLiveStream'] as const;
 
-export const getStartLiveStreamMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startLiveStream>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof startLiveStream>>, TError,void, TContext> => {
+export const getHeartbeatLiveStreamMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof heartbeatLiveStream>>, TError,HeartbeatLiveStreamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof heartbeatLiveStream>>, TError,HeartbeatLiveStreamMutationVariables, TContext> => {
 
-const mutationKey = getStartLiveStreamMutationKey();
+const mutationKey = getHeartbeatLiveStreamMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1244,10 +1334,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startLiveStream>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof heartbeatLiveStream>>, HeartbeatLiveStreamMutationVariables> = (props) => {
+          const {streamId} = props ?? {};
 
-
-          return  startLiveStream(requestOptions)
+          return  heartbeatLiveStream(streamId,requestOptions)
         }
 
 
@@ -1257,23 +1347,97 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type StartLiveStreamMutationResult = NonNullable<Awaited<ReturnType<typeof startLiveStream>>>
+    export type HeartbeatLiveStreamMutationResult = NonNullable<Awaited<ReturnType<typeof heartbeatLiveStream>>>
 
-    export type StartLiveStreamMutationError = ErrorType<SessionUnauthorizedResponse | void>
-
+    export type HeartbeatLiveStreamMutationError = ErrorType<SessionUnauthorizedResponse | void>
+    export type HeartbeatLiveStreamMutationVariables = {streamId: string}
 
     /**
- * @summary Start a separate camera livestream for the signed-in account
+ * @summary Keep the signed-in creator livestream active
  */
-export const useStartLiveStream = <TError = ErrorType<SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startLiveStream>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+export const useHeartbeatLiveStream = <TError = ErrorType<SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof heartbeatLiveStream>>, TError,HeartbeatLiveStreamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
-        Awaited<ReturnType<typeof startLiveStream>>,
+        Awaited<ReturnType<typeof heartbeatLiveStream>>,
         TError,
-        void,
+        HeartbeatLiveStreamMutationVariables,
         TContext
       > => {
-      return useMutation(getStartLiveStreamMutationOptions(options));
+      return useMutation(getHeartbeatLiveStreamMutationOptions(options));
+    }
+
+export const getBeaconEndLiveStreamUrl = (streamId: string,) => {
+
+
+
+
+  return `/api/account/live-streams/${streamId}/end`
+}
+
+/**
+ * @summary End the creator livestream during page navigation or close
+ */
+export const beaconEndLiveStream = async (streamId: string, options?: Parameters<typeof customFetch>[1]): Promise<LiveStreamEnded> => {
+
+  return customFetch<LiveStreamEnded>(getBeaconEndLiveStreamUrl(streamId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getBeaconEndLiveStreamMutationKey = () => ['beaconEndLiveStream'] as const;
+
+export const getBeaconEndLiveStreamMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof beaconEndLiveStream>>, TError,BeaconEndLiveStreamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof beaconEndLiveStream>>, TError,BeaconEndLiveStreamMutationVariables, TContext> => {
+
+const mutationKey = getBeaconEndLiveStreamMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof beaconEndLiveStream>>, BeaconEndLiveStreamMutationVariables> = (props) => {
+          const {streamId} = props ?? {};
+
+          return  beaconEndLiveStream(streamId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BeaconEndLiveStreamMutationResult = NonNullable<Awaited<ReturnType<typeof beaconEndLiveStream>>>
+
+    export type BeaconEndLiveStreamMutationError = ErrorType<SessionUnauthorizedResponse | void>
+    export type BeaconEndLiveStreamMutationVariables = {streamId: string}
+
+    /**
+ * @summary End the creator livestream during page navigation or close
+ */
+export const useBeaconEndLiveStream = <TError = ErrorType<SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof beaconEndLiveStream>>, TError,BeaconEndLiveStreamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof beaconEndLiveStream>>,
+        TError,
+        BeaconEndLiveStreamMutationVariables,
+        TContext
+      > => {
+      return useMutation(getBeaconEndLiveStreamMutationOptions(options));
     }
 
 export const getJoinLiveStreamUrl = (streamId: string,) => {
@@ -1348,6 +1512,80 @@ export const useJoinLiveStream = <TError = ErrorType<SessionUnauthorizedResponse
         TContext
       > => {
       return useMutation(getJoinLiveStreamMutationOptions(options));
+    }
+
+export const getRejoinLiveStreamUrl = (streamId: string,) => {
+
+
+
+
+  return `/api/account/live-streams/${streamId}/rejoin`
+}
+
+/**
+ * @summary Rejoin the signed-in creator's active camera livestream
+ */
+export const rejoinLiveStream = async (streamId: string, options?: Parameters<typeof customFetch>[1]): Promise<LiveStreamHostSession> => {
+
+  return customFetch<LiveStreamHostSession>(getRejoinLiveStreamUrl(streamId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRejoinLiveStreamMutationKey = () => ['rejoinLiveStream'] as const;
+
+export const getRejoinLiveStreamMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejoinLiveStream>>, TError,RejoinLiveStreamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof rejoinLiveStream>>, TError,RejoinLiveStreamMutationVariables, TContext> => {
+
+const mutationKey = getRejoinLiveStreamMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rejoinLiveStream>>, RejoinLiveStreamMutationVariables> = (props) => {
+          const {streamId} = props ?? {};
+
+          return  rejoinLiveStream(streamId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RejoinLiveStreamMutationResult = NonNullable<Awaited<ReturnType<typeof rejoinLiveStream>>>
+
+    export type RejoinLiveStreamMutationError = ErrorType<SessionUnauthorizedResponse | void>
+    export type RejoinLiveStreamMutationVariables = {streamId: string}
+
+    /**
+ * @summary Rejoin the signed-in creator's active camera livestream
+ */
+export const useRejoinLiveStream = <TError = ErrorType<SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejoinLiveStream>>, TError,RejoinLiveStreamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof rejoinLiveStream>>,
+        TError,
+        RejoinLiveStreamMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRejoinLiveStreamMutationOptions(options));
     }
 
 export const getStreamLiveStreamChatUrl = (streamId: string,) => {

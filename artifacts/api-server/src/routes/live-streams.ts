@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 import { and, eq, or } from "drizzle-orm";
 import { accountProfiles, chatAdmissions, db, socialRelations } from "@workspace/db";
 import {
@@ -10,25 +10,51 @@ import {
   JoinLiveStreamParams,
   JoinLiveStreamResponse,
   StartLiveStreamResponse,
+  StartLiveStreamBody,
   StreamLiveStreamChatParams,
+  HeartbeatLiveStreamResponse,
 } from "@workspace/api-zod";
 import { requireCompletedProfile } from "../lib/account-profiles";
-import { isLiveStreamActiveOrStarting, isLiveStreamStarting, liveStreamIdForAccount, liveStreamRoomName,
-  reserveLiveStreamStart, clearLiveStreamStart } from "../lib/live-stream-policy";
 import { liveKitBeamService, publicLiveKitFailure } from "../lib/livekit";
 import { RoomError } from "../lib/room-store";
 import { universityVideoBeamStore } from "../lib/university-video-beam";
 import { requireAdult } from "../lib/community";
 import { liveStreamChatHub } from "../lib/live-stream-chat";
+import {
+  adoptLegacyLiveStreamSession,
+  cleanupStaleLiveStreamSession,
+  endLiveStreamSession,
+  getLiveStreamSession,
+  getLiveStreamSessionByStreamId,
+  liveStreamIdForAccount,
+  liveStreamRoomName,
+  liveStreamSessionIsFresh,
+  renewLiveStreamHeartbeat,
+  reserveLiveStreamStart,
+  clearLiveStreamStart,
+  sweepStaleLiveStreamSessions,
+} from "../lib/live-stream-policy";
 import { pairBlocked } from "../lib/social/core";
 import { visibleMonthlyPurchaseBadgeSummary } from "../lib/social/monthly-credit-badges";
 import { giftNameColorsForAccounts } from "../lib/social/gift-name-color-data";
 import { accountId, sameOrigin } from "./identity";
+import { logger } from "../lib/logger";
 
 const router = Router();
 const LIVE_ROOM_RE = /^st-live-([a-f0-9]{32})$/;
 
+const liveStreamLeaseSweep = setInterval(() => {
+  void sweepStaleLiveStreamSessions().catch(error => {
+    logger.warn({ error }, "Live stream lease sweep failed");
+  });
+}, 5_000);
+liveStreamLeaseSweep.unref();
+
 async function requireLiveParticipant(accountId: string, streamId: string) {
+  const lease = await getLiveStreamSession(accountId);
+  if (!lease || lease.streamId !== streamId || lease.state !== "live" || !(await liveStreamSessionIsFresh(lease))) {
+    throw new RoomError(404, "This livestream is no longer available.");
+  }
   const roomName = liveStreamRoomName(streamId);
   const participants = await liveKitBeamService.listParticipants(roomName);
   if (!participants.some(participant => participant.identity === "host")) {
@@ -69,6 +95,12 @@ async function streamUsername(streamId: string, metadata?: string): Promise<stri
   return profiles.find(profile => liveStreamIdForAccount(profile.accountId) === streamId)?.username ?? "Live creator";
 }
 
+async function streamOwnerProfiles() {
+  const profiles = await db.select({ accountId: accountProfiles.accountId, username: accountProfiles.username })
+    .from(accountProfiles);
+  return new Map(profiles.map(profile => [liveStreamIdForAccount(profile.accountId), profile]));
+}
+
 router.get("/account/live-streams", async (req, res) => {
   const id = accountId(req);
   await requireCompletedProfile(id);
@@ -77,6 +109,7 @@ router.get("/account/live-streams", async (req, res) => {
     const hiddenStreamIds = await hiddenStreamsFor(id);
     const rooms = await liveKitBeamService.listRooms();
     const liveRooms = rooms.filter(room => LIVE_ROOM_RE.test(room.name));
+    const owners = await streamOwnerProfiles();
     const streams = (await Promise.all(liveRooms.map(async room => {
       const match = LIVE_ROOM_RE.exec(room.name);
       if (!match) return null;
@@ -85,10 +118,22 @@ router.get("/account/live-streams", async (req, res) => {
       const participants = await liveKitBeamService.listParticipants(room.name);
       const host = participants.find(participant => participant.identity === "host");
       if (!host) return null;
+      const owner = owners.get(streamId);
+      if (!owner) return null;
+      let lease = await getLiveStreamSession(owner.accountId);
+      if (!lease) {
+        await adoptLegacyLiveStreamSession(owner.accountId, streamId);
+        lease = await getLiveStreamSession(owner.accountId);
+      }
+      if (!lease || lease.streamId !== streamId || lease.state !== "live") return null;
+      if (!(await liveStreamSessionIsFresh(lease))) {
+        await cleanupStaleLiveStreamSession(lease);
+        return null;
+      }
       return {
         streamId,
         displayName: host.name?.trim() || "Live creator",
-        username: await streamUsername(streamId, host.metadata),
+        username: usernameFromMetadata(host.metadata) ?? owner.username,
         viewerCount: Math.max(0, participants.length - 1),
       };
     }))).filter((stream): stream is NonNullable<typeof stream> => stream !== null);
@@ -103,14 +148,35 @@ router.post("/account/live-streams", async (req, res) => {
   const id = accountId(req);
   const profile = await requireCompletedProfile(id);
   await requireAdult(id);
+  const input = StartLiveStreamBody.safeParse(req.body ?? {});
+  if (!input.success) throw new RoomError(400, "Could not start the live stream. Check the request and try again.");
   const displayName = profile.displayName?.trim() || profile.username;
   const streamId = liveStreamIdForAccount(id);
   const roomName = liveStreamRoomName(streamId);
   try {
-    if (await isLiveStreamActiveOrStarting(id) || isLiveStreamStarting(id)) {
-      throw new RoomError(409, "You are already live or a Go Live session is still starting.");
+    const existing = await getLiveStreamSession(id);
+    if (existing) {
+      if (await liveStreamSessionIsFresh(existing)) {
+        if (!input.data.replaceExisting) {
+          throw new RoomError(409, "Your stream may still be live on another device.");
+        }
+        await endLiveStreamSession(id, existing.streamId);
+      } else {
+        await cleanupStaleLiveStreamSession(existing);
+      }
+    } else {
+      const participants = await liveKitBeamService.listParticipants(roomName);
+      if (participants.some(participant => participant.identity === "host")) {
+        if (!input.data.replaceExisting) {
+          throw new RoomError(409, "Your stream may still be live on another device.");
+        }
+        await endLiveStreamSession(id, streamId);
+      } else {
+        const rooms = await liveKitBeamService.listRooms([roomName]);
+        if (rooms.length) await endLiveStreamSession(id, streamId);
+      }
     }
-    reserveLiveStreamStart(id);
+    await reserveLiveStreamStart(id, streamId);
     try {
       const token = await liveKitBeamService.createLiveStreamToken({
         roomName, identity: "host", displayName, username: profile.username, role: "host",
@@ -136,8 +202,71 @@ router.post("/account/live-streams", async (req, res) => {
       }));
     } catch (failure) {
       clearLiveStreamStart(id);
+      await endLiveStreamSession(id, streamId).catch(() => undefined);
       throw failure;
     }
+  } catch (failure) {
+    throw publicLiveKitFailure(failure);
+  }
+});
+
+router.post("/account/live-streams/:streamId/heartbeat", async (req, res) => {
+  sameOrigin(req);
+  const id = accountId(req);
+  const params = JoinLiveStreamParams.safeParse(req.params);
+  if (!params.success || params.data.streamId !== liveStreamIdForAccount(id)) {
+    throw new RoomError(404, "This livestream is no longer available.");
+  }
+  await requireCompletedProfile(id);
+  await requireAdult(id);
+  try {
+    const session = await getLiveStreamSession(id);
+    if (!session || session.streamId !== params.data.streamId || session.state === "ending") {
+      throw new RoomError(404, "This livestream has ended.");
+    }
+    const participants = await liveKitBeamService.listParticipants(liveStreamRoomName(params.data.streamId));
+    if (!participants.some(participant => participant.identity === "host")) {
+      await endLiveStreamSession(id, params.data.streamId);
+      throw new RoomError(404, "This livestream has ended.");
+    }
+    if (!(await renewLiveStreamHeartbeat(id, params.data.streamId))) {
+      throw new RoomError(404, "This livestream has ended.");
+    }
+    res.set("Cache-Control", "no-store").json(HeartbeatLiveStreamResponse.parse({ active: true }));
+  } catch (failure) {
+    throw publicLiveKitFailure(failure);
+  }
+});
+
+router.post("/account/live-streams/:streamId/rejoin", async (req, res) => {
+  sameOrigin(req);
+  const id = accountId(req);
+  const params = JoinLiveStreamParams.safeParse(req.params);
+  if (!params.success || params.data.streamId !== liveStreamIdForAccount(id)) {
+    throw new RoomError(403, "Only the stream creator can rejoin this stream.");
+  }
+  const profile = await requireCompletedProfile(id);
+  await requireAdult(id);
+  try {
+    const session = await getLiveStreamSession(id);
+    if (!session || session.streamId !== params.data.streamId || session.state !== "live"
+      || !(await liveStreamSessionIsFresh(session))) {
+      if (session) await cleanupStaleLiveStreamSession(session);
+      throw new RoomError(404, "That stream has already ended.");
+    }
+    const roomName = liveStreamRoomName(params.data.streamId);
+    const participants = await liveKitBeamService.listParticipants(roomName);
+    if (!participants.some(participant => participant.identity === "host")) {
+      await endLiveStreamSession(id, params.data.streamId);
+      throw new RoomError(404, "That stream has already ended.");
+    }
+    const displayName = profile.displayName?.trim() || profile.username;
+    const token = await liveKitBeamService.createLiveStreamToken({
+      roomName, identity: "host", displayName, username: profile.username, role: "host",
+    });
+    res.set("Cache-Control", "no-store").json(StartLiveStreamResponse.parse({
+      streamId: params.data.streamId, ...token, displayName, username: profile.username,
+    }));
   } catch (failure) {
     throw publicLiveKitFailure(failure);
   }
@@ -155,6 +284,11 @@ router.post("/account/live-streams/:streamId/token", async (req, res) => {
   }
   const roomName = liveStreamRoomName(params.data.streamId);
   try {
+    const lease = await getLiveStreamSessionByStreamId(params.data.streamId);
+    if (!lease || lease.state !== "live" || !(await liveStreamSessionIsFresh(lease))) {
+      if (lease) await cleanupStaleLiveStreamSession(lease);
+      throw new RoomError(404, "This livestream is no longer available.");
+    }
     const participants = await liveKitBeamService.listParticipants(roomName);
     const host = participants.find(participant => participant.identity === "host");
     if (!host) throw new RoomError(404, "This livestream is no longer available.");
@@ -252,7 +386,7 @@ router.post("/account/live-streams/:streamId/chat", async (req, res) => {
   res.status(201).json(SendLiveStreamChatMessageResponse.parse(publicMessage));
 });
 
-router.delete("/account/live-streams/:streamId", async (req, res) => {
+async function endOwnedLiveStream(req: Request, res: Response): Promise<void> {
   sameOrigin(req);
   const id = accountId(req);
   const params = EndLiveStreamParams.safeParse(req.params);
@@ -260,16 +394,15 @@ router.delete("/account/live-streams/:streamId", async (req, res) => {
   if (params.data.streamId !== liveStreamIdForAccount(id)) {
     throw new RoomError(403, "Only the person who started this livestream can end it.");
   }
-  clearLiveStreamStart(id);
   try {
-    const roomName = liveStreamRoomName(params.data.streamId);
-    const rooms = await liveKitBeamService.listRooms([roomName]);
-    if (rooms.length) await liveKitBeamService.deleteRoom(roomName);
-      liveStreamChatHub.end(params.data.streamId);
+    await endLiveStreamSession(id, params.data.streamId);
     res.set("Cache-Control", "no-store").json(EndLiveStreamResponse.parse({ ended: true }));
   } catch (failure) {
     throw publicLiveKitFailure(failure);
   }
-});
+}
+
+router.delete("/account/live-streams/:streamId", endOwnedLiveStream);
+router.post("/account/live-streams/:streamId/end", endOwnedLiveStream);
 
 export default router;

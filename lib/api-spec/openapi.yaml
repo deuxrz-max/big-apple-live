@@ -233,6 +233,11 @@ paths:
       summary: Start a separate camera livestream for the signed-in account
       security:
         - AccountSession: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LiveStreamStartInput" }
       responses:
         "200":
           description: Short-lived host token for an independent LiveKit room
@@ -242,6 +247,40 @@ paths:
         "401": { $ref: "#/components/responses/SessionUnauthorized" }
         "409": { description: A room microphone is active or this account is already live }
         "503": { description: LiveKit room service is unavailable }
+  /account/live-streams/{streamId}/heartbeat:
+    post:
+      operationId: heartbeatLiveStream
+      tags: [video]
+      summary: Keep the signed-in creator livestream active
+      security:
+        - AccountSession: []
+      parameters:
+        - { $ref: "#/components/parameters/LiveStreamId" }
+      responses:
+        "200":
+          description: Lease renewed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LiveStreamHeartbeat" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "404": { description: Livestream is no longer active }
+  /account/live-streams/{streamId}/end:
+    post:
+      operationId: beaconEndLiveStream
+      tags: [video]
+      summary: End the creator livestream during page navigation or close
+      security:
+        - AccountSession: []
+      parameters:
+        - { $ref: "#/components/parameters/LiveStreamId" }
+      responses:
+        "200":
+          description: Stream ended
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LiveStreamEnded" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "403": { description: Only the stream owner may end this livestream }
   /account/live-streams/{streamId}/token:
     post:
       operationId: joinLiveStream
@@ -260,6 +299,24 @@ paths:
         "401": { $ref: "#/components/responses/SessionUnauthorized" }
         "404": { description: Livestream is no longer active }
         "503": { description: LiveKit room service is unavailable }
+  /account/live-streams/{streamId}/rejoin:
+    post:
+      operationId: rejoinLiveStream
+      tags: [video]
+      summary: Rejoin the signed-in creator's active camera livestream
+      security:
+        - AccountSession: []
+      parameters:
+        - { $ref: "#/components/parameters/LiveStreamId" }
+      responses:
+        "200":
+          description: Host token for the creator's existing live room
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LiveStreamHostSession" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "403": { description: Only the creator can rejoin this livestream }
+        "404": { description: Livestream is no longer active }
   /account/live-streams/{streamId}/chat/events:
     get:
       operationId: streamLiveStreamChat
@@ -1712,6 +1769,15 @@ components:
         streams:
           type: array
           items: { $ref: "#/components/schemas/LiveStreamEntry" }
+    LiveStreamStartInput:
+      type: object
+      properties:
+        replaceExisting: { type: boolean, default: false }
+    LiveStreamHeartbeat:
+      type: object
+      required: [active]
+      properties:
+        active: { type: boolean }
     LiveStreamHostSession:
       type: object
       required: [streamId, url, token, displayName, username]

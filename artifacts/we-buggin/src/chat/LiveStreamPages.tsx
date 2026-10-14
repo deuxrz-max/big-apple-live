@@ -4,7 +4,7 @@ import { ArrowLeft, Ban, Eye, Flag, FlipHorizontal, Gift, Mic, MicOff, Radio, Se
 import { Link, useLocation } from "wouter";
 import { Room, RoomEvent, Track, createLocalTracks, type LocalTrack, type RemoteTrack } from "livekit-client";
 import {
-  endLiveStream, getGetSocialBlocksQueryKey, getGetSocialPersonQueryKey, getLiveStreams, joinLiveStream,
+  endLiveStream, getGetSocialBlocksQueryKey, getGetSocialPersonQueryKey, getLiveStreams, joinLiveStream, rejoinLiveStream,
   getGetSocialMeQueryKey, sendLiveStreamChatMessage, startLiveStream, useGetSocialBlocks,
   useGetSocialMe, useGetSocialPerson, useSetSocialRelationship,
 } from "@workspace/api-client-react";
@@ -35,13 +35,17 @@ const NO_HOST_TRACKS: LocalTrack[] = [];
 
 export function GoLiveButton({ className, children }: { className: string; children: ReactNode }) {
   const [, navigate] = useLocation();
+  const me = useGetSocialMe();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [replacePrompt, setReplacePrompt] = useState(false);
+  const [conflictStreamId, setConflictStreamId] = useState<string | null>(null);
 
-  const start = async () => {
+  const start = async (replaceExisting = false) => {
     if (busy) return;
     setBusy(true);
     setError("");
+    setReplacePrompt(false);
     let tracks: LocalTrack[] = [];
     try {
       // Request permission directly from the tap on Go Live.
@@ -49,18 +53,64 @@ export function GoLiveButton({ className, children }: { className: string; child
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
         video: { facingMode: "user", resolution: { width: 720, height: 1280 }, frameRate: 30 },
       });
-      const session = await startLiveStream({ credentials: "include" });
+      const session = await startLiveStream({ replaceExisting }, { credentials: "include" });
       pendingLiveHostStart = { session, tracks };
       tracks = [];
       navigate("/live/start");
     } catch (failure) {
       for (const track of tracks) track.stop();
       const name = failure instanceof Error ? failure.name : "";
-      setError(name === "NotAllowedError" || name === "PermissionDeniedError"
-        ? "Camera or microphone access was denied. Re-enable it in your browser or phone settings, then try Go Live again."
-        : failure instanceof Error && !/internal server|status code 5\d\d/i.test(failure.message)
-          ? failure.message
-          : "Could not start the live stream. Please try again.");
+      const status = typeof failure === "object" && failure !== null && "status" in failure
+        ? Number((failure as { status?: unknown }).status) : 0;
+      if (status === 409 && !replaceExisting) {
+        let activeStreamId: string | null = null;
+        try {
+          const streams = await getLiveStreams({ credentials: "include" });
+          const username = me.data?.profile?.username?.toLowerCase();
+          activeStreamId = streams.streams.find(stream => stream.username.toLowerCase() === username)?.streamId ?? null;
+        } catch {
+          // The owner can still end the previous session without a stream card.
+        }
+        setConflictStreamId(activeStreamId);
+        setReplacePrompt(true);
+      } else {
+        setError(name === "NotAllowedError" || name === "PermissionDeniedError"
+          ? "Camera or microphone access was denied. Re-enable it in your phone or browser settings, then try again."
+          : status === 401 ? "Please sign in again before going live."
+            : status === 403 ? "Finish your profile setup before going live."
+              : status === 503 ? "Live video is temporarily unavailable. Please try again soon."
+                : "Could not start the live stream. Please try again.");
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const rejoin = async () => {
+    if (!conflictStreamId || busy) return;
+    setBusy(true);
+    setError("");
+    let tracks: LocalTrack[] = [];
+    try {
+      tracks = await createLocalTracks({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        video: { facingMode: "user", resolution: { width: 720, height: 1280 }, frameRate: 30 },
+      });
+      const session = await rejoinLiveStream(conflictStreamId, { credentials: "include" });
+      pendingLiveHostStart = { session, tracks };
+      tracks = [];
+      setReplacePrompt(false);
+      navigate("/live/start");
+    } catch (failure) {
+      for (const track of tracks) track.stop();
+      const status = typeof failure === "object" && failure !== null && "status" in failure
+        ? Number((failure as { status?: unknown }).status) : 0;
+      setError(status === 404
+        ? "That stream has already ended. Start a fresh one instead."
+        : status === 503
+          ? "Live video is temporarily unavailable. Please try again soon."
+          : "Could not reconnect to that stream. Please try again.");
+      setReplacePrompt(false);
     } finally {
       setBusy(false);
     }
@@ -71,7 +121,16 @@ export function GoLiveButton({ className, children }: { className: string; child
       <button type="button" className={className} disabled={busy} onClick={() => void start()}>
         {busy ? "Starting…" : children}
       </button>
-      {error && <span className="st-live-start-error" role="alert">{error}</span>}
+      {error && <span className="st-live-start-banner" role="status">{error}</span>}
+      {replacePrompt && <span className="st-live-start-banner st-live-start-choice" role="alert">
+        <strong>A stream may still be active.</strong>
+        <span>Rejoin it, or end it and start fresh?</span>
+        <span className="st-live-start-choice-actions">
+          {conflictStreamId && <button type="button" disabled={busy} onClick={() => void rejoin()}>Rejoin stream</button>}
+          <button type="button" disabled={busy} onClick={() => void start(true)}>End it &amp; start here</button>
+          <button type="button" disabled={busy} onClick={() => setReplacePrompt(false)}>Cancel</button>
+        </span>
+      </span>}
     </span>
   );
 }
@@ -300,6 +359,10 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
   const roomRef = useRef<Room | null>(null);
   const localTracksRef = useRef<LocalTrack[]>(hostTracks);
   const leavingRef = useRef(false);
+  const sessionEndedRef = useRef(false);
+  const endBeaconSentRef = useRef(false);
+  const onEndedRef = useRef(onEnded);
+  onEndedRef.current = onEnded;
   const [room, setRoom] = useState<Room | null>(null);
   const [videoTrack, setVideoTrack] = useState<LocalTrack | RemoteTrack | null>(null);
   const [audioTrack, setAudioTrack] = useState<LocalTrack | RemoteTrack | null>(null);
@@ -350,6 +413,36 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
   }, []);
 
   useEffect(() => {
+    if (!hostMode) return;
+    sessionEndedRef.current = false;
+    endBeaconSentRef.current = false;
+    const sendEndBeacon = () => {
+      if (sessionEndedRef.current || endBeaconSentRef.current) return;
+      endBeaconSentRef.current = true;
+      const url = `${import.meta.env.BASE_URL}api/account/live-streams/${encodeURIComponent(streamId)}/end`;
+      try {
+        const sent = navigator.sendBeacon(url, new Blob(["{}"], { type: "application/json" }));
+        if (!sent) {
+          void fetch(url, {
+            method: "POST",
+            credentials: "include",
+            keepalive: true,
+            headers: { "Content-Type": "application/json" },
+            body: "{}",
+          }).catch(() => undefined);
+        }
+      } catch {
+        // The server heartbeat lease remains the fallback if the browser blocks unload requests.
+      }
+    };
+    window.addEventListener("pagehide", sendEndBeacon);
+    return () => {
+      window.removeEventListener("pagehide", sendEndBeacon);
+      sendEndBeacon();
+    };
+  }, [hostMode, streamId]);
+
+  useEffect(() => {
     const openGiftPanel = (event: Event) => {
       const detail = (event as CustomEvent<{ streamId?: unknown }>).detail;
       if (detail?.streamId === streamId) setGiftOpen(true);
@@ -357,6 +450,39 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
     window.addEventListener("streamtalk:open-live-gifts", openGiftPanel);
     return () => window.removeEventListener("streamtalk:open-live-gifts", openGiftPanel);
   }, [streamId]);
+
+  useEffect(() => {
+    if (!hostMode || !room || status !== "connected") return;
+    let active = true;
+    let inFlight = false;
+    const heartbeat = async () => {
+      if (!active || inFlight) return;
+      inFlight = true;
+      try {
+        const response = await fetch(
+          `${import.meta.env.BASE_URL}api/account/live-streams/${encodeURIComponent(streamId)}/heartbeat`,
+          { method: "POST", credentials: "include", cache: "no-store", headers: { "Content-Type": "application/json" }, body: "{}" },
+        );
+        if (response.status === 404 && active) {
+          sessionEndedRef.current = true;
+          setStatus("ended");
+          setError("This live session ended after the connection was lost.");
+          await room.disconnect();
+          onEndedRef.current?.();
+        }
+      } catch {
+        // A missed heartbeat is retried; the server ends the stream after the 30-second lease expires.
+      } finally {
+        inFlight = false;
+      }
+    };
+    void heartbeat();
+    const timer = window.setInterval(() => void heartbeat(), 10_000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, [hostMode, room, status, streamId]);
 
   const receiveLiveGift = useCallback((gift: LiveStreamGiftNotice, animate: boolean) => {
     setLiveGiftEvents(current => current.some(item => item.id === gift.id)
@@ -475,6 +601,7 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
     setStatus("ending");
     try {
       await endLiveStream(streamId, { credentials: "include" });
+      sessionEndedRef.current = true;
       await roomRef.current?.disconnect();
       for (const track of localTracksRef.current) track.stop();
       localTracksRef.current = [];

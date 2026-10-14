@@ -861,6 +861,14 @@ export interface LiveStreamList {
   streams: LiveStreamEntry[];
 }
 
+export interface LiveStreamStartInput {
+  replaceExisting?: boolean;
+}
+
+export interface LiveStreamHeartbeat {
+  active: boolean;
+}
+
 export interface LiveStreamHostSession {
   /** @pattern ^[a-f0-9]{32}$ */
   streamId: string;
@@ -1835,6 +1843,14 @@ export interface LiveStreamEntry4b96100 {
 
 export interface LiveStreamList4b96100 {
   streams: LiveStreamEntry4b96100[];
+}
+
+export interface LiveStreamStartInput4b96100 {
+  replaceExisting?: boolean;
+}
+
+export interface LiveStreamHeartbeat4b96100 {
+  active: boolean;
 }
 
 export interface LiveStreamHostSession4b96100 {

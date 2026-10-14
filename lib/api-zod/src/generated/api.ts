@@ -617,6 +617,12 @@ export const GetLiveStreamsResponse = zod.object({
 /**
  * @summary Start a separate camera livestream for the signed-in account
  */
+export const startLiveStreamBodyReplaceExistingDefault = false;
+
+export const StartLiveStreamBody = zod.object({
+  "replaceExisting": zod.boolean().default(startLiveStreamBodyReplaceExistingDefault)
+})
+
 export const startLiveStreamResponseStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
 export const startLiveStreamResponseDisplayNameMax = 80;
 
@@ -630,6 +636,36 @@ export const StartLiveStreamResponse = zod.object({
   "token": zod.string(),
   "displayName": zod.string().max(startLiveStreamResponseDisplayNameMax),
   "username": zod.string().max(startLiveStreamResponseUsernameMax)
+})
+
+
+/**
+ * @summary Keep the signed-in creator livestream active
+ */
+export const heartbeatLiveStreamPathStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+
+
+export const HeartbeatLiveStreamParams = zod.object({
+  "streamId": zod.coerce.string().regex(heartbeatLiveStreamPathStreamIdRegExp)
+})
+
+export const HeartbeatLiveStreamResponse = zod.object({
+  "active": zod.boolean()
+})
+
+
+/**
+ * @summary End the creator livestream during page navigation or close
+ */
+export const beaconEndLiveStreamPathStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+
+
+export const BeaconEndLiveStreamParams = zod.object({
+  "streamId": zod.coerce.string().regex(beaconEndLiveStreamPathStreamIdRegExp)
+})
+
+export const BeaconEndLiveStreamResponse = zod.object({
+  "ended": zod.boolean()
 })
 
 
@@ -657,6 +693,32 @@ export const JoinLiveStreamResponse = zod.object({
   "displayName": zod.string().max(joinLiveStreamResponseDisplayNameMax),
   "username": zod.string().max(joinLiveStreamResponseUsernameMax),
   "viewerUsername": zod.string().max(joinLiveStreamResponseViewerUsernameMax)
+})
+
+
+/**
+ * @summary Rejoin the signed-in creator's active camera livestream
+ */
+export const rejoinLiveStreamPathStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+
+
+export const RejoinLiveStreamParams = zod.object({
+  "streamId": zod.coerce.string().regex(rejoinLiveStreamPathStreamIdRegExp)
+})
+
+export const rejoinLiveStreamResponseStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+export const rejoinLiveStreamResponseDisplayNameMax = 80;
+
+export const rejoinLiveStreamResponseUsernameMax = 40;
+
+
+
+export const RejoinLiveStreamResponse = zod.object({
+  "streamId": zod.string().regex(rejoinLiveStreamResponseStreamIdRegExp),
+  "url": zod.string().url(),
+  "token": zod.string(),
+  "displayName": zod.string().max(rejoinLiveStreamResponseDisplayNameMax),
+  "username": zod.string().max(rejoinLiveStreamResponseUsernameMax)
 })
 
 
