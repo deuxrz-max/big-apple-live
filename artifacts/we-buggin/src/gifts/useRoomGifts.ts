@@ -20,7 +20,11 @@ export function useRoomGifts(roomId: string, userId: string, sessionId: string, 
       if (seen.current.has(event.id)) continue;
       seen.current.add(event.id);
       const age = Date.now() - new Date(event.createdAt).getTime();
-      if (!document.hidden && (event.giftId === 'heart' || event.giftId === 'spirit-pup' || event.giftId === 'moonfox' || event.giftId === 'cosmic-encore') && age >= -5000 && age <= 10000) fresh.push(event);
+      if (!document.hidden && (
+        event.giftId === 'heart' || event.giftId === 'spirit-pup' || event.giftId === 'moonfox'
+        || event.giftId === 'cosmic-encore' || event.giftId === 'fireworks'
+        || event.giftId === 'rose-shower' || event.giftId === 'whip'
+      ) && age >= -5000 && age <= 10000) fresh.push(event);
     }
     if (fresh.length) {
       fresh.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() || a.id.localeCompare(b.id));

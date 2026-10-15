@@ -19,6 +19,9 @@ test("the command contract rejects unmarked-action fields and invalid payloads",
   assert.notEqual(parseTestActorCommand({ action: "join", as: "Vampsquad", room: "LiveMe" }), null);
   assert.notEqual(parseTestActorCommand({ action: "gift", as: "TestBigo1", to: "TestBigo2", room: "LiveMe", gift: "heart" }), null);
   assert.notEqual(parseTestActorCommand({ action: "gift", as: "TestBigo1", to: "TestBigo2", room: "LiveMe", gift: "cosmic-encore" }), null);
+  for (const gift of ["fireworks", "rose-shower", "whip"] as const) {
+    assert.notEqual(parseTestActorCommand({ action: "gift", as: "TestBigo1", to: "TestBigo2", room: "LiveMe", gift }), null);
+  }
   assert.equal(parseTestActorCommand({ action: "gift", as: "TestBigo1", to: "TestBigo2", room: "LiveMe", gift: "moonfox", creditAmount: 500 }), null);
   assert.equal(parseTestActorCommand({ action: "chat", as: "TestBigo1", room: "LiveMe", text: "" }), null);
   assert.equal(parseTestActorCommand({ action: "dm", as: "TestBigo1", to: "Vampsquad", text: "hello", extra: true }), null);

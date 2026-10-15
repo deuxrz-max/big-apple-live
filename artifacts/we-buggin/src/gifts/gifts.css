@@ -8,6 +8,18 @@
 @media (min-aspect-ratio:3/4){.cosmic-encore-media{width:100vw;height:100dvh;object-fit:contain}}
 @keyframes cosmic-encore-fade-in{to{opacity:1}}
 @keyframes cosmic-encore-fade-out{to{opacity:0}}
+.big-tier-gift-catalog-icon{display:grid;width:64px;height:64px;place-items:center;font-size:54px;line-height:1;background:transparent}
+.big-tier-gift-overlay{position:fixed;inset:0;z-index:10002;overflow:hidden;pointer-events:none;background:transparent}
+.big-tier-gift-video{position:absolute;display:block;max-width:none;max-height:none;object-fit:cover;object-position:center;mix-blend-mode:screen;background:transparent;border:0;outline:0;box-shadow:none;pointer-events:none}
+.big-tier-gift-overlay--top .big-tier-gift-video{top:0;left:0;width:100vw;height:42dvh;object-position:center top}
+.big-tier-gift-overlay--full .big-tier-gift-video{inset:0;width:100vw;height:100dvh;object-position:center}
+.big-tier-gift-overlay--bottom .big-tier-gift-video{left:0;bottom:0;width:100vw;height:34dvh;object-position:center bottom}
+.big-tier-gift-banner{position:absolute;left:50%;z-index:1;max-width:calc(100vw - 32px);padding:7px 12px;transform:translateX(-50%);overflow:hidden;border:1px solid rgba(255,255,255,.2);border-radius:999px;background:rgba(7,8,18,.72);color:#fff;font:600 13px/1.25 system-ui,sans-serif;text-align:center;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,.7)}
+.big-tier-gift-overlay--top .big-tier-gift-banner{top:calc(42dvh + 10px + env(safe-area-inset-top))}
+.big-tier-gift-overlay--full .big-tier-gift-banner{top:70dvh}
+.big-tier-gift-overlay--bottom .big-tier-gift-banner{top:54dvh}
+.big-tier-gift-overlay.is-fading-out .big-tier-gift-video,.big-tier-gift-overlay.is-fading-out .big-tier-gift-banner{animation:big-tier-gift-fade-out .5s ease-out forwards}
+@keyframes big-tier-gift-fade-out{to{opacity:0}}
 .gift-framework{--gf-purple:#8A2BFF;--gf-purple-d:#5A12B8;--gf-gold:#C9A24A;--gf-deep:#0E0A18;--gf-white:#fff;color:var(--gf-white);font-family:'Montserrat',system-ui,sans-serif}
 .gift-framework-backdrop{position:fixed;inset:0;z-index:10000;background:rgba(8,5,16,.72);display:flex;align-items:flex-end;justify-content:center}
 .gift-framework.gift-sheet{width:100%;max-width:520px;max-height:85dvh;overflow-y:auto;background:linear-gradient(180deg,#1a1030,var(--gf-deep));border:1px solid var(--gf-gold);border-bottom:0;border-radius:20px 20px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));box-sizing:border-box}

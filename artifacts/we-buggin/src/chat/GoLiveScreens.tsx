@@ -12,6 +12,7 @@ import type { LiveStreamEntry, LiveStreamChatMessage } from "@workspace/api-clie
 import { GiftBag } from "@/gifts/GiftBag";
 import { GiftControl } from "@/gifts/GiftControl";
 import { CosmicEncoreAnimation, MoonfoxAnimation, SpiritAnimation } from "@/gifts/SpiritPup";
+import { BigTierGiftAnimation, isBigTierGiftId } from "@/gifts/BigTierGift";
 import { HeartAnimation } from "@/gifts/HeartAnimation";
 import { SafetyReportDialog } from "@/safety/SafetyReportDialog";
 import {
@@ -264,7 +265,8 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
   const chatReady = hostMode ? Boolean(hostState?.chatReady) : viewerState?.phase === "live";
   const [giftOpen, setGiftOpen] = useState(false);
   const [liveGiftEvents, setLiveGiftEvents] = useState<GiftNotice[]>([]);
-  const [activeGift, setActiveGift] = useState<GiftNotice | null>(null);
+  const [giftQueue, setGiftQueue] = useState<GiftNotice[]>([]);
+  const activeGift = giftQueue[0] ?? null;
   const [error, setError] = useState("");
   const [shareNotice, setShareNotice] = useState("");
   const [profileAction, setProfileAction] = useState<ActionTarget | null>(null);
@@ -283,7 +285,7 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
   const audioEnabled = viewerState?.audioEnabled ?? false;
   const chat = useLiveChat(streamId, chatReady, blocked, useCallback((gift: GiftNotice, animate: boolean) => {
     setLiveGiftEvents(current => current.some(item => item.id === gift.id) ? current : [...current, gift].slice(-100));
-    if (animate) setActiveGift(gift);
+    if (animate) setGiftQueue(current => current.some(item => item.id === gift.id) ? current : [...current, gift].slice(-100));
   }, []));
   const gifterTotals = useMemo(() => {
     const totals = new Map<string, { username: string; name: string; credits: number }>();
@@ -349,7 +351,8 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
       onError: () => setError("Could not update your follow right now. Try again."),
     });
   };
-  const finishGift = (giftId: string) => setActiveGift(current => current?.id === giftId ? null : current);
+  const finishGift = (giftId: string) => setGiftQueue(current =>
+    current[0]?.id === giftId ? current.slice(1) : current.filter(item => item.id !== giftId));
   const share = async () => {
     const path = base.endsWith("/") ? base : `${base}/`;
     const url = new URL(`${path}live/${encodeURIComponent(streamId)}`, window.location.origin).toString();
@@ -490,6 +493,7 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
     {activeGift?.giftId === "spirit-pup" && <SpiritAnimation key={activeGift.id} onFinish={() => finishGift(activeGift.id)} />}
     {activeGift?.giftId === "moonfox" && <MoonfoxAnimation key={activeGift.id} onFinish={() => finishGift(activeGift.id)} />}
     {activeGift?.giftId === "cosmic-encore" && <CosmicEncoreAnimation key={activeGift.id} onFinish={() => finishGift(activeGift.id)} />}
+    {activeGift && isBigTierGiftId(activeGift.giftId) && <BigTierGiftAnimation key={activeGift.id} giftId={activeGift.giftId} senderName={activeGift.senderName} onFinish={() => finishGift(activeGift.id)} />}
     {profileAction && <div className="st-live-action-scrim" onClick={() => setProfileAction(null)}>
       <section className="st-live-action-sheet" role="dialog" aria-modal="true" aria-label={`Actions for ${profileAction.displayName}`}
         onClick={event => event.stopPropagation()}>

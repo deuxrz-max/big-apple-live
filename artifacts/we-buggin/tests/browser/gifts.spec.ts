@@ -334,20 +334,21 @@ test('room gift animations serialize Cosmic Encore and following gifts without d
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
 
-  const firstAt = Date.now() - 1000;
-  const orderedGifts = ['cosmic-encore', 'heart', 'spirit-pup', 'moonfox'];
-  const events = orderedGifts.map((giftId, index) => ({
-    id: `queued-${giftId}`,
-    giftId,
-    senderUsername: 'fixture',
-    recipientUsername: 'friend',
-    senderName: 'Fixture',
-    recipientName: 'Friend',
-    createdAt: new Date(firstAt + index * 100).toISOString(),
-  }));
+  const orderedGifts = ['cosmic-encore', 'heart', 'spirit-pup', 'moonfox', 'fireworks', 'rose-shower', 'whip'];
   let polls = 0;
+  let firstAt: number | undefined;
   await page.route('**/api/social/gifts/rooms/*', route => {
     polls++;
+    firstAt ??= Date.now();
+    const events = orderedGifts.map((giftId, index) => ({
+      id: `queued-${giftId}`,
+      giftId,
+      senderUsername: 'fixture',
+      recipientUsername: 'friend',
+      senderName: 'Fixture',
+      recipientName: 'Friend',
+      createdAt: new Date(firstAt! + index * 100).toISOString(),
+    }));
     return route.fulfill({ json: { events: [...events].reverse() } });
   });
   for (const giftId of ['spirit-pup', 'moonfox']) {
@@ -355,6 +356,16 @@ test('room gift animations serialize Cosmic Encore and following gifts without d
       const name = new URL(route.request().url()).pathname.split('/').at(-1)!;
       const body = await readFile(new URL(`../../../../generated-artifacts/${giftId}/${name}`, import.meta.url));
       await route.fulfill({ body, contentType: name.endsWith('.png') ? 'image/png' : 'image/webp' });
+    });
+  }
+  for (const [giftId, source] of [
+    ['fireworks', '../../../../attached_assets/grok_video_2026-10-15-02-42-14_1792047155637.mp4'],
+    ['rose-shower', '../../../../attached_assets/grok_video_2026-10-15-02-46-01_1792047164600.mp4'],
+    ['whip', '../../../../attached_assets/grok_video_2026-10-15-02-47-47_1792047173579.mp4'],
+  ] as const) {
+    await page.route(`**/api/gift-media/${giftId}/v1/animation.mp4`, async route => {
+      const body = await readFile(new URL(source, import.meta.url));
+      await route.fulfill({ body, contentType: 'video/mp4' });
     });
   }
 
@@ -392,7 +403,30 @@ test('room gift animations serialize Cosmic Encore and following gifts without d
   await expect(moonfox.locator('img')).toHaveAttribute('src', /icon\.png$/);
   await moonfox.locator('img').dispatchEvent('error');
   await expect(moonfox).toHaveCount(0);
-  await page.waitForTimeout(2200);
+  for (const [giftId, emoji, giftName, position] of [
+    ['fireworks', '🎆', 'Fireworks', 'top'],
+    ['rose-shower', '🌹', 'Rose Shower', 'full'],
+    ['whip', '🏎️', 'Whip', 'bottom'],
+  ] as const) {
+    const animation = page.getByTestId(`big-tier-${giftId}-animation`);
+    await expect(animation).toBeVisible({ timeout: 3000 });
+    await expect(animation.locator('.big-tier-gift-banner')).toHaveText(`Fixture sent ${giftName} ${emoji}`);
+    await expect(animation).toHaveClass(new RegExp(`big-tier-gift-overlay--${position}`));
+    await expect(animation).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    const video = animation.locator('video');
+    await expect(video).toHaveAttribute('src', new RegExp(`api/gift-media/${giftId}/v1/animation\\.mp4$`));
+    await expect(video).toHaveJSProperty('muted', true);
+    await expect(video).toHaveJSProperty('playsInline', true);
+    await expect(video).toHaveCSS('mix-blend-mode', 'screen');
+    await expect.poll(() => video.evaluate(element => (element as HTMLVideoElement).currentTime)).toBeGreaterThan(0);
+    await expect(page.locator('[data-testid$="-animation"]')).toHaveCount(1);
+    await video.evaluate(element => {
+      const player = element as HTMLVideoElement;
+      player.pause();
+      player.dispatchEvent(new Event('ended'));
+    });
+    await expect(animation).toHaveCount(0, { timeout: 2000 });
+  }
   await expect(page.locator('[data-testid$="-animation"]')).toHaveCount(0);
 });
 

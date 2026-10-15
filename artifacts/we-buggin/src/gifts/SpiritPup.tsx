@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { GiftIcon } from '@/social/common';
 
-export type RoomGiftId = 'heart' | 'spirit-pup' | 'moonfox' | 'cosmic-encore';
-type AnimatedGiftId = Exclude<RoomGiftId, 'heart' | 'cosmic-encore'>;
+export type BigTierGiftId = 'fireworks' | 'rose-shower' | 'whip';
+export type RoomGiftId = 'heart' | 'spirit-pup' | 'moonfox' | 'cosmic-encore' | BigTierGiftId;
+type AnimatedGiftId = 'spirit-pup' | 'moonfox';
 const MEDIA: Record<Exclude<RoomGiftId, 'heart'>, string> = {
   'spirit-pup': `${import.meta.env.BASE_URL}api/gift-media/spirit-pup/v1/`,
   moonfox: `${import.meta.env.BASE_URL}api/gift-media/moonfox/v1/`,
   'cosmic-encore': `${import.meta.env.BASE_URL}api/gift-media/cosmic-encore/v1/`,
+  fireworks: `${import.meta.env.BASE_URL}api/gift-media/fireworks/v1/`,
+  'rose-shower': `${import.meta.env.BASE_URL}api/gift-media/rose-shower/v1/`,
+  whip: `${import.meta.env.BASE_URL}api/gift-media/whip/v1/`,
 };
 const DURATION: Record<AnimatedGiftId, number> = {
   'spirit-pup': 4000,
@@ -16,6 +20,9 @@ const DURATION: Record<AnimatedGiftId, number> = {
 export function RoomGiftIcon({ giftId }: { giftId: RoomGiftId }) {
   const [failed, setFailed] = useState(false);
   if (giftId === 'heart') return <span className="heart-gift-catalog-icon" aria-hidden="true">❤️</span>;
+  if (giftId === 'fireworks') return <span className="big-tier-gift-catalog-icon" aria-hidden="true">🎆</span>;
+  if (giftId === 'rose-shower') return <span className="big-tier-gift-catalog-icon" aria-hidden="true">🌹</span>;
+  if (giftId === 'whip') return <span className="big-tier-gift-catalog-icon" aria-hidden="true">🏎️</span>;
   return failed
     ? <GiftIcon id={giftId} />
     : <img className="spirit-gift-icon" src={`${MEDIA[giftId]}icon-small.png`} width={64} height={64} alt="" aria-hidden="true" onError={() => setFailed(true)} />;

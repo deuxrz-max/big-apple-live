@@ -6,13 +6,16 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useGetSocialMe, getGetSocialMeQueryKey, sendSocialGift, getGetRoomGiftEventsQueryKey } from '@workspace/api-client-react';
 import { GiftIcon, refreshSocial, errMsg } from '@/social/common';
 import { RoomGiftIcon, cosmicEncoreMedia, type RoomGiftId } from './SpiritPup';
+import { bigTierGiftMedia } from './BigTierGift';
 import { ownedGiftItems } from './gift-items';
 import './gifts.css';
 
 type Recipient = { username: string; displayName: string; displayNameColor?: string } | null;
 
 const FOCUSABLE = 'button:not([disabled]),[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
-const ROOM_GIFT_IDS = new Set<RoomGiftId>(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore']);
+const ROOM_GIFT_IDS = new Set<RoomGiftId>([
+  'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip',
+]);
 const isRoomGiftId = (id: string): id is RoomGiftId => ROOM_GIFT_IDS.has(id as RoomGiftId);
 function giftIcon(id: string) {
   return isRoomGiftId(id) ? <RoomGiftIcon giftId={id} /> : <GiftIcon id={id} size={26} />;
@@ -40,18 +43,23 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
   const titleId = useId();
   useEffect(() => {
     if (!roomId && !streamId) return;
-    const video = document.createElement('video');
-    video.preload = 'auto';
-    video.muted = true;
-    video.playsInline = true;
-    video.src = cosmicEncoreMedia.animation;
-    video.load();
+    const videos = [cosmicEncoreMedia.animation, ...Object.values(bigTierGiftMedia)].map(src => {
+      const video = document.createElement('video');
+      video.preload = 'auto';
+      video.muted = true;
+      video.playsInline = true;
+      video.src = src;
+      video.load();
+      return video;
+    });
     const still = new Image();
     still.src = cosmicEncoreMedia.fallback;
     return () => {
-      video.pause();
-      video.removeAttribute('src');
-      video.load();
+      for (const video of videos) {
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+      }
     };
   }, [roomId, streamId]);
   const items = useMemo(() => (me.data ? ownedGiftItems(me.data) : []), [me.data]);

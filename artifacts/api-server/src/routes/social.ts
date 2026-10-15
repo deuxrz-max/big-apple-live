@@ -18,7 +18,10 @@ import { accessFor, requireAdult } from "../lib/community";
 import { blocks, getMe, getPerson, listPeople, relationship, saveSocialProfile } from "../lib/social/people";
 import { claimDaily, gift, ledger, purchase } from "../lib/social/rewards";
 import { roomGiftEvents } from '../lib/social/room-gifts';
-import { serveGiftMedia, serveMoonfoxGiftMedia, serveCosmicEncoreGiftMedia } from '../lib/gift-media';
+import {
+  serveGiftMedia, serveMoonfoxGiftMedia, serveCosmicEncoreGiftMedia,
+  serveFireworksGiftMedia, serveRoseShowerGiftMedia, serveWhipGiftMedia,
+} from '../lib/gift-media';
 import { serveMonthlyCreditTierEntranceEffectMedia, serveRoomEntranceEffectMedia } from "../lib/room-entry-effect-media";
 import { clearThread, inbox, sendMessage, thread } from "../lib/social/messages";
 import { favoritesGallery, favoriteRoom } from "../lib/social/favorites";
@@ -36,6 +39,9 @@ const router: IRouter = Router();
 router.get('/gift-media/spirit-pup/v1/:filename', serveGiftMedia);
 router.get('/gift-media/moonfox/v1/:filename', serveMoonfoxGiftMedia);
 router.get('/gift-media/cosmic-encore/v1/:filename', serveCosmicEncoreGiftMedia);
+router.get('/gift-media/fireworks/v1/:filename', serveFireworksGiftMedia);
+router.get('/gift-media/rose-shower/v1/:filename', serveRoseShowerGiftMedia);
+router.get('/gift-media/whip/v1/:filename', serveWhipGiftMedia);
 router.get('/room-entry-effects/lion/:filename', serveRoomEntranceEffectMedia);
 router.get('/room-entry-effects/monthly-credit-tiers/:tier/:filename', serveMonthlyCreditTierEntranceEffectMedia);
 router.use("/social", async (req, res, next) => {

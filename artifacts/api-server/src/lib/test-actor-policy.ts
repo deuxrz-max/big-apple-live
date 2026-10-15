@@ -6,7 +6,7 @@ export type TestActorCommand =
   | { action: "leave"; as: string; room: string }
   | { action: "chat"; as: string; room: string; text: string }
   | { action: "dm"; as: string; to: string; text: string }
-  | { action: "gift"; as: string; to: string; room: string; gift: "heart" | "spirit-pup" | "moonfox" | "cosmic-encore" };
+  | { action: "gift"; as: string; to: string; room: string; gift: "heart" | "spirit-pup" | "moonfox" | "cosmic-encore" | "fireworks" | "rose-shower" | "whip" };
 
 const keys: Record<TestActorCommand["action"], string[]> = {
   list: ["action"],
@@ -47,7 +47,8 @@ export function parseTestActorCommand(value: unknown): TestActorCommand | null {
     return isUsername(value.to) && isText(value.text, 1000)
       ? { action, as: value.as.trim(), to: value.to.trim(), text: value.text.trim() } : null;
   return isUsername(value.to) && isRoom(value.room)
-    && (value.gift === "heart" || value.gift === "spirit-pup" || value.gift === "moonfox" || value.gift === "cosmic-encore")
+    && (value.gift === "heart" || value.gift === "spirit-pup" || value.gift === "moonfox" || value.gift === "cosmic-encore"
+      || value.gift === "fireworks" || value.gift === "rose-shower" || value.gift === "whip")
     ? { action, as: value.as.trim(), to: value.to.trim(), room: value.room.trim(), gift: value.gift } : null;
 }
 

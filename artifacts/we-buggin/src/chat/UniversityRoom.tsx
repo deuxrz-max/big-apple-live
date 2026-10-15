@@ -20,6 +20,7 @@ import { GiftBag, OPEN_ROOM_GIFTS_EVENT } from '@/gifts';
 import { useRoomGifts } from '@/gifts/useRoomGifts';
 import { HeartAnimation } from '@/gifts/HeartAnimation';
 import { CosmicEncoreAnimation, MoonfoxAnimation, SpiritAnimation } from '@/gifts/SpiritPup';
+import { BigTierGiftAnimation, isBigTierGiftId } from '@/gifts/BigTierGift';
 import { PassportSummaryBadge } from '@/passport/StreamerPassport';
 import { RoomEntranceEffectOverlay } from './RoomEntranceEffectOverlay';
 import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
@@ -501,7 +502,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
               {items.map((it) => {
                 if (it.kind === 'gift') {
                   return <div className="ch-msg" key={it.id} data-testid={`gift-notice-${it.gift.id}`}>
-                    <div><p><span className="ur-gift-person"><BadgeMark id={it.gift.senderBadgeId ?? null} label={it.gift.senderBadgeName} imageUrl={it.gift.senderBadgeImage} size={16} compact /><button type="button" className="ur-name" style={{ color: it.gift.senderNameColor ?? '#FFFFFF' }} onClick={() => openMenu(it.gift.senderUsername, it.gift.senderName, undefined, it.gift.senderNameColor)}>{it.gift.senderName}</button><PassportSummaryBadge passport={it.gift.senderPassport} username={it.gift.senderUsername} context={`gift-sender-${it.gift.id}`} /></span> sent <span className="ur-gift-person"><BadgeMark id={it.gift.recipientBadgeId ?? null} label={it.gift.recipientBadgeName} imageUrl={it.gift.recipientBadgeImage} size={16} compact /><button type="button" className="ur-name" style={{ color: it.gift.recipientNameColor ?? '#FFFFFF' }} onClick={() => openMenu(it.gift.recipientUsername, it.gift.recipientName, undefined, it.gift.recipientNameColor)}>{it.gift.recipientName}</button><PassportSummaryBadge passport={it.gift.recipientPassport} username={it.gift.recipientUsername} context={`gift-recipient-${it.gift.id}`} /></span> a {it.gift.giftId === 'heart' ? 'Heart' : it.gift.giftId === 'moonfox' ? 'Moonfox' : it.gift.giftId === 'cosmic-encore' ? 'Cosmic Encore' : 'Spirit Pup'}.</p></div>
+                    <div><p><span className="ur-gift-person"><BadgeMark id={it.gift.senderBadgeId ?? null} label={it.gift.senderBadgeName} imageUrl={it.gift.senderBadgeImage} size={16} compact /><button type="button" className="ur-name" style={{ color: it.gift.senderNameColor ?? '#FFFFFF' }} onClick={() => openMenu(it.gift.senderUsername, it.gift.senderName, undefined, it.gift.senderNameColor)}>{it.gift.senderName}</button><PassportSummaryBadge passport={it.gift.senderPassport} username={it.gift.senderUsername} context={`gift-sender-${it.gift.id}`} /></span> sent <span className="ur-gift-person"><BadgeMark id={it.gift.recipientBadgeId ?? null} label={it.gift.recipientBadgeName} imageUrl={it.gift.recipientBadgeImage} size={16} compact /><button type="button" className="ur-name" style={{ color: it.gift.recipientNameColor ?? '#FFFFFF' }} onClick={() => openMenu(it.gift.recipientUsername, it.gift.recipientName, undefined, it.gift.recipientNameColor)}>{it.gift.recipientName}</button><PassportSummaryBadge passport={it.gift.recipientPassport} username={it.gift.recipientUsername} context={`gift-recipient-${it.gift.id}`} /></span> a {it.gift.giftId === 'heart' ? 'Heart' : it.gift.giftId === 'moonfox' ? 'Moonfox' : it.gift.giftId === 'cosmic-encore' ? 'Cosmic Encore' : it.gift.giftId === 'fireworks' ? 'Fireworks' : it.gift.giftId === 'rose-shower' ? 'Rose Shower' : it.gift.giftId === 'whip' ? 'Whip' : 'Spirit Pup'}.</p></div>
                   </div>;
                 }
                 if (it.kind === 'arrival') {
@@ -647,6 +648,8 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
         ? <HeartAnimation key={gifts.animation.id} onFinish={gifts.finish} />
         : gifts.animation.giftId === 'cosmic-encore'
           ? <CosmicEncoreAnimation key={gifts.animation.id} onFinish={gifts.finish} />
+        : isBigTierGiftId(gifts.animation.giftId)
+          ? <BigTierGiftAnimation key={gifts.animation.id} giftId={gifts.animation.giftId} senderName={gifts.animation.senderName} onFinish={gifts.finish} />
         : gifts.animation.giftId === 'moonfox'
           ? <MoonfoxAnimation key={gifts.animation.id} onFinish={gifts.finish} />
           : <SpiritAnimation key={gifts.animation.id} onFinish={gifts.finish} />)}

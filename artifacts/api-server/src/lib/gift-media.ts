@@ -11,6 +11,9 @@ const productPaths = {
   'spirit-pup': 'gift-media/spirit-pup/v1',
   moonfox: 'gift-media/moonfox/v1',
   'cosmic-encore': 'gift-media/cosmic-encore/v1',
+  fireworks: 'gift-media/fireworks/v1',
+  'rose-shower': 'gift-media/rose-shower/v1',
+  whip: 'gift-media/whip/v1',
 } as const;
 type GiftMediaProduct = keyof typeof productPaths;
 const storage = new Storage({
@@ -60,3 +63,6 @@ function giftMediaHandler(product: GiftMediaProduct) {
 export const serveGiftMedia = giftMediaHandler('spirit-pup');
 export const serveMoonfoxGiftMedia = giftMediaHandler('moonfox');
 export const serveCosmicEncoreGiftMedia = giftMediaHandler('cosmic-encore');
+export const serveFireworksGiftMedia = giftMediaHandler('fireworks');
+export const serveRoseShowerGiftMedia = giftMediaHandler('rose-shower');
+export const serveWhipGiftMedia = giftMediaHandler('whip');
