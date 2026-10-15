@@ -40,14 +40,14 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
   }
   if (streamContext) {
     if (!roomGift) throw new RoomError(400, "Only room gifts are available during livestreams.");
-    if (liveStreamIdForAccount(target.accountId) !== streamContext.streamId
-      || !(await isLiveStreamActiveOrStarting(target.accountId))) {
+    if (target.accountId !== id && (liveStreamIdForAccount(target.accountId) !== streamContext.streamId
+      || !(await isLiveStreamActiveOrStarting(target.accountId)))) {
       throw new RoomError(404, "This livestream is no longer available.");
     }
   }
   const result = await db.transaction(async tx => {
     await lockPair(tx, id, target.accountId);
-    await assertContact(tx, id, target.accountId);
+    if (id !== target.accountId) await assertContact(tx, id, target.accountId);
     await lockAccounts(tx, [id, target.accountId]);
     const boundHistory = roomGift && roomContext ? roomStore.getHistoryId(roomContext.roomId.toUpperCase()) : null;
     const ref = `gift:${giftId}:${target.accountId}${boundHistory ? ':' + boundHistory : streamContext ? ':live:' + streamContext.streamId : ''}`;

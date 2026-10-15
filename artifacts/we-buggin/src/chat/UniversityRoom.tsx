@@ -181,10 +181,10 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
 
   const people = session?.people ?? [];
   const onBeam = new Set(videoBeam.beam.slots.flatMap(slot => slot.participantId ? [slot.participantId] : []));
-  const giftRecipients = people.filter(person => !person.self && !person.botId
-    && (!videoBeam.beam.beamActive || onBeam.has(person.participantId)))
-    .map(({ username, displayName, displayNameColor }) => ({ username, displayName, displayNameColor }));
   const me = people.find((p) => p.self);
+  const giftRecipients = people.filter(person => !person.botId
+    && (person.self || !videoBeam.beam.beamActive || onBeam.has(person.participantId)))
+    .map(({ username, displayName, displayNameColor }) => ({ username, displayName, displayNameColor }));
   const beamSlots = [...videoBeam.beam.slots].sort((a, b) => a.slotNumber - b.slotNumber);
   const speakerCount = beamSlots.filter(slot => slot.participantId).length;
   const isSelf = (username: string, authorId?: string) => (!!authorId && authorId === r.creds?.participantId) || me?.username === username;

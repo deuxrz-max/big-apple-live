@@ -51,7 +51,7 @@ test('development database: atomic split, bag, retry, funds, membership, blocks 
   await assert.rejects(gift(ids[0]!, names[1]!, SPIRIT_PUP.id, randomUUID(), context), /Not enough credits/);
   assert.equal((await getMe(ids[1]!)).giftQuantities[SPIRIT_PUP.id], undefined);
   await db.update(socialWallets).set({ balance: 200 }).where(eq(socialWallets.accountId, ids[0]!));
-  await assert.rejects(gift(ids[0]!, names[1]!, SPIRIT_PUP.id, randomUUID()), /university gift tab/);
+  await assert.rejects(gift(ids[0]!, names[1]!, SPIRIT_PUP.id, randomUUID()), /room or livestream gift panel/);
   await assert.rejects(gift(ids[0]!, names[1]!, SPIRIT_PUP.id, randomUUID(), { roomId, sessionId: sessions[1]!.participantSessionId }), /does not belong/);
   const key = randomUUID();
   await Promise.all([gift(ids[0]!, names[1]!, SPIRIT_PUP.id, key, context), gift(ids[0]!, names[1]!, SPIRIT_PUP.id, key, context)]);
@@ -74,7 +74,6 @@ test('development database: atomic split, bag, retry, funds, membership, blocks 
   roomStore.leave(roomId, sessions[2]!.participantSessionId);
   await assert.rejects(gift(ids[0]!, names[2]!, SPIRIT_PUP.id, randomUUID(), context), /no longer in/);
   await assert.rejects(gift(ids[0]!, names[1]!, SPIRIT_PUP.id, key, { roomId: overflowId, sessionId: overflow.participantSessionId }), /retry key/);
-  await assert.rejects(gift(ids[0]!, names[0]!, SPIRIT_PUP.id, randomUUID(), context), /another person/);
   await assert.rejects(gift(ids[0]!, names[1]!, SPIRIT_PUP.id, randomUUID(), { roomId: overflowId, sessionId: overflow.participantSessionId }), /does not belong/);
   await Promise.allSettled([gift(ids[0]!, names[1]!, SPIRIT_PUP.id, randomUUID(), context), gift(ids[0]!, names[1]!, SPIRIT_PUP.id, randomUUID(), context)]);
   assert.equal((await getMe(ids[0]!)).wallet.balance, 0, 'concurrent sends cannot overdraw');
@@ -136,4 +135,17 @@ test('development database: Moonfox charges once, splits 250/250, enters the bag
   assert.equal((await roomGiftEvents(ids[1]!, otherRoomId, otherSession.participantSessionId)).events.length, 0);
   await assert.rejects(gift(ids[0]!, names[1]!, MOONFOX.id, randomUUID(), context), /Not enough credits/);
   assert.equal((await getMe(ids[1]!)).giftQuantities[MOONFOX.id], 1);
+
+  await db.update(socialWallets).set({ balance: MOONFOX.cost }).where(eq(socialWallets.accountId, ids[0]!));
+  await gift(ids[0]!, names[0]!, MOONFOX.id, randomUUID(), { roomId, sessionId: sessions[0]!.participantSessionId });
+  const self = await getMe(ids[0]!);
+  assert.equal(self.wallet.balance, 250, 'self-gifting charges the full price, then credits the recipient half');
+  assert.equal(self.wallet.sent, 1000);
+  assert.equal(self.wallet.received, 250);
+  assert.equal(self.giftQuantities[MOONFOX.id], 1);
+  const selfReceipt = (await db.select().from(socialGiftEvents).where(eq(socialGiftEvents.historyId, historyId)))
+    .find(event => event.senderId === ids[0] && event.recipientId === ids[0]);
+  assert.equal(selfReceipt?.cost, 500);
+  assert.equal(selfReceipt?.recipientCredits, 250);
+  assert.equal(selfReceipt?.houseCredits, 250);
 });

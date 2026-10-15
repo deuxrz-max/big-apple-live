@@ -212,13 +212,14 @@ function GifterAvatar({ username, name, credits }: { username: string; name: str
 function liveGiftRecipients(
   room: HostLiveSnapshot["room"],
   ownUsername: string,
+  ownDisplayName: string,
   hostUsername: string,
   hostDisplayName: string,
   blocked: ReadonlySet<string>,
 ) {
   if (!room) return [];
   const own = ownUsername.toLowerCase();
-  return [...room.remoteParticipants.values()].flatMap(participant => {
+  const participants = [...room.remoteParticipants.values()].flatMap(participant => {
     let username = participant.identity === "host" ? hostUsername : "";
     if (participant.metadata) {
       try {
@@ -234,6 +235,13 @@ function liveGiftRecipients(
         : participant.name?.trim() || username,
     }];
   });
+  if (ownUsername && !blocked.has(own)) {
+    participants.unshift({
+      username: ownUsername,
+      displayName: ownDisplayName || ownUsername,
+    });
+  }
+  return participants;
 }
 
 function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeave, ownUsername }: {
@@ -257,7 +265,7 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
     query: { queryKey: getGetSocialPersonQueryKey(hostUsername), enabled: Boolean(hostUsername) && !hostMode },
   });
   const ownProfile = useGetSocialMe({
-    query: { queryKey: getGetSocialMeQueryKey(), enabled: hostMode },
+    query: { queryKey: getGetSocialMeQueryKey(), enabled: Boolean(ownUsername) },
   });
   const hostPhoto = hostMode ? ownProfile.data?.profile.photoUrl : hostPerson.data?.photoUrl;
   const avatar = leadingEmoji(displayName);
@@ -298,9 +306,10 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
     return [...totals.values()].sort((a, b) => b.credits - a.credits).slice(0, 3);
   }, [blockedLower, liveGiftEvents]);
   const following = hostPerson.data?.favorite ?? false;
-  const myName = hostMode ? ownProfile.data?.profile.username ?? ownUsername : ownUsername;
+  const myName = ownProfile.data?.profile.username ?? ownUsername;
+  const myDisplayName = ownProfile.data?.profile.displayName || myName;
   const giftRoom = hostMode ? hostState?.room ?? null : viewerState?.room ?? null;
-  const giftRecipients = liveGiftRecipients(giftRoom, myName, hostUsername, displayName, blockedLower);
+  const giftRecipients = liveGiftRecipients(giftRoom, myName, myDisplayName, hostUsername, displayName, blockedLower);
 
   const markCameraBlocked = useCallback(() => setCameraBlocked(true), []);
   const retryCameraPlayback = useCallback(async () => {

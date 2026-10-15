@@ -158,7 +158,6 @@ export async function sweepStaleLiveStreamSessions(): Promise<number> {
 }
 
 export async function requireLiveStreamGiftAccess(senderId: string, recipientId: string, streamId: string): Promise<void> {
-  if (senderId === recipientId) throw new RoomError(409, "You cannot send a gift to your own stream.");
   const lease = await getLiveStreamSessionByStreamId(streamId);
   if (!lease || lease.state !== "live" || liveStreamIdForAccount(lease.accountId) !== streamId) {
     throw new RoomError(404, "This livestream is no longer available.");
