@@ -109,15 +109,21 @@ export function PublicChatLanding() {
   );
 }
 
-export function AdultGate({ children }: { children: ReactNode }) {
+export function AdultGate({ children, keepMountedOnTransientError = false }: {
+  children: ReactNode;
+  keepMountedOnTransientError?: boolean;
+}) {
   const qc = useQueryClient();
   const q = useGetChatAccess();
   const confirm = useConfirmChatAdult();
   const [ok, setOk] = useState(false);
-  if (q.isLoading) return <Shell><p role="status">Checking access...</p></Shell>;
-  if (q.isError || !q.data) return <Shell><div className="ch-err" role="alert">Could not check access. <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button></div></Shell>;
-  if (q.data.suspended) return <Shell><h1>Chat access restricted</h1><p>Your access requires review by a Streamtalk moderator. A new age confirmation cannot remove this restriction.</p><Link href="/" className="bm-btn">Home</Link></Shell>;
-  if (q.data.adultConfirmed) return <>{children}</>;
+  const lastSuccessfulAccess = useRef(q.data);
+  if (q.data) lastSuccessfulAccess.current = q.data;
+  const access = q.data ?? (keepMountedOnTransientError ? lastSuccessfulAccess.current : undefined);
+  if (q.isLoading && !access) return <Shell><p role="status">Checking access...</p></Shell>;
+  if ((q.isError && !keepMountedOnTransientError) || !access) return <Shell><div className="ch-err" role="alert">Could not check access. <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button></div></Shell>;
+  if (access.suspended) return <Shell><h1>Chat access restricted</h1><p>Your access requires review by a Streamtalk moderator. A new age confirmation cannot remove this restriction.</p><Link href="/" className="bm-btn">Home</Link></Shell>;
+  if (access.adultConfirmed) return <>{children}</>;
   return (
     <Shell>
       <h1>Adults only</h1>
@@ -335,6 +341,25 @@ export function ProfileGate({ children }: { children: ReactNode }) {
       <ProfileGateInner>{children}</ProfileGateInner>
     </AdultGate>
   );
+}
+
+/**
+ * Live routes must remain mounted after their profile has passed the gate.
+ * A transient background profile refresh error should not destroy a running
+ * camera/LiveKit connection.
+ */
+export function LiveProfileGate({ children }: { children: ReactNode }) {
+  return <AdultGate keepMountedOnTransientError><LiveProfileGateInner>{children}</LiveProfileGateInner></AdultGate>;
+}
+
+function LiveProfileGateInner({ children }: { children: ReactNode }) {
+  const q = useGetMyProfile({ query: { queryKey: getGetMyProfileQueryKey(), refetchInterval: 15_000 } });
+  const passedGate = useRef(false);
+  if (q.data?.profile) passedGate.current = true;
+  if (passedGate.current) return <>{children}</>;
+  if (q.isLoading) return <Shell><p role="status">Loading your profile...</p></Shell>;
+  if (q.isError) return <Shell><div className="ch-err" role="alert">Could not load your account. <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button></div></Shell>;
+  return <ChatProfile setup />;
 }
 
 function ProfileGateInner({ children }: { children: ReactNode }) {

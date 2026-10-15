@@ -4,12 +4,12 @@ import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { Redirect, Route, Switch, useLocation, useParams, Router as WouterRouter } from 'wouter';
-import { ErrorBoundary } from '@/components/error-boundary';
+import { ErrorBoundary, type ErrorFallbackProps } from '@/components/error-boundary';
 import { Wordmark } from '@/components/brand';
 import { BottomNavigation } from '@/components/bottom-navigation';
 import NotFound from '@/pages/not-found';
 import { clearAllCreds } from '@/lib/room-creds';
-import { AdultGate, ChatDirectory, ChatProfile, ProfileGate, PublicChatLanding, TextChatRoom } from '@/chat/ChatApp';
+import { AdultGate, ChatDirectory, ChatProfile, LiveProfileGate, ProfileGate, PublicChatLanding, TextChatRoom } from '@/chat/ChatApp';
 import { LiveStreamsDirectory, StartLiveStreamPage, WatchLiveStreamPage } from '@/chat/LiveStreamPages';
 import { EmailSignUp } from '@/components/email-signup';
 import '@/chat/chat.css';
@@ -199,7 +199,7 @@ function StartLiveStreamRoute() {
   const { user } = useUser();
   return (
     <>
-      <Show when="signed-in">{user && <ProfileGate><StartLiveStreamPage key={user.id} /></ProfileGate>}</Show>
+      <Show when="signed-in">{user && <LiveProfileGate><StartLiveStreamPage key={user.id} /></LiveProfileGate>}</Show>
       <Show when="signed-out"><Redirect to="/sign-in" /></Show>
     </>
   );
@@ -210,7 +210,7 @@ function WatchLiveStreamRoute() {
   const { streamId = '' } = useParams<{ streamId: string }>();
   return (
     <>
-      <Show when="signed-in">{user && <ProfileGate><WatchLiveStreamPage key={`${user.id}:${streamId}`} streamId={streamId} /></ProfileGate>}</Show>
+      <Show when="signed-in">{user && <LiveProfileGate><WatchLiveStreamPage key={`${user.id}:${streamId}`} streamId={streamId} /></LiveProfileGate>}</Show>
       <Show when="signed-out"><Redirect to="/sign-in" /></Show>
     </>
   );
@@ -241,7 +241,24 @@ function RoomRoute() {
 
 function RoutedErrorBoundary({ children }: { children: ReactNode }) {
   const [location] = useLocation();
-  return <ErrorBoundary resetKey={location}>{children}</ErrorBoundary>;
+  const isLiveScreen = stripBase(location) === '/live/start' || /^\/live\/[^/]+\/?$/.test(stripBase(location));
+  return <ErrorBoundary resetKey={location}
+    FallbackComponent={isLiveScreen ? LiveRouteErrorFallback : undefined}>{children}</ErrorBoundary>;
+}
+
+function LiveRouteErrorFallback({ resetError }: ErrorFallbackProps) {
+  return (
+    <main className="st-live-page st-live-host-page" style={{
+      display: 'grid', placeItems: 'center', width: '100%', height: '100dvh', minHeight: '100dvh',
+      margin: 0, padding: 24, border: 0, borderRadius: 0, background: '#000', color: '#fff',
+    }}>
+      <section style={{ display: 'grid', justifyItems: 'center', gap: 12, maxWidth: 320, textAlign: 'center' }}>
+        <strong>Live could not load.</strong>
+        <span>Try opening the live screen again.</span>
+        <button type="button" className="st-live-start-button" onClick={resetError}>Try again</button>
+      </section>
+    </main>
+  );
 }
 
 function ClerkProviderWithRoutes() {

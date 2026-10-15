@@ -73,7 +73,10 @@ export function GoLiveButton({ className, children }: { className: string; child
       // Request permission directly from the tap on Go Live.
       tracks = await createLocalTracks({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-        video: { facingMode: "user", resolution: { width: 720, height: 1280 }, frameRate: 30 },
+        // Restore the capture profile from the working full-screen build.
+        // The page crops this landscape feed to fill a portrait display; forcing
+        // a portrait sensor mode is unsupported by some mobile cameras/WebViews.
+        video: { facingMode: "user", resolution: { width: 1280, height: 720 }, frameRate: 30 },
       });
       if (!tracks.some(track => track.kind === Track.Kind.Video)) {
         const unavailable = new Error("No camera track was created");
@@ -123,7 +126,7 @@ export function GoLiveButton({ className, children }: { className: string; child
     try {
       tracks = await createLocalTracks({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-        video: { facingMode: "user", resolution: { width: 720, height: 1280 }, frameRate: 30 },
+        video: { facingMode: "user", resolution: { width: 1280, height: 720 }, frameRate: 30 },
       });
       if (!tracks.some(track => track.kind === Track.Kind.Video)) {
         const unavailable = new Error("No camera track was created");
@@ -482,7 +485,9 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
   const sessionEndedRef = useRef(false);
   const endBeaconSentRef = useRef(false);
   const onEndedRef = useRef(onEnded);
+  const onLeaveRef = useRef(onLeave);
   onEndedRef.current = onEnded;
+  onLeaveRef.current = onLeave;
   const [room, setRoom] = useState<Room | null>(null);
   const [videoTrack, setVideoTrack] = useState<LocalTrack | RemoteTrack | null>(
     () => hostMode ? hostTracks.find(track => track.kind === Track.Kind.Video) ?? null : null,
@@ -625,8 +630,8 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
         if (!hostMode && blockedUsername.toLowerCase() === hostUsername.toLowerCase()) {
           leavingRef.current = true;
           const currentRoom = roomRef.current;
-          if (currentRoom) void currentRoom.disconnect().finally(() => onLeave?.());
-          else onLeave?.();
+          if (currentRoom) void currentRoom.disconnect().finally(() => onLeaveRef.current?.());
+          else onLeaveRef.current?.();
         }
       },
       onError: () => setError("That account could not be blocked right now. Try again."),
@@ -664,6 +669,7 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
         // The chat SSE endpoint requires a fresh live lease. Establish it before
         // mounting LiveChat so its first request cannot race the first heartbeat.
         const heartbeatUrl = `${import.meta.env.BASE_URL}api/account/live-streams/${encodeURIComponent(streamId)}/heartbeat`;
+        let liveConfirmed = false;
         for (let attempt = 0; attempt < 4; attempt += 1) {
           try {
             const response = await fetch(heartbeatUrl, {
@@ -673,12 +679,16 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
               headers: { "Content-Type": "application/json" },
               body: "{}",
             });
-            if (response.ok || response.status !== 404) break;
+            if (response.ok) {
+              liveConfirmed = true;
+              break;
+            }
           } catch {
             // The regular heartbeat and EventSource retry paths remain available.
           }
           if (attempt < 3) await new Promise(resolve => window.setTimeout(resolve, 250 + attempt * 250));
         }
+        if (!liveConfirmed) throw new Error("The live session could not be confirmed.");
       }
       if (cancelled) { await liveRoom.disconnect(); return; }
       setRoom(liveRoom);
@@ -696,7 +706,7 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
         joinNoticeTimer.current = window.setTimeout(() => setVisibleJoinNotice(""), 2800);
       });
       liveRoom.on(RoomEvent.Disconnected, () => {
-        if (!hostMode && !cancelled && !leavingRef.current) onEnded?.();
+        if (!hostMode && !cancelled && !leavingRef.current) onEndedRef.current?.();
       });
       for (const participant of liveRoom.remoteParticipants.values()) {
         for (const publication of participant.trackPublications.values()) {
@@ -731,7 +741,10 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
       for (const track of localTracksRef.current) track.stop();
       localTracksRef.current = [];
     };
-  }, [hostMode, hostSession, hostTracks, onEnded, streamId]);
+  // Keep this connection alive across ordinary parent/profile rerenders.
+  // Callbacks are read from refs, so a fresh callback identity cannot
+  // disconnect LiveKit and stop the camera tracks.
+  }, [hostMode, hostSession, hostTracks, streamId]);
 
   const enableAudio = async () => {
     try {
@@ -752,7 +765,7 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
       localTracksRef.current = [];
       setRoom(null);
       setStatus("ended");
-      onEnded?.();
+      onEndedRef.current?.();
     } catch {
       setError("The stream could not be ended. Check your connection and try again.");
       setStatus("connected");
@@ -804,7 +817,7 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
       }
       acquiredTracks = await createLocalTracks({
         audio: false,
-        video: { facingMode: cameraFacing, resolution: { width: 720, height: 1280 }, frameRate: 30 },
+        video: { facingMode: cameraFacing, resolution: { width: 1280, height: 720 }, frameRate: 30 },
       });
       const nextVideoTrack = acquiredTracks.find(track => track.kind === Track.Kind.Video);
       if (!nextVideoTrack) throw new Error("No camera track was created.");
@@ -1046,21 +1059,26 @@ export function StartLiveStreamPage() {
   const [session, setSession] = useState<HostStartSession | null>(() => pendingLiveHostStart?.session ?? null);
   const [hostTracks, setHostTracks] = useState<LocalTrack[]>(() => pendingLiveHostStart?.tracks ?? []);
   const [finished, setFinished] = useState(false);
+  const hostTracksRef = useRef(hostTracks);
+  hostTracksRef.current = hostTracks;
   useEffect(() => { pendingLiveHostStart = null; }, []);
-  const ended = () => {
-    for (const track of hostTracks) track.stop();
+  const ended = useCallback(() => {
+    for (const track of hostTracksRef.current) track.stop();
     setSession(null);
     setHostTracks([]);
     setFinished(true);
-  };
+  }, []);
 
   if (!session) {
     return (
-      <main className="st-live-page st-live-start-fallback">
-        <Link href="/home" className="st-live-back"><ArrowLeft size={18} /> Directory</Link>
-        <h1>{finished ? "Your stream has ended" : "Start Go Live from Streamtalk"}</h1>
-        {!finished && <p>Use the Go Live button in the header or Directory to request camera and microphone access and start broadcasting.</p>}
-        <Link href="/home" className="st-live-start-button">Back to Directory</Link>
+      <main className="st-live-page st-live-host-page st-live-start-fallback" style={{
+        display: "grid", alignContent: "center", justifyItems: "center", gap: 14,
+        width: "100%", height: "100dvh", minHeight: "100dvh", margin: 0, padding: 24,
+        border: 0, borderRadius: 0, background: "#000", color: "#fff", textAlign: "center",
+      }}>
+        <h1>{finished ? "Your stream has ended" : "Go Live could not start"}</h1>
+        {!finished && <p>Return to the Directory and tap Go Live again to start your camera stream.</p>}
+        <Link href="/home" className="st-live-start-button"><ArrowLeft size={17} /> Back to Directory</Link>
       </main>
     );
   }
@@ -1076,11 +1094,19 @@ export function StartLiveStreamPage() {
 export function WatchLiveStreamPage({ streamId }: { streamId: string }) {
   const [closed, setClosed] = useState(false);
   const [, navigate] = useLocation();
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
+  const markClosed = useCallback(() => setClosed(true), []);
+  const leaveStream = useCallback(() => navigateRef.current("/live"), []);
   return (
     <main className="st-live-page st-live-viewer-page" style={{ backgroundColor: "#000", width: "100%", maxWidth: "none", height: "100dvh", minHeight: "100dvh", margin: 0, padding: 0, border: 0, borderRadius: 0, boxShadow: "none" }}>
-      {closed ? <section className="st-live-empty"><strong>This stream has ended</strong><Link href="/live">Browse live creators</Link></section>
+      {closed ? <section className="st-live-empty" style={{
+        display: "grid", alignContent: "center", justifyItems: "center", gap: 14,
+        width: "100%", height: "100%", margin: 0, padding: 24, border: 0,
+        borderRadius: 0, background: "#000", color: "#fff", boxShadow: "none",
+      }}><strong style={{ color: "#fff" }}>This stream has ended</strong><Link href="/live" className="st-live-start-button">Browse live creators</Link></section>
       : <LiveRoomView key={streamId} streamId={streamId} hostMode={false}
-          onEnded={() => setClosed(true)} onLeave={() => navigate("/live")} />}
+          onEnded={markClosed} onLeave={leaveStream} />}
     </main>
   );
 }
