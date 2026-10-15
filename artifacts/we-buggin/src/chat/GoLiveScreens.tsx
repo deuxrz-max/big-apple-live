@@ -208,6 +208,33 @@ function GifterAvatar({ username, name, credits }: { username: string; name: str
   </span>;
 }
 
+function liveGiftRecipients(
+  room: HostLiveSnapshot["room"],
+  ownUsername: string,
+  hostUsername: string,
+  hostDisplayName: string,
+  blocked: ReadonlySet<string>,
+) {
+  if (!room) return [];
+  const own = ownUsername.toLowerCase();
+  return [...room.remoteParticipants.values()].flatMap(participant => {
+    let username = participant.identity === "host" ? hostUsername : "";
+    if (participant.metadata) {
+      try {
+        const metadata = JSON.parse(participant.metadata) as { username?: unknown };
+        if (typeof metadata.username === "string") username = metadata.username;
+      } catch { /* Ignore malformed participant metadata. */ }
+    }
+    if (!username || username.toLowerCase() === own || blocked.has(username.toLowerCase())) return [];
+    return [{
+      username,
+      displayName: participant.identity === "host"
+        ? hostDisplayName
+        : participant.name?.trim() || username,
+    }];
+  });
+}
+
 function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeave, ownUsername }: {
   streamId: string;
   hostMode: boolean;
@@ -270,6 +297,8 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
   }, [blockedLower, liveGiftEvents]);
   const following = hostPerson.data?.favorite ?? false;
   const myName = hostMode ? ownProfile.data?.profile.username ?? ownUsername : ownUsername;
+  const giftRoom = hostMode ? hostState?.room ?? null : viewerState?.room ?? null;
+  const giftRecipients = liveGiftRecipients(giftRoom, myName, hostUsername, displayName, blockedLower);
 
   const markCameraBlocked = useCallback(() => setCameraBlocked(true), []);
   const retryCameraPlayback = useCallback(async () => {
@@ -408,7 +437,6 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
               const log = chat.logRef.current;
               if (log) chat.pinned.current = log.scrollHeight - log.scrollTop - log.clientHeight < 28;
             }}>
-            {chat.messages.length === 0 && <p className="st-live-muted">Say hello while the creator is live.</p>}
             {chat.messages.map(message => (
               <p className="st-live-chat-line" key={message.id}
                 onContextMenu={event => {
@@ -447,9 +475,8 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
         </section>
       </div>
       <div className="st-live-bottom-controls">
-        {!hostMode
-          ? <GiftControl label="Open live gifts" onClick={() => setGiftOpen(true)} />
-          : <div className="st-live-host-controls">
+        <GiftControl label="Open live gifts" onClick={() => setGiftOpen(true)} />
+        {hostMode && <div className="st-live-host-controls">
             <button type="button" onClick={() => void hostLiveSession.flipCamera()} aria-label="Flip camera"><FlipHorizontal size={18} /><span>Flip</span></button>
             <button type="button" className={muted ? "is-mic-off" : "is-mic-on"} onClick={() => void hostLiveSession.toggleMicrophone()}
               aria-label={muted ? "Unmute microphone" : "Mute microphone"} aria-pressed={!muted}>{muted ? <MicOff size={18} /> : <Mic size={18} />}<span>{muted ? "Mic off" : "Mic on"}</span></button>
@@ -458,7 +485,7 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
       </div>
     </div>
     {audioTrack && <RemoteAudio track={audioTrack} />}
-    {giftOpen && !hostMode && hostUsername && <GiftBag recipient={{ username: hostUsername, displayName }} streamId={streamId} onClose={() => setGiftOpen(false)} />}
+    {giftOpen && <GiftBag recipients={giftRecipients} streamId={streamId} onClose={() => setGiftOpen(false)} />}
     {activeGift?.giftId === "heart" && <HeartAnimation key={activeGift.id} onFinish={() => finishGift(activeGift.id)} />}
     {activeGift?.giftId === "spirit-pup" && <SpiritAnimation key={activeGift.id} onFinish={() => finishGift(activeGift.id)} />}
     {activeGift?.giftId === "moonfox" && <MoonfoxAnimation key={activeGift.id} onFinish={() => finishGift(activeGift.id)} />}

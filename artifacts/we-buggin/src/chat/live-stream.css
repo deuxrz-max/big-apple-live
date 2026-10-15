@@ -660,7 +660,6 @@ body.streamtalk-live-screen .site-header {
   backdrop-filter: blur(12px);
   pointer-events: auto;
 }
-.st-live-room.is-host .st-live-chat-form { right: 194px; }
 #root .st-live-chat-form input {
   flex: 1 1 auto;
   min-width: 0;
@@ -694,9 +693,7 @@ body.streamtalk-live-screen .site-header {
   color: #fff !important;
 }
 #root .st-live-chat-form button:disabled { opacity: .5; }
-.st-live-room.is-host .st-live-chat-form {
-  right: 166px;
-}
+#root .st-live-room.is-host .st-live-chat-form { right: 222px; }
 .st-live-bottom-controls {
   position: absolute;
   z-index: 3;
@@ -706,6 +703,7 @@ body.streamtalk-live-screen .site-header {
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
+  gap: 8px;
   width: max-content;
   pointer-events: none;
 }
@@ -953,17 +951,21 @@ body.streamtalk-live-screen .site-header {
   .st-live-creator-copy strong { max-width: 31vw; font-size: 13px; }
   .st-live-follow { padding: 0 10px; }
   .st-live-chat-log { left: 10px; width: min(75%, 520px); }
-  .st-live-chat-form { right: 72px; left: 10px; }
-  .st-live-room.is-host .st-live-chat-form { right: 166px; }
-  .st-live-room.is-host .st-live-chat-form { gap: 5px; padding: 3px 6px; }
-  .st-live-room.is-host .st-live-chat-form input { font-size: 12px; }
-  .st-live-room.is-host .st-live-chat-form button { flex-basis: auto; width: auto; min-height: 30px; padding: 4px 10px; }
+  #root .st-live-chat-form { left: 10px; }
+  #root .st-live-room.is-host .st-live-chat-form { right: 206px; }
   .st-live-join-banner { left: 10px; }
   .st-live-host-controls { gap: 4px; }
+  .st-live-host-controls button {
+    flex-basis: 40px;
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+  }
+  .st-live-bottom-controls { gap: 6px; }
 }
 @media (max-width: 600px) {
   .st-live-room.is-host .st-live-gifters { display: none; }
-  .st-live-room.is-host .st-live-chat-form { right: 166px; }
   .st-live-host-controls { gap: 6px; }
 }
 @media (max-height: 620px) {
@@ -973,7 +975,6 @@ body.streamtalk-live-screen .site-header {
     max-height: min(30dvh, 190px);
   }
   .st-live-chat-form { bottom: max(10px, env(safe-area-inset-bottom)); }
-  .st-live-room.is-host .st-live-chat-form { right: 166px; }
   .st-live-join-banner {
     bottom: calc(max(10px, env(safe-area-inset-bottom)) + 58px + min(30dvh, 190px) + 8px);
   }

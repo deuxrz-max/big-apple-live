@@ -113,7 +113,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
           <button type="button" className="gift-btn" onClick={onClose} aria-label="Close gift bag" data-testid="gift-bag-close"><X size={16} aria-hidden /></button>
         </div>
         {me.data && <p>Balance: {unlimited ? 'Unlimited test credits' : `${me.data.wallet.balance} credits`}</p>}
-        {roomId && !recipient && (
+        {(roomId || streamId) && !recipient && (
           <label className="gift-recipient">
             <span>Send to</span>
             <select
@@ -123,7 +123,9 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
               disabled={recipients.length === 0}
               onChange={e => { setRecipientUsername(e.target.value); setError(null); retry.current = null; }}
             >
-              <option value="">{recipients.length ? 'Choose someone in this university' : 'No other people are here yet'}</option>
+              <option value="">{recipients.length
+                ? streamId ? 'Choose someone in this live stream' : 'Choose someone in this university'
+                : streamId ? 'No one else is watching yet' : 'No other people are here yet'}</option>
               {recipients.map(person => <option key={person.username} value={person.username} style={{ color: person.displayNameColor ?? '#FFFFFF' }}>
                 {person.displayName} (@{person.username})
               </option>)}

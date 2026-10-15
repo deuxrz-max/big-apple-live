@@ -159,16 +159,26 @@ export async function sweepStaleLiveStreamSessions(): Promise<number> {
 
 export async function requireLiveStreamGiftAccess(senderId: string, recipientId: string, streamId: string): Promise<void> {
   if (senderId === recipientId) throw new RoomError(409, "You cannot send a gift to your own stream.");
-  if (liveStreamIdForAccount(recipientId) !== streamId) throw new RoomError(404, "This livestream is no longer available.");
-  if (!(await isLiveStreamActiveOrStarting(recipientId))) {
+  const lease = await getLiveStreamSessionByStreamId(streamId);
+  if (!lease || lease.state !== "live" || liveStreamIdForAccount(lease.accountId) !== streamId) {
+    throw new RoomError(404, "This livestream is no longer available.");
+  }
+  if (!(await liveStreamSessionIsFresh(lease))) {
+    await cleanupStaleLiveStreamSession(lease);
     throw new RoomError(404, "This livestream is no longer available.");
   }
   const participants = await liveKitBeamService.listParticipants(liveStreamRoomName(streamId));
   if (!participants.some(participant => participant.identity === "host")) {
     throw new RoomError(404, "This livestream is no longer available.");
   }
-  const senderIdentity = `viewer-${liveStreamIdForAccount(senderId)}`;
-  if (!participants.some(participant => participant.identity === senderIdentity)) {
+  const identityFor = (accountId: string) => accountId === lease.accountId
+    ? "host"
+    : `viewer-${liveStreamIdForAccount(accountId)}`;
+  const activeIdentities = new Set(participants.map(participant => participant.identity));
+  if (!activeIdentities.has(identityFor(senderId))) {
     throw new RoomError(403, "Join this livestream before sending a gift.");
+  }
+  if (!activeIdentities.has(identityFor(recipientId))) {
+    throw new RoomError(403, "Choose someone who is currently in this livestream.");
   }
 }
