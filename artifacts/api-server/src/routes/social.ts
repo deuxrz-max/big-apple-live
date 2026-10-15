@@ -41,7 +41,7 @@ router.get('/gift-media/moonfox/v1/:filename', serveMoonfoxGiftMedia);
 router.get('/gift-media/cosmic-encore/v2/:filename', serveCosmicEncoreGiftMedia);
 router.get('/gift-media/fireworks/v3/:filename', serveFireworksGiftMedia);
 router.get('/gift-media/rose-shower/v3/:filename', serveRoseShowerGiftMedia);
-router.get('/gift-media/whip/v2/:filename', serveWhipGiftMedia);
+router.get('/gift-media/whip/v3/:filename', serveWhipGiftMedia);
 router.get('/room-entry-effects/lion/:filename', serveRoomEntranceEffectMedia);
 router.get('/room-entry-effects/monthly-credit-tiers/:tier/:filename', serveMonthlyCreditTierEntranceEffectMedia);
 router.use("/social", async (req, res, next) => {

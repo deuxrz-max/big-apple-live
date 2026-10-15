@@ -11,7 +11,7 @@ const MEDIA: Record<Exclude<RoomGiftId, 'heart'>, string> = {
   'cosmic-encore': `${import.meta.env.BASE_URL}api/gift-media/cosmic-encore/v2/`,
   fireworks: `${import.meta.env.BASE_URL}api/gift-media/fireworks/v3/`,
   'rose-shower': `${import.meta.env.BASE_URL}api/gift-media/rose-shower/v3/`,
-  whip: `${import.meta.env.BASE_URL}api/gift-media/whip/v2/`,
+  whip: `${import.meta.env.BASE_URL}api/gift-media/whip/v3/`,
 };
 const CATALOG_ICON: Record<RoomGiftId, string> = {
   heart: `${import.meta.env.BASE_URL}gift-icons/heart.svg`,

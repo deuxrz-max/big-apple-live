@@ -6,12 +6,12 @@ import './gifts.css';
 export const bigTierGiftMedia: Record<BigTierGiftId, string> = {
   fireworks: `${import.meta.env.BASE_URL}api/gift-media/fireworks/v3/animation.webm`,
   'rose-shower': `${import.meta.env.BASE_URL}api/gift-media/rose-shower/v3/animation.webm`,
-  whip: `${import.meta.env.BASE_URL}api/gift-media/whip/v2/animation.webm`,
+  whip: `${import.meta.env.BASE_URL}api/gift-media/whip/v3/animation.webm`,
 };
 const bigTierGiftFallback: Partial<Record<BigTierGiftId, string>> = {
   fireworks: `${import.meta.env.BASE_URL}api/gift-media/fireworks/v3/animation.webp`,
   'rose-shower': `${import.meta.env.BASE_URL}api/gift-media/rose-shower/v3/animation.webp`,
-  whip: `${import.meta.env.BASE_URL}api/gift-media/whip/v2/animation.webp`,
+  whip: `${import.meta.env.BASE_URL}api/gift-media/whip/v3/animation.webp`,
 };
 const prefersAnimatedImage = () =>
   /iPhone|iPad|iPod/.test(navigator.userAgent)

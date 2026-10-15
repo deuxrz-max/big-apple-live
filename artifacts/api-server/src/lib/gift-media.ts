@@ -13,7 +13,7 @@ const productPaths = {
   'cosmic-encore': 'gift-media/cosmic-encore/v2',
   fireworks: 'gift-media/fireworks/v3',
   'rose-shower': 'gift-media/rose-shower/v3',
-  whip: 'gift-media/whip/v2',
+  whip: 'gift-media/whip/v3',
 } as const;
 type GiftMediaProduct = keyof typeof productPaths;
 const storage = new Storage({

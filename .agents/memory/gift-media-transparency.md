@@ -13,6 +13,12 @@ Green-screen video conversion must be checked on decoded frames and composited a
 
 **How to apply:** Keep uploaded originals untouched, chroma-key silent derivatives, inspect alpha and composites frame-by-frame, and use only animated fallbacks. If the animated formats fail, show no effect rather than a badge still.
 
+A checkerboard visible in uploaded footage can be baked pixels rather than transparency. Do not encode or key it as-is; remove it from every frame and verify the decoded result over both light and dark backgrounds.
+
+**Why:** A replacement gift clip visually resembled a transparency preview, but its MP4 contained an opaque checkerboard. Spatial color-key attempts left a patterned background and damaged white smoke; frame segmentation preserved the subject cleanly.
+
+**How to apply:** Probe the source alpha channel first. If absent, inspect lossless frames, remove the background frame-by-frame, and check moving edges, smoke, and bright trails before encoding browser-specific alpha formats.
+
 For small public gift assets served from GCS, do not destroy the upstream read stream immediately when a client disconnects before the storage response initializes. Unpipe it from the response and drain it so the storage client does not throw `ERR_STREAM_UNABLE_TO_PIPE` and crash the API process.
 
 **Why:** Early browser cancellation during a range request reproduced an uncaught storage-stream error; the API stayed healthy when the response was detached and the asset stream drained.
