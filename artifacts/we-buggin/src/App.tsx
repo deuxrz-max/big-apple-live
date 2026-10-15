@@ -3,7 +3,7 @@ import { ClerkProvider, SignIn, SignUp, Show, useClerk, useUser } from '@clerk/r
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
-import { Redirect, Route, Switch, useLocation, useParams, Router as WouterRouter } from 'wouter';
+import { Link, Redirect, Route, Switch, useLocation, useParams, Router as WouterRouter } from 'wouter';
 import { ErrorBoundary, type ErrorFallbackProps } from '@/components/error-boundary';
 import { Wordmark } from '@/components/brand';
 import { BottomNavigation } from '@/components/bottom-navigation';
@@ -11,6 +11,7 @@ import NotFound from '@/pages/not-found';
 import { clearAllCreds } from '@/lib/room-creds';
 import { AdultGate, ChatDirectory, ChatProfile, LiveProfileGate, ProfileGate, PublicChatLanding, TextChatRoom } from '@/chat/ChatApp';
 import { LiveStreamsDirectory, StartLiveStreamPage, WatchLiveStreamPage } from '@/chat/LiveStreamPages';
+import { endHostLiveSessionForRouteChange, leaveViewerLiveSession } from '@/chat/liveSessionController';
 import { EmailSignUp } from '@/components/email-signup';
 import '@/chat/chat.css';
 import { OwnProfile } from '@/profile/OwnProfile';
@@ -256,6 +257,7 @@ function LiveRouteErrorFallback({ resetError }: ErrorFallbackProps) {
         <strong>Live could not load.</strong>
         <span>Try opening the live screen again.</span>
         <button type="button" className="st-live-start-button" onClick={resetError}>Try again</button>
+        <Link className="st-live-start-button" href="/home">Back to Streamtalk</Link>
       </section>
     </main>
   );
@@ -264,6 +266,19 @@ function LiveRouteErrorFallback({ resetError }: ErrorFallbackProps) {
 function ClerkProviderWithRoutes() {
   const [location, setLocation] = useLocation();
   const currentPath = stripBase(location);
+  const previousLiveRoute = useRef<string | null>(null);
+  useEffect(() => {
+    const viewerMatch = currentPath.match(/^\/live\/([^/]+)\/?$/);
+    const nextLiveRoute = currentPath === "/live/start"
+      ? "host"
+      : viewerMatch ? `viewer:${decodeURIComponent(viewerMatch[1])}` : null;
+    const previous = previousLiveRoute.current;
+    if (previous && previous !== nextLiveRoute) {
+      if (previous === "host") endHostLiveSessionForRouteChange();
+      else if (previous.startsWith("viewer:")) leaveViewerLiveSession(previous.slice("viewer:".length));
+    }
+    previousLiveRoute.current = nextLiveRoute;
+  }, [currentPath]);
   const isBeamRoomScreen = /^\/rooms\/[^/]+\/?$/.test(currentPath);
   const isLiveScreen = currentPath === '/live/start' || /^\/live\/[^/]+\/?$/.test(currentPath);
   const isModerationScreen = currentPath === '/community/moderation';
