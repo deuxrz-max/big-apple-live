@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Ban, Eye, Flag, FlipHorizontal, Gift, Mic, MicOff, Radio, Send, Share2, Users, Video, X } from "lucide-react";
+import { ArrowLeft, Ban, Eye, Flag, FlipHorizontal, Mic, MicOff, Radio, Share2, Users, Video, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { type RemoteTrack } from "livekit-client";
 import {
@@ -10,6 +10,7 @@ import {
 } from "@workspace/api-client-react";
 import type { LiveStreamEntry, LiveStreamChatMessage } from "@workspace/api-client-react";
 import { GiftBag } from "@/gifts/GiftBag";
+import { GiftControl } from "@/gifts/GiftControl";
 import { CosmicEncoreAnimation, MoonfoxAnimation, SpiritAnimation } from "@/gifts/SpiritPup";
 import { HeartAnimation } from "@/gifts/HeartAnimation";
 import { SafetyReportDialog } from "@/safety/SafetyReportDialog";
@@ -441,13 +442,13 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
             <label className="st-live-sr" htmlFor="st-live-chat-input">Write a chat message</label>
             <input id="st-live-chat-input" value={chat.text} onChange={event => chat.setText(event.target.value)}
               maxLength={280} placeholder="Say something…" disabled={!chatReady} />
-            <button type="submit" disabled={!chatReady || !chat.text.trim()} aria-label="Send message"><Send size={17} /></button>
+            <button type="submit" className="bm-btn bm-btn-primary" disabled={!chatReady || !chat.text.trim()} aria-label="Send message">Send</button>
           </form>
         </section>
       </div>
       <div className="st-live-bottom-controls">
         {!hostMode
-          ? <button type="button" className="st-live-gift-button" onClick={() => setGiftOpen(true)} aria-label="Open live gifts"><Gift size={20} /><span>Gift</span></button>
+          ? <GiftControl label="Open live gifts" onClick={() => setGiftOpen(true)} />
           : <div className="st-live-host-controls">
             <button type="button" onClick={() => void hostLiveSession.flipCamera()} aria-label="Flip camera"><FlipHorizontal size={18} /><span>Flip</span></button>
             <button type="button" className={muted ? "is-mic-off" : "is-mic-on"} onClick={() => void hostLiveSession.toggleMicrophone()}

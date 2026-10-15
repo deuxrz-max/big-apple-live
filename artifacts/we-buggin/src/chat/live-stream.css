@@ -573,8 +573,9 @@ body.streamtalk-live-screen .site-header {
   max-height: min(33dvh, 310px);
   flex-direction: column;
   justify-content: flex-end;
-  gap: 4px;
+  gap: 3px;
   overflow: auto;
+  padding-block: 5px;
   mask-image: linear-gradient(to bottom, transparent 0, #000 13%, #000 100%);
   scrollbar-width: none;
   pointer-events: auto;
@@ -584,11 +585,12 @@ body.streamtalk-live-screen .site-header {
   flex: 0 0 auto;
   width: fit-content;
   margin: 0;
-  padding: 7px 10px;
+  padding: 2px 5px;
   border-radius: 13px;
   background: rgba(12, 10, 18, .56);
   color: #fff !important;
-  font-size: 14px;
+  font-size: 12px;
+  line-height: 1.25;
   text-shadow: 0 1px 3px rgba(0,0,0,.9);
 }
 .st-live-chat-line {
@@ -597,12 +599,12 @@ body.streamtalk-live-screen .site-header {
   width: fit-content;
   max-width: 100%;
   margin: 0;
-  padding: 6px 10px;
+  padding: 2px 5px;
   border-radius: 13px;
   background: rgba(10, 9, 16, .64);
   color: #fff;
-  font-size: 15px;
-  line-height: 1.3;
+  font-size: 12px;
+  line-height: 1.25;
   overflow-wrap: anywhere;
   text-shadow: 0 1px 3px rgba(0,0,0,.95), 0 0 1px rgba(0,0,0,.8);
 }
@@ -636,11 +638,12 @@ body.streamtalk-live-screen .site-header {
   text-overflow: ellipsis;
   white-space: nowrap;
   text-shadow: inherit;
-  font-size: inherit;
+  font-size: 11px;
+  line-height: 1.2;
   font-weight: 800;
 }
 .st-live-chat-text { color: #fff; }
-.st-live-chat-form {
+#root .st-live-chat-form {
   position: absolute;
   right: 78px;
   bottom: max(13px, env(safe-area-inset-bottom));
@@ -649,42 +652,48 @@ body.streamtalk-live-screen .site-header {
   align-items: center;
   gap: 5px;
   width: auto;
-  height: 46px;
-  padding: 4px 5px 4px 13px;
-  border: 1px solid rgba(255,255,255,.36);
+  min-height: 38px;
+  padding: 3px 6px;
+  border: 1px solid rgba(176,144,239,.38);
   border-radius: 999px;
-  background: rgba(10, 10, 16, .72);
-  box-shadow: 0 3px 14px rgba(0,0,0,.22);
-  backdrop-filter: blur(10px);
+  background: rgba(17,13,34,.72);
+  backdrop-filter: blur(12px);
   pointer-events: auto;
 }
 .st-live-room.is-host .st-live-chat-form { right: 194px; }
-.st-live-chat-form input {
+#root .st-live-chat-form input {
   flex: 1 1 auto;
   min-width: 0;
-  height: 36px;
-  padding: 0 2px;
+  height: 30px;
+  min-height: 30px;
+  padding: 4px 5px;
   border: 0 !important;
   border-radius: 0;
   outline: 0;
   background: transparent !important;
   color: #fff !important;
   -webkit-text-fill-color: #fff;
-  font-size: 13px;
+  font-size: 12px;
+  box-sizing: border-box;
 }
-.st-live-chat-form input::placeholder { color: rgba(255,255,255,.78) !important; -webkit-text-fill-color: rgba(255,255,255,.78); }
-.st-live-chat-form input:focus { outline: 0; }
-.st-live-chat-form button {
-  flex: 0 0 34px;
-  width: 34px;
-  height: 34px;
-  border: 1px solid rgba(255,255,255,.2);
-  border-radius: 50%;
-  background: rgba(255,255,255,.15);
+#root .st-live-chat-form input::placeholder { color: rgba(255,255,255,.78) !important; -webkit-text-fill-color: rgba(255,255,255,.78); }
+#root .st-live-chat-form input:focus { outline: 0; }
+#root .st-live-chat-form button {
+  flex: 0 0 auto;
+  width: auto;
+  min-height: 30px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+#root .st-live-chat-form button.bm-btn-primary {
+  border: 0;
+  background: var(--st-grad);
   color: #fff !important;
 }
-.st-live-chat-form button svg { color: #fff; stroke: currentColor; }
-.st-live-chat-form button:disabled { opacity: .5; }
+#root .st-live-chat-form button:disabled { opacity: .5; }
 .st-live-room.is-host .st-live-chat-form {
   right: 166px;
 }
@@ -699,6 +708,10 @@ body.streamtalk-live-screen .site-header {
   justify-content: flex-end;
   width: max-content;
   pointer-events: none;
+}
+.st-live-bottom-controls > .gift-control {
+  flex: 0 0 48px;
+  pointer-events: auto;
 }
 .st-live-gift-animation {
   position: absolute;
@@ -942,9 +955,9 @@ body.streamtalk-live-screen .site-header {
   .st-live-chat-log { left: 10px; width: min(75%, 520px); }
   .st-live-chat-form { right: 72px; left: 10px; }
   .st-live-room.is-host .st-live-chat-form { right: 166px; }
-  .st-live-room.is-host .st-live-chat-form { gap: 3px; padding-right: 3px; padding-left: 10px; }
-  .st-live-room.is-host .st-live-chat-form input { font-size: 11px; }
-  .st-live-room.is-host .st-live-chat-form button { flex-basis: 32px; width: 32px; height: 32px; }
+  .st-live-room.is-host .st-live-chat-form { gap: 5px; padding: 3px 6px; }
+  .st-live-room.is-host .st-live-chat-form input { font-size: 12px; }
+  .st-live-room.is-host .st-live-chat-form button { flex-basis: auto; width: auto; min-height: 30px; padding: 4px 10px; }
   .st-live-join-banner { left: 10px; }
   .st-live-host-controls { gap: 4px; }
 }
