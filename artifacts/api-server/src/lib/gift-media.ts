@@ -11,9 +11,9 @@ const productPaths = {
   'spirit-pup': 'gift-media/spirit-pup/v1',
   moonfox: 'gift-media/moonfox/v1',
   'cosmic-encore': 'gift-media/cosmic-encore/v2',
-  fireworks: 'gift-media/fireworks/v2',
-  'rose-shower': 'gift-media/rose-shower/v2',
-  whip: 'gift-media/whip/v1',
+  fireworks: 'gift-media/fireworks/v3',
+  'rose-shower': 'gift-media/rose-shower/v3',
+  whip: 'gift-media/whip/v2',
 } as const;
 type GiftMediaProduct = keyof typeof productPaths;
 const storage = new Storage({
@@ -56,8 +56,20 @@ function giftMediaHandler(product: GiftMediaProduct) {
     res.set('Content-Length', String(end - start + 1));
     if (req.method === 'HEAD') { res.end(); return; }
     const stream = file.createReadStream({ start, end });
-    res.on('close', () => stream.destroy());
-    stream.on('error', () => res.destroy()).pipe(res);
+    let clientDisconnected = false;
+    res.on('close', () => {
+      if (res.writableFinished) return;
+      clientDisconnected = true;
+      stream.unpipe(res);
+      // Drain the small public gift asset instead of destroying a GCS read stream
+      // that may still be waiting for its upstream response to initialize.
+      stream.resume();
+    });
+    stream.on('error', () => {
+      if (clientDisconnected || res.destroyed) return;
+      res.destroy();
+    });
+    stream.pipe(res);
   };
 }
 export const serveGiftMedia = giftMediaHandler('spirit-pup');

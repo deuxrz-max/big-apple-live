@@ -39,9 +39,9 @@ const router: IRouter = Router();
 router.get('/gift-media/spirit-pup/v1/:filename', serveGiftMedia);
 router.get('/gift-media/moonfox/v1/:filename', serveMoonfoxGiftMedia);
 router.get('/gift-media/cosmic-encore/v2/:filename', serveCosmicEncoreGiftMedia);
-router.get('/gift-media/fireworks/v2/:filename', serveFireworksGiftMedia);
-router.get('/gift-media/rose-shower/v2/:filename', serveRoseShowerGiftMedia);
-router.get('/gift-media/whip/v1/:filename', serveWhipGiftMedia);
+router.get('/gift-media/fireworks/v3/:filename', serveFireworksGiftMedia);
+router.get('/gift-media/rose-shower/v3/:filename', serveRoseShowerGiftMedia);
+router.get('/gift-media/whip/v2/:filename', serveWhipGiftMedia);
 router.get('/room-entry-effects/lion/:filename', serveRoomEntranceEffectMedia);
 router.get('/room-entry-effects/monthly-credit-tiers/:tier/:filename', serveMonthlyCreditTierEntranceEffectMedia);
 router.use("/social", async (req, res, next) => {

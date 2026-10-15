@@ -12,3 +12,9 @@ Green-screen video conversion must be checked on decoded frames and composited a
 **Why:** The user explicitly requires every entrance effect to be silent and animated, with the badge image reserved for name/profile use. Earlier code showed still badge art when animation playback failed, and the uploaded Lion MP4 had a baked green background.
 
 **How to apply:** Keep uploaded originals untouched, chroma-key silent derivatives, inspect alpha and composites frame-by-frame, and use only animated fallbacks. If the animated formats fail, show no effect rather than a badge still.
+
+For small public gift assets served from GCS, do not destroy the upstream read stream immediately when a client disconnects before the storage response initializes. Unpipe it from the response and drain it so the storage client does not throw `ERR_STREAM_UNABLE_TO_PIPE` and crash the API process.
+
+**Why:** Early browser cancellation during a range request reproduced an uncaught storage-stream error; the API stayed healthy when the response was detached and the asset stream drained.
+
+**How to apply:** When changing gift-media streaming, test an early client abort and confirm the API continues serving later requests.
