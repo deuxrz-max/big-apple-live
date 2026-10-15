@@ -17,6 +17,12 @@
   Reduced-motion users see the transparent still icon instead.
 - Gift media is stored in the existing App Storage under its own versioned namespace,
   not in the profile-photo namespace. Generated local outputs are ignored by Git/publish.
+- Every current and future gift must use genuine transparency before it enters the catalog
+  or animation player. Catalog art must be a clean transparent PNG/WebP cutout. Animated
+  gifts must preserve decoded per-frame alpha (VP9 WebM for Chromium/Android plus animated
+  WebP or APNG for Safari/iOS); CSS blend modes are not an acceptable substitute. Preserve
+  uploaded originals, inspect alpha after decoding, and composite sample frames over both
+  light and dark backgrounds before release.
 - Preview only. No real-money checkout, cashout or payment provider is enabled.
 
 The owner renamed We Buggin to Streamtalk and selected the uploaded neon shield/

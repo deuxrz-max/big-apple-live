@@ -8,16 +8,16 @@ type AnimatedGiftId = 'spirit-pup' | 'moonfox';
 const MEDIA: Record<Exclude<RoomGiftId, 'heart'>, string> = {
   'spirit-pup': `${import.meta.env.BASE_URL}api/gift-media/spirit-pup/v1/`,
   moonfox: `${import.meta.env.BASE_URL}api/gift-media/moonfox/v1/`,
-  'cosmic-encore': `${import.meta.env.BASE_URL}api/gift-media/cosmic-encore/v1/`,
-  fireworks: `${import.meta.env.BASE_URL}api/gift-media/fireworks/v1/`,
-  'rose-shower': `${import.meta.env.BASE_URL}api/gift-media/rose-shower/v1/`,
+  'cosmic-encore': `${import.meta.env.BASE_URL}api/gift-media/cosmic-encore/v2/`,
+  fireworks: `${import.meta.env.BASE_URL}api/gift-media/fireworks/v2/`,
+  'rose-shower': `${import.meta.env.BASE_URL}api/gift-media/rose-shower/v2/`,
   whip: `${import.meta.env.BASE_URL}api/gift-media/whip/v1/`,
 };
 const CATALOG_ICON: Record<RoomGiftId, string> = {
   heart: `${import.meta.env.BASE_URL}gift-icons/heart.svg`,
   'spirit-pup': `${MEDIA['spirit-pup']}icon-small.png`,
   moonfox: `${MEDIA.moonfox}icon-small.png`,
-  'cosmic-encore': `${import.meta.env.BASE_URL}gift-icons/cosmic-encore.png`,
+  'cosmic-encore': `${MEDIA['cosmic-encore']}icon-small.png`,
   fireworks: `${import.meta.env.BASE_URL}gift-icons/fireworks.png`,
   'rose-shower': `${import.meta.env.BASE_URL}gift-icons/rose-shower.png`,
   whip: `${import.meta.env.BASE_URL}gift-icons/whip.png`,

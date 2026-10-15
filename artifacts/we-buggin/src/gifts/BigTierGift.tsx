@@ -4,10 +4,18 @@ import type { BigTierGiftId } from './SpiritPup';
 import './gifts.css';
 
 export const bigTierGiftMedia: Record<BigTierGiftId, string> = {
-  fireworks: `${import.meta.env.BASE_URL}api/gift-media/fireworks/v1/animation.mp4`,
-  'rose-shower': `${import.meta.env.BASE_URL}api/gift-media/rose-shower/v1/animation.mp4`,
+  fireworks: `${import.meta.env.BASE_URL}api/gift-media/fireworks/v2/animation.webm`,
+  'rose-shower': `${import.meta.env.BASE_URL}api/gift-media/rose-shower/v2/animation.webm`,
   whip: `${import.meta.env.BASE_URL}api/gift-media/whip/v1/animation.mp4`,
 };
+const bigTierGiftFallback: Partial<Record<BigTierGiftId, string>> = {
+  fireworks: `${import.meta.env.BASE_URL}api/gift-media/fireworks/v2/animation.webp`,
+  'rose-shower': `${import.meta.env.BASE_URL}api/gift-media/rose-shower/v2/animation.webp`,
+};
+const prefersAnimatedImage = () =>
+  /iPhone|iPad|iPod/.test(navigator.userAgent)
+  || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent))
+  || (/Safari/.test(navigator.userAgent) && !/Chrome|Chromium|Android/.test(navigator.userAgent));
 
 export const isBigTierGiftId = (id: string): id is BigTierGiftId =>
   id === 'fireworks' || id === 'rose-shower' || id === 'whip';
@@ -30,9 +38,24 @@ export function BigTierGiftAnimation({ giftId, senderName, onFinish }: {
   const fadeStarted = useRef(false);
   const [fadingOut, setFadingOut] = useState(false);
   const [mediaError, setMediaError] = useState(false);
+  const [useImageFallback, setUseImageFallback] = useState(
+    () => Boolean(bigTierGiftFallback[giftId]) && prefersAnimatedImage(),
+  );
   const gift = PRESENTATION[giftId];
 
   useEffect(() => {
+    if (useImageFallback) {
+      const fadeTimer = window.setTimeout(() => setFadingOut(true), 6200);
+      const finishTimer = window.setTimeout(() => {
+        if (alreadyFinished.current) return;
+        alreadyFinished.current = true;
+        finishRef.current();
+      }, 6700);
+      return () => {
+        window.clearTimeout(fadeTimer);
+        window.clearTimeout(finishTimer);
+      };
+    }
     const video = videoRef.current;
     if (!video) return;
     let fadeTimer: number | undefined;
@@ -51,6 +74,10 @@ export function BigTierGiftAnimation({ giftId, senderName, onFinish }: {
     };
     const fail = () => {
       if (fadeStarted.current) return;
+      if (bigTierGiftFallback[giftId]) {
+        setUseImageFallback(true);
+        return;
+      }
       setMediaError(true);
       fadeTimer = window.setTimeout(fade, 1800);
     };
@@ -79,7 +106,7 @@ export function BigTierGiftAnimation({ giftId, senderName, onFinish }: {
       video.removeEventListener('ended', fade);
       video.removeEventListener('error', fail);
     };
-  }, [giftId]);
+  }, [giftId, useImageFallback]);
 
   return createPortal(<div
     className={`big-tier-gift-overlay big-tier-gift-overlay--${gift.position}${fadingOut ? ' is-fading-out' : ''}`}
@@ -87,16 +114,26 @@ export function BigTierGiftAnimation({ giftId, senderName, onFinish }: {
     aria-live="polite"
     data-testid={`big-tier-${giftId}-animation`}
   >
-    <video
-      ref={videoRef}
-      className="big-tier-gift-video"
-      src={bigTierGiftMedia[giftId]}
-      autoPlay
-      muted
-      playsInline
-      preload="auto"
-      aria-hidden="true"
-    />
+    {useImageFallback ? (
+      <img
+        className="big-tier-gift-video big-tier-gift-video--alpha"
+        src={bigTierGiftFallback[giftId]}
+        alt=""
+        aria-hidden="true"
+        onError={() => setMediaError(true)}
+      />
+    ) : (
+      <video
+        ref={videoRef}
+        className={`big-tier-gift-video${bigTierGiftFallback[giftId] ? ' big-tier-gift-video--alpha' : ''}`}
+        src={bigTierGiftMedia[giftId]}
+        autoPlay
+        muted
+        playsInline
+        preload="auto"
+        aria-hidden="true"
+      />
+    )}
     <span className="big-tier-gift-banner">{senderName} sent {gift.name} {gift.emoji}</span>
     {mediaError && <span className="big-tier-gift-error" role="status">{gift.name} animation could not load.</span>}
   </div>, document.body);

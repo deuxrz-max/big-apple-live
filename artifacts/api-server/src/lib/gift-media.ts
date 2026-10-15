@@ -10,9 +10,9 @@ const types: Record<string, string> = {
 const productPaths = {
   'spirit-pup': 'gift-media/spirit-pup/v1',
   moonfox: 'gift-media/moonfox/v1',
-  'cosmic-encore': 'gift-media/cosmic-encore/v1',
-  fireworks: 'gift-media/fireworks/v1',
-  'rose-shower': 'gift-media/rose-shower/v1',
+  'cosmic-encore': 'gift-media/cosmic-encore/v2',
+  fireworks: 'gift-media/fireworks/v2',
+  'rose-shower': 'gift-media/rose-shower/v2',
   whip: 'gift-media/whip/v1',
 } as const;
 type GiftMediaProduct = keyof typeof productPaths;

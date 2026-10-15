@@ -3,7 +3,7 @@
 .spirit-overlay{position:fixed;inset:0;z-index:10003;display:flex;align-items:center;justify-content:center;pointer-events:none}
 .spirit-overlay :is(video,img){width:min(72vw,320px);height:auto;max-height:50dvh;object-fit:contain;pointer-events:none;background-color:transparent;border:0;outline:0;box-shadow:none}
 .gift-animation-error,.cosmic-encore-fallback-note{position:absolute;z-index:2;left:50%;bottom:max(18px,env(safe-area-inset-bottom));max-width:calc(100vw - 32px);padding:7px 11px;transform:translateX(-50%);border:1px solid rgba(255,255,255,.24);border-radius:999px;background:rgba(7,8,18,.82);color:#fff;font:600 12px/1.25 system-ui,sans-serif;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.7)}
-.cosmic-encore-overlay{position:fixed;inset:0;z-index:10003;display:grid;place-items:center;overflow:hidden;background:#05020e;pointer-events:none}
+.cosmic-encore-overlay{position:fixed;inset:0;z-index:10003;display:grid;place-items:center;overflow:hidden;background:transparent;pointer-events:none}
 .cosmic-encore-media{display:block;width:100vw;height:100dvh;object-fit:cover;object-position:center;opacity:0;animation:cosmic-encore-fade-in .5s ease-out forwards;pointer-events:none}
 .cosmic-encore-media.is-fading-out{animation:cosmic-encore-fade-out 1s ease-in forwards}
 @media (min-aspect-ratio:3/4){.cosmic-encore-media{width:100vw;height:100dvh;object-fit:contain}}
@@ -11,6 +11,7 @@
 @keyframes cosmic-encore-fade-out{to{opacity:0}}
 .big-tier-gift-overlay{position:fixed;inset:0;z-index:10003;overflow:hidden;pointer-events:none;background:transparent}
 .big-tier-gift-video{position:absolute;display:block;max-width:none;max-height:none;object-fit:cover;object-position:center;mix-blend-mode:screen;background:transparent;border:0;outline:0;box-shadow:none;pointer-events:none}
+.big-tier-gift-video--alpha{mix-blend-mode:normal}
 .big-tier-gift-overlay--top .big-tier-gift-video{top:0;left:0;width:100vw;height:42dvh;object-position:center top}
 .big-tier-gift-overlay--full .big-tier-gift-video{inset:0;width:100vw;height:100dvh;object-position:center}
 .big-tier-gift-overlay--bottom .big-tier-gift-video{left:0;bottom:0;width:100vw;height:34dvh;object-position:center bottom}
