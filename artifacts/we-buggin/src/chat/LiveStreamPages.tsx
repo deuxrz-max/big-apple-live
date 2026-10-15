@@ -33,6 +33,23 @@ type HostStartSession = Awaited<ReturnType<typeof startLiveStream>>;
 let pendingLiveHostStart: { session: HostStartSession; tracks: LocalTrack[] } | null = null;
 const NO_HOST_TRACKS: LocalTrack[] = [];
 
+function cameraAccessHelp(failure?: unknown): string {
+  const name = failure instanceof Error ? failure.name : "";
+  if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+    return "This in-app browser does not provide camera access. Open this link in Chrome or Brave, then allow camera and microphone access.";
+  }
+  if (["NotAllowedError", "PermissionDeniedError", "SecurityError"].includes(name)) {
+    return "Camera or microphone permission was denied. Allow access in browser settings. If this is an in-app browser, open the link in Chrome or Brave.";
+  }
+  if (["NotFoundError", "DevicesNotFoundError"].includes(name)) {
+    return "No camera was found. Connect or enable a camera, then try again.";
+  }
+  if (["NotReadableError", "TrackStartError"].includes(name)) {
+    return "The camera is busy or unavailable. Close other apps using it, then try again in Chrome or Brave.";
+  }
+  return "Camera startup failed. Check camera permission and try again. If this is an in-app browser, open the link in Chrome or Brave.";
+}
+
 export function GoLiveButton({ className, children }: { className: string; children: ReactNode }) {
   const [, navigate] = useLocation();
   const me = useGetSocialMe();
@@ -48,11 +65,21 @@ export function GoLiveButton({ className, children }: { className: string; child
     setReplacePrompt(false);
     let tracks: LocalTrack[] = [];
     try {
+      if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+        const unavailable = new Error("Camera API unavailable");
+        unavailable.name = "CameraUnavailableError";
+        throw unavailable;
+      }
       // Request permission directly from the tap on Go Live.
       tracks = await createLocalTracks({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
         video: { facingMode: "user", resolution: { width: 720, height: 1280 }, frameRate: 30 },
       });
+      if (!tracks.some(track => track.kind === Track.Kind.Video)) {
+        const unavailable = new Error("No camera track was created");
+        unavailable.name = "CameraUnavailableError";
+        throw unavailable;
+      }
       const session = await startLiveStream({ replaceExisting }, { credentials: "include" });
       pendingLiveHostStart = { session, tracks };
       tracks = [];
@@ -74,8 +101,10 @@ export function GoLiveButton({ className, children }: { className: string; child
         setConflictStreamId(activeStreamId);
         setReplacePrompt(true);
       } else {
-        setError(name === "NotAllowedError" || name === "PermissionDeniedError"
-          ? "Camera or microphone access was denied. Re-enable it in your phone or browser settings, then try again."
+        setError(!navigator.mediaDevices?.getUserMedia || !window.isSecureContext || ["NotAllowedError", "PermissionDeniedError",
+          "SecurityError", "NotFoundError", "DevicesNotFoundError", "NotReadableError", "TrackStartError",
+          "CameraUnavailableError", "TypeError"].includes(name)
+          ? cameraAccessHelp(failure)
           : status === 401 ? "Please sign in again before going live."
             : status === 403 ? "Finish your profile setup before going live."
               : status === 503 ? "Live video is temporarily unavailable. Please try again soon."
@@ -96,6 +125,11 @@ export function GoLiveButton({ className, children }: { className: string; child
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
         video: { facingMode: "user", resolution: { width: 720, height: 1280 }, frameRate: 30 },
       });
+      if (!tracks.some(track => track.kind === Track.Kind.Video)) {
+        const unavailable = new Error("No camera track was created");
+        unavailable.name = "CameraUnavailableError";
+        throw unavailable;
+      }
       const session = await rejoinLiveStream(conflictStreamId, { credentials: "include" });
       pendingLiveHostStart = { session, tracks };
       tracks = [];
@@ -121,7 +155,13 @@ export function GoLiveButton({ className, children }: { className: string; child
       <button type="button" className={className} disabled={busy} onClick={() => void start()}>
         {busy ? "Starting…" : children}
       </button>
-      {error && <span className="st-live-start-banner" role="status">{error}</span>}
+      {error && <span className="st-live-start-banner" role="status">
+        <span>{error}</span>
+        <button type="button" className="st-live-start-retry" data-testid="live-start-retry"
+          disabled={busy} onClick={() => void start()}>
+          {busy ? "Starting…" : "Try again"}
+        </button>
+      </span>}
       {replacePrompt && <span className="st-live-start-banner st-live-start-choice" role="alert">
         <strong>A stream may still be active.</strong>
         <span>Rejoin it, or end it and start fresh?</span>
@@ -164,6 +204,16 @@ function StreamTrack({ track, kind, muted = false, onPlaybackBlocked, onVideoEle
   useEffect(() => {
     const element = kind === "video" ? videoRef.current : audioRef.current;
     if (!element || !track) return;
+    let videoReadinessTimer: number | undefined;
+    const checkVideoFrame = (candidate: HTMLVideoElement) => {
+      const ready = candidate.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && candidate.videoWidth > 0;
+      if (ready) onPlaybackBlockedRef.current?.(false);
+      return ready;
+    };
+    const onVideoReady = (event: Event) => {
+      if (event.currentTarget instanceof HTMLVideoElement) checkVideoFrame(event.currentTarget);
+    };
+    const onVideoError = () => onPlaybackBlockedRef.current?.(true);
     try {
       const attached = track.attach(element);
       attached.autoplay = true;
@@ -172,15 +222,31 @@ function StreamTrack({ track, kind, muted = false, onPlaybackBlocked, onVideoEle
         attached.defaultMuted = muted;
         attached.playsInline = true;
         onVideoElementRef.current?.(attached);
+        attached.addEventListener("loadeddata", onVideoReady);
+        attached.addEventListener("playing", onVideoReady);
+        attached.addEventListener("resize", onVideoReady);
+        attached.addEventListener("error", onVideoError);
+        videoReadinessTimer = window.setTimeout(() => {
+          if (!checkVideoFrame(attached)) onPlaybackBlockedRef.current?.(true);
+        }, 3000);
       }
       if (kind === "video") {
         void attached.play()
-          .then(() => onPlaybackBlockedRef.current?.(false))
+          .then(() => {
+            if (attached instanceof HTMLVideoElement) checkVideoFrame(attached);
+          })
           .catch(() => onPlaybackBlockedRef.current?.(true));
       } else {
         void attached.play().catch(() => onPlaybackBlockedRef.current?.(true));
       }
       return () => {
+        if (videoReadinessTimer) window.clearTimeout(videoReadinessTimer);
+        if (element instanceof HTMLVideoElement) {
+          element.removeEventListener("loadeddata", onVideoReady);
+          element.removeEventListener("playing", onVideoReady);
+          element.removeEventListener("resize", onVideoReady);
+          element.removeEventListener("error", onVideoError);
+        }
         if (element instanceof HTMLVideoElement) onVideoElementRef.current?.(null);
         track.detach(element);
       };
@@ -191,7 +257,8 @@ function StreamTrack({ track, kind, muted = false, onPlaybackBlocked, onVideoEle
   }, [kind, muted, track]);
   if (!track) return null;
   return kind === "video"
-    ? <video ref={videoRef} className="st-live-video" autoPlay playsInline muted={muted} aria-label="Live camera stream" />
+    ? <video ref={videoRef} className="st-live-video" style={{ backgroundColor: "#000" }}
+      autoPlay playsInline muted={muted} aria-label="Live camera stream" />
     : <audio ref={audioRef} autoPlay />;
 }
 
@@ -214,7 +281,11 @@ function LiveChat({ room, streamId, ownUsername, blockedUsernames,
 
   useEffect(() => {
     if (!room) return;
-    const source = new EventSource(`${import.meta.env.BASE_URL}api/account/live-streams/${encodeURIComponent(streamId)}/chat/events`, { withCredentials: true });
+    const url = `${import.meta.env.BASE_URL}api/account/live-streams/${encodeURIComponent(streamId)}/chat/events`;
+    let source: EventSource | null = null;
+    let retryTimer: number | undefined;
+    let retryDelayMs = 1000;
+    let disposed = false;
     const receive = (event: MessageEvent<string>) => {
       try {
         const parsed = JSON.parse(event.data) as LiveStreamChatMessage;
@@ -238,11 +309,35 @@ function LiveChat({ room, streamId, ownUsername, blockedUsernames,
         // Ignore malformed gift events.
       }
     };
-    source.addEventListener("message", receive as EventListener);
-    source.addEventListener("gift", (event => receiveGift(event as MessageEvent<string>, true)) as EventListener);
-    source.addEventListener("gift-history-item", (event => receiveGift(event as MessageEvent<string>, false)) as EventListener);
-    source.onerror = () => setError("Live chat is reconnecting.");
-    return () => { source.close(); };
+    const connect = () => {
+      if (disposed) return;
+      const current = new EventSource(url, { withCredentials: true });
+      source = current;
+      current.addEventListener("message", receive as EventListener);
+      current.addEventListener("gift", (event => receiveGift(event as MessageEvent<string>, true)) as EventListener);
+      current.addEventListener("gift-history-item", (event => receiveGift(event as MessageEvent<string>, false)) as EventListener);
+      current.onopen = () => {
+        retryDelayMs = 1000;
+        setError("");
+      };
+      current.onerror = () => {
+        if (disposed) return;
+        setError("Live chat is reconnecting…");
+        // EventSource automatically retries most network errors, but a 404/401
+        // closes it permanently. Retry closed sources so startup races recover.
+        if (current.readyState === EventSource.CLOSED) {
+          current.close();
+          retryTimer = window.setTimeout(connect, retryDelayMs);
+          retryDelayMs = Math.min(15_000, retryDelayMs * 2);
+        }
+      };
+    };
+    connect();
+    return () => {
+      disposed = true;
+      if (retryTimer) window.clearTimeout(retryTimer);
+      source?.close();
+    };
   }, [blockedUsernames, onGift, room, streamId]);
 
   useEffect(() => {
@@ -310,7 +405,7 @@ function LiveChat({ room, streamId, ownUsername, blockedUsernames,
           </p>
         ))}
       </div>
-      {error && <p className="st-live-error" role="alert">{error}</p>}
+      {error && <p className="st-live-chat-connection" role="status" data-testid="live-chat-connection">{error}</p>}
       <form className="st-live-chat-form" onSubmit={send}>
         <label className="st-live-sr" htmlFor="st-live-chat-input">Write a chat message</label>
         <input id="st-live-chat-input" value={text} onChange={event => setText(event.target.value)}
@@ -389,11 +484,15 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
   const onEndedRef = useRef(onEnded);
   onEndedRef.current = onEnded;
   const [room, setRoom] = useState<Room | null>(null);
-  const [videoTrack, setVideoTrack] = useState<LocalTrack | RemoteTrack | null>(null);
+  const [videoTrack, setVideoTrack] = useState<LocalTrack | RemoteTrack | null>(
+    () => hostMode ? hostTracks.find(track => track.kind === Track.Kind.Video) ?? null : null,
+  );
   const [audioTrack, setAudioTrack] = useState<LocalTrack | RemoteTrack | null>(null);
   const [status, setStatus] = useState("connecting");
   const [audioEnabled, setAudioEnabled] = useState(false);
+  const [cameraFrameReady, setCameraFrameReady] = useState(false);
   const [cameraPlaybackBlocked, setCameraPlaybackBlocked] = useState(false);
+  const [cameraFailureReason, setCameraFailureReason] = useState("");
   const [cameraRetrying, setCameraRetrying] = useState(false);
   const [cameraFacing, setCameraFacing] = useState<"user" | "environment">("user");
   const [viewerCount, setViewerCount] = useState(0);
@@ -556,12 +655,32 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
       await liveRoom.connect(session.url, session.token);
       if (cancelled) { await liveRoom.disconnect(); return; }
       if (hostMode) {
-        for (const track of hostTracks) {
+        for (const track of localTracksRef.current) {
+          if (track.mediaStreamTrack.readyState === "ended") continue;
           if (track.kind === Track.Kind.Video) setVideoTrack(track);
           await liveRoom.localParticipant.publishTrack(track);
           if (track.kind === Track.Kind.Audio) setAudioTrack(track);
         }
+        // The chat SSE endpoint requires a fresh live lease. Establish it before
+        // mounting LiveChat so its first request cannot race the first heartbeat.
+        const heartbeatUrl = `${import.meta.env.BASE_URL}api/account/live-streams/${encodeURIComponent(streamId)}/heartbeat`;
+        for (let attempt = 0; attempt < 4; attempt += 1) {
+          try {
+            const response = await fetch(heartbeatUrl, {
+              method: "POST",
+              credentials: "include",
+              cache: "no-store",
+              headers: { "Content-Type": "application/json" },
+              body: "{}",
+            });
+            if (response.ok || response.status !== 404) break;
+          } catch {
+            // The regular heartbeat and EventSource retry paths remain available.
+          }
+          if (attempt < 3) await new Promise(resolve => window.setTimeout(resolve, 250 + attempt * 250));
+        }
       }
+      if (cancelled) { await liveRoom.disconnect(); return; }
       setRoom(liveRoom);
       setStatus("connected");
       const updateViewerCount = () => setViewerCount(Math.max(0,
@@ -664,7 +783,9 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
 
   const startCameraFromTap = async () => {
     setCameraRetrying(true);
+    setCameraFrameReady(false);
     setCameraPlaybackBlocked(false);
+    setCameraFailureReason("");
     setError("");
     let acquiredTracks: LocalTrack[] = [];
     try {
@@ -673,6 +794,9 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
         && currentVideo.videoWidth > 0) {
         try {
           await currentVideo.play();
+          setCameraFrameReady(true);
+          setCameraPlaybackBlocked(false);
+          setCameraFailureReason("");
           return;
         } catch {
           // If playback is still blocked, reacquire the camera from this tap.
@@ -697,15 +821,23 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
         await currentRoom.localParticipant.publishTrack(nextVideoTrack);
       }
       await localVideoElementRef.current?.play();
-    } catch {
+    } catch (failure) {
       setCameraPlaybackBlocked(true);
-      setError("Camera access is unavailable. Check your browser permissions and try again.");
+      setCameraFailureReason(cameraAccessHelp(failure));
     } finally {
       for (const track of acquiredTracks) {
         if (!localTracksRef.current.includes(track)) track.stop();
       }
       setCameraRetrying(false);
     }
+  };
+
+  const reportCameraPlayback = (blocked: boolean) => {
+    setCameraFrameReady(!blocked);
+    setCameraPlaybackBlocked(blocked);
+    setCameraFailureReason(blocked
+      ? "This page has not received a camera frame. If this is an in-app browser, open the link in Chrome or Brave and allow Camera access."
+      : "");
   };
 
   const toggleHostMic = async () => {
@@ -747,10 +879,12 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
   };
 
   return (
-    <div className={`st-live-room${hostMode ? " is-host" : " is-viewer"}${hostMode && cameraFacing === "user" ? " is-front-camera" : ""}`} data-testid="live-room">
-      <div className="st-live-player">
+      <div className={`st-live-room${hostMode ? " is-host" : " is-viewer"}${hostMode && cameraFacing === "user" ? " is-front-camera" : ""}`}
+      style={{ backgroundColor: "#000", width: "100%", height: "100dvh", minHeight: "100dvh", border: 0, borderRadius: 0, boxShadow: "none" }}
+      data-testid="live-room">
+      <div className="st-live-player" style={{ backgroundColor: "#000", border: 0, borderRadius: 0, boxShadow: "none" }}>
         {videoTrack ? <StreamTrack track={videoTrack} kind="video" muted={hostMode}
-          onPlaybackBlocked={hostMode ? blocked => setCameraPlaybackBlocked(blocked) : undefined}
+          onPlaybackBlocked={hostMode ? reportCameraPlayback : undefined}
           onVideoElement={element => { localVideoElementRef.current = element; }} /> : (
           !hostMode && <div className="st-live-player-empty">
             <span className="st-live-avatar">
@@ -760,10 +894,12 @@ function LiveRoomView({ streamId, hostMode, hostSession, hostTracks = NO_HOST_TR
             <span>{status === "connecting" ? "Starting your camera…" : "Your camera preview is unavailable."}</span>
           </div>
         )}
-        {hostMode && (cameraPlaybackBlocked || (!videoTrack && !["connecting", "reconnecting", "ending", "ended"].includes(status))) && (
+        {hostMode && (!cameraFrameReady || cameraPlaybackBlocked || !videoTrack) && status !== "ending" && status !== "ended" && (
           <div className="st-live-camera-recovery" data-testid="live-camera-recovery">
-            <strong>{cameraPlaybackBlocked ? "Camera is not playing" : "Camera is not ready"}</strong>
-            <span>Allow camera access to show your live video.</span>
+            <strong>{cameraPlaybackBlocked || !videoTrack && status !== "connecting" ? "Camera preview is unavailable" : "Starting your camera…"}</strong>
+            <span>{cameraFailureReason || (status === "connecting"
+              ? "Waiting for the first camera frame. If this is an in-app browser, open the link in Chrome or Brave."
+              : "Allow camera access to show your live video. If this is an in-app browser, open the link in Chrome or Brave.")}</span>
             <button type="button" onClick={() => void startCameraFromTap()} disabled={cameraRetrying}
               data-testid="live-start-camera">{cameraRetrying ? "Starting camera…" : "Tap to start camera"}</button>
           </div>
@@ -930,7 +1066,7 @@ export function StartLiveStreamPage() {
   }
 
   return (
-    <main className="st-live-page st-live-host-page">
+    <main className="st-live-page st-live-host-page" style={{ backgroundColor: "#000", width: "100%", maxWidth: "none", height: "100dvh", minHeight: "100dvh", margin: 0, padding: 0, border: 0, borderRadius: 0, boxShadow: "none" }}>
       <LiveRoomView streamId={session.streamId} hostMode hostSession={session}
         hostTracks={hostTracks} onEnded={ended} />
     </main>
@@ -941,9 +1077,9 @@ export function WatchLiveStreamPage({ streamId }: { streamId: string }) {
   const [closed, setClosed] = useState(false);
   const [, navigate] = useLocation();
   return (
-    <main className="st-live-page">
+    <main className="st-live-page st-live-viewer-page" style={{ backgroundColor: "#000", width: "100%", maxWidth: "none", height: "100dvh", minHeight: "100dvh", margin: 0, padding: 0, border: 0, borderRadius: 0, boxShadow: "none" }}>
       {closed ? <section className="st-live-empty"><strong>This stream has ended</strong><Link href="/live">Browse live creators</Link></section>
-        : <LiveRoomView key={streamId} streamId={streamId} hostMode={false}
+      : <LiveRoomView key={streamId} streamId={streamId} hostMode={false}
           onEnded={() => setClosed(true)} onLeave={() => navigate("/live")} />}
     </main>
   );

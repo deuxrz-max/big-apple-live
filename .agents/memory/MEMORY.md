@@ -2,6 +2,7 @@
 - [Streamtalk owner access](owner-privileges.md) — only the non-test Vampsquad account has full owner/admin and preview test privileges.
 - [Preview fixture boundaries](preview-fixture-boundaries.md) — owner-requested inspection accounts persist; keep regression cleanup separate and never auto-seed production.
 - [Browser runner limits](browser-runner-limits.md) — clipboard and auth-fixture limits; distinguish blocked signup checks from signed-in app verification.
+- [Live stream chat startup](live-stream-startup-race.md) — chat SSE can hit a terminal 404 before the host lease becomes live; establish heartbeat first and reconnect closed streams.
 - [Mood Sync rules](mood-sync-rules.md) — archived branded-avatar rules; active universities use uploaded photos and no profile-image emoji sync.
 - [Portrait cutout checks](portrait-cutouts.md) — inspect detached decorations after background removal; callbacks require workspace-relative image paths.
 - [Image review tooling](image-tooling.md) — montage fonts, Sharp composite order and VP9 alpha checks; crop a source pixel for browser transparency probes.
