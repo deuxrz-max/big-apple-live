@@ -11,6 +11,11 @@ import { hasDevelopmentUnlimitedCredits, planCreditSpend } from "./credits-polic
 import { giftNameColorForSentCredits } from "./gift-name-color";
 import { liveStreamIdForAccount, isLiveStreamActiveOrStarting } from "../live-stream-policy";
 
+/** Unlimited test gifts keep the wallet balance unchanged but retain their nominal value in the ledger. */
+export function giftLedgerDebit(debit: number, cost: number, unlimited: boolean): number {
+  return unlimited ? cost : debit;
+}
+
 export async function claimDaily(id: string) {
   const profile = await requireAccount(id);
   const result = await db.transaction(async tx => {
@@ -68,7 +73,7 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
     }
     await tx.update(socialWallets).set({ balance: sql`${socialWallets.balance} + ${recipientCredits}`, received: sql`${socialWallets.received} + ${recipientCredits}` }).where(eq(socialWallets.accountId, target.accountId));
     await tx.insert(socialLedger).values([
-      { accountId: id, delta: -spend.debit, kind: "gift_sent", description: `${item.name} sent to ${target.username}${unlimited ? " (development unlimited credits)" : ""}`, peer: target.username, requestKey: key, refKey: ref },
+      { accountId: id, delta: -giftLedgerDebit(spend.debit, item.cost, unlimited), kind: "gift_sent", description: `${item.name} sent to ${target.username}${unlimited ? " (development unlimited credits)" : ""}`, peer: target.username, requestKey: key, refKey: ref },
       { accountId: target.accountId, delta: recipientCredits, kind: "gift_received", description: `${item.name} from ${sender.username}`, peer: sender.username },
     ]);
     let liveGiftEvent: {

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { and, eq, inArray } from 'drizzle-orm';
 import { db, accountProfiles, socialWallets, socialSettings, chatAdmissions, socialGiftEvents, socialGiftBag } from '@workspace/db';
-import { gift } from './rewards';
+import { gift, giftLedgerDebit } from './rewards';
 import { getMe } from './people';
 import { relationship } from './people';
 import { getProfile } from '../account-profiles';
@@ -21,6 +21,11 @@ test('Spirit Pup has one changeable price and an exact 50/50 split', () => {
 test('Moonfox is a changeable 500-credit room gift with an even recipient/house split', () => {
   assert.equal(MOONFOX.cost, 500);
   assert.deepEqual(spiritSplit(MOONFOX.cost), { recipientCredits: 250, houseCredits: 250 });
+});
+
+test('unlimited test gifts record nominal value without debiting the wallet', () => {
+  assert.equal(giftLedgerDebit(0, 2500, true), 2500);
+  assert.equal(giftLedgerDebit(500, 500, false), 500);
 });
 
 test('development database: atomic split, bag, retry, funds, membership, blocks and room isolation', async t => {
@@ -143,6 +148,10 @@ test('development database: Moonfox charges once, splits 250/250, enters the bag
   assert.equal(self.wallet.sent, 1000);
   assert.equal(self.wallet.received, 250);
   assert.equal(self.giftQuantities[MOONFOX.id], 1);
+  const selfRoomNotices = (await roomGiftEvents(ids[0]!, roomId, sessions[0]!.participantSessionId)).events;
+  assert.ok(selfRoomNotices.some(event =>
+    event.senderUsername === names[0] && event.recipientUsername === names[0] && event.giftId === MOONFOX.id),
+  'the sender receives the same room animation event for a self-gift');
   const selfReceipt = (await db.select().from(socialGiftEvents).where(eq(socialGiftEvents.historyId, historyId)))
     .find(event => event.senderId === ids[0] && event.recipientId === ids[0]);
   assert.equal(selfReceipt?.cost, 500);

@@ -121,6 +121,50 @@ test('phone gift bag keeps recipient controls without explanatory empty-state co
   expect(writes).toEqual([]);
 });
 
+test('premium gift catalog uses transparent still icons and bold panel headings', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route('**/api/social/me', async route => {
+    const response = await route.fetch();
+    const original = await response.json();
+    await route.fulfill({ response, json: { ...original, gifts: [
+      { id: 'heart', name: 'Heart', cost: 50 },
+      { id: 'spirit-pup', name: 'Spirit Pup', cost: 100 },
+      { id: 'moonfox', name: 'Moonfox', cost: 500 },
+      { id: 'cosmic-encore', name: 'Cosmic Encore', cost: 2500 },
+      { id: 'fireworks', name: 'Fireworks', cost: 2500 },
+      { id: 'rose-shower', name: 'Rose Shower', cost: 2500 },
+      { id: 'whip', name: 'Whip', cost: 2500 },
+    ] } });
+  });
+  await page.goto('/tests/browser/harness.html?view=gifts');
+  await page.getByTestId('button-open-gift-bag').click();
+
+  for (const [giftId, asset] of [
+    ['heart', 'heart.svg'],
+    ['fireworks', 'fireworks.png'],
+    ['rose-shower', 'rose-shower.png'],
+    ['whip', 'whip.png'],
+    ['cosmic-encore', 'cosmic-encore.png'],
+  ] as const) {
+    const image = page.getByTestId(`gift-catalog-${giftId}`).locator('img');
+    await expect(image).toHaveAttribute('src', new RegExp(`gift-icons/${asset.replace('.', '\\.')}$`));
+    await expect(image).toHaveCSS('width', '64px');
+    await expect(image).toHaveCSS('height', '64px');
+    const cornerAlpha = await image.evaluate(element => {
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = 1;
+      const context = canvas.getContext('2d')!;
+      context.drawImage(element as HTMLImageElement, 0, 0, 1, 1, 0, 0, 1, 1);
+      return context.getImageData(0, 0, 1, 1).data[3];
+    });
+    expect(cornerAlpha).toBeLessThan(8);
+  }
+  for (const selector of ['.gift-title', '.gift-sub', '.gift-balance', '.gift-catalog-heading']) {
+    await expect(page.locator(selector)).toHaveCSS('font-weight', '700');
+  }
+  expect(await page.locator('[data-testid^="gift-catalog-"]').count()).toBe(7);
+});
+
 test('gift control is a silent accessible video and repeats on a 30-second cadence', async ({ page }) => {
   await page.clock.install();
   await page.addInitScript(() => {
@@ -301,8 +345,8 @@ test('Heart is a 50-credit first gift and shows its lightweight room animation',
   await expect(send).toBeDisabled();
   await expect(page.getByTestId('gift-catalog-heart')).toContainText('Heart');
   await expect(page.getByTestId('gift-catalog-heart')).toContainText('50 credits');
-  const heartIcon = page.getByTestId('gift-catalog-heart').locator('.heart-gift-catalog-icon');
-  await expect(heartIcon).toHaveText('❤️');
+  const heartIcon = page.getByTestId('gift-catalog-heart').locator('img');
+  await expect(heartIcon).toHaveAttribute('src', /gift-icons\/heart\.svg$/);
   await expect(heartIcon).toHaveCSS('width', '64px');
 
   await page.getByRole('combobox', { name: 'Gift recipient' }).selectOption('testbigo1');
@@ -354,6 +398,10 @@ test('room gift animations serialize Cosmic Encore and following gifts without d
   for (const giftId of ['spirit-pup', 'moonfox']) {
     await page.route(`**/api/gift-media/${giftId}/v1/*`, async route => {
       const name = new URL(route.request().url()).pathname.split('/').at(-1)!;
+      if (name.endsWith('.webm')) {
+        await route.fulfill({ status: 404, contentType: 'application/json', body: '{}' });
+        return;
+      }
       const body = await readFile(new URL(`../../../../generated-artifacts/${giftId}/${name}`, import.meta.url));
       await route.fulfill({ body, contentType: name.endsWith('.png') ? 'image/png' : 'image/webp' });
     });
@@ -387,6 +435,8 @@ test('room gift animations serialize Cosmic Encore and following gifts without d
   });
   const heart = page.getByTestId('heart-animation');
   await expect(heart).toBeVisible();
+  expect(await heart.locator('.heart-gift-animation').evaluate(element => getComputedStyle(element).animationName))
+    .toBe('heart-gift-reduced-pulse');
   await expect(cosmic).toHaveCount(0);
   await heart.locator('.heart-gift-animation').evaluate(element =>
     element.dispatchEvent(new AnimationEvent('animationend', { bubbles: true })));
@@ -394,14 +444,23 @@ test('room gift animations serialize Cosmic Encore and following gifts without d
   const spirit = page.getByTestId('spirit-pup-animation');
   await expect(spirit).toBeVisible();
   await expect(page.getByTestId('moonfox-animation')).toHaveCount(0);
+  await expect(spirit.locator('img')).toHaveAttribute('src', /animation\.webp$/);
+  await spirit.locator('img').dispatchEvent('error');
+  await expect(spirit.locator('img')).toHaveAttribute('src', /animation\.png$/);
+  await spirit.locator('img').dispatchEvent('error');
+  await expect(spirit.getByRole('status')).toContainText('Spirit Pup animation could not load.');
   await expect(spirit.locator('img')).toHaveAttribute('src', /icon\.png$/);
   await spirit.locator('img').dispatchEvent('error');
 
   const moonfox = page.getByTestId('moonfox-animation');
   await expect(moonfox).toBeVisible();
   await expect(spirit).toHaveCount(0);
-  await expect(moonfox.locator('img')).toHaveAttribute('src', /icon\.png$/);
+  await expect(moonfox.locator('img')).toHaveAttribute('src', /animation\.webp$/);
   await moonfox.locator('img').dispatchEvent('error');
+  await expect(moonfox.locator('img')).toHaveAttribute('src', /animation\.png$/);
+  await moonfox.locator('img').dispatchEvent('error');
+  await expect(moonfox.getByRole('status')).toContainText('Moonfox animation could not load.');
+  await expect(moonfox.locator('img')).toHaveAttribute('src', /icon\.png$/);
   await expect(moonfox).toHaveCount(0);
   for (const [giftId, emoji, giftName, position] of [
     ['fireworks', '🎆', 'Fireworks', 'top'],
@@ -510,7 +569,8 @@ test('room Send Gift control lets you choose a person and send directly', async 
   const recipient = page.getByRole('combobox', { name: 'Gift recipient' });
   await expect(recipient).toBeVisible();
   await recipient.selectOption('testbigo1');
-  await expect(recipient.locator('option')).toHaveCount(2);
+  await expect(recipient.locator('option')).toHaveCount(3);
+  await expect(recipient.locator('option[value="fixture"]')).toHaveText(/Fixture/);
   await page.getByTestId('gift-catalog-moonfox').click();
   await expect(page.getByTestId('gift-bag-selection')).toHaveText('Selected: Moonfox for Test Bigo 1');
   await expect(page.getByTestId('gift-bag-send')).toBeEnabled();

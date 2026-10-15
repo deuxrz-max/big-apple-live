@@ -113,14 +113,14 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
         <div ref={ref} className="gift-framework gift-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId} onKeyDown={onKey} data-testid="gift-bag">
         <div className="gift-head">
           <div>
-            <h2 id={titleId} data-testid="gift-bag-title">{name
+            <h2 className="gift-title" id={titleId} data-testid="gift-bag-title">{name
               ? <>Gift bag for <span style={{ color: target?.displayNameColor ?? '#FFFFFF' }}>{name}</span></>
               : roomId || streamId ? 'Send a gift' : 'Your gift bag'}</h2>
             <p className="gift-sub">{name ? 'Choose a gift. Sending costs credits.' : roomId || streamId ? 'Choose someone here and a gift to send.' : 'Gifts you own.'}</p>
           </div>
           <button type="button" className="gift-btn" onClick={onClose} aria-label="Close gift bag" data-testid="gift-bag-close"><X size={16} aria-hidden /></button>
         </div>
-        {me.data && <p>Balance: {unlimited ? 'Unlimited test credits' : `${me.data.wallet.balance} credits`}</p>}
+        {me.data && <p className="gift-balance">Balance: {unlimited ? 'Unlimited test credits' : `${me.data.wallet.balance} credits`}</p>}
         {(roomId || streamId) && !recipient && (
           <label className="gift-recipient">
             <span>Send to</span>
@@ -141,7 +141,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
           </label>
         )}
         {catalog.length > 0 && <section aria-label="Gift catalog">
-          <h3>Gift catalog</h3>
+          <h3 className="gift-catalog-heading">Gift catalog</h3>
           <ul className="gift-grid">{catalog.map(g => <li key={g.id}>
             <button type="button" className="gift-item" aria-pressed={sel === g.id} onClick={() => { setSel(g.id); setError(null); }} data-testid={`gift-catalog-${g.id}`}>
               {giftIcon(g.id)}<span>{g.name}</span><span>{g.cost} credits</span>

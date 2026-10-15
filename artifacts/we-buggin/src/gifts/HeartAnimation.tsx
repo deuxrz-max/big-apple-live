@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 export function HeartAnimation({ onFinish }: { onFinish: () => void }) {
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -17,7 +18,7 @@ export function HeartAnimation({ onFinish }: { onFinish: () => void }) {
     return () => window.clearTimeout(timer);
   }, []);
 
-  return (
+  return createPortal(
     <div className="spirit-overlay heart-gift-overlay" aria-hidden="true" data-testid="heart-animation">
       <span
         className={`heart-gift-animation${reducedMotion ? ' is-reduced-motion' : ''}`}
@@ -25,6 +26,7 @@ export function HeartAnimation({ onFinish }: { onFinish: () => void }) {
       >
         ❤️
       </span>
-    </div>
+    </div>,
+    document.body,
   );
 }

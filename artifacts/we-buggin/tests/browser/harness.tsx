@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PromoBackground } from '../../src/chat/PromoBackground';
 import { TextChatRoom } from '../../src/chat/UniversityRoom';
 import { BuyCreditsPage } from '../../src/social/BuyCreditsPage';
-import { GiftBag, GiftControl } from '../../src/gifts';
+import { GiftBag, GiftControl, OPEN_ROOM_GIFTS_EVENT } from '../../src/gifts';
 import { RewardsPage } from '../../src/social/MoneyPages';
 import '../../src/social/social.css';
 import '../../src/index.css';
@@ -47,6 +47,9 @@ createRoot(document.getElementById('root')!).render(
         <div className="app-bottom-nav-inner">
           {['Home', 'Follow', 'Message', 'Me'].map(label =>
             <span key={label} className="app-bottom-link">{label}</span>)}
+          {new URLSearchParams(location.search).get('view') !== 'gifts' && (
+            <GiftControl onClick={() => window.dispatchEvent(new Event(OPEN_ROOM_GIFTS_EVENT))} label="Open room gifts" />
+          )}
         </div>
       </nav>
     </QueryClientProvider>,

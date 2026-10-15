@@ -18,13 +18,19 @@ export function useRoomGifts(roomId: string, userId: string, sessionId: string, 
     const fresh: RoomGiftEvent[] = [];
     for (const event of events) {
       if (seen.current.has(event.id)) continue;
-      seen.current.add(event.id);
       const age = Date.now() - new Date(event.createdAt).getTime();
-      if (!document.hidden && (
+      const supportedGift = (
         event.giftId === 'heart' || event.giftId === 'spirit-pup' || event.giftId === 'moonfox'
         || event.giftId === 'cosmic-encore' || event.giftId === 'fireworks'
         || event.giftId === 'rose-shower' || event.giftId === 'whip'
-      ) && age >= -5000 && age <= 10000) fresh.push(event);
+      );
+      if (!supportedGift || age < -5000 || age > 10000) {
+        seen.current.add(event.id);
+        continue;
+      }
+      if (document.hidden) continue;
+      seen.current.add(event.id);
+      fresh.push(event);
     }
     if (fresh.length) {
       fresh.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() || a.id.localeCompare(b.id));

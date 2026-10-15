@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img">
+  <defs>
+    <linearGradient id="heart-fill" x1="44" y1="30" x2="198" y2="222" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff5878"/>
+      <stop offset=".48" stop-color="#f10e3b"/>
+      <stop offset="1" stop-color="#b9002d"/>
+    </linearGradient>
+    <linearGradient id="heart-shine" x1="64" y1="51" x2="143" y2="127" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff" stop-opacity=".48"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="heart-glow" x="8" y="5" width="240" height="246" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="7"/>
+      <feColorMatrix values="1 0 0 0 .55  0 0 0 0 .02  0 0 0 0 .12  0 0 0 .38 0"/>
+    </filter>
+  </defs>
+  <path d="M128 224 35 135C-5 96 18 36 68 31c26-3 46 11 60 31 14-20 34-34 60-31 50 5 73 65 33 104l-93 89Z" fill="#f20d3d" filter="url(#heart-glow)"/>
+  <path d="M128 220 39 135C2 100 23 42 69 37c25-3 44 12 59 34 15-22 34-37 59-34 46 5 67 63 30 98l-89 85Z" fill="url(#heart-fill)" stroke="#ff8aa0" stroke-opacity=".65" stroke-width="3"/>
+  <path d="M57 123c-10-17-7-39 7-52 12-11 29-14 44-7 9 4 16 11 22 20-13-7-29-9-43-4-16 6-26 21-30 43Z" fill="url(#heart-shine)"/>
+</svg>

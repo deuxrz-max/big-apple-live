@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { BigTierGiftId } from './SpiritPup';
 import './gifts.css';
 
@@ -28,6 +29,7 @@ export function BigTierGiftAnimation({ giftId, senderName, onFinish }: {
   const alreadyFinished = useRef(false);
   const fadeStarted = useRef(false);
   const [fadingOut, setFadingOut] = useState(false);
+  const [mediaError, setMediaError] = useState(false);
   const gift = PRESENTATION[giftId];
 
   useEffect(() => {
@@ -47,19 +49,24 @@ export function BigTierGiftAnimation({ giftId, senderName, onFinish }: {
       setFadingOut(true);
       fadeTimer = window.setTimeout(complete, 500);
     };
+    const fail = () => {
+      if (fadeStarted.current) return;
+      setMediaError(true);
+      fadeTimer = window.setTimeout(fade, 1800);
+    };
     const setPlaybackSafetyTimer = () => {
       if (safetyTimer !== undefined) window.clearTimeout(safetyTimer);
       const duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration * 1000 : 6042;
       safetyTimer = window.setTimeout(fade, Math.max(4000, duration + 1400));
     };
     const playWhenReady = () => {
-      void video.play().catch(fade);
+      void video.play().catch(fail);
     };
 
     video.addEventListener('loadedmetadata', setPlaybackSafetyTimer);
     video.addEventListener('canplay', playWhenReady);
     video.addEventListener('ended', fade);
-    video.addEventListener('error', fade);
+    video.addEventListener('error', fail);
     safetyTimer = window.setTimeout(fade, 12000);
     if (video.readyState >= HTMLMediaElement.HAVE_METADATA) setPlaybackSafetyTimer();
 
@@ -70,11 +77,11 @@ export function BigTierGiftAnimation({ giftId, senderName, onFinish }: {
       video.removeEventListener('loadedmetadata', setPlaybackSafetyTimer);
       video.removeEventListener('canplay', playWhenReady);
       video.removeEventListener('ended', fade);
-      video.removeEventListener('error', fade);
+      video.removeEventListener('error', fail);
     };
   }, [giftId]);
 
-  return <div
+  return createPortal(<div
     className={`big-tier-gift-overlay big-tier-gift-overlay--${gift.position}${fadingOut ? ' is-fading-out' : ''}`}
     role="status"
     aria-live="polite"
@@ -91,5 +98,6 @@ export function BigTierGiftAnimation({ giftId, senderName, onFinish }: {
       aria-hidden="true"
     />
     <span className="big-tier-gift-banner">{senderName} sent {gift.name} {gift.emoji}</span>
-  </div>;
+    {mediaError && <span className="big-tier-gift-error" role="status">{gift.name} animation could not load.</span>}
+  </div>, document.body);
 }

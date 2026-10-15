@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { GiftIcon } from '@/social/common';
 
 export type BigTierGiftId = 'fireworks' | 'rose-shower' | 'whip';
@@ -12,6 +13,15 @@ const MEDIA: Record<Exclude<RoomGiftId, 'heart'>, string> = {
   'rose-shower': `${import.meta.env.BASE_URL}api/gift-media/rose-shower/v1/`,
   whip: `${import.meta.env.BASE_URL}api/gift-media/whip/v1/`,
 };
+const CATALOG_ICON: Record<RoomGiftId, string> = {
+  heart: `${import.meta.env.BASE_URL}gift-icons/heart.svg`,
+  'spirit-pup': `${MEDIA['spirit-pup']}icon-small.png`,
+  moonfox: `${MEDIA.moonfox}icon-small.png`,
+  'cosmic-encore': `${import.meta.env.BASE_URL}gift-icons/cosmic-encore.png`,
+  fireworks: `${import.meta.env.BASE_URL}gift-icons/fireworks.png`,
+  'rose-shower': `${import.meta.env.BASE_URL}gift-icons/rose-shower.png`,
+  whip: `${import.meta.env.BASE_URL}gift-icons/whip.png`,
+};
 const DURATION: Record<AnimatedGiftId, number> = {
   'spirit-pup': 4000,
   moonfox: 4000,
@@ -19,13 +29,9 @@ const DURATION: Record<AnimatedGiftId, number> = {
 
 export function RoomGiftIcon({ giftId }: { giftId: RoomGiftId }) {
   const [failed, setFailed] = useState(false);
-  if (giftId === 'heart') return <span className="heart-gift-catalog-icon" aria-hidden="true">❤️</span>;
-  if (giftId === 'fireworks') return <span className="big-tier-gift-catalog-icon" aria-hidden="true">🎆</span>;
-  if (giftId === 'rose-shower') return <span className="big-tier-gift-catalog-icon" aria-hidden="true">🌹</span>;
-  if (giftId === 'whip') return <span className="big-tier-gift-catalog-icon" aria-hidden="true">🏎️</span>;
   return failed
     ? <GiftIcon id={giftId} />
-    : <img className="spirit-gift-icon" src={`${MEDIA[giftId]}icon-small.png`} width={64} height={64} alt="" aria-hidden="true" onError={() => setFailed(true)} />;
+    : <img className="spirit-gift-icon" src={CATALOG_ICON[giftId]} width={64} height={64} alt="" aria-hidden="true" onError={() => setFailed(true)} />;
 }
 
 export function SpiritIcon() { return <RoomGiftIcon giftId="spirit-pup" />; }
@@ -44,8 +50,8 @@ function preferImages() {
 /** Check decoded video alpha before showing it; fall back through transparent image formats. */
 export function RoomGiftAnimation({ giftId, onFinish }: { giftId: AnimatedGiftId; onFinish: () => void }) {
   const duration = DURATION[giftId];
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const [mode, setMode] = useState<'checking' | 'video' | 'webp' | 'apng' | 'still'>(reduced ? 'still' : preferImages() ? 'webp' : 'checking');
+  const [mode, setMode] = useState<'checking' | 'video' | 'webp' | 'apng' | 'still'>(preferImages() ? 'webp' : 'checking');
+  const [mediaError, setMediaError] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const loadingTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const finished = useRef(false);
@@ -61,9 +67,10 @@ export function RoomGiftAnimation({ giftId, onFinish }: { giftId: AnimatedGiftId
     loadingTimer.current = setTimeout(finish, 10000);
     return () => { if (loadingTimer.current) clearTimeout(loadingTimer.current); if (timer.current) clearTimeout(timer.current); };
   }, []);
-  return <div className="spirit-overlay" aria-hidden="true" data-testid={`${giftId}-animation`}>
+  return createPortal(<div className="spirit-overlay" aria-hidden={mediaError ? undefined : true} data-testid={`${giftId}-animation`}>
     {(mode === 'checking' || mode === 'video') ? (
       <video src={`${MEDIA[giftId]}animation.webm`} autoPlay muted playsInline preload="auto"
+        aria-hidden="true"
         style={{ visibility: mode === 'video' ? 'visible' : 'hidden' }}
         onLoadedData={async e => {
           const video = e.currentTarget;
@@ -77,8 +84,13 @@ export function RoomGiftAnimation({ giftId, onFinish }: { giftId: AnimatedGiftId
           } catch { setMode('webp'); }
         }} onEnded={finish} onError={() => setMode('webp')} />
     ) : <img src={`${MEDIA[giftId]}${mode === 'webp' ? 'animation.webp' : mode === 'apng' ? 'animation.png' : 'icon.png'}`}
-      alt="" onLoad={start} onError={() => { if (mode === 'webp') setMode('apng'); else if (mode === 'apng') setMode('still'); else finish(); }} />}
-  </div>;
+      alt="" aria-hidden="true" onLoad={start} onError={() => {
+        if (mode === 'webp') setMode('apng');
+        else if (mode === 'apng') { setMode('still'); setMediaError(true); }
+        else finish();
+      }} />}
+    {mediaError && <span className="gift-animation-error" role="status">{giftId === 'spirit-pup' ? 'Spirit Pup' : 'Moonfox'} animation could not load.</span>}
+  </div>, document.body);
 }
 
 export function SpiritAnimation({ onFinish }: { onFinish: () => void }) {
@@ -149,7 +161,7 @@ export function CosmicEncoreAnimation({ onFinish }: { onFinish: () => void }) {
     };
   }, []);
 
-  return <div className="cosmic-encore-overlay" aria-hidden="true" data-testid="cosmic-encore-animation">
+  return createPortal(<div className="cosmic-encore-overlay" aria-hidden="true" data-testid="cosmic-encore-animation">
     {fallback ? (
       <img className={`cosmic-encore-media${fadingOut ? ' is-fading-out' : ''}`} src={cosmicEncoreMedia.fallback} alt=""
         onAnimationEnd={event => { if (event.animationName === 'cosmic-encore-fade-out') finish(); }} />
@@ -159,5 +171,6 @@ export function CosmicEncoreAnimation({ onFinish }: { onFinish: () => void }) {
         autoPlay muted playsInline preload="auto" onEnded={() => setFadingOut(true)}
         onAnimationEnd={event => { if (event.animationName === 'cosmic-encore-fade-out') finish(); }} />
     )}
-  </div>;
+    {fallback && <span className="cosmic-encore-fallback-note" role="status">Cosmic Encore video could not play; showing its artwork.</span>}
+  </div>, document.body);
 }
