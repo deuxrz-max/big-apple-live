@@ -1866,6 +1866,14 @@ export const GetGiftStudioLibraryResponse = zod.object({
 })
 
 
+export const ProcessGiftStudioClipOnServerBody = zod.object({
+  "settings": zod.string().describe('JSON-serialized key settings'),
+  "sourceVideo": zod.string().describe('Source video file part')
+})
+
+export const ProcessGiftStudioClipOnServerResponse = zod.unknown()
+
+
 export const CreateGiftStudioVersionBody = zod.object({
   "giftId": zod.union([zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]).optional(),
   "settings": zod.string().describe('JSON-serialized GiftStudioProcessingSettings'),
@@ -1958,6 +1966,67 @@ export const SetGiftStudioVersionActiveResponse = zod.object({
   "originalBytes": zod.number().int(),
   "webmBytes": zod.number().int(),
   "safariBytes": zod.number().int()
+})
+
+
+export const RenameGiftStudioVersionParams = zod.object({
+  "versionId": zod.coerce.string().uuid()
+})
+
+export const renameGiftStudioVersionBodyNameMax = 60;
+
+
+
+export const RenameGiftStudioVersionBody = zod.object({
+  "name": zod.string().min(1).max(renameGiftStudioVersionBodyNameMax)
+})
+
+export const renameGiftStudioVersionResponseSettingsKeyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const renameGiftStudioVersionResponseSettingsToleranceMin = 0.02;
+export const renameGiftStudioVersionResponseSettingsToleranceMax = 0.65;
+
+export const renameGiftStudioVersionResponseSettingsSoftnessMin = 0;
+export const renameGiftStudioVersionResponseSettingsSoftnessMax = 0.5;
+
+export const renameGiftStudioVersionResponseSettingsSpillMin = 0;
+export const renameGiftStudioVersionResponseSettingsSpillMax = 1;
+
+export const renameGiftStudioVersionResponseSettingsDraftNameMax = 60;
+
+
+
+export const RenameGiftStudioVersionResponse = zod.object({
+  "id": zod.string().uuid(),
+  "giftId": zod.union([zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]),
+  "version": zod.number().int(),
+  "status": zod.enum(['draft', 'active']),
+  "originalName": zod.string(),
+  "durationMs": zod.number().int(),
+  "settings": zod.object({
+  "preset": zod.enum(['green', 'magenta', 'black', 'custom']),
+  "keyColor": zod.string().regex(renameGiftStudioVersionResponseSettingsKeyColorRegExp),
+  "tolerance": zod.number().min(renameGiftStudioVersionResponseSettingsToleranceMin).max(renameGiftStudioVersionResponseSettingsToleranceMax),
+  "softness": zod.number().min(renameGiftStudioVersionResponseSettingsSoftnessMin).max(renameGiftStudioVersionResponseSettingsSoftnessMax),
+  "spill": zod.number().min(renameGiftStudioVersionResponseSettingsSpillMin).max(renameGiftStudioVersionResponseSettingsSpillMax),
+  "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
+  "draftName": zod.string().min(1).max(renameGiftStudioVersionResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft')
+}),
+  "createdAt": zod.coerce.date(),
+  "originalUrl": zod.string(),
+  "webmUrl": zod.string(),
+  "safariUrl": zod.string(),
+  "originalBytes": zod.number().int(),
+  "webmBytes": zod.number().int(),
+  "safariBytes": zod.number().int()
+})
+
+
+export const DeleteGiftStudioVersionParams = zod.object({
+  "versionId": zod.coerce.string().uuid()
+})
+
+export const DeleteGiftStudioVersionResponse = zod.object({
+  "deleted": zod.literal(true)
 })
 
 

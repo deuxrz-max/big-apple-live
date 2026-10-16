@@ -49,8 +49,11 @@ import type {
   GiftStudioActivationInput,
   GiftStudioActiveMediaResponse,
   GiftStudioAssignInput,
+  GiftStudioDeleteResponse,
   GiftStudioGiftId,
   GiftStudioLibrary,
+  GiftStudioProcessInput,
+  GiftStudioRenameInput,
   GiftStudioUploadInput,
   GiftStudioVersion,
   HealthStatus,
@@ -4488,6 +4491,77 @@ export function useGetGiftStudioLibrary<TData = Awaited<ReturnType<typeof getGif
 
 
 
+export const getProcessGiftStudioClipOnServerUrl = () => {
+
+
+
+
+  return `/api/social/admin/gift-studio/process`
+}
+
+export const processGiftStudioClipOnServer = async (giftStudioProcessInput: GiftStudioProcessInput, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+    const formData = new FormData();
+formData.append(`settings`, giftStudioProcessInput.settings);
+formData.append(`sourceVideo`, giftStudioProcessInput.sourceVideo);
+
+  return customFetch<Blob>(getProcessGiftStudioClipOnServerUrl(),
+  {
+    ...options,
+    method: 'POST'
+    ,
+    body: formData
+  }
+);}
+
+
+
+
+
+export const getProcessGiftStudioClipOnServerMutationKey = () => ['processGiftStudioClipOnServer'] as const;
+
+export const getProcessGiftStudioClipOnServerMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof processGiftStudioClipOnServer>>, TError,ProcessGiftStudioClipOnServerMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof processGiftStudioClipOnServer>>, TError,ProcessGiftStudioClipOnServerMutationVariables, TContext> => {
+
+const mutationKey = getProcessGiftStudioClipOnServerMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof processGiftStudioClipOnServer>>, ProcessGiftStudioClipOnServerMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  processGiftStudioClipOnServer(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ProcessGiftStudioClipOnServerMutationResult = NonNullable<Awaited<ReturnType<typeof processGiftStudioClipOnServer>>>
+    export type ProcessGiftStudioClipOnServerMutationBody = BodyType<GiftStudioProcessInput>
+    export type ProcessGiftStudioClipOnServerMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type ProcessGiftStudioClipOnServerMutationVariables = {data: BodyType<GiftStudioProcessInput>}
+
+    export const useProcessGiftStudioClipOnServer = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof processGiftStudioClipOnServer>>, TError,ProcessGiftStudioClipOnServerMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof processGiftStudioClipOnServer>>,
+        TError,
+        ProcessGiftStudioClipOnServerMutationVariables,
+        TContext
+      > => {
+      return useMutation(getProcessGiftStudioClipOnServerMutationOptions(options));
+    }
+
 export const getCreateGiftStudioVersionUrl = () => {
 
 
@@ -4644,6 +4718,157 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getSetGiftStudioVersionActiveMutationOptions(options));
+    }
+
+export const getRenameGiftStudioVersionUrl = (versionId: string,) => {
+
+
+
+
+  return `/api/social/admin/gift-studio/versions/${versionId}/name`
+}
+
+export const renameGiftStudioVersion = async (versionId: string,
+    giftStudioRenameInput: GiftStudioRenameInput, options?: Parameters<typeof customFetch>[1]): Promise<GiftStudioVersion> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GiftStudioVersion>(getRenameGiftStudioVersionUrl(versionId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(giftStudioRenameInput)
+  }
+);}
+
+
+
+
+
+export const getRenameGiftStudioVersionMutationKey = () => ['renameGiftStudioVersion'] as const;
+
+export const getRenameGiftStudioVersionMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof renameGiftStudioVersion>>, TError,RenameGiftStudioVersionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof renameGiftStudioVersion>>, TError,RenameGiftStudioVersionMutationVariables, TContext> => {
+
+const mutationKey = getRenameGiftStudioVersionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof renameGiftStudioVersion>>, RenameGiftStudioVersionMutationVariables> = (props) => {
+          const {versionId,data} = props ?? {};
+
+          return  renameGiftStudioVersion(versionId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RenameGiftStudioVersionMutationResult = NonNullable<Awaited<ReturnType<typeof renameGiftStudioVersion>>>
+    export type RenameGiftStudioVersionMutationBody = BodyType<GiftStudioRenameInput>
+    export type RenameGiftStudioVersionMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type RenameGiftStudioVersionMutationVariables = {versionId: string;data: BodyType<GiftStudioRenameInput>}
+
+    export const useRenameGiftStudioVersion = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof renameGiftStudioVersion>>, TError,RenameGiftStudioVersionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof renameGiftStudioVersion>>,
+        TError,
+        RenameGiftStudioVersionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRenameGiftStudioVersionMutationOptions(options));
+    }
+
+export const getDeleteGiftStudioVersionUrl = (versionId: string,) => {
+
+
+
+
+  return `/api/social/admin/gift-studio/versions/${versionId}/delete`
+}
+
+export const deleteGiftStudioVersion = async (versionId: string, options?: Parameters<typeof customFetch>[1]): Promise<GiftStudioDeleteResponse> => {
+
+  return customFetch<GiftStudioDeleteResponse>(getDeleteGiftStudioVersionUrl(versionId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteGiftStudioVersionMutationKey = () => ['deleteGiftStudioVersion'] as const;
+
+export const getDeleteGiftStudioVersionMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGiftStudioVersion>>, TError,DeleteGiftStudioVersionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteGiftStudioVersion>>, TError,DeleteGiftStudioVersionMutationVariables, TContext> => {
+
+const mutationKey = getDeleteGiftStudioVersionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteGiftStudioVersion>>, DeleteGiftStudioVersionMutationVariables> = (props) => {
+          const {versionId} = props ?? {};
+
+          return  deleteGiftStudioVersion(versionId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteGiftStudioVersionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteGiftStudioVersion>>>
+
+    export type DeleteGiftStudioVersionMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type DeleteGiftStudioVersionMutationVariables = {versionId: string}
+
+    export const useDeleteGiftStudioVersion = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGiftStudioVersion>>, TError,DeleteGiftStudioVersionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteGiftStudioVersion>>,
+        TError,
+        DeleteGiftStudioVersionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteGiftStudioVersionMutationOptions(options));
     }
 
 export const getAssignGiftStudioVersionToGiftUrl = (versionId: string,) => {

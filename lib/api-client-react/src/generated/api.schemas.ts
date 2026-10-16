@@ -2269,6 +2269,26 @@ export interface GiftStudioUploadInput {
   processedWebm: string;
 }
 
+export interface GiftStudioProcessInput {
+  /** JSON-serialized key settings */
+  settings: string;
+  /** Source video file part */
+  sourceVideo: string;
+}
+
+export interface GiftStudioRenameInput {
+  /**
+     * @minLength 1
+     * @maxLength 60
+     */
+  name: string;
+}
+
+export const GiftStudioDeleteResponseValue = {
+  deleted: true,
+} as const;
+export type GiftStudioDeleteResponse = typeof GiftStudioDeleteResponseValue;
+
 export interface GiftStudioAssignInput {
   giftId: GiftStudioGiftId;
 }

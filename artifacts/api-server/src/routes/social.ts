@@ -2,7 +2,7 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { eq, sql } from "drizzle-orm";
 import multer from "multer";
 import { randomUUID } from "node:crypto";
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { accountProfiles, db } from "@workspace/db";
@@ -45,8 +45,9 @@ import {
 import { getMyEntranceEffectSettings, saveMyEntranceEffectSettings } from "../lib/social/entrance-effect-preferences";
 import { saveEquippedBadge } from "../lib/social/monthly-credit-badges";
 import {
-  createGiftStudioVersion, getActiveGiftStudioMedia, giftStudioMediaFile,
-  listGiftStudioVersions, setGiftStudioVersionActive, assignGiftStudioVersionToGift,
+  createGiftStudioVersion, deleteGiftStudioVersion, getActiveGiftStudioMedia, giftStudioMediaFile,
+  listGiftStudioVersions, processGiftStudioClipOnServer, renameGiftStudioVersion,
+  setGiftStudioVersionActive, assignGiftStudioVersionToGift,
 } from "../lib/gift-studio";
 
 const router: IRouter = Router();
@@ -113,7 +114,7 @@ function parseStudioUpload(req: Request, res: Response, next: (error?: unknown) 
       next(new RoomError(413, "Each video must be 100 MB or smaller."));
       return;
     }
-    next(new RoomError(400, "Choose one original video and one processed animation."));
+    next(new RoomError(400, "Choose a valid video file. Each file must be 100 MB or smaller."));
   });
 }
 
@@ -161,6 +162,48 @@ async function streamStudioMedia(
 
 router.get("/social/admin/gift-studio/library", ownerOnly, async (req, res): Promise<void> => {
   res.json(GetGiftStudioLibraryResponse.parse(await listGiftStudioVersions(accountId(req))));
+});
+
+router.post("/social/admin/gift-studio/process", ownerOnly, parseStudioUpload, async (req, res): Promise<void> => {
+  const directory = studioTempDirs.get(req);
+  const files = req.files as Record<string, Express.Multer.File[]> | undefined;
+  const source = files?.sourceVideo?.[0];
+  const controller = new AbortController();
+  req.once("aborted", () => controller.abort());
+  res.once("close", () => {
+    if (!res.writableEnded) controller.abort();
+  });
+  try {
+    if (!directory || !source) throw new RoomError(400, "Choose a source video before processing.");
+    let settingsValue: unknown;
+    try {
+      settingsValue = JSON.parse(String(req.body?.settings ?? ""));
+    } catch {
+      throw new RoomError(400, "The key settings could not be read. Refresh the page and try again.");
+    }
+    const settings = CreateGiftStudioVersionResponse.shape.settings.parse(settingsValue);
+    const result = await processGiftStudioClipOnServer({
+      sourcePath: source.path,
+      sourceBytes: source.size,
+      settings,
+      signal: controller.signal,
+    });
+    const bytes = await readFile(result.path);
+    res.set({
+      "Content-Type": "video/webm",
+      "Content-Length": String(bytes.byteLength),
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+    }).status(200).send(bytes);
+  } catch (error) {
+    req.log.error({ err: error }, "Gift Studio server-side video processing failed");
+    throw error;
+  } finally {
+    if (directory) {
+      await rm(directory, { recursive: true, force: true });
+      studioTempDirs.delete(req);
+    }
+  }
 });
 
 router.post("/social/admin/gift-studio/versions", ownerOnly, parseStudioUpload, async (req, res): Promise<void> => {
@@ -221,6 +264,21 @@ router.patch("/social/admin/gift-studio/versions/:versionId/gift", ownerOnly, as
   if (!params.success || !body.success) throw new RoomError(400, "Choose an existing gift.");
   const result = await assignGiftStudioVersionToGift(accountId(req), params.data.versionId, body.data.giftId);
   res.json(AssignGiftStudioVersionToGiftResponse.parse(result));
+});
+
+router.patch("/social/admin/gift-studio/versions/:versionId/name", ownerOnly, async (req, res): Promise<void> => {
+  const versionId = typeof req.params.versionId === "string" ? req.params.versionId : "";
+  const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+  if (!/^[0-9a-f-]{36}$/i.test(versionId)) throw new RoomError(400, "Choose a saved gift to rename.");
+  if (!name || name.length > 60) throw new RoomError(400, "Gift names must be 1 to 60 characters.");
+  const result = await renameGiftStudioVersion(accountId(req), versionId, name);
+  res.json(CreateGiftStudioVersionResponse.parse(result));
+});
+
+router.delete("/social/admin/gift-studio/versions/:versionId/delete", ownerOnly, async (req, res): Promise<void> => {
+  const versionId = typeof req.params.versionId === "string" ? req.params.versionId : "";
+  if (!/^[0-9a-f-]{36}$/i.test(versionId)) throw new RoomError(400, "Choose a saved gift to delete.");
+  res.json(await deleteGiftStudioVersion(accountId(req), versionId));
 });
 
 router.get("/social/admin/gift-studio/versions/:versionId/media/:variant", ownerOnly, async (req, res): Promise<void> => {

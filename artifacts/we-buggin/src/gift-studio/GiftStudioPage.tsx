@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useAuth } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, Archive, Check, Download, Pipette, FileVideo2, LockKeyhole, Pause, Play, RefreshCw, Scissors, ShieldCheck, Upload, X } from 'lucide-react';
+import { AlertTriangle, Archive, Check, Download, Pipette, FileVideo2, LockKeyhole, Pause, Play, RefreshCw, Scissors, ShieldCheck, Upload, X, Pencil, Trash2, Save } from 'lucide-react';
 import {
   getGetActiveGiftStudioMediaQueryKey,
   getGetGiftStudioLibraryQueryKey,
@@ -49,7 +50,57 @@ const ownerErrorText = (error: unknown) => isDenied(error)
   : errorText(error);
 const timeLabel = (value: number) => `${Math.floor(value / 60)}:${Math.floor(value % 60).toString().padStart(2, '0')}`;
 
+type AuthTokenGetter = () => Promise<string | null>;
+
+async function processClipOnServer(file: File, settings: ClipSettings, signal: AbortSignal, getToken: AuthTokenGetter): Promise<Blob> {
+  const form = new FormData();
+  form.append('sourceVideo', file, file.name);
+  form.append('settings', JSON.stringify(settings));
+  const token = await getToken();
+  const response = await fetch('/api/social/admin/gift-studio/process', {
+    method: 'POST',
+    credentials: 'include',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body: form,
+    signal,
+  });
+  if (!response.ok) {
+    const raw = await response.text();
+    let message = '';
+    try {
+      const parsed = JSON.parse(raw) as { message?: string; error?: string; detail?: string };
+      message = parsed.message ?? parsed.detail ?? parsed.error ?? '';
+    } catch {
+      message = raw.trim();
+    }
+    throw new Error(message || `Streamtalk could not process this clip (server error ${response.status}).`);
+  }
+  const output = await response.blob();
+  if (output.size === 0) throw new Error('The processor returned an empty video. Try processing again.');
+  if (!output.type.includes('video/webm')) throw new Error('The processor returned an unexpected file instead of transparent WebM.');
+  return output;
+}
+
+async function giftStudioLibraryRequest(url: string, method: 'PATCH' | 'DELETE', getToken: AuthTokenGetter, body?: unknown) {
+  const token = await getToken();
+  const response = await fetch(url, {
+    method,
+    credentials: 'include',
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const raw = await response.text();
+  let data: { message?: string; error?: string } = {};
+  try { data = raw ? JSON.parse(raw) as typeof data : {}; } catch { /* keep the short fallback below */ }
+  if (!response.ok) throw new Error(data.message ?? data.error ?? `Gift Studio could not ${method === 'DELETE' ? 'delete' : 'update'} this saved item.`);
+  return data;
+}
+
 export function GiftStudioPage() {
+  const { getToken } = useAuth();
   const client = useQueryClient();
   const library = useGetGiftStudioLibrary({ query: { queryKey: getGetGiftStudioLibraryQueryKey(), retry: false } });
   const createVersion = useCreateGiftStudioVersion();
@@ -60,6 +111,7 @@ export function GiftStudioPage() {
   const [processedUrl, setProcessedUrl] = useState('');
   const [processedBlob, setProcessedBlob] = useState<Blob | null>(null);
   const [duration, setDuration] = useState(0);
+  const [frameRatio, setFrameRatio] = useState<number | null>(null);
   const [addToGiftSelection, setAddToGiftSelection] = useState(false);
   const [giftId, setGiftId] = useState<GiftStudioGiftId | ''>('');
   const [draftName, setDraftName] = useState('');
@@ -67,10 +119,11 @@ export function GiftStudioPage() {
   const [keyColor, setKeyColor] = useState('#00ff00');
   const [tolerance, setTolerance] = useState(.24);
   const [softness, setSoftness] = useState(.08);
-  const [spill, setSpill] = useState(.35);
-  const [maxDimension, setMaxDimension] = useState<ClipSettings['maxDimension']>(720);
+  const [spill, setSpill] = useState(.55);
+  const [maxDimension, setMaxDimension] = useState<ClipSettings['maxDimension']>(480);
   const [backdrop, setBackdrop] = useState<'checker' | 'light' | 'dark'>('checker');
   const [processing, setProcessing] = useState(false);
+  const [serverProcessing, setServerProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [downloadingFrames, setDownloadingFrames] = useState(false);
   const [frameZipProgress, setFrameZipProgress] = useState(0);
@@ -80,7 +133,10 @@ export function GiftStudioPage() {
   const [error, setError] = useState('');
   const [selectedPreview, setSelectedPreview] = useState<GiftStudioVersion | null>(null);
   const [playingPreview, setPlayingPreview] = useState<GiftStudioVersion | null>(null);
+  const [playingSample, setPlayingSample] = useState<GiftStudioVersion | null>(null);
+  const [libraryActionId, setLibraryActionId] = useState<string | null>(null);
   const cancelledRef = useRef(false);
+  const serverAbortRef = useRef<AbortController | null>(null);
   const originalVideoRef = useRef<HTMLVideoElement>(null);
   const processedVideoRef = useRef<HTMLVideoElement>(null);
   const livePreviewCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -167,12 +223,16 @@ export function GiftStudioPage() {
     setOriginalUrl(nextUrl);
     setFile(candidate);
     setDuration(0);
+    setFrameRatio(null);
     setPlayhead(0);
     setStatus('Checking clip length…');
   };
   const onOriginalMetadata = () => {
     const video = originalVideoRef.current;
     if (!video) return;
+    if (video.videoWidth > 0 && video.videoHeight > 0) {
+      setFrameRatio(video.videoWidth / video.videoHeight);
+    }
     setDuration(video.duration);
     if (!Number.isFinite(video.duration) || video.duration > MAX_SECONDS) {
       setError('Clip must be 15 seconds or shorter.');
@@ -180,7 +240,7 @@ export function GiftStudioPage() {
       setFile(null);
       return;
     }
-    setStatus('Ready to process locally.');
+    setStatus('Ready to process. Android uses Streamtalk’s temporary 480 px processor to avoid phone memory failures.');
     void video.play().catch(() => setStatus('Tap Play to start both previews.'));
   };
 
@@ -234,8 +294,11 @@ export function GiftStudioPage() {
     cancelledRef.current = true;
     engineRef.current?.terminate();
     engineRef.current = null;
+    serverAbortRef.current?.abort();
+    serverAbortRef.current = null;
     resetOutput();
     setProcessing(false);
+    setServerProcessing(false);
     setProgress(0);
     setStatus('Processing cancelled. Temporary clip data was cleared.');
     setError('');
@@ -245,23 +308,56 @@ export function GiftStudioPage() {
     cancelledRef.current = false;
     resetOutput();
     setProcessing(true);
+    setServerProcessing(false);
     setProgress(0);
     setError('');
     setStatus('Loading local video engine…');
+    const preferServer = /Android/i.test(navigator.userAgent);
     try {
-      const { processClipLocally } = await import('./processClip');
+      let resultBlob: Blob;
+      let usedServerProcessor = preferServer;
+      if (preferServer) {
+        setServerProcessing(true);
+        setStatus('Using Streamtalk’s Android-safe processor (480 px, 24 fps)…');
+        const controller = new AbortController();
+        serverAbortRef.current = controller;
+        resultBlob = await processClipOnServer(file, settings, controller.signal, getToken);
+      } else {
+        try {
+          const { processClipLocally } = await import('./processClip');
+          if (cancelledRef.current) return;
+          const result = await processClipLocally(file, settings, (value) => setProgress(value), (engine) => {
+            engineRef.current = engine;
+          }, (stage) => setStatus(stage));
+          resultBlob = result.blob;
+        } catch (localCause) {
+          if (cancelledRef.current) return;
+          usedServerProcessor = true;
+          setServerProcessing(true);
+          setProgress(0);
+          setStatus('Phone encoding could not finish. Retrying with Streamtalk’s low-memory processor (480 px, 24 fps)…');
+          const controller = new AbortController();
+          serverAbortRef.current = controller;
+          try {
+            resultBlob = await processClipOnServer(file, settings, controller.signal, getToken);
+          } catch (serverCause) {
+            if (cancelledRef.current) return;
+            const localMessage = localCause instanceof Error && localCause.message
+              ? localCause.message
+              : 'the phone video encoder stopped unexpectedly';
+            throw new Error(`${localMessage} Server fallback also failed: ${errorText(serverCause)}`);
+          }
+        }
+      }
       if (cancelledRef.current) return;
-      const result = await processClipLocally(file, settings, (value) => setProgress(value), (engine) => {
-        engineRef.current = engine;
-        if (engine) setStatus('Processing clip on this device…');
-      }, (stage) => setStatus(stage));
-      if (cancelledRef.current) return;
-      const url = URL.createObjectURL(result.blob);
+      const url = URL.createObjectURL(resultBlob);
       setProcessedUrl(url);
-      setProcessedBlob(result.blob);
+      setProcessedBlob(resultBlob);
       processedSettingsRef.current = JSON.stringify(settings);
       setProgress(1);
-      setStatus('Finished. The transparent WebM passed the local alpha check.');
+      setStatus(usedServerProcessor
+        ? 'Finished with low-memory server processing. The transparent WebM passed the alpha check.'
+        : 'Finished. The transparent WebM passed the local alpha check.');
     } catch (cause) {
       if (cancelledRef.current || String(cause).toLowerCase().includes('terminated')) {
         setStatus('Processing cancelled. Temporary clip data was cleared.');
@@ -271,6 +367,8 @@ export function GiftStudioPage() {
       }
     } finally {
       setProcessing(false);
+      setServerProcessing(false);
+      serverAbortRef.current = null;
       engineRef.current = null;
     }
   };
@@ -401,6 +499,42 @@ export function GiftStudioPage() {
       onError: (cause) => setError(ownerErrorText(cause)),
     });
   };
+  const renameVersion = async (version: GiftStudioVersion, name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setError('Enter a name before saving.');
+      return;
+    }
+    setLibraryActionId(version.id);
+    setError('');
+    try {
+      await giftStudioLibraryRequest(`/api/social/admin/gift-studio/versions/${version.id}/name`, 'PATCH', getToken, { name: trimmed });
+      await client.invalidateQueries({ queryKey: getGetGiftStudioLibraryQueryKey() });
+      setStatus(`Saved gift renamed to “${trimmed}”.`);
+      setSelectedPreview((current) => current?.id === version.id ? { ...current, settings: { ...current.settings, draftName: trimmed } } : current);
+    } catch (cause) {
+      setError(ownerErrorText(cause));
+    } finally {
+      setLibraryActionId(null);
+    }
+  };
+  const removeVersion = async (version: GiftStudioVersion) => {
+    if (!window.confirm(`Delete “${versionName(version)}” and its saved animation files? This cannot be undone.`)) return;
+    setLibraryActionId(version.id);
+    setError('');
+    try {
+      await giftStudioLibraryRequest(`/api/social/admin/gift-studio/versions/${version.id}/delete`, 'DELETE', getToken);
+      await client.invalidateQueries({ queryKey: getGetGiftStudioLibraryQueryKey() });
+      if (selectedPreview?.id === version.id) setSelectedPreview(null);
+      if (playingPreview?.id === version.id) setPlayingPreview(null);
+      if (playingSample?.id === version.id) setPlayingSample(null);
+      setStatus(`“${versionName(version)}” was removed from saved gifts.`);
+    } catch (cause) {
+      setError(ownerErrorText(cause));
+    } finally {
+      setLibraryActionId(null);
+    }
+  };
   const previewVersion = (version: GiftStudioVersion) => setSelectedPreview(version);
 
   if (library.isError && isDenied(library.error)) {
@@ -409,13 +543,16 @@ export function GiftStudioPage() {
 
   const libraryItems = library.data?.items ?? [];
   const filteredItems = selectedPreview ? [selectedPreview, ...libraryItems.filter((item) => item.id !== selectedPreview.id)] : libraryItems;
+  const previewStageStyle = frameRatio && Number.isFinite(frameRatio)
+    ? { width: `min(100%, ${48 * frameRatio}dvh)`, maxHeight: '48dvh', aspectRatio: String(frameRatio), marginInline: 'auto' }
+    : undefined;
   return (
     <main className="gs">
       <div className="gs-shell">
         <div className="gs-topline"><span className="gs-topline-mark" /> STREAMTALK · GIFT STUDIO</div>
         <header className="gs-heading">
-          <div><h1>Cut the screen.<br /><span>Keep the glow.</span></h1><p>Turn green, magenta or black-screen gift animations into real transparency. Processing runs in your browser, free.</p></div>
-          <div className="gs-private"><LockKeyhole size={13} /> On-device processing</div>
+          <div><h1>Cut the screen.<br /><span>Keep the glow.</span></h1><p>Preview stays on your phone. If its video encoder cannot finish, Streamtalk can process a temporary low-memory copy; nothing is saved until you approve it.</p></div>
+          <div className="gs-private"><LockKeyhole size={13} /> Phone + safe fallback</div>
         </header>
 
         <div className="gs-layout">
@@ -437,7 +574,7 @@ export function GiftStudioPage() {
                       </>}
                     <input id="gs-file-input" type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" disabled={processing} onChange={(event) => { loadFile(event.currentTarget.files?.[0]); event.currentTarget.value = ''; }} data-testid="input-source-video" aria-label="Choose a video clip" />
                   </label>
-                  <p className="gs-caption">Nothing uploads while you experiment. The original stays on your device until you approve the final version.</p>
+                  <p className="gs-caption">The live preview stays on your phone. If Android needs server encoding, a temporary copy is deleted after processing. Nothing is saved until you approve it.</p>
                 </div>
               </div>
             </section>
@@ -466,13 +603,13 @@ export function GiftStudioPage() {
               <div className="gs-preview-grid">
                 <div className="gs-preview">
                   <div className="gs-preview-label">Before <span>Original clip</span></div>
-                  <div className={`gs-preview-stage ${backdrop}`} data-testid="preview-original">
+                  <div className={`gs-preview-stage ${backdrop}`} style={previewStageStyle} data-testid="preview-original">
                     {originalUrl ? <video ref={originalVideoRef} src={originalUrl} muted playsInline loop autoPlay preload="metadata" onLoadedMetadata={onOriginalMetadata} onTimeUpdate={syncTime} /> : <div className="gs-empty-preview">Your source preview will appear here.</div>}
                   </div>
                 </div>
                 <div className="gs-preview">
                   <div className="gs-preview-label">After <span>{processedUrl ? <span className="gs-ready-label"><Check size={12} /> Ready</span> : file ? 'Live cutout preview' : 'Background removed'}</span></div>
-                  <div className={`gs-preview-stage ${backdrop}`} data-testid="preview-processed">
+                  <div className={`gs-preview-stage ${backdrop}`} style={previewStageStyle} data-testid="preview-processed">
                     {processedUrl ? <video ref={processedVideoRef} src={processedUrl} muted playsInline loop autoPlay preload="metadata" onLoadedMetadata={onProcessedMetadata} onTimeUpdate={syncTime} /> :
                       originalUrl ? <><canvas ref={livePreviewCanvasRef} aria-label="Live background-removed preview" data-testid="canvas-live-cutout" />{livePreviewError && <div className="gs-preview-note" role="status">{livePreviewError}</div>}</> :
                         <div className="gs-empty-preview">Choose a source clip to see the cutout preview.</div>}
@@ -481,7 +618,7 @@ export function GiftStudioPage() {
                     {!processedUrl && (processing ?
                       <button className="gs-button quiet" type="button" onClick={cancelProcessing} data-testid="button-cancel-processing"><X size={15} /> Cancel processing</button> :
                       <button className="gs-button primary gs-remove-background" type="button" onClick={() => void process()} disabled={!file || duration > MAX_SECONDS || duration <= 0} data-testid="button-process"><Scissors size={17} /> Remove background</button>)}
-                    {processing && <div className="gs-progress" role="status" aria-live="polite" data-testid="state-processing"><div className="gs-progress-track"><div className="gs-progress-fill" style={{ width: `${Math.round(progress * 100)}%` }} /></div><div className="gs-progress-copy"><span>{status}</span><span>{Math.round(progress * 100)}%</span></div></div>}
+                    {processing && <div className="gs-progress" role="status" aria-live="polite" data-testid="state-processing"><div className="gs-progress-track"><div className={`gs-progress-fill${serverProcessing ? ' is-indeterminate' : ''}`} style={serverProcessing ? undefined : { width: `${Math.round(progress * 100)}%` }} /></div><div className="gs-progress-copy"><span>{status}</span><span>{serverProcessing ? 'Working' : `${Math.round(progress * 100)}%`}</span></div></div>}
                     {processedUrl && <div className="gs-save-destination" data-testid="panel-save-destination">
                       <strong>What would you like to do with this clip?</strong>
                       <label><input type="radio" name="gift-destination" checked={!addToGiftSelection} onChange={() => setAddToGiftSelection(false)} data-testid="radio-standalone-draft" /> Save it as a named Gift Studio draft</label>
@@ -494,10 +631,10 @@ export function GiftStudioPage() {
                         </select>
                       </label>}
                       <button className="gs-button primary" type="button" onClick={approve} disabled={!file || !processedBlob || !draftName.trim() || (addToGiftSelection && !giftId) || createVersion.isPending} data-testid="button-save-as-gift" aria-describedby="gs-save-target-note">
-                        {createVersion.isPending ? 'Saving…' : addToGiftSelection ? 'Save gift draft' : 'Save standalone draft'} <Check size={15} />
+                        {createVersion.isPending ? 'Saving…' : addToGiftSelection ? 'Save to selected gift' : 'Save as gift'} <Check size={15} />
                       </button>
                       {createVersion.isError && <div className="gs-error" role="alert" data-testid="state-upload-error">{ownerErrorText(createVersion.error)}</div>}
-                      <p className="gs-caption gs-save-note" id="gs-save-target-note">Gift drafts stay inactive until you activate a version in the library. Standalone drafts do not appear in the gift picker.</p>
+                      <p className="gs-caption gs-save-note" id="gs-save-target-note">This saves the named clip in Streamtalk’s Saved gifts list. To use it in gifting, attach it to an existing catalog gift and activate it there; prices and gift credits do not change.</p>
                     </div>}
                     {processedUrl && <div className="gs-after-downloads">
                       <button className="gs-button" type="button" onClick={() => processedBlob && downloadBlob(processedBlob, `${safeGiftFilePrefix()}-transparent.webm`)} disabled={!processedBlob} data-testid="button-download-webm"><Download size={14} /> Download WebM</button>
@@ -535,25 +672,25 @@ export function GiftStudioPage() {
                 <div className="gs-field-row"><div><label htmlFor="gs-spill">Spill reduction <output>{spill.toFixed(2)}</output></label><input className="gs-range" id="gs-spill" type="range" min="0" max="1" step=".01" value={spill} onChange={(event) => setSpill(Number(event.target.value))} disabled={keyPreset === 'black'} data-testid="input-spill" />{keyPreset === 'black' && <p className="gs-caption">Spill reduction is not used with a black key.</p>}</div><span className="gs-kicker">Color</span></div>
                 <div><label className="gs-kicker" htmlFor="gs-max-size">Maximum output dimension</label><select className="gs-chip-button" id="gs-max-size" value={maxDimension ?? 'original'} onChange={(event) => setMaxDimension(event.target.value === 'original' ? null : Number(event.target.value) as 480 | 720 | 1080)} data-testid="select-max-dimension"><option value="original">Keep original size</option><option value="480">480 px · smallest</option><option value="720">720 px · balanced</option><option value="1080">1080 px · sharpest</option></select><p className="gs-caption">Downscaling lowers memory use and can finish faster, especially on phones.</p></div>
               </fieldset>
-              <div className="gs-mobile-note"><FileVideo2 size={16} /><div><strong>Large clips use phone memory</strong>Processing happens locally and temporarily holds the source and output in memory. On mobile, choose 480 or 720 px for a lighter run.</div></div>
+                <div className="gs-mobile-note"><FileVideo2 size={16} /><div><strong>Lower memory mode</strong>Android phones with limited memory use server encoding at 480 px and 24 fps. Larger devices try on-device encoding first, then fall back if it fails.</div></div>
             </section>
           </div>
 
           <aside className="gs-stack">
             <section className="gs-panel" aria-labelledby="gs-library-title">
-              <div className="gs-panel-head"><div><div className="gs-kicker">Saved for later</div><h2 className="gs-panel-title" id="gs-library-title">Version library</h2></div><span className="gs-status">{libraryItems.length} saved</span></div>
+              <div className="gs-panel-head"><div><div className="gs-kicker">Owner gift storage</div><h2 className="gs-panel-title" id="gs-library-title">Saved gifts</h2></div><span className="gs-status">{libraryItems.length} saved</span></div>
               {library.isLoading ? <div className="gs-library-list" aria-label="Loading gift versions" data-testid="state-library-loading">{[1, 2, 3].map((i) => <div className="gs-library-card" key={i}><div className="gs-version-mark" /><div className="gs-version-info"><strong>Loading saved version</strong><small>Fetching your library…</small></div></div>)}</div> :
                 library.isError ? <div className="gs-error-panel" role="alert" data-testid="state-library-error"><p>{errorText(library.error)}</p><button className="gs-button" type="button" onClick={() => void library.refetch()} data-testid="button-retry-library"><RefreshCw size={14} /> Try again</button></div> :
-                  libraryItems.length === 0 ? <div className="gs-empty-library" data-testid="state-library-empty">Your saved versions will live here. Save a finished cutout to add the first draft. Nothing is stored before you save.</div> :
-                     <div className="gs-library-list" data-testid="list-gift-versions">{filteredItems.map((version) => <LibraryVersion key={version.id} version={version} onPreview={previewVersion} onToggle={toggleVersion} onAssign={attachVersion} pending={setActive.isPending || assignVersion.isPending} />)}</div>}
-              <p className="gs-caption">Drafts never interrupt the animation currently playing in your rooms. You can switch versions or return one to draft at any time.</p>
+                  libraryItems.length === 0 ? <div className="gs-empty-library" data-testid="state-library-empty">Saved gifts will appear here with a looping preview. Save a finished transparent clip to add the first one.</div> :
+                     <div className="gs-library-list" data-testid="list-gift-versions">{filteredItems.map((version) => <LibraryVersion key={version.id} version={version} onPreview={previewVersion} onToggle={toggleVersion} onAssign={attachVersion} onRename={renameVersion} onDelete={removeVersion} pending={setActive.isPending || assignVersion.isPending || libraryActionId === version.id} />)}</div>}
+              <p className="gs-caption">Attach a saved draft to an existing catalog gift and activate it when ready. Active versions are available to Streamtalk’s gift player; drafts do not replace current gift animations.</p>
             </section>
             <section className="gs-panel">
               <div className="gs-panel-head"><div><div className="gs-kicker">How it works</div><h2 className="gs-panel-title">Owner-controlled, always</h2></div></div>
               <div className="gs-stack" style={{ gap: 12 }}>
-                <div className="gs-mobile-note"><span className="gs-step-number">A</span><div><strong>Preview stays private</strong>Keying and encoding run in your browser with the local FFmpeg engine.</div></div>
+                <div className="gs-mobile-note"><span className="gs-step-number">A</span><div><strong>Preview stays private</strong>The live key preview stays on-device. On lower-memory Android phones, final encoding uses a temporary server copy that is deleted after processing.</div></div>
                 <div className="gs-mobile-note"><span className="gs-step-number">B</span><div><strong>Save the exact export</strong>Both the original and the same transparent WebM are saved as a named draft.</div></div>
-                <div className="gs-mobile-note"><span className="gs-step-number">C</span><div><strong>Activate only when ready</strong>Old versions stay saved, so you can safely switch back.</div></div>
+                <div className="gs-mobile-note"><span className="gs-step-number">C</span><div><strong>Use in gifts when ready</strong>Attach a saved clip to an existing gift and activate it. Other versions remain saved for switching back.</div></div>
               </div>
             </section>
           </aside>
@@ -566,10 +703,11 @@ export function GiftStudioPage() {
           <div className="gs-panel-head"><div><div className="gs-kicker">{selectedPreview.status} · version {selectedPreview.version}</div><h2 className="gs-panel-title" id="gs-version-dialog-title">{versionName(selectedPreview)} animation</h2></div><button type="button" className="gs-icon-button" onClick={() => setSelectedPreview(null)} aria-label="Close version preview" data-testid="button-close-version-preview"><X size={16} /></button></div>
           <div className="gs-preview-stage checker"><video src={giftStudioMediaUrl(selectedPreview.webmUrl)} controls muted playsInline preload="metadata" data-testid={`video-library-version-${selectedPreview.id}`} /></div>
           <div className="gs-controls">
+            <button type="button" className="gs-button primary" onClick={() => setPlayingSample(selectedPreview)} data-testid={`button-play-version-sample-${selectedPreview.id}`}>Play over sample stream</button>
             {selectedPreview.giftId ? <>
               <button type="button" className="gs-button" onClick={() => setPlayingPreview(selectedPreview)} data-testid={`button-play-version-overlay-${selectedPreview.id}`}>Play through gift overlay</button>
               <button type="button" className="gs-button" onClick={() => toggleVersion(selectedPreview, selectedPreview.status !== 'active')} disabled={setActive.isPending} data-testid={`button-toggle-version-${selectedPreview.id}`}>{selectedPreview.status === 'active' ? 'Return to draft' : 'Activate this version'}</button>
-            </> : <p className="gs-caption">This is a standalone draft. Add it to an existing gift from its library card before testing it in the gift overlay or activating it.</p>}
+            </> : <p className="gs-caption">To use this saved clip in gifts, choose an existing catalog gift in its card and activate the attached version.</p>}
             <button type="button" className="gs-button quiet" onClick={() => setSelectedPreview(null)}>Done</button>
           </div>
         </section>
@@ -586,26 +724,32 @@ export function GiftStudioPage() {
         }}
         onFinish={() => setPlayingPreview(null)}
       />}
+      {playingSample && <GiftStudioSamplePreview version={playingSample} onClose={() => setPlayingSample(null)} />}
     </main>
   );
 }
 
 export default GiftStudioPage;
 
-function LibraryVersion({ version, onPreview, onToggle, onAssign, pending }: {
+function LibraryVersion({ version, onPreview, onToggle, onAssign, onRename, onDelete, pending }: {
   version: GiftStudioVersion;
   onPreview: (version: GiftStudioVersion) => void;
   onToggle: (version: GiftStudioVersion, active: boolean) => void;
   onAssign: (version: GiftStudioVersion, giftId: GiftStudioGiftId) => void;
+  onRename: (version: GiftStudioVersion, name: string) => void;
+  onDelete: (version: GiftStudioVersion) => void;
   pending: boolean;
 }) {
   const [giftTarget, setGiftTarget] = useState<GiftStudioGiftId | ''>('');
   const label = versionName(version);
+  const [name, setName] = useState(label);
+  useEffect(() => setName(label), [label]);
   return <article className="gs-library-card" data-testid={`card-gift-version-${version.id}`}>
-    <div className="gs-version-mark">V{version.version}</div>
+    <div className="gs-library-preview checker"><video src={giftStudioMediaUrl(version.webmUrl)} muted playsInline loop autoPlay preload="metadata" aria-label={`${label} looping transparent preview`} data-testid={`video-library-loop-${version.id}`} /></div>
     <div className="gs-version-info"><strong>{label}</strong><small>{version.giftId ? `${GIFTS.find((gift) => gift.id === version.giftId)?.label} · ` : 'Standalone draft · not in gift selection · '}{new Date(version.createdAt).toLocaleDateString()} · {formatBytes(version.webmBytes)} WebM · {version.durationMs / 1000}s</small><span className={`gs-status ${version.status === 'active' ? 'active' : ''}`} data-testid={`status-version-${version.id}`}>{version.status}</span></div>
     <div className="gs-card-actions">
       <button className="gs-icon-button" type="button" onClick={() => onPreview(version)} aria-label={`Preview ${label} version ${version.version}`} data-testid={`button-preview-version-${version.id}`}><Play size={14} /></button>
+      <button className="gs-chip-button" type="button" onClick={() => onDelete(version)} disabled={pending} aria-label={`Delete ${label}`} data-testid={`button-delete-version-${version.id}`}><Trash2 size={14} /> Delete</button>
       {version.giftId ? <button className="gs-chip-button" type="button" onClick={() => onToggle(version, version.status !== 'active')} disabled={pending} data-testid={`button-activate-version-${version.id}`}>{version.status === 'active' ? 'Return to draft' : 'Activate'}</button> :
         <div className="gs-assign-row">
           <select className="gs-chip-button" value={giftTarget} onChange={(event) => setGiftTarget(event.target.value as GiftStudioGiftId | '')} aria-label={`Choose a gift for ${label}`} data-testid={`select-assign-gift-${version.id}`}>
@@ -615,7 +759,25 @@ function LibraryVersion({ version, onPreview, onToggle, onAssign, pending }: {
           <button className="gs-chip-button" type="button" onClick={() => giftTarget && onAssign(version, giftTarget)} disabled={pending || !giftTarget} data-testid={`button-assign-gift-${version.id}`}>Add to gift</button>
         </div>}
     </div>
+    <form className="gs-library-rename" onSubmit={(event) => { event.preventDefault(); onRename(version, name); }}>
+      <label htmlFor={`gift-name-${version.id}`}>Rename saved gift</label>
+      <input id={`gift-name-${version.id}`} value={name} maxLength={MAX_DRAFT_NAME} onChange={(event) => setName(event.target.value)} aria-label={`Name for ${label}`} data-testid={`input-rename-version-${version.id}`} />
+      <button className="gs-chip-button" type="submit" disabled={pending || !name.trim() || name.trim() === label}><Save size={14} /> Save name</button>
+    </form>
   </article>;
+}
+
+function GiftStudioSamplePreview({ version, onClose }: { version: GiftStudioVersion; onClose: () => void }) {
+  return <div className="gs-sample-preview-wrap" role="dialog" aria-modal="true" aria-label={`${versionName(version)} sample stream preview`} onClick={(event) => { if (event.target === event.currentTarget) onClose(); }} data-testid="dialog-sample-stream-preview">
+    <div className="gs-sample-stream" aria-label="Sample live stream background">
+      <div className="gs-sample-stream-scene" />
+      <div className="gs-sample-stream-top"><span className="gs-live-dot" /> SAMPLE STREAM</div>
+      <div className="gs-sample-stream-chat">The gift animation is playing over the sample stream.</div>
+      <video src={giftStudioMediaUrl(version.webmUrl)} muted playsInline loop autoPlay preload="auto" aria-label={`${versionName(version)} looping animation`} data-testid="video-sample-stream-preview" />
+      <div className="gs-sample-stream-name">{versionName(version)}</div>
+    </div>
+    <button type="button" className="gs-sample-close" onClick={onClose} aria-label="Close sample stream preview"><X size={20} /> Close</button>
+  </div>;
 }
 
 function versionName(version: GiftStudioVersion) {

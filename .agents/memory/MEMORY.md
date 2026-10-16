@@ -22,7 +22,7 @@
 - [Photo visibility cache precedence](photo-visibility-cache-precedence.md) — never replace a fresh hidden-photo response with an older cached image.
 - [Sesame MCP handoff](sesame-mcp-handoff.md) — use official Replit MCP for Agent recommendations; do not publish Streamtalk to enable access.
 - [Gift-flow demos](gift-flow-demos.md) — show existing gift UI in an isolated phone-sized browser recording and disclose synthetic responses.
-- [Gift Studio FFmpeg worker](gift-studio-ffmpeg-worker.md) — keep `@ffmpeg/ffmpeg` out of Vite dependency prebundling so the local processing worker URL resolves in preview.
+- [Gift Studio processing](gift-studio-ffmpeg-worker.md) — preserve Vite worker handling; use bounded server FFmpeg for Android and local Wasm elsewhere with timeout fallback.
 - [Transparent media assets](gift-media-transparency.md) — verify decoded per-frame alpha and composites; container alpha flags alone are not proof.
 - [Safe preview schema pushes](safe-preview-schema-pushes.md) — stop when Drizzle proposes truncating unrelated Passport rows; preserve data and apply only additive preview changes.
 - [Public topic-room ownership](public-topic-room-ownership.md) — public rooms are ownerless and audience-unlimited; Beam TV remains automatic and the separate speaker-seat count stays fixed.

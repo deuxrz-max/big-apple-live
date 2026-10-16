@@ -147,6 +147,33 @@
         }
       }
     },
+    "/social/admin/gift-studio/process": {
+      "post": {
+        "operationId": "processGiftStudioClipOnServer",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {"$ref": "#/components/schemas/GiftStudioProcessInput"}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Server-processed transparent VP9 WebM",
+            "content": {"video/webm": {"schema": {"type": "string", "format": "binary"}}}
+          },
+          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Owner access required"},
+          "413": {"description": "Source clip exceeds the upload limit"},
+          "415": {"description": "Unsupported video format"},
+          "422": {"description": "The clip could not be processed or transparency could not be verified"}
+        }
+      }
+    },
     "/social/admin/gift-studio/versions/{versionId}": {
       "patch": {
         "operationId": "setGiftStudioVersionActive",
@@ -157,6 +184,36 @@
         "responses": {
           "200": {"description": "Gift animation version status updated", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioVersion"}}}},
           "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Owner access required"},
+          "404": {"description": "Gift animation version not found"}
+        }
+      }
+    },
+    "/social/admin/gift-studio/versions/{versionId}/name": {
+      "patch": {
+        "operationId": "renameGiftStudioVersion",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "parameters": [{"name": "versionId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioRenameInput"}}}},
+        "responses": {
+          "200": {"description": "Saved gift renamed", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioVersion"}}}},
+          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Owner access required"},
+          "404": {"description": "Gift animation version not found"}
+        }
+      }
+    },
+    "/social/admin/gift-studio/versions/{versionId}/delete": {
+      "delete": {
+        "operationId": "deleteGiftStudioVersion",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "parameters": [{"name": "versionId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}],
+        "responses": {
+          "200": {"description": "Saved gift removed", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioDeleteResponse"}}}},
           "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
           "403": {"description": "Owner access required"},
           "404": {"description": "Gift animation version not found"}
@@ -1027,6 +1084,26 @@
           "sourceVideo": {"type": "string", "description": "Video file part"},
           "processedWebm": {"type": "string", "description": "Processed transparent WebM file part"}
         }
+      },
+      "GiftStudioProcessInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["settings", "sourceVideo"],
+        "properties": {
+          "settings": {"type": "string", "description": "JSON-serialized key settings"},
+          "sourceVideo": {"type": "string", "description": "Source video file part"}
+        }
+      },
+      "GiftStudioRenameInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {"name": {"type": "string", "minLength": 1, "maxLength": 60}}
+      },
+      "GiftStudioDeleteResponse": {
+        "type": "object",
+        "required": ["deleted"],
+        "properties": {"deleted": {"type": "boolean", "const": true}}
       },
       "GiftStudioAssignInput": {
         "type": "object",

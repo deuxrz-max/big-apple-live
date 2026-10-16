@@ -194,6 +194,61 @@ export async function listGiftStudioVersions(ownerId: string) {
   return { items: rows.map(toVersion) };
 }
 
+export async function processGiftStudioClipOnServer(input: {
+  sourcePath: string;
+  sourceBytes: number;
+  settings: GiftStudioProcessingSettings;
+  signal?: AbortSignal;
+}) {
+  await validateSource(input.sourcePath, input.sourceBytes);
+  const outputPath = path.join(path.dirname(input.sourcePath), `processed-${randomUUID()}.webm`);
+  const boundedDimension = Math.min(input.settings.maxDimension ?? 480, 480);
+  const color = input.settings.keyColor.replace("#", "0x");
+  const similarity = Math.max(0.02, Math.min(0.65, input.settings.tolerance));
+  const blend = Math.max(0, Math.min(0.5, input.settings.softness));
+  const filters = [
+    "fps=24",
+    `scale='if(gte(iw,ih),min(iw,${boundedDimension}),-2)':'if(gte(iw,ih),-2,min(ih,${boundedDimension}))':flags=lanczos`,
+    `format=yuva420p,chromakey=${color}:${similarity.toFixed(3)}:${blend.toFixed(3)}`,
+  ];
+  if (input.settings.spill > 0.01 && input.settings.preset !== "black") {
+    const despillChannel = input.settings.preset === "green" || input.settings.keyColor.toLowerCase() === "#00ff00"
+      ? "green"
+      : "blue";
+    filters.push(`despill=type=${despillChannel}:mix=${Math.max(0, Math.min(1, input.settings.spill)).toFixed(2)}:expand=0`);
+  }
+
+  try {
+    await execFileAsync(process.env.FFMPEG_PATH ?? "ffmpeg", [
+      "-hide_banner", "-loglevel", "error", "-y",
+      "-i", input.sourcePath,
+      "-vf", filters.join(","),
+      "-an", "-t", "15",
+      "-c:v", "libvpx-vp9", "-pix_fmt", "yuva420p", "-auto-alt-ref", "0",
+      "-b:v", "0", "-crf", "34", "-deadline", "realtime", "-cpu-used", "5",
+      outputPath,
+    ], {
+      timeout: 240_000,
+      maxBuffer: 2 * 1024 * 1024,
+      ...(input.signal ? { signal: input.signal } : {}),
+    });
+    const stat = await fs.stat(outputPath);
+    if (!stat.size || stat.size > MAX_VIDEO_BYTES) {
+      throw new RoomError(413, "The transparent result is too large. Use a shorter clip.");
+    }
+    await verifyAlpha(outputPath, "libvpx-vp9");
+    return { path: outputPath, bytes: stat.size };
+  } catch (error) {
+    if (error instanceof RoomError) throw error;
+    if (input.signal?.aborted) throw new RoomError(400, "Processing was cancelled.");
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === "ETIMEDOUT") {
+      throw new RoomError(422, "Server processing took too long. Try a shorter clip.");
+    }
+    throw new RoomError(422, "Server processing could not encode and verify this clip. Try another key color or a shorter source video.");
+  }
+}
+
 export async function createGiftStudioVersion(input: {
   ownerId: string;
   giftId: GiftStudioGiftId | null;
@@ -265,6 +320,31 @@ export async function createGiftStudioVersion(input: {
   } finally {
     await fs.rm(temp, { recursive: true, force: true });
   }
+}
+
+export async function renameGiftStudioVersion(ownerId: string, versionId: string, name: string) {
+  const trimmed = name.trim();
+  if (!trimmed || trimmed.length > 60) throw new RoomError(400, "Gift names must be 1 to 60 characters.");
+  const [asset] = await db.select().from(giftStudioAssets).where(eq(giftStudioAssets.id, versionId));
+  if (!asset || asset.ownerId !== ownerId) throw new RoomError(404, "Saved gift not found.");
+  const [updated] = await db.update(giftStudioAssets)
+    .set({ settings: { ...asset.settings, draftName: trimmed } })
+    .where(and(eq(giftStudioAssets.id, versionId), eq(giftStudioAssets.ownerId, ownerId)))
+    .returning();
+  if (!updated) throw new RoomError(404, "Saved gift not found.");
+  return toVersion(updated);
+}
+
+export async function deleteGiftStudioVersion(ownerId: string, versionId: string) {
+  const [asset] = await db.select().from(giftStudioAssets).where(eq(giftStudioAssets.id, versionId));
+  if (!asset || asset.ownerId !== ownerId) throw new RoomError(404, "Saved gift not found.");
+  await deleteAssets(asset.id, asset.originalExtension);
+  const [deleted] = await db.delete(giftStudioAssets).where(and(
+    eq(giftStudioAssets.id, versionId),
+    eq(giftStudioAssets.ownerId, ownerId),
+  )).returning({ id: giftStudioAssets.id });
+  if (!deleted) throw new RoomError(404, "Saved gift not found.");
+  return { deleted: true as const };
 }
 
 export async function assignGiftStudioVersionToGift(ownerId: string, versionId: string, giftId: GiftStudioGiftId) {

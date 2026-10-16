@@ -21,6 +21,23 @@ export interface ProcessResult {
 
 const escapeFilterColor = (color: string) => color.replace('#', '0x');
 
+async function withWorkerTimeout<T>(operation: Promise<T>, engine: FFmpeg, milliseconds: number, message: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => {
+          try { engine.terminate(); } catch { /* worker already stopped */ }
+          reject(new Error(message));
+        }, milliseconds);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 export async function processClipLocally(
   file: File,
   settings: ClipSettings,
@@ -35,21 +52,16 @@ export async function processClipLocally(
   const outputName = 'gift-alpha.webm';
   const verifyName = 'verify-alpha.rgba';
   let engineLoaded = false;
-  let loadTimer: ReturnType<typeof setTimeout> | undefined;
   try {
     onStage('Loading the local video engine…');
-    await Promise.race([
+    await withWorkerTimeout(
       engine.load({ coreURL, wasmURL, workerURL }).then(() => {
         engineLoaded = true;
       }),
-      new Promise<never>((_, reject) => {
-        loadTimer = setTimeout(
-          () => reject(new Error('The local video processor did not start. Try again in Chrome or Brave, or reload this page.')),
-          90_000,
-        );
-      }),
-    ]);
-    if (loadTimer) clearTimeout(loadTimer);
+      engine,
+      45_000,
+      'The phone video engine did not start in time. Switching to the low-memory server processor.',
+    );
     onStage('Preparing the source clip…');
     await engine.writeFile(inputName, new Uint8Array(await file.arrayBuffer()));
     const filterParts: string[] = [];
@@ -64,7 +76,7 @@ export async function processClipLocally(
       filterParts.push(`despill=type=${despillChannel}:mix=${settings.spill.toFixed(2)}:expand=0`);
     }
     onStage('Removing the background and encoding transparent video…');
-    const result = await engine.exec([
+    const result = await withWorkerTimeout(engine.exec([
       '-i', inputName,
       '-vf', filterParts.join(','),
       '-an',
@@ -76,13 +88,13 @@ export async function processClipLocally(
       '-deadline', 'good',
       '-cpu-used', '4',
       '-y', outputName,
-    ]);
+    ]), engine, 90_000, 'The phone ran out of time or memory while encoding. Switching to the low-memory server processor.');
     if (result !== 0) throw new Error('The clip could not be processed. Try a smaller output size or a different source file.');
     const output = await engine.readFile(outputName);
     if (typeof output === 'string') throw new Error('The processed clip could not be read.');
     const bytes = new Uint8Array(output);
     onStage('Verifying transparency frame by frame…');
-    const verification = await engine.exec([
+    const verification = await withWorkerTimeout(engine.exec([
       '-c:v', 'libvpx-vp9',
       '-i', outputName,
       '-vf', 'fps=3,scale=128:128,format=rgba',
@@ -90,7 +102,7 @@ export async function processClipLocally(
       '-f', 'rawvideo',
       '-pix_fmt', 'rgba',
       '-y', verifyName,
-    ]);
+    ]), engine, 30_000, 'The phone could not verify the finished transparency. Switching to the server processor.');
     if (verification !== 0) {
       throw new Error('Transparency could not be verified on this device. Try processing again or use a supported browser.');
     }
@@ -122,7 +134,6 @@ export async function processClipLocally(
     onProgress(1);
     return { blob: new Blob([bytes], { type: 'video/webm' }), bytes };
   } finally {
-    if (loadTimer) clearTimeout(loadTimer);
     if (engineLoaded) {
       try { await engine.deleteFile(inputName); } catch { /* worker may have been terminated */ }
       try { await engine.deleteFile(outputName); } catch { /* worker may have been terminated */ }
