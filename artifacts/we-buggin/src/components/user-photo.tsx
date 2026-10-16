@@ -24,7 +24,7 @@ export function UserPhoto({ username, displayName, photoUrl, size = 36, reviewSt
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [photoUrl]);
   const label = displayName?.trim() || username || 'User';
-  const box = { width: size, height: size, minWidth: size, borderRadius: '50%', overflow: 'hidden', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#1D1D23', color: '#F4F1F8', border: '1px solid #41414b', fontWeight: 800, fontSize: Math.max(10, size * 0.38), fontFamily: "'Montserrat',system-ui,sans-serif", flexShrink: 0 } as const;
+  const box = { width: size, height: size, minWidth: size, borderRadius: '50%', overflow: 'hidden', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#f0edf5', color: '#292630', border: '1px solid #ded8e6', fontWeight: 800, fontSize: Math.max(10, size * 0.38), fontFamily: "'Nunito Sans',system-ui,sans-serif", flexShrink: 0 } as const;
   if (photoUrl && !failed) return <span>
     <span style={box}><img src={photoSrc(photoUrl)} alt={`${label} profile photo`} onError={() => setFailed(true)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></span>
     {reviewStatus && reviewStatus !== 'approved' && <span className="ch-note" role="status" style={{ display: 'block' }}>

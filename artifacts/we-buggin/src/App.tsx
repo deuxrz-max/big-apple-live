@@ -35,7 +35,7 @@ function stripBase(path: string): string {
 }
 
 
-const INK = '#211e27';
+const INK = '#292630';
 const clerkAppearance = {
   theme: shadcn,
   cssLayerName: 'clerk',
@@ -47,13 +47,13 @@ const clerkAppearance = {
   variables: {
     colorPrimary: '#9D1DFF',
     colorForeground: INK,
-    colorMutedForeground: '#6e6976',
+    colorMutedForeground: '#77727e',
     colorDanger: '#c83255',
     colorBackground: '#ffffff',
     colorInput: '#ffffff',
     colorInputForeground: INK,
     colorNeutral: INK,
-    fontFamily: "'Montserrat', system-ui, sans-serif",
+    fontFamily: "'Nunito Sans', system-ui, sans-serif",
     borderRadius: '12px',
   },
   elements: {
@@ -61,29 +61,29 @@ const clerkAppearance = {
     cardBox: 'bg-white w-[440px] max-w-full overflow-hidden border border-[#e5e1eb] shadow-sm',
     card: '!shadow-none !border-0 !bg-transparent !rounded-[16px]',
     footer: '!shadow-none !border-0 !bg-transparent !rounded-[16px]',
-    headerTitle: '!font-sans !font-extrabold !text-[#287b32]',
-    headerSubtitle: { color: '#6e6976' },
+    headerTitle: '!font-sans !font-extrabold !text-[#292630]',
+    headerSubtitle: { color: '#77727e' },
     socialButtonsBlockButtonText: { color: INK, fontWeight: 700 },
     formFieldLabel: { color: INK, fontWeight: 700 },
-    footerActionLink: { fontWeight: 800, color: '#FF268F', textDecoration: 'none' },
-    footerActionText: { color: 'hsl(60 3% 62%)' },
-    dividerText: { color: 'hsl(60 3% 62%)' },
+    footerActionLink: { fontWeight: 800, color: '#cf2876', textDecoration: 'none' },
+    footerActionText: { color: '#77727e' },
+    dividerText: { color: '#77727e' },
     identityPreviewEditButton: { color: INK },
-    formFieldSuccessText: { color: '#287b32' },
+    formFieldSuccessText: { color: '#267244' },
     alertText: { color: '#b42344' },
     logoBox: 'h-14 justify-center',
     logoImage: 'h-14 w-14',
     socialButtonsBlockButton: 'border border-[#ded9e5] bg-white rounded-[12px]',
     formButtonPrimary: {
       color: '#ffffff',
-      background: 'linear-gradient(120deg,#9D1DFF,#5E00FF)',
+      background: 'linear-gradient(110deg,#a522ed,#e63c9a)',
       border: '0',
       borderRadius: '12px',
       fontWeight: 700,
     },
     formFieldInput: 'border border-[#ded9e5] bg-white rounded-[12px]',
     footerAction: '',
-    dividerLine: 'bg-[#9D1DFF]/30',
+    dividerLine: 'bg-[#a522ed]/30',
     alert: 'border-2 border-[#d84b63] rounded-[12px]',
     otpCodeFieldInput: 'border border-[#ded9e5] bg-white rounded-[12px]',
     formFieldRow: '',
@@ -283,7 +283,8 @@ function ClerkProviderWithRoutes() {
   const isLiveScreen = currentPath === '/live/start' || /^\/live\/[^/]+\/?$/.test(currentPath);
   const isModerationScreen = currentPath === '/community/moderation';
   const isDirectoryScreen = currentPath === '/home';
-  const isLightScreen = !isBeamRoomScreen && !isLiveScreen && !isModerationScreen && !isDirectoryScreen;
+  // The route flags below remain for layout/media behavior; the visual theme is unified.
+  const isLightScreen = true;
   useLayoutEffect(() => {
     document.body.classList.toggle('streamtalk-beam-screen', isBeamRoomScreen);
     document.body.classList.toggle('streamtalk-light-screen', isLightScreen);
@@ -317,7 +318,7 @@ function ClerkProviderWithRoutes() {
     >
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
-        <div className={`app-page ${isLiveScreen ? 'is-live-screen' : isBeamRoomScreen ? 'is-beam-screen' : isModerationScreen ? 'is-moderation-screen' : isDirectoryScreen ? 'is-directory-screen' : 'is-light-screen'}`}><RoutedErrorBoundary>
+        <div className={`app-page is-light-screen ${isLiveScreen ? 'is-live-screen' : ''} ${isBeamRoomScreen ? 'is-beam-screen' : ''} ${isModerationScreen ? 'is-moderation-screen' : ''} ${isDirectoryScreen ? 'is-directory-screen' : ''}`}><RoutedErrorBoundary>
           <Switch>
             {DevAudioHarnessPage && (
               <Route path="/__dev/audio-harness">

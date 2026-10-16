@@ -675,3 +675,425 @@ body.streamtalk-light-screen #root .app-bottom-link:focus-visible { outline-colo
     scroll-behavior: auto;
   }
 }
+
+/* Streamtalk · unified light system. Every route shares these surfaces; only
+   actual camera/video canvases retain their media-native dark backdrop. */
+body.streamtalk-light-screen {
+  color-scheme: light;
+  --background: 252 25% 98%;
+  --foreground: 264 16% 15%;
+  --card: 0 0% 100%;
+  --card-foreground: 264 16% 15%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 264 16% 15%;
+  --primary: 280 91% 54%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 258 20% 96%;
+  --secondary-foreground: 264 16% 15%;
+  --muted: 258 20% 96%;
+  --muted-foreground: 258 8% 44%;
+  --border: 258 14% 89%;
+  --input: 258 14% 86%;
+  --ring: 280 91% 54%;
+  --accent: 330 86% 57%;
+  --accent-foreground: 0 0% 100%;
+  --space-0: #f8f7fa;
+  --space-1: #f3f1f6;
+  --space-2: #ebe8f0;
+  --space-ink: #292630;
+  --space-muted: #77727e;
+  --space-lime: #7725b8;
+  --space-edge: #e6e1eb;
+  --space-shadow: 0 5px 18px rgba(38, 29, 51, .07);
+  background: #f8f7fa;
+  color: #292630;
+  font-family: 'Nunito Sans', system-ui, sans-serif;
+}
+
+body.streamtalk-light-screen #root,
+body.streamtalk-light-screen #root .app-page,
+body.streamtalk-light-screen #root .app-page.is-light-screen {
+  color: #292630;
+  background: #f8f7fa;
+  font-family: 'Nunito Sans', system-ui, sans-serif;
+}
+body.streamtalk-light-screen #root * {
+  font-family: 'Nunito Sans', system-ui, sans-serif !important;
+}
+body.streamtalk-light-screen #root :is(.ch,.ch-auth,.beam-app,.sc-inbox-screen,.sc-following-screen,.pf,.gs) {
+  --bm-ink: #292630;
+  --bm-mute: #77727e;
+  --bm-line: #e6e1eb;
+  --bm-acc: #9125db;
+  --bm-bg: #f8f7fa;
+  --st-panel: #ffffff;
+  color: #292630;
+  background-color: #f8f7fa;
+  font-family: 'Nunito Sans', system-ui, sans-serif;
+}
+body.streamtalk-light-screen #root :is(h1,h2,h3,h4,h5,h6,.ch-title,.bm-logo,.sc-h1,.sc-h2,.ib-title,.fg-title,.ur-title,.bm-room-name) {
+  color: #292630 !important;
+  font-family: 'Nunito Sans', system-ui, sans-serif;
+  letter-spacing: -.025em;
+  text-shadow: none;
+}
+body.streamtalk-light-screen #root :is(.ch-note,.sc-sub,.sc-count,.dh-note,.dh-sub,.st-card-body span,.fg-empty,.ib-prev,.ib-time) {
+  color: #77727e;
+}
+body.streamtalk-light-screen #root :is(.ch-list li,.sc-card,.sc-panel,.sc-empty,.sc-wallet,.ib-row,.fg-tile,.bc-card,.bc-review,
+  .dh-banner,.dh-card,.pf-dialog,.pf-menu-list,.pf-stats>div,.sp-card,.sp-review,.sp-modal-panel,.sp-review-item,
+  .sc-msgs,.sc-skel,.ch-photo-card,.ch-auth .ch-card,.ur-side,.ur-slot,.ur-menu,.ur-rules,.ur-tv-dialog,
+  .bm-modal,.bm-mic-panel,.bm-tray,.gs-panel,.gs-preview,.gs-library-card) {
+  border: 1px solid #e7e2ec;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 5px 18px rgba(38,29,51,.07);
+  color: #292630;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+body.streamtalk-light-screen #root :is(input,textarea,select,.sc-select,.sc-text,.bm-input-box,.sp-field input,.sp-field select,.ur-tv-dialog input) {
+  border: 1px solid #ddd7e4;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #292630;
+  box-shadow: none;
+}
+body.streamtalk-light-screen #root :is(input,textarea,select)::placeholder { color: #8a8491; }
+body.streamtalk-light-screen #root :is(.bm-btn,.btn,.pf-btn,.pf-edit,.sc-nav-item,.ur-slot-action,.ur-slot-join,.ur-resume-audio,.sp-button,.sp-modal-close) {
+  border: 1px solid #e0d9e7;
+  border-radius: 999px;
+  background: #fff;
+  color: #4a4052;
+  font-family: 'Nunito Sans', system-ui, sans-serif;
+  font-weight: 800;
+  box-shadow: none;
+}
+body.streamtalk-light-screen #root :is(.bm-btn-primary,.btn-pink,.pf-btn-fill,.formButtonPrimary,.sc-nav-item.is-on,
+  .ur-slot-join,.gift-framework .gift-send,.st-card-body .st-enter,.dh-join,.st-live-start-button) {
+  border-color: transparent;
+  border-radius: 999px;
+  background: linear-gradient(110deg,#a522ed,#e63c9a);
+  color: #fff !important;
+  box-shadow: none;
+}
+body.streamtalk-light-screen #root :is(.bm-btn,.pf-btn,.pf-edit,.sc-nav-item,.ur-slot-action,.ur-slot-join,.sp-button):focus-visible,
+body.streamtalk-light-screen #root :is(input,textarea,select):focus-visible {
+  outline: 2px solid #a522ed;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(165,34,237,.12);
+}
+body.streamtalk-light-screen #root :is([role="dialog"],[role="alertdialog"],.ur-modal,.bm-modal-back,.sp-modal,.pf-modal,.gift-framework-backdrop) {
+  color: #292630;
+  background: rgba(45,39,53,.28);
+  backdrop-filter: blur(3px);
+}
+body.streamtalk-light-screen #root :is([role="dialog"],[role="alertdialog"],.ur-menu,.ur-rules,.ur-tv-dialog,.bm-modal,.bm-mic-panel,.st-live-action-sheet) {
+  border: 1px solid #e5dfea;
+  border-radius: 20px;
+  background: #fff;
+  color: #292630;
+  box-shadow: 0 14px 42px rgba(36,28,46,.18);
+}
+
+/* Home and university rooms share the same soft canvas and purple-magenta action language. */
+body.streamtalk-light-screen #root .st-dir-intro h1,
+body.streamtalk-light-screen #root .st-dir-intro h1 em,
+body.streamtalk-light-screen #root .st-dir-section-head h2,
+body.streamtalk-light-screen #root .st-dir-overline,
+body.streamtalk-light-screen #root .st-dir-kicker,
+body.streamtalk-light-screen #root .st-dir-feature-mark { color: #342e3a; }
+body.streamtalk-light-screen #root .ch.st-directory { background: #f8f7fa; color: #292630; }
+body.streamtalk-light-screen #root .st-dir-intro p,
+body.streamtalk-light-screen #root .st-dir-footer p { color: #77727e; }
+body.streamtalk-light-screen #root .st-dir-search,
+body.streamtalk-light-screen #root .st-dir-filter,
+body.streamtalk-light-screen #root .st-dir-signout,
+body.streamtalk-light-screen #root .st-dir-menu summary {
+  border-color: #e4dfe8 !important; background: #fff !important; color: #514b59 !important;
+}
+body.streamtalk-light-screen #root .st-dir-card {
+  border: 1px solid #e6e1eb;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 5px 18px rgba(38,29,51,.07);
+}
+body.streamtalk-light-screen #root .st-dir-card-titles h3 { color: #292630; }
+body.streamtalk-light-screen #root .st-dir-card-titles p { color: #77727e; }
+body.streamtalk-light-screen #root .st-dir-card-copy { background: #fff; }
+body.streamtalk-light-screen #root .st-dir-enter,
+body.streamtalk-light-screen #root .st-dir-go-live,
+body.streamtalk-light-screen #root .st-topbar-live {
+  border: 0; background: linear-gradient(110deg,#a522ed,#e63c9a); color: #fff;
+}
+body.streamtalk-light-screen #root .st-dir-live,
+body.streamtalk-light-screen #root .st-dir-count,
+body.streamtalk-light-screen #root .st-dir-video-tag {
+  border-color: rgba(255,255,255,.9); background: rgba(255,255,255,.94); color: #3a3440;
+}
+body.streamtalk-light-screen #root .st-dir-count b { color: #c62665; }
+body.streamtalk-light-screen #root .st-dir-art-shade { background: linear-gradient(180deg,transparent 45%,rgba(20,15,24,.52)); }
+body.streamtalk-light-screen #root .ch.ur,
+body.streamtalk-light-screen #root .ch.ur .ur-in { background: #f8f7fa; color: #292630; }
+body.streamtalk-light-screen #root .ur-title,
+body.streamtalk-light-screen #root .ur-topic,
+body.streamtalk-light-screen #root .ur-empty-name,
+body.streamtalk-light-screen #root .ur-pname,
+body.streamtalk-light-screen #root .ch.ur .ch-msg,
+body.streamtalk-light-screen #root .ch.ur .ch-sender { color: #292630; text-shadow: none; }
+body.streamtalk-light-screen #root .ur-slot { border-color: #e5dfea; background: #fff; box-shadow: 0 3px 12px rgba(38,29,51,.06); }
+body.streamtalk-light-screen #root .ur-slot:not(.is-occupied) { background-color: #f6f3f8; background-image: none; }
+body.streamtalk-light-screen #root .ur-slot::before,
+body.streamtalk-light-screen #root .ur-slot::after { opacity: .42; }
+body.streamtalk-light-screen #root .ur-slot-copy { background: linear-gradient(180deg,transparent,rgba(255,255,255,.94) 45%,#fff); }
+body.streamtalk-light-screen #root .ur-slot-name,
+body.streamtalk-light-screen #root .ur-slot-caption,
+body.streamtalk-light-screen #root .ur-audio-status,
+body.streamtalk-light-screen #root .ur-mic-lock-indicator,
+body.streamtalk-light-screen #root .ur-room-sound-hint,
+body.streamtalk-light-screen #root .ur-mic-state,
+body.streamtalk-light-screen #root .ur-beam-full { color: #625b68; text-shadow: none; }
+body.streamtalk-light-screen #root .ur-slot-avatar { background: #eee8f4; color: #51445d; }
+body.streamtalk-light-screen #root .ur-slot-media { background: #eeeaf1; }
+body.streamtalk-light-screen #root .ur-slot-media:has(.ur-slot-empty-copy) { background: #f5f2f7; }
+body.streamtalk-light-screen #root .ur-empty-number { color: #7026ad; background: #f2e7fb; border-color: #d6b7eb; box-shadow: none; }
+body.streamtalk-light-screen #root .ur-menu button,
+body.streamtalk-light-screen #root .ur-tv-dialog input { background: #fff; color: #292630; }
+body.streamtalk-light-screen #root .ur-modal { background: rgba(45,39,53,.28); }
+body.streamtalk-light-screen #root .ur-tv-frame,
+body.streamtalk-light-screen #root .ur-tv-player,
+body.streamtalk-light-screen #root .ur-live-video { /* video media remains untouched */ }
+
+/* Social, profile, moderation, auth and owner tools are never dark exceptions. */
+body.streamtalk-light-screen #root .beam-app.sc-moderation-screen,
+body.streamtalk-light-screen #root .beam-app.sc-moderation-screen .sc-main,
+body.streamtalk-light-screen #root .beam-app.sc-moderation-screen .sc-main > *,
+body.streamtalk-light-screen #root .beam-app.sc-moderation-screen .ch { background: #f8f7fa; color: #292630; }
+body.streamtalk-light-screen #root .beam-app.sc-moderation-screen .bm-nav {
+  background: #fff; border-color: #e6e1eb; box-shadow: 0 4px 16px rgba(38,29,51,.06);
+}
+body.streamtalk-light-screen #root .bm-bots,
+body.streamtalk-light-screen #root .bm-chatter,
+body.streamtalk-light-screen #root .bm-chatter-profile,
+body.streamtalk-light-screen #root .bm-bots .bm-flag {
+  border: 1px solid #e6e1eb; border-radius: 16px; background: #fff; color: #292630; box-shadow: none;
+}
+body.streamtalk-light-screen #root .bm-bots :is(h2,p,label),
+body.streamtalk-light-screen #root .bm-chatter :is(h3,p,summary,strong,span) { color: #292630; }
+body.streamtalk-light-screen #root .ch-auth { background: #f8f7fa; }
+body.streamtalk-light-screen #root .ch-auth .ch-card { border: 1px solid #e6e1eb; border-radius: 20px; background: #fff; box-shadow: 0 8px 28px rgba(38,29,51,.08); }
+body.streamtalk-light-screen #root .ch-auth [role="tab"] { color: #514b59; }
+body.streamtalk-light-screen #root .st-wordmark-lockup,
+body.streamtalk-light-screen #root .st-wordmark-lockup .st-wordmark,
+body.streamtalk-light-screen #root .beam-app.sc .bm-logo,
+body.streamtalk-light-screen #root .beam-app.sc .bm-logo .st-wordmark { color: #292630; }
+body.streamtalk-light-screen #root .st-wordmark { letter-spacing: .055em; }
+body.streamtalk-light-screen #root .sc-header-home,
+body.streamtalk-light-screen #root .sc-header-home svg,
+body.streamtalk-light-screen #root .sc-more-menu > summary,
+body.streamtalk-light-screen #root .sc-more-menu > nav svg { color: #8b22cb; }
+body.streamtalk-light-screen #root .sc-more-menu > nav a:hover { background: #f7effb; color: #7521ad; }
+body.streamtalk-light-screen #root .gs {
+  --gs-bg: #f8f7fa; --gs-panel: #fff; --gs-panel-2: #f4f1f7; --gs-line: #e5dfea;
+  --gs-text: #292630; --gs-muted: #77727e; --gs-pink: #cf2876; --gs-lilac: #8e45c6;
+  min-height: 100dvh; color: #292630; background: #f8f7fa;
+}
+body.streamtalk-light-screen #root .gs :is(.gs-topline,.gs-heading h1,.gs-heading p,.gs-private,.gs-panel-title,.gs-kicker,
+  .gs-upload strong,.gs-upload small,.gs-file-meta,.gs-caption,.gs-preview-label,.gs-preview-label span,
+  .gs-field-row label,.gs-field-row output,.gs-warning,.gs-mobile-note,.gs-mobile-note strong,.gs-progress-copy,
+  .gs-version-info strong,.gs-version-info small,.gs-status,.gs-empty-library,.gs-name-field,.gs-name-field small) { color: #292630; }
+body.streamtalk-light-screen #root .gs :is(.gs-panel,.gs-preview,.gs-library-card,.gs-upload,.gs-empty-library,.gs-mobile-note) {
+  border-color: #e5dfea; border-radius: 16px; background: #fff; box-shadow: 0 5px 18px rgba(38,29,51,.06);
+}
+body.streamtalk-light-screen #root .gs .gs-preview-label { background: #f3f0f6; }
+body.streamtalk-light-screen #root .gs .gs-preview-stage.checker {
+  background-color: #e9e8e8;
+  background-image: linear-gradient(45deg,#c8c7ca 25%,transparent 25%),linear-gradient(-45deg,#c8c7ca 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#c8c7ca 75%),linear-gradient(-45deg,transparent 75%,#c8c7ca 75%);
+  background-size: 18px 18px; background-position: 0 0,0 9px,9px -9px,-9px 0;
+}
+body.streamtalk-light-screen #root .gs .gs-preview-stage.dark { background: #17151c; }
+body.streamtalk-light-screen #root .gs .gs-preview-stage.light { background: #eeeaf0; }
+body.streamtalk-light-screen #root .gs :is(.gs-button,.gs-chip-button,.gs-icon-button,.gs-choice,.gs-backdrop-tabs) {
+  border-color: #e1d9e9; background: #fff; color: #51465a; border-radius: 999px;
+}
+body.streamtalk-light-screen #root .gs .gs-button.primary { border: 0; background: linear-gradient(110deg,#a522ed,#e63c9a); color: #fff; }
+body.streamtalk-light-screen #root .gs .gs-choice[aria-pressed="true"],
+body.streamtalk-light-screen #root .gs .gs-backdrop-tabs button[aria-pressed="true"] { background: #f4e8fb; color: #7629af; }
+body.streamtalk-light-screen #root .gs .gs-backdrop-tabs button { color: #51465a; }
+body.streamtalk-light-screen #root .gs .gs-backdrop-tabs button[aria-pressed="true"] { color: #7629af; }
+body.streamtalk-light-screen #root .gs .gs-name-field input { background: #fff; color: #292630; border-color: #ddd7e4; border-radius: 12px; }
+body.streamtalk-light-screen #root .gs .gs-modal-wrap { background: rgba(45,39,53,.28); backdrop-filter: blur(3px); }
+body.streamtalk-light-screen #root .gs .gs-modal { background: #fff; border-radius: 20px; }
+body.streamtalk-light-screen #root .gs .gs-step-number {
+  border: 1px solid #e1d1ed; background: #f4eafb; color: #7522ad;
+}
+body.streamtalk-light-screen #root .gs .gs-progress-track { background: #e8e3ec; }
+body.streamtalk-light-screen #root .gs .gs-version-mark {
+  border-color: #e1d9e9; background: linear-gradient(135deg,#f6eefa,#f1eef6); color: #7522ad;
+}
+body.streamtalk-light-screen #root .gs .gs-status.active {
+  border: 1px solid #b8dfc3; background: #edf8f0; color: #1e6e3c;
+}
+body.streamtalk-light-screen #root .gs .gs-error-panel {
+  border-color: #e8bdc6; background: #fff4f6; color: #762e3e;
+}
+body.streamtalk-light-screen #root .gs .gs-error {
+  border-color: #e8bdc6; background: #fff4f6; color: #8a263b;
+}
+body.streamtalk-light-screen #root .gs .gs-success { color: #1e6e3c; }
+body.streamtalk-light-screen #root .gs :disabled { opacity: .76; }
+body.streamtalk-light-screen #root .gs .gs-preview-stage:not(.dark) .gs-empty-preview { color: #292630; }
+
+/* Immersive broadcast keeps its camera/video pixels and two legibility fades;
+   all chrome and controls are light chips over that unchanged media canvas. */
+body.streamtalk-live-screen { color-scheme: light; }
+body.streamtalk-live-screen #root .app-page.is-live-screen { background: transparent !important; }
+body.streamtalk-live-screen #root .st-live-page.st-live-host-page,
+body.streamtalk-live-screen #root .st-live-page.st-live-viewer-page,
+body.streamtalk-live-screen #root .st-live-room { color: #fff; }
+body.streamtalk-live-screen #root .st-live-player { background: #000; }
+body.streamtalk-live-screen #root .st-live-player::after {
+  background: linear-gradient(180deg,rgba(8,8,14,.42),transparent 20%),linear-gradient(0deg,rgba(8,8,14,.52),transparent 21%);
+}
+body.streamtalk-live-screen #root :is(.st-live-viewers,.st-live-gifters,.st-live-close-button,.st-live-follow,
+  .st-live-gift-button,.st-live-host-controls button,.st-live-report-stream,.st-live-chat-form,.st-live-action-sheet) {
+  border: 1px solid rgba(255,255,255,.82);
+  background: rgba(255,255,255,.94);
+  color: #292630 !important;
+  -webkit-text-fill-color: #292630;
+  text-shadow: none;
+  backdrop-filter: blur(10px);
+}
+body.streamtalk-live-screen #root :is(.st-live-viewers svg,.st-live-gift-button svg,.st-live-host-controls button svg,
+  .st-live-host-controls button span,.st-live-report-stream) { color: #292630 !important; -webkit-text-fill-color: #292630; text-shadow: none; }
+body.streamtalk-live-screen #root .st-live-follow.is-following { background: rgba(255,255,255,.76); color: #292630; }
+body.streamtalk-live-screen #root .st-live-chat-form input { color: #292630 !important; -webkit-text-fill-color: #292630; }
+body.streamtalk-live-screen #root .st-live-chat-form input::placeholder { color: #77727e !important; -webkit-text-fill-color: #77727e; }
+body.streamtalk-live-screen #root .st-live-chat-form button.bm-btn-primary { background: linear-gradient(110deg,#a522ed,#e63c9a); color: #fff !important; -webkit-text-fill-color: #fff; }
+body.streamtalk-live-screen #root .st-live-chat-line,
+body.streamtalk-live-screen #root .st-live-chat-log > .st-live-muted,
+body.streamtalk-live-screen #root .st-live-join-banner { background: rgba(8,8,14,.42); }
+body.streamtalk-live-screen #root .st-live-chat-line,
+body.streamtalk-live-screen #root .st-live-chat-log > .st-live-muted,
+body.streamtalk-live-screen #root .st-live-join-banner { color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+body.streamtalk-live-screen #root .st-live-action-sheet { color: #292630; }
+body.streamtalk-live-screen #root .st-live-action-sheet > button:not(.st-live-action-close) { background: #f7f5f9; border-color: #e5dfea; color: #292630; }
+body.streamtalk-live-screen #root .st-live-action-close { background: #f2eff5; color: #292630; }
+
+/* One persistent white navigation rail on every route with site chrome. */
+body.streamtalk-light-screen #root .app-bottom-nav {
+  background: #fff !important;
+  color: #3e3944;
+  border-top: 1px solid #e7e2eb;
+  border-radius: 0;
+  box-shadow: 0 -4px 16px rgba(38,29,51,.07);
+  backdrop-filter: none;
+}
+body.streamtalk-light-screen #root .app-bottom-link,
+body.streamtalk-light-screen #root .app-bottom-link.is-active {
+  color: #625c68; background: transparent; box-shadow: none;
+  font-family: 'Nunito Sans', system-ui, sans-serif; font-weight: 800;
+}
+body.streamtalk-light-screen #root .app-bottom-link.is-active span { color: #8b22cb; }
+body.streamtalk-light-screen #root .app-bottom-link:focus-visible { outline-color: #a522ed; }
+body.streamtalk-live-screen #root .app-bottom-nav { display: none !important; }
+
+@media (max-width: 760px) {
+  body.streamtalk-light-screen #root .app-page.is-light-screen :is(.sc-shell,.ch-in) { min-width: 0; }
+  body.streamtalk-light-screen #root .ur-slot { padding: 4px; }
+  body.streamtalk-light-screen #root .gs { padding: 20px 13px calc(100px + env(safe-area-inset-bottom)); }
+}
+
+/* Override legacy route-specific dark canvases with the unified light shell. */
+body.streamtalk-light-screen.streamtalk-directory-screen #root .app-page.is-directory-screen,
+body.streamtalk-light-screen #root .app-page.is-moderation-screen,
+body.streamtalk-light-screen.streamtalk-beam-screen #root .app-page.is-beam-screen {
+  color: #292630;
+  background: #f8f7fa;
+}
+body.streamtalk-light-screen #root .beam-app.sc-moderation-screen,
+body.streamtalk-light-screen #root .beam-app.sc-moderation-screen .sc-main,
+body.streamtalk-light-screen #root .beam-app.sc-moderation-screen .sc-main > *,
+body.streamtalk-light-screen #root .beam-app.sc-moderation-screen .ch {
+  color: #292630;
+  background: #f8f7fa;
+}
+body.streamtalk-light-screen #root .beam-app.sc-moderation-screen .bm-nav {
+  color: #292630;
+  background: #fff;
+  border-color: #e6e1eb;
+}
+body.streamtalk-light-screen #root .app-bottom-link:nth-child(1) svg,
+body.streamtalk-light-screen #root .app-bottom-link:nth-child(2) svg,
+body.streamtalk-light-screen #root .app-bottom-link:nth-child(3) svg,
+body.streamtalk-light-screen #root .app-bottom-link:nth-child(4) svg {
+  color: #292630;
+}
+body.streamtalk-light-screen #root .app-bottom-link.is-active span { color: #292630; }
+
+/* The TV and camera pixels remain media; surrounding room UI becomes light. */
+body.streamtalk-light-screen #root .ch.ur .bm-nav,
+body.streamtalk-light-screen #root .ch.ur .ur-head,
+body.streamtalk-light-screen #root .ch.ur .ur-tv-section,
+body.streamtalk-light-screen #root .ch.ur .ur-audience,
+body.streamtalk-light-screen #root .ch.ur .ur-chat-shell,
+body.streamtalk-light-screen #root .ch.ur .ur-controls {
+  color: #292630;
+  background: #f8f7fa;
+}
+body.streamtalk-light-screen #root .ch.ur .bm-nav {
+  border-color: #e6e1eb;
+  box-shadow: 0 4px 16px rgba(38,29,51,.06);
+}
+body.streamtalk-light-screen #root .ur-title,
+body.streamtalk-light-screen #root .ur-topic,
+body.streamtalk-light-screen #root .ur-audio-status,
+body.streamtalk-light-screen #root .ur-mic-lock-indicator,
+body.streamtalk-light-screen #root .ur-room-sound-hint,
+body.streamtalk-light-screen #root .ur-mic-state,
+body.streamtalk-light-screen #root .ur-beam-full {
+  color: #514b59 !important;
+  text-shadow: none !important;
+}
+body.streamtalk-light-screen #root .ch.ur .ch-msg {
+  color: #292630;
+  background: #f0edf4;
+  border: 1px solid #e5dfea;
+  text-shadow: none;
+}
+body.streamtalk-light-screen #root .ch.ur .ch-comp {
+  border: 1px solid #e1dbe7;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(38,29,51,.06);
+}
+body.streamtalk-light-screen #root .ur-tv-frame {
+  border-color: #e1dbe7;
+  background: #fff;
+  box-shadow: 0 4px 15px rgba(38,29,51,.08);
+}
+body.streamtalk-light-screen #root .ur-slot.is-occupied .ur-slot-copy {
+  background: linear-gradient(180deg,transparent 0%,rgba(255,255,255,.91) 46%,#fff 100%);
+}
+body.streamtalk-light-screen #root .ur-slot.is-occupied :is(.ur-slot-name,.ur-slot-marks,.ur-slot-mic-icon) {
+  color: #292630;
+  text-shadow: 0 1px 2px rgba(255,255,255,.9);
+}
+body.streamtalk-light-screen #root .ur-slot-action,
+body.streamtalk-light-screen #root .ur-slot-join,
+body.streamtalk-light-screen #root .ur-resume-audio {
+  border-color: #e0d9e7;
+  background: #fff;
+  color: #51465a;
+}
+body.streamtalk-light-screen #root .ur-slot-join {
+  border-color: transparent;
+  background: linear-gradient(110deg,#a522ed,#e63c9a);
+  color: #fff;
+}
+
+/* Empty-state panels are light too; keep actual media black only while loading. */
+body.streamtalk-light-screen #root .ur-tv-frame:has(iframe[src=""]),
+body.streamtalk-light-screen #root .ur-tv-frame:has(.ur-tv-placeholder),
+body.streamtalk-light-screen #root .ur-tv-frame:has(.ur-tv-empty) {
+  background: #f3f0f6;
+}

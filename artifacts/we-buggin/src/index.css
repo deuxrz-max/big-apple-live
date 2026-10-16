@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
 @layer theme, base, clerk, components, utilities;
 @import 'tailwindcss';
 @import 'tw-animate-css';
@@ -68,7 +69,7 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Streamtalk deep-space glass palette */
+/* Streamtalk light palette */
 :root {
   --button-outline: rgba(0, 0, 0, 0.1);
   --badge-outline: rgba(0, 0, 0, 0.05);
@@ -80,70 +81,45 @@
   --elevate-1: rgba(0, 0, 0, 0.03);
   --elevate-2: rgba(0, 0, 0, 0.08);
 
-  --background: 247 48% 7%;
-
-  --foreground: 255 38% 96%;
-
-  --border: 265 45% 48%;
-
-  --card: 258 42% 14%;
-
-  --card-foreground: 255 38% 96%;
-
-  --card-border: 267 55% 56%;
-
-  --sidebar: 249 42% 10%;
-
-  --sidebar-foreground: 255 38% 96%;
-
-  --sidebar-border: 265 45% 48%;
-
-  --sidebar-primary: 332 85% 52%;
-
-  --sidebar-primary-foreground: 42 70% 98%;
-
-  --sidebar-accent: 43 96% 58%;
-
-  --sidebar-accent-foreground: 255 38% 14%;
-
-  --sidebar-ring: 332 85% 52%;
-
-  --popover: 257 44% 13%;
-
-  --popover-foreground: 255 38% 96%;
-
-  --popover-border: 267 55% 56%;
-
-  --primary: 269 90% 64%;
+  --background: 260 24% 98%;
+  --foreground: 264 16% 15%;
+  --border: 258 14% 88%;
+  --card: 0 0% 100%;
+  --card-foreground: 264 16% 15%;
+  --card-border: 258 14% 88%;
+  --sidebar: 0 0% 100%;
+  --sidebar-foreground: 264 16% 15%;
+  --sidebar-border: 258 14% 88%;
+  --sidebar-primary: 281 91% 54%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 329 88% 94%;
+  --sidebar-accent-foreground: 264 16% 15%;
+  --sidebar-ring: 281 91% 54%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 264 16% 15%;
+  --popover-border: 258 14% 88%;
+  --primary: 281 91% 54%;
 
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 254 32% 21%;
-
-  --secondary-foreground: 255 38% 96%;
-
-  --muted: 252 30% 20%;
-
-  --muted-foreground: 254 20% 73%;
-
-  --accent: 197 84% 72%;
-
-  --accent-foreground: 247 48% 7%;
-
-  --destructive: 346 84% 70%;
-
-  --destructive-foreground: 247 48% 7%;
-
-  --input: 265 42% 44%;
-  --ring: 276 100% 76%;
+  --secondary: 260 20% 95%;
+  --secondary-foreground: 264 16% 15%;
+  --muted: 260 20% 95%;
+  --muted-foreground: 258 8% 44%;
+  --accent: 329 88% 57%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 351 75% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --input: 258 14% 86%;
+  --ring: 281 91% 54%;
   --chart-1: 276 90% 72%;
   --chart-2: 331 87% 72%;
   --chart-3: 197 84% 72%;
   --chart-4: 52 82% 72%;
   --chart-5: 146 67% 66%;
 
-  --app-font-sans: 'DM Sans', sans-serif;
-  --app-font-serif: 'Bricolage Grotesque', sans-serif;
+  --app-font-sans: 'Nunito Sans', sans-serif;
+  --app-font-serif: 'Nunito Sans', sans-serif;
   --app-font-mono: 'Space Mono', monospace;
   --radius: 0.9rem; /* 8px */
   --shadow-2xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0); /*replace with H S L */
@@ -229,63 +205,63 @@
   --elevate-1: rgba(255, 255, 255, 0.04);
   --elevate-2: rgba(255, 255, 255, 0.09);
 
-  --background: 247 48% 7%;
+  --background: 260 24% 98%;
 
-  --foreground: 255 38% 96%;
+  --foreground: 264 16% 15%;
 
-  --border: 265 45% 48%;
+  --border: 258 14% 88%;
 
-  --card: 258 42% 14%;
+  --card: 0 0% 100%;
 
-  --card-foreground: 255 38% 96%;
+  --card-foreground: 264 16% 15%;
 
-  --card-border: 267 55% 56%;
+  --card-border: 258 14% 88%;
 
-  --sidebar: 249 42% 10%;
+  --sidebar: 0 0% 100%;
 
-  --sidebar-foreground: 255 38% 96%;
+  --sidebar-foreground: 264 16% 15%;
 
-  --sidebar-border: 265 45% 48%;
+  --sidebar-border: 258 14% 88%;
 
-  --sidebar-primary: 332 85% 52%;
+  --sidebar-primary: 281 91% 54%;
 
   --sidebar-primary-foreground: 42 70% 98%;
 
-  --sidebar-accent: 43 96% 58%;
+  --sidebar-accent: 329 88% 94%;
 
   --sidebar-accent-foreground: 255 38% 14%;
 
   --sidebar-ring: 332 85% 52%;
 
-  --popover: 257 44% 13%;
+  --popover: 0 0% 100%;
 
-  --popover-foreground: 255 38% 96%;
+  --popover-foreground: 264 16% 15%;
 
-  --popover-border: 267 55% 56%;
+  --popover-border: 258 14% 88%;
 
-  --primary: 269 90% 64%;
+  --primary: 281 91% 54%;
 
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 254 32% 21%;
+  --secondary: 260 20% 95%;
 
-  --secondary-foreground: 255 38% 96%;
+  --secondary-foreground: 264 16% 15%;
 
-  --muted: 252 30% 20%;
+  --muted: 260 20% 95%;
 
-  --muted-foreground: 254 20% 73%;
+  --muted-foreground: 258 8% 44%;
 
-  --accent: 197 84% 72%;
+  --accent: 329 88% 57%;
 
-  --accent-foreground: 247 48% 7%;
+  --accent-foreground: 0 0% 100%;
 
-  --destructive: 346 84% 70%;
+  --destructive: 351 75% 51%;
 
-  --destructive-foreground: 247 48% 7%;
+  --destructive-foreground: 0 0% 100%;
 
   /* Used as the border around inputs. Dark mode: Should be a border that is light enough to have high contrast when rendered on a --card background. More contrast than standard --border */
-  --input: 265 42% 44%;
-  --ring: 276 100% 76%;
+  --input: 258 14% 86%;
+  --ring: 281 91% 54%;
   --chart-1: 332 85% 52%;
   --chart-2: 43 96% 58%;
   --chart-3: 200 92% 60%;
