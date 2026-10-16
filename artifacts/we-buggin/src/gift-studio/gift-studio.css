@@ -131,3 +131,28 @@
 @media (prefers-reduced-motion:reduce) {
   .gs *, .gs *::before, .gs *::after { scroll-behavior:auto !important; transition:none !important; }
 }
+
+/* High-contrast owner tools for phone screens. */
+.gs-topline { color:#f0e8f7; font-size:13px; }
+.gs-heading h1,.gs-panel-title { color:#a8ef69; }
+.gs-heading p { color:#f0edf4; }
+.gs-kicker { color:#f0edf4; font-size:13px; line-height:1.4; }
+.gs-upload small,.gs-file-meta { color:#f0edf4; }
+.gs-caption { color:#e9e5ee; }
+.gs-preview-label span { color:#eeeaf3; font-size:14px; }
+.gs-choice { min-height:40px; border-color:#625c6a; color:#f2eff6; font-size:14px; }
+.gs-field-row label { color:#f2eff6; font-size:14px; }
+.gs-field-row output { color:#e5dfeb; font-size:13px; }
+.gs-warning { color:#fff0d5; font-size:14px; }
+.gs-mobile-note { border-color:#4b4654; background:rgba(255,255,255,.035); color:#e9e5ee; font-size:14px; }
+.gs-mobile-note strong { color:#fff; font-size:14px; }
+.gs-progress-copy { color:#f0edf4; font-size:14px; }
+.gs-version-info strong { color:#fff; font-size:14px; }
+.gs-version-info small { color:#e9e5ee; font-size:14px; }
+.gs-status { color:#f5f1f8; font-size:13px; }
+.gs-status.active { color:#c1f4d2; }
+.gs-empty-library { border-color:#5b5562; color:#f0edf4; }
+.gs-backdrop-tabs button { color:#fff; }
+.gs-name-field small { color:#e9e5ee; font-size:14px; }
+.gs :disabled { color:#e4dfea; }
+.gs-settings :disabled { opacity:.82; }
