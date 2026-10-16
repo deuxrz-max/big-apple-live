@@ -767,6 +767,18 @@ paths:
     $ref: './social.openapi.json#/paths/~1social~1admin~1passport~1requests~1{entryId}~1review'
   /social/admin/passport/founding-league:
     $ref: './social.openapi.json#/paths/~1social~1admin~1passport~1founding-league'
+  /social/admin/gift-studio/library:
+    $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1library'
+  /social/admin/gift-studio/versions:
+    $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1versions'
+  /social/admin/gift-studio/versions/{versionId}:
+    $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1versions~1{versionId}'
+  /social/admin/gift-studio/versions/{versionId}/media/{variant}:
+    $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1versions~1{versionId}~1media~1{variant}'
+  /social/gift-studio/media/{versionId}/{variant}:
+    $ref: './social.openapi.json#/paths/~1social~1gift-studio~1media~1{versionId}~1{variant}'
+  /social/gift-studio/active/{giftId}:
+    $ref: './social.openapi.json#/paths/~1social~1gift-studio~1active~1{giftId}'
   /social/people:
     $ref: './social.openapi.json#/paths/~1social~1people'
   /social/people/{username}:

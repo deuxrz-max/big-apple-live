@@ -46,6 +46,12 @@ import type {
   GetRoomGiftEvents200,
   GetSocialConversationParams,
   GetSocialPeopleParams,
+  GiftStudioActivationInput,
+  GiftStudioActiveMediaResponse,
+  GiftStudioGiftId,
+  GiftStudioLibrary,
+  GiftStudioUploadInput,
+  GiftStudioVersion,
   HealthStatus,
   InvalidInputResponse,
   LiveStreamChatInput,
@@ -4409,6 +4415,456 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getSetStreamerPassportFoundingLeagueMutationOptions(options));
     }
+
+export const getGetGiftStudioLibraryUrl = () => {
+
+
+
+
+  return `/api/social/admin/gift-studio/library`
+}
+
+export const getGiftStudioLibrary = async ( options?: Parameters<typeof customFetch>[1]): Promise<GiftStudioLibrary> => {
+
+  return customFetch<GiftStudioLibrary>(getGetGiftStudioLibraryUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGiftStudioLibraryQueryKey = () => {
+    return [
+    `/api/social/admin/gift-studio/library`
+    ] as const;
+    }
+
+
+export const getGetGiftStudioLibraryQueryOptions = <TData = Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError = ErrorType<ErrorResponse4b96100 | void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGiftStudioLibraryQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGiftStudioLibrary>>> = ({ signal }) => getGiftStudioLibrary({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGiftStudioLibraryQueryResult = NonNullable<Awaited<ReturnType<typeof getGiftStudioLibrary>>>
+export type GetGiftStudioLibraryQueryError = ErrorType<ErrorResponse4b96100 | void>
+
+
+
+export function useGetGiftStudioLibrary<TData = Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGiftStudioLibraryQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateGiftStudioVersionUrl = () => {
+
+
+
+
+  return `/api/social/admin/gift-studio/versions`
+}
+
+export const createGiftStudioVersion = async (giftStudioUploadInput: GiftStudioUploadInput, options?: Parameters<typeof customFetch>[1]): Promise<GiftStudioVersion> => {
+    const formData = new FormData();
+formData.append(`giftId`, giftStudioUploadInput.giftId);
+formData.append(`settings`, giftStudioUploadInput.settings);
+formData.append(`sourceVideo`, giftStudioUploadInput.sourceVideo);
+formData.append(`processedWebm`, giftStudioUploadInput.processedWebm);
+
+  return customFetch<GiftStudioVersion>(getCreateGiftStudioVersionUrl(),
+  {
+    ...options,
+    method: 'POST'
+    ,
+    body: formData
+  }
+);}
+
+
+
+
+
+export const getCreateGiftStudioVersionMutationKey = () => ['createGiftStudioVersion'] as const;
+
+export const getCreateGiftStudioVersionMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGiftStudioVersion>>, TError,CreateGiftStudioVersionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createGiftStudioVersion>>, TError,CreateGiftStudioVersionMutationVariables, TContext> => {
+
+const mutationKey = getCreateGiftStudioVersionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGiftStudioVersion>>, CreateGiftStudioVersionMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createGiftStudioVersion(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateGiftStudioVersionMutationResult = NonNullable<Awaited<ReturnType<typeof createGiftStudioVersion>>>
+    export type CreateGiftStudioVersionMutationBody = BodyType<GiftStudioUploadInput>
+    export type CreateGiftStudioVersionMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type CreateGiftStudioVersionMutationVariables = {data: BodyType<GiftStudioUploadInput>}
+
+    export const useCreateGiftStudioVersion = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGiftStudioVersion>>, TError,CreateGiftStudioVersionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createGiftStudioVersion>>,
+        TError,
+        CreateGiftStudioVersionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateGiftStudioVersionMutationOptions(options));
+    }
+
+export const getSetGiftStudioVersionActiveUrl = (versionId: string,) => {
+
+
+
+
+  return `/api/social/admin/gift-studio/versions/${versionId}`
+}
+
+export const setGiftStudioVersionActive = async (versionId: string,
+    giftStudioActivationInput: GiftStudioActivationInput, options?: Parameters<typeof customFetch>[1]): Promise<GiftStudioVersion> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GiftStudioVersion>(getSetGiftStudioVersionActiveUrl(versionId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(giftStudioActivationInput)
+  }
+);}
+
+
+
+
+
+export const getSetGiftStudioVersionActiveMutationKey = () => ['setGiftStudioVersionActive'] as const;
+
+export const getSetGiftStudioVersionActiveMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setGiftStudioVersionActive>>, TError,SetGiftStudioVersionActiveMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setGiftStudioVersionActive>>, TError,SetGiftStudioVersionActiveMutationVariables, TContext> => {
+
+const mutationKey = getSetGiftStudioVersionActiveMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setGiftStudioVersionActive>>, SetGiftStudioVersionActiveMutationVariables> = (props) => {
+          const {versionId,data} = props ?? {};
+
+          return  setGiftStudioVersionActive(versionId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetGiftStudioVersionActiveMutationResult = NonNullable<Awaited<ReturnType<typeof setGiftStudioVersionActive>>>
+    export type SetGiftStudioVersionActiveMutationBody = BodyType<GiftStudioActivationInput>
+    export type SetGiftStudioVersionActiveMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type SetGiftStudioVersionActiveMutationVariables = {versionId: string;data: BodyType<GiftStudioActivationInput>}
+
+    export const useSetGiftStudioVersionActive = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setGiftStudioVersionActive>>, TError,SetGiftStudioVersionActiveMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setGiftStudioVersionActive>>,
+        TError,
+        SetGiftStudioVersionActiveMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetGiftStudioVersionActiveMutationOptions(options));
+    }
+
+export const getGetGiftStudioVersionMediaUrl = (versionId: string,
+    variant: 'original' | 'webm' | 'safari',) => {
+
+
+
+
+  return `/api/social/admin/gift-studio/versions/${versionId}/media/${variant}`
+}
+
+export const getGiftStudioVersionMedia = async (versionId: string,
+    variant: 'original' | 'webm' | 'safari', options?: Parameters<typeof customFetch>[1]): Promise<Blob | void> => {
+
+  return customFetch<Blob | void>(getGetGiftStudioVersionMediaUrl(versionId,variant),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGiftStudioVersionMediaQueryKey = (versionId: string,
+    variant: 'original' | 'webm' | 'safari',) => {
+    return [
+    `/api/social/admin/gift-studio/versions/${versionId}/media/${variant}`
+    ] as const;
+    }
+
+
+export const getGetGiftStudioVersionMediaQueryOptions = <TData = Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError = ErrorType<ErrorResponse4b96100 | void>>(versionId: string,
+    variant: 'original' | 'webm' | 'safari', options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGiftStudioVersionMediaQueryKey(versionId,variant);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>> = ({ signal }) => getGiftStudioVersionMedia(versionId,variant, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: versionId !== null && versionId !== undefined && variant !== null && variant !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGiftStudioVersionMediaQueryResult = NonNullable<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>>
+export type GetGiftStudioVersionMediaQueryError = ErrorType<ErrorResponse4b96100 | void>
+
+
+
+export function useGetGiftStudioVersionMedia<TData = Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
+ versionId: string,
+    variant: 'original' | 'webm' | 'safari', options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGiftStudioVersionMediaQueryOptions(versionId,variant,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetActiveGiftStudioVersionMediaUrl = (versionId: string,
+    variant: 'webm' | 'safari',) => {
+
+
+
+
+  return `/api/social/gift-studio/media/${versionId}/${variant}`
+}
+
+export const getActiveGiftStudioVersionMedia = async (versionId: string,
+    variant: 'webm' | 'safari', options?: Parameters<typeof customFetch>[1]): Promise<Blob | void> => {
+
+  return customFetch<Blob | void>(getGetActiveGiftStudioVersionMediaUrl(versionId,variant),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetActiveGiftStudioVersionMediaQueryKey = (versionId: string,
+    variant: 'webm' | 'safari',) => {
+    return [
+    `/api/social/gift-studio/media/${versionId}/${variant}`
+    ] as const;
+    }
+
+
+export const getGetActiveGiftStudioVersionMediaQueryOptions = <TData = Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError = ErrorType<ErrorResponse4b96100 | void>>(versionId: string,
+    variant: 'webm' | 'safari', options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetActiveGiftStudioVersionMediaQueryKey(versionId,variant);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>> = ({ signal }) => getActiveGiftStudioVersionMedia(versionId,variant, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: versionId !== null && versionId !== undefined && variant !== null && variant !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetActiveGiftStudioVersionMediaQueryResult = NonNullable<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>>
+export type GetActiveGiftStudioVersionMediaQueryError = ErrorType<ErrorResponse4b96100 | void>
+
+
+
+export function useGetActiveGiftStudioVersionMedia<TData = Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
+ versionId: string,
+    variant: 'webm' | 'safari', options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetActiveGiftStudioVersionMediaQueryOptions(versionId,variant,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetActiveGiftStudioMediaUrl = (giftId: GiftStudioGiftId,) => {
+
+
+
+
+  return `/api/social/gift-studio/active/${giftId}`
+}
+
+export const getActiveGiftStudioMedia = async (giftId: GiftStudioGiftId, options?: Parameters<typeof customFetch>[1]): Promise<GiftStudioActiveMediaResponse> => {
+
+  return customFetch<GiftStudioActiveMediaResponse>(getGetActiveGiftStudioMediaUrl(giftId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetActiveGiftStudioMediaQueryKey = (giftId: GiftStudioGiftId,) => {
+    return [
+    `/api/social/gift-studio/active/${giftId}`
+    ] as const;
+    }
+
+
+export const getGetActiveGiftStudioMediaQueryOptions = <TData = Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError = ErrorType<ErrorResponse4b96100>>(giftId: GiftStudioGiftId, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetActiveGiftStudioMediaQueryKey(giftId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>> = ({ signal }) => getActiveGiftStudioMedia(giftId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: giftId !== null && giftId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetActiveGiftStudioMediaQueryResult = NonNullable<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>>
+export type GetActiveGiftStudioMediaQueryError = ErrorType<ErrorResponse4b96100>
+
+
+
+export function useGetActiveGiftStudioMedia<TData = Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError = ErrorType<ErrorResponse4b96100>>(
+ giftId: GiftStudioGiftId, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetActiveGiftStudioMediaQueryOptions(giftId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetSocialPeopleUrl = (params?: GetSocialPeopleParams,) => {
   const normalizedParams = new URLSearchParams();

@@ -111,6 +111,105 @@
         }
       }
     },
+    "/social/admin/gift-studio/library": {
+      "get": {
+        "operationId": "getGiftStudioLibrary",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "responses": {
+          "200": {"description": "Owner's saved gift animation versions", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioLibrary"}}}},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Owner access required"}
+        }
+      }
+    },
+    "/social/admin/gift-studio/versions": {
+      "post": {
+        "operationId": "createGiftStudioVersion",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {"$ref": "#/components/schemas/GiftStudioUploadInput"}
+            }
+          }
+        },
+        "responses": {
+          "201": {"description": "Transparent animation saved as a draft version", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioVersion"}}}},
+          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Owner access required"},
+          "413": {"description": "One or more video files exceed the upload limit"},
+          "415": {"description": "Unsupported video format"},
+          "422": {"description": "Transparency or video validation failed"}
+        }
+      }
+    },
+    "/social/admin/gift-studio/versions/{versionId}": {
+      "patch": {
+        "operationId": "setGiftStudioVersionActive",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "parameters": [{"name": "versionId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioActivationInput"}}}},
+        "responses": {
+          "200": {"description": "Gift animation version status updated", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioVersion"}}}},
+          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Owner access required"},
+          "404": {"description": "Gift animation version not found"}
+        }
+      }
+    },
+    "/social/admin/gift-studio/versions/{versionId}/media/{variant}": {
+      "get": {
+        "operationId": "getGiftStudioVersionMedia",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "parameters": [
+          {"name": "versionId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}},
+          {"name": "variant", "in": "path", "required": true, "schema": {"type": "string", "enum": ["original", "webm", "safari"]}}
+        ],
+        "responses": {
+          "200": {"description": "Owner-only original or draft animation preview", "content": {"application/octet-stream": {"schema": {"type": "string", "format": "binary"}}}},
+          "206": {"description": "Partial media response"},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Owner access required"},
+          "404": {"description": "Media not found"}
+        }
+      }
+    },
+    "/social/gift-studio/media/{versionId}/{variant}": {
+      "get": {
+        "operationId": "getActiveGiftStudioVersionMedia",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "parameters": [
+          {"name": "versionId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}},
+          {"name": "variant", "in": "path", "required": true, "schema": {"type": "string", "enum": ["webm", "safari"]}}
+        ],
+        "responses": {
+          "200": {"description": "Active transparent gift animation", "content": {"application/octet-stream": {"schema": {"type": "string", "format": "binary"}}}},
+          "206": {"description": "Partial media response"},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "404": {"description": "Active media not found"}
+        }
+      }
+    },
+    "/social/gift-studio/active/{giftId}": {
+      "get": {
+        "operationId": "getActiveGiftStudioMedia",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "parameters": [{"name": "giftId", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/GiftStudioGiftId"}}],
+        "responses": {
+          "200": {"description": "Currently active custom animation, if any", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioActiveMediaResponse"}}}},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"}
+        }
+      }
+    },
     "/social/me": {
       "get": {
         "operationId": "getSocialMe",
@@ -884,6 +983,82 @@
   },
   "components": {
     "schemas": {
+      "GiftStudioGiftId": {
+        "type": "string",
+        "enum": ["heart", "spirit-pup", "moonfox", "cosmic-encore", "fireworks", "rose-shower", "whip"]
+      },
+      "GiftStudioProcessingSettings": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["preset", "keyColor", "tolerance", "softness", "spill", "maxDimension"],
+        "properties": {
+          "preset": {"type": "string", "enum": ["green", "magenta", "black", "custom"]},
+          "keyColor": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+          "tolerance": {"type": "number", "minimum": 0.02, "maximum": 0.65},
+          "softness": {"type": "number", "minimum": 0, "maximum": 0.5},
+          "spill": {"type": "number", "minimum": 0, "maximum": 1},
+          "maxDimension": {"anyOf": [{"type": "integer", "enum": [480, 720, 1080]}, {"type": "null"}]}
+        }
+      },
+      "GiftStudioUploadInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["giftId", "settings", "sourceVideo", "processedWebm"],
+        "properties": {
+          "giftId": {"$ref": "#/components/schemas/GiftStudioGiftId"},
+          "settings": {"type": "string", "description": "JSON-serialized GiftStudioProcessingSettings"},
+          "sourceVideo": {"type": "string", "description": "Video file part"},
+          "processedWebm": {"type": "string", "description": "Processed transparent WebM file part"}
+        }
+      },
+      "GiftStudioActivationInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["active"],
+        "properties": {"active": {"type": "boolean"}}
+      },
+      "GiftStudioVersion": {
+        "type": "object",
+        "required": ["id", "giftId", "version", "status", "originalName", "durationMs", "settings", "createdAt", "originalUrl", "webmUrl", "safariUrl", "originalBytes", "webmBytes", "safariBytes"],
+        "properties": {
+          "id": {"type": "string", "format": "uuid"},
+          "giftId": {"$ref": "#/components/schemas/GiftStudioGiftId"},
+          "version": {"type": "integer"},
+          "status": {"type": "string", "enum": ["draft", "active"]},
+          "originalName": {"type": "string"},
+          "durationMs": {"type": "integer"},
+          "settings": {"$ref": "#/components/schemas/GiftStudioProcessingSettings"},
+          "createdAt": {"type": "string", "format": "date-time"},
+          "originalUrl": {"type": "string"},
+          "webmUrl": {"type": "string"},
+          "safariUrl": {"type": "string"},
+          "originalBytes": {"type": "integer"},
+          "webmBytes": {"type": "integer"},
+          "safariBytes": {"type": "integer"}
+        }
+      },
+      "GiftStudioLibrary": {
+        "type": "object",
+        "required": ["items"],
+        "properties": {"items": {"type": "array", "items": {"$ref": "#/components/schemas/GiftStudioVersion"}}}
+      },
+      "GiftStudioPlaybackMedia": {
+        "type": "object",
+        "required": ["versionId", "webmUrl", "safariUrl", "durationMs"],
+        "properties": {
+          "versionId": {"type": "string", "format": "uuid"},
+          "webmUrl": {"type": "string"},
+          "safariUrl": {"type": "string"},
+          "durationMs": {"type": "integer", "minimum": 1, "maximum": 15000}
+        }
+      },
+      "GiftStudioActiveMediaResponse": {
+        "type": "object",
+        "required": ["media"],
+        "properties": {
+          "media": {"anyOf": [{"$ref": "#/components/schemas/GiftStudioPlaybackMedia"}, {"type": "null"}]}
+        }
+      },
       "StreamerPassportPlatform": {
         "type": "object",
         "required": ["id", "label", "color"],

@@ -1824,6 +1824,168 @@ export const SetStreamerPassportFoundingLeagueResponse = zod.object({
 })
 
 
+export const getGiftStudioLibraryResponseItemsItemSettingsKeyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getGiftStudioLibraryResponseItemsItemSettingsToleranceMin = 0.02;
+export const getGiftStudioLibraryResponseItemsItemSettingsToleranceMax = 0.65;
+
+export const getGiftStudioLibraryResponseItemsItemSettingsSoftnessMin = 0;
+export const getGiftStudioLibraryResponseItemsItemSettingsSoftnessMax = 0.5;
+
+export const getGiftStudioLibraryResponseItemsItemSettingsSpillMin = 0;
+export const getGiftStudioLibraryResponseItemsItemSettingsSpillMax = 1;
+
+
+
+export const GetGiftStudioLibraryResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "giftId": zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),
+  "version": zod.number().int(),
+  "status": zod.enum(['draft', 'active']),
+  "originalName": zod.string(),
+  "durationMs": zod.number().int(),
+  "settings": zod.object({
+  "preset": zod.enum(['green', 'magenta', 'black', 'custom']),
+  "keyColor": zod.string().regex(getGiftStudioLibraryResponseItemsItemSettingsKeyColorRegExp),
+  "tolerance": zod.number().min(getGiftStudioLibraryResponseItemsItemSettingsToleranceMin).max(getGiftStudioLibraryResponseItemsItemSettingsToleranceMax),
+  "softness": zod.number().min(getGiftStudioLibraryResponseItemsItemSettingsSoftnessMin).max(getGiftStudioLibraryResponseItemsItemSettingsSoftnessMax),
+  "spill": zod.number().min(getGiftStudioLibraryResponseItemsItemSettingsSpillMin).max(getGiftStudioLibraryResponseItemsItemSettingsSpillMax),
+  "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()])
+}),
+  "createdAt": zod.coerce.date(),
+  "originalUrl": zod.string(),
+  "webmUrl": zod.string(),
+  "safariUrl": zod.string(),
+  "originalBytes": zod.number().int(),
+  "webmBytes": zod.number().int(),
+  "safariBytes": zod.number().int()
+}))
+})
+
+
+export const CreateGiftStudioVersionBody = zod.object({
+  "giftId": zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),
+  "settings": zod.string().describe('JSON-serialized GiftStudioProcessingSettings'),
+  "sourceVideo": zod.string().describe('Video file part'),
+  "processedWebm": zod.string().describe('Processed transparent WebM file part')
+})
+
+export const createGiftStudioVersionResponseSettingsKeyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const createGiftStudioVersionResponseSettingsToleranceMin = 0.02;
+export const createGiftStudioVersionResponseSettingsToleranceMax = 0.65;
+
+export const createGiftStudioVersionResponseSettingsSoftnessMin = 0;
+export const createGiftStudioVersionResponseSettingsSoftnessMax = 0.5;
+
+export const createGiftStudioVersionResponseSettingsSpillMin = 0;
+export const createGiftStudioVersionResponseSettingsSpillMax = 1;
+
+
+
+export const CreateGiftStudioVersionResponse = zod.object({
+  "id": zod.string().uuid(),
+  "giftId": zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),
+  "version": zod.number().int(),
+  "status": zod.enum(['draft', 'active']),
+  "originalName": zod.string(),
+  "durationMs": zod.number().int(),
+  "settings": zod.object({
+  "preset": zod.enum(['green', 'magenta', 'black', 'custom']),
+  "keyColor": zod.string().regex(createGiftStudioVersionResponseSettingsKeyColorRegExp),
+  "tolerance": zod.number().min(createGiftStudioVersionResponseSettingsToleranceMin).max(createGiftStudioVersionResponseSettingsToleranceMax),
+  "softness": zod.number().min(createGiftStudioVersionResponseSettingsSoftnessMin).max(createGiftStudioVersionResponseSettingsSoftnessMax),
+  "spill": zod.number().min(createGiftStudioVersionResponseSettingsSpillMin).max(createGiftStudioVersionResponseSettingsSpillMax),
+  "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()])
+}),
+  "createdAt": zod.coerce.date(),
+  "originalUrl": zod.string(),
+  "webmUrl": zod.string(),
+  "safariUrl": zod.string(),
+  "originalBytes": zod.number().int(),
+  "webmBytes": zod.number().int(),
+  "safariBytes": zod.number().int()
+})
+
+
+export const SetGiftStudioVersionActiveParams = zod.object({
+  "versionId": zod.coerce.string().uuid()
+})
+
+export const SetGiftStudioVersionActiveBody = zod.object({
+  "active": zod.boolean()
+})
+
+export const setGiftStudioVersionActiveResponseSettingsKeyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const setGiftStudioVersionActiveResponseSettingsToleranceMin = 0.02;
+export const setGiftStudioVersionActiveResponseSettingsToleranceMax = 0.65;
+
+export const setGiftStudioVersionActiveResponseSettingsSoftnessMin = 0;
+export const setGiftStudioVersionActiveResponseSettingsSoftnessMax = 0.5;
+
+export const setGiftStudioVersionActiveResponseSettingsSpillMin = 0;
+export const setGiftStudioVersionActiveResponseSettingsSpillMax = 1;
+
+
+
+export const SetGiftStudioVersionActiveResponse = zod.object({
+  "id": zod.string().uuid(),
+  "giftId": zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),
+  "version": zod.number().int(),
+  "status": zod.enum(['draft', 'active']),
+  "originalName": zod.string(),
+  "durationMs": zod.number().int(),
+  "settings": zod.object({
+  "preset": zod.enum(['green', 'magenta', 'black', 'custom']),
+  "keyColor": zod.string().regex(setGiftStudioVersionActiveResponseSettingsKeyColorRegExp),
+  "tolerance": zod.number().min(setGiftStudioVersionActiveResponseSettingsToleranceMin).max(setGiftStudioVersionActiveResponseSettingsToleranceMax),
+  "softness": zod.number().min(setGiftStudioVersionActiveResponseSettingsSoftnessMin).max(setGiftStudioVersionActiveResponseSettingsSoftnessMax),
+  "spill": zod.number().min(setGiftStudioVersionActiveResponseSettingsSpillMin).max(setGiftStudioVersionActiveResponseSettingsSpillMax),
+  "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()])
+}),
+  "createdAt": zod.coerce.date(),
+  "originalUrl": zod.string(),
+  "webmUrl": zod.string(),
+  "safariUrl": zod.string(),
+  "originalBytes": zod.number().int(),
+  "webmBytes": zod.number().int(),
+  "safariBytes": zod.number().int()
+})
+
+
+export const GetGiftStudioVersionMediaParams = zod.object({
+  "versionId": zod.coerce.string().uuid(),
+  "variant": zod.enum(['original', 'webm', 'safari'])
+})
+
+export const GetGiftStudioVersionMediaResponse = zod.unknown()
+
+
+export const GetActiveGiftStudioVersionMediaParams = zod.object({
+  "versionId": zod.coerce.string().uuid(),
+  "variant": zod.enum(['webm', 'safari'])
+})
+
+export const GetActiveGiftStudioVersionMediaResponse = zod.unknown()
+
+
+export const GetActiveGiftStudioMediaParams = zod.object({
+  "giftId": zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip'])
+})
+
+export const getActiveGiftStudioMediaResponseMediaOneDurationMsMax = 15000;
+
+
+
+export const GetActiveGiftStudioMediaResponse = zod.object({
+  "media": zod.union([zod.object({
+  "versionId": zod.string().uuid(),
+  "webmUrl": zod.string(),
+  "safariUrl": zod.string(),
+  "durationMs": zod.number().int().min(1).max(getActiveGiftStudioMediaResponseMediaOneDurationMsMax)
+}),zod.null()])
+})
+
+
 export const getSocialPeopleQueryOffsetMin = 0;
 
 

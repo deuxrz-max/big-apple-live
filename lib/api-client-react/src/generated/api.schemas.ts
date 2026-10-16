@@ -2199,6 +2199,118 @@ export interface ErrorResponse4b96100 {
   error: string;
 }
 
+export type GiftStudioGiftId = typeof GiftStudioGiftId[keyof typeof GiftStudioGiftId];
+
+
+export const GiftStudioGiftId = {
+  heart: 'heart',
+  'spirit-pup': 'spirit-pup',
+  moonfox: 'moonfox',
+  'cosmic-encore': 'cosmic-encore',
+  fireworks: 'fireworks',
+  'rose-shower': 'rose-shower',
+  whip: 'whip',
+} as const;
+
+export type GiftStudioProcessingSettingsPreset = typeof GiftStudioProcessingSettingsPreset[keyof typeof GiftStudioProcessingSettingsPreset];
+
+
+export const GiftStudioProcessingSettingsPreset = {
+  green: 'green',
+  magenta: 'magenta',
+  black: 'black',
+  custom: 'custom',
+} as const;
+
+export type GiftStudioProcessingSettingsMaxDimension = typeof GiftStudioProcessingSettingsMaxDimension[keyof typeof GiftStudioProcessingSettingsMaxDimension] | null;
+
+
+export const GiftStudioProcessingSettingsMaxDimension = {
+  NUMBER_480: 480,
+  NUMBER_720: 720,
+  NUMBER_1080: 1080,
+} as const;
+
+export interface GiftStudioProcessingSettings {
+  preset: GiftStudioProcessingSettingsPreset;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  keyColor: string;
+  /**
+     * @minimum 0.02
+     * @maximum 0.65
+     */
+  tolerance: number;
+  /**
+     * @minimum 0
+     * @maximum 0.5
+     */
+  softness: number;
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  spill: number;
+  maxDimension: GiftStudioProcessingSettingsMaxDimension;
+}
+
+export interface GiftStudioUploadInput {
+  giftId: GiftStudioGiftId;
+  /** JSON-serialized GiftStudioProcessingSettings */
+  settings: string;
+  /** Video file part */
+  sourceVideo: string;
+  /** Processed transparent WebM file part */
+  processedWebm: string;
+}
+
+export interface GiftStudioActivationInput {
+  active: boolean;
+}
+
+export type GiftStudioVersionStatus = typeof GiftStudioVersionStatus[keyof typeof GiftStudioVersionStatus];
+
+
+export const GiftStudioVersionStatus = {
+  draft: 'draft',
+  active: 'active',
+} as const;
+
+export interface GiftStudioVersion {
+  id: string;
+  giftId: GiftStudioGiftId;
+  version: number;
+  status: GiftStudioVersionStatus;
+  originalName: string;
+  durationMs: number;
+  settings: GiftStudioProcessingSettings;
+  createdAt: string;
+  originalUrl: string;
+  webmUrl: string;
+  safariUrl: string;
+  originalBytes: number;
+  webmBytes: number;
+  safariBytes: number;
+}
+
+export interface GiftStudioLibrary {
+  items: GiftStudioVersion[];
+}
+
+export interface GiftStudioPlaybackMedia {
+  versionId: string;
+  webmUrl: string;
+  safariUrl: string;
+  /**
+     * @minimum 1
+     * @maximum 15000
+     */
+  durationMs: number;
+}
+
+export interface GiftStudioActiveMediaResponse {
+  media: GiftStudioPlaybackMedia | null;
+}
+
 export type StreamerPassportPlatformInputPlatform = typeof StreamerPassportPlatformInputPlatform[keyof typeof StreamerPassportPlatformInputPlatform];
 
 

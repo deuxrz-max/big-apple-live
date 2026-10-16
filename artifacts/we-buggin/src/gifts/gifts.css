@@ -21,6 +21,11 @@
 .big-tier-gift-overlay--top .big-tier-gift-banner{top:calc(42dvh + 10px + env(safe-area-inset-top))}
 .big-tier-gift-overlay--full .big-tier-gift-banner{top:70dvh}
 .big-tier-gift-overlay--bottom .big-tier-gift-banner{top:54dvh}
+.big-tier-gift-overlay--center .gift-studio-custom-media{position:absolute;top:50%;left:50%;width:min(78vw,500px);height:min(62dvh,620px);transform:translate(-50%,-50%);object-fit:contain;mix-blend-mode:normal}
+.big-tier-gift-overlay--top .gift-studio-custom-media{top:0;left:0;width:100vw;height:42dvh;object-fit:contain;mix-blend-mode:normal}
+.big-tier-gift-overlay--full .gift-studio-custom-media{inset:0;width:100vw;height:100dvh;object-fit:contain;mix-blend-mode:normal}
+.big-tier-gift-overlay--bottom .gift-studio-custom-media{left:0;bottom:0;width:100vw;height:34dvh;object-fit:contain;mix-blend-mode:normal}
+.big-tier-gift-overlay--center .big-tier-gift-banner{top:72dvh}
 .big-tier-gift-overlay.is-fading-out :is(.big-tier-gift-video,.rose-shower-canvas,.big-tier-gift-banner){animation:big-tier-gift-fade-out .5s ease-out forwards}
 @keyframes big-tier-gift-fade-out{to{opacity:0}}
 .gift-framework{--gf-purple:#8A2BFF;--gf-purple-d:#5A12B8;--gf-gold:#C9A24A;--gf-deep:#0E0A18;--gf-white:#fff;color:var(--gf-white);font-family:'Montserrat',system-ui,sans-serif}

@@ -11,9 +11,7 @@ import {
 import type { LiveStreamEntry, LiveStreamChatMessage } from "@workspace/api-client-react";
 import { GiftBag } from "@/gifts/GiftBag";
 import { GiftControl } from "@/gifts/GiftControl";
-import { CosmicEncoreAnimation, MoonfoxAnimation, SpiritAnimation } from "@/gifts/SpiritPup";
-import { BigTierGiftAnimation, isBigTierGiftId } from "@/gifts/BigTierGift";
-import { HeartAnimation } from "@/gifts/HeartAnimation";
+import { GiftAnimationPlayer } from "@/gifts/GiftAnimationPlayer";
 import { SafetyReportDialog } from "@/safety/SafetyReportDialog";
 import {
   hostLiveSession, leaveViewerLiveSession, viewerLiveSession,
@@ -498,11 +496,12 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
     </div>
     {audioTrack && <RemoteAudio track={audioTrack} />}
     {giftOpen && <GiftBag recipients={giftRecipients} streamId={streamId} onClose={() => setGiftOpen(false)} />}
-    {activeGift?.giftId === "heart" && <HeartAnimation key={activeGift.id} onFinish={() => finishGift(activeGift.id)} />}
-    {activeGift?.giftId === "spirit-pup" && <SpiritAnimation key={activeGift.id} onFinish={() => finishGift(activeGift.id)} />}
-    {activeGift?.giftId === "moonfox" && <MoonfoxAnimation key={activeGift.id} onFinish={() => finishGift(activeGift.id)} />}
-    {activeGift?.giftId === "cosmic-encore" && <CosmicEncoreAnimation key={activeGift.id} onFinish={() => finishGift(activeGift.id)} />}
-    {activeGift && isBigTierGiftId(activeGift.giftId) && <BigTierGiftAnimation key={activeGift.id} giftId={activeGift.giftId} senderName={activeGift.senderName} onFinish={() => finishGift(activeGift.id)} />}
+    {activeGift && <GiftAnimationPlayer
+      key={activeGift.id}
+      giftId={activeGift.giftId as import("@workspace/api-client-react").GiftStudioGiftId}
+      senderName={activeGift.senderName}
+      onFinish={() => finishGift(activeGift.id)}
+    />}
     {profileAction && <div className="st-live-action-scrim" onClick={() => setProfileAction(null)}>
       <section className="st-live-action-sheet" role="dialog" aria-modal="true" aria-label={`Actions for ${profileAction.displayName}`}
         onClick={event => event.stopPropagation()}>

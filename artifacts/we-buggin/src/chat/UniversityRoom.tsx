@@ -18,9 +18,7 @@ import { BeamTv, type BeamTvHandle } from './BeamTv';
 import { BotShield } from './BotShield';
 import { GiftBag, OPEN_ROOM_GIFTS_EVENT } from '@/gifts';
 import { useRoomGifts } from '@/gifts/useRoomGifts';
-import { HeartAnimation } from '@/gifts/HeartAnimation';
-import { CosmicEncoreAnimation, MoonfoxAnimation, SpiritAnimation } from '@/gifts/SpiritPup';
-import { BigTierGiftAnimation, isBigTierGiftId } from '@/gifts/BigTierGift';
+import { GiftAnimationPlayer } from '@/gifts/GiftAnimationPlayer';
 import { PassportSummaryBadge } from '@/passport/StreamerPassport';
 import { RoomEntranceEffectOverlay } from './RoomEntranceEffectOverlay';
 import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
@@ -646,15 +644,12 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
       )}
 
       {giftBag && <GiftBag recipient={giftBag.recipient} recipients={giftRecipients} roomId={roomId} sessionId={sessionId} onClose={() => setGiftBag(null)} />}
-      {gifts.animation && (gifts.animation.giftId === 'heart'
-        ? <HeartAnimation key={gifts.animation.id} onFinish={gifts.finish} />
-        : gifts.animation.giftId === 'cosmic-encore'
-          ? <CosmicEncoreAnimation key={gifts.animation.id} onFinish={gifts.finish} />
-        : isBigTierGiftId(gifts.animation.giftId)
-          ? <BigTierGiftAnimation key={gifts.animation.id} giftId={gifts.animation.giftId} senderName={gifts.animation.senderName} onFinish={gifts.finish} />
-        : gifts.animation.giftId === 'moonfox'
-          ? <MoonfoxAnimation key={gifts.animation.id} onFinish={gifts.finish} />
-          : <SpiritAnimation key={gifts.animation.id} onFinish={gifts.finish} />)}
+      {gifts.animation && <GiftAnimationPlayer
+        key={gifts.animation.id}
+        giftId={gifts.animation.giftId as import('@workspace/api-client-react').GiftStudioGiftId}
+        senderName={gifts.animation.senderName}
+        onFinish={gifts.finish}
+      />}
 
       {rulesOpen && (
         <div className="ur-modal" onClick={dismissRules}>

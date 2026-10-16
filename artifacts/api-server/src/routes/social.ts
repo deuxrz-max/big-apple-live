@@ -1,5 +1,10 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request, type Response } from "express";
 import { eq, sql } from "drizzle-orm";
+import multer from "multer";
+import { randomUUID } from "node:crypto";
+import { mkdir, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { accountProfiles, db } from "@workspace/db";
 import {
   SaveSocialProfileBody, SaveSocialProfileResponse, GetSocialMeResponse, GetSocialPeopleResponse,
@@ -10,11 +15,15 @@ import {
   GetFavoritesGalleryResponse, GetFavoriteRoomResponse, SaveMyStreamerPassportPlatformBody,
   ReviewStreamerPassportRequestBody, SetStreamerPassportFoundingLeagueBody,
   EquipMyBadgeBody, EquipMyBadgeResponse,
+  CreateGiftStudioVersionBody, CreateGiftStudioVersionResponse,
+  GetGiftStudioLibraryResponse, SetGiftStudioVersionActiveBody, SetGiftStudioVersionActiveParams,
+  SetGiftStudioVersionActiveResponse, GetGiftStudioVersionMediaParams,
+  GetActiveGiftStudioMediaParams, GetActiveGiftStudioMediaResponse,
 } from "@workspace/api-zod";
 import { accountId, sameOrigin } from "./identity";
 import { RoomError } from "../lib/room-store";
 import { requireAccount } from "../lib/social/core";
-import { accessFor, requireAdult } from "../lib/community";
+import { accessFor, requireAdult, requireOwner } from "../lib/community";
 import { blocks, getMe, getPerson, listPeople, relationship, saveSocialProfile } from "../lib/social/people";
 import { claimDaily, gift, ledger, purchase } from "../lib/social/rewards";
 import { roomGiftEvents } from '../lib/social/room-gifts';
@@ -34,6 +43,10 @@ import {
 } from "../lib/social/passport";
 import { getMyEntranceEffectSettings, saveMyEntranceEffectSettings } from "../lib/social/entrance-effect-preferences";
 import { saveEquippedBadge } from "../lib/social/monthly-credit-badges";
+import {
+  createGiftStudioVersion, getActiveGiftStudioMedia, giftStudioMediaFile,
+  listGiftStudioVersions, setGiftStudioVersionActive,
+} from "../lib/gift-studio";
 
 const router: IRouter = Router();
 router.get('/gift-media/spirit-pup/v1/:filename', serveGiftMedia);
@@ -50,6 +63,177 @@ router.use("/social", async (req, res, next) => {
   await requireAccount(id);
   res.set("Cache-Control", "no-store");
   next();
+});
+
+const studioTempDirs = new WeakMap<Request, string>();
+const studioUpload = multer({
+  storage: multer.diskStorage({
+    destination(req, _file, callback) {
+      let directory = studioTempDirs.get(req);
+      if (!directory) {
+        directory = path.join(tmpdir(), `streamtalk-gift-studio-${randomUUID()}`);
+        studioTempDirs.set(req, directory);
+        mkdir(directory, { recursive: true }).then(
+          () => callback(null, directory!),
+          (error: Error) => callback(error, ""),
+        );
+        return;
+      }
+      callback(null, directory);
+    },
+    filename(_req, _file, callback) {
+      callback(null, randomUUID());
+    },
+  }),
+  limits: { fileSize: 100 * 1024 * 1024, files: 2, fields: 4, fieldSize: 8192, parts: 6 },
+}).fields([
+  { name: "sourceVideo", maxCount: 1 },
+  { name: "processedWebm", maxCount: 1 },
+]);
+
+async function ownerOnly(req: Request, _res: Response, next: (error?: unknown) => void) {
+  try {
+    await requireOwner(accountId(req));
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
+function parseStudioUpload(req: Request, res: Response, next: (error?: unknown) => void) {
+  studioUpload(req, res, (error) => {
+    if (!error) {
+      next();
+      return;
+    }
+    const directory = studioTempDirs.get(req);
+    if (directory) void rm(directory, { recursive: true, force: true }).finally(() => studioTempDirs.delete(req));
+    if (error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE") {
+      next(new RoomError(413, "Each video must be 100 MB or smaller."));
+      return;
+    }
+    next(new RoomError(400, "Choose one original video and one processed animation."));
+  });
+}
+
+async function streamStudioMedia(
+  req: Request,
+  res: Response,
+  input: { versionId: string; variant: "original" | "webm" | "safari"; ownerId?: string; activeOnly?: boolean },
+): Promise<void> {
+  const { file, contentType, immutable } = await giftStudioMediaFile(input);
+  const [metadata] = await file.getMetadata();
+  const size = Number(metadata.size);
+  if (!Number.isSafeInteger(size) || size <= 0) throw new RoomError(404, "Gift media not found.");
+  res.set({
+    "Content-Type": contentType,
+    "X-Content-Type-Options": "nosniff",
+    "Accept-Ranges": "bytes",
+    "Cache-Control": immutable ? "public, max-age=31536000, immutable" : "private, no-store",
+  });
+  let start = 0;
+  let end = size - 1;
+  const range = req.get("Range");
+  if (range) {
+    const parsed = /^bytes=(\d*)-(\d*)$/.exec(range);
+    if (!parsed || (!parsed[1] && !parsed[2])) {
+      res.set("Content-Range", `bytes */${size}`).status(416).end();
+      return;
+    }
+    start = parsed[1] ? Number(parsed[1]) : Math.max(0, size - Number(parsed[2]));
+    end = parsed[1] && parsed[2] ? Math.min(size - 1, Number(parsed[2])) : size - 1;
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start > end || start >= size) {
+      res.set("Content-Range", `bytes */${size}`).status(416).end();
+      return;
+    }
+    res.status(206).set("Content-Range", `bytes ${start}-${end}/${size}`);
+  }
+  res.set("Content-Length", String(end - start + 1));
+  if (req.method === "HEAD") {
+    res.end();
+    return;
+  }
+  const source = file.createReadStream({ start, end });
+  res.on("close", () => source.destroy());
+  source.on("error", () => res.destroy()).pipe(res);
+}
+
+router.get("/social/admin/gift-studio/library", ownerOnly, async (req, res): Promise<void> => {
+  res.json(GetGiftStudioLibraryResponse.parse(await listGiftStudioVersions(accountId(req))));
+});
+
+router.post("/social/admin/gift-studio/versions", ownerOnly, parseStudioUpload, async (req, res): Promise<void> => {
+  const directory = studioTempDirs.get(req);
+  const files = req.files as Record<string, Express.Multer.File[]> | undefined;
+  const original = files?.sourceVideo?.[0];
+  const processed = files?.processedWebm?.[0];
+  try {
+    if (!directory || !original || !processed) throw new RoomError(400, "Choose both the original clip and processed transparent WebM.");
+    const parsedBody = CreateGiftStudioVersionBody.safeParse({
+      giftId: req.body?.giftId,
+      settings: req.body?.settings,
+      sourceVideo: original.originalname,
+      processedWebm: processed.originalname,
+    });
+    if (!parsedBody.success) throw new RoomError(400, "Check the selected gift and processing settings.");
+    let settings: unknown;
+    try {
+      settings = JSON.parse(parsedBody.data.settings);
+    } catch {
+      throw new RoomError(400, "Processing settings could not be read.");
+    }
+    const validatedSettings = CreateGiftStudioVersionResponse.shape.settings.parse(settings);
+    const result = await createGiftStudioVersion({
+      ownerId: accountId(req),
+      giftId: parsedBody.data.giftId,
+      settings: validatedSettings,
+      originalPath: original.path,
+      originalName: original.originalname,
+      originalBytes: original.size,
+      processedWebmPath: processed.path,
+      processedWebmBytes: processed.size,
+    });
+    res.status(201).json(CreateGiftStudioVersionResponse.parse(result));
+  } finally {
+    if (directory) {
+      await rm(directory, { recursive: true, force: true });
+      studioTempDirs.delete(req);
+    }
+  }
+});
+
+router.patch("/social/admin/gift-studio/versions/:versionId", ownerOnly, async (req, res): Promise<void> => {
+  const params = SetGiftStudioVersionActiveParams.safeParse(req.params);
+  const body = SetGiftStudioVersionActiveBody.safeParse(req.body);
+  if (!params.success || !body.success) throw new RoomError(400, "Choose whether to use this gift version.");
+  const result = await setGiftStudioVersionActive(accountId(req), params.data.versionId, body.data.active);
+  res.json(SetGiftStudioVersionActiveResponse.parse(result));
+});
+
+router.get("/social/admin/gift-studio/versions/:versionId/media/:variant", ownerOnly, async (req, res): Promise<void> => {
+  const parsed = GetGiftStudioVersionMediaParams.safeParse(req.params);
+  if (!parsed.success) throw new RoomError(404, "Gift media not found.");
+  await streamStudioMedia(req, res, {
+    versionId: parsed.data.versionId,
+    variant: parsed.data.variant,
+    ownerId: accountId(req),
+  });
+});
+
+router.get("/social/gift-studio/media/:versionId/:variant", async (req, res): Promise<void> => {
+  const parsed = GetGiftStudioVersionMediaParams.safeParse(req.params);
+  if (!parsed.success || parsed.data.variant === "original") throw new RoomError(404, "Gift media not found.");
+  await streamStudioMedia(req, res, {
+    versionId: parsed.data.versionId,
+    variant: parsed.data.variant,
+    activeOnly: true,
+  });
+});
+
+router.get("/social/gift-studio/active/:giftId", async (req, res): Promise<void> => {
+  const params = GetActiveGiftStudioMediaParams.safeParse(req.params);
+  if (!params.success) throw new RoomError(404, "Gift not found.");
+  res.json(GetActiveGiftStudioMediaResponse.parse(await getActiveGiftStudioMedia(params.data.giftId)));
 });
 const name = (raw: string | string[] | undefined) => {
   const value = typeof raw === "string" ? raw : "";

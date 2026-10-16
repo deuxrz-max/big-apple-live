@@ -15,6 +15,7 @@ import { InboxPage } from './InboxPage';
 import { LeaderboardPage, RewardsPage, ThreadPage } from './MoneyPages';
 import { StreamerPassportReview } from '@/passport/StreamerPassport';
 import { SafetyReportsPage } from '@/safety/SafetyReportsPage';
+import { GiftStudioPage } from '@/gift-studio/GiftStudioPage';
 
 const NAV = [
   { to: '/community', label: 'People', icon: Users, exact: true },
@@ -39,6 +40,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
     useEffect(() => {
       document.title = path === '/community/moderation' ? 'Moderation — Streamtalk'
         : path === '/community/reports' ? 'Safety reports — Streamtalk'
+        : path === '/community/gift-studio' ? 'Gift Studio — Streamtalk'
         : path === '/community/messages' ? 'Messages — Streamtalk'
           : path === '/community/favorites' ? 'Following — Streamtalk'
             : 'People — Streamtalk';
@@ -106,6 +108,11 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
               <Route path="/community/passport-review">{() => access.data?.owner
                 ? <StreamerPassportReview />
                 : <div className="sc-empty" role="status" data-testid="status-passport-review-access"><h2>Moderator access required</h2><p>This review desk is limited to authorized moderators.</p><Link href="/community" className="bm-btn">Back to People</Link></div>}</Route>
+              <Route path="/community/gift-studio">{() => access.data?.owner
+                ? <GiftStudioPage />
+                : access.isLoading
+                  ? <Loading />
+                  : <div className="sc-empty" role="status" data-testid="status-gift-studio-access"><h2>Owner access required</h2><p>Gift Studio is available only to the Streamtalk owner.</p><Link href="/community/profile" className="bm-btn">Back to Me</Link></div>}</Route>
               <Route path="/community/rewards"><RewardsPage /></Route>
               <Route path="/community/credits" component={BuyCreditsPage} />
               <Route path="/community/leaderboard" component={LeaderboardPage} />
