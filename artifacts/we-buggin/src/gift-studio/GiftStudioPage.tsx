@@ -29,6 +29,7 @@ const KEY_PRESETS: { id: KeyColor; label: string; value: string }[] = [
 ];
 const MAX_BYTES = 100 * 1024 * 1024;
 const MAX_SECONDS = 15;
+const MAX_DRAFT_NAME = 60;
 const formatBytes = (bytes: number) => bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(0)} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 
 const errorText = (error: unknown) => {
@@ -56,6 +57,7 @@ export function GiftStudioPage() {
   const [processedBlob, setProcessedBlob] = useState<Blob | null>(null);
   const [duration, setDuration] = useState(0);
   const [giftId, setGiftId] = useState<GiftStudioGiftId>('heart');
+  const [draftName, setDraftName] = useState('');
   const [keyPreset, setKeyPreset] = useState<KeyColor>('green');
   const [keyColor, setKeyColor] = useState('#00ff00');
   const [tolerance, setTolerance] = useState(.24);
@@ -271,10 +273,11 @@ export function GiftStudioPage() {
   };
 
   const approve = () => {
-    if (!file || !processedBlob || !approved) return;
+    const trimmedName = draftName.trim();
+    if (!file || !processedBlob || !approved || !trimmedName) return;
     const data: GiftStudioUploadInput = {
       giftId,
-      settings: JSON.stringify(settings),
+      settings: JSON.stringify({ ...settings, draftName: trimmedName }),
       // Generated multipart typing says string; actual File/Blob values are intentionally passed through for FormData.append.
       sourceVideo: file as unknown as string,
       processedWebm: new File([processedBlob], `${file.name.replace(/\.[^.]+$/, '')}-alpha.webm`, { type: 'video/webm' }) as unknown as string,
@@ -336,21 +339,29 @@ export function GiftStudioPage() {
             <section className="gs-panel" aria-labelledby="gs-preview-title">
               <div className="gs-panel-head"><div className="gs-step-number">02</div><div><div className="gs-kicker">Dial in the cutout</div><h2 className="gs-panel-title" id="gs-preview-title">Compare your clip</h2></div></div>
               <div className="gs-toolbar">
-                <div className="gs-choice-row" role="group" aria-label="Gift for this version">
-                  <label className="gs-sr-only" htmlFor="gs-gift-select">Choose a gift</label>
-                  <select id="gs-gift-select" className="gs-chip-button" value={giftId} onChange={(event) => setGiftId(event.target.value as GiftStudioGiftId)} disabled={processing} data-testid="select-gift">
-                    {GIFTS.map((gift) => <option key={gift.id} value={gift.id}>{gift.label}</option>)}
-                  </select>
-                </div>
+                <label className="gs-name-field">
+                  <span>Name this gift <small>Required to save</small></span>
+                  <input
+                    type="text"
+                    value={draftName}
+                    maxLength={MAX_DRAFT_NAME}
+                    onChange={(event) => setDraftName(event.target.value)}
+                    disabled={processing}
+                    placeholder="For example, Rose Shower"
+                    autoComplete="off"
+                    aria-required="true"
+                    data-testid="input-draft-name"
+                  />
+                </label>
                 <div className="gs-backdrop-tabs" role="group" aria-label="Transparency preview backdrop">
                   {(['checker', 'light', 'dark'] as const).map((mode) => <button type="button" key={mode} aria-pressed={backdrop === mode} onClick={() => { setBackdrop(mode); if (processedUrl && mode === 'light') setReviewedLight(true); if (processedUrl && mode === 'dark') setReviewedDark(true); }} data-testid={`button-backdrop-${mode}`}>{mode === 'checker' ? 'Grid' : mode}</button>)}
                 </div>
               </div>
               <div className="gs-preview-grid">
-                <div className="gs-preview"><div className="gs-preview-label">Original <span>Source</span></div><div className={`gs-preview-stage ${backdrop}`} data-testid="preview-original">
+                <div className="gs-preview"><div className="gs-preview-label">Before <span>Original clip</span></div><div className={`gs-preview-stage ${backdrop}`} data-testid="preview-original">
                   {originalUrl ? <video ref={originalVideoRef} src={originalUrl} muted playsInline preload="metadata" onLoadedMetadata={onOriginalMetadata} onTimeUpdate={syncTime} onEnded={() => processedVideoRef.current?.pause()} /> : <div className="gs-empty-preview">Your source preview will appear here.</div>}
                 </div></div>
-                <div className="gs-preview"><div className="gs-preview-label">Cutout <span>Alpha</span></div><div className={`gs-preview-stage ${backdrop}`} data-testid="preview-processed">
+                <div className="gs-preview"><div className="gs-preview-label">After <span>Background removed</span></div><div className={`gs-preview-stage ${backdrop}`} data-testid="preview-processed">
                   {processedUrl ? <video ref={processedVideoRef} src={processedUrl} muted playsInline preload="metadata" onTimeUpdate={syncTime} /> : <div className="gs-empty-preview">{file ? 'Process the clip to inspect its transparent edges.' : 'Choose a source clip to begin.'}</div>}
                 </div></div>
               </div>
@@ -399,8 +410,8 @@ export function GiftStudioPage() {
               </label>
               {(!reviewedLight || !reviewedDark) && <p className="gs-caption" data-testid="text-review-required">Switch the processed preview to both Light and Dark to unlock approval.</p>}
               <div className="gs-controls">
-                <button className="gs-button primary" type="button" onClick={approve} disabled={!approved || createVersion.isPending} data-testid="button-approve-add">{createVersion.isPending ? 'Saving draft…' : 'Approve and add draft'} <Check size={15} /></button>
-                <span className="gs-caption">Approval creates a draft; it does not change the live gift.</span>
+                <button className="gs-button primary" type="button" onClick={approve} disabled={!approved || !draftName.trim() || createVersion.isPending} data-testid="button-approve-add">{createVersion.isPending ? 'Saving draft…' : 'Approve and add draft'} <Check size={15} /></button>
+                <span className="gs-caption">Approval creates a named draft; it does not change the live gift.</span>
               </div>
               {createVersion.isError && <div className="gs-error" role="alert" data-testid="state-upload-error">{errorText(createVersion.error)}</div>}
             </section>}
@@ -430,7 +441,7 @@ export function GiftStudioPage() {
 
       {selectedPreview && <div role="dialog" aria-modal="true" aria-labelledby="gs-version-dialog-title" className="gs-modal-wrap" onClick={(event) => { if (event.target === event.currentTarget) setSelectedPreview(null); }} data-testid="dialog-version-preview">
         <section className="gs-panel gs-modal">
-          <div className="gs-panel-head"><div><div className="gs-kicker">{selectedPreview.status} · version {selectedPreview.version}</div><h2 className="gs-panel-title" id="gs-version-dialog-title">{GIFTS.find((gift) => gift.id === selectedPreview.giftId)?.label} animation</h2></div><button type="button" className="gs-icon-button" onClick={() => setSelectedPreview(null)} aria-label="Close version preview" data-testid="button-close-version-preview"><X size={16} /></button></div>
+          <div className="gs-panel-head"><div><div className="gs-kicker">{selectedPreview.status} · version {selectedPreview.version}</div><h2 className="gs-panel-title" id="gs-version-dialog-title">{versionName(selectedPreview)} animation</h2></div><button type="button" className="gs-icon-button" onClick={() => setSelectedPreview(null)} aria-label="Close version preview" data-testid="button-close-version-preview"><X size={16} /></button></div>
           <div className="gs-preview-stage checker"><video src={giftStudioMediaUrl(selectedPreview.webmUrl)} controls muted playsInline preload="metadata" data-testid={`video-library-version-${selectedPreview.id}`} /></div>
           <div className="gs-controls">
             <button type="button" className="gs-button" onClick={() => setPlayingPreview(selectedPreview)} data-testid={`button-play-version-overlay-${selectedPreview.id}`}>Play through gift overlay</button>
@@ -463,13 +474,18 @@ function LibraryVersion({ version, onPreview, onToggle, pending }: {
   onToggle: (version: GiftStudioVersion, active: boolean) => void;
   pending: boolean;
 }) {
-  const label = GIFTS.find((gift) => gift.id === version.giftId)?.label ?? version.giftId;
+  const label = versionName(version);
   return <article className="gs-library-card" data-testid={`card-gift-version-${version.id}`}>
     <div className="gs-version-mark">V{version.version}</div>
-    <div className="gs-version-info"><strong>{label} · {version.originalName}</strong><small>{new Date(version.createdAt).toLocaleDateString()} · {formatBytes(version.webmBytes)} WebM · {version.durationMs / 1000}s</small><span className={`gs-status ${version.status === 'active' ? 'active' : ''}`} data-testid={`status-version-${version.id}`}>{version.status}</span></div>
+    <div className="gs-version-info"><strong>{label}</strong><small>{new Date(version.createdAt).toLocaleDateString()} · {formatBytes(version.webmBytes)} WebM · {version.durationMs / 1000}s</small><span className={`gs-status ${version.status === 'active' ? 'active' : ''}`} data-testid={`status-version-${version.id}`}>{version.status}</span></div>
     <div className="gs-card-actions">
       <button className="gs-icon-button" type="button" onClick={() => onPreview(version)} aria-label={`Preview ${label} version ${version.version}`} data-testid={`button-preview-version-${version.id}`}><Play size={14} /></button>
       <button className="gs-chip-button" type="button" onClick={() => onToggle(version, version.status !== 'active')} disabled={pending} data-testid={`button-activate-version-${version.id}`}>{version.status === 'active' ? 'Return to draft' : 'Activate'}</button>
     </div>
   </article>;
+}
+
+function versionName(version: GiftStudioVersion) {
+  return version.settings.draftName?.trim()
+    || `${GIFTS.find((gift) => gift.id === version.giftId)?.label ?? version.giftId} · ${version.originalName}`;
 }

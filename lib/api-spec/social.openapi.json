@@ -997,7 +997,8 @@
           "tolerance": {"type": "number", "minimum": 0.02, "maximum": 0.65},
           "softness": {"type": "number", "minimum": 0, "maximum": 0.5},
           "spill": {"type": "number", "minimum": 0, "maximum": 1},
-          "maxDimension": {"anyOf": [{"type": "integer", "enum": [480, 720, 1080]}, {"type": "null"}]}
+          "maxDimension": {"anyOf": [{"type": "integer", "enum": [480, 720, 1080]}, {"type": "null"}]},
+          "draftName": {"type": "string", "minLength": 1, "maxLength": 60, "description": "Owner-provided name shown for this saved Gift Studio draft"}
         }
       },
       "GiftStudioUploadInput": {

@@ -1834,6 +1834,8 @@ export const getGiftStudioLibraryResponseItemsItemSettingsSoftnessMax = 0.5;
 export const getGiftStudioLibraryResponseItemsItemSettingsSpillMin = 0;
 export const getGiftStudioLibraryResponseItemsItemSettingsSpillMax = 1;
 
+export const getGiftStudioLibraryResponseItemsItemSettingsDraftNameMax = 60;
+
 
 
 export const GetGiftStudioLibraryResponse = zod.object({
@@ -1850,7 +1852,8 @@ export const GetGiftStudioLibraryResponse = zod.object({
   "tolerance": zod.number().min(getGiftStudioLibraryResponseItemsItemSettingsToleranceMin).max(getGiftStudioLibraryResponseItemsItemSettingsToleranceMax),
   "softness": zod.number().min(getGiftStudioLibraryResponseItemsItemSettingsSoftnessMin).max(getGiftStudioLibraryResponseItemsItemSettingsSoftnessMax),
   "spill": zod.number().min(getGiftStudioLibraryResponseItemsItemSettingsSpillMin).max(getGiftStudioLibraryResponseItemsItemSettingsSpillMax),
-  "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()])
+  "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
+  "draftName": zod.string().min(1).max(getGiftStudioLibraryResponseItemsItemSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft')
 }),
   "createdAt": zod.coerce.date(),
   "originalUrl": zod.string(),
@@ -1880,6 +1883,8 @@ export const createGiftStudioVersionResponseSettingsSoftnessMax = 0.5;
 export const createGiftStudioVersionResponseSettingsSpillMin = 0;
 export const createGiftStudioVersionResponseSettingsSpillMax = 1;
 
+export const createGiftStudioVersionResponseSettingsDraftNameMax = 60;
+
 
 
 export const CreateGiftStudioVersionResponse = zod.object({
@@ -1895,7 +1900,8 @@ export const CreateGiftStudioVersionResponse = zod.object({
   "tolerance": zod.number().min(createGiftStudioVersionResponseSettingsToleranceMin).max(createGiftStudioVersionResponseSettingsToleranceMax),
   "softness": zod.number().min(createGiftStudioVersionResponseSettingsSoftnessMin).max(createGiftStudioVersionResponseSettingsSoftnessMax),
   "spill": zod.number().min(createGiftStudioVersionResponseSettingsSpillMin).max(createGiftStudioVersionResponseSettingsSpillMax),
-  "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()])
+  "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
+  "draftName": zod.string().min(1).max(createGiftStudioVersionResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft')
 }),
   "createdAt": zod.coerce.date(),
   "originalUrl": zod.string(),
@@ -1925,6 +1931,8 @@ export const setGiftStudioVersionActiveResponseSettingsSoftnessMax = 0.5;
 export const setGiftStudioVersionActiveResponseSettingsSpillMin = 0;
 export const setGiftStudioVersionActiveResponseSettingsSpillMax = 1;
 
+export const setGiftStudioVersionActiveResponseSettingsDraftNameMax = 60;
+
 
 
 export const SetGiftStudioVersionActiveResponse = zod.object({
@@ -1940,7 +1948,8 @@ export const SetGiftStudioVersionActiveResponse = zod.object({
   "tolerance": zod.number().min(setGiftStudioVersionActiveResponseSettingsToleranceMin).max(setGiftStudioVersionActiveResponseSettingsToleranceMax),
   "softness": zod.number().min(setGiftStudioVersionActiveResponseSettingsSoftnessMin).max(setGiftStudioVersionActiveResponseSettingsSoftnessMax),
   "spill": zod.number().min(setGiftStudioVersionActiveResponseSettingsSpillMin).max(setGiftStudioVersionActiveResponseSettingsSpillMax),
-  "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()])
+  "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
+  "draftName": zod.string().min(1).max(setGiftStudioVersionActiveResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft')
 }),
   "createdAt": zod.coerce.date(),
   "originalUrl": zod.string(),

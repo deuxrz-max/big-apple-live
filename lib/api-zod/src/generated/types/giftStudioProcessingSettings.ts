@@ -28,4 +28,10 @@ export interface GiftStudioProcessingSettings {
      */
   spill: number;
   maxDimension: GiftStudioProcessingSettingsMaxDimension;
+  /**
+     * Owner-provided name shown for this saved Gift Studio draft
+     * @minLength 1
+     * @maxLength 60
+     */
+  draftName?: string;
 }

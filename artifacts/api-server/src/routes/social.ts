@@ -183,10 +183,14 @@ router.post("/social/admin/gift-studio/versions", ownerOnly, parseStudioUpload, 
       throw new RoomError(400, "Processing settings could not be read.");
     }
     const validatedSettings = CreateGiftStudioVersionResponse.shape.settings.parse(settings);
+    const draftName = validatedSettings.draftName?.trim();
+    if (!draftName || draftName.length > 60) {
+      throw new RoomError(400, "Enter a gift name of 1 to 60 characters before saving.");
+    }
     const result = await createGiftStudioVersion({
       ownerId: accountId(req),
       giftId: parsedBody.data.giftId,
-      settings: validatedSettings,
+      settings: { ...validatedSettings, draftName },
       originalPath: original.path,
       originalName: original.originalname,
       originalBytes: original.size,
