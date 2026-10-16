@@ -1,5 +1,5 @@
 import { Storage } from "@google-cloud/storage";
-import { and, desc, eq, max } from "drizzle-orm";
+import { and, desc, eq, isNull, max } from "drizzle-orm";
 import { db, giftStudioAssets, type GiftStudioAsset } from "@workspace/db";
 import type { GiftStudioGiftId, GiftStudioProcessingSettings, GiftStudioVersion } from "@workspace/api-zod";
 import { randomUUID } from "node:crypto";
@@ -52,7 +52,7 @@ function mediaUrl(id: string, variant: GiftStudioMediaVariant, ownerOnly: boolea
 function toVersion(row: GiftStudioAsset): GiftStudioVersion {
   return {
     id: row.id,
-    giftId: row.giftId as GiftStudioGiftId,
+    giftId: row.giftId as GiftStudioGiftId | null,
     version: row.version,
     status: row.status as "draft" | "active",
     originalName: row.originalName,
@@ -196,7 +196,7 @@ export async function listGiftStudioVersions(ownerId: string) {
 
 export async function createGiftStudioVersion(input: {
   ownerId: string;
-  giftId: GiftStudioGiftId;
+  giftId: GiftStudioGiftId | null;
   settings: GiftStudioProcessingSettings;
   originalPath: string;
   originalName: string;
@@ -204,7 +204,7 @@ export async function createGiftStudioVersion(input: {
   processedWebmPath: string;
   processedWebmBytes: number;
 }) {
-  if (!GIFT_IDS.has(input.giftId)) throw new RoomError(400, "Choose an existing gift.");
+  if (input.giftId !== null && !GIFT_IDS.has(input.giftId)) throw new RoomError(400, "Choose an existing gift.");
   if (input.processedWebmBytes <= 0 || input.processedWebmBytes > MAX_VIDEO_BYTES) {
     throw new RoomError(413, "The processed animation must be 100 MB or smaller.");
   }
@@ -227,9 +227,11 @@ export async function createGiftStudioVersion(input: {
   const id = randomUUID();
   const safeName = input.originalName.replace(/^.*[\\/]/, "").replace(/[\u0000-\u001f\u007f]/g, "").slice(0, 120)
     || `source.${source.type}`;
-  const [maxVersionRow] = await db.select({ version: max(giftStudioAssets.version) }).from(giftStudioAssets)
-    .where(eq(giftStudioAssets.giftId, input.giftId));
-  const version = Number(maxVersionRow?.version ?? 0) + 1;
+  const [maxVersionRow] = input.giftId
+    ? await db.select({ version: max(giftStudioAssets.version) }).from(giftStudioAssets)
+      .where(eq(giftStudioAssets.giftId, input.giftId))
+    : [];
+  const version = input.giftId ? Number(maxVersionRow?.version ?? 0) + 1 : 1;
 
   try {
     await createSafariFallback(input.processedWebmPath, fallbackPath);
@@ -265,13 +267,32 @@ export async function createGiftStudioVersion(input: {
   }
 }
 
+export async function assignGiftStudioVersionToGift(ownerId: string, versionId: string, giftId: GiftStudioGiftId) {
+  if (!GIFT_IDS.has(giftId)) throw new RoomError(400, "Choose an existing gift.");
+  const [asset] = await db.select().from(giftStudioAssets).where(eq(giftStudioAssets.id, versionId));
+  if (!asset || asset.ownerId !== ownerId) throw new RoomError(404, "Gift animation version not found.");
+  if (asset.giftId !== null || asset.status !== "draft") {
+    throw new RoomError(400, "Only an unattached draft can be added to a gift.");
+  }
+  const [maxVersionRow] = await db.select({ version: max(giftStudioAssets.version) }).from(giftStudioAssets)
+    .where(eq(giftStudioAssets.giftId, giftId));
+  const [updated] = await db.update(giftStudioAssets)
+    .set({ giftId, version: Number(maxVersionRow?.version ?? 0) + 1 })
+    .where(and(eq(giftStudioAssets.id, versionId), eq(giftStudioAssets.ownerId, ownerId), isNull(giftStudioAssets.giftId)))
+    .returning();
+  if (!updated) throw new RoomError(409, "This draft was already added to a gift. Refresh the library.");
+  return toVersion(updated);
+}
+
 export async function setGiftStudioVersionActive(ownerId: string, versionId: string, active: boolean) {
   const [asset] = await db.select().from(giftStudioAssets).where(eq(giftStudioAssets.id, versionId));
   if (!asset || asset.ownerId !== ownerId) throw new RoomError(404, "Gift animation version not found.");
+  if (!asset.giftId) throw new RoomError(400, "Add this draft to a gift before activating it.");
+  const giftId = asset.giftId;
   const row = await db.transaction(async (tx) => {
     if (active) {
       await tx.update(giftStudioAssets).set({ status: "draft", activatedAt: null }).where(and(
-        eq(giftStudioAssets.giftId, asset.giftId), eq(giftStudioAssets.status, "active"),
+        eq(giftStudioAssets.giftId, giftId), eq(giftStudioAssets.status, "active"),
       ));
     }
     const [updated] = await tx.update(giftStudioAssets)

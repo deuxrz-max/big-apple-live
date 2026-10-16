@@ -283,17 +283,19 @@ function ClerkProviderWithRoutes() {
   const isLiveScreen = currentPath === '/live/start' || /^\/live\/[^/]+\/?$/.test(currentPath);
   const isModerationScreen = currentPath === '/community/moderation';
   const isDirectoryScreen = currentPath === '/home';
+  const isGiftStudioScreen = currentPath === '/community/gift-studio';
   // The route flags below remain for layout/media behavior; the visual theme is unified.
-  const isLightScreen = true;
+  const isLightScreen = !isGiftStudioScreen;
   useLayoutEffect(() => {
     document.body.classList.toggle('streamtalk-beam-screen', isBeamRoomScreen);
     document.body.classList.toggle('streamtalk-light-screen', isLightScreen);
     document.body.classList.toggle('streamtalk-directory-screen', isDirectoryScreen);
     document.body.classList.toggle('streamtalk-live-screen', isLiveScreen);
+    document.body.classList.toggle('streamtalk-gift-studio-screen', isGiftStudioScreen);
     return () => {
-      document.body.classList.remove('streamtalk-beam-screen', 'streamtalk-light-screen', 'streamtalk-directory-screen', 'streamtalk-live-screen');
+      document.body.classList.remove('streamtalk-beam-screen', 'streamtalk-light-screen', 'streamtalk-directory-screen', 'streamtalk-live-screen', 'streamtalk-gift-studio-screen');
     };
-  }, [isBeamRoomScreen, isLightScreen, isDirectoryScreen, isLiveScreen]);
+  }, [isBeamRoomScreen, isLightScreen, isDirectoryScreen, isLiveScreen, isGiftStudioScreen]);
   const clerkPubKey = publishableKeyFromHost(
     window.location.hostname,
     import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
@@ -318,7 +320,7 @@ function ClerkProviderWithRoutes() {
     >
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
-        <div className={`app-page is-light-screen ${isLiveScreen ? 'is-live-screen' : ''} ${isBeamRoomScreen ? 'is-beam-screen' : ''} ${isModerationScreen ? 'is-moderation-screen' : ''} ${isDirectoryScreen ? 'is-directory-screen' : ''}`}><RoutedErrorBoundary>
+        <div className={`app-page ${isLightScreen ? 'is-light-screen' : ''} ${isLiveScreen ? 'is-live-screen' : ''} ${isBeamRoomScreen ? 'is-beam-screen' : ''} ${isModerationScreen ? 'is-moderation-screen' : ''} ${isDirectoryScreen ? 'is-directory-screen' : ''} ${isGiftStudioScreen ? 'is-gift-studio-screen' : ''}`}><RoutedErrorBoundary>
           <Switch>
             {DevAudioHarnessPage && (
               <Route path="/__dev/audio-harness">

@@ -89,6 +89,7 @@ export * from './getSocialPeopleGender';
 export * from './getSocialPeopleParams';
 export * from './giftStudioActivationInput';
 export * from './giftStudioActiveMediaResponse';
+export * from './giftStudioAssignInput';
 export * from './giftStudioGiftId';
 export * from './giftStudioLibrary';
 export * from './giftStudioPlaybackMedia';

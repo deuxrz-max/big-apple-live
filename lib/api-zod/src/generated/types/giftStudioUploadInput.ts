@@ -8,7 +8,7 @@
 import type { GiftStudioGiftId } from './giftStudioGiftId';
 
 export interface GiftStudioUploadInput {
-  giftId: GiftStudioGiftId;
+  giftId?: GiftStudioGiftId | null;
   /** JSON-serialized GiftStudioProcessingSettings */
   settings: string;
   /** Video file part */

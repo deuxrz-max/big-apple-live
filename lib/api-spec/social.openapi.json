@@ -163,6 +163,22 @@
         }
       }
     },
+    "/social/admin/gift-studio/versions/{versionId}/gift": {
+      "patch": {
+        "operationId": "assignGiftStudioVersionToGift",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "parameters": [{"name": "versionId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioAssignInput"}}}},
+        "responses": {
+          "200": {"description": "Named standalone draft attached to an existing gift", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioVersion"}}}},
+          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Owner access required"},
+          "404": {"description": "Gift animation version not found"}
+        }
+      }
+    },
     "/social/admin/gift-studio/versions/{versionId}/media/{variant}": {
       "get": {
         "operationId": "getGiftStudioVersionMedia",
@@ -1004,13 +1020,19 @@
       "GiftStudioUploadInput": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["giftId", "settings", "sourceVideo", "processedWebm"],
+        "required": ["settings", "sourceVideo", "processedWebm"],
         "properties": {
-          "giftId": {"$ref": "#/components/schemas/GiftStudioGiftId"},
+          "giftId": {"anyOf": [{"$ref": "#/components/schemas/GiftStudioGiftId"}, {"type": "null"}]},
           "settings": {"type": "string", "description": "JSON-serialized GiftStudioProcessingSettings"},
           "sourceVideo": {"type": "string", "description": "Video file part"},
           "processedWebm": {"type": "string", "description": "Processed transparent WebM file part"}
         }
+      },
+      "GiftStudioAssignInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["giftId"],
+        "properties": {"giftId": {"$ref": "#/components/schemas/GiftStudioGiftId"}}
       },
       "GiftStudioActivationInput": {
         "type": "object",
@@ -1023,7 +1045,7 @@
         "required": ["id", "giftId", "version", "status", "originalName", "durationMs", "settings", "createdAt", "originalUrl", "webmUrl", "safariUrl", "originalBytes", "webmBytes", "safariBytes"],
         "properties": {
           "id": {"type": "string", "format": "uuid"},
-          "giftId": {"$ref": "#/components/schemas/GiftStudioGiftId"},
+          "giftId": {"anyOf": [{"$ref": "#/components/schemas/GiftStudioGiftId"}, {"type": "null"}]},
           "version": {"type": "integer"},
           "status": {"type": "string", "enum": ["draft", "active"]},
           "originalName": {"type": "string"},

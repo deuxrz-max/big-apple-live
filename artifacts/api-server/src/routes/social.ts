@@ -17,7 +17,8 @@ import {
   EquipMyBadgeBody, EquipMyBadgeResponse,
   CreateGiftStudioVersionBody, CreateGiftStudioVersionResponse,
   GetGiftStudioLibraryResponse, SetGiftStudioVersionActiveBody, SetGiftStudioVersionActiveParams,
-  SetGiftStudioVersionActiveResponse, GetGiftStudioVersionMediaParams,
+  SetGiftStudioVersionActiveResponse, AssignGiftStudioVersionToGiftBody, AssignGiftStudioVersionToGiftParams,
+  AssignGiftStudioVersionToGiftResponse, GetGiftStudioVersionMediaParams,
   GetActiveGiftStudioMediaParams, GetActiveGiftStudioMediaResponse,
 } from "@workspace/api-zod";
 import { accountId, sameOrigin } from "./identity";
@@ -45,7 +46,7 @@ import { getMyEntranceEffectSettings, saveMyEntranceEffectSettings } from "../li
 import { saveEquippedBadge } from "../lib/social/monthly-credit-badges";
 import {
   createGiftStudioVersion, getActiveGiftStudioMedia, giftStudioMediaFile,
-  listGiftStudioVersions, setGiftStudioVersionActive,
+  listGiftStudioVersions, setGiftStudioVersionActive, assignGiftStudioVersionToGift,
 } from "../lib/gift-studio";
 
 const router: IRouter = Router();
@@ -189,7 +190,7 @@ router.post("/social/admin/gift-studio/versions", ownerOnly, parseStudioUpload, 
     }
     const result = await createGiftStudioVersion({
       ownerId: accountId(req),
-      giftId: parsedBody.data.giftId,
+      giftId: parsedBody.data.giftId ?? null,
       settings: { ...validatedSettings, draftName },
       originalPath: original.path,
       originalName: original.originalname,
@@ -212,6 +213,14 @@ router.patch("/social/admin/gift-studio/versions/:versionId", ownerOnly, async (
   if (!params.success || !body.success) throw new RoomError(400, "Choose whether to use this gift version.");
   const result = await setGiftStudioVersionActive(accountId(req), params.data.versionId, body.data.active);
   res.json(SetGiftStudioVersionActiveResponse.parse(result));
+});
+
+router.patch("/social/admin/gift-studio/versions/:versionId/gift", ownerOnly, async (req, res): Promise<void> => {
+  const params = AssignGiftStudioVersionToGiftParams.safeParse(req.params);
+  const body = AssignGiftStudioVersionToGiftBody.safeParse(req.body);
+  if (!params.success || !body.success) throw new RoomError(400, "Choose an existing gift.");
+  const result = await assignGiftStudioVersionToGift(accountId(req), params.data.versionId, body.data.giftId);
+  res.json(AssignGiftStudioVersionToGiftResponse.parse(result));
 });
 
 router.get("/social/admin/gift-studio/versions/:versionId/media/:variant", ownerOnly, async (req, res): Promise<void> => {

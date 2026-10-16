@@ -773,6 +773,8 @@ paths:
     $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1versions'
   /social/admin/gift-studio/versions/{versionId}:
     $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1versions~1{versionId}'
+  /social/admin/gift-studio/versions/{versionId}/gift:
+    $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1versions~1{versionId}~1gift'
   /social/admin/gift-studio/versions/{versionId}/media/{variant}:
     $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1versions~1{versionId}~1media~1{variant}'
   /social/gift-studio/media/{versionId}/{variant}:

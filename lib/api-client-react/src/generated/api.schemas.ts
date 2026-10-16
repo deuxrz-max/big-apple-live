@@ -2260,13 +2260,17 @@ export interface GiftStudioProcessingSettings {
 }
 
 export interface GiftStudioUploadInput {
-  giftId: GiftStudioGiftId;
+  giftId?: GiftStudioGiftId | null;
   /** JSON-serialized GiftStudioProcessingSettings */
   settings: string;
   /** Video file part */
   sourceVideo: string;
   /** Processed transparent WebM file part */
   processedWebm: string;
+}
+
+export interface GiftStudioAssignInput {
+  giftId: GiftStudioGiftId;
 }
 
 export interface GiftStudioActivationInput {
@@ -2283,7 +2287,7 @@ export const GiftStudioVersionStatus = {
 
 export interface GiftStudioVersion {
   id: string;
-  giftId: GiftStudioGiftId;
+  giftId: GiftStudioGiftId | null;
   version: number;
   status: GiftStudioVersionStatus;
   originalName: string;

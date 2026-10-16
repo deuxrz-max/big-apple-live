@@ -48,6 +48,7 @@ import type {
   GetSocialPeopleParams,
   GiftStudioActivationInput,
   GiftStudioActiveMediaResponse,
+  GiftStudioAssignInput,
   GiftStudioGiftId,
   GiftStudioLibrary,
   GiftStudioUploadInput,
@@ -4497,7 +4498,9 @@ export const getCreateGiftStudioVersionUrl = () => {
 
 export const createGiftStudioVersion = async (giftStudioUploadInput: GiftStudioUploadInput, options?: Parameters<typeof customFetch>[1]): Promise<GiftStudioVersion> => {
     const formData = new FormData();
-formData.append(`giftId`, giftStudioUploadInput.giftId);
+if(giftStudioUploadInput.giftId !== undefined && giftStudioUploadInput.giftId !== null) {
+ formData.append(`giftId`, giftStudioUploadInput.giftId);
+ }
 formData.append(`settings`, giftStudioUploadInput.settings);
 formData.append(`sourceVideo`, giftStudioUploadInput.sourceVideo);
 formData.append(`processedWebm`, giftStudioUploadInput.processedWebm);
@@ -4641,6 +4644,89 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getSetGiftStudioVersionActiveMutationOptions(options));
+    }
+
+export const getAssignGiftStudioVersionToGiftUrl = (versionId: string,) => {
+
+
+
+
+  return `/api/social/admin/gift-studio/versions/${versionId}/gift`
+}
+
+export const assignGiftStudioVersionToGift = async (versionId: string,
+    giftStudioAssignInput: GiftStudioAssignInput, options?: Parameters<typeof customFetch>[1]): Promise<GiftStudioVersion> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GiftStudioVersion>(getAssignGiftStudioVersionToGiftUrl(versionId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(giftStudioAssignInput)
+  }
+);}
+
+
+
+
+
+export const getAssignGiftStudioVersionToGiftMutationKey = () => ['assignGiftStudioVersionToGift'] as const;
+
+export const getAssignGiftStudioVersionToGiftMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignGiftStudioVersionToGift>>, TError,AssignGiftStudioVersionToGiftMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof assignGiftStudioVersionToGift>>, TError,AssignGiftStudioVersionToGiftMutationVariables, TContext> => {
+
+const mutationKey = getAssignGiftStudioVersionToGiftMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignGiftStudioVersionToGift>>, AssignGiftStudioVersionToGiftMutationVariables> = (props) => {
+          const {versionId,data} = props ?? {};
+
+          return  assignGiftStudioVersionToGift(versionId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AssignGiftStudioVersionToGiftMutationResult = NonNullable<Awaited<ReturnType<typeof assignGiftStudioVersionToGift>>>
+    export type AssignGiftStudioVersionToGiftMutationBody = BodyType<GiftStudioAssignInput>
+    export type AssignGiftStudioVersionToGiftMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type AssignGiftStudioVersionToGiftMutationVariables = {versionId: string;data: BodyType<GiftStudioAssignInput>}
+
+    export const useAssignGiftStudioVersionToGift = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignGiftStudioVersionToGift>>, TError,AssignGiftStudioVersionToGiftMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof assignGiftStudioVersionToGift>>,
+        TError,
+        AssignGiftStudioVersionToGiftMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAssignGiftStudioVersionToGiftMutationOptions(options));
     }
 
 export const getGetGiftStudioVersionMediaUrl = (versionId: string,

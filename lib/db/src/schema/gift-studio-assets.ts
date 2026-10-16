@@ -10,7 +10,7 @@ import { accountProfiles } from "./account-profiles";
 export const giftStudioAssets = pgTable("gift_studio_assets", {
   id: uuid("id").primaryKey().defaultRandom(),
   ownerId: text("owner_id").notNull().references(() => accountProfiles.accountId, { onDelete: "cascade" }),
-  giftId: text("gift_id").notNull(),
+  giftId: text("gift_id"),
   version: integer("version").notNull(),
   status: text("status").notNull().default("draft"),
   originalName: text("original_name").notNull(),

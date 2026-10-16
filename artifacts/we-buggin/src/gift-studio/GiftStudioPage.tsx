@@ -4,6 +4,7 @@ import { AlertTriangle, Archive, Check, Download, Pipette, FileVideo2, LockKeyho
 import {
   getGetActiveGiftStudioMediaQueryKey,
   getGetGiftStudioLibraryQueryKey,
+  useAssignGiftStudioVersionToGift,
   useCreateGiftStudioVersion,
   useGetGiftStudioLibrary,
   useSetGiftStudioVersionActive,
@@ -53,12 +54,14 @@ export function GiftStudioPage() {
   const library = useGetGiftStudioLibrary({ query: { queryKey: getGetGiftStudioLibraryQueryKey(), retry: false } });
   const createVersion = useCreateGiftStudioVersion();
   const setActive = useSetGiftStudioVersionActive();
+  const assignVersion = useAssignGiftStudioVersionToGift();
   const [file, setFile] = useState<File | null>(null);
   const [originalUrl, setOriginalUrl] = useState('');
   const [processedUrl, setProcessedUrl] = useState('');
   const [processedBlob, setProcessedBlob] = useState<Blob | null>(null);
   const [duration, setDuration] = useState(0);
-  const [giftId, setGiftId] = useState<GiftStudioGiftId>('heart');
+  const [addToGiftSelection, setAddToGiftSelection] = useState(false);
+  const [giftId, setGiftId] = useState<GiftStudioGiftId | ''>('');
   const [draftName, setDraftName] = useState('');
   const [keyPreset, setKeyPreset] = useState<KeyColor>('green');
   const [keyColor, setKeyColor] = useState('#00ff00');
@@ -343,9 +346,9 @@ export function GiftStudioPage() {
 
   const approve = () => {
     const trimmedName = draftName.trim();
-    if (!file || !processedBlob || !trimmedName || createVersion.isPending) return;
+    if (!file || !processedBlob || !trimmedName || createVersion.isPending || (addToGiftSelection && !giftId)) return;
     const data: GiftStudioUploadInput = {
-      giftId,
+      ...(addToGiftSelection && giftId ? { giftId } : {}),
       settings: JSON.stringify({ ...settings, draftName: trimmedName }),
       // Generated multipart typing says string; actual File/Blob values are intentionally passed through for FormData.append.
       sourceVideo: file as unknown as string,
@@ -354,16 +357,33 @@ export function GiftStudioPage() {
     createVersion.mutate({ data }, {
       onSuccess: () => {
         void client.invalidateQueries({ queryKey: getGetGiftStudioLibraryQueryKey() });
-        setStatus('Saved as a named Heart draft in Streamtalk. It will not change the live Heart animation until activated from the library.');
+        setStatus(addToGiftSelection && giftId
+          ? `Saved “${trimmedName}” as a ${GIFTS.find((gift) => gift.id === giftId)?.label} draft. Activate it from the library when you are ready.`
+          : `Saved “${trimmedName}” as a standalone Gift Studio draft. You can add it to a gift selection from the library later.`);
+      },
+      onError: (cause) => setError(ownerErrorText(cause)),
+    });
+  };
+  const attachVersion = (version: GiftStudioVersion, targetGiftId: GiftStudioGiftId) => {
+    assignVersion.mutate({ versionId: version.id, data: { giftId: targetGiftId } }, {
+      onSuccess: (updated) => {
+        void client.invalidateQueries({ queryKey: getGetGiftStudioLibraryQueryKey() });
+        void client.invalidateQueries({ queryKey: getGetActiveGiftStudioMediaQueryKey(updated.giftId!) });
+        setSelectedPreview((current) => current?.id === updated.id ? updated : current);
+        setStatus(`Added “${versionName(updated)}” to ${GIFTS.find((gift) => gift.id === updated.giftId)?.label} as a draft version. Activate it from the library when ready.`);
       },
       onError: (cause) => setError(ownerErrorText(cause)),
     });
   };
   const toggleVersion = (version: GiftStudioVersion, active: boolean) => {
+    if (!version.giftId) {
+      setError('Add this standalone draft to an existing gift before activating it.');
+      return;
+    }
     setActive.mutate({ versionId: version.id, data: { active } }, {
       onSuccess: (updated) => {
         void client.invalidateQueries({ queryKey: getGetGiftStudioLibraryQueryKey() });
-        void client.invalidateQueries({ queryKey: getGetActiveGiftStudioMediaQueryKey(updated.giftId) });
+        if (updated.giftId) void client.invalidateQueries({ queryKey: getGetActiveGiftStudioMediaQueryKey(updated.giftId) });
         setSelectedPreview((current) => current?.id === updated.id ? updated : current);
         setStatus(active ? `${GIFTS.find((gift) => gift.id === updated.giftId)?.label} version ${updated.version} is now active.` : `Version ${updated.version} returned to draft.`);
       },
@@ -381,9 +401,9 @@ export function GiftStudioPage() {
   return (
     <main className="gs">
       <div className="gs-shell">
-        <div className="gs-topline"><span className="gs-topline-mark" /> Creator tools / Gift Studio</div>
+        <div className="gs-topline"><span className="gs-topline-mark" /> STREAMTALK · GIFT STUDIO</div>
         <header className="gs-heading">
-          <div><h1>Gift Studio</h1><p>Make a clean cutout from a short clip, then choose exactly when a version goes live in your room.</p></div>
+          <div><h1>Cut the screen.<br /><span>Keep the glow.</span></h1><p>Turn green, magenta or black-screen gift animations into real transparency. Processing runs in your browser, free.</p></div>
           <div className="gs-private"><LockKeyhole size={13} /> On-device processing</div>
         </header>
 
@@ -396,7 +416,14 @@ export function GiftStudioPage() {
                 <div>
                   <label className="gs-upload" htmlFor="gs-file-input" data-testid="upload-video-dropzone">
                     {file ? <><div className="gs-file-row"><span className="gs-file-name">{file.name}</span><span className="gs-file-meta">{formatBytes(file.size)}</span></div><small>{duration ? `${duration.toFixed(1)} sec` : 'Checking clip length'} · select to replace</small></> :
-                      <><span className="gs-upload-icon"><Upload size={19} /></span><strong>Choose a clip from this device</strong><small>MP4, WebM, or MOV · up to 15 seconds · 100 MB max</small></>}
+                      <>
+                        <span className="gs-upload-icon"><FileVideo2 size={23} /></span>
+                        <strong>Upload a video</strong>
+                        <small>Videos only: MP4, WebM or MOV. Up to 15 seconds and 100 MB.</small>
+                        <span className="gs-upload-helper">Choose a video from your phone. Images are not accepted.</span>
+                        <span className="gs-upload-cta"><Upload size={17} /> Choose video</span>
+                        <span className="gs-upload-instruction">Play, pause and scrub your video before removing its background.</span>
+                      </>}
                     <input id="gs-file-input" type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" disabled={processing} onChange={(event) => { loadFile(event.currentTarget.files?.[0]); event.currentTarget.value = ''; }} data-testid="input-source-video" aria-label="Choose a video clip" />
                   </label>
                   <p className="gs-caption">Nothing uploads while you experiment. The original stays on your device until you approve the final version.</p>
@@ -444,12 +471,27 @@ export function GiftStudioPage() {
                       <button className="gs-button quiet" type="button" onClick={cancelProcessing} data-testid="button-cancel-processing"><X size={15} /> Cancel processing</button> :
                       <button className="gs-button primary gs-remove-background" type="button" onClick={() => void process()} disabled={!file || duration > MAX_SECONDS || duration <= 0} data-testid="button-process"><Scissors size={17} /> Remove background</button>)}
                     {processing && <div className="gs-progress" role="status" aria-live="polite" data-testid="state-processing"><div className="gs-progress-track"><div className="gs-progress-fill" style={{ width: `${Math.round(progress * 100)}%` }} /></div><div className="gs-progress-copy"><span>{status}</span><span>{Math.round(progress * 100)}%</span></div></div>}
+                    {processedUrl && <div className="gs-save-destination" data-testid="panel-save-destination">
+                      <strong>What would you like to do with this clip?</strong>
+                      <label><input type="radio" name="gift-destination" checked={!addToGiftSelection} onChange={() => setAddToGiftSelection(false)} data-testid="radio-standalone-draft" /> Save it as a named Gift Studio draft</label>
+                      <label><input type="radio" name="gift-destination" checked={addToGiftSelection} onChange={() => setAddToGiftSelection(true)} data-testid="radio-add-to-gifts" /> Add it to the gift selection</label>
+                      {addToGiftSelection && <label className="gs-name-field gs-target-field">
+                        <span>Choose the existing gift</span>
+                        <select value={giftId} onChange={(event) => setGiftId(event.target.value as GiftStudioGiftId | '')} data-testid="select-gift-target">
+                          <option value="">Choose a gift…</option>
+                          {GIFTS.map((gift) => <option key={gift.id} value={gift.id}>{gift.label}</option>)}
+                        </select>
+                      </label>}
+                      <button className="gs-button primary" type="button" onClick={approve} disabled={!file || !processedBlob || !draftName.trim() || (addToGiftSelection && !giftId) || createVersion.isPending} data-testid="button-save-as-gift" aria-describedby="gs-save-target-note">
+                        {createVersion.isPending ? 'Saving…' : addToGiftSelection ? 'Save gift draft' : 'Save standalone draft'} <Check size={15} />
+                      </button>
+                      {createVersion.isError && <div className="gs-error" role="alert" data-testid="state-upload-error">{ownerErrorText(createVersion.error)}</div>}
+                      <p className="gs-caption gs-save-note" id="gs-save-target-note">Gift drafts stay inactive until you activate a version in the library. Standalone drafts do not appear in the gift picker.</p>
+                    </div>}
                     {processedUrl && <div className="gs-after-downloads">
-                      <button className="gs-button primary" type="button" onClick={approve} disabled data-testid="button-save-as-gift" aria-describedby="gs-save-target-note">Save as gift <Check size={15} /></button>
                       <button className="gs-button" type="button" onClick={() => processedBlob && downloadBlob(processedBlob, `${safeGiftFilePrefix()}-transparent.webm`)} disabled={!processedBlob} data-testid="button-download-webm"><Download size={14} /> Download WebM</button>
                       <button className="gs-button" type="button" onClick={() => framesZipBlob ? downloadBlob(framesZipBlob, `${safeGiftFilePrefix()}-png-frames.zip`) : void downloadFramesZip()} disabled={downloadingFrames} data-testid="button-download-png-zip"><Archive size={14} /> {downloadingFrames ? `Building ZIP ${Math.round(frameZipProgress * 100)}%` : framesZipBlob ? 'Download PNG frames ZIP' : 'Prepare PNG frames ZIP'}</button>
                     </div>}
-                    {processedUrl && <p className="gs-caption gs-save-note" id="gs-save-target-note">Saving is paused so this named clip is not silently filed under Heart. Choose whether it should be a standalone draft or a draft for an existing gift.</p>}
                     {error && <div className="gs-error" role="alert" data-testid="state-error">{error}</div>}
                     {status && !processing && <p className="gs-caption" role="status" aria-live="polite" data-testid="state-status">{status}</p>}
                     {createVersion.isError && <div className="gs-error" role="alert" data-testid="state-upload-error">{ownerErrorText(createVersion.error)}</div>}
@@ -492,7 +534,7 @@ export function GiftStudioPage() {
               {library.isLoading ? <div className="gs-library-list" aria-label="Loading gift versions" data-testid="state-library-loading">{[1, 2, 3].map((i) => <div className="gs-library-card" key={i}><div className="gs-version-mark" /><div className="gs-version-info"><strong>Loading saved version</strong><small>Fetching your library…</small></div></div>)}</div> :
                 library.isError ? <div className="gs-error-panel" role="alert" data-testid="state-library-error"><p>{errorText(library.error)}</p><button className="gs-button" type="button" onClick={() => void library.refetch()} data-testid="button-retry-library"><RefreshCw size={14} /> Try again</button></div> :
                   libraryItems.length === 0 ? <div className="gs-empty-library" data-testid="state-library-empty">Your saved versions will live here. Save a finished cutout to add the first draft. Nothing is stored before you save.</div> :
-                    <div className="gs-library-list" data-testid="list-gift-versions">{filteredItems.map((version) => <LibraryVersion key={version.id} version={version} onPreview={previewVersion} onToggle={toggleVersion} pending={setActive.isPending} />)}</div>}
+                     <div className="gs-library-list" data-testid="list-gift-versions">{filteredItems.map((version) => <LibraryVersion key={version.id} version={version} onPreview={previewVersion} onToggle={toggleVersion} onAssign={attachVersion} pending={setActive.isPending || assignVersion.isPending} />)}</div>}
               <p className="gs-caption">Drafts never interrupt the animation currently playing in your rooms. You can switch versions or return one to draft at any time.</p>
             </section>
             <section className="gs-panel">
@@ -513,13 +555,15 @@ export function GiftStudioPage() {
           <div className="gs-panel-head"><div><div className="gs-kicker">{selectedPreview.status} · version {selectedPreview.version}</div><h2 className="gs-panel-title" id="gs-version-dialog-title">{versionName(selectedPreview)} animation</h2></div><button type="button" className="gs-icon-button" onClick={() => setSelectedPreview(null)} aria-label="Close version preview" data-testid="button-close-version-preview"><X size={16} /></button></div>
           <div className="gs-preview-stage checker"><video src={giftStudioMediaUrl(selectedPreview.webmUrl)} controls muted playsInline preload="metadata" data-testid={`video-library-version-${selectedPreview.id}`} /></div>
           <div className="gs-controls">
-            <button type="button" className="gs-button" onClick={() => setPlayingPreview(selectedPreview)} data-testid={`button-play-version-overlay-${selectedPreview.id}`}>Play through gift overlay</button>
-            <button type="button" className="gs-button" onClick={() => toggleVersion(selectedPreview, selectedPreview.status !== 'active')} disabled={setActive.isPending} data-testid={`button-toggle-version-${selectedPreview.id}`}>{selectedPreview.status === 'active' ? 'Return to draft' : 'Activate this version'}</button>
+            {selectedPreview.giftId ? <>
+              <button type="button" className="gs-button" onClick={() => setPlayingPreview(selectedPreview)} data-testid={`button-play-version-overlay-${selectedPreview.id}`}>Play through gift overlay</button>
+              <button type="button" className="gs-button" onClick={() => toggleVersion(selectedPreview, selectedPreview.status !== 'active')} disabled={setActive.isPending} data-testid={`button-toggle-version-${selectedPreview.id}`}>{selectedPreview.status === 'active' ? 'Return to draft' : 'Activate this version'}</button>
+            </> : <p className="gs-caption">This is a standalone draft. Add it to an existing gift from its library card before testing it in the gift overlay or activating it.</p>}
             <button type="button" className="gs-button quiet" onClick={() => setSelectedPreview(null)}>Done</button>
           </div>
         </section>
       </div>}
-      {playingPreview && <GiftAnimationPlayer
+      {playingPreview?.giftId && <GiftAnimationPlayer
         key={`gift-studio-preview-${playingPreview.id}`}
         giftId={playingPreview.giftId}
         senderName="Preview"
@@ -537,24 +581,33 @@ export function GiftStudioPage() {
 
 export default GiftStudioPage;
 
-function LibraryVersion({ version, onPreview, onToggle, pending }: {
+function LibraryVersion({ version, onPreview, onToggle, onAssign, pending }: {
   version: GiftStudioVersion;
   onPreview: (version: GiftStudioVersion) => void;
   onToggle: (version: GiftStudioVersion, active: boolean) => void;
+  onAssign: (version: GiftStudioVersion, giftId: GiftStudioGiftId) => void;
   pending: boolean;
 }) {
+  const [giftTarget, setGiftTarget] = useState<GiftStudioGiftId | ''>('');
   const label = versionName(version);
   return <article className="gs-library-card" data-testid={`card-gift-version-${version.id}`}>
     <div className="gs-version-mark">V{version.version}</div>
-    <div className="gs-version-info"><strong>{label}</strong><small>{new Date(version.createdAt).toLocaleDateString()} · {formatBytes(version.webmBytes)} WebM · {version.durationMs / 1000}s</small><span className={`gs-status ${version.status === 'active' ? 'active' : ''}`} data-testid={`status-version-${version.id}`}>{version.status}</span></div>
+    <div className="gs-version-info"><strong>{label}</strong><small>{version.giftId ? `${GIFTS.find((gift) => gift.id === version.giftId)?.label} · ` : 'Standalone draft · not in gift selection · '}{new Date(version.createdAt).toLocaleDateString()} · {formatBytes(version.webmBytes)} WebM · {version.durationMs / 1000}s</small><span className={`gs-status ${version.status === 'active' ? 'active' : ''}`} data-testid={`status-version-${version.id}`}>{version.status}</span></div>
     <div className="gs-card-actions">
       <button className="gs-icon-button" type="button" onClick={() => onPreview(version)} aria-label={`Preview ${label} version ${version.version}`} data-testid={`button-preview-version-${version.id}`}><Play size={14} /></button>
-      <button className="gs-chip-button" type="button" onClick={() => onToggle(version, version.status !== 'active')} disabled={pending} data-testid={`button-activate-version-${version.id}`}>{version.status === 'active' ? 'Return to draft' : 'Activate'}</button>
+      {version.giftId ? <button className="gs-chip-button" type="button" onClick={() => onToggle(version, version.status !== 'active')} disabled={pending} data-testid={`button-activate-version-${version.id}`}>{version.status === 'active' ? 'Return to draft' : 'Activate'}</button> :
+        <div className="gs-assign-row">
+          <select className="gs-chip-button" value={giftTarget} onChange={(event) => setGiftTarget(event.target.value as GiftStudioGiftId | '')} aria-label={`Choose a gift for ${label}`} data-testid={`select-assign-gift-${version.id}`}>
+            <option value="">Choose gift…</option>
+            {GIFTS.map((gift) => <option key={gift.id} value={gift.id}>{gift.label}</option>)}
+          </select>
+          <button className="gs-chip-button" type="button" onClick={() => giftTarget && onAssign(version, giftTarget)} disabled={pending || !giftTarget} data-testid={`button-assign-gift-${version.id}`}>Add to gift</button>
+        </div>}
     </div>
   </article>;
 }
 
 function versionName(version: GiftStudioVersion) {
   return version.settings.draftName?.trim()
-    || `${GIFTS.find((gift) => gift.id === version.giftId)?.label ?? version.giftId} · ${version.originalName}`;
+    || `${GIFTS.find((gift) => gift.id === version.giftId)?.label ?? 'Gift Studio'} · ${version.originalName}`;
 }

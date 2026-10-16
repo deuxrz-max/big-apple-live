@@ -11,7 +11,7 @@ import type { GiftStudioVersionStatus } from './giftStudioVersionStatus';
 
 export interface GiftStudioVersion {
   id: string;
-  giftId: GiftStudioGiftId;
+  giftId: GiftStudioGiftId | null;
   version: number;
   status: GiftStudioVersionStatus;
   originalName: string;
