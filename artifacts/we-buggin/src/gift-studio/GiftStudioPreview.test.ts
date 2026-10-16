@@ -6,7 +6,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { createStoredZip } from "./downloadPngFramesZip";
-import { applyKeyToPixels } from "./liveKeyPreview";
+import { applyKeyToPixels, fitFrameToBox } from "./liveKeyPreview";
 import type { ClipSettings } from "./processClip";
 
 const greenSettings: ClipSettings = {
@@ -40,6 +40,21 @@ test("black key removes black but retains a mid-gray subject", () => {
   });
   assert.equal(pixels[3], 0);
   assert.equal(pixels[7], 255);
+});
+
+test("live cutout keeps the full landscape frame inside the preview box", () => {
+  const fit = fitFrameToBox(1920, 1080, 346, 194);
+  assert.deepEqual(fit, { width: 345, height: 194 });
+});
+
+test("live cutout keeps the full portrait frame inside the same preview box", () => {
+  const fit = fitFrameToBox(720, 1280, 346, 194);
+  assert.deepEqual(fit, { width: 109, height: 194 });
+});
+
+test("invalid frame or box sizes do not produce a misleading preview size", () => {
+  assert.equal(fitFrameToBox(0, 1080, 346, 194), null);
+  assert.equal(fitFrameToBox(1920, 1080, 0, 194), null);
 });
 
 test("PNG frame archive is a valid ZIP with intact frame bytes", async () => {

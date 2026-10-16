@@ -6,6 +6,23 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
+export function fitFrameToBox(
+  frameWidth: number,
+  frameHeight: number,
+  boxWidth: number,
+  boxHeight: number,
+) {
+  if (![frameWidth, frameHeight, boxWidth, boxHeight].every(Number.isFinite)
+    || frameWidth <= 0 || frameHeight <= 0 || boxWidth <= 0 || boxHeight <= 0) {
+    return null;
+  }
+  const scale = Math.min(boxWidth / frameWidth, boxHeight / frameHeight);
+  return {
+    width: Math.round(frameWidth * scale),
+    height: Math.round(frameHeight * scale),
+  };
+}
+
 function colorChannels(hex: string) {
   const normalized = hex.replace("#", "");
   const expanded = normalized.length === 3
@@ -34,6 +51,16 @@ export function drawKeyedPreview(
   if (canvas.width !== width || canvas.height !== height) {
     canvas.width = width;
     canvas.height = height;
+  }
+  const stage = canvas.parentElement?.getBoundingClientRect();
+  if (stage?.width && stage.height) {
+    const displaySize = fitFrameToBox(width, height, stage.width, stage.height);
+    if (displaySize) {
+      const displayWidth = `${displaySize.width}px`;
+      const displayHeight = `${displaySize.height}px`;
+      if (canvas.style.width !== displayWidth) canvas.style.width = displayWidth;
+      if (canvas.style.height !== displayHeight) canvas.style.height = displayHeight;
+    }
   }
   const context = canvas.getContext("2d", { willReadFrequently: true });
   if (!context) throw new Error("This browser could not start the live cutout preview.");

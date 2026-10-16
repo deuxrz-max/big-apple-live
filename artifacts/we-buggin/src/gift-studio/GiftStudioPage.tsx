@@ -204,10 +204,21 @@ export function GiftStudioPage() {
       }
       frameId = window.requestAnimationFrame(render);
     };
+    const resizeObserver = new ResizeObserver(() => {
+      if (disposed || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
+      try {
+        drawKeyedPreview(video, canvas, settings);
+        setLivePreviewError('');
+      } catch (cause) {
+        setLivePreviewError(cause instanceof Error ? cause.message : 'Live cutout preview is unavailable in this browser.');
+      }
+    });
+    if (canvas.parentElement) resizeObserver.observe(canvas.parentElement);
     frameId = window.requestAnimationFrame(render);
     return () => {
       disposed = true;
       window.cancelAnimationFrame(frameId);
+      resizeObserver.disconnect();
     };
   }, [file, originalUrl, processedUrl, settings]);
 
