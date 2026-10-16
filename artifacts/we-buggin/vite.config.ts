@@ -29,6 +29,11 @@ if (!basePath) {
 
 export default defineConfig({
   base: basePath,
+  // FFmpeg's worker URL import is not compatible with Vite's dep optimizer.
+  // Keep it as a native module so on-device Gift Studio processing can load.
+  optimizeDeps: {
+    exclude: ['@ffmpeg/ffmpeg'],
+  },
   plugins: [
     react(),
     tailwindcss({ optimize: false }),

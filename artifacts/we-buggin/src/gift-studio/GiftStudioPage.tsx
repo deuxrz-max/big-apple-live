@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, Check, Pipette, FileVideo2, LockKeyhole, Pause, Play, RefreshCw, Scissors, ShieldCheck, Upload, X } from 'lucide-react';
+import { AlertTriangle, Archive, Check, Download, Pipette, FileVideo2, LockKeyhole, Pause, Play, RefreshCw, Scissors, ShieldCheck, Upload, X } from 'lucide-react';
 import {
   getGetActiveGiftStudioMediaQueryKey,
   getGetGiftStudioLibraryQueryKey,
@@ -11,6 +11,8 @@ import {
 import type { GiftStudioGiftId, GiftStudioVersion, GiftStudioUploadInput } from '@workspace/api-client-react';
 import type { ClipSettings, KeyColor } from './processClip';
 import { GiftAnimationPlayer, giftStudioMediaUrl } from '@/gifts/GiftAnimationPlayer';
+import { drawKeyedPreview } from './liveKeyPreview';
+import { createTransparentPngFramesZip } from './downloadPngFramesZip';
 import './gift-studio.css';
 
 const GIFTS: { id: GiftStudioGiftId; label: string }[] = [
@@ -65,18 +67,20 @@ export function GiftStudioPage() {
   const [spill, setSpill] = useState(.35);
   const [maxDimension, setMaxDimension] = useState<ClipSettings['maxDimension']>(720);
   const [backdrop, setBackdrop] = useState<'checker' | 'light' | 'dark'>('checker');
-  const [reviewedLight, setReviewedLight] = useState(false);
-  const [reviewedDark, setReviewedDark] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [downloadingFrames, setDownloadingFrames] = useState(false);
+  const [frameZipProgress, setFrameZipProgress] = useState(0);
+  const [framesZipBlob, setFramesZipBlob] = useState<Blob | null>(null);
+  const [livePreviewError, setLivePreviewError] = useState('');
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
-  const [approved, setApproved] = useState(false);
   const [selectedPreview, setSelectedPreview] = useState<GiftStudioVersion | null>(null);
   const [playingPreview, setPlayingPreview] = useState<GiftStudioVersion | null>(null);
   const cancelledRef = useRef(false);
   const originalVideoRef = useRef<HTMLVideoElement>(null);
   const processedVideoRef = useRef<HTMLVideoElement>(null);
+  const livePreviewCanvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<import('@ffmpeg/ffmpeg').FFmpeg | null>(null);
   const isSeekingRef = useRef(false);
   const processedSettingsRef = useRef<string | null>(null);
@@ -86,15 +90,15 @@ export function GiftStudioPage() {
     preset: keyPreset, keyColor, tolerance, softness, spill, maxDimension,
   }), [keyPreset, keyColor, tolerance, softness, spill, maxDimension]);
 
-  const releasePreviewUrls = () => {
-    if (originalUrl) URL.revokeObjectURL(originalUrl);
-    if (processedUrl) URL.revokeObjectURL(processedUrl);
-  };
   useEffect(() => () => {
     if (originalUrl) URL.revokeObjectURL(originalUrl);
+  }, [originalUrl]);
+  useEffect(() => () => {
     if (processedUrl) URL.revokeObjectURL(processedUrl);
+  }, [processedUrl]);
+  useEffect(() => () => {
     engineRef.current?.terminate();
-  }, [originalUrl, processedUrl]);
+  }, []);
 
   useEffect(() => {
     if (!selectedPreview) return;
@@ -131,12 +135,11 @@ export function GiftStudioPage() {
     if (processedUrl) URL.revokeObjectURL(processedUrl);
     setProcessedUrl('');
     setProcessedBlob(null);
-    setApproved(false);
-    setReviewedLight(false);
-    setReviewedDark(false);
+    setFramesZipBlob(null);
     processedSettingsRef.current = null;
     setStatus('');
     setError('');
+    setLivePreviewError('');
   };
   useEffect(() => {
     if (processedUrl && processedSettingsRef.current !== JSON.stringify(settings)) {
@@ -175,6 +178,42 @@ export function GiftStudioPage() {
       return;
     }
     setStatus('Ready to process locally.');
+    void video.play().catch(() => setStatus('Tap Play to start both previews.'));
+  };
+
+  useEffect(() => {
+    const video = originalVideoRef.current;
+    const canvas = livePreviewCanvasRef.current;
+    if (!file || !originalUrl || processedUrl || !video || !canvas) return;
+    let frameId = 0;
+    let lastTime = -1;
+    let disposed = false;
+    const render = () => {
+      if (disposed) return;
+      if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && Math.abs(video.currentTime - lastTime) > 0.008) {
+        try {
+          drawKeyedPreview(video, canvas, settings);
+          lastTime = video.currentTime;
+          setLivePreviewError('');
+        } catch (cause) {
+          setLivePreviewError(cause instanceof Error ? cause.message : 'Live cutout preview is unavailable in this browser.');
+        }
+      }
+      frameId = window.requestAnimationFrame(render);
+    };
+    frameId = window.requestAnimationFrame(render);
+    return () => {
+      disposed = true;
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [file, originalUrl, processedUrl, settings]);
+
+  const onProcessedMetadata = () => {
+    const output = processedVideoRef.current;
+    const source = originalVideoRef.current;
+    if (!output) return;
+    output.currentTime = Math.min(source?.currentTime ?? playhead, Math.max(0, output.duration - 0.02));
+    if (source && !source.paused) void output.play().catch(() => undefined);
   };
 
   const cancelProcessing = () => {
@@ -207,11 +246,8 @@ export function GiftStudioPage() {
       setProcessedUrl(url);
       setProcessedBlob(result.blob);
       processedSettingsRef.current = JSON.stringify(settings);
-      setApproved(false);
-      setReviewedLight(false);
-      setReviewedDark(false);
       setProgress(1);
-      setStatus('Processed locally. Check the alpha on both backdrops before approval.');
+      setStatus('Finished. The transparent WebM passed the local alpha check.');
     } catch (cause) {
       if (cancelledRef.current || String(cause).toLowerCase().includes('terminated')) {
         setStatus('Processing cancelled. Temporary clip data was cleared.');
@@ -250,6 +286,39 @@ export function GiftStudioPage() {
     window.setTimeout(() => { isSeekingRef.current = false; }, 100);
   };
 
+  const downloadBlob = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+  };
+
+  const safeGiftFilePrefix = () => (draftName.trim() || 'gift')
+    .normalize('NFKD')
+    .replace(/[^\w-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40) || 'gift';
+
+  const downloadFramesZip = async () => {
+    if (!processedUrl) return;
+    setDownloadingFrames(true);
+    setFrameZipProgress(0);
+    setError('');
+    try {
+      const zip = await createTransparentPngFramesZip(processedUrl, safeGiftFilePrefix(), setFrameZipProgress);
+      setFramesZipBlob(zip);
+      setStatus('PNG frames are ready. Tap Download PNG frames ZIP to save them.');
+    } catch (cause) {
+      setError(errorText(cause));
+    } finally {
+      setDownloadingFrames(false);
+    }
+  };
+
   const choosePreset = (preset: KeyColor) => {
     setKeyPreset(preset);
     const found = KEY_PRESETS.find((option) => option.id === preset);
@@ -274,7 +343,7 @@ export function GiftStudioPage() {
 
   const approve = () => {
     const trimmedName = draftName.trim();
-    if (!file || !processedBlob || !approved || !trimmedName) return;
+    if (!file || !processedBlob || !trimmedName || createVersion.isPending) return;
     const data: GiftStudioUploadInput = {
       giftId,
       settings: JSON.stringify({ ...settings, draftName: trimmedName }),
@@ -285,8 +354,7 @@ export function GiftStudioPage() {
     createVersion.mutate({ data }, {
       onSuccess: () => {
         void client.invalidateQueries({ queryKey: getGetGiftStudioLibraryQueryKey() });
-        setApproved(false);
-        setStatus('Draft version saved. It is not live until you activate it from the library.');
+        setStatus('Saved as a named Heart draft in Streamtalk. It will not change the live Heart animation until activated from the library.');
       },
       onError: (cause) => setError(ownerErrorText(cause)),
     });
@@ -354,16 +422,40 @@ export function GiftStudioPage() {
                   />
                 </label>
                 <div className="gs-backdrop-tabs" role="group" aria-label="Transparency preview backdrop">
-                  {(['checker', 'light', 'dark'] as const).map((mode) => <button type="button" key={mode} aria-pressed={backdrop === mode} onClick={() => { setBackdrop(mode); if (processedUrl && mode === 'light') setReviewedLight(true); if (processedUrl && mode === 'dark') setReviewedDark(true); }} data-testid={`button-backdrop-${mode}`}>{mode === 'checker' ? 'Grid' : mode}</button>)}
+                  {(['checker', 'light', 'dark'] as const).map((mode) => <button type="button" key={mode} aria-pressed={backdrop === mode} onClick={() => setBackdrop(mode)} data-testid={`button-backdrop-${mode}`}>{mode === 'checker' ? 'Grid' : mode}</button>)}
                 </div>
               </div>
               <div className="gs-preview-grid">
-                <div className="gs-preview"><div className="gs-preview-label">Before <span>Original clip</span></div><div className={`gs-preview-stage ${backdrop}`} data-testid="preview-original">
-                  {originalUrl ? <video ref={originalVideoRef} src={originalUrl} muted playsInline preload="metadata" onLoadedMetadata={onOriginalMetadata} onTimeUpdate={syncTime} onEnded={() => processedVideoRef.current?.pause()} /> : <div className="gs-empty-preview">Your source preview will appear here.</div>}
-                </div></div>
-                <div className="gs-preview"><div className="gs-preview-label">After <span>Background removed</span></div><div className={`gs-preview-stage ${backdrop}`} data-testid="preview-processed">
-                  {processedUrl ? <video ref={processedVideoRef} src={processedUrl} muted playsInline preload="metadata" onTimeUpdate={syncTime} /> : <div className="gs-empty-preview">{file ? 'Process the clip to inspect its transparent edges.' : 'Choose a source clip to begin.'}</div>}
-                </div></div>
+                <div className="gs-preview">
+                  <div className="gs-preview-label">Before <span>Original clip</span></div>
+                  <div className={`gs-preview-stage ${backdrop}`} data-testid="preview-original">
+                    {originalUrl ? <video ref={originalVideoRef} src={originalUrl} muted playsInline loop autoPlay preload="metadata" onLoadedMetadata={onOriginalMetadata} onTimeUpdate={syncTime} /> : <div className="gs-empty-preview">Your source preview will appear here.</div>}
+                  </div>
+                </div>
+                <div className="gs-preview">
+                  <div className="gs-preview-label">After <span>{processedUrl ? <span className="gs-ready-label"><Check size={12} /> Ready</span> : file ? 'Live cutout preview' : 'Background removed'}</span></div>
+                  <div className={`gs-preview-stage ${backdrop}`} data-testid="preview-processed">
+                    {processedUrl ? <video ref={processedVideoRef} src={processedUrl} muted playsInline loop autoPlay preload="metadata" onLoadedMetadata={onProcessedMetadata} onTimeUpdate={syncTime} /> :
+                      originalUrl ? <><canvas ref={livePreviewCanvasRef} aria-label="Live background-removed preview" data-testid="canvas-live-cutout" />{livePreviewError && <div className="gs-preview-note" role="status">{livePreviewError}</div>}</> :
+                        <div className="gs-empty-preview">Choose a source clip to see the cutout preview.</div>}
+                  </div>
+                  <div className="gs-after-actions">
+                    {!processedUrl && (processing ?
+                      <button className="gs-button quiet" type="button" onClick={cancelProcessing} data-testid="button-cancel-processing"><X size={15} /> Cancel processing</button> :
+                      <button className="gs-button primary gs-remove-background" type="button" onClick={() => void process()} disabled={!file || duration > MAX_SECONDS || duration <= 0} data-testid="button-process"><Scissors size={17} /> Remove background</button>)}
+                    {processing && <div className="gs-progress" role="status" aria-live="polite" data-testid="state-processing"><div className="gs-progress-track"><div className="gs-progress-fill" style={{ width: `${Math.round(progress * 100)}%` }} /></div><div className="gs-progress-copy"><span>{status}</span><span>{Math.round(progress * 100)}%</span></div></div>}
+                    {processedUrl && <div className="gs-after-downloads">
+                      <button className="gs-button primary" type="button" onClick={approve} disabled data-testid="button-save-as-gift" aria-describedby="gs-save-target-note">Save as gift <Check size={15} /></button>
+                      <button className="gs-button" type="button" onClick={() => processedBlob && downloadBlob(processedBlob, `${safeGiftFilePrefix()}-transparent.webm`)} disabled={!processedBlob} data-testid="button-download-webm"><Download size={14} /> Download WebM</button>
+                      <button className="gs-button" type="button" onClick={() => framesZipBlob ? downloadBlob(framesZipBlob, `${safeGiftFilePrefix()}-png-frames.zip`) : void downloadFramesZip()} disabled={downloadingFrames} data-testid="button-download-png-zip"><Archive size={14} /> {downloadingFrames ? `Building ZIP ${Math.round(frameZipProgress * 100)}%` : framesZipBlob ? 'Download PNG frames ZIP' : 'Prepare PNG frames ZIP'}</button>
+                    </div>}
+                    {processedUrl && <p className="gs-caption gs-save-note" id="gs-save-target-note">Saving is paused so this named clip is not silently filed under Heart. Choose whether it should be a standalone draft or a draft for an existing gift.</p>}
+                    {error && <div className="gs-error" role="alert" data-testid="state-error">{error}</div>}
+                    {status && !processing && <p className="gs-caption" role="status" aria-live="polite" data-testid="state-status">{status}</p>}
+                    {createVersion.isError && <div className="gs-error" role="alert" data-testid="state-upload-error">{ownerErrorText(createVersion.error)}</div>}
+                    {downloadingFrames && <p className="gs-caption" role="status" aria-live="polite">Preparing transparent PNG frames for download…</p>}
+                  </div>
+                </div>
               </div>
               <div className="gs-controls">
                 <button className="gs-icon-button" type="button" onClick={() => void synchronizePlay()} disabled={!file} aria-label={originalVideoRef.current?.paused ? 'Play both previews' : 'Pause both previews'} data-testid="button-play-pause">{originalVideoRef.current?.paused ? <Play size={16} /> : <Pause size={16} />}</button>
@@ -391,30 +483,7 @@ export function GiftStudioPage() {
                 <div><label className="gs-kicker" htmlFor="gs-max-size">Maximum output dimension</label><select className="gs-chip-button" id="gs-max-size" value={maxDimension ?? 'original'} onChange={(event) => setMaxDimension(event.target.value === 'original' ? null : Number(event.target.value) as 480 | 720 | 1080)} data-testid="select-max-dimension"><option value="original">Keep original size</option><option value="480">480 px · smallest</option><option value="720">720 px · balanced</option><option value="1080">1080 px · sharpest</option></select><p className="gs-caption">Downscaling lowers memory use and can finish faster, especially on phones.</p></div>
               </fieldset>
               <div className="gs-mobile-note"><FileVideo2 size={16} /><div><strong>Large clips use phone memory</strong>Processing happens locally and temporarily holds the source and output in memory. On mobile, choose 480 or 720 px for a lighter run.</div></div>
-              {processing && <div className="gs-progress" role="status" aria-live="polite" data-testid="state-processing"><div className="gs-progress-track"><div className="gs-progress-fill" style={{ width: `${Math.round(progress * 100)}%` }} /></div><div className="gs-progress-copy"><span>{status}</span><span>{Math.round(progress * 100)}%</span></div></div>}
-              <div className="gs-controls">
-                {!processing ? <button className="gs-button primary" type="button" onClick={() => void process()} disabled={!file || duration > MAX_SECONDS || duration <= 0} data-testid="button-process"><Scissors size={15} /> Process on this device</button> :
-                  <button className="gs-button quiet" type="button" onClick={cancelProcessing} data-testid="button-cancel-processing"><X size={15} /> Cancel & clear</button>}
-                {processedUrl && !processing && <span className="gs-success" role="status" data-testid="state-processed"><Check size={14} style={{ verticalAlign: '-3px' }} /> Ready to review</span>}
-              </div>
-              {error && <div className="gs-error" role="alert" data-testid="state-error">{error}</div>}
-              {status && !processing && <p className="gs-caption" role="status" aria-live="polite" data-testid="state-status">{status}</p>}
             </section>
-
-            {processedUrl && <section className="gs-panel" aria-labelledby="gs-approve-title" data-testid="panel-approval">
-              <div className="gs-panel-head"><div className="gs-step-number">04</div><div><div className="gs-kicker">Your final check</div><h2 className="gs-panel-title" id="gs-approve-title">Approve this cutout</h2></div></div>
-              <p className="gs-caption" style={{ marginTop: -7, marginBottom: 13 }}>Review the actual WebM above on Grid, Light, and Dark. Your source and exact processed bytes stay local unless you approve.</p>
-              <label className="gs-choice" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 13 }}>
-                <input type="checkbox" checked={approved} disabled={!reviewedLight || !reviewedDark} onChange={(event) => setApproved(event.target.checked)} data-testid="checkbox-approve-review" />
-                I checked the transparent edges on light and dark
-              </label>
-              {(!reviewedLight || !reviewedDark) && <p className="gs-caption" data-testid="text-review-required">Switch the processed preview to both Light and Dark to unlock approval.</p>}
-              <div className="gs-controls">
-                <button className="gs-button primary" type="button" onClick={approve} disabled={!approved || !draftName.trim() || createVersion.isPending} data-testid="button-approve-add">{createVersion.isPending ? 'Saving draft…' : 'Approve and add draft'} <Check size={15} /></button>
-                <span className="gs-caption">Approval creates a named draft; it does not change the live gift.</span>
-              </div>
-              {createVersion.isError && <div className="gs-error" role="alert" data-testid="state-upload-error">{errorText(createVersion.error)}</div>}
-            </section>}
           </div>
 
           <aside className="gs-stack">
@@ -422,7 +491,7 @@ export function GiftStudioPage() {
               <div className="gs-panel-head"><div><div className="gs-kicker">Saved for later</div><h2 className="gs-panel-title" id="gs-library-title">Version library</h2></div><span className="gs-status">{libraryItems.length} saved</span></div>
               {library.isLoading ? <div className="gs-library-list" aria-label="Loading gift versions" data-testid="state-library-loading">{[1, 2, 3].map((i) => <div className="gs-library-card" key={i}><div className="gs-version-mark" /><div className="gs-version-info"><strong>Loading saved version</strong><small>Fetching your library…</small></div></div>)}</div> :
                 library.isError ? <div className="gs-error-panel" role="alert" data-testid="state-library-error"><p>{errorText(library.error)}</p><button className="gs-button" type="button" onClick={() => void library.refetch()} data-testid="button-retry-library"><RefreshCw size={14} /> Try again</button></div> :
-                  libraryItems.length === 0 ? <div className="gs-empty-library" data-testid="state-library-empty">Your saved versions will live here. Approve a cutout to add the first draft. Nothing is stored before approval.</div> :
+                  libraryItems.length === 0 ? <div className="gs-empty-library" data-testid="state-library-empty">Your saved versions will live here. Save a finished cutout to add the first draft. Nothing is stored before you save.</div> :
                     <div className="gs-library-list" data-testid="list-gift-versions">{filteredItems.map((version) => <LibraryVersion key={version.id} version={version} onPreview={previewVersion} onToggle={toggleVersion} pending={setActive.isPending} />)}</div>}
               <p className="gs-caption">Drafts never interrupt the animation currently playing in your rooms. You can switch versions or return one to draft at any time.</p>
             </section>
@@ -430,7 +499,7 @@ export function GiftStudioPage() {
               <div className="gs-panel-head"><div><div className="gs-kicker">How it works</div><h2 className="gs-panel-title">Owner-controlled, always</h2></div></div>
               <div className="gs-stack" style={{ gap: 12 }}>
                 <div className="gs-mobile-note"><span className="gs-step-number">A</span><div><strong>Preview stays private</strong>Keying and encoding run in your browser with the local FFmpeg engine.</div></div>
-                <div className="gs-mobile-note"><span className="gs-step-number">B</span><div><strong>Approve the exact export</strong>Both the original and the same transparent WebM are saved as a draft.</div></div>
+                <div className="gs-mobile-note"><span className="gs-step-number">B</span><div><strong>Save the exact export</strong>Both the original and the same transparent WebM are saved as a named draft.</div></div>
                 <div className="gs-mobile-note"><span className="gs-step-number">C</span><div><strong>Activate only when ready</strong>Old versions stay saved, so you can safely switch back.</div></div>
               </div>
             </section>
