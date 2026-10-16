@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { BigTierGiftId } from './SpiritPup';
+import { RoseShowerEffect } from './RoseShowerEffect';
 import './gifts.css';
 
 export const bigTierGiftMedia: Record<BigTierGiftId, string> = {
@@ -29,6 +30,17 @@ const PRESENTATION: Record<BigTierGiftId, { name: string; emoji: string; positio
 
 export function BigTierGiftAnimation({ giftId, senderName, onFinish }: {
   giftId: BigTierGiftId;
+  senderName: string;
+  onFinish: () => void;
+}) {
+  if (giftId === 'rose-shower') {
+    return <RoseShowerEffect senderName={senderName} onFinish={onFinish} />;
+  }
+  return <BigTierGiftVideoAnimation giftId={giftId} senderName={senderName} onFinish={onFinish} />;
+}
+
+function BigTierGiftVideoAnimation({ giftId, senderName, onFinish }: {
+  giftId: Exclude<BigTierGiftId, 'rose-shower'>;
   senderName: string;
   onFinish: () => void;
 }) {

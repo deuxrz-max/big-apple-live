@@ -11,13 +11,19 @@ Green-screen video conversion must be checked on decoded frames and composited a
 
 **Why:** The user explicitly requires every entrance effect to be silent and animated, with the badge image reserved for name/profile use. Earlier code showed still badge art when animation playback failed, and the uploaded Lion MP4 had a baked green background.
 
-**How to apply:** Keep uploaded originals untouched, chroma-key silent derivatives, inspect alpha and composites frame-by-frame, and use only animated fallbacks. If the animated formats fail, show no effect rather than a badge still.
+**How to apply:** Keep uploaded originals untouched, preserve native alpha or remove backgrounds frame-by-frame, strip audio when required, inspect decoded alpha and light/dark composites, and use only animated fallbacks. If animated formats fail, show no effect rather than a badge still.
 
 A checkerboard visible in uploaded footage can be baked pixels rather than transparency. Do not encode or key it as-is; remove it from every frame and verify the decoded result over both light and dark backgrounds.
 
 **Why:** A replacement gift clip visually resembled a transparency preview, but its MP4 contained an opaque checkerboard. Spatial color-key attempts left a patterned background and damaged white smoke; frame segmentation preserved the subject cleanly.
 
 **How to apply:** Probe the source alpha channel first. If absent, inspect lossless frames, remove the background frame-by-frame, and check moving edges, smoke, and bright trails before encoding browser-specific alpha formats.
+
+The image preview tool may display transparent pixels as a checkerboard; that preview alone does not prove checkerboard pixels are baked into the file.
+
+**Why:** A real-alpha cutout appeared checkerboarded in the image preview, while raw alpha samples and composites confirmed it was transparent.
+
+**How to apply:** Check source pixel alpha and composite against solid light and dark backgrounds before deciding whether the checkerboard is part of the image.
 
 For small public gift assets served from GCS, do not destroy the upstream read stream immediately when a client disconnects before the storage response initializes. Unpipe it from the response and drain it so the storage client does not throw `ERR_STREAM_UNABLE_TO_PIPE` and crash the API process.
 
