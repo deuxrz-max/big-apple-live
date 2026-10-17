@@ -2276,6 +2276,16 @@ export interface GiftStudioProcessInput {
   sourceVideo: string;
 }
 
+export interface GiftStudioProcessedSaveInput {
+  processingSession: string;
+  /**
+     * @minLength 1
+     * @maxLength 60
+     */
+  draftName: string;
+  giftId?: GiftStudioGiftId | null;
+}
+
 export interface GiftStudioRenameInput {
   /**
      * @minLength 1

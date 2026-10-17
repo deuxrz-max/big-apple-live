@@ -1874,6 +1874,56 @@ export const ProcessGiftStudioClipOnServerBody = zod.object({
 export const ProcessGiftStudioClipOnServerResponse = zod.unknown()
 
 
+export const saveGiftStudioProcessedBodyDraftNameMax = 60;
+
+
+
+export const SaveGiftStudioProcessedBody = zod.object({
+  "processingSession": zod.string().uuid(),
+  "draftName": zod.string().min(1).max(saveGiftStudioProcessedBodyDraftNameMax),
+  "giftId": zod.union([zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]).optional()
+})
+
+export const saveGiftStudioProcessedResponseSettingsKeyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const saveGiftStudioProcessedResponseSettingsToleranceMin = 0.02;
+export const saveGiftStudioProcessedResponseSettingsToleranceMax = 0.65;
+
+export const saveGiftStudioProcessedResponseSettingsSoftnessMin = 0;
+export const saveGiftStudioProcessedResponseSettingsSoftnessMax = 0.5;
+
+export const saveGiftStudioProcessedResponseSettingsSpillMin = 0;
+export const saveGiftStudioProcessedResponseSettingsSpillMax = 1;
+
+export const saveGiftStudioProcessedResponseSettingsDraftNameMax = 60;
+
+
+
+export const SaveGiftStudioProcessedResponse = zod.object({
+  "id": zod.string().uuid(),
+  "giftId": zod.union([zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]),
+  "version": zod.number().int(),
+  "status": zod.enum(['draft', 'active']),
+  "originalName": zod.string(),
+  "durationMs": zod.number().int(),
+  "settings": zod.object({
+  "preset": zod.enum(['green', 'magenta', 'black', 'custom']),
+  "keyColor": zod.string().regex(saveGiftStudioProcessedResponseSettingsKeyColorRegExp),
+  "tolerance": zod.number().min(saveGiftStudioProcessedResponseSettingsToleranceMin).max(saveGiftStudioProcessedResponseSettingsToleranceMax),
+  "softness": zod.number().min(saveGiftStudioProcessedResponseSettingsSoftnessMin).max(saveGiftStudioProcessedResponseSettingsSoftnessMax),
+  "spill": zod.number().min(saveGiftStudioProcessedResponseSettingsSpillMin).max(saveGiftStudioProcessedResponseSettingsSpillMax),
+  "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
+  "draftName": zod.string().min(1).max(saveGiftStudioProcessedResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft')
+}),
+  "createdAt": zod.coerce.date(),
+  "originalUrl": zod.string(),
+  "webmUrl": zod.string(),
+  "safariUrl": zod.string(),
+  "originalBytes": zod.number().int(),
+  "webmBytes": zod.number().int(),
+  "safariBytes": zod.number().int()
+})
+
+
 export const CreateGiftStudioVersionBody = zod.object({
   "giftId": zod.union([zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]).optional(),
   "settings": zod.string().describe('JSON-serialized GiftStudioProcessingSettings'),

@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   AssignGiftStudioVersionToGiftBody,
   CreateGiftStudioVersionBody,
+  SaveGiftStudioProcessedBody,
   SetGiftStudioVersionActiveResponse,
 } from "@workspace/api-zod";
 
@@ -28,6 +29,13 @@ test("Gift Studio still accepts a draft targeted to an existing catalog gift", (
 test("only a catalog gift can be selected when attaching a standalone draft", () => {
   assert.equal(AssignGiftStudioVersionToGiftBody.safeParse({ giftId: "whip" }).success, true);
   assert.equal(AssignGiftStudioVersionToGiftBody.safeParse({ giftId: "new-gift" }).success, false);
+});
+
+test("a processed server-side session can save either a standalone draft or an existing gift draft", () => {
+  const base = { processingSession: "c1c0e6f4-a9af-4c09-9ce4-93b53ed6f118", draftName: "Night Bloom" };
+  assert.equal(SaveGiftStudioProcessedBody.safeParse(base).success, true);
+  assert.equal(SaveGiftStudioProcessedBody.safeParse({ ...base, giftId: "rose-shower" }).success, true);
+  assert.equal(SaveGiftStudioProcessedBody.safeParse({ ...base, giftId: "new-gift" }).success, false);
 });
 
 test("a saved standalone draft is represented without pretending it belongs to Heart", () => {

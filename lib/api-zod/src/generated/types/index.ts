@@ -94,6 +94,7 @@ export * from './giftStudioDeleteResponse';
 export * from './giftStudioGiftId';
 export * from './giftStudioLibrary';
 export * from './giftStudioPlaybackMedia';
+export * from './giftStudioProcessedSaveInput';
 export * from './giftStudioProcessingSettings';
 export * from './giftStudioProcessingSettingsMaxDimension';
 export * from './giftStudioProcessingSettingsPreset';

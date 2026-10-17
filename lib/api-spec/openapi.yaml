@@ -771,6 +771,8 @@ paths:
     $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1library'
   /social/admin/gift-studio/process:
     $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1process'
+  /social/admin/gift-studio/save-processed:
+    $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1save-processed'
   /social/admin/gift-studio/versions:
     $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1versions'
   /social/admin/gift-studio/versions/{versionId}:

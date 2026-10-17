@@ -6,11 +6,10 @@ import {
   getGetActiveGiftStudioMediaQueryKey,
   getGetGiftStudioLibraryQueryKey,
   useAssignGiftStudioVersionToGift,
-  useCreateGiftStudioVersion,
   useGetGiftStudioLibrary,
   useSetGiftStudioVersionActive,
 } from '@workspace/api-client-react';
-import type { GiftStudioGiftId, GiftStudioVersion, GiftStudioUploadInput } from '@workspace/api-client-react';
+import type { GiftStudioGiftId, GiftStudioVersion } from '@workspace/api-client-react';
 import type { ClipSettings, KeyColor } from './processClip';
 import { GiftAnimationPlayer, giftStudioMediaUrl } from '@/gifts/GiftAnimationPlayer';
 import { drawKeyedPreview } from './liveKeyPreview';
@@ -52,7 +51,30 @@ const timeLabel = (value: number) => `${Math.floor(value / 60)}:${Math.floor(val
 
 type AuthTokenGetter = () => Promise<string | null>;
 
-async function processClipOnServer(file: File, settings: ClipSettings, signal: AbortSignal, getToken: AuthTokenGetter): Promise<Blob> {
+class GiftStudioRequestError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+  }
+}
+
+async function responseError(response: Response, fallback: string): Promise<GiftStudioRequestError> {
+  const raw = await response.text();
+  let message = '';
+  try {
+    const parsed = JSON.parse(raw) as { message?: string; error?: string; detail?: string };
+    message = parsed.message ?? parsed.detail ?? parsed.error ?? '';
+  } catch {
+    message = raw.trim();
+  }
+  return new GiftStudioRequestError(message || fallback, response.status);
+}
+
+async function processClipOnServer(
+  file: File,
+  settings: ClipSettings,
+  signal: AbortSignal,
+  getToken: AuthTokenGetter,
+): Promise<{ blob: Blob; processingSession: string | null }> {
   const form = new FormData();
   form.append('sourceVideo', file, file.name);
   form.append('settings', JSON.stringify(settings));
@@ -65,20 +87,63 @@ async function processClipOnServer(file: File, settings: ClipSettings, signal: A
     signal,
   });
   if (!response.ok) {
-    const raw = await response.text();
-    let message = '';
-    try {
-      const parsed = JSON.parse(raw) as { message?: string; error?: string; detail?: string };
-      message = parsed.message ?? parsed.detail ?? parsed.error ?? '';
-    } catch {
-      message = raw.trim();
-    }
-    throw new Error(message || `Streamtalk could not process this clip (server error ${response.status}).`);
+    throw await responseError(response, `Streamtalk could not process this clip (server error ${response.status}).`);
   }
   const output = await response.blob();
   if (output.size === 0) throw new Error('The processor returned an empty video. Try processing again.');
-  if (!output.type.includes('video/webm')) throw new Error('The processor returned an unexpected file instead of transparent WebM.');
-  return output;
+  // This endpoint only returns alpha-verified VP9 WebM. Normalize the Blob type even
+  // if a proxy/browser adds codec parameters or drops the response MIME type.
+  const processingSession = response.headers.get('X-Gift-Studio-Processing-Session');
+  return { blob: new Blob([output], { type: 'video/webm' }), processingSession };
+}
+
+async function saveGiftStudioClip(input: {
+  original: File;
+  processed: Blob;
+  processingSession: string | null;
+  draftName: string;
+  giftId: GiftStudioGiftId | '';
+  settings: ClipSettings;
+  getToken: AuthTokenGetter;
+}): Promise<GiftStudioVersion> {
+  const token = await input.getToken();
+  const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+  const trimmedName = input.draftName.trim();
+
+  if (input.processingSession) {
+    const response = await fetch('/api/social/admin/gift-studio/save-processed', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
+      body: JSON.stringify({
+        processingSession: input.processingSession,
+        draftName: trimmedName,
+        ...(input.giftId ? { giftId: input.giftId } : {}),
+      }),
+    });
+    if (response.status !== 410) {
+      if (!response.ok) throw await responseError(response, `Streamtalk could not save this gift (server error ${response.status}).`);
+      return await response.json() as GiftStudioVersion;
+    }
+    // A dev preview/server restart may expire its temporary copy. The browser still
+    // has both files, so upload those explicit file parts instead.
+  }
+
+  const form = new FormData();
+  form.append('sourceVideo', input.original, input.original.name || 'source.mp4');
+  const baseName = trimmedName.normalize('NFKD').replace(/[^\w-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'gift';
+  const processedFile = new File([input.processed], `${baseName}-alpha.webm`, { type: 'video/webm' });
+  form.append('processedWebm', processedFile, processedFile.name);
+  form.append('settings', JSON.stringify({ ...input.settings, draftName: trimmedName }));
+  if (input.giftId) form.append('giftId', input.giftId);
+  const response = await fetch('/api/social/admin/gift-studio/versions', {
+    method: 'POST',
+    credentials: 'include',
+    headers: authHeaders,
+    body: form,
+  });
+  if (!response.ok) throw await responseError(response, `Streamtalk could not save this gift (server error ${response.status}).`);
+  return await response.json() as GiftStudioVersion;
 }
 
 async function giftStudioLibraryRequest(url: string, method: 'PATCH' | 'DELETE', getToken: AuthTokenGetter, body?: unknown) {
@@ -103,13 +168,13 @@ export function GiftStudioPage() {
   const { getToken } = useAuth();
   const client = useQueryClient();
   const library = useGetGiftStudioLibrary({ query: { queryKey: getGetGiftStudioLibraryQueryKey(), retry: false } });
-  const createVersion = useCreateGiftStudioVersion();
   const setActive = useSetGiftStudioVersionActive();
   const assignVersion = useAssignGiftStudioVersionToGift();
   const [file, setFile] = useState<File | null>(null);
   const [originalUrl, setOriginalUrl] = useState('');
   const [processedUrl, setProcessedUrl] = useState('');
   const [processedBlob, setProcessedBlob] = useState<Blob | null>(null);
+  const [processingSession, setProcessingSession] = useState<string | null>(null);
   const [duration, setDuration] = useState(0);
   const [frameRatio, setFrameRatio] = useState<number | null>(null);
   const [addToGiftSelection, setAddToGiftSelection] = useState(false);
@@ -131,6 +196,9 @@ export function GiftStudioPage() {
   const [livePreviewError, setLivePreviewError] = useState('');
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
+  const [saveError, setSaveError] = useState('');
+  const [savingVersion, setSavingVersion] = useState(false);
+  const [savedVersionId, setSavedVersionId] = useState<string | null>(null);
   const [selectedPreview, setSelectedPreview] = useState<GiftStudioVersion | null>(null);
   const [playingPreview, setPlayingPreview] = useState<GiftStudioVersion | null>(null);
   const [playingSample, setPlayingSample] = useState<GiftStudioVersion | null>(null);
@@ -194,10 +262,13 @@ export function GiftStudioPage() {
     if (processedUrl) URL.revokeObjectURL(processedUrl);
     setProcessedUrl('');
     setProcessedBlob(null);
+    setProcessingSession(null);
     setFramesZipBlob(null);
+    setSavedVersionId(null);
     processedSettingsRef.current = null;
     setStatus('');
     setError('');
+    setSaveError('');
     setLivePreviewError('');
   };
   useEffect(() => {
@@ -315,13 +386,16 @@ export function GiftStudioPage() {
     const preferServer = /Android/i.test(navigator.userAgent);
     try {
       let resultBlob: Blob;
+      let resultSession: string | null = null;
       let usedServerProcessor = preferServer;
       if (preferServer) {
         setServerProcessing(true);
         setStatus('Using Streamtalk’s Android-safe processor (480 px, 24 fps)…');
         const controller = new AbortController();
         serverAbortRef.current = controller;
-        resultBlob = await processClipOnServer(file, settings, controller.signal, getToken);
+        const result = await processClipOnServer(file, settings, controller.signal, getToken);
+        resultBlob = result.blob;
+        resultSession = result.processingSession;
       } else {
         try {
           const { processClipLocally } = await import('./processClip');
@@ -339,7 +413,9 @@ export function GiftStudioPage() {
           const controller = new AbortController();
           serverAbortRef.current = controller;
           try {
-            resultBlob = await processClipOnServer(file, settings, controller.signal, getToken);
+            const result = await processClipOnServer(file, settings, controller.signal, getToken);
+            resultBlob = result.blob;
+            resultSession = result.processingSession;
           } catch (serverCause) {
             if (cancelledRef.current) return;
             const localMessage = localCause instanceof Error && localCause.message
@@ -353,6 +429,7 @@ export function GiftStudioPage() {
       const url = URL.createObjectURL(resultBlob);
       setProcessedUrl(url);
       setProcessedBlob(resultBlob);
+      setProcessingSession(resultSession);
       processedSettingsRef.current = JSON.stringify(settings);
       setProgress(1);
       setStatus(usedServerProcessor
@@ -423,6 +500,7 @@ export function GiftStudioPage() {
     try {
       const zip = await createTransparentPngFramesZip(processedUrl, safeGiftFilePrefix(), setFrameZipProgress);
       setFramesZipBlob(zip);
+      setError('');
       setStatus('PNG frames are ready. Tap Download PNG frames ZIP to save them.');
     } catch (cause) {
       setError(errorText(cause));
@@ -453,25 +531,33 @@ export function GiftStudioPage() {
     }
   };
 
-  const approve = () => {
+  const approve = async () => {
     const trimmedName = draftName.trim();
-    if (!file || !processedBlob || !trimmedName || createVersion.isPending || (addToGiftSelection && !giftId)) return;
-    const data: GiftStudioUploadInput = {
-      ...(addToGiftSelection && giftId ? { giftId } : {}),
-      settings: JSON.stringify({ ...settings, draftName: trimmedName }),
-      // Generated multipart typing says string; actual File/Blob values are intentionally passed through for FormData.append.
-      sourceVideo: file as unknown as string,
-      processedWebm: new File([processedBlob], `${file.name.replace(/\.[^.]+$/, '')}-alpha.webm`, { type: 'video/webm' }) as unknown as string,
-    };
-    createVersion.mutate({ data }, {
-      onSuccess: () => {
-        void client.invalidateQueries({ queryKey: getGetGiftStudioLibraryQueryKey() });
-        setStatus(addToGiftSelection && giftId
-          ? `Saved “${trimmedName}” as a ${GIFTS.find((gift) => gift.id === giftId)?.label} draft. Activate it from the library when you are ready.`
-          : `Saved “${trimmedName}” as a standalone Gift Studio draft. You can add it to a gift selection from the library later.`);
-      },
-      onError: (cause) => setError(ownerErrorText(cause)),
-    });
+    if (!file || !processedBlob || !trimmedName || savingVersion || (addToGiftSelection && !giftId)) return;
+    setSavingVersion(true);
+    setSaveError('');
+    setError('');
+    try {
+      const saved = await saveGiftStudioClip({
+        original: file,
+        processed: processedBlob,
+        processingSession,
+        draftName: trimmedName,
+        giftId: addToGiftSelection ? giftId : '',
+        settings,
+        getToken,
+      });
+      await client.invalidateQueries({ queryKey: getGetGiftStudioLibraryQueryKey() });
+      setSavedVersionId(saved.id);
+      setStatus(addToGiftSelection && giftId
+        ? `Saved “${trimmedName}” to Saved gifts as a ${GIFTS.find((gift) => gift.id === giftId)?.label} draft.`
+        : `Saved “${trimmedName}” to the Saved gifts list.`);
+      setSaveError('');
+    } catch (cause) {
+      setSaveError(ownerErrorText(cause));
+    } finally {
+      setSavingVersion(false);
+    }
   };
   const attachVersion = (version: GiftStudioVersion, targetGiftId: GiftStudioGiftId) => {
     assignVersion.mutate({ versionId: version.id, data: { giftId: targetGiftId } }, {
@@ -630,10 +716,10 @@ export function GiftStudioPage() {
                           {GIFTS.map((gift) => <option key={gift.id} value={gift.id}>{gift.label}</option>)}
                         </select>
                       </label>}
-                      <button className="gs-button primary" type="button" onClick={approve} disabled={!file || !processedBlob || !draftName.trim() || (addToGiftSelection && !giftId) || createVersion.isPending} data-testid="button-save-as-gift" aria-describedby="gs-save-target-note">
-                        {createVersion.isPending ? 'Saving…' : addToGiftSelection ? 'Save to selected gift' : 'Save as gift'} <Check size={15} />
+                      <button className="gs-button primary" type="button" onClick={approve} disabled={!file || !processedBlob || !draftName.trim() || (addToGiftSelection && !giftId) || savingVersion || Boolean(savedVersionId)} data-testid="button-save-as-gift" aria-describedby="gs-save-target-note">
+                        {savingVersion ? 'Saving…' : savedVersionId ? 'Saved to Gift Studio' : addToGiftSelection ? 'Save to selected gift' : 'Save as gift'} <Check size={15} />
                       </button>
-                      {createVersion.isError && <div className="gs-error" role="alert" data-testid="state-upload-error">{ownerErrorText(createVersion.error)}</div>}
+                      {saveError && <div className="gs-error" role="alert" data-testid="state-upload-error">{saveError}</div>}
                       <p className="gs-caption gs-save-note" id="gs-save-target-note">This saves the named clip in Streamtalk’s Saved gifts list. To use it in gifting, attach it to an existing catalog gift and activate it there; prices and gift credits do not change.</p>
                     </div>}
                     {processedUrl && <div className="gs-after-downloads">
@@ -642,7 +728,6 @@ export function GiftStudioPage() {
                     </div>}
                     {error && <div className="gs-error" role="alert" data-testid="state-error">{error}</div>}
                     {status && !processing && <p className="gs-caption" role="status" aria-live="polite" data-testid="state-status">{status}</p>}
-                    {createVersion.isError && <div className="gs-error" role="alert" data-testid="state-upload-error">{ownerErrorText(createVersion.error)}</div>}
                     {downloadingFrames && <p className="gs-caption" role="status" aria-live="polite">Preparing transparent PNG frames for download…</p>}
                   </div>
                 </div>

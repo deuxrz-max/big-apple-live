@@ -16,6 +16,7 @@ import {
   ReviewStreamerPassportRequestBody, SetStreamerPassportFoundingLeagueBody,
   EquipMyBadgeBody, EquipMyBadgeResponse,
   CreateGiftStudioVersionBody, CreateGiftStudioVersionResponse,
+  SaveGiftStudioProcessedBody,
   GetGiftStudioLibraryResponse, SetGiftStudioVersionActiveBody, SetGiftStudioVersionActiveParams,
   SetGiftStudioVersionActiveResponse, AssignGiftStudioVersionToGiftBody, AssignGiftStudioVersionToGiftParams,
   AssignGiftStudioVersionToGiftResponse, GetGiftStudioVersionMediaParams,
@@ -49,6 +50,10 @@ import {
   listGiftStudioVersions, processGiftStudioClipOnServer, renameGiftStudioVersion,
   setGiftStudioVersionActive, assignGiftStudioVersionToGift,
 } from "../lib/gift-studio";
+import {
+  claimGiftStudioProcessingSession, discardGiftStudioProcessingSession,
+  releaseGiftStudioProcessingSession, retainGiftStudioProcessingSession,
+} from "../lib/gift-studio-processing-sessions";
 
 const router: IRouter = Router();
 router.get('/gift-media/spirit-pup/v1/:filename', serveGiftMedia);
@@ -169,6 +174,7 @@ router.post("/social/admin/gift-studio/process", ownerOnly, parseStudioUpload, a
   const files = req.files as Record<string, Express.Multer.File[]> | undefined;
   const source = files?.sourceVideo?.[0];
   const controller = new AbortController();
+  let retainedForSave = false;
   req.once("aborted", () => controller.abort());
   res.once("close", () => {
     if (!res.writableEnded) controller.abort();
@@ -185,24 +191,65 @@ router.post("/social/admin/gift-studio/process", ownerOnly, parseStudioUpload, a
     const result = await processGiftStudioClipOnServer({
       sourcePath: source.path,
       sourceBytes: source.size,
+      sourceName: source.originalname,
       settings,
       signal: controller.signal,
     });
     const bytes = await readFile(result.path);
+    const processingSession = retainGiftStudioProcessingSession({
+      ownerId: accountId(req),
+      directory,
+      sourcePath: source.path,
+      sourceName: source.originalname,
+      sourceBytes: source.size,
+      processedPath: result.path,
+      processedBytes: result.bytes,
+      settings,
+    });
+    retainedForSave = true;
     res.set({
       "Content-Type": "video/webm",
       "Content-Length": String(bytes.byteLength),
       "Cache-Control": "no-store",
       "X-Content-Type-Options": "nosniff",
+      "X-Gift-Studio-Processing-Session": processingSession,
     }).status(200).send(bytes);
   } catch (error) {
     req.log.error({ err: error }, "Gift Studio server-side video processing failed");
     throw error;
   } finally {
-    if (directory) {
+    if (directory && !retainedForSave) {
       await rm(directory, { recursive: true, force: true });
       studioTempDirs.delete(req);
     }
+  }
+});
+
+router.post("/social/admin/gift-studio/save-processed", ownerOnly, async (req, res): Promise<void> => {
+  const parsed = SaveGiftStudioProcessedBody.safeParse(req.body);
+  if (!parsed.success) throw new RoomError(400, "The processed clip details are incomplete. Process the video again.");
+  const session = claimGiftStudioProcessingSession(accountId(req), parsed.data.processingSession);
+  if (!session) {
+    throw new RoomError(410, "The temporary processed clip expired. Save again now, or process the clip again.");
+  }
+  try {
+    const result = await createGiftStudioVersion({
+      ownerId: accountId(req),
+      giftId: parsed.data.giftId ?? null,
+      settings: { ...session.settings, draftName: parsed.data.draftName.trim() },
+      originalPath: session.sourcePath,
+      originalName: session.sourceName,
+      originalBytes: session.sourceBytes,
+      processedWebmPath: session.processedPath,
+      processedWebmBytes: session.processedBytes,
+    });
+    await discardGiftStudioProcessingSession(session.token).catch((error) => {
+      req.log.warn({ err: error }, "Gift Studio processed session cleanup failed after a saved version was created");
+    });
+    res.status(201).json(CreateGiftStudioVersionResponse.parse(result));
+  } catch (error) {
+    releaseGiftStudioProcessingSession(session.token);
+    throw error;
   }
 });
 

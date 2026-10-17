@@ -82,24 +82,37 @@ async function probe(filePath: string) {
   }
 }
 
-async function sniffVideo(filePath: string): Promise<"mp4" | "mov" | "webm"> {
+async function sniffVideo(filePath: string, originalName = ""): Promise<"mp4" | "mov" | "webm"> {
   const file = await fs.open(filePath, "r");
   try {
-    const header = Buffer.alloc(16);
+    const header = Buffer.alloc(64);
     const { bytesRead } = await file.read(header, 0, header.length, 0);
     if (bytesRead >= 12 && header.subarray(0, 4).toString() === "\x1aE\xdf\xa3") return "webm";
     if (bytesRead >= 12 && header.subarray(4, 8).toString() === "ftyp") {
-      return header.subarray(8, 12).toString() === "qt  " ? "mov" : "mp4";
+      const brand = header.subarray(8, 12).toString();
+      return brand === "qt  " || /\.mov$/i.test(originalName) ? "mov" : "mp4";
     }
   } finally {
     await file.close();
   }
+  // Some encoders prepend metadata or use container variants beyond the common magic bytes.
+  // Ignore the browser-declared MIME type and ask ffprobe to identify the actual file contents.
+  try {
+    const { stdout } = await execFileAsync(process.env.FFPROBE_PATH ?? "ffprobe", [
+      "-v", "error", "-print_format", "json", "-show_format", filePath,
+    ], { timeout: 20_000, maxBuffer: 512 * 1024 });
+    const format = (JSON.parse(stdout) as { format?: { format_name?: string } }).format?.format_name ?? "";
+    if (format.includes("webm") || format.includes("matroska")) return "webm";
+    if (format.includes("mov") || format.includes("mp4")) return /\.mov$/i.test(originalName) ? "mov" : "mp4";
+  } catch {
+    // A rejected or unreadable file is reported below with a format-specific message.
+  }
   throw new RoomError(415, "Use an MP4, WebM or MOV video file.");
 }
 
-async function validateSource(filePath: string, fileSize: number) {
+async function validateSource(filePath: string, fileSize: number, originalName = "") {
   if (!fileSize || fileSize > MAX_VIDEO_BYTES) throw new RoomError(413, "The original video must be 100 MB or smaller.");
-  const type = await sniffVideo(filePath);
+  const type = await sniffVideo(filePath, originalName);
   const media = await probe(filePath);
   const video = media.streams?.find((stream) => stream.codec_type === "video");
   const duration = Number(video?.duration ?? media.format?.duration);
@@ -197,10 +210,11 @@ export async function listGiftStudioVersions(ownerId: string) {
 export async function processGiftStudioClipOnServer(input: {
   sourcePath: string;
   sourceBytes: number;
+  sourceName?: string;
   settings: GiftStudioProcessingSettings;
   signal?: AbortSignal;
 }) {
-  await validateSource(input.sourcePath, input.sourceBytes);
+  await validateSource(input.sourcePath, input.sourceBytes, input.sourceName);
   const outputPath = path.join(path.dirname(input.sourcePath), `processed-${randomUUID()}.webm`);
   const boundedDimension = Math.min(input.settings.maxDimension ?? 480, 480);
   const color = input.settings.keyColor.replace("#", "0x");
@@ -263,7 +277,7 @@ export async function createGiftStudioVersion(input: {
   if (input.processedWebmBytes <= 0 || input.processedWebmBytes > MAX_VIDEO_BYTES) {
     throw new RoomError(413, "The processed animation must be 100 MB or smaller.");
   }
-  const source = await validateSource(input.originalPath, input.originalBytes);
+  const source = await validateSource(input.originalPath, input.originalBytes, input.originalName);
   if (await sniffVideo(input.processedWebmPath) !== "webm") {
     throw new RoomError(415, "The processed animation must be a transparent WebM video.");
   }
