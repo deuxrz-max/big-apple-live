@@ -250,3 +250,124 @@ body.streamtalk-directory-screen #root .app-bottom-link:nth-child(4) svg{color:#
 .st-dir-live-stream>b{color:#a6ed58;font-size:10px}
 .st-topbar-live{display:inline-flex;align-items:center;gap:5px;padding:7px 10px;border:1px solid #8b62e8;border-radius:999px;background:#7149dc;color:#fff;font-size:11px;font-weight:750;text-decoration:none}
 @media(max-width:420px){.st-dir-go-live{min-height:28px;padding:0 7px;font-size:9px}.st-dir-live-streams{grid-template-columns:minmax(0,1fr)}}
+
+/* Compact signed-in lobby. All overrides are deliberately scoped to /home. */
+.ch.st-directory{
+  --dir-lime:#d5ff42;
+  --dir-purple:#c69aff;
+  padding:0 14px calc(102px + env(safe-area-inset-bottom));
+  background:
+    radial-gradient(ellipse at 10% -8%,rgba(143,75,185,.26),transparent 33%),
+    radial-gradient(ellipse at 100% 42%,rgba(60,37,104,.16),transparent 38%),
+    linear-gradient(180deg,#14101f 0%,#0e0c16 50%,#100d19 100%);
+}
+.ch.st-directory .ch-in{max-width:740px}
+.st-dir-header{padding-top:12px}
+.st-dir-topline{padding-bottom:12px}
+.st-directory .st-wordmark-lockup{gap:6px}
+.st-directory .st-wordmark-lockup .st-shield-logo{width:31px;height:31px}
+.st-directory .st-wordmark{font-size:15px;letter-spacing:.12em}
+.st-dir-lockup{gap:0}
+.st-dir-livehub{margin:1px 0 0 38px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#a99dbb;font:700 9px 'DM Sans',sans-serif;letter-spacing:.09em;text-transform:uppercase}
+.st-dir-account{gap:8px}
+.st-dir-rewards{display:grid;place-items:center;width:31px;height:31px;border:1px solid rgba(198,154,255,.2);border-radius:50%;background:rgba(31,25,43,.62);color:#d9c6ff;text-decoration:none}
+.st-dir-rewards:focus-visible{outline:2px solid var(--dir-lime);outline-offset:3px}
+.st-dir-wallet{display:inline-flex;align-items:center;min-height:29px;padding:0 10px;border:1px solid rgba(213,255,66,.32);border-radius:999px;background:rgba(213,255,66,.07);color:#e3ff93;text-decoration:none;font:800 10px 'DM Sans',sans-serif;white-space:nowrap}
+.st-dir-avatar .st-shield-logo{display:block}
+.st-dir-avatar img{border-radius:50%}
+.st-dir-avatar>i{border-color:#14101f}
+.st-dir-menu summary{width:31px;height:31px;border-color:rgba(208,184,239,.17);font-size:20px}
+.st-dir-search-wrap{gap:8px}
+.st-directory .st-dir-search{flex:1;min-width:0;width:0;height:42px;padding-right:34px!important;border-radius:12px!important;background:rgba(31,25,43,.84)!important;border-color:rgba(205,178,240,.18)!important;font-size:13px}
+.st-dir-search-icon{left:14px;width:16px;height:16px}
+.st-dir-search-wrap{max-width:none}
+.st-dir-search-submit{flex:0 0 76px;height:42px;border:1px solid rgba(255,255,255,.8);border-radius:11px;background:#f7f4fb;color:#17131d;font:800 12px 'DM Sans',sans-serif;cursor:pointer}
+.st-dir-search-submit:hover{background:#e9e2f1}
+.st-dir-search-submit:focus-visible{outline:2px solid var(--dir-lime);outline-offset:3px}
+.st-dir-search-wrap .st-dir-clear{top:50%;right:88px;transform:translateY(-50%);width:25px;height:25px}
+.st-dir-tabs{display:flex;align-items:center;gap:21px;margin:15px 0 17px;border-bottom:1px solid rgba(210,186,240,.12)}
+.st-dir-tabs button{position:relative;padding:0 1px 10px;border:0;background:none;color:#92869f;font:800 12px 'DM Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+.st-dir-tabs button.is-active{color:#f7f0ff}
+.st-dir-tabs button.is-active:after{position:absolute;right:0;bottom:-1px;left:0;height:2px;background:#b458ff;content:""}
+.st-dir-tabs button:focus-visible{outline:2px solid var(--dir-lime);outline-offset:3px}
+.st-dir-section-head{margin-bottom:11px}
+.st-dir-section-head h2{margin-top:4px;font-size:20px}
+.st-dir-overline{font-size:8px;letter-spacing:.16em}
+.st-dir-feature{margin:0 0 20px}
+.st-dir-feature-mark{font-size:9px}
+.st-dir-card{border-color:rgba(201,171,238,.2);border-radius:15px}
+.st-dir-card.is-featured .st-dir-art{aspect-ratio:2.6/1}
+.st-dir-card.is-featured .st-dir-featured-copy{bottom:12px;left:14px;gap:3px}
+.st-dir-card.is-featured .st-dir-featured-title{font-size:22px}
+.st-dir-card.is-featured .st-dir-featured-description{font-size:10px}
+.st-dir-featured-meta{font-size:9px}
+.st-dir-topic-avatar{width:22px;height:22px}
+.st-dir-featured-enter{min-height:27px}
+.st-dir-explore-heading{margin-bottom:8px}
+.st-dir-total{padding-bottom:2px;color:#d4ff73;font-size:10px}
+.st-dir-filters{gap:7px;padding:2px 1px 11px}
+.st-dir-filter{min-height:31px;padding:0 11px;border-radius:9px;background:rgba(36,29,49,.64);font-size:10px}
+.st-dir-filter.is-active{border-color:transparent;background:linear-gradient(110deg,#478ff2,#6071f4);color:#fff;box-shadow:0 4px 14px rgba(63,119,242,.22)}
+.st-dir-grid{gap:10px;margin-top:0}
+.st-dir-card{height:100%;background:#1b1626}
+.st-dir-art{aspect-ratio:1.25/1}
+.st-dir-card-copy{gap:8px;padding:10px}
+.st-dir-card-titles h3{font-size:12px}
+.st-dir-card-titles p{font-size:9px}
+.st-dir-live,.st-dir-count{top:8px;padding:5px 7px;font-size:8px}
+.st-dir-live{left:8px}
+.st-dir-count{right:8px}
+.st-dir-video-tag{bottom:8px;left:8px;padding:5px 7px;font-size:8px}
+.st-dir-enter{height:29px;font-size:10px}
+.st-dir-creators{margin:0}
+.st-dir-live-streams{gap:8px}
+.st-dir-live-stream{min-height:58px;padding:8px;border-color:rgba(198,154,255,.22);border-radius:12px;background:rgba(29,23,40,.8)}
+.st-dir-live-stream-icon{flex-basis:30px;width:30px;height:30px;border-color:rgba(213,255,66,.3);background:rgba(213,255,66,.08);color:var(--dir-lime)}
+.st-dir-live-stream-copy strong{font-size:11px}
+.st-dir-live-stream-copy small{font-size:9px}
+.st-dir-live-stream>b{color:var(--dir-lime);font-size:9px}
+.st-dir-stream-loading{padding:18px 14px;border:1px solid rgba(198,154,255,.18);border-radius:13px;color:#b9adc8;font-size:12px}
+.st-dir-state{margin:8px auto;padding:20px;border-radius:15px}
+.st-dir-footer{margin-top:24px;padding-top:12px}
+.st-dir-footer>span{font-size:8px}
+body.streamtalk-directory-screen #root .app-bottom-nav{
+  background:rgba(17,13,25,.96);
+  border-color:rgba(192,167,255,.17);
+  box-shadow:0 -9px 28px rgba(5,3,10,.48);
+  backdrop-filter:blur(18px);
+}
+body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live{grid-template-columns:repeat(5,minmax(0,1fr));max-width:540px;align-items:center}
+body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-bottom-link{height:58px;border:0;color:#94899e;font:700 9px 'DM Sans',sans-serif;letter-spacing:.02em}
+body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-bottom-link svg{width:20px;height:20px}
+body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-bottom-link.is-active{color:#edffbc;background:transparent;box-shadow:none}
+body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-bottom-link.is-active:after{bottom:3px;width:3px;height:3px;background:var(--dir-lime);box-shadow:none}
+body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-bottom-link:nth-child(1) svg,
+body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-bottom-link:nth-child(2) svg{color:inherit}
+body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-home-live{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+   justify-self:center;align-self:center;width:56px;height:56px;margin-top:-17px;
+   border:1px solid rgba(249,213,255,.64);border-radius:19px;
+   background:linear-gradient(145deg,#d93bf0,#8037ed);color:#fff;
+   box-shadow:0 5px 22px rgba(155,56,236,.48);cursor:pointer;
+}
+body.streamtalk-directory-screen #root .app-home-live:focus-visible{outline:2px solid #f3ffbb;outline-offset:3px}
+@media(min-width:760px){
+  .st-dir-header{display:block}
+  .st-dir-topline{padding-bottom:12px}
+  .st-dir-grid{gap:13px}
+}
+@media(max-width:420px){
+  .ch.st-directory{padding-inline:12px}
+  .st-dir-account{gap:6px}
+  .st-dir-rewards{width:27px;height:27px}
+  .st-dir-wallet{min-height:26px;padding:0 8px;font-size:9px}
+  .st-dir-topline{gap:7px}
+  .st-dir-grid{gap:8px}
+  .st-dir-card-copy{padding:8px}
+  .st-dir-card-titles h3{font-size:11px}
+  .st-dir-card-titles p{font-size:8px}
+  .st-dir-card.is-featured .st-dir-art{aspect-ratio:2.1/1}
+  .st-dir-card.is-featured .st-dir-featured-description{display:none}
+  body.streamtalk-directory-screen #root .app-home-live{width:54px;height:54px}
+}
+@media(prefers-reduced-motion:reduce){.st-dir-tabs button,.st-dir-card,.st-dir-art img{transition:none}}

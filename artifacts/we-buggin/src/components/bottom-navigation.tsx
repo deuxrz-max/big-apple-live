@@ -1,13 +1,15 @@
 import { useUser } from '@clerk/react';
-import { Heart, House, MessageCircle, UserRound } from 'lucide-react';
+import { Camera, Heart, House, MessageCircle, UserRound } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { GiftControl, OPEN_ROOM_GIFTS_EVENT } from '@/gifts';
+import { GoLiveButton } from '@/chat/LiveStreamPages';
 import './bottom-navigation.css';
 
 export function BottomNavigation() {
   const [path] = useLocation();
   const { isSignedIn } = useUser();
   const isUniversityRoom = path.startsWith('/rooms/');
+  const isHome = path === '/home';
   const protectedHref = (href: string) => isSignedIn ? href : '/sign-in';
   const items = [
     { label: 'Home', icon: House, href: isSignedIn ? '/home' : '/', active: path === '/' || path === '/home' || path.startsWith('/rooms/') || path === '/community' },
@@ -17,8 +19,20 @@ export function BottomNavigation() {
   ];
   return (
     <nav className="app-bottom-nav" aria-label="Main navigation">
-      <div className={`app-bottom-nav-inner${isUniversityRoom ? ' has-room-gift' : ''}`}>
-        {items.map(({ label, icon: Icon, href, active }) => (
+      <div className={`app-bottom-nav-inner${isUniversityRoom ? ' has-room-gift' : ''}${isHome && isSignedIn ? ' has-home-live' : ''}`}>
+        {items.slice(0, 2).map(({ label, icon: Icon, href, active }) => (
+          <Link key={label} href={href} className={`app-bottom-link${active ? ' is-active' : ''}`}
+            aria-current={active ? 'page' : undefined} data-testid={`bottom-nav-${label.toLowerCase()}`}>
+            <Icon size={26} strokeWidth={2} aria-hidden="true" />
+            <span>{label}</span>
+          </Link>
+        ))}
+        {isHome && isSignedIn && (
+          <GoLiveButton className="app-home-live" aria-label="Go live now">
+            <Camera size={22} strokeWidth={2.4} aria-hidden="true" />
+          </GoLiveButton>
+        )}
+        {items.slice(2).map(({ label, icon: Icon, href, active }) => (
           <Link key={label} href={href} className={`app-bottom-link${active ? ' is-active' : ''}`}
             aria-current={active ? 'page' : undefined} data-testid={`bottom-nav-${label.toLowerCase()}`}>
             <Icon size={26} strokeWidth={2} aria-hidden="true" />
