@@ -141,6 +141,8 @@ async function verifyAlpha(filePath: string, decoder?: "libvpx-vp9"): Promise<vo
     if (files.length < 2) throw new Error("No decodable alpha frames");
     let transparentFrames = 0;
     let visibleFrames = 0;
+    let clearPixels = 0;
+    let totalPixels = 0;
     for (const entry of files) {
       const { data, info } = await sharp(path.join(temp, entry)).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
       if (info.channels !== 4) throw new Error("Frame did not decode with alpha");
@@ -152,14 +154,24 @@ async function verifyAlpha(filePath: string, decoder?: "libvpx-vp9"): Promise<vo
         if (alpha > 200) visible++;
       }
       const pixels = info.width * info.height;
+      clearPixels += clear;
+      totalPixels += pixels;
       if (clear / pixels >= 0.01) transparentFrames++;
       if (visible / pixels >= 0.03) visibleFrames++;
     }
     const requiredFrames = Math.max(2, Math.ceil(files.length * 0.2));
-    if (transparentFrames < requiredFrames || visibleFrames < requiredFrames) {
-      throw new Error("Decoded frames did not contain both visible artwork and transparent pixels");
+    if (transparentFrames < requiredFrames) {
+      const transparentPercent = totalPixels ? Math.round((clearPixels / totalPixels) * 100) : 0;
+      throw new RoomError(
+        422,
+        `Only ${transparentPercent}% of pixels became transparent. Tap the background in the preview to sample its color, then process again.`,
+      );
     }
-  } catch {
+    if (visibleFrames < requiredFrames) {
+      throw new RoomError(422, "The key removed nearly all visible artwork. Choose a cleaner background sample and try again.");
+    }
+  } catch (error) {
+    if (error instanceof RoomError) throw error;
     throw new RoomError(422, "Transparency could not be verified in the processed video. Nothing was added.");
   } finally {
     await fs.rm(temp, { recursive: true, force: true });
@@ -208,6 +220,86 @@ export async function listGiftStudioVersions(ownerId: string) {
   return { items: rows.map(toVersion) };
 }
 
+function giftKeyColor(settings: GiftStudioProcessingSettings) {
+  const channels = settings.keyColor.replace("#", "");
+  const rgb = [0, 2, 4].map((offset) => Number.parseInt(channels.slice(offset, offset + 2), 16));
+  const [r8, g8, b8] = rgb;
+  const r = (r8 ?? 0) / 255;
+  const g = (g8 ?? 0) / 255;
+  const b = (b8 ?? 0) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const chroma = max - min;
+  let hue = 0;
+  if (chroma > 0) {
+    if (max === r) hue = 60 * (((g - b) / chroma) % 6);
+    else if (max === g) hue = 60 * ((b - r) / chroma + 2);
+    else hue = 60 * ((r - g) / chroma + 4);
+  }
+  if (hue < 0) hue += 360;
+  const saturation = max === 0 ? 0 : chroma / max;
+  return { red: r8 ?? 0, green: g8 ?? 0, blue: b8 ?? 0, hue, saturation, value: max };
+}
+
+function rgbToHsv(red: number, green: number, blue: number) {
+  const r = red / 255;
+  const g = green / 255;
+  const b = blue / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const chroma = max - min;
+  let hue = 0;
+  if (chroma > 0) {
+    if (max === r) hue = 60 * (((g - b) / chroma) % 6);
+    else if (max === g) hue = 60 * ((b - r) / chroma + 2);
+    else hue = 60 * ((r - g) / chroma + 4);
+  }
+  if (hue < 0) hue += 360;
+  return { hue, saturation: max === 0 ? 0 : chroma / max, value: max };
+}
+
+function applyGiftStudioKey(data: Buffer, settings: GiftStudioProcessingSettings) {
+  const key = giftKeyColor(settings);
+  const low = Math.max(0, settings.tolerance * 80 - settings.softness * 45);
+  const high = Math.min(88, settings.tolerance * 80 + settings.softness * 45);
+  const range = Math.max(1, high - low);
+  const spill = Math.max(0, Math.min(1, settings.spill));
+  for (let offset = 0; offset + 3 < data.length; offset += 4) {
+    const red = data[offset]!;
+    const green = data[offset + 1]!;
+    const blue = data[offset + 2]!;
+    const pixel = rgbToHsv(red, green, blue);
+    let matte = 1;
+    if (settings.preset === "black") {
+      const distance = Math.sqrt(red * red + green * green + blue * blue) / 441.673;
+      const blackLow = Math.max(0, settings.tolerance - settings.softness);
+      const blackHigh = Math.min(1, settings.tolerance + settings.softness);
+      const t = Math.max(0, Math.min(1, (distance - blackLow) / Math.max(0.001, blackHigh - blackLow)));
+      matte = t * t * (3 - 2 * t);
+    } else if (pixel.saturation >= Math.max(0.12, key.saturation * 0.2)) {
+      const rawHueDistance = Math.abs(pixel.hue - key.hue);
+      const hueDistance = Math.min(rawHueDistance, 360 - rawHueDistance);
+      const chromaDistance = Math.abs(pixel.saturation - key.saturation) * 80;
+      const valueDistance = Math.abs(pixel.value - key.value) * 18;
+      const distance = Math.sqrt(hueDistance ** 2 + chromaDistance ** 2 + valueDistance ** 2);
+      const t = Math.max(0, Math.min(1, (distance - low) / range));
+      matte = t * t * (3 - 2 * t);
+    }
+    data[offset + 3] = Math.round(data[offset + 3]! * matte);
+    const despill = spill * (1 - matte);
+    if (despill > 0.001 && settings.preset !== "black") {
+      if (key.hue >= 75 && key.hue <= 170) {
+        data[offset + 1] = Math.round(green - Math.max(0, green - Math.max(red, blue)) * despill);
+      } else if (key.hue >= 190 && key.hue <= 265) {
+        data[offset + 2] = Math.round(blue - Math.max(0, blue - Math.max(red, green)) * despill);
+      } else if (key.hue >= 265 && key.hue <= 335) {
+        data[offset] = Math.round(red - Math.max(0, red - green) * despill);
+        data[offset + 2] = Math.round(blue - Math.max(0, blue - green) * despill);
+      }
+    }
+  }
+}
+
 export async function processGiftStudioClipOnServer(input: {
   sourcePath: string;
   sourceBytes: number;
@@ -217,27 +309,40 @@ export async function processGiftStudioClipOnServer(input: {
 }) {
   await validateSource(input.sourcePath, input.sourceBytes, input.sourceName);
   const outputPath = path.join(path.dirname(input.sourcePath), `processed-${randomUUID()}.webm`);
+  const workPath = path.join(path.dirname(input.sourcePath), `frames-${randomUUID()}`);
+  const sourceFrames = path.join(workPath, "source");
+  const keyedFrames = path.join(workPath, "keyed");
   const boundedDimension = Math.min(input.settings.maxDimension ?? 480, 480);
-  const color = input.settings.keyColor.replace("#", "0x");
-  const similarity = Math.max(0.02, Math.min(0.65, input.settings.tolerance));
-  const blend = Math.max(0, Math.min(0.5, input.settings.softness));
-  const filters = [
-    "fps=24",
-    `scale='if(gte(iw,ih),min(iw,${boundedDimension}),-2)':'if(gte(iw,ih),-2,min(ih,${boundedDimension}))':flags=lanczos`,
-    `format=yuva420p,chromakey=${color}:${similarity.toFixed(3)}:${blend.toFixed(3)}`,
-  ];
-  if (input.settings.spill > 0.01 && input.settings.preset !== "black") {
-    const despillChannel = input.settings.preset === "green" || input.settings.keyColor.toLowerCase() === "#00ff00"
-      ? "green"
-      : "blue";
-    filters.push(`despill=type=${despillChannel}:mix=${Math.max(0, Math.min(1, input.settings.spill)).toFixed(2)}:expand=0`);
-  }
 
   try {
+    await fs.mkdir(sourceFrames, { recursive: true });
+    await fs.mkdir(keyedFrames, { recursive: true });
     await execFileAsync(process.env.FFMPEG_PATH ?? "ffmpeg", [
       "-hide_banner", "-loglevel", "error", "-y",
       "-i", input.sourcePath,
-      "-vf", filters.join(","),
+      "-vf", `fps=24,scale='if(gte(iw,ih),min(iw,${boundedDimension}),-2)':'if(gte(iw,ih),-2,min(ih,${boundedDimension}))':flags=lanczos,format=rgba`,
+      "-an", "-t", "15", "-vsync", "0", "-start_number", "1",
+      path.join(sourceFrames, "frame-%05d.png"),
+    ], {
+      timeout: 90_000,
+      maxBuffer: 2 * 1024 * 1024,
+      ...(input.signal ? { signal: input.signal } : {}),
+    });
+    const frameNames = (await fs.readdir(sourceFrames)).filter((name) => /^frame-\d+\.png$/.test(name)).sort();
+    if (frameNames.length < 2) throw new Error("The clip did not produce enough frames to process.");
+    for (const name of frameNames) {
+      if (input.signal?.aborted) throw new RoomError(400, "Processing was cancelled.");
+      const sourceFrame = path.join(sourceFrames, name);
+      const { data, info } = await sharp(sourceFrame).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+      if (info.channels !== 4) throw new Error("A decoded frame did not contain RGBA pixels.");
+      applyGiftStudioKey(data, input.settings);
+      await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } })
+        .png({ compressionLevel: 1 })
+        .toFile(path.join(keyedFrames, name));
+    }
+    await execFileAsync(process.env.FFMPEG_PATH ?? "ffmpeg", [
+      "-hide_banner", "-loglevel", "error", "-y",
+      "-framerate", "24", "-start_number", "1", "-i", path.join(keyedFrames, "frame-%05d.png"),
       "-an", "-t", "15",
       "-c:v", "libvpx-vp9", "-pix_fmt", "yuva420p", "-auto-alt-ref", "0",
       "-b:v", "0", "-crf", "34", "-deadline", "realtime", "-cpu-used", "5",
@@ -261,6 +366,8 @@ export async function processGiftStudioClipOnServer(input: {
       throw new RoomError(422, "Server processing took too long. Try a shorter clip.");
     }
     throw new RoomError(422, "Server processing could not encode and verify this clip. Try another key color or a shorter source video.");
+  } finally {
+    await fs.rm(workPath, { recursive: true, force: true });
   }
 }
 

@@ -2,6 +2,7 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import coreURL from '@ffmpeg/core?url';
 import wasmURL from '@ffmpeg/core/wasm?url';
 import workerURL from '@ffmpeg/ffmpeg/worker?url';
+import { buildHueChromaKeyFilter } from './liveKeyPreview';
 
 export type KeyColor = 'green' | 'magenta' | 'black' | 'custom';
 
@@ -18,8 +19,6 @@ export interface ProcessResult {
   blob: Blob;
   bytes: Uint8Array;
 }
-
-const escapeFilterColor = (color: string) => color.replace('#', '0x');
 
 async function withWorkerTimeout<T>(operation: Promise<T>, engine: FFmpeg, milliseconds: number, message: string): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -68,9 +67,7 @@ export async function processClipLocally(
     if (settings.maxDimension) {
       filterParts.push(`scale='if(gte(iw,ih),min(iw,${settings.maxDimension}),-2)':'if(gte(iw,ih),-2,min(ih,${settings.maxDimension}))':flags=lanczos`);
     }
-    const similarity = Math.max(0.02, Math.min(0.65, settings.tolerance));
-    const blend = Math.max(0, Math.min(0.5, settings.softness));
-    filterParts.push(`format=yuva420p,chromakey=${escapeFilterColor(settings.keyColor)}:${similarity.toFixed(3)}:${blend.toFixed(3)}`);
+    filterParts.push(buildHueChromaKeyFilter(settings));
     if (settings.spill > 0.01 && settings.preset !== 'black') {
       const despillChannel = settings.preset === 'green' || settings.keyColor.toLowerCase() === '#00ff00' ? 'green' : 'blue';
       filterParts.push(`despill=type=${despillChannel}:mix=${settings.spill.toFixed(2)}:expand=0`);
@@ -114,6 +111,8 @@ export async function processClipLocally(
     }
     let framesWithTransparency = 0;
     let framesWithArtwork = 0;
+    let transparentPixels = 0;
+    let sampledPixels = 0;
     const frameCount = Math.floor(pixels.length / frameBytes);
     for (let frame = 0; frame < frameCount; frame++) {
       let transparent = 0;
@@ -124,12 +123,18 @@ export async function processClipLocally(
         if (pixels[i]! < 32) transparent++;
         if (pixels[i]! > 200) visible++;
       }
+      transparentPixels += transparent;
+      sampledPixels += framePixels;
       if (transparent / framePixels >= 0.01) framesWithTransparency++;
       if (visible / framePixels >= 0.03) framesWithArtwork++;
     }
     const requiredFrames = Math.max(2, Math.ceil(frameCount * 0.2));
-    if (framesWithTransparency < requiredFrames || framesWithArtwork < requiredFrames) {
-      throw new Error('The processed clip did not contain both transparent background and visible artwork. Adjust the key settings and process again.');
+    if (framesWithTransparency < requiredFrames) {
+      const percent = sampledPixels ? Math.round((transparentPixels / sampledPixels) * 100) : 0;
+      throw new Error(`Only ${percent}% of pixels became transparent. Tap the background in the preview to sample its color, then process again.`);
+    }
+    if (framesWithArtwork < requiredFrames) {
+      throw new Error('The key removed nearly all visible artwork. Choose a cleaner background sample and try again.');
     }
     onProgress(1);
     return { blob: new Blob([bytes], { type: 'video/webm' }), bytes };

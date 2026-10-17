@@ -6,7 +6,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { createStoredZip } from "./downloadPngFramesZip";
-import { applyKeyToPixels, fitFrameToBox } from "./liveKeyPreview";
+import { applyKeyToPixels, classifyKeyColor, detectDominantEdgeColor, fitFrameToBox } from "./liveKeyPreview";
 import type { ClipSettings } from "./processClip";
 
 const greenSettings: ClipSettings = {
@@ -29,6 +29,48 @@ test("live green key removes the backdrop, keeps the white subject and feathers 
   assert.equal(pixels[7], 255);
   assert.ok(pixels[11]! > 0 && pixels[11]! < 255);
   assert.ok(pixels[9]! < 200, "spill reduction should reduce green tint on the edge");
+});
+
+test("automatic edge sampling finds a compressed dark-green screen color", () => {
+  const width = 20;
+  const height = 16;
+  const data = new Uint8ClampedArray(width * height * 4);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const offset = (y * width + x) * 4;
+      const isCenter = x > 2 && x < width - 3 && y > 2 && y < height - 3;
+      const color = isCenter ? [18, 20, 21] : [0, 126 + ((x + y) % 4), 0];
+      data.set([...color, 255], offset);
+    }
+  }
+  const frame = { width, height, data } as ImageData;
+  const color = detectDominantEdgeColor([frame, frame]);
+  assert.ok(color);
+  assert.equal(classifyKeyColor(color), "green");
+  const channels = [Number.parseInt(color.slice(1, 3), 16), Number.parseInt(color.slice(3, 5), 16), Number.parseInt(color.slice(5, 7), 16)];
+  assert.ok(channels[1]! >= 124 && channels[1]! <= 130);
+});
+
+test("hue/chroma key clears darker and brighter green while protecting black, white and red", () => {
+  for (const keyColor of ["#008000", "#00ff00"]) {
+    const pixels = new Uint8ClampedArray([
+      0, 128, 0, 255,        // dark green screen
+      0, 96, 0, 255,         // darker green lighting
+      0, 160, 0, 255,        // lighter green lighting
+      0, 255, 0, 255,        // bright green screen
+      4, 5, 4, 255,          // black car body / tire
+      245, 245, 245, 255,    // white highlight
+      240, 8, 10, 255,       // red light trail
+    ]);
+    applyKeyToPixels(pixels, { ...greenSettings, keyColor, tolerance: .36, softness: .12 });
+    assert.equal(pixels[3], 0, `${keyColor} sample should clear dark green`);
+    assert.equal(pixels[7], 0, `${keyColor} sample should clear darker-lit green`);
+    assert.equal(pixels[11], 0, `${keyColor} sample should clear lighter-lit green`);
+    assert.equal(pixels[15], 0, `${keyColor} sample should clear bright green`);
+    assert.ok(pixels[19]! > 240, "black body stays opaque");
+    assert.ok(pixels[23]! > 240, "white highlight stays opaque");
+    assert.ok(pixels[27]! > 240, "red tail light stays opaque");
+  }
 });
 
 test("black key removes black but retains a mid-gray subject", () => {

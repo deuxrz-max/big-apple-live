@@ -1,21 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { MouseEvent } from 'react';
 import { useAuth } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, Archive, Check, Download, Pipette, FileVideo2, LockKeyhole, Pause, Play, RefreshCw, Scissors, ShieldCheck, Upload, X, Pencil, Trash2, Save } from 'lucide-react';
+import { AlertTriangle, Archive, Check, ChevronRight, Download, Pipette, FileVideo2, LockKeyhole, Pause, Play, RefreshCw, Scissors, ShieldCheck, Upload, X, Pencil, Trash2, Save } from 'lucide-react';
 import {
   getGetActiveGiftStudioMediaQueryKey,
   getGetGiftStudioLibraryQueryKey,
   getGetSocialMeQueryKey,
   useAssignGiftStudioVersionToGift,
+  useGetActiveGiftStudioMedia,
   useGetGiftStudioLibrary,
   useSetGiftStudioVersionActive,
 } from '@workspace/api-client-react';
 import type { GiftStudioGiftId, GiftStudioVersion } from '@workspace/api-client-react';
 import type { ClipSettings, KeyColor } from './processClip';
 import { GiftAnimationPlayer, giftStudioMediaUrl } from '@/gifts/GiftAnimationPlayer';
-import { drawKeyedPreview } from './liveKeyPreview';
+import { classifyKeyColor, detectVideoEdgeColor, drawKeyedPreview, sampleVideoColorAtPoint } from './liveKeyPreview';
 import { createTransparentPngFramesZip } from './downloadPngFramesZip';
 import './gift-studio.css';
+import './gift-studio-production.css';
 
 const GIFTS: { id: GiftStudioGiftId; label: string }[] = [
   { id: 'heart', label: 'Heart' },
@@ -35,6 +38,8 @@ const MAX_BYTES = 100 * 1024 * 1024;
 const MAX_SECONDS = 15;
 const MAX_DRAFT_NAME = 60;
 const formatBytes = (bytes: number) => bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(0)} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+type GiftSetupMode = 'new' | 'replace';
+const PRODUCTION_STEPS = ['Name & type', 'Upload', 'Remove background', 'Review', 'Activate'];
 
 const errorText = (error: unknown) => {
   if (!error) return 'Something went wrong. Please try again.';
@@ -178,14 +183,17 @@ export function GiftStudioPage() {
   const [processingSession, setProcessingSession] = useState<string | null>(null);
   const [duration, setDuration] = useState(0);
   const [frameRatio, setFrameRatio] = useState<number | null>(null);
-  const [addToGiftSelection, setAddToGiftSelection] = useState(false);
+  const [giftMode, setGiftMode] = useState<GiftSetupMode>('replace');
   const [giftId, setGiftId] = useState<GiftStudioGiftId | ''>('');
   const [draftName, setDraftName] = useState('');
+  const [reviewMode, setReviewMode] = useState<'checker' | 'sample'>('checker');
+  const [previewConfirmed, setPreviewConfirmed] = useState(false);
+  const [activeProductionStep, setActiveProductionStep] = useState(1);
   const [keyPreset, setKeyPreset] = useState<KeyColor>('green');
   const [keyColor, setKeyColor] = useState('#00ff00');
-  const [tolerance, setTolerance] = useState(.24);
+  const [tolerance, setTolerance] = useState(.12);
   const [softness, setSoftness] = useState(.08);
-  const [spill, setSpill] = useState(.55);
+  const [spill, setSpill] = useState(.72);
   const [maxDimension, setMaxDimension] = useState<ClipSettings['maxDimension']>(480);
   const [backdrop, setBackdrop] = useState<'checker' | 'light' | 'dark'>('checker');
   const [processing, setProcessing] = useState(false);
@@ -195,6 +203,8 @@ export function GiftStudioPage() {
   const [frameZipProgress, setFrameZipProgress] = useState(0);
   const [framesZipBlob, setFramesZipBlob] = useState<Blob | null>(null);
   const [livePreviewError, setLivePreviewError] = useState('');
+  const [detectedKeyColor, setDetectedKeyColor] = useState<string | null>(null);
+  const [keyDetecting, setKeyDetecting] = useState(false);
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
   const [saveError, setSaveError] = useState('');
@@ -212,12 +222,46 @@ export function GiftStudioPage() {
   const livePreviewCanvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<import('@ffmpeg/ffmpeg').FFmpeg | null>(null);
   const isSeekingRef = useRef(false);
+  const keyWasChangedRef = useRef(false);
+  const nameWasEditedRef = useRef(false);
+  const metadataHandledUrlRef = useRef<string | null>(null);
   const processedSettingsRef = useRef<string | null>(null);
+  const productionStepRefs = useRef<Array<HTMLElement | null>>([]);
   const [playhead, setPlayhead] = useState(0);
 
   const settings = useMemo<ClipSettings>(() => ({
     preset: keyPreset, keyColor, tolerance, softness, spill, maxDimension,
   }), [keyPreset, keyColor, tolerance, softness, spill, maxDimension]);
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
+  const activeGiftId = (giftId || 'heart') as GiftStudioGiftId;
+  const activeGiftQuery = useGetActiveGiftStudioMedia(activeGiftId, {
+    query: {
+      queryKey: getGetActiveGiftStudioMediaQueryKey(activeGiftId),
+      enabled: giftMode === 'replace' && Boolean(giftId),
+      staleTime: 0,
+    },
+  });
+  const activeGiftName = activeGiftQuery.data?.media?.name
+    || GIFTS.find((gift) => gift.id === giftId)?.label
+    || '';
+
+  useEffect(() => {
+    if (giftMode !== 'replace' || !giftId || nameWasEditedRef.current || !activeGiftName) return;
+    setDraftName(activeGiftName);
+  }, [giftMode, giftId, activeGiftName]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      const top = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      const step = Number((top?.target as HTMLElement | undefined)?.dataset.productionStep);
+      if (Number.isInteger(step) && step > 0) setActiveProductionStep(step);
+    }, { rootMargin: '-18% 0px -62% 0px', threshold: [0, 0.1, 0.35, 0.6] });
+    productionStepRefs.current.forEach((section) => section && observer.observe(section));
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => () => {
     if (originalUrl) URL.revokeObjectURL(originalUrl);
@@ -269,6 +313,7 @@ export function GiftStudioPage() {
     setSavedVersionId(null);
     setSavedVersionPreview(null);
     processedSettingsRef.current = null;
+    setPreviewConfirmed(false);
     setStatus('');
     setError('');
     setSaveError('');
@@ -292,6 +337,10 @@ export function GiftStudioPage() {
       return;
     }
     resetOutput();
+    keyWasChangedRef.current = false;
+    metadataHandledUrlRef.current = null;
+    setKeyDetecting(true);
+    setDetectedKeyColor(null);
     if (originalUrl) URL.revokeObjectURL(originalUrl);
     const nextUrl = URL.createObjectURL(candidate);
     setOriginalUrl(nextUrl);
@@ -303,7 +352,8 @@ export function GiftStudioPage() {
   };
   const onOriginalMetadata = () => {
     const video = originalVideoRef.current;
-    if (!video) return;
+    if (!video || metadataHandledUrlRef.current === originalUrl) return;
+    metadataHandledUrlRef.current = originalUrl;
     if (video.videoWidth > 0 && video.videoHeight > 0) {
       setFrameRatio(video.videoWidth / video.videoHeight);
     }
@@ -312,10 +362,40 @@ export function GiftStudioPage() {
       setError('Clip must be 15 seconds or shorter.');
       setStatus('');
       setFile(null);
+      setOriginalUrl('');
+      setKeyDetecting(false);
       return;
     }
-    setStatus('Ready to process. Android uses Streamtalk’s temporary 480 px processor to avoid phone memory failures.');
-    void video.play().catch(() => setStatus('Tap Play to start both previews.'));
+    setStatus('Detecting the background color…');
+    setKeyDetecting(true);
+    void video.play().catch(() => setStatus('Tap Play to start the clip preview.')).then(() => detectVideoEdgeColor(video)).then((color) => {
+      if (keyWasChangedRef.current) return;
+      if (!color) {
+        setStatus('No solid edge color was detected. Tap the background in the video to choose it.');
+        return;
+      }
+      const family = classifyKeyColor(color);
+      const detectedSettings: ClipSettings = {
+        ...settingsRef.current,
+        preset: family === 'green' || family === 'magenta' ? family : 'custom',
+        keyColor: color,
+        tolerance: .12,
+        softness: .08,
+        spill: .72,
+      };
+      setDetectedKeyColor(color);
+      setKeyColor(color);
+      setKeyPreset(detectedSettings.preset);
+      setTolerance(.12);
+      setSoftness(.08);
+      setSpill(.72);
+      setStatus(`Background detected (${color.toUpperCase()}). Removing it now…`);
+      void process(detectedSettings);
+    }).catch((cause) => {
+      if (!keyWasChangedRef.current) {
+        setStatus(cause instanceof Error ? cause.message : 'Tap the background in the video to choose its color.');
+      }
+    }).finally(() => setKeyDetecting(false));
   };
 
   useEffect(() => {
@@ -377,8 +457,8 @@ export function GiftStudioPage() {
     setStatus('Processing cancelled. Temporary clip data was cleared.');
     setError('');
   };
-  const process = async () => {
-    if (!file) return;
+  const process = async (processSettings: ClipSettings = settingsRef.current) => {
+    if (!file || processing) return;
     cancelledRef.current = false;
     resetOutput();
     setProcessing(true);
@@ -396,14 +476,14 @@ export function GiftStudioPage() {
         setStatus('Using Streamtalk’s Android-safe processor (480 px, 24 fps)…');
         const controller = new AbortController();
         serverAbortRef.current = controller;
-        const result = await processClipOnServer(file, settings, controller.signal, getToken);
+        const result = await processClipOnServer(file, processSettings, controller.signal, getToken);
         resultBlob = result.blob;
         resultSession = result.processingSession;
       } else {
         try {
           const { processClipLocally } = await import('./processClip');
           if (cancelledRef.current) return;
-          const result = await processClipLocally(file, settings, (value) => setProgress(value), (engine) => {
+          const result = await processClipLocally(file, processSettings, (value) => setProgress(value), (engine) => {
             engineRef.current = engine;
           }, (stage) => setStatus(stage));
           resultBlob = result.blob;
@@ -416,7 +496,7 @@ export function GiftStudioPage() {
           const controller = new AbortController();
           serverAbortRef.current = controller;
           try {
-            const result = await processClipOnServer(file, settings, controller.signal, getToken);
+            const result = await processClipOnServer(file, processSettings, controller.signal, getToken);
             resultBlob = result.blob;
             resultSession = result.processingSession;
           } catch (serverCause) {
@@ -433,8 +513,10 @@ export function GiftStudioPage() {
       setProcessedUrl(url);
       setProcessedBlob(resultBlob);
       setProcessingSession(resultSession);
-      processedSettingsRef.current = JSON.stringify(settings);
+      processedSettingsRef.current = JSON.stringify(processSettings);
       setProgress(1);
+      setActiveProductionStep(4);
+      setPreviewConfirmed(false);
       setStatus(usedServerProcessor
         ? 'Finished with low-memory server processing. The transparent WebM passed the alpha check.'
         : 'Finished. The transparent WebM passed the local alpha check.');
@@ -513,9 +595,31 @@ export function GiftStudioPage() {
   };
 
   const choosePreset = (preset: KeyColor) => {
+    keyWasChangedRef.current = true;
+    setKeyDetecting(false);
     setKeyPreset(preset);
     const found = KEY_PRESETS.find((option) => option.id === preset);
-    if (found) setKeyColor(found.value);
+    if (found) {
+      setKeyColor(found.value);
+      setDetectedKeyColor(found.value);
+      const nextSettings = { ...settingsRef.current, preset, keyColor: found.value };
+      if (file && duration > 0 && !processing) void process(nextSettings);
+    }
+  };
+  const pickVideoKeyColor = (event: MouseEvent<HTMLElement>) => {
+    const source = originalVideoRef.current;
+    if (!source) return;
+    const color = sampleVideoColorAtPoint(source, event.clientX, event.clientY, event.currentTarget.getBoundingClientRect());
+    if (!color) return;
+    keyWasChangedRef.current = true;
+    setKeyDetecting(false);
+    setDetectedKeyColor(color);
+    const family = classifyKeyColor(color);
+    const preset = family === 'green' || family === 'magenta' ? family : 'custom';
+    setKeyPreset(preset);
+    setKeyColor(color);
+    setStatus(`Sampled ${color.toUpperCase()} from the clip. The live preview updated.`);
+    if (file && duration > 0 && !processing) void process({ ...settingsRef.current, preset, keyColor: color });
   };
   const sampleColor = async () => {
     const EyeDropperApi = (window as Window & { EyeDropper?: new () => { open: () => Promise<{ sRGBHex: string }> } }).EyeDropper;
@@ -526,9 +630,17 @@ export function GiftStudioPage() {
     }
     try {
       const result = await new EyeDropperApi().open();
-      setKeyPreset('custom');
+      keyWasChangedRef.current = true;
+      setKeyDetecting(false);
+      setDetectedKeyColor(result.sRGBHex.toLowerCase());
+      const family = classifyKeyColor(result.sRGBHex);
+      const preset = family === 'green' || family === 'magenta' ? family : 'custom';
+      setKeyPreset(preset);
       setKeyColor(result.sRGBHex.toLowerCase());
       setStatus(`Custom key color set to ${result.sRGBHex}.`);
+      if (file && duration > 0 && !processing) {
+        void process({ ...settingsRef.current, preset, keyColor: result.sRGBHex.toLowerCase() });
+      }
     } catch {
       setStatus('Color selection cancelled.');
     }
@@ -536,7 +648,8 @@ export function GiftStudioPage() {
 
   const approve = async () => {
     const trimmedName = draftName.trim();
-    if (!file || !processedBlob || !trimmedName || savingVersion || (addToGiftSelection && !giftId)) return;
+    const replacing = giftMode === 'replace';
+    if (!file || !processedBlob || !trimmedName || savingVersion || !previewConfirmed || (replacing && !giftId)) return;
     setSavingVersion(true);
     setSaveError('');
     setError('');
@@ -546,13 +659,13 @@ export function GiftStudioPage() {
         processed: processedBlob,
         processingSession,
         draftName: trimmedName,
-        giftId: addToGiftSelection ? giftId : '',
-        settings,
+        giftId: replacing ? giftId : '',
+        settings: settingsRef.current,
         getToken,
       });
       await Promise.all([
         client.invalidateQueries({ queryKey: getGetGiftStudioLibraryQueryKey() }),
-        ...(addToGiftSelection && giftId
+        ...(replacing && giftId
           ? [
             client.invalidateQueries({ queryKey: getGetActiveGiftStudioMediaQueryKey(giftId) }),
             client.invalidateQueries({ queryKey: getGetSocialMeQueryKey() }),
@@ -560,11 +673,12 @@ export function GiftStudioPage() {
           : []),
       ]);
       setSavedVersionId(saved.id);
-      setStatus(addToGiftSelection && giftId
+      setStatus(replacing && giftId
         ? `${GIFTS.find((gift) => gift.id === giftId)?.label} is now “${trimmedName}” and its new animation is active. The previous version is kept in Saved gifts as a backup.`
-        : `Saved “${trimmedName}” to the Saved gifts list.`);
-      setSavedVersionPreview(addToGiftSelection && giftId ? saved : null);
+        : `Saved “${trimmedName}” as a new Gift Studio draft. It needs a catalog credit price before it can be activated.`);
+      setSavedVersionPreview(saved);
       setSaveError('');
+      setActiveProductionStep(5);
     } catch (cause) {
       setSaveError(ownerErrorText(cause));
     } finally {
@@ -643,6 +757,45 @@ export function GiftStudioPage() {
     }
   };
   const previewVersion = (version: GiftStudioVersion) => setSelectedPreview(version);
+  const nameAndTypeReady = Boolean(draftName.trim()) && (giftMode === 'new' || Boolean(giftId));
+  const stepComplete = [
+    nameAndTypeReady,
+    Boolean(file && duration > 0 && duration <= MAX_SECONDS),
+    Boolean(processedUrl),
+    previewConfirmed,
+    Boolean(savedVersionId),
+  ];
+  const canVisitStep = (step: number) => step <= 1 || stepComplete.slice(0, step - 1).every(Boolean);
+  const goToProductionStep = (step: number) => {
+    if (!canVisitStep(step)) return;
+    setActiveProductionStep(step);
+    productionStepRefs.current[step - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  const changeGiftMode = (mode: GiftSetupMode) => {
+    if (savedVersionId) return;
+    setGiftMode(mode);
+    setPreviewConfirmed(false);
+    if (mode === 'new') {
+      setGiftId('');
+      nameWasEditedRef.current = false;
+      setDraftName('');
+    } else {
+      setGiftId('');
+      nameWasEditedRef.current = false;
+      setDraftName('');
+    }
+  };
+  const changeGiftTarget = (nextGiftId: GiftStudioGiftId) => {
+    if (savedVersionId) return;
+    setGiftId(nextGiftId);
+    nameWasEditedRef.current = false;
+    setDraftName(GIFTS.find((gift) => gift.id === nextGiftId)?.label ?? '');
+    setPreviewConfirmed(false);
+  };
+  const advanceToStep = (step: number) => {
+    setActiveProductionStep(step);
+    window.setTimeout(() => productionStepRefs.current[step - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+  };
 
   if (library.isError && isDenied(library.error)) {
     return <main className="gs"><div className="gs-shell"><section className="gs-error-panel" role="alert" data-testid="state-owner-denied"><ShieldCheck size={23} /><h1 className="gs-panel-title">Gift Studio is for owners</h1><p>Your account does not have permission to manage gift animation versions. Sign in with the owner account, then try again.</p><button className="gs-button" type="button" onClick={() => void library.refetch()} data-testid="button-retry-access"><RefreshCw size={15} /> Check access again</button></section></div></main>;
@@ -651,171 +804,273 @@ export function GiftStudioPage() {
   const libraryItems = library.data?.items ?? [];
   const filteredItems = selectedPreview ? [selectedPreview, ...libraryItems.filter((item) => item.id !== selectedPreview.id)] : libraryItems;
   const previewStageStyle = frameRatio && Number.isFinite(frameRatio)
-    ? { width: `min(100%, ${48 * frameRatio}dvh)`, maxHeight: '48dvh', aspectRatio: String(frameRatio), marginInline: 'auto' }
+    ? { width: `min(100%, ${52 * frameRatio}dvh)`, maxHeight: '52dvh', aspectRatio: String(frameRatio), marginInline: 'auto' }
     : undefined;
   return (
     <main className="gs">
       <div className="gs-shell">
         <div className="gs-topline"><span className="gs-topline-mark" /> STREAMTALK · GIFT STUDIO</div>
-        <header className="gs-heading">
-          <div><h1>Cut the screen.<br /><span>Keep the glow.</span></h1><p>Preview stays on your phone. If its video encoder cannot finish, Streamtalk can process a temporary low-memory copy; nothing is saved until you approve it.</p></div>
-          <div className="gs-private"><LockKeyhole size={13} /> Phone + safe fallback</div>
+        <header className="gs-production-intro">
+          <h1>Gift production</h1>
+          <p>Name it, remove the screen, check the transparent animation, then activate it in Streamtalk.</p>
+          <div className="gs-private"><LockKeyhole size={13} /> Owner-only workspace</div>
         </header>
 
-        <div className="gs-layout">
-          <div className="gs-stack">
-            <section className="gs-panel" aria-labelledby="gs-source-title">
-              <div className="gs-panel-head"><div className="gs-step-number">01</div><div><div className="gs-kicker">Start with a clip</div><h2 className="gs-panel-title" id="gs-source-title">Choose your source</h2></div></div>
-              <div className="gs-step">
-                <div aria-hidden="true" />
-                <div>
-                  <label className="gs-upload" htmlFor="gs-file-input" data-testid="upload-video-dropzone">
-                    {file ? <><div className="gs-file-row"><span className="gs-file-name">{file.name}</span><span className="gs-file-meta">{formatBytes(file.size)}</span></div><small>{duration ? `${duration.toFixed(1)} sec` : 'Checking clip length'} · select to replace</small></> :
-                      <>
-                        <span className="gs-upload-icon"><FileVideo2 size={23} /></span>
-                        <strong>Upload a video</strong>
-                        <small>Videos only: MP4, WebM or MOV. Up to 15 seconds and 100 MB.</small>
-                        <span className="gs-upload-helper">Choose a video from your phone. Images are not accepted.</span>
-                        <span className="gs-upload-cta"><Upload size={17} /> Choose video</span>
-                        <span className="gs-upload-instruction">Play, pause and scrub your video before removing its background.</span>
-                      </>}
-                    <input id="gs-file-input" type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" disabled={processing} onChange={(event) => { loadFile(event.currentTarget.files?.[0]); event.currentTarget.value = ''; }} data-testid="input-source-video" aria-label="Choose a video clip" />
-                  </label>
-                  <p className="gs-caption">The live preview stays on your phone. If Android needs server encoding, a temporary copy is deleted after processing. Nothing is saved until you approve it.</p>
-                </div>
-              </div>
-            </section>
+        <div className="gs-production">
+          <nav className="gs-production-stepper" aria-label="Gift production progress" data-testid="gift-production-stepper">
+            <div className="gs-production-stepper-head">
+              <strong>Step {activeProductionStep} of 5</strong>
+              <span>{PRODUCTION_STEPS[activeProductionStep - 1]}</span>
+            </div>
+            <div className="gs-production-track" aria-hidden="true">
+              <span className="gs-production-track-fill" style={{ width: `${activeProductionStep * 20}%` }} />
+            </div>
+            <div className="gs-production-step-links">
+              {PRODUCTION_STEPS.map((label, index) => {
+                const step = index + 1;
+                return <button
+                  className={`gs-production-step-link${stepComplete[index] ? ' is-complete' : ''}`}
+                  type="button"
+                  key={label}
+                  aria-current={activeProductionStep === step ? 'step' : undefined}
+                  disabled={!canVisitStep(step)}
+                  onClick={() => goToProductionStep(step)}
+                  data-testid={`button-production-step-${step}`}
+                >{step}. {label}</button>;
+              })}
+            </div>
+          </nav>
 
-            <section className="gs-panel" aria-labelledby="gs-preview-title">
-              <div className="gs-panel-head"><div className="gs-step-number">02</div><div><div className="gs-kicker">Dial in the cutout</div><h2 className="gs-panel-title" id="gs-preview-title">Compare your clip</h2></div></div>
-              <div className="gs-toolbar">
-                <label className="gs-name-field">
-                  <span>Name this gift <small>Required to save</small></span>
-                  <input
-                    type="text"
-                    value={draftName}
-                    maxLength={MAX_DRAFT_NAME}
-                    onChange={(event) => setDraftName(event.target.value)}
-                    disabled={processing}
-                    placeholder="For example, Rose Shower"
-                    autoComplete="off"
-                    aria-required="true"
-                    data-testid="input-draft-name"
-                  />
+          <section
+            className="gs-production-step"
+            id="gift-step-name"
+            aria-labelledby="gs-step-name-title"
+            data-production-step="1"
+            data-testid="production-step-name"
+            ref={(node) => { productionStepRefs.current[0] = node; }}
+          >
+            <div className="gs-production-step-head">
+              <span className="gs-production-step-number">01</span>
+              <div><h2 id="gs-step-name-title">Name and gift type</h2><p>Choose a new draft or select the catalog gift to replace.</p></div>
+            </div>
+            <div className="gs-production-step-body">
+              <label className="gs-name-field">
+                <span>Gift name <small>Required</small></span>
+                <input
+                  type="text"
+                  value={draftName}
+                  maxLength={MAX_DRAFT_NAME}
+                  onChange={(event) => { nameWasEditedRef.current = true; setDraftName(event.target.value); }}
+                  disabled={processing || Boolean(savedVersionId)}
+                  placeholder="For example, Midnight Rose"
+                  autoComplete="off"
+                  aria-required="true"
+                  data-testid="input-draft-name"
+                />
+              </label>
+              <div className="gs-gift-mode" role="radiogroup" aria-label="New gift or replacement">
+                <label className="gs-gift-mode-choice">
+                  <input type="radio" name="gift-setup-mode" checked={giftMode === 'new'} onChange={() => changeGiftMode('new')} disabled={Boolean(savedVersionId)} data-testid="radio-new-gift" />
+                  <span><strong>New gift</strong><small>Save as a new draft. A credit price is required before it can join the live catalog.</small></span>
                 </label>
-                <div className="gs-backdrop-tabs" role="group" aria-label="Transparency preview backdrop">
-                  {(['checker', 'light', 'dark'] as const).map((mode) => <button type="button" key={mode} aria-pressed={backdrop === mode} onClick={() => setBackdrop(mode)} data-testid={`button-backdrop-${mode}`}>{mode === 'checker' ? 'Grid' : mode}</button>)}
-                </div>
+                <label className="gs-gift-mode-choice">
+                  <input type="radio" name="gift-setup-mode" checked={giftMode === 'replace'} onChange={() => changeGiftMode('replace')} disabled={Boolean(savedVersionId)} data-testid="radio-replace-gift" />
+                  <span><strong>Replace an existing gift</strong><small>Activate its new animation and name; keep the previous version as a backup.</small></span>
+                </label>
               </div>
-              <div className="gs-preview-grid">
-                <div className="gs-preview">
-                  <div className="gs-preview-label">Before <span>Original clip</span></div>
-                  <div className={`gs-preview-stage ${backdrop}`} style={previewStageStyle} data-testid="preview-original">
-                    {originalUrl ? <video ref={originalVideoRef} src={originalUrl} muted playsInline loop autoPlay preload="metadata" onLoadedMetadata={onOriginalMetadata} onTimeUpdate={syncTime} /> : <div className="gs-empty-preview">Your source preview will appear here.</div>}
-                  </div>
-                </div>
-                <div className="gs-preview">
-                  <div className="gs-preview-label">After <span>{processedUrl ? <span className="gs-ready-label"><Check size={12} /> Ready</span> : file ? 'Live cutout preview' : 'Background removed'}</span></div>
-                  <div className={`gs-preview-stage ${backdrop}`} style={previewStageStyle} data-testid="preview-processed">
-                    {processedUrl ? <video ref={processedVideoRef} src={processedUrl} muted playsInline loop autoPlay preload="metadata" onLoadedMetadata={onProcessedMetadata} onTimeUpdate={syncTime} /> :
-                      originalUrl ? <><canvas ref={livePreviewCanvasRef} aria-label="Live background-removed preview" data-testid="canvas-live-cutout" />{livePreviewError && <div className="gs-preview-note" role="status">{livePreviewError}</div>}</> :
-                        <div className="gs-empty-preview">Choose a source clip to see the cutout preview.</div>}
-                  </div>
-                  <div className="gs-after-actions">
-                    {!processedUrl && (processing ?
-                      <button className="gs-button quiet" type="button" onClick={cancelProcessing} data-testid="button-cancel-processing"><X size={15} /> Cancel processing</button> :
-                      <button className="gs-button primary gs-remove-background" type="button" onClick={() => void process()} disabled={!file || duration > MAX_SECONDS || duration <= 0} data-testid="button-process"><Scissors size={17} /> Remove background</button>)}
-                    {processing && <div className="gs-progress" role="status" aria-live="polite" data-testid="state-processing"><div className="gs-progress-track"><div className={`gs-progress-fill${serverProcessing ? ' is-indeterminate' : ''}`} style={serverProcessing ? undefined : { width: `${Math.round(progress * 100)}%` }} /></div><div className="gs-progress-copy"><span>{status}</span><span>{serverProcessing ? 'Working' : `${Math.round(progress * 100)}%`}</span></div></div>}
-                    {processedUrl && <div className="gs-save-destination" data-testid="panel-save-destination">
-                      <strong>What would you like to do with this clip?</strong>
-                      <label><input type="radio" name="gift-destination" checked={!addToGiftSelection} onChange={() => setAddToGiftSelection(false)} data-testid="radio-standalone-draft" /> Save it as a named Gift Studio draft</label>
-                      <label><input type="radio" name="gift-destination" checked={addToGiftSelection} onChange={() => setAddToGiftSelection(true)} data-testid="radio-add-to-gifts" /> Add it to the gift selection</label>
-                      {addToGiftSelection && <label className="gs-name-field gs-target-field">
-                        <span>Choose the existing gift</span>
-                        <select value={giftId} onChange={(event) => setGiftId(event.target.value as GiftStudioGiftId | '')} data-testid="select-gift-target">
-                          <option value="">Choose a gift…</option>
-                          {GIFTS.map((gift) => <option key={gift.id} value={gift.id}>{gift.label}</option>)}
-                        </select>
-                      </label>}
-                      <button className="gs-button primary" type="button" onClick={approve} disabled={!file || !processedBlob || !draftName.trim() || (addToGiftSelection && !giftId) || savingVersion || Boolean(savedVersionId)} data-testid="button-save-as-gift" aria-describedby="gs-save-target-note">
-                        {savingVersion ? 'Saving…' : savedVersionId ? 'Saved to Gift Studio' : addToGiftSelection ? 'Save to selected gift' : 'Save as gift'} <Check size={15} />
-                      </button>
-                      {saveError && <div className="gs-error" role="alert" data-testid="state-upload-error">{saveError}</div>}
-                      {savedVersionPreview?.giftId && <div className="gs-save-confirmation" data-testid="panel-active-gift-confirmation">
-                        <strong>{GIFTS.find((gift) => gift.id === savedVersionPreview.giftId)?.label} now shows “{versionName(savedVersionPreview)}”</strong>
-                        <div className="gs-library-preview checker">
-                          <video
-                            src={giftStudioMediaUrl(savedVersionPreview.webmUrl)}
-                            muted
-                            playsInline
-                            loop
-                            autoPlay
-                            preload="metadata"
-                            aria-label={`Preview of the new ${versionName(savedVersionPreview)} gift animation`}
-                            data-testid="video-confirmed-active-gift"
-                          />
-                        </div>
-                        <p className="gs-caption">The new animation is active. The previous version remains in Saved gifts as a backup.</p>
-                      </div>}
-                      <p className="gs-caption gs-save-note" id="gs-save-target-note">Saving to an existing gift activates the new animation and name immediately. The previous version stays in Saved gifts as a backup. Gift prices and credits do not change.</p>
-                    </div>}
-                    {processedUrl && <div className="gs-after-downloads">
-                      <button className="gs-button" type="button" onClick={() => processedBlob && downloadBlob(processedBlob, `${safeGiftFilePrefix()}-transparent.webm`)} disabled={!processedBlob} data-testid="button-download-webm"><Download size={14} /> Download WebM</button>
-                      <button className="gs-button" type="button" onClick={() => framesZipBlob ? downloadBlob(framesZipBlob, `${safeGiftFilePrefix()}-png-frames.zip`) : void downloadFramesZip()} disabled={downloadingFrames} data-testid="button-download-png-zip"><Archive size={14} /> {downloadingFrames ? `Building ZIP ${Math.round(frameZipProgress * 100)}%` : framesZipBlob ? 'Download PNG frames ZIP' : 'Prepare PNG frames ZIP'}</button>
-                    </div>}
-                    {error && <div className="gs-error" role="alert" data-testid="state-error">{error}</div>}
-                    {status && !processing && <p className="gs-caption" role="status" aria-live="polite" data-testid="state-status">{status}</p>}
-                    {downloadingFrames && <p className="gs-caption" role="status" aria-live="polite">Preparing transparent PNG frames for download…</p>}
-                  </div>
-                </div>
+              {giftMode === 'replace' && <label className="gs-name-field gs-gift-mode-control">
+                <span>Gift to replace</span>
+                <select value={giftId} onChange={(event) => changeGiftTarget(event.target.value as GiftStudioGiftId)} disabled={Boolean(savedVersionId)} data-testid="select-gift-target">
+                  <option value="">Choose a catalog gift…</option>
+                  {GIFTS.map((gift) => <option key={gift.id} value={gift.id}>{gift.label}</option>)}
+                </select>
+                {giftId && <small>{activeGiftQuery.isFetching ? 'Loading current gift name…' : `Current name: ${activeGiftName}`}</small>}
+              </label>}
+              {error && <div className="gs-error" role="alert" data-testid="state-error">{error}</div>}
+              <div className="gs-activation-actions">
+                <button className="gs-button primary" type="button" disabled={!nameAndTypeReady} onClick={() => advanceToStep(2)} data-testid="button-continue-name">Continue to upload <ChevronRight size={16} /></button>
               </div>
+            </div>
+          </section>
+
+          <section
+            className="gs-production-step"
+            id="gift-step-upload"
+            aria-labelledby="gs-step-upload-title"
+            data-production-step="2"
+            data-testid="production-step-upload"
+            ref={(node) => { productionStepRefs.current[1] = node; }}
+          >
+            <div className="gs-production-step-head">
+              <span className="gs-production-step-number">02</span>
+              <div><h2 id="gs-step-upload-title">Upload video</h2><p>MP4, WebM or MOV · up to 15 seconds and 100 MB.</p></div>
+            </div>
+            <div className="gs-production-step-body">
+              <label className="gs-upload gs-production-upload" htmlFor="gs-file-input" data-testid="upload-video-dropzone">
+                {file ? <><div className="gs-file-row"><span className="gs-file-name">{file.name}</span><span className="gs-file-meta">{formatBytes(file.size)}</span></div><small>{duration ? `${duration.toFixed(1)} seconds` : 'Checking clip length'} · tap to replace</small></> :
+                  <><span className="gs-upload-icon"><FileVideo2 size={23} /></span><strong>Choose a gift video</strong><small>MP4, WebM or MOV. Maximum 15 seconds and 100 MB.</small><span className="gs-upload-cta"><Upload size={17} /> Browse phone</span></>}
+                <input id="gs-file-input" type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" disabled={processing || Boolean(savedVersionId)} onChange={(event) => { loadFile(event.currentTarget.files?.[0]); event.currentTarget.value = ''; }} data-testid="input-source-video" aria-label="Choose a video clip" />
+              </label>
+              {originalUrl && <div className="gs-upload-summary"><strong>Source clip ready</strong> · {file?.name} · {duration ? `${duration.toFixed(1)} sec` : 'Reading duration'} · {formatBytes(file?.size ?? 0)}</div>}
+              {originalUrl && <div className="gs-preview">
+                <div className="gs-preview-label">Original clip <span>Source video</span></div>
+                <div className={`gs-preview-stage ${backdrop}`} style={previewStageStyle} onClick={pickVideoKeyColor} data-testid="preview-original" title="Tap the background to sample its color">
+                  <video ref={originalVideoRef} src={originalUrl} muted playsInline loop autoPlay preload="metadata" onLoadedMetadata={onOriginalMetadata} onError={() => { setKeyDetecting(false); setError('This clip could not be decoded in the browser. Try an MP4 or WebM export and reload it.'); }} onTimeUpdate={syncTime} />
+                </div>
+              </div>}
+              {error && <div className="gs-error" role="alert" data-testid="state-upload-error">{error}</div>}
+              <div className="gs-activation-actions">
+                <button className="gs-button" type="button" onClick={() => goToProductionStep(1)} data-testid="button-back-upload">Back to name</button>
+                <button className="gs-button primary" type="button" disabled={!file || !duration || duration > MAX_SECONDS} onClick={() => advanceToStep(3)} data-testid="button-continue-upload">Continue to removal <ChevronRight size={16} /></button>
+              </div>
+            </div>
+          </section>
+
+          <section
+            className="gs-production-step"
+            id="gift-step-remove"
+            aria-labelledby="gs-step-remove-title"
+            data-production-step="3"
+            data-testid="production-step-remove"
+            ref={(node) => { productionStepRefs.current[2] = node; }}
+          >
+            <div className="gs-production-step-head">
+              <span className="gs-production-step-number">03</span>
+              <div><h2 id="gs-step-remove-title">Remove background</h2><p>Streamtalk detects the screen color and starts processing automatically.</p></div>
+            </div>
+            <div className="gs-production-step-body">
+              <div className="gs-auto-key-status" role="status" data-testid="text-detected-key-color">
+                {keyDetecting ? <>Detecting background color… <span className="gs-progress-mini" /></> : detectedKeyColor
+                  ? <><strong>Background detected</strong> <span className="gs-detected-swatch" style={{ backgroundColor: detectedKeyColor }} /> <code>{detectedKeyColor.toUpperCase()}</code>. Auto-removal starts as soon as detection finishes.</>
+                  : file ? 'Tap the background in the source clip above if automatic detection needs help.' : 'Upload a clip to detect and remove its background.'}
+              </div>
+              {keyPreset === 'black' && <p className="gs-warning" role="note" data-testid="warning-black-key"><AlertTriangle size={13} style={{ verticalAlign: '-2px', marginRight: 5 }} />Black keying also removes black car bodies, tires, and shadows.</p>}
+              <details className="gs-adjust" data-testid="details-adjust">
+                <summary>Adjust color and edge cleanup</summary>
+                <p className="gs-caption">Tap the screen behind the subject in the source preview above to choose its exact color. Changes update the live preview; run removal again to export the adjusted result.</p>
+                <fieldset className="gs-settings" disabled={processing}>
+                  <div>
+                    <div className="gs-kicker" style={{ marginBottom: 8 }}>Key color</div>
+                    <div className="gs-choice-row" role="group" aria-label="Key color preset">
+                      {KEY_PRESETS.map((preset) => <button className="gs-choice" type="button" key={preset.id} aria-pressed={keyPreset === preset.id} onClick={() => choosePreset(preset.id)} data-testid={`button-key-${preset.id}`}><span className="gs-swatch" style={{ backgroundColor: preset.value }} />{preset.label}</button>)}
+                      <button className="gs-choice" type="button" aria-pressed={keyPreset === 'custom'} onClick={() => void sampleColor()} data-testid="button-eyedropper"><Pipette size={14} /> Eyedropper</button>
+                      <label className="gs-sr-only" htmlFor="gs-key-color">Custom key color</label>
+                      <input className="gs-color-input" id="gs-key-color" type="color" value={keyColor} onChange={(event) => { keyWasChangedRef.current = true; setKeyDetecting(false); setDetectedKeyColor(event.target.value); const family = classifyKeyColor(event.target.value); const preset = family === 'green' || family === 'magenta' ? family : 'custom'; setKeyPreset(preset); setKeyColor(event.target.value); }} aria-label="Choose custom key color" data-testid="input-key-color" />
+                    </div>
+                  </div>
+                  <div className="gs-field-row"><div><label htmlFor="gs-tolerance">Tolerance <output>{tolerance.toFixed(2)}</output></label><input className="gs-range" id="gs-tolerance" type="range" min=".02" max=".65" step=".01" value={tolerance} onChange={(event) => setTolerance(Number(event.target.value))} data-testid="input-tolerance" /></div></div>
+                  <div className="gs-field-row"><div><label htmlFor="gs-softness">Edge softness <output>{softness.toFixed(2)}</output></label><input className="gs-range" id="gs-softness" type="range" min="0" max=".5" step=".01" value={softness} onChange={(event) => setSoftness(Number(event.target.value))} data-testid="input-softness" /></div></div>
+                  <div className="gs-field-row"><div><label htmlFor="gs-spill">Spill reduction <output>{spill.toFixed(2)}</output></label><input className="gs-range" id="gs-spill" type="range" min="0" max="1" step=".01" value={spill} onChange={(event) => setSpill(Number(event.target.value))} disabled={keyPreset === 'black'} data-testid="input-spill" /></div></div>
+                  <label className="gs-kicker" htmlFor="gs-max-size">Maximum output dimension</label>
+                  <select className="gs-chip-button" id="gs-max-size" value={maxDimension ?? 'original'} onChange={(event) => setMaxDimension(event.target.value === 'original' ? null : Number(event.target.value) as 480 | 720 | 1080)} data-testid="select-max-dimension"><option value="original">Keep original size</option><option value="480">480 px · smallest</option><option value="720">720 px · balanced</option><option value="1080">1080 px · sharpest</option></select>
+                </fieldset>
+              </details>
+              {processing && <div className="gs-progress" role="status" aria-live="polite" data-testid="state-processing"><div className="gs-progress-track"><div className={`gs-progress-fill${serverProcessing ? ' is-indeterminate' : ''}`} style={serverProcessing ? undefined : { width: `${Math.round(progress * 100)}%` }} /></div><div className="gs-progress-copy"><span>{status}</span><span>{serverProcessing ? 'Working' : `${Math.round(progress * 100)}%`}</span></div><button className="gs-button quiet" type="button" onClick={cancelProcessing} data-testid="button-cancel-processing"><X size={15} /> Cancel</button></div>}
+              {!processing && file && !processedUrl && <button className="gs-button primary gs-auto-process" type="button" onClick={() => void process(settingsRef.current)} disabled={keyDetecting || duration <= 0 || duration > MAX_SECONDS} data-testid="button-process">{error ? 'Try background removal again' : detectedKeyColor ? 'Remove background again' : 'Process with current key'} <ChevronRight size={16} /></button>}
+              {error && <div className="gs-error" role="alert" data-testid="state-error">{error}</div>}
+              {status && !processing && <p className="gs-caption" role="status" aria-live="polite" data-testid="state-status">{status}</p>}
+              <div className="gs-activation-actions">
+                <button className="gs-button" type="button" onClick={() => goToProductionStep(2)} data-testid="button-back-remove">Back to upload</button>
+                <button className="gs-button primary" type="button" disabled={!processedUrl} onClick={() => advanceToStep(4)} data-testid="button-continue-remove">Review result <ChevronRight size={16} /></button>
+              </div>
+            </div>
+          </section>
+
+          <section
+            className="gs-production-step"
+            id="gift-step-review"
+            aria-labelledby="gs-step-review-title"
+            data-production-step="4"
+            data-testid="production-step-review"
+            ref={(node) => { productionStepRefs.current[3] = node; }}
+          >
+            <div className="gs-production-step-head">
+              <span className="gs-production-step-number">04</span>
+              <div><h2 id="gs-step-review-title">Review the transparent result</h2><p>Fit the whole frame. Check transparency before activation.</p></div>
+            </div>
+            <div className="gs-production-step-body">
+              <div className="gs-result-toggle" role="group" aria-label="Result preview mode">
+                <button type="button" aria-pressed={reviewMode === 'checker'} onClick={() => setReviewMode('checker')} data-testid="button-review-checker">Checkerboard</button>
+                <button type="button" aria-pressed={reviewMode === 'sample'} onClick={() => setReviewMode('sample')} data-testid="button-review-sample">Sample stream</button>
+              </div>
+              <div className={`gs-result-preview${reviewMode === 'sample' ? ' is-sample' : ''}`} style={previewStageStyle} data-testid="preview-final-result">
+                {reviewMode === 'sample' && <><div className="gs-stream-mock-top"><span className="gs-live-dot" /> LIVE · STREAMTALK</div><div className="gs-stream-mock-chat">Chat stays visible under the gift.</div><div className="gs-stream-mock-name">{draftName || 'Gift preview'}</div></>}
+                {processedUrl
+                  ? <video key={processedUrl} ref={processedVideoRef} src={processedUrl} muted playsInline loop autoPlay preload="metadata" onLoadedMetadata={onProcessedMetadata} onTimeUpdate={syncTime} aria-label="Processed transparent gift animation" data-testid="video-final-result" />
+                  : originalUrl
+                    ? <canvas ref={livePreviewCanvasRef} onClick={pickVideoKeyColor} aria-label="Live transparent cutout preview while processing" data-testid="canvas-live-cutout" />
+                    : <div className="gs-empty-preview">Upload a clip to preview the final animation here.</div>}
+                {livePreviewError && !processedUrl && <div className="gs-preview-note" role="status">{livePreviewError}</div>}
+              </div>
+              {processedUrl ? <div className="gs-auto-key-status gs-transparency-passed" role="status" data-testid="status-alpha-check"><Check size={17} /><strong>Transparency check passed</strong><span>The exported animation is playing with its verified alpha channel.</span></div> :
+                error ? <div className="gs-error" role="alert">{error} Open Adjust to refine the key and try again.</div> :
+                  <div className="gs-upload-summary">The live cutout appears here while the finished transparent export is processing.</div>}
               <div className="gs-controls">
                 <button className="gs-icon-button" type="button" onClick={() => void synchronizePlay()} disabled={!file} aria-label={originalVideoRef.current?.paused ? 'Play both previews' : 'Pause both previews'} data-testid="button-play-pause">{originalVideoRef.current?.paused ? <Play size={16} /> : <Pause size={16} />}</button>
                 <input className="gs-range" type="range" min="0" max={duration || 1} step=".05" value={Math.min(playhead, duration || 0)} onChange={(event) => seek(Number(event.target.value))} disabled={!file} aria-label="Scrub both previews" data-testid="input-preview-scrubber" />
                 <span className="gs-file-meta" data-testid="text-preview-time">{timeLabel(playhead)} / {timeLabel(duration)}</span>
               </div>
-            </section>
-
-            <section className="gs-panel" aria-labelledby="gs-key-title">
-              <div className="gs-panel-head"><div className="gs-step-number">03</div><div><div className="gs-kicker">Refine the edge</div><h2 className="gs-panel-title" id="gs-key-title">Key & output</h2></div></div>
-              <fieldset className="gs-settings" disabled={processing}>
-                <div>
-                  <div className="gs-kicker" style={{ marginBottom: 8 }}>Key color</div>
-                  <div className="gs-choice-row" role="group" aria-label="Key color preset">
-                    {KEY_PRESETS.map((preset) => <button className="gs-choice" type="button" key={preset.id} aria-pressed={keyPreset === preset.id} onClick={() => choosePreset(preset.id)} data-testid={`button-key-${preset.id}`}><span className="gs-swatch" style={{ backgroundColor: preset.value }} />{preset.label}</button>)}
-                    <button className="gs-choice" type="button" aria-pressed={keyPreset === 'custom'} onClick={() => void sampleColor()} data-testid="button-eyedropper"><Pipette size={14} /> Eyedropper</button>
-                    <label className="gs-sr-only" htmlFor="gs-key-color">Custom key color</label>
-                    <input className="gs-color-input" id="gs-key-color" type="color" value={keyColor} onChange={(event) => { setKeyPreset('custom'); setKeyColor(event.target.value); }} aria-label="Choose custom key color" data-testid="input-key-color" />
-                  </div>
-                  {keyPreset === 'black' && <p className="gs-warning" role="note" data-testid="warning-black-key"><AlertTriangle size={13} style={{ verticalAlign: '-2px', marginRight: 5 }} />Black keying also removes black car bodies, tires, and shadows.</p>}
-                </div>
-                <div className="gs-field-row"><div><label htmlFor="gs-tolerance">Tolerance <output>{tolerance.toFixed(2)}</output></label><input className="gs-range" id="gs-tolerance" type="range" min=".02" max=".65" step=".01" value={tolerance} onChange={(event) => setTolerance(Number(event.target.value))} data-testid="input-tolerance" /></div><span className="gs-kicker">Key</span></div>
-                <div className="gs-field-row"><div><label htmlFor="gs-softness">Softness / edge feather <output>{softness.toFixed(2)}</output></label><input className="gs-range" id="gs-softness" type="range" min="0" max=".5" step=".01" value={softness} onChange={(event) => setSoftness(Number(event.target.value))} data-testid="input-softness" /></div><span className="gs-kicker">Edge</span></div>
-                <div className="gs-field-row"><div><label htmlFor="gs-spill">Spill reduction <output>{spill.toFixed(2)}</output></label><input className="gs-range" id="gs-spill" type="range" min="0" max="1" step=".01" value={spill} onChange={(event) => setSpill(Number(event.target.value))} disabled={keyPreset === 'black'} data-testid="input-spill" />{keyPreset === 'black' && <p className="gs-caption">Spill reduction is not used with a black key.</p>}</div><span className="gs-kicker">Color</span></div>
-                <div><label className="gs-kicker" htmlFor="gs-max-size">Maximum output dimension</label><select className="gs-chip-button" id="gs-max-size" value={maxDimension ?? 'original'} onChange={(event) => setMaxDimension(event.target.value === 'original' ? null : Number(event.target.value) as 480 | 720 | 1080)} data-testid="select-max-dimension"><option value="original">Keep original size</option><option value="480">480 px · smallest</option><option value="720">720 px · balanced</option><option value="1080">1080 px · sharpest</option></select><p className="gs-caption">Downscaling lowers memory use and can finish faster, especially on phones.</p></div>
-              </fieldset>
-                <div className="gs-mobile-note"><FileVideo2 size={16} /><div><strong>Lower memory mode</strong>Android phones with limited memory use server encoding at 480 px and 24 fps. Larger devices try on-device encoding first, then fall back if it fails.</div></div>
-            </section>
-          </div>
-
-          <aside className="gs-stack">
-            <section className="gs-panel" aria-labelledby="gs-library-title">
-              <div className="gs-panel-head"><div><div className="gs-kicker">Owner gift storage</div><h2 className="gs-panel-title" id="gs-library-title">Saved gifts</h2></div><span className="gs-status">{libraryItems.length} saved</span></div>
-              {library.isLoading ? <div className="gs-library-list" aria-label="Loading gift versions" data-testid="state-library-loading">{[1, 2, 3].map((i) => <div className="gs-library-card" key={i}><div className="gs-version-mark" /><div className="gs-version-info"><strong>Loading saved version</strong><small>Fetching your library…</small></div></div>)}</div> :
-                library.isError ? <div className="gs-error-panel" role="alert" data-testid="state-library-error"><p>{errorText(library.error)}</p><button className="gs-button" type="button" onClick={() => void library.refetch()} data-testid="button-retry-library"><RefreshCw size={14} /> Try again</button></div> :
-                  libraryItems.length === 0 ? <div className="gs-empty-library" data-testid="state-library-empty">Saved gifts will appear here with a looping preview. Save a finished transparent clip to add the first one.</div> :
-                     <div className="gs-library-list" data-testid="list-gift-versions">{filteredItems.map((version) => <LibraryVersion key={version.id} version={version} onPreview={previewVersion} onToggle={toggleVersion} onAssign={attachVersion} onRename={renameVersion} onDelete={removeVersion} pending={setActive.isPending || assignVersion.isPending || libraryActionId === version.id} />)}</div>}
-              <p className="gs-caption">Attach a saved draft to an existing catalog gift and activate it when ready. Active versions are available to Streamtalk’s gift player; drafts do not replace current gift animations.</p>
-            </section>
-            <section className="gs-panel">
-              <div className="gs-panel-head"><div><div className="gs-kicker">How it works</div><h2 className="gs-panel-title">Owner-controlled, always</h2></div></div>
-              <div className="gs-stack" style={{ gap: 12 }}>
-                <div className="gs-mobile-note"><span className="gs-step-number">A</span><div><strong>Preview stays private</strong>The live key preview stays on-device. On lower-memory Android phones, final encoding uses a temporary server copy that is deleted after processing.</div></div>
-                <div className="gs-mobile-note"><span className="gs-step-number">B</span><div><strong>Save the exact export</strong>Both the original and the same transparent WebM are saved as a named draft.</div></div>
-                <div className="gs-mobile-note"><span className="gs-step-number">C</span><div><strong>Use in gifts when ready</strong>Attach a saved clip to an existing gift and activate it. Other versions remain saved for switching back.</div></div>
+              {processedUrl && <div className="gs-after-downloads">
+                <button className="gs-button quiet" type="button" onClick={() => processedBlob && downloadBlob(processedBlob, `${safeGiftFilePrefix()}-transparent.webm`)} disabled={!processedBlob} data-testid="button-download-webm"><Download size={14} /> Download WebM</button>
+                <button className="gs-button quiet" type="button" onClick={() => framesZipBlob ? downloadBlob(framesZipBlob, `${safeGiftFilePrefix()}-png-frames.zip`) : void downloadFramesZip()} disabled={downloadingFrames} data-testid="button-download-png-zip"><Archive size={14} /> {downloadingFrames ? `Preparing ZIP ${Math.round(frameZipProgress * 100)}%` : framesZipBlob ? 'Download PNG frames ZIP' : 'Prepare PNG frames ZIP'}</button>
+              </div>}
+              <div className="gs-activation-actions">
+                <button className="gs-button" type="button" onClick={() => goToProductionStep(3)} data-testid="button-back-preview">Back to removal</button>
+                <button className="gs-button primary" type="button" disabled={!processedUrl} onClick={() => { setPreviewConfirmed(true); advanceToStep(5); }} data-testid="button-approve-preview">Looks good — continue to activate <ChevronRight size={16} /></button>
               </div>
-            </section>
-          </aside>
+            </div>
+          </section>
+
+          <section
+            className="gs-production-step"
+            id="gift-step-activate"
+            aria-labelledby="gs-step-activate-title"
+            data-production-step="5"
+            data-testid="production-step-activate"
+            ref={(node) => { productionStepRefs.current[4] = node; }}
+          >
+            <div className="gs-production-step-head">
+              <span className="gs-production-step-number">05</span>
+              <div><h2 id="gs-step-activate-title">Activate in Streamtalk</h2><p>Save the finished clip to the real gift library.</p></div>
+            </div>
+            <div className="gs-production-step-body">
+              <div className="gs-activation-summary">
+                {giftMode === 'replace'
+                  ? <><strong>Replacing {GIFTS.find((gift) => gift.id === giftId)?.label ?? 'a catalog gift'}</strong><br />Current name: {activeGiftName || 'Loading current name…'}<br />New name: {draftName || 'Enter a gift name above.'} · Existing price and credit rules stay unchanged.</>
+                  : <><strong>New gift: {draftName || 'Enter a gift name above.'}</strong><br />It will be saved as a named draft. A credit price is needed before a new item can be added to the live gift picker.</>}
+              </div>
+              {!previewConfirmed && <p className="gs-caption">Review the processed result in step 4 before activating.</p>}
+              <div className="gs-activation-actions">
+                <button className="gs-button" type="button" onClick={() => goToProductionStep(4)} data-testid="button-back-activate">Back to result</button>
+                <button className="gs-button primary" type="button" onClick={() => void approve()} disabled={!file || !processedBlob || !draftName.trim() || (giftMode === 'replace' && !giftId) || !previewConfirmed || savingVersion || Boolean(savedVersionId)} data-testid="button-save-as-gift">
+                  {savingVersion ? 'Saving…' : savedVersionId ? 'Saved' : giftMode === 'replace' ? 'Activate replacement' : 'Save new gift draft'} <Check size={15} />
+                </button>
+              </div>
+              {saveError && <div className="gs-error" role="alert" data-testid="state-upload-error">{saveError}</div>}
+              {savedVersionPreview && <div className="gs-save-confirmation" data-testid={savedVersionPreview.giftId ? 'panel-active-gift-confirmation' : 'panel-new-gift-draft-confirmation'}>
+                <strong>{savedVersionPreview.giftId ? `${GIFTS.find((gift) => gift.id === savedVersionPreview.giftId)?.label} is now “${versionName(savedVersionPreview)}” in the gift picker.` : `“${versionName(savedVersionPreview)}” is saved as a draft.`}</strong>
+                <div className="gs-library-preview checker">
+                  <video src={giftStudioMediaUrl(savedVersionPreview.webmUrl)} muted playsInline loop autoPlay preload="metadata" aria-label={`Preview of ${versionName(savedVersionPreview)}`} data-testid="video-confirmed-active-gift" />
+                </div>
+                <p className="gs-caption">{savedVersionPreview.giftId ? 'The previous animation is saved as a backup. The active gift price and credit rules are unchanged.' : 'This new draft is stored in Saved gifts, but is not in the live picker until a credit price is set.'}</p>
+              </div>}
+              {error && <div className="gs-error" role="alert" data-testid="state-error">{error}</div>}
+              {status && !processing && <p className="gs-caption" role="status" aria-live="polite" data-testid="state-status">{status}</p>}
+              {downloadingFrames && <p className="gs-caption" role="status" aria-live="polite">Preparing transparent PNG frames…</p>}
+            </div>
+          </section>
+
+          <section className="gs-production-step gs-saved-gifts" aria-labelledby="gs-library-title" data-testid="section-saved-gifts">
+            <div className="gs-production-step-head">
+              <span className="gs-production-step-number"><Archive size={15} /></span>
+              <div><h2 id="gs-library-title">Saved gifts</h2><p>Active versions and restorable backups.</p></div>
+              <span className="gs-status">{libraryItems.length} saved</span>
+            </div>
+            {library.isLoading ? <div className="gs-library-list" aria-label="Loading gift versions" data-testid="state-library-loading">{[1, 2, 3].map((i) => <div className="gs-library-card" key={i}><div className="gs-version-mark" /><div className="gs-version-info"><strong>Loading saved version</strong><small>Fetching your library…</small></div></div>)}</div> :
+              library.isError ? <div className="gs-error-panel" role="alert" data-testid="state-library-error"><p>{errorText(library.error)}</p><button className="gs-button" type="button" onClick={() => void library.refetch()} data-testid="button-retry-library"><RefreshCw size={14} /> Try again</button></div> :
+                libraryItems.length === 0 ? <div className="gs-empty-library" data-testid="state-library-empty">Saved gifts and replacement backups will appear here.</div> :
+                  <div className="gs-library-list" data-testid="list-gift-versions">{filteredItems.map((version) => <LibraryVersion key={version.id} version={version} onPreview={previewVersion} onToggle={toggleVersion} onAssign={attachVersion} onRename={renameVersion} onDelete={removeVersion} pending={setActive.isPending || assignVersion.isPending || libraryActionId === version.id} />)}</div>}
+          </section>
         </div>
         <div className="gs-sr-only" aria-live="polite" data-testid="state-announcer">{status}</div>
       </div>
