@@ -7,6 +7,7 @@
  */
 import type { GiftStudioProcessingSettingsMaxDimension } from './giftStudioProcessingSettingsMaxDimension';
 import type { GiftStudioProcessingSettingsPreset } from './giftStudioProcessingSettingsPreset';
+import type { GiftStudioProductType } from './giftStudioProductType';
 
 export interface GiftStudioProcessingSettings {
   preset: GiftStudioProcessingSettingsPreset;
@@ -34,4 +35,5 @@ export interface GiftStudioProcessingSettings {
      * @maxLength 60
      */
   draftName?: string;
+  productType?: GiftStudioProductType;
 }

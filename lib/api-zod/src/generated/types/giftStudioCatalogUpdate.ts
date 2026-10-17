@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { GiftStudioCatalogUpdateStatus } from './giftStudioCatalogUpdateStatus';
+import type { GiftStudioProductType } from './giftStudioProductType';
 
 export interface GiftStudioCatalogUpdate {
   /**
@@ -15,5 +16,6 @@ export interface GiftStudioCatalogUpdate {
   name?: string;
   /** @minimum 1 */
   cost?: number;
+  productType?: GiftStudioProductType;
   status?: GiftStudioCatalogUpdateStatus;
 }

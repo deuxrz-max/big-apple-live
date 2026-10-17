@@ -4,7 +4,6 @@ import {
   giftStudioAssets,
   socialGiftCatalogSettings,
 } from "@workspace/db";
-import type { GiftStudioGiftId } from "@workspace/api-zod";
 import type { SocialGiftCatalogSettings } from "@workspace/db";
 import { RoomError } from "./room-store";
 import { GIFTS } from "./social/catalog";
@@ -12,15 +11,16 @@ import { isRoomGift } from "./social/room-gift-policy";
 
 const DEFAULT_GIFTS = new Map(GIFTS.map((gift) => [gift.id, gift] as const));
 type GiftCatalogStatus = "active" | "inactive" | "deleted";
+export type GiftStudioProductType = "gift" | "entrance-effect";
 
 export function giftNameFromSettings(settings: unknown, giftId: string): string {
   if (!settings || typeof settings !== "object" || Array.isArray(settings)) {
-    return DEFAULT_GIFTS.get(giftId as GiftStudioGiftId)?.name ?? giftId;
+    return DEFAULT_GIFTS.get(giftId as (typeof GIFTS)[number]["id"])?.name ?? giftId;
   }
   const name = (settings as Record<string, unknown>).draftName;
   return typeof name === "string" && name.trim()
     ? name.trim().slice(0, 60)
-    : DEFAULT_GIFTS.get(giftId as GiftStudioGiftId)?.name ?? giftId;
+    : DEFAULT_GIFTS.get(giftId as (typeof GIFTS)[number]["id"])?.name ?? giftId;
 }
 
 async function activeGiftData() {
@@ -47,31 +47,57 @@ function catalogRecord(
     id: gift.id,
     name: activeName ?? (config?.displayName?.trim() || gift.name),
     cost: config?.cost ?? gift.cost,
+    productType: (config?.productType ?? "gift") as GiftStudioProductType,
     status: (config?.status ?? "active") as GiftCatalogStatus,
-    roomGift: isRoomGift(gift.id),
+    roomGift: (config?.productType ?? "gift") === "gift" && isRoomGift(gift.id),
     animationAvailable: true,
   };
 }
 
 export async function listGiftCatalogForOwner() {
   const data = await activeGiftData();
-  return GIFTS.map((gift) => catalogRecord(
+  const builtIns = GIFTS.map((gift) => catalogRecord(
     gift,
     data.settings.get(gift.id),
     data.activeNames.get(gift.id),
   ));
+  const builtInIds = new Set<string>(GIFTS.map((gift) => gift.id));
+  const custom = [...data.settings.values()]
+    .filter((config) => !builtInIds.has(config.giftId))
+    .map((config) => ({
+      id: config.giftId,
+      name: data.activeNames.get(config.giftId) ?? config.displayName?.trim() ?? config.giftId,
+      cost: config.cost ?? 1,
+      productType: (config.productType ?? "gift") as GiftStudioProductType,
+      status: config.status as GiftCatalogStatus,
+      roomGift: (config.productType ?? "gift") === "gift",
+      animationAvailable: data.activeNames.has(config.giftId),
+    }));
+  return [...builtIns, ...custom];
 }
 
 export async function getGiftCatalogItem(giftId: string) {
-  const gift = DEFAULT_GIFTS.get(giftId as GiftStudioGiftId);
-  if (!gift || gift.id !== giftId) return null;
+  const gift = DEFAULT_GIFTS.get(giftId as (typeof GIFTS)[number]["id"]);
   const data = await activeGiftData();
-  return catalogRecord(gift, data.settings.get(giftId), data.activeNames.get(giftId));
+  if (gift && gift.id === giftId) {
+    return catalogRecord(gift, data.settings.get(giftId), data.activeNames.get(giftId));
+  }
+  const config = data.settings.get(giftId);
+  if (!config) return null;
+  return {
+    id: config.giftId,
+    name: data.activeNames.get(giftId) ?? config.displayName?.trim() ?? giftId,
+    cost: config.cost ?? 1,
+    productType: (config.productType ?? "gift") as GiftStudioProductType,
+    status: config.status as GiftCatalogStatus,
+    roomGift: (config.productType ?? "gift") === "gift",
+    animationAvailable: data.activeNames.has(giftId),
+  };
 }
 
 export async function giftCatalogWithActiveNames() {
   return (await listGiftCatalogForOwner())
-    .filter((gift) => gift.status === "active")
+    .filter((gift) => gift.status === "active" && gift.productType === "gift" && gift.animationAvailable)
     .map(({ id, name, cost }) => ({ id, name, cost }));
 }
 
@@ -85,8 +111,8 @@ export async function activeGiftNames(giftIds: string[]): Promise<Map<string, st
   return new Map(catalog.filter((gift) => selected.has(gift.id)).map((gift) => [gift.id, gift.name]));
 }
 
-export async function activeGiftDisplayName(giftId: GiftStudioGiftId) {
-  return (await getGiftCatalogItem(giftId))?.name ?? DEFAULT_GIFTS.get(giftId)?.name ?? giftId;
+export async function activeGiftDisplayName(giftId: string) {
+  return (await getGiftCatalogItem(giftId))?.name ?? DEFAULT_GIFTS.get(giftId as (typeof GIFTS)[number]["id"])?.name ?? giftId;
 }
 
 export async function updateGiftCatalogItem(input: {
@@ -94,14 +120,15 @@ export async function updateGiftCatalogItem(input: {
   name?: string;
   cost?: number;
   status?: GiftCatalogStatus;
+  productType?: GiftStudioProductType;
 }) {
-  const gift = DEFAULT_GIFTS.get(input.giftId as GiftStudioGiftId);
-  if (!gift || gift.id !== input.giftId) throw new RoomError(404, "Gift catalog item not found.");
+  const gift = await getGiftCatalogItem(input.giftId);
+  if (!gift) throw new RoomError(404, "Gift catalog item not found.");
   if (input.name !== undefined && (!input.name.trim() || input.name.trim().length > 60)) {
-    throw new RoomError(400, "Gift names must be 1 to 60 characters.");
+    throw new RoomError(400, "Names must be 1 to 60 characters.");
   }
   if (input.cost !== undefined && (!Number.isSafeInteger(input.cost) || input.cost < 1)) {
-    throw new RoomError(400, "Gift prices must be whole positive credit amounts.");
+    throw new RoomError(400, "Prices must be whole positive credit amounts.");
   }
 
   await db.transaction(async (tx) => {
@@ -109,12 +136,14 @@ export async function updateGiftCatalogItem(input: {
       giftId: gift.id,
       ...(input.name !== undefined ? { displayName: input.name.trim() } : {}),
       ...(input.cost !== undefined ? { cost: input.cost } : {}),
+      ...(input.productType !== undefined ? { productType: input.productType } : {}),
       ...(input.status !== undefined ? { status: input.status } : {}),
       updatedAt: new Date(),
     };
     const set = {
       ...(input.name !== undefined ? { displayName: input.name.trim() } : {}),
       ...(input.cost !== undefined ? { cost: input.cost } : {}),
+      ...(input.productType !== undefined ? { productType: input.productType } : {}),
       ...(input.status !== undefined ? { status: input.status } : {}),
       updatedAt: new Date(),
     };
@@ -136,6 +165,6 @@ export async function updateGiftCatalogItem(input: {
 
 export async function getSendableGiftCatalogItem(giftId: string) {
   const item = await getGiftCatalogItem(giftId);
-  if (!item || item.status !== "active") return null;
+  if (!item || item.status !== "active" || item.productType !== "gift" || !item.animationAvailable) return null;
   return item;
 }

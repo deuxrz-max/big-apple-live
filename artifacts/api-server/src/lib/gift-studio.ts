@@ -1,6 +1,6 @@
 import { Storage } from "@google-cloud/storage";
 import { and, desc, eq, isNull, max } from "drizzle-orm";
-import { db, giftStudioAssets, socialGiftCatalogSettings, type GiftStudioAsset } from "@workspace/db";
+import { db, giftStudioAssets, socialGiftCatalogSettings, socialSettings, type GiftStudioAsset } from "@workspace/db";
 import type { GiftStudioGiftId, GiftStudioProcessingSettings, GiftStudioVersion } from "@workspace/api-zod";
 import { randomUUID } from "node:crypto";
 import { execFile } from "node:child_process";
@@ -10,13 +10,10 @@ import path from "node:path";
 import { promisify } from "node:util";
 import sharp from "sharp";
 import { RoomError } from "./room-store";
-import { giftNameFromSettings, listGiftCatalogForOwner, updateGiftCatalogItem } from "./gift-studio-catalog";
+import { getGiftCatalogItem, giftNameFromSettings, listGiftCatalogForOwner, updateGiftCatalogItem, type GiftStudioProductType } from "./gift-studio-catalog";
 
 const execFileAsync = promisify(execFile);
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
-const GIFT_IDS = new Set<GiftStudioGiftId>([
-  "good-vibes", "big-love", "standing-ovation", "heart", "spirit-pup", "moonfox", "cosmic-encore", "fireworks", "rose-shower", "whip",
-]);
 const storage = new Storage({
   credentials: {
     audience: "replit", subject_token_type: "access_token", type: "external_account",
@@ -376,7 +373,8 @@ export async function processGiftStudioClipOnServer(input: {
 
 export async function createGiftStudioVersion(input: {
   ownerId: string;
-  giftId: GiftStudioGiftId | null;
+  giftId: string | null;
+  productType?: GiftStudioProductType;
   catalogCost?: number;
   settings: GiftStudioProcessingSettings;
   originalPath: string;
@@ -385,11 +383,18 @@ export async function createGiftStudioVersion(input: {
   processedWebmPath: string;
   processedWebmBytes: number;
 }) {
-  if (input.giftId !== null && !GIFT_IDS.has(input.giftId)) throw new RoomError(400, "Choose an existing gift.");
   if (input.processedWebmBytes <= 0 || input.processedWebmBytes > MAX_VIDEO_BYTES) {
     throw new RoomError(413, "The processed animation must be 100 MB or smaller.");
   }
   const source = await validateSource(input.originalPath, input.originalBytes, input.originalName);
+  const catalogItem = input.giftId ? await getGiftCatalogItem(input.giftId) : null;
+  if (input.giftId && (!catalogItem || catalogItem.status === "deleted")) {
+    throw new RoomError(404, "Choose an available catalog item.");
+  }
+  const productType = input.productType ?? catalogItem?.productType ?? input.settings.productType ?? "gift";
+  if (catalogItem && input.productType && catalogItem.productType !== input.productType) {
+    throw new RoomError(400, "The selected item must match the chosen production type.");
+  }
   if (await sniffVideo(input.processedWebmPath) !== "webm") {
     throw new RoomError(415, "The processed animation must be a transparent WebM video.");
   }
@@ -440,12 +445,14 @@ export async function createGiftStudioVersion(input: {
           await tx.insert(socialGiftCatalogSettings).values({
             giftId: input.giftId,
             displayName: input.settings.draftName?.trim() || null,
+            productType,
             ...(input.catalogCost !== undefined ? { cost: input.catalogCost } : {}),
             status: "active",
           }).onConflictDoUpdate({
             target: socialGiftCatalogSettings.giftId,
             set: {
               displayName: input.settings.draftName?.trim() || null,
+              productType,
               ...(input.catalogCost !== undefined ? { cost: input.catalogCost } : {}),
               status: "active",
               updatedAt: new Date(),
@@ -456,7 +463,7 @@ export async function createGiftStudioVersion(input: {
           id, ownerId: input.ownerId, giftId: input.giftId, version, status,
           originalName: safeName, originalExtension: source.type, durationMs: source.durationMs,
           originalBytes: input.originalBytes, webmBytes: input.processedWebmBytes,
-          safariBytes: fallbackBytes, settings: { ...input.settings },
+          safariBytes: fallbackBytes, settings: { ...input.settings, productType },
           activatedAt: input.giftId ? new Date() : null,
         }).returning();
         return inserted;
@@ -508,11 +515,26 @@ export async function deleteGiftStudioVersion(ownerId: string, versionId: string
     eq(giftStudioAssets.ownerId, ownerId),
   )).returning({ id: giftStudioAssets.id });
   if (!deleted) throw new RoomError(404, "Saved gift not found.");
+  if (asset.giftId?.startsWith("studio-") && asset.status === "active") {
+    const [stillActive] = await db.select({ id: giftStudioAssets.id })
+      .from(giftStudioAssets)
+      .where(and(eq(giftStudioAssets.giftId, asset.giftId), eq(giftStudioAssets.status, "active")))
+      .limit(1);
+    if (!stillActive) {
+      await db.update(socialGiftCatalogSettings)
+        .set({ status: "inactive", updatedAt: new Date() })
+        .where(eq(socialGiftCatalogSettings.giftId, asset.giftId));
+      await db.update(socialSettings)
+        .set({ equippedEntranceEffectId: null })
+        .where(eq(socialSettings.equippedEntranceEffectId, asset.giftId));
+    }
+  }
   return { deleted: true as const };
 }
 
 export async function assignGiftStudioVersionToGift(ownerId: string, versionId: string, giftId: GiftStudioGiftId) {
-  if (!GIFT_IDS.has(giftId)) throw new RoomError(400, "Choose an existing gift.");
+  const catalogItem = await getGiftCatalogItem(giftId);
+  if (!catalogItem || catalogItem.status === "deleted") throw new RoomError(400, "Choose an existing catalog item.");
   const [asset] = await db.select().from(giftStudioAssets).where(eq(giftStudioAssets.id, versionId));
   if (!asset || asset.ownerId !== ownerId) throw new RoomError(404, "Gift animation version not found.");
   if (asset.giftId !== null || asset.status !== "draft") {
@@ -528,28 +550,80 @@ export async function assignGiftStudioVersionToGift(ownerId: string, versionId: 
   return toVersion(updated);
 }
 
-export async function setGiftStudioVersionActive(ownerId: string, versionId: string, active: boolean) {
+export async function setGiftStudioVersionActive(
+  ownerId: string,
+  versionId: string,
+  active: boolean,
+  options?: { productType?: GiftStudioProductType; cost?: number },
+) {
   const [asset] = await db.select().from(giftStudioAssets).where(eq(giftStudioAssets.id, versionId));
   if (!asset || asset.ownerId !== ownerId) throw new RoomError(404, "Gift animation version not found.");
-  if (!asset.giftId) throw new RoomError(400, "Add this draft to a gift before activating it.");
-  const giftId = asset.giftId;
+  if (active && !asset.giftId && (!options?.productType || !options.cost || !Number.isSafeInteger(options.cost) || options.cost < 1)) {
+    throw new RoomError(400, "Choose Gift or Entrance effect and a whole positive credit price before activating this new item.");
+  }
+  const giftId = asset.giftId ?? (active ? `studio-${asset.id}` : null);
+  const productType = options?.productType ?? (asset.settings as Record<string, unknown>).productType as GiftStudioProductType ?? "gift";
   const row = await db.transaction(async (tx) => {
-    if (active) {
+    if (active && !asset.giftId && giftId) {
+      await tx.insert(socialGiftCatalogSettings).values({
+        giftId,
+        displayName: giftNameFromSettings(asset.settings, giftId),
+        cost: options!.cost!,
+        productType,
+        status: "active",
+      }).onConflictDoNothing();
+    }
+    if (active && giftId) {
       await tx.update(giftStudioAssets).set({ status: "draft", activatedAt: null }).where(and(
         eq(giftStudioAssets.giftId, giftId), eq(giftStudioAssets.status, "active"),
       ));
     }
     const [updated] = await tx.update(giftStudioAssets)
-      .set({ status: active ? "active" : "draft", activatedAt: active ? new Date() : null })
+      .set({
+        giftId,
+        settings: { ...asset.settings, ...(options?.productType ? { productType: options.productType } : {}) },
+        status: active ? "active" : "draft",
+        activatedAt: active ? new Date() : null,
+      })
       .where(and(eq(giftStudioAssets.id, versionId), eq(giftStudioAssets.ownerId, ownerId)))
       .returning();
+    if (active && asset.giftId) {
+      await tx.insert(socialGiftCatalogSettings).values({
+        giftId: asset.giftId,
+        productType,
+        status: "active",
+        ...(options?.cost !== undefined ? { cost: options.cost } : {}),
+      }).onConflictDoUpdate({
+        target: socialGiftCatalogSettings.giftId,
+        set: {
+          productType,
+          status: "active",
+          ...(options?.cost !== undefined ? { cost: options.cost } : {}),
+          updatedAt: new Date(),
+        },
+      });
+    }
+    if (!active && asset.status === "active" && asset.giftId?.startsWith("studio-")) {
+      const [stillActive] = await tx.select({ id: giftStudioAssets.id })
+        .from(giftStudioAssets)
+        .where(and(eq(giftStudioAssets.giftId, asset.giftId), eq(giftStudioAssets.status, "active")))
+        .limit(1);
+      if (!stillActive) {
+        await tx.update(socialGiftCatalogSettings)
+          .set({ status: "inactive", updatedAt: new Date() })
+          .where(eq(socialGiftCatalogSettings.giftId, asset.giftId));
+        await tx.update(socialSettings)
+          .set({ equippedEntranceEffectId: null })
+          .where(eq(socialSettings.equippedEntranceEffectId, asset.giftId));
+      }
+    }
     return updated;
   });
   if (!row) throw new RoomError(404, "Gift animation version not found.");
   return toVersion(row);
 }
 
-export async function getActiveGiftStudioMedia(giftId: GiftStudioGiftId) {
+export async function getActiveGiftStudioMedia(giftId: string) {
   const [row] = await db.select().from(giftStudioAssets)
     .where(and(eq(giftStudioAssets.giftId, giftId), eq(giftStudioAssets.status, "active"))).limit(1);
   if (!row) return { media: null };

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { RoomEntranceEffectEvent } from "./useTextRoom";
+import { GiftAnimationPlayer } from "@/gifts/GiftAnimationPlayer";
+import type { GiftStudioGiftId } from "@workspace/api-client-react";
 
 type EffectAsset = { webmSrc: string; webpSrc: string };
 const BASE = import.meta.env.BASE_URL;
@@ -9,6 +11,10 @@ const tierUrl = (tier: string, filename: string) =>
 const tierNumber = (effectId: string) => /^monthly-tier-([1-5])$/.exec(effectId)?.[1] ?? null;
 const HOLD_LAST_FRAME_MS = 2_000;
 const FADE_OUT_MS = 500;
+const STATIC_GIFT_IDS = new Set([
+  "good-vibes", "big-love", "standing-ovation", "heart", "spirit-pup",
+  "moonfox", "cosmic-encore", "fireworks", "rose-shower", "whip",
+]);
 
 function shouldUseAnimatedWebp() {
   const ua = navigator.userAgent;
@@ -33,12 +39,14 @@ export function RoomEntranceEffectOverlay({
   const fadeTimerRef = useRef<number | null>(null);
   const beginHoldRef = useRef<() => void>(() => {});
   const [asset, setAsset] = useState<EffectAsset | null>(null);
+  const [staticGiftPlayer, setStaticGiftPlayer] = useState(false);
   const [useWebp, setUseWebp] = useState(false);
   const [unavailable, setUnavailable] = useState(false);
   const [fading, setFading] = useState(false);
 
   useEffect(() => {
     setAsset(null);
+    setStaticGiftPlayer(false);
     setUnavailable(false);
     setFading(false);
     beginHoldRef.current = () => {};
@@ -67,6 +75,9 @@ export function RoomEntranceEffectOverlay({
     if (event.effectId === "lion-entrance") {
       webmSrc = lionUrl("animation.webm");
       webpSrc = lionUrl("animation.webp");
+    } else if (event.studioVersionId) {
+      webmSrc = `${BASE}api/social/gift-studio/media/${event.studioVersionId}/webm`;
+      webpSrc = `${BASE}api/social/gift-studio/media/${event.studioVersionId}/safari`;
     } else {
       const tier = tierNumber(event.effectId);
       if (tier && ["2", "3", "4"].includes(tier)) {
@@ -78,6 +89,10 @@ export function RoomEntranceEffectOverlay({
     // Tier 1 and 5 do not have uploaded entrance animations yet. Never substitute
     // their badge art here; badge art is reserved for username/profile display.
     if (!webmSrc || !webpSrc) {
+      if (STATIC_GIFT_IDS.has(event.effectId)) {
+        setStaticGiftPlayer(true);
+        return;
+      }
       onFinish(event.eventId);
       return;
     }
@@ -98,7 +113,22 @@ export function RoomEntranceEffectOverlay({
     };
   }, [event?.eventId, event?.effectId, event?.startedAt, event?.durationMs, onFinish]);
 
-  if (!event || !asset || unavailable) return null;
+  if (!event || unavailable) return null;
+  if (staticGiftPlayer) {
+    return (
+      <>
+        <div className={`ur-room-entry-effect${fading ? " is-fading" : ""}`} aria-hidden="true">
+          <span className="ur-entry-effect-caption">{event.displayName} · {event.effectName ?? "Entrance effect"}</span>
+        </div>
+        <GiftAnimationPlayer
+          giftId={event.effectId as GiftStudioGiftId}
+          senderName={event.displayName}
+          onFinish={() => onFinish(event.eventId)}
+        />
+      </>
+    );
+  }
+  if (!asset) return null;
   const elapsed = Math.max(0, Date.now() - event.startedAt);
   const fallbackToAnimationImage = () => setUseWebp(true);
   const startWebpHoldTimer = () => {
@@ -116,6 +146,9 @@ export function RoomEntranceEffectOverlay({
       data-testid="room-entrance-effect"
       data-effect-id={event.effectId}
     >
+      <span className="ur-entry-effect-caption">
+        {event.displayName} · {event.effectName ?? "Entrance effect"}
+      </span>
       {useWebp ? (
         <img
           className="ur-entry-effect-webp"

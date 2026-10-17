@@ -97,6 +97,7 @@ router.post("/account/rooms/:roomId/join", async (req, res) => {
     const effectId = selected ? await claimRoomEntranceEffect(id, selected.effectId, entryId) : null;
     if (effectId && selected) roomStore.publishRoomEntranceEffect(
       params.data.roomId, id, effectId, selected.durationMs,
+      { studioVersionId: selected.studioVersionId, effectName: selected.effectName },
     );
   } catch {
     req.log.warn("Room entrance effect could not be started");

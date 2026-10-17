@@ -5,7 +5,11 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { GiftStudioProductType } from './giftStudioProductType';
 
 export interface GiftStudioActivationInput {
   active: boolean;
+  productType?: GiftStudioProductType;
+  /** @minimum 1 */
+  cost?: number;
 }

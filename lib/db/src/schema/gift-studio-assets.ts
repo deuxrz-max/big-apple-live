@@ -26,7 +26,7 @@ export const giftStudioAssets = pgTable("gift_studio_assets", {
   uniqueIndex("gift_studio_gift_version_unique").on(table.giftId, table.version),
   uniqueIndex("gift_studio_one_active_per_gift").on(table.giftId).where(sql`status = 'active'`),
   index("gift_studio_library_order").on(table.giftId, table.createdAt),
-  check("gift_studio_gift_id_check", sql`${table.giftId} in ('good-vibes','big-love','standing-ovation','heart','spirit-pup','moonfox','cosmic-encore','fireworks','rose-shower','whip')`),
+  check("gift_studio_gift_id_check", sql`${table.giftId} in ('good-vibes','big-love','standing-ovation','heart','spirit-pup','moonfox','cosmic-encore','fireworks','rose-shower','whip') or ${table.giftId} ~ '^studio-[0-9a-f-]{36}$'`),
   check("gift_studio_status_check", sql`${table.status} in ('draft','active')`),
   check("gift_studio_version_positive", sql`${table.version} > 0`),
   check("gift_studio_duration_limit", sql`${table.durationMs} > 0 and ${table.durationMs} <= 15000`),

@@ -15,6 +15,7 @@ export const socialSettings = pgTable('social_settings', {
   ownerTestBadgeTier: integer('owner_test_badge_tier').notNull().default(5),
   ownerTierEntranceEffects: jsonb('owner_tier_entrance_effects').$type<Record<string, boolean>>().notNull().default(sql`'{}'::jsonb`),
   ownerLionEntranceEnabled: boolean('owner_lion_entrance_enabled').notNull().default(true),
+  equippedEntranceEffectId: text('equipped_entrance_effect_id'),
   updatedAt: timestamp('updated_at', {withTimezone:true}).notNull().defaultNow(),
 });
 export const insertSocialSettingsSchema = createInsertSchema(socialSettings);

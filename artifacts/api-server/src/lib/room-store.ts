@@ -21,12 +21,13 @@ type Listener = (event: RoomEvent) => void;
 export type RoomEntranceEffectEvent = {
   eventId: string;
   roomId: string;
-  effectId: "lion-entrance" | "monthly-tier-1" | "monthly-tier-2" | "monthly-tier-3" | "monthly-tier-4" | "monthly-tier-5";
+  effectId: string;
   participantId: string;
   displayName: string;
   effectName?: string;
   badgeImage?: string;
   assetFolder?: string;
+  studioVersionId?: string;
   startedAt: number;
   durationMs: number;
 };
@@ -219,7 +220,13 @@ export class RoomStore {
     return [...room.sessions.values()].some(session => session.accountId === accountId);
   }
 
-  publishRoomEntranceEffect(roomId: string, accountId: string, effectId: RoomEntranceEffectEvent["effectId"], durationMs: number): RoomEntranceEffectEvent {
+  publishRoomEntranceEffect(
+    roomId: string,
+    accountId: string,
+    effectId: RoomEntranceEffectEvent["effectId"],
+    durationMs: number,
+    custom?: { studioVersionId?: string; effectName?: string },
+  ): RoomEntranceEffectEvent {
     const room = this.requireRoom(roomId);
     const participant = [...room.sessions.values()].find(session => session.accountId === accountId)?.participant;
     if (!participant) throw new RoomError(409, "The effect owner is no longer in the room");
@@ -231,6 +238,8 @@ export class RoomStore {
       participantId: participant.participantId,
       displayName: participant.displayName,
       ...(tier ? { effectName: tier.name, badgeImage: tier.badgeImage, assetFolder: tier.entranceEffectFolder } : {}),
+      ...(custom?.studioVersionId ? { studioVersionId: custom.studioVersionId } : {}),
+      ...(custom?.effectName ? { effectName: custom.effectName } : {}),
       startedAt: this.now(),
       durationMs,
     };

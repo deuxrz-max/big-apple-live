@@ -149,6 +149,7 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 .ur-audio-connecting .ur-status-dot{background:#edbe53}
 .ur-audio-error .ur-status-dot{background:#ff6b88}
 .ur-room-entry-effect{position:fixed;inset:0;z-index:80;display:grid;place-items:center;overflow:hidden;pointer-events:none;background:transparent!important;border:0!important;box-shadow:none!important;filter:none!important}
+.ur-entry-effect-caption{position:absolute;top:max(12px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 12px;border-radius:999px;background:rgba(8,10,18,.58);color:#fff;font-size:13px;font-weight:700;text-shadow:0 1px 3px #000}
 .ur-room-entry-effect img,.ur-room-entry-effect video{display:block;width:min(72vw,360px);height:auto;max-width:100vw;max-height:72vh;max-height:72dvh;object-fit:contain;object-position:center;user-select:none;background:transparent!important;border:0!important;box-shadow:none!important}
 .ur-entry-effect-webp,.ur-entry-effect-video{opacity:1;transition:opacity 500ms ease-out;filter:none}
 .ur-room-entry-effect.is-fading .ur-entry-effect-webp,.ur-room-entry-effect.is-fading .ur-entry-effect-video{opacity:0}

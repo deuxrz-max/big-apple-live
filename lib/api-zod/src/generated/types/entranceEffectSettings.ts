@@ -7,6 +7,7 @@
  */
 import type { EntranceEffectSettingsBadgeId } from './entranceEffectSettingsBadgeId';
 import type { OwnerEntranceEffectSettings } from './ownerEntranceEffectSettings';
+import type { SocialGiftCatalogId } from './socialGiftCatalogId';
 
 export interface EntranceEffectSettings {
   eligible: boolean;
@@ -15,5 +16,6 @@ export interface EntranceEffectSettings {
   badgeId: EntranceEffectSettingsBadgeId;
   /** @nullable */
   badgeName: string | null;
+  equippedEffectId: SocialGiftCatalogId | null;
   ownerTest: OwnerEntranceEffectSettings | null;
 }

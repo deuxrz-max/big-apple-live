@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { GiftStudioGiftId } from './giftStudioGiftId';
+import type { GiftStudioProductType } from './giftStudioProductType';
 
 export interface GiftStudioProcessedSaveInput {
   processingSession: string;
@@ -15,6 +16,7 @@ export interface GiftStudioProcessedSaveInput {
      */
   draftName: string;
   giftId?: GiftStudioGiftId | null;
+  productType?: GiftStudioProductType;
   /**
      * Optional updated credit price for an existing catalog gift
      * @minimum 1

@@ -5,7 +5,7 @@ import { MONTHLY_CREDIT_BADGE_TIERS } from "./social/monthly-credit-badge-config
 
 export const ROOM_ENTRANCE_EFFECT_DURATION_MS = 6_083;
 export const ROOM_ENTRANCE_EFFECT_ID = "lion-entrance" as const;
-export type RoomEntranceEffectId = typeof ROOM_ENTRANCE_EFFECT_ID | typeof MONTHLY_CREDIT_BADGE_TIERS[number]["entranceEffectId"];
+export type RoomEntranceEffectId = string;
 
 const recentEntryClaims = new Map<string, number>();
 const ENTRY_CLAIM_TTL_MS = 5 * 60_000;

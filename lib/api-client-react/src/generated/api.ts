@@ -35,8 +35,13 @@ import type {
   ChatReportRecord,
   ChatReportReviewInput,
   EmojiOption,
+  EntranceEffectEquipInput,
+  EntranceEffectEquipResponse,
+  EntranceEffectPurchaseInput,
+  EntranceEffectPurchaseResponse,
   EntranceEffectSettings,
   EntranceEffectSettingsInput,
+  EntranceEffectShop,
   EquipMyBadgeInput,
   EquippedBadgeState,
   ErrorResponse,
@@ -3746,6 +3751,242 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getUpdateMyEntranceEffectSettingsMutationOptions(options));
     }
 
+export const getGetEntranceEffectShopUrl = () => {
+
+
+
+
+  return `/api/social/entrance-effects/shop`
+}
+
+export const getEntranceEffectShop = async ( options?: Parameters<typeof customFetch>[1]): Promise<EntranceEffectShop> => {
+
+  return customFetch<EntranceEffectShop>(getGetEntranceEffectShopUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetEntranceEffectShopQueryKey = () => {
+    return [
+    `/api/social/entrance-effects/shop`
+    ] as const;
+    }
+
+
+export const getGetEntranceEffectShopQueryOptions = <TData = Awaited<ReturnType<typeof getEntranceEffectShop>>, TError = ErrorType<ErrorResponse4b96100>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEntranceEffectShop>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEntranceEffectShopQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEntranceEffectShop>>> = ({ signal }) => getEntranceEffectShop({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEntranceEffectShop>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetEntranceEffectShopQueryResult = NonNullable<Awaited<ReturnType<typeof getEntranceEffectShop>>>
+export type GetEntranceEffectShopQueryError = ErrorType<ErrorResponse4b96100>
+
+
+
+export function useGetEntranceEffectShop<TData = Awaited<ReturnType<typeof getEntranceEffectShop>>, TError = ErrorType<ErrorResponse4b96100>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEntranceEffectShop>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetEntranceEffectShopQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPurchaseEntranceEffectUrl = (effectId: SocialGiftCatalogId,) => {
+
+
+
+
+  return `/api/social/entrance-effects/${effectId}/purchase`
+}
+
+export const purchaseEntranceEffect = async (effectId: SocialGiftCatalogId,
+    entranceEffectPurchaseInput: EntranceEffectPurchaseInput, options?: Parameters<typeof customFetch>[1]): Promise<EntranceEffectPurchaseResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<EntranceEffectPurchaseResponse>(getPurchaseEntranceEffectUrl(effectId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(entranceEffectPurchaseInput)
+  }
+);}
+
+
+
+
+
+export const getPurchaseEntranceEffectMutationKey = () => ['purchaseEntranceEffect'] as const;
+
+export const getPurchaseEntranceEffectMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purchaseEntranceEffect>>, TError,PurchaseEntranceEffectMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof purchaseEntranceEffect>>, TError,PurchaseEntranceEffectMutationVariables, TContext> => {
+
+const mutationKey = getPurchaseEntranceEffectMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof purchaseEntranceEffect>>, PurchaseEntranceEffectMutationVariables> = (props) => {
+          const {effectId,data} = props ?? {};
+
+          return  purchaseEntranceEffect(effectId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PurchaseEntranceEffectMutationResult = NonNullable<Awaited<ReturnType<typeof purchaseEntranceEffect>>>
+    export type PurchaseEntranceEffectMutationBody = BodyType<EntranceEffectPurchaseInput>
+    export type PurchaseEntranceEffectMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type PurchaseEntranceEffectMutationVariables = {effectId: SocialGiftCatalogId;data: BodyType<EntranceEffectPurchaseInput>}
+
+    export const usePurchaseEntranceEffect = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purchaseEntranceEffect>>, TError,PurchaseEntranceEffectMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof purchaseEntranceEffect>>,
+        TError,
+        PurchaseEntranceEffectMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPurchaseEntranceEffectMutationOptions(options));
+    }
+
+export const getEquipEntranceEffectUrl = () => {
+
+
+
+
+  return `/api/social/entrance-effects/equipped`
+}
+
+export const equipEntranceEffect = async (entranceEffectEquipInput: EntranceEffectEquipInput, options?: Parameters<typeof customFetch>[1]): Promise<EntranceEffectEquipResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<EntranceEffectEquipResponse>(getEquipEntranceEffectUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(entranceEffectEquipInput)
+  }
+);}
+
+
+
+
+
+export const getEquipEntranceEffectMutationKey = () => ['equipEntranceEffect'] as const;
+
+export const getEquipEntranceEffectMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof equipEntranceEffect>>, TError,EquipEntranceEffectMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof equipEntranceEffect>>, TError,EquipEntranceEffectMutationVariables, TContext> => {
+
+const mutationKey = getEquipEntranceEffectMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof equipEntranceEffect>>, EquipEntranceEffectMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  equipEntranceEffect(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EquipEntranceEffectMutationResult = NonNullable<Awaited<ReturnType<typeof equipEntranceEffect>>>
+    export type EquipEntranceEffectMutationBody = BodyType<EntranceEffectEquipInput>
+    export type EquipEntranceEffectMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type EquipEntranceEffectMutationVariables = {data: BodyType<EntranceEffectEquipInput>}
+
+    export const useEquipEntranceEffect = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof equipEntranceEffect>>, TError,EquipEntranceEffectMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof equipEntranceEffect>>,
+        TError,
+        EquipEntranceEffectMutationVariables,
+        TContext
+      > => {
+      return useMutation(getEquipEntranceEffectMutationOptions(options));
+    }
+
 export const getEquipMyBadgeUrl = () => {
 
 
@@ -4743,6 +4984,9 @@ export const createGiftStudioVersion = async (giftStudioUploadInput: GiftStudioU
     const formData = new FormData();
 if(giftStudioUploadInput.giftId !== undefined && giftStudioUploadInput.giftId !== null) {
  formData.append(`giftId`, giftStudioUploadInput.giftId);
+ }
+if(giftStudioUploadInput.productType !== undefined) {
+ formData.append(`productType`, giftStudioUploadInput.productType);
  }
 if(giftStudioUploadInput.cost !== undefined) {
  formData.append(`cost`, giftStudioUploadInput.cost.toString())

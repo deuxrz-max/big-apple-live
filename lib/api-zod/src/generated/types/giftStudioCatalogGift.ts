@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { GiftStudioCatalogGiftStatus } from './giftStudioCatalogGiftStatus';
+import type { GiftStudioProductType } from './giftStudioProductType';
 import type { SocialGiftCatalogId } from './socialGiftCatalogId';
 
 export interface GiftStudioCatalogGift {
@@ -13,6 +14,7 @@ export interface GiftStudioCatalogGift {
   name: string;
   /** @minimum 1 */
   cost: number;
+  productType: GiftStudioProductType;
   status: GiftStudioCatalogGiftStatus;
   roomGift: boolean;
   animationAvailable: boolean;

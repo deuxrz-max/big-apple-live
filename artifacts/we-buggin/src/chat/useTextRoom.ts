@@ -21,12 +21,13 @@ const ordered = (messages: ChatMessage[]) => [...new Map(messages.map(m => [m.id
 export type RoomEntranceEffectEvent = {
   eventId: string;
   roomId: string;
-  effectId: "lion-entrance" | "monthly-tier-1" | "monthly-tier-2" | "monthly-tier-3" | "monthly-tier-4" | "monthly-tier-5";
+  effectId: string;
   participantId: string;
   displayName: string;
   effectName?: string;
   badgeImage?: string;
   assetFolder?: string;
+  studioVersionId?: string;
   startedAt: number;
   durationMs: number;
 };

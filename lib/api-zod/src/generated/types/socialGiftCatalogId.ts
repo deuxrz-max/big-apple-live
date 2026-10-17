@@ -6,18 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type SocialGiftCatalogId = typeof SocialGiftCatalogId[keyof typeof SocialGiftCatalogId];
-
-
-export const SocialGiftCatalogId = {
-  'good-vibes': 'good-vibes',
-  'big-love': 'big-love',
-  'standing-ovation': 'standing-ovation',
-  heart: 'heart',
-  'spirit-pup': 'spirit-pup',
-  moonfox: 'moonfox',
-  'cosmic-encore': 'cosmic-encore',
-  fireworks: 'fireworks',
-  'rose-shower': 'rose-shower',
-  whip: 'whip',
-} as const;
+/**
+ * @pattern ^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$
+ */
+export type SocialGiftCatalogId = string;

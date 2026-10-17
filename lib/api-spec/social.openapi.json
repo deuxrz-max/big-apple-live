@@ -111,6 +111,48 @@
         }
       }
     },
+    "/social/entrance-effects/shop": {
+      "get": {
+        "operationId": "getEntranceEffectShop",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "responses": {
+          "200": {"description": "Entrance effects for sale and those owned by the signed-in user", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EntranceEffectShop"}}}},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"}
+        }
+      }
+    },
+    "/social/entrance-effects/{effectId}/purchase": {
+      "post": {
+        "operationId": "purchaseEntranceEffect",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "parameters": [{"name": "effectId", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/SocialGiftCatalogId"}}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EntranceEffectPurchaseInput"}}}},
+        "responses": {
+          "200": {"description": "Owned entrance effect and updated wallet", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EntranceEffectPurchaseResponse"}}}},
+          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "404": {"description": "Entrance effect is not available"},
+          "409": {"description": "Insufficient credits"}
+        }
+      }
+    },
+    "/social/entrance-effects/equipped": {
+      "patch": {
+        "operationId": "equipEntranceEffect",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EntranceEffectEquipInput"}}}},
+        "responses": {
+          "200": {"description": "Equipped entrance effect", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EntranceEffectEquipResponse"}}}},
+          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "The user does not own this entrance effect"},
+          "404": {"description": "Entrance effect is not available"}
+        }
+      }
+    },
     "/social/admin/gift-studio/library": {
       "get": {
         "operationId": "getGiftStudioLibrary",
@@ -1096,11 +1138,11 @@
     "schemas": {
       "GiftStudioGiftId": {
         "type": "string",
-        "enum": ["good-vibes", "big-love", "standing-ovation", "heart", "spirit-pup", "moonfox", "cosmic-encore", "fireworks", "rose-shower", "whip"]
+        "pattern": "^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$"
       },
       "SocialGiftCatalogId": {
         "type": "string",
-        "enum": ["good-vibes", "big-love", "standing-ovation", "heart", "spirit-pup", "moonfox", "cosmic-encore", "fireworks", "rose-shower", "whip"]
+        "pattern": "^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$"
       },
       "GiftStudioCatalogUpdate": {
         "type": "object",
@@ -1109,20 +1151,85 @@
         "properties": {
           "name": {"type": "string", "minLength": 1, "maxLength": 60},
           "cost": {"type": "integer", "minimum": 1},
+          "productType": {"$ref": "#/components/schemas/GiftStudioProductType"},
           "status": {"type": "string", "enum": ["active", "inactive", "deleted"]}
         }
       },
       "GiftStudioCatalogGift": {
         "type": "object",
-        "required": ["id", "name", "cost", "status", "roomGift", "animationAvailable"],
+        "required": ["id", "name", "cost", "productType", "status", "roomGift", "animationAvailable"],
         "properties": {
           "id": {"$ref": "#/components/schemas/SocialGiftCatalogId"},
           "name": {"type": "string"},
           "cost": {"type": "integer", "minimum": 1},
+          "productType": {"$ref": "#/components/schemas/GiftStudioProductType"},
           "status": {"type": "string", "enum": ["active", "inactive", "deleted"]},
           "roomGift": {"type": "boolean"},
           "animationAvailable": {"type": "boolean"}
         }
+      },
+      "GiftStudioProductType": {
+        "type": "string",
+        "enum": ["gift", "entrance-effect"]
+      },
+      "EntranceEffectShopMedia": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["versionId", "webmUrl", "safariUrl", "durationMs"],
+        "properties": {
+          "versionId": {"type": "string", "format": "uuid"},
+          "webmUrl": {"type": "string"},
+          "safariUrl": {"type": "string"},
+          "durationMs": {"type": "integer", "minimum": 1}
+        }
+      },
+      "EntranceEffectShopItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "cost", "availableForPurchase", "owned", "equipped", "media"],
+        "properties": {
+          "id": {"$ref": "#/components/schemas/SocialGiftCatalogId"},
+          "name": {"type": "string", "minLength": 1},
+          "cost": {"type": "integer", "minimum": 1},
+          "availableForPurchase": {"type": "boolean"},
+          "owned": {"type": "boolean"},
+          "equipped": {"type": "boolean"},
+          "media": {"anyOf": [{"$ref": "#/components/schemas/EntranceEffectShopMedia"}, {"type": "null"}]}
+        }
+      },
+      "EntranceEffectShop": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["items"],
+        "properties": {"items": {"type": "array", "items": {"$ref": "#/components/schemas/EntranceEffectShopItem"}}}
+      },
+      "EntranceEffectPurchaseInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["requestId"],
+        "properties": {"requestId": {"type": "string", "format": "uuid"}}
+      },
+      "EntranceEffectPurchaseResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["effectId", "purchased", "wallet"],
+        "properties": {
+          "effectId": {"$ref": "#/components/schemas/SocialGiftCatalogId"},
+          "purchased": {"type": "boolean"},
+          "wallet": {"$ref": "#/components/schemas/SocialWallet"}
+        }
+      },
+      "EntranceEffectEquipInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["effectId"],
+        "properties": {"effectId": {"anyOf": [{"$ref": "#/components/schemas/SocialGiftCatalogId"}, {"type": "null"}]}}
+      },
+      "EntranceEffectEquipResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["effectId"],
+        "properties": {"effectId": {"anyOf": [{"$ref": "#/components/schemas/SocialGiftCatalogId"}, {"type": "null"}]}}
       },
       "GiftStudioProcessingSettings": {
         "type": "object",
@@ -1135,7 +1242,8 @@
           "softness": {"type": "number", "minimum": 0, "maximum": 0.5},
           "spill": {"type": "number", "minimum": 0, "maximum": 1},
           "maxDimension": {"anyOf": [{"type": "integer", "enum": [480, 720, 1080]}, {"type": "null"}]},
-          "draftName": {"type": "string", "minLength": 1, "maxLength": 60, "description": "Owner-provided name shown for this saved Gift Studio draft"}
+          "draftName": {"type": "string", "minLength": 1, "maxLength": 60, "description": "Owner-provided name shown for this saved Gift Studio draft"},
+          "productType": {"$ref": "#/components/schemas/GiftStudioProductType"}
         }
       },
       "GiftStudioUploadInput": {
@@ -1144,6 +1252,7 @@
         "required": ["settings", "sourceVideo", "processedWebm"],
         "properties": {
           "giftId": {"anyOf": [{"$ref": "#/components/schemas/GiftStudioGiftId"}, {"type": "null"}]},
+          "productType": {"$ref": "#/components/schemas/GiftStudioProductType"},
           "cost": {"type": "integer", "minimum": 1, "description": "Optional updated credit price for an existing catalog gift"},
           "settings": {"type": "string", "description": "JSON-serialized GiftStudioProcessingSettings"},
           "sourceVideo": {"type": "string", "description": "Video file part"},
@@ -1167,6 +1276,7 @@
           "processingSession": {"type": "string", "format": "uuid"},
           "draftName": {"type": "string", "minLength": 1, "maxLength": 60},
           "giftId": {"anyOf": [{"$ref": "#/components/schemas/GiftStudioGiftId"}, {"type": "null"}]},
+          "productType": {"$ref": "#/components/schemas/GiftStudioProductType"},
           "cost": {"type": "integer", "minimum": 1, "description": "Optional updated credit price for an existing catalog gift"}
         }
       },
@@ -1191,7 +1301,11 @@
         "type": "object",
         "additionalProperties": false,
         "required": ["active"],
-        "properties": {"active": {"type": "boolean"}}
+        "properties": {
+          "active": {"type": "boolean"},
+          "productType": {"$ref": "#/components/schemas/GiftStudioProductType"},
+          "cost": {"type": "integer", "minimum": 1}
+        }
       },
       "GiftStudioVersion": {
         "type": "object",
@@ -1580,9 +1694,10 @@
           "enabled": {"type": "boolean"},
           "badgeId": {"type": ["string", "null"], "enum": ["monthly-tier-1", "monthly-tier-2", "monthly-tier-3", "monthly-tier-4", "monthly-tier-5", "lion-entrance", null]},
           "badgeName": {"type": ["string", "null"]},
+          "equippedEffectId": {"anyOf": [{"$ref": "#/components/schemas/SocialGiftCatalogId"}, {"type": "null"}]},
           "ownerTest": {"anyOf": [{"$ref": "#/components/schemas/OwnerEntranceEffectSettings"}, {"type": "null"}]}
         },
-        "required": ["eligible", "enabled", "badgeId", "badgeName", "ownerTest"]
+        "required": ["eligible", "enabled", "badgeId", "badgeName", "equippedEffectId", "ownerTest"]
       },
       "SocialMe": {
         "type": "object",

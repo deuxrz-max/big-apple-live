@@ -749,6 +749,12 @@ paths:
     $ref: './social.openapi.json#/paths/~1social~1me'
   /social/me/entrance-effects:
     $ref: './social.openapi.json#/paths/~1social~1me~1entrance-effects'
+  /social/entrance-effects/shop:
+    $ref: './social.openapi.json#/paths/~1social~1entrance-effects~1shop'
+  /social/entrance-effects/{effectId}/purchase:
+    $ref: './social.openapi.json#/paths/~1social~1entrance-effects~1{effectId}~1purchase'
+  /social/entrance-effects/equipped:
+    $ref: './social.openapi.json#/paths/~1social~1entrance-effects~1equipped'
   /social/me/equipped-badge:
     $ref: './social.openapi.json#/paths/~1social~1me~1equipped-badge'
   /social/me/passport:

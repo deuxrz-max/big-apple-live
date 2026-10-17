@@ -4,7 +4,6 @@ import { RoomError, roomStore } from "../room-store";
 import { DAILY_REWARD } from "./catalog";
 import { assertContact, lockAccounts, lockPair, replay, requireAccount, targetAccount, wallet } from "./core";
 import { SPIRIT_PUP, spiritSplit } from './spirit-pup-policy';
-import { isRoomGift } from './room-gift-policy';
 import { validateGiftRoom } from './room-gifts';
 import { requireAdult } from '../community';
 import { hasDevelopmentUnlimitedCredits, planCreditSpend } from "./credits-policy";
@@ -36,7 +35,7 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
   const target = await targetAccount(recipient);
   const item = await getSendableGiftCatalogItem(giftId);
   if (!item) throw new RoomError(400, "This gift is no longer available. Refresh the gift list and choose another.");
-  const roomGift = isRoomGift(item.id);
+  const roomGift = item.roomGift;
   const roomContext = context && "roomId" in context ? context : null;
   const streamContext = context && "streamId" in context ? context : null;
   if (roomGift) {

@@ -185,6 +185,20 @@
   gap: 13px;
 }
 
+.gs .gs-product-type {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.gs .gs-product-type legend {
+  margin-bottom: 8px;
+  color: #f1f1ec;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .gs .gs-gift-mode {
   display: grid;
   gap: 10px;

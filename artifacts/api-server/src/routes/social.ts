@@ -45,6 +45,7 @@ import {
   requestPassportVerification, reviewPassportRequest, savePassportPlatform, setFoundingLeague,
 } from "../lib/social/passport";
 import { getMyEntranceEffectSettings, saveMyEntranceEffectSettings } from "../lib/social/entrance-effect-preferences";
+import { equipEntranceEffect, listEntranceEffectShop, purchaseEntranceEffect } from "../lib/social/entrance-effect-shop";
 import { saveEquippedBadge } from "../lib/social/monthly-credit-badges";
 import {
   createGiftStudioVersion, deleteGiftStudioVersion, getActiveGiftStudioMedia, giftStudioMediaFile,
@@ -247,8 +248,9 @@ router.post("/social/admin/gift-studio/save-processed", ownerOnly, async (req, r
     const result = await createGiftStudioVersion({
       ownerId: accountId(req),
       giftId: parsed.data.giftId ?? null,
+      productType: parsed.data.productType ?? session.settings.productType,
       catalogCost: parsed.data.cost,
-      settings: { ...session.settings, draftName: parsed.data.draftName.trim() },
+      settings: { ...session.settings, draftName: parsed.data.draftName.trim(), productType: parsed.data.productType ?? session.settings.productType },
       originalPath: session.sourcePath,
       originalName: session.sourceName,
       originalBytes: session.sourceBytes,
@@ -274,6 +276,7 @@ router.post("/social/admin/gift-studio/versions", ownerOnly, parseStudioUpload, 
     if (!directory || !original || !processed) throw new RoomError(400, "Choose both the original clip and processed transparent WebM.");
     const parsedBody = CreateGiftStudioVersionBody.safeParse({
       giftId: req.body?.giftId,
+      productType: req.body?.productType,
       ...(req.body?.cost !== undefined ? { cost: Number(req.body.cost) } : {}),
       settings: req.body?.settings,
       sourceVideo: original.originalname,
@@ -294,8 +297,9 @@ router.post("/social/admin/gift-studio/versions", ownerOnly, parseStudioUpload, 
     const result = await createGiftStudioVersion({
       ownerId: accountId(req),
       giftId: parsedBody.data.giftId ?? null,
+      productType: parsedBody.data.productType ?? validatedSettings.productType,
       catalogCost: parsedBody.data.cost,
-      settings: { ...validatedSettings, draftName },
+      settings: { ...validatedSettings, draftName, productType: parsedBody.data.productType ?? validatedSettings.productType },
       originalPath: original.path,
       originalName: original.originalname,
       originalBytes: original.size,
@@ -315,7 +319,10 @@ router.patch("/social/admin/gift-studio/versions/:versionId", ownerOnly, async (
   const params = SetGiftStudioVersionActiveParams.safeParse(req.params);
   const body = SetGiftStudioVersionActiveBody.safeParse(req.body);
   if (!params.success || !body.success) throw new RoomError(400, "Choose whether to use this gift version.");
-  const result = await setGiftStudioVersionActive(accountId(req), params.data.versionId, body.data.active);
+  const result = await setGiftStudioVersionActive(accountId(req), params.data.versionId, body.data.active, {
+    productType: body.data.productType,
+    cost: body.data.cost,
+  });
   res.json(SetGiftStudioVersionActiveResponse.parse(result));
 });
 
@@ -416,6 +423,30 @@ router.get("/social/favorites/:username/room", async (req, res): Promise<void> =
 });
 router.get("/social/me", async (req, res): Promise<void> => {
   res.json(GetSocialMeResponse.parse(await getMe(accountId(req))));
+});
+router.get("/social/entrance-effects/shop", async (req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
+  res.json(await listEntranceEffectShop(accountId(req)));
+});
+router.post("/social/entrance-effects/:effectId/purchase", async (req, res): Promise<void> => {
+  sameOrigin(req);
+  const effectId = String(req.params.effectId ?? "");
+  const requestId = req.body?.requestId;
+  if (!/^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$/i.test(effectId) || typeof requestId !== "string"
+    || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId)
+    || Object.keys(req.body ?? {}).some(key => key !== "requestId")) {
+    throw new RoomError(400, "Choose a valid entrance effect and try again.");
+  }
+  res.json(await purchaseEntranceEffect(accountId(req), effectId, requestId));
+});
+router.patch("/social/entrance-effects/equipped", async (req, res): Promise<void> => {
+  sameOrigin(req);
+  const effectId = req.body?.effectId;
+  if (Object.keys(req.body ?? {}).some(key => key !== "effectId")
+    || !(effectId === null || (typeof effectId === "string" && /^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$/i.test(effectId)))) {
+    throw new RoomError(400, "Choose an effect you own, or choose none.");
+  }
+  res.json(await equipEntranceEffect(accountId(req), effectId));
 });
 router.put("/social/me/equipped-badge", async (req, res): Promise<void> => {
   const input = EquipMyBadgeBody.safeParse(req.body);

@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { EntranceEffectSettingsInput } from "@workspace/api-zod";
-import { db, socialSettings } from "@workspace/db";
+import { accountRoomEntranceEffects, db, socialSettings } from "@workspace/db";
 import { RoomError } from "../room-store";
 import { ensureSocial, lockAccounts, requireAccount } from "./core";
 import { MONTHLY_CREDIT_BADGE_TIERS } from "./monthly-credit-badge-config";
@@ -11,6 +11,11 @@ import {
 } from "./owner-entrance-effects-policy";
 import { accountBadgeState } from "./monthly-credit-badges";
 import { ROOM_ENTRANCE_EFFECT_DURATION_MS } from "../room-entrance-effects";
+import { getActiveGiftStudioMedia } from "../gift-studio";
+import { getGiftCatalogItem } from "../gift-studio-catalog";
+
+const isCatalogEffectId = (id: string) =>
+  /^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$/i.test(id);
 
 const enabledTiersFrom = (value: Record<string, boolean> | null | undefined) =>
   MONTHLY_CREDIT_BADGE_TIERS.map(tier => ({
@@ -26,15 +31,20 @@ export async function getMyEntranceEffectSettings(accountId: string) {
     enabled: socialSettings.entranceEffectsEnabled,
     tierEffects: socialSettings.ownerTierEntranceEffects,
     lionEnabled: socialSettings.ownerLionEntranceEnabled,
+    equippedEffectId: socialSettings.equippedEntranceEffectId,
   }).from(socialSettings).where(eq(socialSettings.accountId, accountId)).limit(1);
   const ownerTest = hasOwnerTierTestAccess(profile, process.env.NODE_ENV);
   const badgeState = await accountBadgeState(accountId);
+  const ownedEffects = await db.select({ effectId: accountRoomEntranceEffects.effectId })
+    .from(accountRoomEntranceEffects).where(eq(accountRoomEntranceEffects.accountId, accountId));
+  const hasPurchasedEffects = ownedEffects.some(row => isCatalogEffectId(row.effectId));
   const displayedBadge = badgeState.equippedBadge;
   return {
-    eligible: ownerTest || badgeState.badges.length > 0,
+    eligible: ownerTest || badgeState.badges.length > 0 || hasPurchasedEffects,
     enabled: preferences?.enabled ?? true,
     badgeId: displayedBadge?.tier.id ?? null,
     badgeName: displayedBadge?.tier.name ?? null,
+    equippedEffectId: preferences?.equippedEffectId ?? null,
     ownerTest: ownerTest ? {
       tiers: enabledTiersFrom(preferences?.tierEffects),
       lionEffectEnabled: preferences?.lionEnabled ?? true,
@@ -49,14 +59,17 @@ export async function saveMyEntranceEffectSettings(accountId: string, input: Ent
   const hasOwnerFields = input.tierEffectId !== undefined || input.tierEffectEnabled !== undefined
     || input.lionEffectEnabled !== undefined;
   const badgeState = await accountBadgeState(accountId);
+  const ownedEffects = await db.select({ effectId: accountRoomEntranceEffects.effectId })
+    .from(accountRoomEntranceEffects).where(eq(accountRoomEntranceEffects.accountId, accountId));
+  const hasPurchasedEffects = ownedEffects.some(row => isCatalogEffectId(row.effectId));
 
   if (input.tierEffectId !== undefined && input.tierEffectEnabled === undefined
     || input.tierEffectId === undefined && input.tierEffectEnabled !== undefined) {
     throw new RoomError(400, "Choose a tier and its on/off setting together");
   }
   if (hasOwnerFields && !ownerTest) throw new RoomError(403, "Owner preview controls are not available for this account");
-  if (!ownerTest && input.enabled !== undefined && badgeState.badges.length === 0)
-    throw new RoomError(403, "An active monthly purchase badge is required");
+  if (!ownerTest && input.enabled !== undefined && badgeState.badges.length === 0 && !hasPurchasedEffects)
+    throw new RoomError(403, "Own a badge or entrance effect before changing this setting.");
   if (input.enabled === undefined && !hasOwnerFields)
     throw new RoomError(400, "Choose an entrance-effect setting to update");
 
@@ -88,6 +101,7 @@ export async function accountEntranceEffectSelection(accountId: string) {
     enabled: socialSettings.entranceEffectsEnabled,
     tierEffects: socialSettings.ownerTierEntranceEffects,
     lionEnabled: socialSettings.ownerLionEntranceEnabled,
+    equippedEffectId: socialSettings.equippedEntranceEffectId,
   }).from(socialSettings).where(eq(socialSettings.accountId, accountId)).limit(1);
   const settings = preferences ?? {
     enabled: true,
@@ -95,6 +109,32 @@ export async function accountEntranceEffectSelection(accountId: string) {
     lionEnabled: true,
   };
   if (settings.enabled === false) return null;
+  if (settings.equippedEffectId && isCatalogEffectId(settings.equippedEffectId)) {
+    const [owned] = await db.select({ effectId: accountRoomEntranceEffects.effectId })
+      .from(accountRoomEntranceEffects)
+      .where(and(
+        eq(accountRoomEntranceEffects.accountId, accountId),
+        eq(accountRoomEntranceEffects.effectId, settings.equippedEffectId),
+      ))
+      .limit(1);
+    if (owned) {
+      const { media } = await getActiveGiftStudioMedia(settings.equippedEffectId);
+      if (media) return {
+        effectId: settings.equippedEffectId,
+        durationMs: media.durationMs,
+        studioVersionId: media.versionId,
+        effectName: media.name,
+      };
+      const catalogItem = await getGiftCatalogItem(settings.equippedEffectId);
+      if (!settings.equippedEffectId.startsWith("studio-") && catalogItem?.animationAvailable) {
+        return {
+          effectId: settings.equippedEffectId,
+          durationMs: ROOM_ENTRANCE_EFFECT_DURATION_MS,
+          effectName: catalogItem.name,
+        };
+      }
+    }
+  }
   const equipped = badgeState.equippedBadge;
   const effectId = chooseAccountEntranceEffect({
     ownerPreview,

@@ -1397,6 +1397,7 @@ export const ReviewChatReportResponse = zod.object({
 })
 
 
+export const getSocialMeResponseEntranceEffectsEquippedEffectIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
 export const getSocialMeResponseEntranceEffectsOwnerTestOneTiersMin = 5;
 export const getSocialMeResponseEntranceEffectsOwnerTestOneTiersMax = 5;
 
@@ -1428,6 +1429,7 @@ export const GetSocialMeResponse = zod.object({
   "enabled": zod.boolean(),
   "badgeId": zod.union([zod.literal('monthly-tier-1'),zod.literal('monthly-tier-2'),zod.literal('monthly-tier-3'),zod.literal('monthly-tier-4'),zod.literal('monthly-tier-5'),zod.literal('lion-entrance'),zod.literal(null)]).nullable(),
   "badgeName": zod.string().nullable(),
+  "equippedEffectId": zod.union([zod.string().regex(getSocialMeResponseEntranceEffectsEquippedEffectIdOneRegExp),zod.null()]),
   "ownerTest": zod.union([zod.object({
   "tiers": zod.array(zod.object({
   "badgeId": zod.enum(['monthly-tier-1', 'monthly-tier-2', 'monthly-tier-3', 'monthly-tier-4', 'monthly-tier-5']),
@@ -1623,6 +1625,7 @@ export const UpdateMyEntranceEffectSettingsBody = zod.object({
   "lionEffectEnabled": zod.boolean().optional()
 })
 
+export const updateMyEntranceEffectSettingsResponseEquippedEffectIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
 export const updateMyEntranceEffectSettingsResponseOwnerTestOneTiersMin = 5;
 export const updateMyEntranceEffectSettingsResponseOwnerTestOneTiersMax = 5;
 
@@ -1633,6 +1636,7 @@ export const UpdateMyEntranceEffectSettingsResponse = zod.object({
   "enabled": zod.boolean(),
   "badgeId": zod.union([zod.literal('monthly-tier-1'),zod.literal('monthly-tier-2'),zod.literal('monthly-tier-3'),zod.literal('monthly-tier-4'),zod.literal('monthly-tier-5'),zod.literal('lion-entrance'),zod.literal(null)]).nullable(),
   "badgeName": zod.string().nullable(),
+  "equippedEffectId": zod.union([zod.string().regex(updateMyEntranceEffectSettingsResponseEquippedEffectIdOneRegExp),zod.null()]),
   "ownerTest": zod.union([zod.object({
   "tiers": zod.array(zod.object({
   "badgeId": zod.enum(['monthly-tier-1', 'monthly-tier-2', 'monthly-tier-3', 'monthly-tier-4', 'monthly-tier-5']),
@@ -1641,6 +1645,74 @@ export const UpdateMyEntranceEffectSettingsResponse = zod.object({
 })).min(updateMyEntranceEffectSettingsResponseOwnerTestOneTiersMin).max(updateMyEntranceEffectSettingsResponseOwnerTestOneTiersMax),
   "lionEffectEnabled": zod.boolean()
 }),zod.null()])
+})
+
+
+export const getEntranceEffectShopResponseItemsItemIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
+
+
+
+
+
+export const GetEntranceEffectShopResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string().regex(getEntranceEffectShopResponseItemsItemIdRegExp),
+  "name": zod.string().min(1),
+  "cost": zod.number().int().min(1),
+  "availableForPurchase": zod.boolean(),
+  "owned": zod.boolean(),
+  "equipped": zod.boolean(),
+  "media": zod.union([zod.object({
+  "versionId": zod.string().uuid(),
+  "webmUrl": zod.string(),
+  "safariUrl": zod.string(),
+  "durationMs": zod.number().int().min(1)
+}),zod.null()])
+}))
+})
+
+
+export const purchaseEntranceEffectPathEffectIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
+
+
+export const PurchaseEntranceEffectParams = zod.object({
+  "effectId": zod.coerce.string().regex(purchaseEntranceEffectPathEffectIdRegExp)
+})
+
+export const PurchaseEntranceEffectBody = zod.object({
+  "requestId": zod.string().uuid()
+})
+
+export const purchaseEntranceEffectResponseEffectIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
+
+
+export const PurchaseEntranceEffectResponse = zod.object({
+  "effectId": zod.string().regex(purchaseEntranceEffectResponseEffectIdRegExp),
+  "purchased": zod.boolean(),
+  "wallet": zod.object({
+  "balance": zod.number().int(),
+  "earned": zod.number().int(),
+  "received": zod.number().int(),
+  "sent": zod.number().int(),
+  "canClaimDaily": zod.boolean(),
+  "dailyReward": zod.number().int(),
+  "unlimited": zod.boolean().describe('True only for the development-preview owner account; does not alter the stored wallet balance.')
+})
+})
+
+
+export const equipEntranceEffectBodyEffectIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
+
+
+export const EquipEntranceEffectBody = zod.object({
+  "effectId": zod.union([zod.string().regex(equipEntranceEffectBodyEffectIdOneRegExp),zod.null()])
+})
+
+export const equipEntranceEffectResponseEffectIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
+
+
+export const EquipEntranceEffectResponse = zod.object({
+  "effectId": zod.union([zod.string().regex(equipEntranceEffectResponseEffectIdOneRegExp),zod.null()])
 })
 
 
@@ -1824,6 +1896,7 @@ export const SetStreamerPassportFoundingLeagueResponse = zod.object({
 })
 
 
+export const getGiftStudioLibraryResponseItemsItemGiftIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
 export const getGiftStudioLibraryResponseItemsItemSettingsKeyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getGiftStudioLibraryResponseItemsItemSettingsToleranceMin = 0.02;
 export const getGiftStudioLibraryResponseItemsItemSettingsToleranceMax = 0.65;
@@ -1836,13 +1909,14 @@ export const getGiftStudioLibraryResponseItemsItemSettingsSpillMax = 1;
 
 export const getGiftStudioLibraryResponseItemsItemSettingsDraftNameMax = 60;
 
+export const getGiftStudioLibraryResponseCatalogItemIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
 
 
 
 export const GetGiftStudioLibraryResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.string().uuid(),
-  "giftId": zod.union([zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]),
+  "giftId": zod.union([zod.string().regex(getGiftStudioLibraryResponseItemsItemGiftIdOneRegExp),zod.null()]),
   "version": zod.number().int(),
   "status": zod.enum(['draft', 'active']),
   "originalName": zod.string(),
@@ -1854,7 +1928,8 @@ export const GetGiftStudioLibraryResponse = zod.object({
   "softness": zod.number().min(getGiftStudioLibraryResponseItemsItemSettingsSoftnessMin).max(getGiftStudioLibraryResponseItemsItemSettingsSoftnessMax),
   "spill": zod.number().min(getGiftStudioLibraryResponseItemsItemSettingsSpillMin).max(getGiftStudioLibraryResponseItemsItemSettingsSpillMax),
   "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
-  "draftName": zod.string().min(1).max(getGiftStudioLibraryResponseItemsItemSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft')
+  "draftName": zod.string().min(1).max(getGiftStudioLibraryResponseItemsItemSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft'),
+  "productType": zod.enum(['gift', 'entrance-effect']).optional()
 }),
   "createdAt": zod.coerce.date(),
   "originalUrl": zod.string(),
@@ -1865,9 +1940,10 @@ export const GetGiftStudioLibraryResponse = zod.object({
   "safariBytes": zod.number().int()
 })),
   "catalog": zod.array(zod.object({
-  "id": zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),
+  "id": zod.string().regex(getGiftStudioLibraryResponseCatalogItemIdRegExp),
   "name": zod.string(),
   "cost": zod.number().int().min(1),
+  "productType": zod.enum(['gift', 'entrance-effect']),
   "status": zod.enum(['active', 'inactive', 'deleted']),
   "roomGift": zod.boolean(),
   "animationAvailable": zod.boolean()
@@ -1875,8 +1951,11 @@ export const GetGiftStudioLibraryResponse = zod.object({
 })
 
 
+export const updateGiftStudioCatalogItemPathGiftIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
+
+
 export const UpdateGiftStudioCatalogItemParams = zod.object({
-  "giftId": zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip'])
+  "giftId": zod.coerce.string().regex(updateGiftStudioCatalogItemPathGiftIdRegExp)
 })
 
 export const updateGiftStudioCatalogItemBodyNameMax = 60;
@@ -1887,16 +1966,19 @@ export const updateGiftStudioCatalogItemBodyNameMax = 60;
 export const UpdateGiftStudioCatalogItemBody = zod.object({
   "name": zod.string().min(1).max(updateGiftStudioCatalogItemBodyNameMax).optional(),
   "cost": zod.number().int().min(1).optional(),
+  "productType": zod.enum(['gift', 'entrance-effect']).optional(),
   "status": zod.enum(['active', 'inactive', 'deleted']).optional()
 })
 
+export const updateGiftStudioCatalogItemResponseIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
 
 
 
 export const UpdateGiftStudioCatalogItemResponse = zod.object({
-  "id": zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),
+  "id": zod.string().regex(updateGiftStudioCatalogItemResponseIdRegExp),
   "name": zod.string(),
   "cost": zod.number().int().min(1),
+  "productType": zod.enum(['gift', 'entrance-effect']),
   "status": zod.enum(['active', 'inactive', 'deleted']),
   "roomGift": zod.boolean(),
   "animationAvailable": zod.boolean()
@@ -1913,16 +1995,19 @@ export const ProcessGiftStudioClipOnServerResponse = zod.unknown()
 
 export const saveGiftStudioProcessedBodyDraftNameMax = 60;
 
+export const saveGiftStudioProcessedBodyGiftIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
 
 
 
 export const SaveGiftStudioProcessedBody = zod.object({
   "processingSession": zod.string().uuid(),
   "draftName": zod.string().min(1).max(saveGiftStudioProcessedBodyDraftNameMax),
-  "giftId": zod.union([zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]).optional(),
+  "giftId": zod.union([zod.string().regex(saveGiftStudioProcessedBodyGiftIdOneRegExp),zod.null()]).optional(),
+  "productType": zod.enum(['gift', 'entrance-effect']).optional(),
   "cost": zod.number().int().min(1).optional().describe('Optional updated credit price for an existing catalog gift')
 })
 
+export const saveGiftStudioProcessedResponseGiftIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
 export const saveGiftStudioProcessedResponseSettingsKeyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const saveGiftStudioProcessedResponseSettingsToleranceMin = 0.02;
 export const saveGiftStudioProcessedResponseSettingsToleranceMax = 0.65;
@@ -1939,7 +2024,7 @@ export const saveGiftStudioProcessedResponseSettingsDraftNameMax = 60;
 
 export const SaveGiftStudioProcessedResponse = zod.object({
   "id": zod.string().uuid(),
-  "giftId": zod.union([zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]),
+  "giftId": zod.union([zod.string().regex(saveGiftStudioProcessedResponseGiftIdOneRegExp),zod.null()]),
   "version": zod.number().int(),
   "status": zod.enum(['draft', 'active']),
   "originalName": zod.string(),
@@ -1951,7 +2036,8 @@ export const SaveGiftStudioProcessedResponse = zod.object({
   "softness": zod.number().min(saveGiftStudioProcessedResponseSettingsSoftnessMin).max(saveGiftStudioProcessedResponseSettingsSoftnessMax),
   "spill": zod.number().min(saveGiftStudioProcessedResponseSettingsSpillMin).max(saveGiftStudioProcessedResponseSettingsSpillMax),
   "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
-  "draftName": zod.string().min(1).max(saveGiftStudioProcessedResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft')
+  "draftName": zod.string().min(1).max(saveGiftStudioProcessedResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft'),
+  "productType": zod.enum(['gift', 'entrance-effect']).optional()
 }),
   "createdAt": zod.coerce.date(),
   "originalUrl": zod.string(),
@@ -1963,17 +2049,20 @@ export const SaveGiftStudioProcessedResponse = zod.object({
 })
 
 
+export const createGiftStudioVersionBodyGiftIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
 
 
 
 export const CreateGiftStudioVersionBody = zod.object({
-  "giftId": zod.union([zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]).optional(),
+  "giftId": zod.union([zod.string().regex(createGiftStudioVersionBodyGiftIdOneRegExp),zod.null()]).optional(),
+  "productType": zod.enum(['gift', 'entrance-effect']).optional(),
   "cost": zod.number().int().min(1).optional().describe('Optional updated credit price for an existing catalog gift'),
   "settings": zod.string().describe('JSON-serialized GiftStudioProcessingSettings'),
   "sourceVideo": zod.string().describe('Video file part'),
   "processedWebm": zod.string().describe('Processed transparent WebM file part')
 })
 
+export const createGiftStudioVersionResponseGiftIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
 export const createGiftStudioVersionResponseSettingsKeyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const createGiftStudioVersionResponseSettingsToleranceMin = 0.02;
 export const createGiftStudioVersionResponseSettingsToleranceMax = 0.65;
@@ -1990,7 +2079,7 @@ export const createGiftStudioVersionResponseSettingsDraftNameMax = 60;
 
 export const CreateGiftStudioVersionResponse = zod.object({
   "id": zod.string().uuid(),
-  "giftId": zod.union([zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]),
+  "giftId": zod.union([zod.string().regex(createGiftStudioVersionResponseGiftIdOneRegExp),zod.null()]),
   "version": zod.number().int(),
   "status": zod.enum(['draft', 'active']),
   "originalName": zod.string(),
@@ -2002,7 +2091,8 @@ export const CreateGiftStudioVersionResponse = zod.object({
   "softness": zod.number().min(createGiftStudioVersionResponseSettingsSoftnessMin).max(createGiftStudioVersionResponseSettingsSoftnessMax),
   "spill": zod.number().min(createGiftStudioVersionResponseSettingsSpillMin).max(createGiftStudioVersionResponseSettingsSpillMax),
   "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
-  "draftName": zod.string().min(1).max(createGiftStudioVersionResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft')
+  "draftName": zod.string().min(1).max(createGiftStudioVersionResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft'),
+  "productType": zod.enum(['gift', 'entrance-effect']).optional()
 }),
   "createdAt": zod.coerce.date(),
   "originalUrl": zod.string(),
@@ -2018,10 +2108,16 @@ export const SetGiftStudioVersionActiveParams = zod.object({
   "versionId": zod.coerce.string().uuid()
 })
 
+
+
+
 export const SetGiftStudioVersionActiveBody = zod.object({
-  "active": zod.boolean()
+  "active": zod.boolean(),
+  "productType": zod.enum(['gift', 'entrance-effect']).optional(),
+  "cost": zod.number().int().min(1).optional()
 })
 
+export const setGiftStudioVersionActiveResponseGiftIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
 export const setGiftStudioVersionActiveResponseSettingsKeyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const setGiftStudioVersionActiveResponseSettingsToleranceMin = 0.02;
 export const setGiftStudioVersionActiveResponseSettingsToleranceMax = 0.65;
@@ -2038,7 +2134,7 @@ export const setGiftStudioVersionActiveResponseSettingsDraftNameMax = 60;
 
 export const SetGiftStudioVersionActiveResponse = zod.object({
   "id": zod.string().uuid(),
-  "giftId": zod.union([zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]),
+  "giftId": zod.union([zod.string().regex(setGiftStudioVersionActiveResponseGiftIdOneRegExp),zod.null()]),
   "version": zod.number().int(),
   "status": zod.enum(['draft', 'active']),
   "originalName": zod.string(),
@@ -2050,7 +2146,8 @@ export const SetGiftStudioVersionActiveResponse = zod.object({
   "softness": zod.number().min(setGiftStudioVersionActiveResponseSettingsSoftnessMin).max(setGiftStudioVersionActiveResponseSettingsSoftnessMax),
   "spill": zod.number().min(setGiftStudioVersionActiveResponseSettingsSpillMin).max(setGiftStudioVersionActiveResponseSettingsSpillMax),
   "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
-  "draftName": zod.string().min(1).max(setGiftStudioVersionActiveResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft')
+  "draftName": zod.string().min(1).max(setGiftStudioVersionActiveResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft'),
+  "productType": zod.enum(['gift', 'entrance-effect']).optional()
 }),
   "createdAt": zod.coerce.date(),
   "originalUrl": zod.string(),
@@ -2074,6 +2171,7 @@ export const RenameGiftStudioVersionBody = zod.object({
   "name": zod.string().min(1).max(renameGiftStudioVersionBodyNameMax)
 })
 
+export const renameGiftStudioVersionResponseGiftIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
 export const renameGiftStudioVersionResponseSettingsKeyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const renameGiftStudioVersionResponseSettingsToleranceMin = 0.02;
 export const renameGiftStudioVersionResponseSettingsToleranceMax = 0.65;
@@ -2090,7 +2188,7 @@ export const renameGiftStudioVersionResponseSettingsDraftNameMax = 60;
 
 export const RenameGiftStudioVersionResponse = zod.object({
   "id": zod.string().uuid(),
-  "giftId": zod.union([zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]),
+  "giftId": zod.union([zod.string().regex(renameGiftStudioVersionResponseGiftIdOneRegExp),zod.null()]),
   "version": zod.number().int(),
   "status": zod.enum(['draft', 'active']),
   "originalName": zod.string(),
@@ -2102,7 +2200,8 @@ export const RenameGiftStudioVersionResponse = zod.object({
   "softness": zod.number().min(renameGiftStudioVersionResponseSettingsSoftnessMin).max(renameGiftStudioVersionResponseSettingsSoftnessMax),
   "spill": zod.number().min(renameGiftStudioVersionResponseSettingsSpillMin).max(renameGiftStudioVersionResponseSettingsSpillMax),
   "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
-  "draftName": zod.string().min(1).max(renameGiftStudioVersionResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft')
+  "draftName": zod.string().min(1).max(renameGiftStudioVersionResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft'),
+  "productType": zod.enum(['gift', 'entrance-effect']).optional()
 }),
   "createdAt": zod.coerce.date(),
   "originalUrl": zod.string(),
@@ -2127,10 +2226,14 @@ export const AssignGiftStudioVersionToGiftParams = zod.object({
   "versionId": zod.coerce.string().uuid()
 })
 
+export const assignGiftStudioVersionToGiftBodyGiftIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
+
+
 export const AssignGiftStudioVersionToGiftBody = zod.object({
-  "giftId": zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip'])
+  "giftId": zod.string().regex(assignGiftStudioVersionToGiftBodyGiftIdRegExp)
 })
 
+export const assignGiftStudioVersionToGiftResponseGiftIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
 export const assignGiftStudioVersionToGiftResponseSettingsKeyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const assignGiftStudioVersionToGiftResponseSettingsToleranceMin = 0.02;
 export const assignGiftStudioVersionToGiftResponseSettingsToleranceMax = 0.65;
@@ -2147,7 +2250,7 @@ export const assignGiftStudioVersionToGiftResponseSettingsDraftNameMax = 60;
 
 export const AssignGiftStudioVersionToGiftResponse = zod.object({
   "id": zod.string().uuid(),
-  "giftId": zod.union([zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]),
+  "giftId": zod.union([zod.string().regex(assignGiftStudioVersionToGiftResponseGiftIdOneRegExp),zod.null()]),
   "version": zod.number().int(),
   "status": zod.enum(['draft', 'active']),
   "originalName": zod.string(),
@@ -2159,7 +2262,8 @@ export const AssignGiftStudioVersionToGiftResponse = zod.object({
   "softness": zod.number().min(assignGiftStudioVersionToGiftResponseSettingsSoftnessMin).max(assignGiftStudioVersionToGiftResponseSettingsSoftnessMax),
   "spill": zod.number().min(assignGiftStudioVersionToGiftResponseSettingsSpillMin).max(assignGiftStudioVersionToGiftResponseSettingsSpillMax),
   "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
-  "draftName": zod.string().min(1).max(assignGiftStudioVersionToGiftResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft')
+  "draftName": zod.string().min(1).max(assignGiftStudioVersionToGiftResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft'),
+  "productType": zod.enum(['gift', 'entrance-effect']).optional()
 }),
   "createdAt": zod.coerce.date(),
   "originalUrl": zod.string(),
@@ -2187,8 +2291,11 @@ export const GetActiveGiftStudioVersionMediaParams = zod.object({
 export const GetActiveGiftStudioVersionMediaResponse = zod.unknown()
 
 
+export const getActiveGiftStudioMediaPathGiftIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
+
+
 export const GetActiveGiftStudioMediaParams = zod.object({
-  "giftId": zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip'])
+  "giftId": zod.coerce.string().regex(getActiveGiftStudioMediaPathGiftIdRegExp)
 })
 
 export const getActiveGiftStudioMediaResponseMediaOneNameMax = 60;

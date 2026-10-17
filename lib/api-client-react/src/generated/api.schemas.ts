@@ -2199,37 +2199,15 @@ export interface ErrorResponse4b96100 {
   error: string;
 }
 
-export type GiftStudioGiftId = typeof GiftStudioGiftId[keyof typeof GiftStudioGiftId];
+/**
+ * @pattern ^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$
+ */
+export type GiftStudioGiftId = string;
 
-
-export const GiftStudioGiftId = {
-  'good-vibes': 'good-vibes',
-  'big-love': 'big-love',
-  'standing-ovation': 'standing-ovation',
-  heart: 'heart',
-  'spirit-pup': 'spirit-pup',
-  moonfox: 'moonfox',
-  'cosmic-encore': 'cosmic-encore',
-  fireworks: 'fireworks',
-  'rose-shower': 'rose-shower',
-  whip: 'whip',
-} as const;
-
-export type SocialGiftCatalogId = typeof SocialGiftCatalogId[keyof typeof SocialGiftCatalogId];
-
-
-export const SocialGiftCatalogId = {
-  'good-vibes': 'good-vibes',
-  'big-love': 'big-love',
-  'standing-ovation': 'standing-ovation',
-  heart: 'heart',
-  'spirit-pup': 'spirit-pup',
-  moonfox: 'moonfox',
-  'cosmic-encore': 'cosmic-encore',
-  fireworks: 'fireworks',
-  'rose-shower': 'rose-shower',
-  whip: 'whip',
-} as const;
+/**
+ * @pattern ^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$
+ */
+export type SocialGiftCatalogId = string;
 
 export type GiftStudioCatalogUpdateStatus = typeof GiftStudioCatalogUpdateStatus[keyof typeof GiftStudioCatalogUpdateStatus];
 
@@ -2240,6 +2218,14 @@ export const GiftStudioCatalogUpdateStatus = {
   deleted: 'deleted',
 } as const;
 
+export type GiftStudioProductType = typeof GiftStudioProductType[keyof typeof GiftStudioProductType];
+
+
+export const GiftStudioProductType = {
+  gift: 'gift',
+  'entrance-effect': 'entrance-effect',
+} as const;
+
 export interface GiftStudioCatalogUpdate {
   /**
      * @minLength 1
@@ -2248,6 +2234,7 @@ export interface GiftStudioCatalogUpdate {
   name?: string;
   /** @minimum 1 */
   cost?: number;
+  productType?: GiftStudioProductType;
   status?: GiftStudioCatalogUpdateStatus;
 }
 
@@ -2265,9 +2252,63 @@ export interface GiftStudioCatalogGift {
   name: string;
   /** @minimum 1 */
   cost: number;
+  productType: GiftStudioProductType;
   status: GiftStudioCatalogGiftStatus;
   roomGift: boolean;
   animationAvailable: boolean;
+}
+
+export interface EntranceEffectShopMedia {
+  versionId: string;
+  webmUrl: string;
+  safariUrl: string;
+  /** @minimum 1 */
+  durationMs: number;
+}
+
+export interface EntranceEffectShopItem {
+  id: SocialGiftCatalogId;
+  /** @minLength 1 */
+  name: string;
+  /** @minimum 1 */
+  cost: number;
+  availableForPurchase: boolean;
+  owned: boolean;
+  equipped: boolean;
+  media: EntranceEffectShopMedia | null;
+}
+
+export interface EntranceEffectShop {
+  items: EntranceEffectShopItem[];
+}
+
+export interface EntranceEffectPurchaseInput {
+  requestId: string;
+}
+
+export interface SocialWallet {
+  balance: number;
+  earned: number;
+  received: number;
+  sent: number;
+  canClaimDaily: boolean;
+  dailyReward: number;
+  /** True only for the development-preview owner account; does not alter the stored wallet balance. */
+  unlimited: boolean;
+}
+
+export interface EntranceEffectPurchaseResponse {
+  effectId: SocialGiftCatalogId;
+  purchased: boolean;
+  wallet: SocialWallet;
+}
+
+export interface EntranceEffectEquipInput {
+  effectId: SocialGiftCatalogId | null;
+}
+
+export interface EntranceEffectEquipResponse {
+  effectId: SocialGiftCatalogId | null;
 }
 
 export type GiftStudioProcessingSettingsPreset = typeof GiftStudioProcessingSettingsPreset[keyof typeof GiftStudioProcessingSettingsPreset];
@@ -2315,10 +2356,12 @@ export interface GiftStudioProcessingSettings {
      * @maxLength 60
      */
   draftName?: string;
+  productType?: GiftStudioProductType;
 }
 
 export interface GiftStudioUploadInput {
   giftId?: GiftStudioGiftId | null;
+  productType?: GiftStudioProductType;
   /**
      * Optional updated credit price for an existing catalog gift
      * @minimum 1
@@ -2347,6 +2390,7 @@ export interface GiftStudioProcessedSaveInput {
      */
   draftName: string;
   giftId?: GiftStudioGiftId | null;
+  productType?: GiftStudioProductType;
   /**
      * Optional updated credit price for an existing catalog gift
      * @minimum 1
@@ -2373,6 +2417,9 @@ export interface GiftStudioAssignInput {
 
 export interface GiftStudioActivationInput {
   active: boolean;
+  productType?: GiftStudioProductType;
+  /** @minimum 1 */
+  cost?: number;
 }
 
 export type GiftStudioVersionStatus = typeof GiftStudioVersionStatus[keyof typeof GiftStudioVersionStatus];
@@ -2552,17 +2599,6 @@ export interface SocialProfileInput {
   badgeId: string | null;
 }
 
-export interface SocialWallet {
-  balance: number;
-  earned: number;
-  received: number;
-  sent: number;
-  canClaimDaily: boolean;
-  dailyReward: number;
-  /** True only for the development-preview owner account; does not alter the stored wallet balance. */
-  unlimited: boolean;
-}
-
 export interface SocialProduct {
   id: string;
   name: string;
@@ -2643,6 +2679,7 @@ export interface EntranceEffectSettings {
   badgeId: EntranceEffectSettingsBadgeId;
   /** @nullable */
   badgeName: string | null;
+  equippedEffectId: SocialGiftCatalogId | null;
   ownerTest: OwnerEntranceEffectSettings | null;
 }
 

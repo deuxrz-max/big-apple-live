@@ -8,6 +8,7 @@ import { RewardsPage } from '@/social/MoneyPages';
 import { ProfileView } from './ProfileView';
 import { GiftBag, GiftControl } from '@/gifts';
 import { MyStreamerPassport } from '@/passport/StreamerPassport';
+import { EntranceEffectsShop } from './EntranceEffectsShop';
 
 export function OwnProfile() {
   const [bagOpen, setBagOpen] = useState(false);
@@ -31,6 +32,7 @@ export function OwnProfile() {
       <Link href="/community/credits" className="pf-btn" data-testid="link-buy-credits">Buy credits</Link>
       <GiftControl onClick={() => setBagOpen(true)} label="Open your gift bag" />
       {bagOpen && <GiftBag onClose={() => setBagOpen(false)} />}
+      <EntranceEffectsShop />
       <div id="streamer-passport"><MyStreamerPassport /></div>
       <div className="sc pf-rewards"><RewardsPage embedded /></div>
     </ProfileView>
