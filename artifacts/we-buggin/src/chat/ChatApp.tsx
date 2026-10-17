@@ -2,7 +2,7 @@ import '@/beam/beam.css';
 import '@/social/social.css';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Radio, Trophy, Users } from 'lucide-react';
+import { ArrowUpRight, Camera, Coins, Flame, Radio, Search, Trophy, Users, X } from 'lucide-react';
 import { useClerk } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -10,13 +10,13 @@ import {
   useConfirmChatAdult, useGetChatAccess, useGetChatDirectory,
   useGetMyProfile, useGetSocialMe, useEquipMyBadge, useSaveMyProfile,
   getGetChatDirectoryQueryKey, getGetLiveStreamsQueryKey, useGetLiveStreams,
+  getGetSocialInboxQueryKey, useGetSocialInbox,
 } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
 import { Wordmark } from '@/components/brand';
 import { errMessage } from '@/lib/errors';
 import { PhotoReviewQueue } from './PhotoReviewQueue';
 import { BotModerationPanel } from './BotModerationPanel';
-import { selectFeaturedRoom } from './directory-utils';
 import { BadgeArt } from '@/social/BadgeArt';
 import { GoLiveButton } from './LiveStreamPages';
 import './chat.css';
@@ -142,7 +142,6 @@ export function ChatDirectory() {
   const [query, setQuery] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [filter, setFilter] = useState('All');
-  const [discoveryTab, setDiscoveryTab] = useState<'rooms' | 'creators'>('rooms');
   const directory = useGetChatDirectory({ query: { queryKey: getGetChatDirectoryQueryKey(), refetchInterval: 5_000 } });
   const me = useGetMyProfile({ query: { queryKey: getGetMyProfileQueryKey(), refetchInterval: 60_000 } });
   const socialMe = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), refetchInterval: 60_000 } });
@@ -165,96 +164,91 @@ export function ChatDirectory() {
   const liveCreators = (liveStreams.data?.streams ?? []).filter((stream) =>
     !!stream.streamId && `${stream.displayName} ${stream.username}`.toLowerCase().includes(query.trim().toLowerCase()),
   );
-  const selectedFeatured = selectFeaturedRoom(rooms);
-  const featured = selectedFeatured && selectedFeatured.headcount > 0 &&
-    (!query.trim() || `${selectedFeatured.label} ${topicFor(selectedFeatured)} ${selectedFeatured.nowPlayingTitle ?? ''}`.toLowerCase().includes(query.trim().toLowerCase())) &&
-    (filter === 'All' || filter === 'Live Now' || filter === 'Popular' || topicFor(selectedFeatured) === filter)
-    ? selectedFeatured
-    : null;
   const activeRoomCount = rooms.filter((room) => room.headcount > 0).length;
   return (
-    <Shell className="st-directory">
+    <Shell className="st-directory st-home">
       <header className="st-dir-header">
         <div className="st-dir-topline">
           <div className="st-dir-lockup">
-            <Wordmark href="/home" className="st-brand" />
-            <span className="st-dir-livehub">{me.data?.profile?.displayName || me.data?.profile?.username || 'YOUR LIVE LOBBY'}</span>
+            <Link href="/home" className="st-home-app-logo" aria-label="Streamtalk home" data-testid="link-home-logo">ST</Link>
           </div>
           <div className="st-dir-account">
-            <Link href="/community/rewards" className="st-dir-rewards" aria-label="Open rewards">
+            <Link href="/community/leaderboard" className="st-dir-rewards" aria-label="Open leaderboard" data-testid="link-leaderboard">
               <Trophy size={16} aria-hidden="true" />
             </Link>
-            <Link href="/community/rewards" className="st-dir-wallet" aria-label="Open rewards and wallet">
-              {!socialMe.data ? (socialMe.isLoading ? '…' : 'Credits') : socialMe.data.wallet.unlimited ? 'Unlimited' : `${socialMe.data.wallet.balance.toLocaleString()} credits`}
+            <Link href="/community/rewards" className={`st-dir-wallet${socialMe.data?.wallet.unlimited ? ' is-unlimited' : ''}`} aria-label="Open rewards and wallet" data-testid="link-home-wallet">
+              {socialMe.data?.wallet.unlimited
+                ? <><i aria-hidden="true" />Unlimited</>
+                : socialMe.data
+                  ? <><Coins size={13} aria-hidden="true" />{socialMe.data.wallet.balance.toLocaleString()} credits</>
+                  : socialMe.isLoading ? '…' : 'Credits'}
             </Link>
-            <Link href="/user-portal" className="st-dir-avatar" aria-label={`Profile${me.data?.profile?.username ? `: ${me.data.profile.username}` : ''}`}>
-              <UserPhoto username={me.data?.profile?.username} displayName={me.data?.profile?.displayName} photoUrl={me.data?.profile?.photoUrl} size={38} />
-              <i aria-hidden="true" />
-            </Link>
-            <details className="st-dir-menu">
-              <summary aria-label="Open account menu">⋯</summary>
-              <button type="button" onClick={() => signOut({ redirectUrl: import.meta.env.BASE_URL || '/' })}>Sign out</button>
+            <details className="st-dir-menu st-home-profile-menu">
+              <summary className="st-dir-avatar st-home-avatar" aria-label={`Open profile menu${me.data?.profile?.username ? ` for ${me.data.profile.username}` : ''}`} data-testid="button-home-profile-menu">
+                {[...(me.data?.profile?.username?.trim() || me.data?.profile?.displayName?.trim() || '?')][0]?.toUpperCase() ?? '?'}
+                <i aria-hidden="true" />
+              </summary>
+              <div className="st-home-profile-dropdown">
+                <Link href="/user-portal" data-testid="link-home-profile">Profile</Link>
+                <button type="button" data-testid="button-home-sign-out" onClick={() => signOut({ redirectUrl: import.meta.env.BASE_URL || '/' })}>Sign out</button>
+              </div>
             </details>
           </div>
         </div>
-        <form className="st-dir-search-wrap" role="search" onSubmit={(event) => {
-          event.preventDefault();
-          setQuery(searchInput.trim());
-        }}>
-          <span className="st-dir-search-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.5" /><path d="m16 16 4.2 4.2" /></svg>
-          </span>
-          <input type="search" className="st-search st-dir-search" value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)} placeholder="Search rooms, topics or creators" aria-label="Search rooms, topics or creators" />
-          {searchInput && <button type="button" className="st-dir-clear" onClick={() => {
-            setSearchInput('');
-            setQuery('');
-          }} aria-label="Clear search">×</button>}
-          <button type="submit" className="st-dir-search-submit">Search</button>
-        </form>
       </header>
 
-      <nav className="st-dir-tabs" aria-label="Discover">
-        <button type="button" className={discoveryTab === 'rooms' ? 'is-active' : ''} aria-pressed={discoveryTab === 'rooms'} onClick={() => setDiscoveryTab('rooms')}>Rooms</button>
-        <button type="button" className={discoveryTab === 'creators' ? 'is-active' : ''} aria-pressed={discoveryTab === 'creators'} onClick={() => setDiscoveryTab('creators')}>Creators</button>
+      <nav className="st-home-categories" aria-label="Room categories">
+        <button type="button" className="is-active" aria-current="true" data-testid="category-featured">Featured</button>
+        <span aria-disabled="true" data-testid="category-party">Party</span>
+        <span aria-disabled="true" data-testid="category-global">Global</span>
+        <span aria-disabled="true" data-testid="category-nearby">Nearby</span>
       </nav>
+      <form className="st-dir-search-wrap st-home-search-form" role="search" onSubmit={(event) => {
+        event.preventDefault();
+        setQuery(searchInput.trim());
+      }}>
+        <span className="st-dir-search-icon" aria-hidden="true"><Search size={17} /></span>
+        <input type="search" className="st-search st-dir-search" value={searchInput}
+          onChange={(e) => { setSearchInput(e.target.value); setQuery(e.target.value); }} placeholder="Search rooms, topics or creators" aria-label="Search rooms, topics or creators" data-testid="input-home-search" />
+        {searchInput && <button type="button" className="st-dir-clear" onClick={() => {
+          setSearchInput('');
+          setQuery('');
+        }} aria-label="Clear search" data-testid="button-clear-home-search"><X size={15} /></button>}
+        <button type="submit" className="st-dir-search-submit" data-testid="button-home-search">Search</button>
+      </form>
 
-      {discoveryTab === 'rooms' && !directory.isLoading && !directory.isError && featured && (
-        <section className="st-dir-feature" aria-label="Most occupied room">
-          <div className="st-dir-section-head">
-              <div><span className="st-dir-overline">LIVE RIGHT NOW</span><h2>Room in the moment</h2></div>
-              <a className="st-dir-feature-mark" href="#live-channels">All rooms</a>
+      <section className="st-dir-explore st-home-rooms" id="live-channels" aria-labelledby="st-dir-explore-title">
+        <div className="st-dir-section-head st-dir-explore-heading">
+          <div><span className="st-dir-overline">LIVE CHANNELS</span><h2 id="st-dir-explore-title">Featured</h2></div>
+          {!directory.isLoading && !directory.isError && <span className="st-dir-total">{activeRoomCount} Active Rooms</span>}
           </div>
-            <DirectoryRoomCard room={featured} topic={topicFor(featured)} featured />
-        </section>
-      )}
-
-      {discoveryTab === 'rooms' ? (
-        <section className="st-dir-explore" id="live-channels" aria-labelledby="st-dir-explore-title">
-          <div className="st-dir-section-head st-dir-explore-heading">
-            <div><span className="st-dir-overline">THE LOBBY</span><h2 id="st-dir-explore-title">Pick a room</h2></div>
-            {!directory.isLoading && !directory.isError && <span className="st-dir-total">{activeRoomCount} live</span>}
-          </div>
-          <div className="st-dir-filters" role="group" aria-label="Filter rooms">
+        <div className="st-dir-filters" role="group" aria-label="Filter rooms">
             {['All', 'Live Now', 'Popular', ...topics].map((item) => (
-              <button key={item} type="button" className={`st-dir-filter${filter === item ? ' is-active' : ''}`} aria-pressed={filter === item} onClick={() => setFilter(item)}>
+              <button key={item} type="button" className={`st-dir-filter${filter === item ? ' is-active' : ''}`} aria-pressed={filter === item} onClick={() => setFilter(item)} data-testid={`filter-home-${item.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>
                 {item === 'Live Now' && <span className="st-dir-filter-dot" aria-hidden="true" />}{item}
               </button>
             ))}
-          </div>
+        </div>
 
-          {directory.isLoading && <ul className="st-dir-grid" aria-label="Loading rooms" aria-busy="true">{[0, 1, 2, 3].map((n) => <li className="st-dir-skeleton" key={n}><span /><div><i /><i /></div></li>)}</ul>}
-          {directory.isError && <div className="st-dir-state st-dir-error" role="alert"><div className="st-dir-state-mark">!</div><h3>Rooms aren’t loading</h3><p>We couldn’t reach the directory. Give it another try.</p><button type="button" onClick={() => directory.refetch()}>Retry directory</button></div>}
-          {directory.data && rooms.length === 0 && <div className="st-dir-state"><div className="st-dir-state-mark">—</div><h3>Quiet for a moment</h3><p>There are no rooms in the directory right now. Check back soon.</p></div>}
-          {directory.data && rooms.length > 0 && visible.length === 0 && <div className="st-dir-state"><div className="st-dir-state-mark">⌕</div><h3>No rooms found</h3><p>Try another search or switch to a different topic.</p><button type="button" onClick={() => { setQuery(''); setSearchInput(''); setFilter('All'); }}>Clear filters</button></div>}
-          {directory.data && visible.length > 0 && <ul className="st-dir-grid">
-            {visible.map((room) => <li key={room.roomId}><DirectoryRoomCard room={room} topic={topicFor(room)} /></li>)}
-          </ul>}
-        </section>
-      ) : (
-        <section className="st-dir-explore st-dir-creators" aria-labelledby="st-dir-creators-title">
+        {directory.isError && <div className="st-dir-state st-dir-error" role="alert"><div className="st-dir-state-mark">!</div><h3>Rooms aren’t loading</h3><p>We couldn’t reach the directory. Give it another try.</p><button type="button" onClick={() => directory.refetch()}>Retry directory</button></div>}
+        {directory.data && rooms.length === 0 && <div className="st-dir-state"><div className="st-dir-state-mark">—</div><h3>Quiet for a moment</h3><p>There are no rooms in the directory right now. Check back soon.</p></div>}
+        {directory.data && rooms.length > 0 && visible.length === 0 && <div className="st-dir-state"><div className="st-dir-state-mark">⌕</div><h3>No rooms found</h3><p>Try another search or switch to a different topic.</p><button type="button" onClick={() => { setQuery(''); setSearchInput(''); setFilter('All'); }}>Clear filters</button></div>}
+        <ul className="st-dir-grid st-home-grid" aria-label={directory.isLoading ? 'Loading rooms' : 'Rooms'} aria-busy={directory.isLoading}>
+          {directory.isLoading
+            ? [0, 1, 2].map((n) => <li className="st-dir-skeleton" key={`loading-${n}`}><span /><div><i /><i /></div></li>)
+            : directory.data && visible.map((room) => <li key={room.roomId}><DirectoryRoomCard room={room} topic={topicFor(room)} /></li>)}
+          <li className="st-home-go-live">
+            <GoLiveButton className="st-home-go-live-button">
+              <span className="st-home-go-live-icon"><Camera size={26} strokeWidth={1.8} /></span>
+              <span className="st-home-go-live-copy"><strong>Go Live</strong><small>Start your own room</small></span>
+              <ArrowUpRight size={17} aria-hidden="true" />
+            </GoLiveButton>
+          </li>
+        </ul>
+      </section>
+      <section className="st-dir-explore st-dir-creators st-home-creators" aria-labelledby="st-dir-creators-title" data-testid="section-home-creators">
           <div className="st-dir-section-head st-dir-explore-heading">
-            <div><span className="st-dir-overline">CREATOR STREAMS</span><h2 id="st-dir-creators-title">On air now</h2></div>
+            <div><span className="st-dir-overline">FROM THE COMMUNITY</span><h2 id="st-dir-creators-title">Creators on air</h2></div>
             <Link href="/live" className="st-dir-feature-mark">All live</Link>
           </div>
           {liveStreams.isError
@@ -264,7 +258,7 @@ export function ChatDirectory() {
               : liveCreators.length
                 ? <div className="st-dir-live-streams">
                   {liveCreators.map((stream) => (
-                    <Link href={`/live/${stream.streamId}`} className="st-dir-live-stream" key={stream.streamId}>
+                    <Link href={`/live/${stream.streamId}`} className="st-dir-live-stream" key={stream.streamId} data-testid={`link-home-live-${stream.streamId}`}>
                       <span className="st-dir-live-stream-icon"><Radio size={17} /></span>
                       <span className="st-dir-live-stream-copy"><strong>{stream.displayName}</strong><small><Users size={13} /> {stream.viewerCount} watching</small></span>
                       <b>Watch</b>
@@ -274,17 +268,15 @@ export function ChatDirectory() {
                 : liveStreams.data?.streams.length && query.trim()
                   ? <div className="st-dir-state"><h3>No creators found</h3><p>Try a different name or clear your search.</p><button type="button" onClick={() => { setQuery(''); setSearchInput(''); }}>Clear search</button></div>
                   : <div className="st-dir-state"><h3>No creator streams right now</h3><p>When someone goes live, their stream will appear here.</p></div>}
-        </section>
-      )}
+      </section>
       <footer className="st-dir-footer"><span>STREAMTALK · FIND YOUR PEOPLE</span></footer>
     </Shell>
   );
 }
 
-function DirectoryRoomCard({ room, topic, featured = false }: {
+function DirectoryRoomCard({ room, topic }: {
   room: { roomId: string; label: string; headcount: number; nowPlayingVideoId?: string | null; nowPlayingTitle?: string | null };
   topic: string;
-  featured?: boolean;
 }) {
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
   const [topicPhotoFailed, setTopicPhotoFailed] = useState(false);
@@ -293,33 +285,25 @@ function DirectoryRoomCard({ room, topic, featured = false }: {
   const hasTopicPhoto = !hasThumbnail && !topicPhotoFailed;
   const displayTitle = room.nowPlayingTitle?.trim();
   return (
-    <Link href={`/rooms/${encodeURIComponent(room.roomId)}`} className={`st-dir-card${featured ? ' is-featured' : ''}`} aria-label={`Enter ${room.label}, ${room.headcount} ${room.headcount === 1 ? 'person' : 'people'} here`}>
+    <Link href={`/rooms/${encodeURIComponent(room.roomId)}`} className="st-dir-card" aria-label={`Enter ${room.label}, ${room.headcount} ${room.headcount === 1 ? 'person' : 'people'} here`} data-testid={`card-home-room-${room.roomId}`}>
       <div className={`st-dir-art st-dir-art-${topicClass(topic)}${hasThumbnail ? ' has-video' : ''}`}>
         {hasThumbnail
-          ? <img src={`https://img.youtube.com/vi/${encodeURIComponent(videoId!)}/hqdefault.jpg`} alt="" loading={featured ? 'eager' : 'lazy'} onError={() => setThumbnailFailed(true)} />
+          ? <img src={`https://img.youtube.com/vi/${encodeURIComponent(videoId!)}/hqdefault.jpg`} alt="" loading="lazy" onError={() => setThumbnailFailed(true)} />
           : hasTopicPhoto
-            ? <img className="st-dir-topic-photo" src={topicPhotoUrl(topic)} alt="" loading={featured ? 'eager' : 'lazy'} onError={() => setTopicPhotoFailed(true)} />
+            ? <img className="st-dir-topic-photo" src={topicPhotoUrl(topic)} alt="" loading="lazy" onError={() => setTopicPhotoFailed(true)} />
             : <div className="st-dir-art-fallback" aria-hidden="true"><span className="st-dir-art-index">{topicInitial(topic)}</span><span className="st-dir-art-word">{topic.toUpperCase()}</span><span className="st-dir-art-lines" /></div>}
-        <span className={`st-dir-live${room.headcount > 0 ? ' is-live' : ''}`}><i />{room.headcount > 0 ? 'LIVE NOW' : 'OPEN ROOM'}</span>
-        <span className="st-dir-count"><b aria-hidden="true">◉</b><span>{room.headcount} watching</span></span>
-        <span className="st-dir-video-tag">{displayTitle || `${topic} community`}</span>
+        <span className={`st-dir-live${room.headcount > 0 ? ' is-live' : ''}`} title={room.label}>
+          <i /><span>{room.headcount > 0 ? 'LIVE' : 'ROOM'} · {room.label}</span>
+        </span>
         <span className="st-dir-art-shade" />
-        {featured && (
-          <span className="st-dir-featured-copy">
-            <span className="st-dir-featured-title">{room.label}</span>
-            <span className="st-dir-featured-description">{topicDescription(topic)}</span>
-            <span className="st-dir-featured-meta">
-              <span className="st-dir-topic-avatar" aria-hidden="true">{topicInitial(topic)}</span>
-              <span>Community in {topic}</span>
-              <span className="st-dir-featured-enter">Enter room</span>
-            </span>
-          </span>
-        )}
+        <div className="st-home-card-copy">
+          <span className="st-home-card-category">{topic}</span>
+          <span className="st-home-card-subtitle" title={displayTitle || topicDescription(topic)}>{displayTitle || topicDescription(topic)}</span>
+        </div>
+        <span className="st-dir-count" aria-label={`${room.headcount} people in ${room.label}`}>
+          <Flame size={12} aria-hidden="true" /><span>{room.headcount}</span>
+        </span>
       </div>
-      {!featured && <div className="st-dir-card-copy">
-        <div className="st-dir-card-titles"><h3>{room.label}</h3><p>{displayTitle || topicDescription(topic)}</p></div>
-        <span className="st-dir-enter" aria-hidden="true">▶ Enter</span>
-      </div>}
     </Link>
   );
 }

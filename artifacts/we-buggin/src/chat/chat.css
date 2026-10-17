@@ -371,3 +371,181 @@ body.streamtalk-directory-screen #root .app-home-live:focus-visible{outline:2px 
   body.streamtalk-directory-screen #root .app-home-live{width:54px;height:54px}
 }
 @media(prefers-reduced-motion:reduce){.st-dir-tabs button,.st-dir-card,.st-dir-art img{transition:none}}
+
+/* /home only — late-night live-room discovery */
+.ch.st-home{
+  --dir-lime:#f6c9ff;
+  --dir-purple:#d34cff;
+  min-height:100dvh;
+  padding:0 16px calc(112px + env(safe-area-inset-bottom));
+  background:
+    radial-gradient(ellipse at 84% 0%,rgba(138,38,175,.21),transparent 34%),
+    radial-gradient(ellipse at 0% 50%,rgba(91,30,119,.13),transparent 37%),
+    linear-gradient(180deg,#0d0a10 0%,#100b14 54%,#0c0a10 100%);
+  color:#fff;
+}
+.ch.st-home .ch-in{max-width:620px}
+.ch.st-home .st-dir-header{padding-top:14px}
+.ch.st-home .st-dir-topline{padding-bottom:13px}
+.ch.st-home .st-dir-lockup{width:38px;height:38px;overflow:hidden;justify-content:center}
+.ch.st-home .st-dir-lockup .st-brand{width:36px;height:36px}
+.ch.st-home .st-dir-lockup .st-wordmark{display:none}
+.ch.st-home .st-dir-lockup .st-wordmark-lockup{gap:0}
+.ch.st-home .st-dir-account{gap:7px}
+.ch.st-home .st-dir-rewards{width:31px;height:31px;border-color:rgba(237,190,255,.17);background:#19131e;color:#e5b6f8}
+.ch.st-home .st-dir-wallet{min-height:30px;border-color:rgba(218,76,255,.34);background:rgba(176,48,213,.13);color:#efc6ff;font-size:10px}
+.ch.st-home .st-home-avatar{display:grid;place-items:center;width:34px;height:34px;background:linear-gradient(145deg,#b546d0,#5a277b);color:#fff;font:800 13px 'DM Sans',sans-serif;text-decoration:none;box-shadow:0 0 0 2px #24132b}
+.ch.st-home .st-home-avatar>span{display:flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:50%;overflow:hidden}
+.ch.st-home .st-home-avatar>i{border-color:#100b14;background:#e851bc;box-shadow:none}
+.ch.st-home .st-dir-menu summary{width:31px;height:31px;background:#19131e;border-color:rgba(237,190,255,.15);color:#dfd0e6}
+.ch.st-home .st-dir-search-wrap{gap:8px}
+.ch.st-home .st-dir-search-icon{left:13px;color:#a896ad}
+.ch.st-home .st-dir-search{height:41px;border-radius:13px!important;border-color:rgba(220,177,239,.14)!important;background:#18121d!important;color:#fff;font-size:12px}
+.ch.st-home .st-dir-search::placeholder{color:#8d8094}
+.ch.st-home .st-dir-search:focus{outline:2px solid rgba(214,80,245,.72);outline-offset:1px}
+.ch.st-home .st-dir-search-submit{flex-basis:65px;height:41px;border:0;border-radius:12px;background:#d84ce9;color:#170d1c;font-weight:850}
+.ch.st-home .st-dir-clear{right:75px}
+.st-home-intro{padding:27px 2px 17px}
+.st-home-eyebrow{display:flex;align-items:center;gap:8px;color:#c69ccf;font:800 9px 'DM Sans',sans-serif;letter-spacing:.18em}
+.st-home-eyebrow i{width:6px;height:6px;border-radius:50%;background:#eb53d1;box-shadow:0 0 10px #eb53d180}
+.ch.st-home .st-home-intro h1{margin:12px 0 8px;color:#fff;font:800 clamp(38px,10vw,58px)/.91 'Bricolage Grotesque','DM Sans',sans-serif;letter-spacing:-.065em;text-transform:none}
+.st-home-intro h1 em{color:#e770e6;font-style:normal}
+.st-home-intro p{margin:0;color:#ad9caf;font:500 12px 'DM Sans',sans-serif}
+.st-home-categories{display:flex;align-items:center;gap:23px;overflow-x:auto;margin:8px -1px 20px;border-bottom:1px solid rgba(235,202,244,.12);scrollbar-width:none}
+.st-home-categories::-webkit-scrollbar{display:none}
+.st-home-categories button,.st-home-categories span{position:relative;flex:0 0 auto;padding:0 0 11px;border:0;background:none;color:#796d80;font:750 11px 'DM Sans',sans-serif;letter-spacing:.025em}
+.st-home-categories button{color:#fff;cursor:default}
+.st-home-categories button:after{position:absolute;right:0;bottom:-1px;left:0;height:2px;border-radius:2px;background:#db4fe7;content:""}
+.ch.st-home .st-dir-section-head{margin-bottom:10px}
+.ch.st-home .st-dir-section-head h2{font:750 20px/1.15 'Bricolage Grotesque','DM Sans',sans-serif;letter-spacing:-.04em}
+.ch.st-home .st-dir-overline{color:#9f8ba6;font-size:8px}
+.ch.st-home .st-dir-total{color:#db9ce7;font-size:10px}
+.ch.st-home .st-dir-filters{gap:6px;padding:2px 0 11px}
+.ch.st-home .st-dir-filter{min-height:29px;padding:0 10px;border-color:rgba(223,185,235,.14);border-radius:999px;background:#19131e;color:#b5a8bc;font-size:9px}
+.ch.st-home .st-dir-filter.is-active{border-color:rgba(224,91,241,.57);background:rgba(206,61,222,.17);color:#f3adf5;box-shadow:none}
+.ch.st-home .st-dir-grid.st-home-grid{gap:11px 10px;align-items:start;margin-top:0}
+.ch.st-home .st-home-grid>li:nth-child(even){transform:translateY(13px)}
+.ch.st-home .st-home-grid>li:nth-child(odd){transform:translateY(0)}
+.ch.st-home .st-home-grid>li .st-dir-card{position:relative;min-height:0;height:auto;overflow:hidden;border:1px solid rgba(238,211,245,.13);border-radius:16px;background:#1a141f;box-shadow:0 10px 25px rgba(0,0,0,.24)}
+.ch.st-home .st-home-grid .st-dir-art{aspect-ratio:.88/1;background:#25162d}
+.ch.st-home .st-home-grid .st-dir-art img{filter:saturate(.84);transition:transform .35s ease}
+.ch.st-home .st-home-grid .st-dir-card:hover .st-dir-art img{transform:scale(1.035)}
+.ch.st-home .st-home-grid .st-dir-art-shade{inset:25% 0 0;background:linear-gradient(180deg,transparent 0%,rgba(9,6,13,.2) 38%,rgba(8,5,12,.9) 100%)}
+.ch.st-home .st-home-grid .st-dir-live,.ch.st-home .st-home-grid .st-dir-count{top:8px;padding:5px 7px;border-color:#ffffff25;background:#100d13b5;font-size:7px;backdrop-filter:blur(8px)}
+.ch.st-home .st-home-grid .st-dir-live{left:8px}
+.ch.st-home .st-home-grid .st-dir-live.is-live{color:#ffc3f3}
+.ch.st-home .st-home-grid .st-dir-live.is-live i{background:#ed53c8;box-shadow:0 0 8px #ed53c880}
+.ch.st-home .st-home-grid .st-dir-count{right:8px}
+.ch.st-home .st-home-grid .st-dir-video-tag{display:none}
+.ch.st-home .st-home-grid .st-dir-card-copy{position:absolute;z-index:3;right:10px;bottom:10px;left:10px;display:flex;align-items:flex-end;gap:7px;padding:0;flex-direction:row}
+.ch.st-home .st-home-grid .st-dir-card-titles{min-width:0;flex:1}
+.ch.st-home .st-home-grid .st-dir-card-titles h3{color:#fff;font:750 14px/1.1 'Bricolage Grotesque','DM Sans',sans-serif;text-shadow:0 2px 10px #000}
+.ch.st-home .st-home-grid .st-dir-card-titles p{margin-top:4px;color:#d0c5d4;font-size:8px;text-shadow:0 1px 7px #000;white-space:normal;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
+.ch.st-home .st-home-grid .st-dir-enter{width:auto;min-width:29px;height:29px;flex:0 0 29px;border:1px solid #ffffff38;border-radius:50%;background:rgba(17,11,21,.56);color:#fff;font-size:0}
+.ch.st-home .st-home-grid .st-dir-enter:after{content:"↗";font:700 14px 'DM Sans',sans-serif}
+.ch.st-home .st-home-grid .st-home-go-live{position:relative;align-self:start;min-height:0;padding:0;border:0;background:none}
+.ch.st-home .st-home-go-live-button{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;width:100%;aspect-ratio:.88/1;padding:13px;border:1px solid rgba(227,122,239,.35);border-radius:16px;background:radial-gradient(ellipse at 82% 18%,rgba(244,110,231,.26),transparent 34%),linear-gradient(145deg,#3a1e47,#1d1427 65%,#19131e);color:#fff;text-align:left;cursor:pointer}
+.st-home-go-live-icon{display:grid;place-items:center;width:36px;height:36px;border:1px solid #f2a6f0;background:#d84ce926;border-radius:12px;color:#f6b6ee;position:absolute;top:13px;left:13px}
+.st-home-go-live-copy{display:grid;gap:4px}
+.st-home-go-live-copy strong{font:750 16px 'Bricolage Grotesque','DM Sans',sans-serif}
+.st-home-go-live-copy small{color:#c3adca;font:500 9px 'DM Sans',sans-serif}
+.st-home-go-live-button>svg{color:#f49be9}
+.ch.st-home .st-dir-creators{margin-top:36px}
+.ch.st-home .st-dir-live-stream{border-color:rgba(219,105,233,.18);background:linear-gradient(130deg,#1f1625,#15111a)}
+.ch.st-home .st-dir-live-stream-icon{border-color:rgba(230,108,235,.3);background:rgba(208,72,223,.1);color:#ed9fea}
+.ch.st-home .st-dir-live-stream>b{color:#eca0eb}
+.ch.st-home .st-dir-footer{border-color:rgba(220,179,233,.12)}
+.ch.st-home .st-dir-footer>span{color:#76677d}
+body.streamtalk-directory-screen #root .app-bottom-nav{background:rgba(15,11,18,.96);border-color:rgba(225,184,239,.12);box-shadow:0 -10px 30px rgba(0,0,0,.46);backdrop-filter:blur(18px)}
+body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-bottom-link{color:#a396aa}
+body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-bottom-link.is-active{color:#f4b0f1}
+body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-bottom-link.is-active:after{background:#e454db}
+body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-home-live{border-color:#f2b4ef;background:linear-gradient(145deg,#eb70df,#a13be0);box-shadow:0 5px 22px rgba(204,66,223,.36)}
+body.streamtalk-directory-screen #root .app-bottom-unread{position:absolute;top:7px;left:calc(50% + 6px);min-width:15px;height:15px;padding:0 4px;border:1.5px solid #100b14;border-radius:999px;background:#ed4cab;color:#fff;font:800 8px/12px 'DM Sans',sans-serif;text-align:center}
+body.streamtalk-directory-screen #root .app-bottom-link{position:relative}
+@media(min-width:760px){
+  .ch.st-home .st-dir-grid.st-home-grid{gap:14px}
+  .ch.st-home .st-home-intro{padding-top:35px}
+}
+@media(max-width:420px){
+  .ch.st-home{padding-right:13px;padding-left:13px}
+  .ch.st-home .st-dir-account{gap:5px}
+  .ch.st-home .st-dir-wallet{max-width:91px;overflow:hidden;text-overflow:ellipsis}
+  .st-home-intro{padding-top:24px}
+  .ch.st-home .st-home-intro h1{font-size:41px}
+  .ch.st-home .st-home-grid .st-dir-art{aspect-ratio:.82/1}
+  .ch.st-home .st-home-go-live-button{aspect-ratio:.82/1;padding:10px}
+  .st-home-go-live-icon{top:10px;left:10px;width:33px;height:33px}
+  .ch.st-home .st-home-grid .st-dir-card-titles h3{font-size:12px}
+}
+@media(prefers-reduced-motion:reduce){
+  .ch.st-home .st-home-grid .st-dir-art img{transition:none}
+}
+
+/* Final Home reference refinements. */
+.ch.st-home{--dir-lime:#a6ff00;padding:0 14px calc(112px + env(safe-area-inset-bottom));background:radial-gradient(ellipse at 83% 0%,rgba(111,36,142,.2),transparent 34%),radial-gradient(ellipse at 0% 45%,rgba(85,34,121,.13),transparent 38%),linear-gradient(180deg,#0b090e 0%,#100b14 56%,#0a080c 100%)}
+.ch.st-home .ch-in{max-width:650px}
+.ch.st-home .st-dir-lockup .st-brand{display:grid;place-items:center;width:38px;height:38px;border:1px solid rgba(238,194,255,.24);border-radius:12px;background:linear-gradient(145deg,#2b1834,#17121d);box-shadow:0 4px 13px #0005}
+.ch.st-home .st-dir-lockup .st-shield-logo{width:29px;height:29px}
+.ch.st-home .st-home-app-logo{display:grid;place-items:center;width:38px;height:38px;border:1px solid rgba(238,194,255,.24);border-radius:12px;background:linear-gradient(145deg,#32203b,#17121d);box-shadow:0 4px 13px #0005;color:#a6ff00;text-decoration:none;font:900 15px 'Bricolage Grotesque','DM Sans',sans-serif;letter-spacing:-.06em}
+.ch.st-home .st-dir-wallet{gap:6px;border-color:rgba(155,218,161,.16);background:#132019;color:#e2f2e4}
+.ch.st-home .st-dir-wallet.is-unlimited{border-color:rgba(115,225,129,.2);background:#12251a;color:#d5f5d8}
+.st-dir-wallet.is-unlimited i{width:6px;height:6px;border-radius:50%;background:#54e878;box-shadow:0 0 8px #54e87880}
+.ch.st-home .st-home-avatar{cursor:pointer}
+.ch.st-home .st-home-profile-menu>summary{list-style:none}
+.ch.st-home .st-home-profile-menu>summary::-webkit-details-marker{display:none}
+.st-home-profile-dropdown{position:absolute;z-index:20;top:41px;right:0;display:grid;min-width:130px;overflow:hidden;padding:5px;border:1px solid rgba(226,193,237,.16);border-radius:13px;background:#1b1420;box-shadow:0 12px 30px #0008}
+.st-home-profile-dropdown a,.st-home-profile-dropdown button{display:block;width:100%;padding:10px;border:0;border-radius:8px;background:transparent;color:#f7effa;text-align:left;text-decoration:none;font:700 12px 'DM Sans',sans-serif}
+.st-home-profile-dropdown a:hover,.st-home-profile-dropdown button:hover{background:#302038}
+.ch.st-home .st-dir-header{padding-bottom:0}
+.ch.st-home .st-home-categories{margin:9px -2px 13px}
+.ch.st-home .st-dir-search-wrap{max-width:none;margin:0 0 13px}
+.ch.st-home .st-dir-search{height:41px}
+.ch.st-home .st-dir-search-submit{flex-basis:65px;height:41px}
+.ch.st-home .st-dir-section-head h2{font:750 20px/1.15 'Bricolage Grotesque','DM Sans',sans-serif}
+.ch.st-home .st-dir-filters{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.ch.st-home .st-dir-filters::-webkit-scrollbar{display:none}
+.ch.st-home .st-dir-filter{flex:0 0 auto}
+.ch.st-home .st-home-grid.st-dir-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:4px;grid-auto-flow:dense;gap:8px 10px;align-items:stretch}
+.ch.st-home .st-home-grid>li{min-width:0;min-height:0}
+.ch.st-home .st-home-grid>li:nth-child(4n+1){grid-row:span 34}
+.ch.st-home .st-home-grid>li:nth-child(4n+2){grid-row:span 18}
+.ch.st-home .st-home-grid>li:nth-child(4n+3){grid-row:span 17}
+.ch.st-home .st-home-grid>li:nth-child(4n){grid-row:span 25}
+.ch.st-home .st-home-grid>li.st-home-go-live{grid-row:span 25}
+.ch.st-home .st-home-grid>li .st-dir-card{height:100%;min-height:0}
+.ch.st-home .st-home-grid .st-dir-art{position:absolute;inset:0;height:100%;aspect-ratio:auto}
+.ch.st-home .st-home-grid .st-dir-art-shade{inset:24% 0 0;background:linear-gradient(180deg,transparent 0%,rgba(9,6,13,.16) 34%,rgba(8,5,12,.92) 100%)}
+.ch.st-home .st-home-grid .st-dir-live{top:9px;left:9px;right:9px;max-width:calc(100% - 18px);overflow:hidden;padding:5px 7px;border-color:#ffffff25;border-radius:8px;background:#100d13b5;font-size:8px}
+.ch.st-home .st-home-grid .st-dir-live>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ch.st-home .st-home-grid .st-dir-live.is-live{color:#fff}
+.ch.st-home .st-home-grid .st-dir-live.is-live i{background:#a6ff00;box-shadow:0 0 8px #a6ff0080}
+.ch.st-home .st-home-grid .st-dir-live:not(.is-live) i{background:#9b8ca0;box-shadow:none}
+.ch.st-home .st-home-grid .st-dir-count{top:auto;right:9px;bottom:9px;gap:4px;padding:6px 8px;border-color:#ffffff25;border-radius:999px;background:#100d13c9;color:#fff;font-size:10px;letter-spacing:0}
+.ch.st-home .st-home-grid .st-dir-count svg{color:#ff9f45;fill:#ff9f45}
+.st-home-card-copy{position:absolute;z-index:3;right:50px;bottom:10px;left:11px;display:grid;gap:4px;min-width:0}
+.st-home-card-category{overflow:hidden;color:#fff;text-overflow:ellipsis;font:800 clamp(20px,6vw,27px)/1 'Bricolage Grotesque','DM Sans',sans-serif;letter-spacing:-.045em;text-shadow:0 2px 12px #000}
+.st-home-card-subtitle{overflow:hidden;color:#dfd3e3;text-overflow:ellipsis;white-space:nowrap;font:600 9px/1.2 'DM Sans',sans-serif;text-shadow:0 1px 7px #000}
+.ch.st-home .st-home-go-live-button{height:100%;min-height:0;aspect-ratio:auto;align-items:flex-start;justify-content:flex-end;flex-direction:column;gap:8px;padding:13px;background:radial-gradient(ellipse at 75% 20%,rgba(255,139,241,.4),transparent 34%),linear-gradient(145deg,#b42bc5 0%,#7130b3 52%,#341641 100%)}
+.st-home-go-live-icon{position:absolute;top:24%;left:50%;width:76px;height:76px;transform:translateX(-50%);border:1.5px solid rgba(255,255,255,.72);border-radius:50%;background:rgba(255,255,255,.07);color:#fff}
+.st-home-go-live-copy strong{font-size:18px}
+.st-home-go-live-copy small{color:#f0d7f1;font-size:10px}
+.ch.st-home .st-home-grid .st-dir-count svg{fill:none}
+.ch.st-home .st-home-grid .st-dir-count svg path{fill:#ff9f45}
+.ch.st-home .st-home-categories{display:flex;align-items:center;gap:7px;overflow-x:auto;padding:0 2px;border-bottom:1px solid rgba(235,202,244,.1);scrollbar-width:none}
+.ch.st-home .st-home-categories::-webkit-scrollbar{display:none}
+.ch.st-home .st-home-categories button,.ch.st-home .st-home-categories span{position:relative;flex:0 0 auto;padding:8px 10px 10px;border:0;border-radius:9px 9px 0 0;background:transparent;color:#857b8d;font:750 11px 'DM Sans',sans-serif}
+.ch.st-home .st-home-categories button{background:rgba(187,74,216,.12);color:#fff}
+.ch.st-home .st-home-categories button:after{position:absolute;right:9px;bottom:-1px;left:9px;height:2px;border-radius:2px;background:#d94ee4;content:""}
+body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-bottom-link.is-active{color:#a6ff00}
+body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-bottom-link.is-active:after{background:#a6ff00}
+body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-home-live{width:56px;height:56px;border-radius:50%;margin-top:-17px;transform:none}
+body.streamtalk-directory-screen #root .app-bottom-unread{background:#ed354f}
+@media(max-width:420px){
+  .ch.st-home{padding-right:12px;padding-left:12px}
+  .ch.st-home .st-dir-account{gap:5px}
+  .ch.st-home .st-dir-wallet{max-width:100px;overflow:hidden;text-overflow:ellipsis}
+  .ch.st-home .st-home-grid .st-dir-live{font-size:7px}
+  .st-home-card-category{font-size:22px}
+  .st-home-go-live-icon{width:66px;height:66px}
+}
