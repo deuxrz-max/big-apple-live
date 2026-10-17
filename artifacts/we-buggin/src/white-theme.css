@@ -1097,3 +1097,75 @@ body.streamtalk-light-screen #root .ur-tv-frame:has(.ur-tv-placeholder),
 body.streamtalk-light-screen #root .ur-tv-frame:has(.ur-tv-empty) {
   background: #f3f0f6;
 }
+
+/* Shared bottom navigation: keep the Home treatment consistent on every route. */
+body #root .app-bottom-nav,
+body.streamtalk-light-screen #root .app-bottom-nav,
+body.streamtalk-gift-studio-screen #root .app-bottom-nav,
+body.streamtalk-directory-screen #root .app-bottom-nav {
+  background: rgba(8,7,11,.98) !important;
+  color: #f7f4fa !important;
+  border-top: 1px solid rgba(255,255,255,.15) !important;
+  box-shadow: 0 -8px 28px rgba(0,0,0,.48) !important;
+  backdrop-filter: blur(18px);
+}
+body #root .app-bottom-nav .app-bottom-link,
+body #root .app-bottom-nav .app-bottom-link.is-active,
+body.streamtalk-light-screen #root .app-bottom-nav .app-bottom-link,
+body.streamtalk-light-screen #root .app-bottom-nav .app-bottom-link.is-active,
+body.streamtalk-gift-studio-screen #root .app-bottom-nav .app-bottom-link,
+body.streamtalk-directory-screen #root .app-bottom-nav .app-bottom-link {
+  position: relative;
+  color: #e4e0e8 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-top: 0 !important;
+  font-family: 'DM Sans', system-ui, sans-serif !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: .01em;
+  text-shadow: 0 1px 2px rgba(0,0,0,.7);
+}
+body #root .app-bottom-nav .app-bottom-link svg,
+body.streamtalk-light-screen #root .app-bottom-nav .app-bottom-link svg,
+body.streamtalk-gift-studio-screen #root .app-bottom-nav .app-bottom-link svg,
+body.streamtalk-directory-screen #root .app-bottom-nav .app-bottom-link svg {
+  color: inherit !important;
+  stroke-width: 3 !important;
+}
+body #root .app-bottom-nav .app-bottom-link span,
+body.streamtalk-light-screen #root .app-bottom-nav .app-bottom-link span,
+body.streamtalk-gift-studio-screen #root .app-bottom-nav .app-bottom-link span,
+body.streamtalk-directory-screen #root .app-bottom-nav .app-bottom-link span {
+  color: inherit !important;
+  font-weight: 900 !important;
+}
+body #root .app-bottom-nav .app-bottom-link.is-active,
+body.streamtalk-light-screen #root .app-bottom-nav .app-bottom-link.is-active,
+body.streamtalk-gift-studio-screen #root .app-bottom-nav .app-bottom-link.is-active,
+body.streamtalk-directory-screen #root .app-bottom-nav .app-bottom-link.is-active {
+  color: #a6ff00 !important;
+}
+body #root .app-bottom-nav .app-bottom-link.is-active svg,
+body.streamtalk-light-screen #root .app-bottom-nav .app-bottom-link.is-active svg,
+body.streamtalk-gift-studio-screen #root .app-bottom-nav .app-bottom-link.is-active svg,
+body.streamtalk-directory-screen #root .app-bottom-nav .app-bottom-link.is-active svg {
+  color: #a6ff00 !important;
+  filter: drop-shadow(0 0 5px rgba(166,255,0,.48));
+}
+body #root .app-bottom-nav .app-bottom-link.is-active::after,
+body.streamtalk-light-screen #root .app-bottom-nav .app-bottom-link.is-active::after,
+body.streamtalk-gift-studio-screen #root .app-bottom-nav .app-bottom-link.is-active::after,
+body.streamtalk-directory-screen #root .app-bottom-nav .app-bottom-link.is-active::after {
+  content: "";
+  position: absolute;
+  right: auto;
+  bottom: 3px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #a6ff00 !important;
+  box-shadow: 0 0 8px rgba(166,255,0,.8);
+  transform: translateX(-50%);
+}

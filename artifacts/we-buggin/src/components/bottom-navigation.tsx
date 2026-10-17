@@ -26,7 +26,7 @@ export function BottomNavigation() {
         {items.slice(0, 2).map(({ label, icon: Icon, href, active }) => (
           <Link key={label} href={href} className={`app-bottom-link${active ? ' is-active' : ''}`}
             aria-current={active ? 'page' : undefined} data-testid={`bottom-nav-${label.toLowerCase()}`}>
-            <Icon size={26} strokeWidth={isHome && isSignedIn ? 3 : 2} aria-hidden="true" />
+            <Icon size={26} strokeWidth={3} aria-hidden="true" />
             <span>{label}</span>
           </Link>
         ))}
@@ -39,7 +39,7 @@ export function BottomNavigation() {
         {items.slice(2).map(({ label, icon: Icon, href, active }) => (
           <Link key={label} href={href} className={`app-bottom-link${active ? ' is-active' : ''}`}
             aria-current={active ? 'page' : undefined} data-testid={`bottom-nav-${label.toLowerCase()}`}>
-            <Icon size={26} strokeWidth={isHome && isSignedIn ? 3 : 2} aria-hidden="true" />
+            <Icon size={26} strokeWidth={3} aria-hidden="true" />
             {isHome && label === 'Message' && unreadCount > 0 && <b className="app-bottom-unread" aria-label={`${unreadCount} unread messages`} data-testid="badge-home-unread">{unreadCount > 99 ? '99+' : unreadCount}</b>}
             <span>{label}</span>
           </Link>
