@@ -137,7 +137,7 @@
           }
         },
         "responses": {
-          "201": {"description": "Transparent animation saved as a draft version", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioVersion"}}}},
+          "201": {"description": "Transparent animation saved; activated immediately when an existing gift is selected", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioVersion"}}}},
           "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
           "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
           "403": {"description": "Owner access required"},
@@ -188,7 +188,7 @@
           }
         },
         "responses": {
-          "201": {"description": "Server-processed transparent animation saved as a draft", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioVersion"}}}},
+          "201": {"description": "Server-processed transparent animation saved; activated immediately when an existing gift is selected", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioVersion"}}}},
           "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
           "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
           "403": {"description": "Owner access required"},
@@ -1176,9 +1176,10 @@
       },
       "GiftStudioPlaybackMedia": {
         "type": "object",
-        "required": ["versionId", "webmUrl", "safariUrl", "durationMs"],
+        "required": ["versionId", "name", "webmUrl", "safariUrl", "durationMs"],
         "properties": {
           "versionId": {"type": "string", "format": "uuid"},
+          "name": {"type": "string", "minLength": 1, "maxLength": 60},
           "webmUrl": {"type": "string"},
           "safariUrl": {"type": "string"},
           "durationMs": {"type": "integer", "minimum": 1, "maximum": 15000}
@@ -1687,6 +1688,7 @@
         "properties": {
           "id": {"type": "string"},
           "giftId": {"type": "string"},
+          "giftName": {"type": "string"},
           "senderUsername": {"type": "string"},
           "recipientUsername": {"type": "string"},
           "senderName": {"type": "string"},
@@ -1703,7 +1705,7 @@
           "recipientPassport": {"$ref": "#/components/schemas/StreamerPassportBadgeSummary"},
           "createdAt": {"type": "string", "format": "date-time"}
         },
-        "required": ["id", "giftId", "senderUsername", "recipientUsername", "senderName", "recipientName", "senderBadgeId", "recipientBadgeId", "senderBadgeName", "recipientBadgeName", "senderBadgeImage", "recipientBadgeImage", "createdAt"]
+        "required": ["id", "giftId", "giftName", "senderUsername", "recipientUsername", "senderName", "recipientName", "senderBadgeId", "recipientBadgeId", "senderBadgeName", "recipientBadgeName", "senderBadgeImage", "recipientBadgeImage", "createdAt"]
       },
       "SocialGiftInput": {
         "type": "object",

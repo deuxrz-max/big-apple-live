@@ -3,10 +3,11 @@ import { and, eq, ne, or, ilike, desc, sql } from "drizzle-orm";
 import type { SocialProfileInput } from "@workspace/api-zod";
 import { RoomError } from "../room-store";
 import { assertContact, ensureSocial, lockAccounts, lockPair, pairBlocked, person, requireAccount, targetAccount, wallet } from "./core";
-import { COUNTRIES, COUNTRY_CODES, GIFTS, PRODUCTS } from "./catalog";
+import { COUNTRIES, COUNTRY_CODES, PRODUCTS } from "./catalog";
 import { roomStore } from "../room-store";
 import { accountBadgeState, myBadgeViews, visibleMonthlyPurchaseBadgeSummaries } from "./monthly-credit-badges";
 import { getMyEntranceEffectSettings } from "./entrance-effect-preferences";
+import { giftCatalogWithActiveNames } from "../gift-studio-catalog";
 
 export async function getMe(id: string) {
   const profile = await requireAccount(id);
@@ -17,14 +18,18 @@ export async function getMe(id: string) {
     accountBadgeState(id),
     myBadgeViews(id),
   ]);
+  const [gifts, entranceEffects] = await Promise.all([
+    giftCatalogWithActiveNames(),
+    getMyEntranceEffectSettings(id),
+  ]);
   return { profile: await person(id, profile, undefined, true), wallet: await wallet(id, db, profile.username), inventory: giftsOwned.map(g => g.giftId),
     giftQuantities: Object.fromEntries(giftsOwned.map(g => [g.giftId, g.quantity])),
     badges,
     equippedBadgeId: badgeState.equippedBadgeId,
     badgeExpirations: Object.fromEntries(badges.filter(badge => badge.expiresAt)
       .map(badge => [badge.id, badge.expiresAt!])),
-    loginStreak: streak?.consecutiveDays ?? 0, products: PRODUCTS, gifts: GIFTS, countries: COUNTRIES,
-    entranceEffects: await getMyEntranceEffectSettings(id) };
+    loginStreak: streak?.consecutiveDays ?? 0, products: PRODUCTS, gifts, countries: COUNTRIES,
+    entranceEffects };
 }
 export async function saveSocialProfile(id: string, input: SocialProfileInput) {
   const profile = await requireAccount(id);

@@ -48,19 +48,27 @@ export function GiftAnimationPlayer({
     query: {
       queryKey: getGetActiveGiftStudioMediaQueryKey(giftId),
       enabled: !mediaOverride,
-      staleTime: 5 * 60 * 1000,
+      staleTime: 0,
+      refetchOnMount: "always",
+      refetchOnWindowFocus: true,
       retry: false,
     },
   });
   const [manifestTimedOut, setManifestTimedOut] = useState(false);
 
   useEffect(() => {
-    if (mediaOverride || !activeQuery.isLoading) return;
+    if (mediaOverride || !activeQuery.isFetching) {
+      setManifestTimedOut(false);
+      return;
+    }
+    setManifestTimedOut(false);
     const timeout = window.setTimeout(() => setManifestTimedOut(true), 2500);
     return () => window.clearTimeout(timeout);
-  }, [activeQuery.isLoading, giftId, mediaOverride]);
+  }, [activeQuery.isFetching, giftId, mediaOverride]);
 
-  const customMedia = mediaOverride ?? (manifestTimedOut ? null : activeQuery.data?.media ?? null);
+  const customMedia = mediaOverride ?? (activeQuery.isFetching && !manifestTimedOut
+    ? null
+    : manifestTimedOut ? null : activeQuery.data?.media ?? null);
   if (customMedia) {
     return <TransparentGiftAnimation
       key={customMedia.versionId}
@@ -70,7 +78,7 @@ export function GiftAnimationPlayer({
       onFinish={onFinish}
     />;
   }
-  if (!mediaOverride && activeQuery.isLoading && !manifestTimedOut) return null;
+  if (!mediaOverride && activeQuery.isFetching && !manifestTimedOut) return null;
 
   if (giftId === "heart") return <HeartAnimation onFinish={onFinish} />;
   if (giftId === "cosmic-encore") return <CosmicEncoreAnimation onFinish={onFinish} />;
@@ -132,7 +140,7 @@ function TransparentGiftAnimation({
     };
   }, [media.versionId, media.durationMs]);
 
-  const presentation = PRESENTATION[giftId];
+  const presentation = { ...PRESENTATION[giftId], name: media.name || PRESENTATION[giftId].name };
   const positionClass = `big-tier-gift-overlay--${presentation.position}`;
   const mediaClass = `big-tier-gift-video big-tier-gift-video--alpha gift-studio-custom-media${fading ? " is-fading-out" : ""}`;
   const src = useImage ? giftStudioMediaUrl(media.safariUrl) : giftStudioMediaUrl(media.webmUrl);

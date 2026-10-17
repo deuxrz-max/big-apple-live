@@ -10,6 +10,8 @@ import { requireAdult } from '../community';
 import { hasDevelopmentUnlimitedCredits, planCreditSpend } from "./credits-policy";
 import { giftNameColorForSentCredits } from "./gift-name-color";
 import { liveStreamIdForAccount, isLiveStreamActiveOrStarting } from "../live-stream-policy";
+import { activeGiftDisplayName } from "../gift-studio-catalog";
+import type { GiftStudioGiftId } from "@workspace/api-zod";
 
 /** Unlimited test gifts keep the wallet balance unchanged but retain their nominal value in the ledger. */
 export function giftLedgerDebit(debit: number, cost: number, unlimited: boolean): number {
@@ -33,8 +35,14 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
   context?: { roomId: string; sessionId: string } | { streamId: string }) {
   const sender = await requireAccount(id);
   const target = await targetAccount(recipient);
-  const item = GIFTS.find(g => g.id === giftId);
-  if (!item) throw new RoomError(400, "Choose a gift from the catalog");
+  const catalogItem = GIFTS.find(g => g.id === giftId);
+  if (!catalogItem) throw new RoomError(400, "Choose a gift from the catalog");
+  const item = {
+    ...catalogItem,
+    name: ["heart", "spirit-pup", "moonfox", "cosmic-encore", "fireworks", "rose-shower", "whip"].includes(catalogItem.id)
+      ? await activeGiftDisplayName(catalogItem.id as GiftStudioGiftId)
+      : catalogItem.name,
+  };
   const roomGift = isRoomGift(item.id);
   const roomContext = context && "roomId" in context ? context : null;
   const streamContext = context && "streamId" in context ? context : null;

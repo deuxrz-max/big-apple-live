@@ -2148,6 +2148,8 @@ export const GetActiveGiftStudioMediaParams = zod.object({
   "giftId": zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip'])
 })
 
+export const getActiveGiftStudioMediaResponseMediaOneNameMax = 60;
+
 export const getActiveGiftStudioMediaResponseMediaOneDurationMsMax = 15000;
 
 
@@ -2155,6 +2157,7 @@ export const getActiveGiftStudioMediaResponseMediaOneDurationMsMax = 15000;
 export const GetActiveGiftStudioMediaResponse = zod.object({
   "media": zod.union([zod.object({
   "versionId": zod.string().uuid(),
+  "name": zod.string().min(1).max(getActiveGiftStudioMediaResponseMediaOneNameMax),
   "webmUrl": zod.string(),
   "safariUrl": zod.string(),
   "durationMs": zod.number().int().min(1).max(getActiveGiftStudioMediaResponseMediaOneDurationMsMax)
@@ -2443,6 +2446,7 @@ export const GetRoomGiftEventsResponse = zod.object({
   "events": zod.array(zod.object({
   "id": zod.string(),
   "giftId": zod.string(),
+  "giftName": zod.string(),
   "senderUsername": zod.string(),
   "recipientUsername": zod.string(),
   "senderName": zod.string(),

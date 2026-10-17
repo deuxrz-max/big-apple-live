@@ -10,6 +10,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import sharp from "sharp";
 import { RoomError } from "./room-store";
+import { giftNameFromSettings } from "./gift-studio-catalog";
 
 const execFileAsync = promisify(execFile);
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
@@ -296,12 +297,6 @@ export async function createGiftStudioVersion(input: {
   const id = randomUUID();
   const safeName = input.originalName.replace(/^.*[\\/]/, "").replace(/[\u0000-\u001f\u007f]/g, "").slice(0, 120)
     || `source.${source.type}`;
-  const [maxVersionRow] = input.giftId
-    ? await db.select({ version: max(giftStudioAssets.version) }).from(giftStudioAssets)
-      .where(eq(giftStudioAssets.giftId, input.giftId))
-    : [];
-  const version = input.giftId ? Number(maxVersionRow?.version ?? 0) + 1 : 1;
-
   try {
     await createSafariFallback(input.processedWebmPath, fallbackPath);
     const fallbackBytes = (await fs.stat(fallbackPath)).size;
@@ -319,12 +314,28 @@ export async function createGiftStudioVersion(input: {
       ]);
       const failedUpload = uploaded.find((result) => result.status === "rejected");
       if (failedUpload?.status === "rejected") throw failedUpload.reason;
-      const [row] = await db.insert(giftStudioAssets).values({
-        id, ownerId: input.ownerId, giftId: input.giftId, version, status: "draft",
-        originalName: safeName, originalExtension: source.type, durationMs: source.durationMs,
-        originalBytes: input.originalBytes, webmBytes: input.processedWebmBytes,
-        safariBytes: fallbackBytes, settings: { ...input.settings },
-      }).returning();
+      const row = await db.transaction(async (tx) => {
+        const [maxVersionRow] = input.giftId
+          ? await tx.select({ version: max(giftStudioAssets.version) }).from(giftStudioAssets)
+            .where(eq(giftStudioAssets.giftId, input.giftId))
+          : [];
+        const version = input.giftId ? Number(maxVersionRow?.version ?? 0) + 1 : 1;
+        const status = input.giftId ? "active" : "draft";
+        if (input.giftId) {
+          await tx.update(giftStudioAssets).set({ status: "draft", activatedAt: null }).where(and(
+            eq(giftStudioAssets.giftId, input.giftId),
+            eq(giftStudioAssets.status, "active"),
+          ));
+        }
+        const [inserted] = await tx.insert(giftStudioAssets).values({
+          id, ownerId: input.ownerId, giftId: input.giftId, version, status,
+          originalName: safeName, originalExtension: source.type, durationMs: source.durationMs,
+          originalBytes: input.originalBytes, webmBytes: input.processedWebmBytes,
+          safariBytes: fallbackBytes, settings: { ...input.settings },
+          activatedAt: input.giftId ? new Date() : null,
+        }).returning();
+        return inserted;
+      });
       if (!row) throw new Error("Gift Studio version was not created");
       return toVersion(row);
     } catch (error) {
@@ -405,6 +416,7 @@ export async function getActiveGiftStudioMedia(giftId: GiftStudioGiftId) {
   if (!row) return { media: null };
   return { media: {
     versionId: row.id,
+    name: giftNameFromSettings(row.settings, giftId),
     webmUrl: mediaUrl(row.id, "webm", false),
     safariUrl: mediaUrl(row.id, "safari", false),
     durationMs: row.durationMs,

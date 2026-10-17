@@ -231,6 +231,9 @@
 .gs .gs-preview-label span .gs-ready-label { color:#147244; }
 .gs-ready-label { display:inline-flex; align-items:center; justify-content:flex-end; gap:4px; color:#147244 !important; font-weight:700 !important; }
 .gs-after-actions { display:grid; gap:9px; padding:12px; background:#fff; }
+.gs-save-confirmation { display:grid; gap:9px; padding:11px; border:1px solid #a7d9bb; border-radius:12px; background:#f0faf4; color:#155b37; }
+.gs-save-confirmation > strong { font-size:14px; line-height:1.35; }
+.gs-save-confirmation .gs-caption { margin:0; }
 .gs-after-downloads { display:flex; flex-wrap:wrap; gap:8px; }
 .gs-after-downloads .gs-button { min-height:40px; }
 .gs-remove-background { width:100%; min-height:48px; font-size:15px; }
@@ -594,6 +597,7 @@ body.streamtalk-gift-studio-screen #root .app-bottom-link.is-active {
 .gs-name-field input { border-color:#444; background:#111; color:#f7f7f4; }
 .gs .gs-preview-label span .gs-ready-label,.gs-ready-label { color:#d6f4a6 !important; }
 .gs-after-actions,.gs-save-destination { border-color:#333; background:#101010; color:#f7f7f4; }
+.gs-save-confirmation { border-color:#286344; background:#102016; color:#d4f8e1; }
 .gs-save-destination input[type="radio"] { accent-color:#ffe600; }
 .gs-remove-background { min-height:54px; }
 .gs-preview-note { border-color:#7d3840; background:rgba(28,10,12,.96); color:#ffc4c8; }

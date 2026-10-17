@@ -351,7 +351,7 @@ router.get("/social/gift-studio/media/:versionId/:variant", async (req, res): Pr
 router.get("/social/gift-studio/active/:giftId", async (req, res): Promise<void> => {
   const params = GetActiveGiftStudioMediaParams.safeParse(req.params);
   if (!params.success) throw new RoomError(404, "Gift not found.");
-  res.json(GetActiveGiftStudioMediaResponse.parse(await getActiveGiftStudioMedia(params.data.giftId)));
+  res.set("Cache-Control", "no-store").json(GetActiveGiftStudioMediaResponse.parse(await getActiveGiftStudioMedia(params.data.giftId)));
 });
 const name = (raw: string | string[] | undefined) => {
   const value = typeof raw === "string" ? raw : "";

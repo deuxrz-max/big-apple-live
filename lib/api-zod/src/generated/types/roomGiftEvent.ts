@@ -10,6 +10,7 @@ import type { StreamerPassportBadgeSummary } from './streamerPassportBadgeSummar
 export interface RoomGiftEvent {
   id: string;
   giftId: string;
+  giftName: string;
   senderUsername: string;
   recipientUsername: string;
   senderName: string;

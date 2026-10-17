@@ -5,6 +5,7 @@ import { AlertTriangle, Archive, Check, Download, Pipette, FileVideo2, LockKeyho
 import {
   getGetActiveGiftStudioMediaQueryKey,
   getGetGiftStudioLibraryQueryKey,
+  getGetSocialMeQueryKey,
   useAssignGiftStudioVersionToGift,
   useGetGiftStudioLibrary,
   useSetGiftStudioVersionActive,
@@ -199,6 +200,7 @@ export function GiftStudioPage() {
   const [saveError, setSaveError] = useState('');
   const [savingVersion, setSavingVersion] = useState(false);
   const [savedVersionId, setSavedVersionId] = useState<string | null>(null);
+  const [savedVersionPreview, setSavedVersionPreview] = useState<GiftStudioVersion | null>(null);
   const [selectedPreview, setSelectedPreview] = useState<GiftStudioVersion | null>(null);
   const [playingPreview, setPlayingPreview] = useState<GiftStudioVersion | null>(null);
   const [playingSample, setPlayingSample] = useState<GiftStudioVersion | null>(null);
@@ -265,6 +267,7 @@ export function GiftStudioPage() {
     setProcessingSession(null);
     setFramesZipBlob(null);
     setSavedVersionId(null);
+    setSavedVersionPreview(null);
     processedSettingsRef.current = null;
     setStatus('');
     setError('');
@@ -547,11 +550,20 @@ export function GiftStudioPage() {
         settings,
         getToken,
       });
-      await client.invalidateQueries({ queryKey: getGetGiftStudioLibraryQueryKey() });
+      await Promise.all([
+        client.invalidateQueries({ queryKey: getGetGiftStudioLibraryQueryKey() }),
+        ...(addToGiftSelection && giftId
+          ? [
+            client.invalidateQueries({ queryKey: getGetActiveGiftStudioMediaQueryKey(giftId) }),
+            client.invalidateQueries({ queryKey: getGetSocialMeQueryKey() }),
+          ]
+          : []),
+      ]);
       setSavedVersionId(saved.id);
       setStatus(addToGiftSelection && giftId
-        ? `Saved “${trimmedName}” to Saved gifts as a ${GIFTS.find((gift) => gift.id === giftId)?.label} draft.`
+        ? `${GIFTS.find((gift) => gift.id === giftId)?.label} is now “${trimmedName}” and its new animation is active. The previous version is kept in Saved gifts as a backup.`
         : `Saved “${trimmedName}” to the Saved gifts list.`);
+      setSavedVersionPreview(addToGiftSelection && giftId ? saved : null);
       setSaveError('');
     } catch (cause) {
       setSaveError(ownerErrorText(cause));
@@ -578,7 +590,10 @@ export function GiftStudioPage() {
     setActive.mutate({ versionId: version.id, data: { active } }, {
       onSuccess: (updated) => {
         void client.invalidateQueries({ queryKey: getGetGiftStudioLibraryQueryKey() });
-        if (updated.giftId) void client.invalidateQueries({ queryKey: getGetActiveGiftStudioMediaQueryKey(updated.giftId) });
+        if (updated.giftId) {
+          void client.invalidateQueries({ queryKey: getGetActiveGiftStudioMediaQueryKey(updated.giftId) });
+          void client.invalidateQueries({ queryKey: getGetSocialMeQueryKey() });
+        }
         setSelectedPreview((current) => current?.id === updated.id ? updated : current);
         setStatus(active ? `${GIFTS.find((gift) => gift.id === updated.giftId)?.label} version ${updated.version} is now active.` : `Version ${updated.version} returned to draft.`);
       },
@@ -594,8 +609,14 @@ export function GiftStudioPage() {
     setLibraryActionId(version.id);
     setError('');
     try {
-      await giftStudioLibraryRequest(`/api/social/admin/gift-studio/versions/${version.id}/name`, 'PATCH', getToken, { name: trimmed });
+      const updated = await giftStudioLibraryRequest(`/api/social/admin/gift-studio/versions/${version.id}/name`, 'PATCH', getToken, { name: trimmed }) as GiftStudioVersion;
       await client.invalidateQueries({ queryKey: getGetGiftStudioLibraryQueryKey() });
+      if (updated.status === 'active' && updated.giftId) {
+        await Promise.all([
+          client.invalidateQueries({ queryKey: getGetActiveGiftStudioMediaQueryKey(updated.giftId) }),
+          client.invalidateQueries({ queryKey: getGetSocialMeQueryKey() }),
+        ]);
+      }
       setStatus(`Saved gift renamed to “${trimmed}”.`);
       setSelectedPreview((current) => current?.id === version.id ? { ...current, settings: { ...current.settings, draftName: trimmed } } : current);
     } catch (cause) {
@@ -720,7 +741,23 @@ export function GiftStudioPage() {
                         {savingVersion ? 'Saving…' : savedVersionId ? 'Saved to Gift Studio' : addToGiftSelection ? 'Save to selected gift' : 'Save as gift'} <Check size={15} />
                       </button>
                       {saveError && <div className="gs-error" role="alert" data-testid="state-upload-error">{saveError}</div>}
-                      <p className="gs-caption gs-save-note" id="gs-save-target-note">This saves the named clip in Streamtalk’s Saved gifts list. To use it in gifting, attach it to an existing catalog gift and activate it there; prices and gift credits do not change.</p>
+                      {savedVersionPreview?.giftId && <div className="gs-save-confirmation" data-testid="panel-active-gift-confirmation">
+                        <strong>{GIFTS.find((gift) => gift.id === savedVersionPreview.giftId)?.label} now shows “{versionName(savedVersionPreview)}”</strong>
+                        <div className="gs-library-preview checker">
+                          <video
+                            src={giftStudioMediaUrl(savedVersionPreview.webmUrl)}
+                            muted
+                            playsInline
+                            loop
+                            autoPlay
+                            preload="metadata"
+                            aria-label={`Preview of the new ${versionName(savedVersionPreview)} gift animation`}
+                            data-testid="video-confirmed-active-gift"
+                          />
+                        </div>
+                        <p className="gs-caption">The new animation is active. The previous version remains in Saved gifts as a backup.</p>
+                      </div>}
+                      <p className="gs-caption gs-save-note" id="gs-save-target-note">Saving to an existing gift activates the new animation and name immediately. The previous version stays in Saved gifts as a backup. Gift prices and credits do not change.</p>
                     </div>}
                     {processedUrl && <div className="gs-after-downloads">
                       <button className="gs-button" type="button" onClick={() => processedBlob && downloadBlob(processedBlob, `${safeGiftFilePrefix()}-transparent.webm`)} disabled={!processedBlob} data-testid="button-download-webm"><Download size={14} /> Download WebM</button>
@@ -803,6 +840,7 @@ export function GiftStudioPage() {
         senderName="Preview"
         mediaOverride={{
           versionId: playingPreview.id,
+           name: versionName(playingPreview),
           webmUrl: playingPreview.webmUrl,
           safariUrl: playingPreview.safariUrl,
           durationMs: playingPreview.durationMs,

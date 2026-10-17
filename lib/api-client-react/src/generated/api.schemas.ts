@@ -2338,6 +2338,11 @@ export interface GiftStudioLibrary {
 
 export interface GiftStudioPlaybackMedia {
   versionId: string;
+  /**
+     * @minLength 1
+     * @maxLength 60
+     */
+  name: string;
   webmUrl: string;
   safariUrl: string;
   /**
@@ -2650,6 +2655,7 @@ export interface SocialAction {
 export interface RoomGiftEvent {
   id: string;
   giftId: string;
+  giftName: string;
   senderUsername: string;
   recipientUsername: string;
   senderName: string;

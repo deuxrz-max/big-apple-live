@@ -8,6 +8,11 @@
 
 export interface GiftStudioPlaybackMedia {
   versionId: string;
+  /**
+     * @minLength 1
+     * @maxLength 60
+     */
+  name: string;
   webmUrl: string;
   safariUrl: string;
   /**
