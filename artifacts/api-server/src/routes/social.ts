@@ -20,6 +20,7 @@ import {
   GetGiftStudioLibraryResponse, SetGiftStudioVersionActiveBody, SetGiftStudioVersionActiveParams,
   SetGiftStudioVersionActiveResponse, AssignGiftStudioVersionToGiftBody, AssignGiftStudioVersionToGiftParams,
   AssignGiftStudioVersionToGiftResponse, GetGiftStudioVersionMediaParams,
+  UpdateGiftStudioCatalogItemBody, UpdateGiftStudioCatalogItemParams, UpdateGiftStudioCatalogItemResponse,
   GetActiveGiftStudioMediaParams, GetActiveGiftStudioMediaResponse,
 } from "@workspace/api-zod";
 import { accountId, sameOrigin } from "./identity";
@@ -48,7 +49,7 @@ import { saveEquippedBadge } from "../lib/social/monthly-credit-badges";
 import {
   createGiftStudioVersion, deleteGiftStudioVersion, getActiveGiftStudioMedia, giftStudioMediaFile,
   listGiftStudioVersions, processGiftStudioClipOnServer, renameGiftStudioVersion,
-  setGiftStudioVersionActive, assignGiftStudioVersionToGift,
+  setGiftStudioVersionActive, assignGiftStudioVersionToGift, updateGiftCatalogItem,
 } from "../lib/gift-studio";
 import {
   claimGiftStudioProcessingSession, discardGiftStudioProcessingSession,
@@ -169,6 +170,16 @@ router.get("/social/admin/gift-studio/library", ownerOnly, async (req, res): Pro
   res.json(GetGiftStudioLibraryResponse.parse(await listGiftStudioVersions(accountId(req))));
 });
 
+router.patch("/social/admin/gift-studio/catalog/:giftId", ownerOnly, async (req, res): Promise<void> => {
+  const params = UpdateGiftStudioCatalogItemParams.safeParse(req.params);
+  const body = UpdateGiftStudioCatalogItemBody.safeParse(req.body);
+  if (!params.success || !body.success || Object.keys(body.data).length === 0) {
+    throw new RoomError(400, "Choose a gift name, whole positive credit price, or availability.");
+  }
+  const result = await updateGiftCatalogItem({ giftId: params.data.giftId, ...body.data });
+  res.json(UpdateGiftStudioCatalogItemResponse.parse(result));
+});
+
 router.post("/social/admin/gift-studio/process", ownerOnly, parseStudioUpload, async (req, res): Promise<void> => {
   const directory = studioTempDirs.get(req);
   const files = req.files as Record<string, Express.Multer.File[]> | undefined;
@@ -236,6 +247,7 @@ router.post("/social/admin/gift-studio/save-processed", ownerOnly, async (req, r
     const result = await createGiftStudioVersion({
       ownerId: accountId(req),
       giftId: parsed.data.giftId ?? null,
+      catalogCost: parsed.data.cost,
       settings: { ...session.settings, draftName: parsed.data.draftName.trim() },
       originalPath: session.sourcePath,
       originalName: session.sourceName,
@@ -262,6 +274,7 @@ router.post("/social/admin/gift-studio/versions", ownerOnly, parseStudioUpload, 
     if (!directory || !original || !processed) throw new RoomError(400, "Choose both the original clip and processed transparent WebM.");
     const parsedBody = CreateGiftStudioVersionBody.safeParse({
       giftId: req.body?.giftId,
+      ...(req.body?.cost !== undefined ? { cost: Number(req.body.cost) } : {}),
       settings: req.body?.settings,
       sourceVideo: original.originalname,
       processedWebm: processed.originalname,
@@ -281,6 +294,7 @@ router.post("/social/admin/gift-studio/versions", ownerOnly, parseStudioUpload, 
     const result = await createGiftStudioVersion({
       ownerId: accountId(req),
       giftId: parsedBody.data.giftId ?? null,
+      catalogCost: parsedBody.data.cost,
       settings: { ...validatedSettings, draftName },
       originalPath: original.path,
       originalName: original.originalname,

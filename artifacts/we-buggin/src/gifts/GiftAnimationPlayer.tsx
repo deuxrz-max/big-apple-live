@@ -11,6 +11,9 @@ import { CosmicEncoreAnimation, MoonfoxAnimation, SpiritAnimation } from "./Spir
 import "./gifts.css";
 
 const PRESENTATION: Record<GiftStudioGiftId, { name: string; emoji: string; position: "top" | "full" | "bottom" | "center" }> = {
+  "good-vibes": { name: "Good vibes", emoji: "✨", position: "center" },
+  "big-love": { name: "Big love", emoji: "💖", position: "center" },
+  "standing-ovation": { name: "Standing ovation", emoji: "👏", position: "center" },
   heart: { name: "Heart", emoji: "❤️", position: "center" },
   "spirit-pup": { name: "Spirit Pup", emoji: "🐶", position: "center" },
   moonfox: { name: "Moonfox", emoji: "🦊", position: "center" },
@@ -81,10 +84,37 @@ export function GiftAnimationPlayer({
   if (!mediaOverride && activeQuery.isFetching && !manifestTimedOut) return null;
 
   if (giftId === "heart") return <HeartAnimation onFinish={onFinish} />;
+  if (giftId === "good-vibes" || giftId === "big-love" || giftId === "standing-ovation") {
+    return <CatalogIconGiftAnimation giftId={giftId} onFinish={onFinish} />;
+  }
   if (giftId === "cosmic-encore") return <CosmicEncoreAnimation onFinish={onFinish} />;
   if (isBigTierGiftId(giftId)) return <BigTierGiftAnimation giftId={giftId} senderName={senderName} onFinish={onFinish} />;
   if (giftId === "moonfox") return <MoonfoxAnimation onFinish={onFinish} />;
   return <SpiritAnimation onFinish={onFinish} />;
+}
+
+function CatalogIconGiftAnimation({ giftId, onFinish }: {
+  giftId: "good-vibes" | "big-love" | "standing-ovation";
+  onFinish: () => void;
+}) {
+  const [fading, setFading] = useState(false);
+  const finishRef = useRef(onFinish);
+  finishRef.current = onFinish;
+  useEffect(() => {
+    const fade = window.setTimeout(() => setFading(true), 1900);
+    const finish = window.setTimeout(() => finishRef.current(), 2300);
+    return () => {
+      window.clearTimeout(fade);
+      window.clearTimeout(finish);
+    };
+  }, [giftId]);
+  const item = PRESENTATION[giftId];
+  return createPortal(
+    <div className={`big-tier-gift-overlay big-tier-gift-overlay--center${fading ? " is-fading-out" : ""}`} role="status" aria-live="polite">
+      <div className="catalog-icon-gift-preview"><span>{item.emoji}</span><strong>{item.name}</strong></div>
+    </div>,
+    document.body,
+  );
 }
 
 function TransparentGiftAnimation({

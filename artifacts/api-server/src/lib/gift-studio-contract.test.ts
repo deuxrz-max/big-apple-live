@@ -7,6 +7,7 @@ import {
   GetRoomGiftEventsResponse,
   SaveGiftStudioProcessedBody,
   SetGiftStudioVersionActiveResponse,
+  UpdateGiftStudioCatalogItemBody,
 } from "@workspace/api-zod";
 import { mergeActiveGiftNames } from "./gift-studio-catalog";
 
@@ -80,6 +81,39 @@ test("active custom display names replace catalog labels without changing gift p
   assert.equal(whip?.name, "Midnight Roadster");
   assert.equal(whip?.cost, 2500);
   assert.equal(catalog.find((gift) => gift.id === "rose-shower")?.name, "Rose Shower");
+});
+
+test("catalog price edits only accept positive whole credit amounts", () => {
+  assert.equal(UpdateGiftStudioCatalogItemBody.safeParse({ cost: 1 }).success, true);
+  assert.equal(UpdateGiftStudioCatalogItemBody.safeParse({ cost: 2500 }).success, true);
+  assert.equal(UpdateGiftStudioCatalogItemBody.safeParse({ cost: 0 }).success, false);
+  assert.equal(UpdateGiftStudioCatalogItemBody.safeParse({ cost: -1 }).success, false);
+  assert.equal(UpdateGiftStudioCatalogItemBody.safeParse({ cost: 1.5 }).success, false);
+  assert.equal(UpdateGiftStudioCatalogItemBody.safeParse({}).success, true);
+});
+
+test("gift replacement can atomically carry a new catalog price", () => {
+  const settings = JSON.stringify({ draftName: "Midnight Roadster" });
+  assert.equal(CreateGiftStudioVersionBody.safeParse({
+    giftId: "whip",
+    cost: 2501,
+    settings,
+    sourceVideo: "source.mp4",
+    processedWebm: "transparent.webm",
+  }).success, true);
+  assert.equal(SaveGiftStudioProcessedBody.safeParse({
+    processingSession: "c1c0e6f4-a9af-4c09-9ce4-93b53ed6f118",
+    giftId: "whip",
+    cost: 2501,
+    draftName: "Midnight Roadster",
+  }).success, true);
+});
+
+test("catalog updates support active, inactive and soft-deleted states", () => {
+  for (const status of ["active", "inactive", "deleted"] as const) {
+    assert.equal(UpdateGiftStudioCatalogItemBody.safeParse({ status }).success, true);
+  }
+  assert.equal(UpdateGiftStudioCatalogItemBody.safeParse({ status: "removed" }).success, false);
 });
 
 test("room gift notices expose the current catalog display name", () => {

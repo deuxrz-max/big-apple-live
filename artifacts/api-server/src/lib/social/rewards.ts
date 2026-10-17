@@ -1,7 +1,7 @@
 import { db, socialWallets, socialLedger, socialGiftEvents, socialGiftBag } from "@workspace/db";
 import { desc, eq, sql } from "drizzle-orm";
 import { RoomError, roomStore } from "../room-store";
-import { DAILY_REWARD, GIFTS } from "./catalog";
+import { DAILY_REWARD } from "./catalog";
 import { assertContact, lockAccounts, lockPair, replay, requireAccount, targetAccount, wallet } from "./core";
 import { SPIRIT_PUP, spiritSplit } from './spirit-pup-policy';
 import { isRoomGift } from './room-gift-policy';
@@ -10,8 +10,7 @@ import { requireAdult } from '../community';
 import { hasDevelopmentUnlimitedCredits, planCreditSpend } from "./credits-policy";
 import { giftNameColorForSentCredits } from "./gift-name-color";
 import { liveStreamIdForAccount, isLiveStreamActiveOrStarting } from "../live-stream-policy";
-import { activeGiftDisplayName } from "../gift-studio-catalog";
-import type { GiftStudioGiftId } from "@workspace/api-zod";
+import { getSendableGiftCatalogItem } from "../gift-studio-catalog";
 
 /** Unlimited test gifts keep the wallet balance unchanged but retain their nominal value in the ledger. */
 export function giftLedgerDebit(debit: number, cost: number, unlimited: boolean): number {
@@ -35,14 +34,8 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
   context?: { roomId: string; sessionId: string } | { streamId: string }) {
   const sender = await requireAccount(id);
   const target = await targetAccount(recipient);
-  const catalogItem = GIFTS.find(g => g.id === giftId);
-  if (!catalogItem) throw new RoomError(400, "Choose a gift from the catalog");
-  const item = {
-    ...catalogItem,
-    name: ["heart", "spirit-pup", "moonfox", "cosmic-encore", "fireworks", "rose-shower", "whip"].includes(catalogItem.id)
-      ? await activeGiftDisplayName(catalogItem.id as GiftStudioGiftId)
-      : catalogItem.name,
-  };
+  const item = await getSendableGiftCatalogItem(giftId);
+  if (!item) throw new RoomError(400, "This gift is no longer available. Refresh the gift list and choose another.");
   const roomGift = isRoomGift(item.id);
   const roomContext = context && "roomId" in context ? context : null;
   const streamContext = context && "streamId" in context ? context : null;

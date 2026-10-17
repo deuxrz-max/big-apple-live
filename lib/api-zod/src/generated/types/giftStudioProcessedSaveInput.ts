@@ -15,4 +15,9 @@ export interface GiftStudioProcessedSaveInput {
      */
   draftName: string;
   giftId?: GiftStudioGiftId | null;
+  /**
+     * Optional updated credit price for an existing catalog gift
+     * @minimum 1
+     */
+  cost?: number;
 }

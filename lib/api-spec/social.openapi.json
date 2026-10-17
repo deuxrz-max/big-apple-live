@@ -123,6 +123,22 @@
         }
       }
     },
+    "/social/admin/gift-studio/catalog/{giftId}": {
+      "patch": {
+        "operationId": "updateGiftStudioCatalogItem",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "parameters": [{"name": "giftId", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/SocialGiftCatalogId"}}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioCatalogUpdate"}}}},
+        "responses": {
+          "200": {"description": "Gift catalog item updated", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioCatalogGift"}}}},
+          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Owner access required"},
+          "404": {"description": "Gift catalog item not found"}
+        }
+      }
+    },
     "/social/admin/gift-studio/versions": {
       "post": {
         "operationId": "createGiftStudioVersion",
@@ -1080,7 +1096,33 @@
     "schemas": {
       "GiftStudioGiftId": {
         "type": "string",
-        "enum": ["heart", "spirit-pup", "moonfox", "cosmic-encore", "fireworks", "rose-shower", "whip"]
+        "enum": ["good-vibes", "big-love", "standing-ovation", "heart", "spirit-pup", "moonfox", "cosmic-encore", "fireworks", "rose-shower", "whip"]
+      },
+      "SocialGiftCatalogId": {
+        "type": "string",
+        "enum": ["good-vibes", "big-love", "standing-ovation", "heart", "spirit-pup", "moonfox", "cosmic-encore", "fireworks", "rose-shower", "whip"]
+      },
+      "GiftStudioCatalogUpdate": {
+        "type": "object",
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": {
+          "name": {"type": "string", "minLength": 1, "maxLength": 60},
+          "cost": {"type": "integer", "minimum": 1},
+          "status": {"type": "string", "enum": ["active", "inactive", "deleted"]}
+        }
+      },
+      "GiftStudioCatalogGift": {
+        "type": "object",
+        "required": ["id", "name", "cost", "status", "roomGift", "animationAvailable"],
+        "properties": {
+          "id": {"$ref": "#/components/schemas/SocialGiftCatalogId"},
+          "name": {"type": "string"},
+          "cost": {"type": "integer", "minimum": 1},
+          "status": {"type": "string", "enum": ["active", "inactive", "deleted"]},
+          "roomGift": {"type": "boolean"},
+          "animationAvailable": {"type": "boolean"}
+        }
       },
       "GiftStudioProcessingSettings": {
         "type": "object",
@@ -1102,6 +1144,7 @@
         "required": ["settings", "sourceVideo", "processedWebm"],
         "properties": {
           "giftId": {"anyOf": [{"$ref": "#/components/schemas/GiftStudioGiftId"}, {"type": "null"}]},
+          "cost": {"type": "integer", "minimum": 1, "description": "Optional updated credit price for an existing catalog gift"},
           "settings": {"type": "string", "description": "JSON-serialized GiftStudioProcessingSettings"},
           "sourceVideo": {"type": "string", "description": "Video file part"},
           "processedWebm": {"type": "string", "description": "Processed transparent WebM file part"}
@@ -1123,7 +1166,8 @@
         "properties": {
           "processingSession": {"type": "string", "format": "uuid"},
           "draftName": {"type": "string", "minLength": 1, "maxLength": 60},
-          "giftId": {"anyOf": [{"$ref": "#/components/schemas/GiftStudioGiftId"}, {"type": "null"}]}
+          "giftId": {"anyOf": [{"$ref": "#/components/schemas/GiftStudioGiftId"}, {"type": "null"}]},
+          "cost": {"type": "integer", "minimum": 1, "description": "Optional updated credit price for an existing catalog gift"}
         }
       },
       "GiftStudioRenameInput": {
@@ -1171,8 +1215,11 @@
       },
       "GiftStudioLibrary": {
         "type": "object",
-        "required": ["items"],
-        "properties": {"items": {"type": "array", "items": {"$ref": "#/components/schemas/GiftStudioVersion"}}}
+        "required": ["items", "catalog"],
+        "properties": {
+          "items": {"type": "array", "items": {"$ref": "#/components/schemas/GiftStudioVersion"}},
+          "catalog": {"type": "array", "items": {"$ref": "#/components/schemas/GiftStudioCatalogGift"}}
+        }
       },
       "GiftStudioPlaybackMedia": {
         "type": "object",

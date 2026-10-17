@@ -9,6 +9,11 @@ import type { GiftStudioGiftId } from './giftStudioGiftId';
 
 export interface GiftStudioUploadInput {
   giftId?: GiftStudioGiftId | null;
+  /**
+     * Optional updated credit price for an existing catalog gift
+     * @minimum 1
+     */
+  cost?: number;
   /** JSON-serialized GiftStudioProcessingSettings */
   settings: string;
   /** Video file part */

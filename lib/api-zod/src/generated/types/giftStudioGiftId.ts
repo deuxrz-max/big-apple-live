@@ -10,6 +10,9 @@ export type GiftStudioGiftId = typeof GiftStudioGiftId[keyof typeof GiftStudioGi
 
 
 export const GiftStudioGiftId = {
+  'good-vibes': 'good-vibes',
+  'big-love': 'big-love',
+  'standing-ovation': 'standing-ovation',
   heart: 'heart',
   'spirit-pup': 'spirit-pup',
   moonfox: 'moonfox',

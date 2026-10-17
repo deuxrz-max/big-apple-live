@@ -1,6 +1,6 @@
 import { Storage } from "@google-cloud/storage";
 import { and, desc, eq, isNull, max } from "drizzle-orm";
-import { db, giftStudioAssets, type GiftStudioAsset } from "@workspace/db";
+import { db, giftStudioAssets, socialGiftCatalogSettings, type GiftStudioAsset } from "@workspace/db";
 import type { GiftStudioGiftId, GiftStudioProcessingSettings, GiftStudioVersion } from "@workspace/api-zod";
 import { randomUUID } from "node:crypto";
 import { execFile } from "node:child_process";
@@ -10,12 +10,12 @@ import path from "node:path";
 import { promisify } from "node:util";
 import sharp from "sharp";
 import { RoomError } from "./room-store";
-import { giftNameFromSettings } from "./gift-studio-catalog";
+import { giftNameFromSettings, listGiftCatalogForOwner, updateGiftCatalogItem } from "./gift-studio-catalog";
 
 const execFileAsync = promisify(execFile);
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 const GIFT_IDS = new Set<GiftStudioGiftId>([
-  "heart", "spirit-pup", "moonfox", "cosmic-encore", "fireworks", "rose-shower", "whip",
+  "good-vibes", "big-love", "standing-ovation", "heart", "spirit-pup", "moonfox", "cosmic-encore", "fireworks", "rose-shower", "whip",
 ]);
 const storage = new Storage({
   credentials: {
@@ -215,9 +215,12 @@ async function deleteAssets(id: string, extension: string) {
 }
 
 export async function listGiftStudioVersions(ownerId: string) {
-  const rows = await db.select().from(giftStudioAssets).where(eq(giftStudioAssets.ownerId, ownerId))
-    .orderBy(desc(giftStudioAssets.createdAt));
-  return { items: rows.map(toVersion) };
+  const [rows, catalog] = await Promise.all([
+    db.select().from(giftStudioAssets).where(eq(giftStudioAssets.ownerId, ownerId))
+      .orderBy(desc(giftStudioAssets.createdAt)),
+    listGiftCatalogForOwner(),
+  ]);
+  return { items: rows.map(toVersion), catalog };
 }
 
 function giftKeyColor(settings: GiftStudioProcessingSettings) {
@@ -374,6 +377,7 @@ export async function processGiftStudioClipOnServer(input: {
 export async function createGiftStudioVersion(input: {
   ownerId: string;
   giftId: GiftStudioGiftId | null;
+  catalogCost?: number;
   settings: GiftStudioProcessingSettings;
   originalPath: string;
   originalName: string;
@@ -433,6 +437,20 @@ export async function createGiftStudioVersion(input: {
             eq(giftStudioAssets.giftId, input.giftId),
             eq(giftStudioAssets.status, "active"),
           ));
+          await tx.insert(socialGiftCatalogSettings).values({
+            giftId: input.giftId,
+            displayName: input.settings.draftName?.trim() || null,
+            ...(input.catalogCost !== undefined ? { cost: input.catalogCost } : {}),
+            status: "active",
+          }).onConflictDoUpdate({
+            target: socialGiftCatalogSettings.giftId,
+            set: {
+              displayName: input.settings.draftName?.trim() || null,
+              ...(input.catalogCost !== undefined ? { cost: input.catalogCost } : {}),
+              status: "active",
+              updatedAt: new Date(),
+            },
+          });
         }
         const [inserted] = await tx.insert(giftStudioAssets).values({
           id, ownerId: input.ownerId, giftId: input.giftId, version, status,
@@ -459,13 +477,27 @@ export async function renameGiftStudioVersion(ownerId: string, versionId: string
   if (!trimmed || trimmed.length > 60) throw new RoomError(400, "Gift names must be 1 to 60 characters.");
   const [asset] = await db.select().from(giftStudioAssets).where(eq(giftStudioAssets.id, versionId));
   if (!asset || asset.ownerId !== ownerId) throw new RoomError(404, "Saved gift not found.");
-  const [updated] = await db.update(giftStudioAssets)
-    .set({ settings: { ...asset.settings, draftName: trimmed } })
-    .where(and(eq(giftStudioAssets.id, versionId), eq(giftStudioAssets.ownerId, ownerId)))
-    .returning();
+  const updated = await db.transaction(async (tx) => {
+    const [row] = await tx.update(giftStudioAssets)
+      .set({ settings: { ...asset.settings, draftName: trimmed } })
+      .where(and(eq(giftStudioAssets.id, versionId), eq(giftStudioAssets.ownerId, ownerId)))
+      .returning();
+    if (row?.status === "active" && row.giftId) {
+      await tx.insert(socialGiftCatalogSettings).values({
+        giftId: row.giftId,
+        displayName: trimmed,
+      }).onConflictDoUpdate({
+        target: socialGiftCatalogSettings.giftId,
+        set: { displayName: trimmed, updatedAt: new Date() },
+      });
+    }
+    return row;
+  });
   if (!updated) throw new RoomError(404, "Saved gift not found.");
   return toVersion(updated);
 }
+
+export { updateGiftCatalogItem };
 
 export async function deleteGiftStudioVersion(ownerId: string, versionId: string) {
   const [asset] = await db.select().from(giftStudioAssets).where(eq(giftStudioAssets.id, versionId));

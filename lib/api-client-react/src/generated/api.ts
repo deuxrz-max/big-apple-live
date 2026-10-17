@@ -49,6 +49,8 @@ import type {
   GiftStudioActivationInput,
   GiftStudioActiveMediaResponse,
   GiftStudioAssignInput,
+  GiftStudioCatalogGift,
+  GiftStudioCatalogUpdate,
   GiftStudioDeleteResponse,
   GiftStudioGiftId,
   GiftStudioLibrary,
@@ -88,6 +90,7 @@ import type {
   SessionUnauthorizedResponse,
   SocialAction,
   SocialConversation,
+  SocialGiftCatalogId,
   SocialGiftInput,
   SocialInbox,
   SocialLedger,
@@ -4492,6 +4495,89 @@ export function useGetGiftStudioLibrary<TData = Awaited<ReturnType<typeof getGif
 
 
 
+export const getUpdateGiftStudioCatalogItemUrl = (giftId: SocialGiftCatalogId,) => {
+
+
+
+
+  return `/api/social/admin/gift-studio/catalog/${giftId}`
+}
+
+export const updateGiftStudioCatalogItem = async (giftId: SocialGiftCatalogId,
+    giftStudioCatalogUpdate: GiftStudioCatalogUpdate, options?: Parameters<typeof customFetch>[1]): Promise<GiftStudioCatalogGift> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GiftStudioCatalogGift>(getUpdateGiftStudioCatalogItemUrl(giftId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(giftStudioCatalogUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateGiftStudioCatalogItemMutationKey = () => ['updateGiftStudioCatalogItem'] as const;
+
+export const getUpdateGiftStudioCatalogItemMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGiftStudioCatalogItem>>, TError,UpdateGiftStudioCatalogItemMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateGiftStudioCatalogItem>>, TError,UpdateGiftStudioCatalogItemMutationVariables, TContext> => {
+
+const mutationKey = getUpdateGiftStudioCatalogItemMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateGiftStudioCatalogItem>>, UpdateGiftStudioCatalogItemMutationVariables> = (props) => {
+          const {giftId,data} = props ?? {};
+
+          return  updateGiftStudioCatalogItem(giftId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateGiftStudioCatalogItemMutationResult = NonNullable<Awaited<ReturnType<typeof updateGiftStudioCatalogItem>>>
+    export type UpdateGiftStudioCatalogItemMutationBody = BodyType<GiftStudioCatalogUpdate>
+    export type UpdateGiftStudioCatalogItemMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type UpdateGiftStudioCatalogItemMutationVariables = {giftId: SocialGiftCatalogId;data: BodyType<GiftStudioCatalogUpdate>}
+
+    export const useUpdateGiftStudioCatalogItem = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGiftStudioCatalogItem>>, TError,UpdateGiftStudioCatalogItemMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateGiftStudioCatalogItem>>,
+        TError,
+        UpdateGiftStudioCatalogItemMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateGiftStudioCatalogItemMutationOptions(options));
+    }
+
 export const getProcessGiftStudioClipOnServerUrl = () => {
 
 
@@ -4657,6 +4743,9 @@ export const createGiftStudioVersion = async (giftStudioUploadInput: GiftStudioU
     const formData = new FormData();
 if(giftStudioUploadInput.giftId !== undefined && giftStudioUploadInput.giftId !== null) {
  formData.append(`giftId`, giftStudioUploadInput.giftId);
+ }
+if(giftStudioUploadInput.cost !== undefined) {
+ formData.append(`cost`, giftStudioUploadInput.cost.toString())
  }
 formData.append(`settings`, giftStudioUploadInput.settings);
 formData.append(`sourceVideo`, giftStudioUploadInput.sourceVideo);

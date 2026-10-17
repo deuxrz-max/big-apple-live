@@ -5,8 +5,10 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { GiftStudioCatalogGift } from './giftStudioCatalogGift';
 import type { GiftStudioVersion } from './giftStudioVersion';
 
 export interface GiftStudioLibrary {
   items: GiftStudioVersion[];
+  catalog: GiftStudioCatalogGift[];
 }

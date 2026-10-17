@@ -1838,10 +1838,11 @@ export const getGiftStudioLibraryResponseItemsItemSettingsDraftNameMax = 60;
 
 
 
+
 export const GetGiftStudioLibraryResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.string().uuid(),
-  "giftId": zod.union([zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]),
+  "giftId": zod.union([zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]),
   "version": zod.number().int(),
   "status": zod.enum(['draft', 'active']),
   "originalName": zod.string(),
@@ -1862,7 +1863,43 @@ export const GetGiftStudioLibraryResponse = zod.object({
   "originalBytes": zod.number().int(),
   "webmBytes": zod.number().int(),
   "safariBytes": zod.number().int()
+})),
+  "catalog": zod.array(zod.object({
+  "id": zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),
+  "name": zod.string(),
+  "cost": zod.number().int().min(1),
+  "status": zod.enum(['active', 'inactive', 'deleted']),
+  "roomGift": zod.boolean(),
+  "animationAvailable": zod.boolean()
 }))
+})
+
+
+export const UpdateGiftStudioCatalogItemParams = zod.object({
+  "giftId": zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip'])
+})
+
+export const updateGiftStudioCatalogItemBodyNameMax = 60;
+
+
+
+
+export const UpdateGiftStudioCatalogItemBody = zod.object({
+  "name": zod.string().min(1).max(updateGiftStudioCatalogItemBodyNameMax).optional(),
+  "cost": zod.number().int().min(1).optional(),
+  "status": zod.enum(['active', 'inactive', 'deleted']).optional()
+})
+
+
+
+
+export const UpdateGiftStudioCatalogItemResponse = zod.object({
+  "id": zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),
+  "name": zod.string(),
+  "cost": zod.number().int().min(1),
+  "status": zod.enum(['active', 'inactive', 'deleted']),
+  "roomGift": zod.boolean(),
+  "animationAvailable": zod.boolean()
 })
 
 
@@ -1878,10 +1915,12 @@ export const saveGiftStudioProcessedBodyDraftNameMax = 60;
 
 
 
+
 export const SaveGiftStudioProcessedBody = zod.object({
   "processingSession": zod.string().uuid(),
   "draftName": zod.string().min(1).max(saveGiftStudioProcessedBodyDraftNameMax),
-  "giftId": zod.union([zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]).optional()
+  "giftId": zod.union([zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]).optional(),
+  "cost": zod.number().int().min(1).optional().describe('Optional updated credit price for an existing catalog gift')
 })
 
 export const saveGiftStudioProcessedResponseSettingsKeyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -1900,7 +1939,7 @@ export const saveGiftStudioProcessedResponseSettingsDraftNameMax = 60;
 
 export const SaveGiftStudioProcessedResponse = zod.object({
   "id": zod.string().uuid(),
-  "giftId": zod.union([zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]),
+  "giftId": zod.union([zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]),
   "version": zod.number().int(),
   "status": zod.enum(['draft', 'active']),
   "originalName": zod.string(),
@@ -1924,8 +1963,12 @@ export const SaveGiftStudioProcessedResponse = zod.object({
 })
 
 
+
+
+
 export const CreateGiftStudioVersionBody = zod.object({
-  "giftId": zod.union([zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]).optional(),
+  "giftId": zod.union([zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]).optional(),
+  "cost": zod.number().int().min(1).optional().describe('Optional updated credit price for an existing catalog gift'),
   "settings": zod.string().describe('JSON-serialized GiftStudioProcessingSettings'),
   "sourceVideo": zod.string().describe('Video file part'),
   "processedWebm": zod.string().describe('Processed transparent WebM file part')
@@ -1947,7 +1990,7 @@ export const createGiftStudioVersionResponseSettingsDraftNameMax = 60;
 
 export const CreateGiftStudioVersionResponse = zod.object({
   "id": zod.string().uuid(),
-  "giftId": zod.union([zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]),
+  "giftId": zod.union([zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]),
   "version": zod.number().int(),
   "status": zod.enum(['draft', 'active']),
   "originalName": zod.string(),
@@ -1995,7 +2038,7 @@ export const setGiftStudioVersionActiveResponseSettingsDraftNameMax = 60;
 
 export const SetGiftStudioVersionActiveResponse = zod.object({
   "id": zod.string().uuid(),
-  "giftId": zod.union([zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]),
+  "giftId": zod.union([zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]),
   "version": zod.number().int(),
   "status": zod.enum(['draft', 'active']),
   "originalName": zod.string(),
@@ -2047,7 +2090,7 @@ export const renameGiftStudioVersionResponseSettingsDraftNameMax = 60;
 
 export const RenameGiftStudioVersionResponse = zod.object({
   "id": zod.string().uuid(),
-  "giftId": zod.union([zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]),
+  "giftId": zod.union([zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]),
   "version": zod.number().int(),
   "status": zod.enum(['draft', 'active']),
   "originalName": zod.string(),
@@ -2085,7 +2128,7 @@ export const AssignGiftStudioVersionToGiftParams = zod.object({
 })
 
 export const AssignGiftStudioVersionToGiftBody = zod.object({
-  "giftId": zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip'])
+  "giftId": zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip'])
 })
 
 export const assignGiftStudioVersionToGiftResponseSettingsKeyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -2104,7 +2147,7 @@ export const assignGiftStudioVersionToGiftResponseSettingsDraftNameMax = 60;
 
 export const AssignGiftStudioVersionToGiftResponse = zod.object({
   "id": zod.string().uuid(),
-  "giftId": zod.union([zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]),
+  "giftId": zod.union([zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip']),zod.null()]),
   "version": zod.number().int(),
   "status": zod.enum(['draft', 'active']),
   "originalName": zod.string(),
@@ -2145,7 +2188,7 @@ export const GetActiveGiftStudioVersionMediaResponse = zod.unknown()
 
 
 export const GetActiveGiftStudioMediaParams = zod.object({
-  "giftId": zod.enum(['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip'])
+  "giftId": zod.enum(['good-vibes', 'big-love', 'standing-ovation', 'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip'])
 })
 
 export const getActiveGiftStudioMediaResponseMediaOneNameMax = 60;

@@ -2203,6 +2203,9 @@ export type GiftStudioGiftId = typeof GiftStudioGiftId[keyof typeof GiftStudioGi
 
 
 export const GiftStudioGiftId = {
+  'good-vibes': 'good-vibes',
+  'big-love': 'big-love',
+  'standing-ovation': 'standing-ovation',
   heart: 'heart',
   'spirit-pup': 'spirit-pup',
   moonfox: 'moonfox',
@@ -2211,6 +2214,61 @@ export const GiftStudioGiftId = {
   'rose-shower': 'rose-shower',
   whip: 'whip',
 } as const;
+
+export type SocialGiftCatalogId = typeof SocialGiftCatalogId[keyof typeof SocialGiftCatalogId];
+
+
+export const SocialGiftCatalogId = {
+  'good-vibes': 'good-vibes',
+  'big-love': 'big-love',
+  'standing-ovation': 'standing-ovation',
+  heart: 'heart',
+  'spirit-pup': 'spirit-pup',
+  moonfox: 'moonfox',
+  'cosmic-encore': 'cosmic-encore',
+  fireworks: 'fireworks',
+  'rose-shower': 'rose-shower',
+  whip: 'whip',
+} as const;
+
+export type GiftStudioCatalogUpdateStatus = typeof GiftStudioCatalogUpdateStatus[keyof typeof GiftStudioCatalogUpdateStatus];
+
+
+export const GiftStudioCatalogUpdateStatus = {
+  active: 'active',
+  inactive: 'inactive',
+  deleted: 'deleted',
+} as const;
+
+export interface GiftStudioCatalogUpdate {
+  /**
+     * @minLength 1
+     * @maxLength 60
+     */
+  name?: string;
+  /** @minimum 1 */
+  cost?: number;
+  status?: GiftStudioCatalogUpdateStatus;
+}
+
+export type GiftStudioCatalogGiftStatus = typeof GiftStudioCatalogGiftStatus[keyof typeof GiftStudioCatalogGiftStatus];
+
+
+export const GiftStudioCatalogGiftStatus = {
+  active: 'active',
+  inactive: 'inactive',
+  deleted: 'deleted',
+} as const;
+
+export interface GiftStudioCatalogGift {
+  id: SocialGiftCatalogId;
+  name: string;
+  /** @minimum 1 */
+  cost: number;
+  status: GiftStudioCatalogGiftStatus;
+  roomGift: boolean;
+  animationAvailable: boolean;
+}
 
 export type GiftStudioProcessingSettingsPreset = typeof GiftStudioProcessingSettingsPreset[keyof typeof GiftStudioProcessingSettingsPreset];
 
@@ -2261,6 +2319,11 @@ export interface GiftStudioProcessingSettings {
 
 export interface GiftStudioUploadInput {
   giftId?: GiftStudioGiftId | null;
+  /**
+     * Optional updated credit price for an existing catalog gift
+     * @minimum 1
+     */
+  cost?: number;
   /** JSON-serialized GiftStudioProcessingSettings */
   settings: string;
   /** Video file part */
@@ -2284,6 +2347,11 @@ export interface GiftStudioProcessedSaveInput {
      */
   draftName: string;
   giftId?: GiftStudioGiftId | null;
+  /**
+     * Optional updated credit price for an existing catalog gift
+     * @minimum 1
+     */
+  cost?: number;
 }
 
 export interface GiftStudioRenameInput {
@@ -2334,6 +2402,7 @@ export interface GiftStudioVersion {
 
 export interface GiftStudioLibrary {
   items: GiftStudioVersion[];
+  catalog: GiftStudioCatalogGift[];
 }
 
 export interface GiftStudioPlaybackMedia {
