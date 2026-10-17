@@ -707,3 +707,93 @@ body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-
   body.streamtalk-directory-screen #root .ch.st-home .st-home-card-subtitle{font-size:9px}
   body.streamtalk-directory-screen #root .ch.st-home .st-home-go-live-icon{width:58px;height:58px}
 }
+
+/* Home refresh: keep the Featured / Go Live row compact and readable. */
+body.streamtalk-directory-screen #root .ch.st-home .st-home-categories{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  overflow:visible;margin:6px 0 18px;padding:0 0 8px;border-bottom:1px solid #ffffff20;
+}
+body.streamtalk-directory-screen #root .ch.st-home .st-home-categories>button:first-child{
+  flex:0 0 auto;padding:8px 10px;color:#fff;font-size:14px;font-weight:900;
+  background:rgba(174,72,214,.17);border-radius:9px;
+}
+body.streamtalk-directory-screen #root .ch.st-home .st-home-categories>button:first-child:after{display:none}
+body.streamtalk-directory-screen #root .ch.st-home .st-home-featured-live{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;margin-left:auto;
+  min-height:36px;padding:0 15px;border:1px solid #f3b5f5;border-radius:999px;
+  background:linear-gradient(110deg,#8d35d1,#e03caa)!important;color:#fff;
+  box-shadow:0 5px 16px #b92fc54d;font:850 12px/1 'DM Sans',sans-serif;
+}
+body.streamtalk-directory-screen #root .ch.st-home .st-home-featured-live svg{color:#fff}
+body.streamtalk-directory-screen #root .ch.st-home .st-dir-rewards{
+  background:#211827!important;border-color:#5b4666!important;color:#fff!important;
+  box-shadow:0 3px 12px #0007;
+}
+body.streamtalk-directory-screen #root .ch.st-home .st-dir-rewards svg{
+  width:19px;height:19px;color:#fff!important;stroke-width:2.6;
+}
+
+/* Card overlays sit above every photo, including very bright thumbnails. */
+body.streamtalk-directory-screen #root .ch.st-home .st-home-grid-column .st-dir-art-shade{
+  z-index:1;inset:0!important;
+  background:linear-gradient(180deg,rgba(5,4,9,.17) 0%,rgba(5,4,9,.04) 26%,rgba(5,4,9,.55) 57%,rgba(5,4,9,.97) 100%)!important;
+}
+body.streamtalk-directory-screen #root .ch.st-home .st-home-live-label{
+  z-index:3;top:9px;left:9px;right:9px;width:max-content;max-width:calc(100% - 18px);
+  min-height:26px;padding:0 8px;border:1px solid #ffffff2b;border-radius:999px;
+  background:rgba(12,9,16,.82);box-shadow:0 3px 12px #0007;text-shadow:none;
+}
+body.streamtalk-directory-screen #root .ch.st-home .st-home-live-label b{color:#fff}
+body.streamtalk-directory-screen #root .ch.st-home .st-home-live-label>span{color:#fff}
+body.streamtalk-directory-screen #root .ch.st-home .st-dir-count{
+  z-index:4;background:rgba(12,9,16,.94);border-color:#ffffff30;color:#fff;
+  box-shadow:0 3px 12px #0008;
+}
+body.streamtalk-directory-screen #root .ch.st-home .st-dir-count svg,
+body.streamtalk-directory-screen #root .ch.st-home .st-dir-count svg path{
+  color:#ff9c27!important;fill:#ff9c27!important;stroke:#ff9c27!important;
+}
+body.streamtalk-directory-screen #root .ch.st-home .st-home-card-copy{
+  z-index:3;right:10px;bottom:40px;left:11px;gap:4px;
+}
+body.streamtalk-directory-screen #root .ch.st-home .st-home-card-category{
+  display:-webkit-box;overflow:hidden;white-space:normal;text-overflow:clip;
+  -webkit-box-orient:vertical;-webkit-line-clamp:2;
+  color:#fff;font-size:clamp(19px,5.7vw,26px);line-height:1.02;
+  text-shadow:0 2px 12px #000,0 1px 2px #000;
+}
+body.streamtalk-directory-screen #root .ch.st-home .st-home-card-subtitle{
+  max-width:100%;overflow:hidden;color:#f0edf3;white-space:nowrap;
+  text-overflow:ellipsis;text-shadow:0 1px 8px #000;
+}
+body.streamtalk-directory-screen #root .ch.st-home .st-wrestling-arena-art{
+  position:absolute;inset:0;width:100%;height:100%;display:block;
+}
+body.streamtalk-directory-screen #root .ch.st-home .st-dir-art-word{display:none!important}
+
+/* The home dock uses the same dark surface and bright, heavy labels in either theme. */
+body.streamtalk-directory-screen #root .app-bottom-nav{
+  background:rgba(8,7,11,.98)!important;border-top:1px solid #ffffff25!important;
+  color:#f7f4fa!important;box-shadow:0 -8px 28px #0009!important;
+}
+body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-bottom-link{
+  color:#e2dfe6!important;font:850 10px/1.15 'DM Sans',sans-serif!important;
+  letter-spacing:.01em;text-shadow:0 1px 2px #000;
+}
+body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-bottom-link svg{
+  color:inherit!important;stroke-width:3!important;
+}
+body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-bottom-link.is-active{
+  color:#a6ff00!important;
+}
+body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-bottom-link.is-active svg{
+  color:#a6ff00!important;filter:drop-shadow(0 0 5px #a6ff0080);
+}
+body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-home-live{
+  color:#fff!important;
+}
+@media(max-width:420px){
+  body.streamtalk-directory-screen #root .ch.st-home .st-home-featured-live{min-height:35px;padding:0 12px}
+  body.streamtalk-directory-screen #root .ch.st-home .st-home-card-copy{bottom:39px}
+  body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-bottom-link{font-size:9px!important}
+}

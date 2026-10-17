@@ -16,7 +16,7 @@ export function BottomNavigation() {
   const protectedHref = (href: string) => isSignedIn ? href : '/sign-in';
   const items = [
     { label: 'Home', icon: House, href: isSignedIn ? '/home' : '/', active: path === '/' || path === '/home' || path.startsWith('/rooms/') || path === '/community' },
-    { label: isHome ? 'Follow' : 'Following', icon: Heart, href: protectedHref('/community/favorites'), active: path === '/community/favorites' },
+    { label: 'Following', icon: Heart, href: protectedHref('/community/favorites'), active: path === '/community/favorites' },
     { label: 'Message', icon: MessageCircle, href: protectedHref('/community/messages'), active: path === '/community/messages' || path.startsWith('/community/messages/') },
     { label: 'Me', icon: UserRound, href: protectedHref('/user-portal'), active: path === '/user-portal' || path.startsWith('/user-portal/') || path === '/community/profile' },
   ];
@@ -26,7 +26,7 @@ export function BottomNavigation() {
         {items.slice(0, 2).map(({ label, icon: Icon, href, active }) => (
           <Link key={label} href={href} className={`app-bottom-link${active ? ' is-active' : ''}`}
             aria-current={active ? 'page' : undefined} data-testid={`bottom-nav-${label.toLowerCase()}`}>
-            <Icon size={26} strokeWidth={2} aria-hidden="true" />
+            <Icon size={26} strokeWidth={isHome && isSignedIn ? 3 : 2} aria-hidden="true" />
             <span>{label}</span>
           </Link>
         ))}
@@ -39,7 +39,7 @@ export function BottomNavigation() {
         {items.slice(2).map(({ label, icon: Icon, href, active }) => (
           <Link key={label} href={href} className={`app-bottom-link${active ? ' is-active' : ''}`}
             aria-current={active ? 'page' : undefined} data-testid={`bottom-nav-${label.toLowerCase()}`}>
-            <Icon size={26} strokeWidth={2} aria-hidden="true" />
+            <Icon size={26} strokeWidth={isHome && isSignedIn ? 3 : 2} aria-hidden="true" />
             {isHome && label === 'Message' && unreadCount > 0 && <b className="app-bottom-unread" aria-label={`${unreadCount} unread messages`} data-testid="badge-home-unread">{unreadCount > 99 ? '99+' : unreadCount}</b>}
             <span>{label}</span>
           </Link>
