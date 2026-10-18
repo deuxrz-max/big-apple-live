@@ -28,6 +28,7 @@ import { CoinAmount, GiftIcon } from '@/social/common';
 import { RoomGiftIcon, type RoomGiftId } from '@/gifts/SpiritPup';
 import { classifyKeyColor, detectVideoEdgeColor, drawKeyedPreview, sampleVideoColorAtPoint } from './liveKeyPreview';
 import { createTransparentPngFramesZip } from './downloadPngFramesZip';
+import { SceneModelManager } from '@/scene/SceneModelManager';
 import './gift-studio.css';
 import './gift-studio-production.css';
 
@@ -1261,6 +1262,7 @@ export function GiftStudioPage() {
                 </>}
           </section>
         </div>
+        <SceneModelManager />
         <div className="gs-sr-only" aria-live="polite" data-testid="state-announcer">{status}</div>
       </div>
 

@@ -153,6 +153,72 @@
         }
       }
     },
+    "/social/scene-models": {
+      "get": {
+        "operationId": "getSceneModels",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "responses": {
+          "200": {"description": "Scene models visible to signed-in users", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DeveloperSceneModelList"}}}},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"}
+        }
+      }
+    },
+    "/social/scene-models/{modelId}/file": {
+      "get": {
+        "operationId": "getSceneModelFile",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "parameters": [{"name": "modelId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}],
+        "responses": {
+          "200": {"description": "Active scene model binary", "content": {"model/gltf-binary": {"schema": {"type": "string", "format": "binary"}}, "model/gltf+json": {"schema": {"type": "string", "format": "binary"}}}},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "404": {"description": "Scene model is not available"}
+        }
+      }
+    },
+    "/social/admin/scene-models": {
+      "get": {
+        "operationId": "getAdminSceneModels",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "responses": {
+          "200": {"description": "Owner-managed scene models", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DeveloperSceneModelList"}}}},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Owner access required"}
+        }
+      },
+      "post": {
+        "operationId": "uploadSceneModel",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "requestBody": {"required": true, "content": {"multipart/form-data": {"schema": {"$ref": "#/components/schemas/DeveloperSceneModelUploadInput"}}}},
+        "responses": {
+          "201": {"description": "GLB/GLTF model stored and placed in the shared scene", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DeveloperSceneModel"}}}},
+          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Owner access required"},
+          "413": {"description": "Model exceeds the upload limit"},
+          "415": {"description": "Unsupported or non-self-contained model"}
+        }
+      }
+    },
+    "/social/admin/scene-models/{modelId}/placement": {
+      "patch": {
+        "operationId": "updateSceneModelPlacement",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "parameters": [{"name": "modelId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DeveloperSceneModelPlacementInput"}}}},
+        "responses": {
+          "200": {"description": "Scene model placement saved", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DeveloperSceneModel"}}}},
+          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Owner access required"},
+          "404": {"description": "Scene model not found"}
+        }
+      }
+    },
     "/social/admin/gift-studio/library": {
       "get": {
         "operationId": "getGiftStudioLibrary",
@@ -1164,6 +1230,55 @@
   },
   "components": {
     "schemas": {
+      "DeveloperSceneModelVector3": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "items": {"type": "number"}
+      },
+      "DeveloperSceneModel": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "format", "fileUrl", "position", "rotation", "scale", "byteSize", "createdAt"],
+        "properties": {
+          "id": {"type": "string", "format": "uuid"},
+          "name": {"type": "string"},
+          "format": {"type": "string", "enum": ["glb", "gltf"]},
+          "fileUrl": {"type": "string"},
+          "position": {"$ref": "#/components/schemas/DeveloperSceneModelVector3"},
+          "rotation": {"$ref": "#/components/schemas/DeveloperSceneModelVector3"},
+          "scale": {"type": "number", "minimum": 0.1, "maximum": 4},
+          "byteSize": {"type": "integer", "minimum": 1},
+          "createdAt": {"type": "string", "format": "date-time"}
+        }
+      },
+      "DeveloperSceneModelList": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["models"],
+        "properties": {
+          "models": {"type": "array", "items": {"$ref": "#/components/schemas/DeveloperSceneModel"}}
+        }
+      },
+      "DeveloperSceneModelUploadInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "model"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1, "maxLength": 80},
+          "model": {"type": "string", "description": "One self-contained GLB or GLTF model file sent as the multipart field named model, up to 100 MB"}
+        }
+      },
+      "DeveloperSceneModelPlacementInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["position", "rotation", "scale"],
+        "properties": {
+          "position": {"$ref": "#/components/schemas/DeveloperSceneModelVector3"},
+          "rotation": {"$ref": "#/components/schemas/DeveloperSceneModelVector3"},
+          "scale": {"type": "number", "minimum": 0.1, "maximum": 4}
+        }
+      },
       "GiftStudioGiftId": {
         "type": "string",
         "pattern": "^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$"

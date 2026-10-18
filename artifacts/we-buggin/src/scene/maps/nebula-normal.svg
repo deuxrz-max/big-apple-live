@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs><filter id="relief"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="3" seed="19"/><feDiffuseLighting lighting-color="#fff" surfaceScale="3"><feDistantLight azimuth="45" elevation="55"/></feDiffuseLighting></filter></defs>
+  <rect width="256" height="256" fill="#8080ff"/><rect width="256" height="256" filter="url(#relief)" opacity=".3"/>
+</svg>

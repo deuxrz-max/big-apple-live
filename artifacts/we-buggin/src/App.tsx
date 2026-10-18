@@ -4,7 +4,7 @@ import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { Link, Redirect, Route, Switch, useLocation, useParams, Router as WouterRouter } from 'wouter';
-import { getGetSocialMeQueryKey, useGetSocialMe } from '@workspace/api-client-react';
+import { getGetSceneModelsQueryKey, useGetSceneModels, getGetSocialMeQueryKey, useGetSocialMe } from '@workspace/api-client-react';
 import { ErrorBoundary, type ErrorFallbackProps } from '@/components/error-boundary';
 import { Wordmark } from '@/components/brand';
 import { BottomNavigation } from '@/components/bottom-navigation';
@@ -21,9 +21,11 @@ import { StorePage } from '@/store/StorePage';
 import { ShinyName } from '@/components/ShinyName';
 import SocialApp from '@/social/SocialApp';
 import { SignInArtwork } from '@/components/sign-in-artwork';
+import { reportSceneModelLoad } from '@/scene/modelLoadStatus';
 import '@/theme.css';
 import '@/white-theme.css';
 import '@/dark-app-theme.css';
+import '@/depth-ui.css';
 
 const DevAudioHarnessPage = import.meta.env.DEV
   ? lazy(() => import('@/dev/AudioHarnessPage'))
@@ -33,6 +35,7 @@ const queryClient = new QueryClient();
 
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
+const SceneBackdrop = lazy(() => import('@/scene/SceneBackdrop'));
 
 function stripBase(path: string): string {
   return basePath && path.startsWith(basePath) ? path.slice(basePath.length) || '/' : path;
@@ -62,7 +65,7 @@ const clerkAppearance = {
   },
   elements: {
     rootBox: 'w-full flex justify-center',
-    cardBox: 'bg-[#151126] w-[440px] max-w-full overflow-hidden border border-[#483765] shadow-sm',
+    cardBox: 'depth-auth-card bg-[#151126] w-[440px] max-w-full overflow-hidden border border-[#483765] shadow-sm',
     card: '!shadow-none !border-0 !bg-transparent !rounded-[16px]',
     footer: '!shadow-none !border-0 !bg-transparent !rounded-[16px]',
     headerTitle: '!font-sans !font-extrabold !text-[#f7f4ff]',
@@ -314,6 +317,80 @@ function RoutedErrorBoundary({ children }: { children: ReactNode }) {
     FallbackComponent={isLiveScreen ? LiveRouteErrorFallback : undefined}>{children}</ErrorBoundary>;
 }
 
+function SceneErrorFallback() {
+  // The 3D canvas is decorative; WebGL failures must never take down the app UI.
+  return null;
+}
+
+function canCreateWebGLContext() {
+  try {
+    const canvas = document.createElement("canvas");
+    const attributes: WebGLContextAttributes = {
+      alpha: true,
+      antialias: false,
+      powerPreference: "low-power",
+      failIfMajorPerformanceCaveat: false,
+    };
+    const context = canvas.getContext("webgl2", attributes)
+      ?? canvas.getContext("webgl", attributes)
+      ?? canvas.getContext("experimental-webgl", attributes);
+    if (!context) return false;
+    const loseContext = (context as WebGLRenderingContext).getExtension("WEBGL_lose_context");
+    loseContext?.loseContext();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function SharedSceneBackdrop() {
+  const { isSignedIn } = useUser();
+  const [idleReady, setIdleReady] = useState(false);
+  const [webglAvailable, setWebglAvailable] = useState<boolean | null>(null);
+  const sceneModels = useGetSceneModels({
+    query: {
+      queryKey: getGetSceneModelsQueryKey(),
+      enabled: Boolean(isSignedIn),
+      retry: false,
+      staleTime: 5 * 60_000,
+      refetchOnWindowFocus: true,
+    },
+  });
+  useEffect(() => {
+    const idleWindow = window as Window & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+    const startWhenIdle = () => {
+      setWebglAvailable(canCreateWebGLContext());
+      setIdleReady(true);
+    };
+    const timeout = window.setTimeout(startWhenIdle, 1000);
+    const idle = idleWindow.requestIdleCallback?.(startWhenIdle, { timeout: 1800 });
+    return () => {
+      window.clearTimeout(timeout);
+      if (idle !== undefined) idleWindow.cancelIdleCallback?.(idle);
+    };
+  }, []);
+  const models = isSignedIn
+    ? (sceneModels.data?.models ?? []).map((model) => ({
+      id: model.id,
+      url: model.fileUrl,
+      position: model.position as [number, number, number],
+      rotation: model.rotation as [number, number, number],
+      scale: model.scale,
+    }))
+    : [];
+  if (!idleReady || webglAvailable !== true) return null;
+  return (
+    <ErrorBoundary FallbackComponent={SceneErrorFallback}>
+      <Suspense fallback={null}>
+        <SceneBackdrop models={models} onModelLoad={reportSceneModelLoad} />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+
 function LiveRouteErrorFallback({ resetError }: ErrorFallbackProps) {
   return (
     <main className="st-live-page st-live-host-page" style={{
@@ -386,6 +463,7 @@ function ClerkProviderWithRoutes() {
       routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
     >
       <QueryClientProvider client={queryClient}>
+        <SharedSceneBackdrop />
         <ClerkQueryClientCacheInvalidator />
         <div className={`app-page ${isLightScreen ? 'is-light-screen' : ''} ${isLiveScreen ? 'is-live-screen' : ''} ${isBeamRoomScreen ? 'is-beam-screen' : ''} ${isModerationScreen ? 'is-moderation-screen' : ''} ${isDirectoryScreen ? 'is-directory-screen' : ''} ${isGiftStudioScreen ? 'is-gift-studio-screen' : ''}`}><RoutedErrorBoundary>
           <Switch>

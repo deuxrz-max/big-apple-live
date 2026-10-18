@@ -1,0 +1,334 @@
+/*
+ * Streamtalk depth pass
+ * Visual-only surface treatment. Dimensions, component flow, media and controls
+ * remain owned by their existing stylesheets.
+ */
+:root {
+  --st-depth-violet: rgba(176, 133, 255, .78);
+  --st-depth-lilac: rgba(214, 193, 255, .48);
+  --st-depth-blue: rgba(116, 169, 255, .34);
+  --st-depth-shadow: 0 14px 34px rgba(3, 2, 16, .34), 0 3px 9px rgba(5, 3, 20, .22);
+  --st-depth-inset: inset 0 1px 0 rgba(255, 255, 255, .095), inset 0 -1px 0 rgba(7, 4, 22, .44);
+  --st-depth-gold: rgba(255, 190, 92, .6);
+}
+
+/* Raised, glass-dark cards and shared panels. Keep the fill opaque enough for text. */
+#root :is(
+  .ch-list li, .sc-card, .sc-panel, .sc-empty, .sc-wallet, .ib-row, .fg-tile,
+  .bc-card, .bc-review, .dh-banner, .dh-card, .ur-side, .ur-slot, .ur-menu,
+  .ur-rules, .ur-tv-dialog, .ur-chip, .pf-panel, .pf-dialog, .pf-menu-list,
+  .pf-stats > div, .pf-name-tier, .sp-card, .sp-review, .sp-modal-panel,
+  .sp-review-item, .sc-msgs, .sc-skel, .ch-photo-card, .ch-auth .ch-card,
+  .gs-panel, .gs-preview, .gs-library-card, .gs-empty-library, .gs-after-actions,
+  .gs-production-step, .gs-error-panel, .depth-auth-card,
+  .bm-tile, .bm-modal, .bm-mic-panel, .bm-tray, .gift-framework.gift-sheet,
+  .st-live-action-sheet,
+  .st-dir-card, .st-dir-live-stream, .st-dir-state, .st-store .st-loading-card,
+  .st-store .st-error-card, .st-store .st-empty-state, .st-store .st-query-state,
+  .st-store .sc-empty, .st-store .st-launch-tile, .st-store .st-item-card,
+  .st-store .st-balance-bar, .st-store .st-sheet, .st-store .st-toast
+) {
+  border-color: rgba(196, 166, 255, .4);
+  box-shadow: var(--st-depth-shadow), var(--st-depth-inset);
+}
+
+#root :is(
+  .ch-list li, .sc-card, .sc-panel, .sc-empty, .sc-wallet, .ib-row, .fg-tile,
+  .bc-card, .bc-review, .dh-banner, .dh-card, .ur-side, .ur-slot, .ur-menu,
+  .ur-rules, .ur-tv-dialog, .pf-panel, .pf-dialog, .pf-menu-list,
+  .pf-stats > div, .pf-name-tier, .sp-card, .sp-review, .sp-modal-panel,
+  .sp-review-item, .sc-msgs, .sc-skel, .ch-photo-card, .ch-auth .ch-card,
+  .gs-panel, .gs-preview, .gs-library-card, .gs-empty-library, .gs-after-actions,
+  .gs-production-step, .gs-error-panel, .depth-auth-card,
+  .bm-tile, .bm-modal, .bm-mic-panel, .bm-tray, .gift-framework.gift-sheet,
+  .st-live-action-sheet,
+  .st-dir-card, .st-dir-live-stream, .st-dir-state, .st-store .st-loading-card,
+  .st-store .st-error-card, .st-store .st-empty-state, .st-store .st-query-state,
+  .st-store .sc-empty, .st-store .st-launch-tile, .st-store .st-item-card,
+  .st-store .st-balance-bar, .st-store .st-sheet, .st-store .st-toast
+) {
+  background-image:
+    linear-gradient(145deg, rgba(255, 255, 255, .045), transparent 38%),
+    linear-gradient(160deg, rgba(36, 27, 66, .89), rgba(16, 13, 34, .88));
+}
+
+/* A crisp inset lip and upper-left reflection; these never sit above content. */
+#root :is(
+  .sc-panel, .sc-card, .sc-wallet, .ib-row, .fg-tile, .bc-card, .bc-review,
+  .dh-banner, .dh-card, .pf-panel, .pf-dialog, .pf-menu-list, .pf-name-tier,
+  .sp-card, .sp-review, .sp-modal-panel, .sc-msgs, .ch-auth .ch-card,
+  .gs-production-step, .gs-error-panel, .depth-auth-card,
+  .gs-panel, .gs-preview, .gs-library-card, .st-dir-card, .st-store .st-item-card,
+  .st-store .st-launch-tile
+) {
+  box-shadow:
+    0 16px 34px rgba(3, 2, 16, .34),
+    0 3px 10px rgba(5, 3, 20, .24),
+    inset 0 1px 0 rgba(255, 255, 255, .12),
+    inset 0 -1px 0 rgba(5, 3, 19, .5);
+}
+
+#root :is(.sc-card, .ib-row, .fg-tile, .bc-card, .dh-card, .st-dir-card, .st-store .st-item-card) {
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+#root :is(.sc-card, .ib-row, .fg-tile, .bc-card, .dh-card, .st-dir-card, .st-store .st-item-card):hover {
+  border-color: rgba(216, 192, 255, .72);
+  box-shadow: 0 18px 38px rgba(3, 2, 16, .4), 0 0 17px rgba(153, 101, 238, .12), var(--st-depth-inset);
+}
+
+/* Surface-specific fills retain room content and media as the foreground layer. */
+#root .ch-list li,
+#root .sc-card,
+#root .sc-panel,
+#root .sc-empty,
+#root .sc-wallet,
+#root .ib-row,
+#root .fg-tile,
+#root .bc-card,
+#root .bc-review,
+#root .dh-banner,
+#root .dh-card,
+#root .pf-panel,
+#root .pf-dialog,
+#root .pf-menu-list,
+#root .pf-stats > div,
+#root .pf-name-tier,
+#root .sp-card,
+#root .sp-review,
+#root .sp-modal-panel,
+#root .sp-review-item,
+#root .sc-msgs,
+#root .sc-skel,
+#root .ch-photo-card,
+#root .ch-auth .ch-card,
+#root .gs-panel,
+#root .gs-preview,
+#root .gs-library-card,
+#root .gs-empty-library,
+#root .gs-after-actions,
+#root .gs-production-step,
+#root .gs-error-panel,
+#root .depth-auth-card,
+#root .beam-app .bm-tile,
+#root .beam-app .bm-modal,
+#root .beam-app .bm-mic-panel,
+#root .beam-app .bm-tray {
+  background-color: rgba(20, 15, 39, .94);
+}
+
+/* The 3D scene stays visible through dark page surfaces without reducing contrast. */
+#root .ch.ur,
+#root .ch.ur .ur-in,
+#root .ch.ur .ur-body,
+#root .ch.ur .ch-room {
+  background-color: rgba(8, 7, 20, .78);
+}
+
+#root .st-store {
+  background-color: rgba(8, 7, 20, .72);
+}
+
+#root .gs {
+  background: linear-gradient(155deg, rgba(16, 13, 33, .88), rgba(8, 7, 20, .88) 65%);
+}
+
+/* Eight speaker seats: retain their animated neon rails and add depth. */
+#root .ch.ur .ur-head {
+  box-shadow: 0 8px 22px rgba(3, 2, 15, .28), inset 0 1px 0 rgba(255, 255, 255, .09);
+}
+
+#root .ch.ur .ur-slot {
+  border-color: rgba(204, 178, 255, .58);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, .07), transparent 34%),
+    linear-gradient(150deg, rgba(37, 27, 67, .96), rgba(13, 12, 31, .98));
+  box-shadow:
+    0 8px 18px rgba(2, 2, 14, .34),
+    inset 0 1px 0 rgba(255, 255, 255, .12),
+    inset 0 -3px 9px rgba(4, 2, 16, .5);
+}
+
+#root .ch.ur .ur-slot:not(.is-occupied) {
+  background-color: #131026;
+  box-shadow: 0 7px 16px rgba(2, 2, 14, .3), inset 0 1px 0 rgba(255, 255, 255, .07), inset 0 0 20px rgba(134, 94, 210, .12);
+}
+
+#root .ch.ur .ur-slot.is-speaking {
+  box-shadow: 0 8px 20px rgba(2, 2, 14, .36), inset 0 1px 0 rgba(255, 255, 255, .12), inset 0 0 0 1px rgba(159, 232, 189, .28);
+}
+
+#root .ch.ur .ur-slot-media {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .075), inset 0 -2px 8px rgba(0, 0, 0, .3);
+}
+
+/* Player bezels stay outside the actual video and never add filtering to it. */
+#root .ch.ur .ur-tv-frame {
+  border-color: rgba(206, 181, 255, .72);
+  box-shadow: 0 12px 26px rgba(1, 1, 12, .42), inset 0 1px 0 rgba(255, 255, 255, .16);
+}
+
+#root .ch.ur.ur-comedy .ur-tv-frame {
+  border-color: var(--st-depth-gold);
+  box-shadow: 0 12px 26px rgba(1, 1, 12, .42), inset 0 1px 0 rgba(255, 238, 196, .18);
+}
+
+#root .ch.ur.ur-comedy .ur-tv-frame::before {
+  background: linear-gradient(135deg, #ffe39a, #ffad52 52%, #e77b53);
+}
+
+/* Text-chat surfaces and message bubbles. Avoid touching media, canvas, or audio nodes. */
+#root .ch.ur .ch-msg {
+  border-radius: 12px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .56);
+}
+
+#root .ch.ur .ch-comp,
+#root .beam-app .bm-composer,
+#root .beam-app .bm-tray {
+  box-shadow: 0 10px 24px rgba(2, 2, 14, .34), inset 0 1px 0 rgba(255, 255, 255, .09);
+}
+
+#root .beam-app .bm-msg:not(.bm-msg-sys) {
+  border-radius: 13px;
+}
+
+#root .beam-app .bm-msg-body {
+  padding: 7px 10px;
+  border: 1px solid rgba(190, 159, 255, .22);
+  border-radius: 13px;
+  background: linear-gradient(145deg, rgba(37, 28, 67, .82), rgba(18, 14, 38, .88));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .075);
+}
+
+#root .beam-app .bm-msg.is-mine .bm-msg-body {
+  border-color: rgba(218, 192, 255, .34);
+  background: linear-gradient(145deg, rgba(113, 75, 188, .9), rgba(73, 47, 128, .94));
+}
+
+#root .ib-msg,
+#root .sc-msg {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 3px 9px rgba(4, 2, 16, .18);
+}
+
+#root .ib-msg.is-mine,
+#root .sc-msg.is-mine {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 4px 12px rgba(4, 2, 16, .22);
+}
+
+/* Profile, passport, gifts, store and studio surfaces keep existing warm details. */
+#root .pf-hero {
+  box-shadow: inset 0 -18px 30px rgba(7, 4, 20, .26);
+}
+
+#root .pf-chip,
+#root .sc-tags i,
+#root .sc-chip {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 3px 9px rgba(3, 2, 14, .2);
+}
+
+#root .pf-edit,
+#root .pf-btn,
+#root .pf-menu-list button,
+#root .ur-menu button,
+#root .ur-rules button:not(.bm-btn),
+#root .st-live-action-sheet > button:not(.st-live-action-close) {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 4px 12px rgba(3, 2, 14, .22);
+}
+
+#root .gift-framework.gift-sheet {
+  border-top-color: rgba(215, 183, 255, .76);
+  box-shadow: 0 -16px 38px rgba(2, 1, 12, .48), inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+
+#root .gift-framework .gift-item {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 5px 12px rgba(3, 2, 14, .2);
+}
+
+#root .gift-framework .gift-item[aria-pressed="true"] {
+  border-color: var(--st-depth-gold);
+  box-shadow: inset 0 1px 0 rgba(255, 225, 165, .18), inset 0 0 0 1px rgba(255, 190, 92, .12), 0 5px 14px rgba(3, 2, 14, .24);
+}
+
+#root .gift-framework .gift-send,
+#root .st-store .st-detail-action:not(:disabled),
+#root .st-store .st-detail-preview:not(:disabled),
+#root .st-store .st-balance-bar button {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .24), 0 5px 13px rgba(5, 2, 18, .28);
+}
+
+#root .st-store .st-promo,
+#root .st-store .st-detail-price,
+#root .st-store .st-category-note,
+#root .st-store .st-detail-fact {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 9px 22px rgba(3, 2, 14, .25);
+}
+
+#root .st-store .st-art {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .13), inset 0 -12px 20px rgba(3, 2, 14, .2);
+}
+
+/* Persistent navigation: lifted lip and beveled destinations, without changing its footprint. */
+#root .app-bottom-nav {
+  border-color: rgba(196, 166, 255, .52);
+  box-shadow:
+    0 -10px 28px rgba(3, 2, 15, .4),
+    0 -1px 0 rgba(235, 220, 255, .12),
+    inset 0 1px 0 rgba(255, 255, 255, .1);
+}
+
+#root .app-bottom-nav-inner {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035);
+}
+
+#root .app-bottom-link {
+  transition: transform .14s ease, background-color .14s ease, color .14s ease;
+}
+
+#root .app-bottom-link.is-active {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), inset 0 -2px 0 rgba(5, 3, 19, .3);
+}
+
+/* Buttons and existing tap targets press into the surface rather than lifting out. */
+#root :is(
+  button, [role="button"], .bm-btn, .btn, .pf-btn, .pf-edit, .sc-nav-item,
+  .ur-slot-action, .ur-slot-join, .ur-resume-audio, .sp-button, .sp-modal-close,
+  .gs-button, .gs-chip-button, .gs-icon-button, .gift-control, .gift-item,
+  .app-bottom-link, .st-dir-card, .st-dir-filter, .st-dir-enter, .st-dir-go-live,
+  .st-store .st-header-back, .st-store .st-header-items, .st-store .st-launch-tile,
+  .st-store .st-item-card, .st-store .st-detail-action, .st-store .st-detail-preview,
+  .st-store .st-sheet-close, .st-store .st-balance-bar button
+) {
+  -webkit-tap-highlight-color: transparent;
+  transition-property: transform, box-shadow, border-color, background-color, color;
+  transition-duration: .16s;
+  transition-timing-function: ease;
+}
+
+#root :is(
+  button:not(:disabled), [role="button"], .bm-btn:not(:disabled), .btn:not(:disabled),
+  .pf-btn:not(:disabled), .pf-edit, .sc-nav-item, .ur-slot-action:not(:disabled),
+  .ur-slot-join:not(:disabled), .ur-resume-audio, .sp-button:not(:disabled),
+  .sp-modal-close, .gs-button:not(:disabled), .gs-chip-button, .gs-icon-button,
+  .gift-control, .gift-item, .app-bottom-link, .st-dir-card, .st-dir-filter,
+  .st-dir-enter, .st-dir-go-live, .st-store .st-header-back, .st-store .st-header-items,
+  .st-store .st-launch-tile, .st-store .st-item-card, .st-store .st-detail-action:not(:disabled),
+  .st-store .st-detail-preview:not(:disabled), .st-store .st-sheet-close,
+  .st-store .st-balance-bar button
+):active {
+  transform: perspective(420px) rotateX(2deg) scale(.975);
+}
+
+#root :is(button:disabled, .ur-slot-action:disabled, .ur-slot-join:disabled, .st-store .st-detail-action:disabled, .st-store .st-detail-preview:disabled):active {
+  transform: none;
+}
+
+#root :is(button, a, [role="button"], input, textarea, select):focus-visible {
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #root :is(button, a, [role="button"], .sc-card, .ib-row, .fg-tile, .bc-card, .dh-card, .st-dir-card, .st-store .st-item-card, .app-bottom-link) {
+    transition-duration: .01ms !important;
+  }
+}

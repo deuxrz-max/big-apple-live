@@ -2411,6 +2411,61 @@ export interface ErrorResponse4b96100 {
 }
 
 /**
+ * @minItems 3
+ * @maxItems 3
+ */
+export type DeveloperSceneModelVector3 = number[];
+
+export type DeveloperSceneModelFormat = typeof DeveloperSceneModelFormat[keyof typeof DeveloperSceneModelFormat];
+
+
+export const DeveloperSceneModelFormat = {
+  glb: 'glb',
+  gltf: 'gltf',
+} as const;
+
+export interface DeveloperSceneModel {
+  id: string;
+  name: string;
+  format: DeveloperSceneModelFormat;
+  fileUrl: string;
+  position: DeveloperSceneModelVector3;
+  rotation: DeveloperSceneModelVector3;
+  /**
+     * @minimum 0.1
+     * @maximum 4
+     */
+  scale: number;
+  /** @minimum 1 */
+  byteSize: number;
+  createdAt: string;
+}
+
+export interface DeveloperSceneModelList {
+  models: DeveloperSceneModel[];
+}
+
+export interface DeveloperSceneModelUploadInput {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  name: string;
+  /** One self-contained GLB or GLTF model file sent as the multipart field named model, up to 100 MB */
+  model: string;
+}
+
+export interface DeveloperSceneModelPlacementInput {
+  position: DeveloperSceneModelVector3;
+  rotation: DeveloperSceneModelVector3;
+  /**
+     * @minimum 0.1
+     * @maximum 4
+     */
+  scale: number;
+}
+
+/**
  * @pattern ^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$
  */
 export type GiftStudioGiftId = string;

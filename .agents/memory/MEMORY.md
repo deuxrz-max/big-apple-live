@@ -30,3 +30,4 @@
 - [Beam TV video screening](beam-tv-video-screening.md) — English/widescreen checks are best-effort; persist pools, cursors and play history to avoid repeats after restart.
 - [Hidden topic rooms](hidden-topic-rooms.md) — hide rooms through an explicit Directory allowlist; preserve stored histories and pools, and refill/sanitize only visible rooms.
 - [Requested scope only](requested-scope-only.md) — for Streamtalk changes, do not add unrequested controls, features, or UI.
+- [Shared 3D preview limits](shared-scene-webgl.md) — the screenshot browser lacked WebGL; keep the decorative scene isolated and fall back to the app UI.

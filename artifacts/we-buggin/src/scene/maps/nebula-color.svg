@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <radialGradient id="nebula" cx="38%" cy="30%" r="78%">
+      <stop stop-color="#bf7eae"/><stop offset=".34" stop-color="#554766"/><stop offset=".7" stop-color="#242638"/><stop offset="1" stop-color="#11131c"/>
+    </radialGradient>
+    <filter id="cloud"><feTurbulence type="fractalNoise" baseFrequency=".022 .071" numOctaves="4" seed="14"/><feColorMatrix values=".55 0 0 0 .16 0 .43 0 0 .10 0 0 .62 0 .20 0 0 0 .25 0"/></filter>
+  </defs>
+  <rect width="256" height="256" fill="url(#nebula)"/><rect width="256" height="256" filter="url(#cloud)" opacity=".58"/>
+</svg>

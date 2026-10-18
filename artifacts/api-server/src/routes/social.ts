@@ -23,6 +23,9 @@ import {
   AssignGiftStudioVersionToGiftResponse, GetGiftStudioVersionMediaParams,
   UpdateGiftStudioCatalogItemBody, UpdateGiftStudioCatalogItemParams, UpdateGiftStudioCatalogItemResponse,
   GetActiveGiftStudioMediaParams, GetActiveGiftStudioMediaResponse,
+  GetSceneModelsResponse, GetSceneModelFileParams, GetAdminSceneModelsResponse,
+  UploadSceneModelBody, UploadSceneModelResponse,
+  UpdateSceneModelPlacementParams, UpdateSceneModelPlacementBody, UpdateSceneModelPlacementResponse,
 } from "@workspace/api-zod";
 import { accountId, sameOrigin } from "./identity";
 import { RoomError, roomStore } from "../lib/room-store";
@@ -58,6 +61,10 @@ import {
   claimGiftStudioProcessingSession, discardGiftStudioProcessingSession,
   releaseGiftStudioProcessingSession, retainGiftStudioProcessingSession,
 } from "../lib/gift-studio-processing-sessions";
+import {
+  activeSceneModelFile, addSceneModel, listActiveSceneModels, listOwnerSceneModels,
+  updateOwnerSceneModelPlacement,
+} from "../lib/developer-scene-models";
 
 const router: IRouter = Router();
 router.get('/gift-media/spirit-pup/v1/:filename', serveGiftMedia);
@@ -77,6 +84,7 @@ router.use("/social", async (req, res, next) => {
 });
 
 const studioTempDirs = new WeakMap<Request, string>();
+const sceneModelTempDirs = new WeakMap<Request, string>();
 const studioUpload = multer({
   storage: multer.diskStorage({
     destination(req, _file, callback) {
@@ -109,6 +117,44 @@ async function ownerOnly(req: Request, _res: Response, next: (error?: unknown) =
   } catch (error) {
     next(error);
   }
+}
+
+const sceneModelUpload = multer({
+  storage: multer.diskStorage({
+    destination(req, _file, callback) {
+      let directory = sceneModelTempDirs.get(req);
+      if (!directory) {
+        directory = path.join(tmpdir(), `streamtalk-scene-model-${randomUUID()}`);
+        sceneModelTempDirs.set(req, directory);
+        mkdir(directory, { recursive: true }).then(
+          () => callback(null, directory!),
+          (error: Error) => callback(error, ""),
+        );
+        return;
+      }
+      callback(null, directory);
+    },
+    filename(_req, _file, callback) {
+      callback(null, randomUUID());
+    },
+  }),
+  limits: { fileSize: 100 * 1024 * 1024, files: 1, fields: 1, fieldSize: 1024, parts: 2 },
+}).single("model");
+
+function parseSceneModelUpload(req: Request, res: Response, next: (error?: unknown) => void) {
+  sceneModelUpload(req, res, (error) => {
+    if (!error) {
+      next();
+      return;
+    }
+    const directory = sceneModelTempDirs.get(req);
+    if (directory) void rm(directory, { recursive: true, force: true }).finally(() => sceneModelTempDirs.delete(req));
+    if (error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE") {
+      next(new RoomError(413, "Choose a model file no larger than 100 MB."));
+      return;
+    }
+    next(new RoomError(400, "Choose one GLB or GLTF model file."));
+  });
 }
 
 function parseStudioUpload(req: Request, res: Response, next: (error?: unknown) => void) {
@@ -171,6 +217,72 @@ async function streamStudioMedia(
 
 router.get("/social/admin/gift-studio/library", ownerOnly, async (req, res): Promise<void> => {
   res.json(GetGiftStudioLibraryResponse.parse(await listGiftStudioVersions(accountId(req))));
+});
+
+router.get("/social/scene-models", async (_req, res): Promise<void> => {
+  res.json(GetSceneModelsResponse.parse({ models: await listActiveSceneModels() }));
+});
+
+router.get("/social/scene-models/:modelId/file", async (req, res): Promise<void> => {
+  const params = GetSceneModelFileParams.safeParse(req.params);
+  if (!params.success) throw new RoomError(404, "Scene model is not available.");
+  const model = await activeSceneModelFile(params.data.modelId);
+  if (!model) throw new RoomError(404, "Scene model is not available.");
+  res.set({
+    "Content-Type": model.contentType,
+    "Content-Length": String(model.byteSize),
+    "Cache-Control": "public, max-age=31536000, immutable",
+    "X-Content-Type-Options": "nosniff",
+  });
+  const stream = model.file.createReadStream();
+  res.on("close", () => stream.destroy());
+  stream.on("error", () => res.destroy()).pipe(res);
+});
+
+router.get("/social/admin/scene-models", ownerOnly, async (req, res): Promise<void> => {
+  res.json(GetAdminSceneModelsResponse.parse({ models: await listOwnerSceneModels(accountId(req)) }));
+});
+
+router.post("/social/admin/scene-models", ownerOnly, parseSceneModelUpload, async (req, res): Promise<void> => {
+  const directory = sceneModelTempDirs.get(req);
+  try {
+    const file = req.file;
+    if (!directory || !file) throw new RoomError(400, "Choose one GLB or GLTF model file.");
+    const name = UploadSceneModelBody.shape.name.safeParse(req.body?.name);
+    if (!name.success) throw new RoomError(400, "Enter a model name of 1 to 80 characters.");
+    const result = await addSceneModel({
+      ownerId: accountId(req),
+      name: name.data.trim(),
+      originalName: file.originalname,
+      filePath: file.path,
+    });
+    res.status(201).json(UploadSceneModelResponse.parse(result));
+  } finally {
+    if (directory) {
+      await rm(directory, { recursive: true, force: true });
+      sceneModelTempDirs.delete(req);
+    }
+  }
+});
+
+router.patch("/social/admin/scene-models/:modelId/placement", ownerOnly, async (req, res): Promise<void> => {
+  const params = UpdateSceneModelPlacementParams.safeParse(req.params);
+  const body = UpdateSceneModelPlacementBody.safeParse(req.body);
+  if (!params.success || !body.success) throw new RoomError(400, "Check the model's position and scale.");
+  const [x, y, z] = body.data.position;
+  const [rx, ry, rz] = body.data.rotation;
+  if (x === undefined || y === undefined || z === undefined || rx === undefined || ry === undefined || rz === undefined
+    || x < -20 || x > 20 || y < -10 || y > 10 || z < -20 || z > 20
+    || Math.abs(rx) > 360 || Math.abs(ry) > 360 || Math.abs(rz) > 360) {
+    throw new RoomError(400, "Keep position within ±20 units and rotation within one turn.");
+  }
+  const result = await updateOwnerSceneModelPlacement(accountId(req), params.data.modelId, {
+    position: [x, y, z],
+    rotation: [rx, ry, rz],
+    scale: body.data.scale,
+  });
+  if (!result) throw new RoomError(404, "Scene model not found.");
+  res.json(UpdateSceneModelPlacementResponse.parse(result));
 });
 
 router.patch("/social/admin/gift-studio/catalog/:giftId", ownerOnly, async (req, res): Promise<void> => {
