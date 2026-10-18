@@ -1,14 +1,20 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   getGetActiveGiftStudioMediaQueryKey,
   useGetActiveGiftStudioMedia,
+  getGetGiftMotionPlaybackQueryKey,
+  useGetGiftMotionPlayback,
 } from "@workspace/api-client-react";
-import type { GiftStudioGiftId, GiftStudioPlaybackMedia } from "@workspace/api-client-react";
+import type { DeveloperGiftMotion, GiftStudioGiftId, GiftStudioPlaybackMedia, SocialGiftCatalogId } from "@workspace/api-client-react";
 import { HeartAnimation } from "./HeartAnimation";
 import { BigTierGiftAnimation, isBigTierGiftId } from "./BigTierGift";
 import { CosmicEncoreAnimation, MoonfoxAnimation, SpiritAnimation } from "./SpiritPup";
 import "./gifts.css";
+import "./gift-motion-overlay.css";
+
+const isMotionGiftId = (id: string) => /^motion-[0-9a-f-]{36}$/.test(id);
+const GiftMotionPreview = lazy(() => import("./GiftMotionPreview").then((module) => ({ default: module.GiftMotionPreview })));
 
 const PRESENTATION: Record<GiftStudioGiftId, { name: string; emoji: string; position: "top" | "full" | "bottom" | "center" }> = {
   "good-vibes": { name: "Good vibes", emoji: "✨", position: "center" },
@@ -51,17 +57,45 @@ export function GiftAnimationPlayer({
   onFinish: () => void;
   mediaOverride?: GiftStudioPlaybackMedia;
 }) {
+  const isMotionGift = isMotionGiftId(giftId);
   const activeQuery = useGetActiveGiftStudioMedia(giftId, {
     query: {
       queryKey: getGetActiveGiftStudioMediaQueryKey(giftId),
-      enabled: !mediaOverride,
+      enabled: !mediaOverride && !isMotionGift,
       staleTime: 0,
       refetchOnMount: "always",
       refetchOnWindowFocus: true,
       retry: false,
     },
   });
+  const motionQuery = useGetGiftMotionPlayback(giftId as SocialGiftCatalogId, {
+    query: {
+      queryKey: getGetGiftMotionPlaybackQueryKey(giftId as SocialGiftCatalogId),
+      enabled: isMotionGift && !mediaOverride,
+      staleTime: 0,
+      refetchOnMount: "always",
+      retry: false,
+    },
+  });
   const [manifestTimedOut, setManifestTimedOut] = useState(false);
+  const motionFinishRef = useRef(onFinish);
+  motionFinishRef.current = onFinish;
+
+  useEffect(() => {
+    if (!isMotionGift || motionQuery.data) return;
+    const timeout = window.setTimeout(() => motionFinishRef.current(), 7000);
+    return () => window.clearTimeout(timeout);
+  }, [giftId, isMotionGift, motionQuery.data]);
+
+  if (isMotionGift && !mediaOverride) {
+    if (!motionQuery.data) return null;
+    return <ThreeDimensionalGiftAnimation
+      key={motionQuery.data.id}
+      gift={motionQuery.data}
+      senderName={senderName}
+      onFinish={onFinish}
+    />;
+  }
 
   useEffect(() => {
     if (mediaOverride || !activeQuery.isFetching) {
@@ -96,6 +130,66 @@ export function GiftAnimationPlayer({
     senderNameColor={senderNameColor} senderNameTierIndex={senderNameTierIndex} onFinish={onFinish} />;
   if (giftId === "moonfox") return <MoonfoxAnimation onFinish={onFinish} />;
   return <SpiritAnimation onFinish={onFinish} />;
+}
+
+function ThreeDimensionalGiftAnimation({
+  gift,
+  senderName,
+  onFinish,
+}: {
+  gift: DeveloperGiftMotion;
+  senderName: string;
+  onFinish: () => void;
+}) {
+  const finishRef = useRef(onFinish);
+  finishRef.current = onFinish;
+  const [fading, setFading] = useState(false);
+  const [previewError, setPreviewError] = useState(false);
+  const finished = useRef(false);
+  useEffect(() => {
+    finished.current = false;
+    setFading(false);
+    const failsafe = window.setTimeout(() => fade(), 15000);
+    let fadeTimer = 0;
+    function fade() {
+      if (finished.current) return;
+      finished.current = true;
+      setFading(true);
+      fadeTimer = window.setTimeout(() => finishRef.current(), 450);
+    }
+    return () => {
+      window.clearTimeout(failsafe);
+      window.clearTimeout(fadeTimer);
+    };
+  }, [gift.id]);
+  const fade = () => {
+    if (finished.current) return;
+    finished.current = true;
+    setFading(true);
+    window.setTimeout(() => finishRef.current(), 450);
+  };
+  return createPortal(
+    <div className={`gift-motion-overlay${fading ? " is-fading" : ""}`} role="status" aria-live="polite">
+      {!previewError && <Suspense fallback={<div className="gift-motion-preview-fallback">Loading 3D gift…</div>}>
+        <GiftMotionPreview
+          src={gift.fileUrl}
+          category={gift.category}
+          motion={gift.motion}
+          loop={false}
+          onModelInfo={() => undefined}
+          onError={() => setPreviewError(true)}
+          onFinish={fade}
+        />
+      </Suspense>}
+      {previewError && <div className="gift-motion-simple-fallback">
+        <strong>{gift.name}</strong><span>3D gift preview is not available on this device.</span>
+      </div>}
+      <div className="gift-motion-sender-banner">
+        <strong>{senderName}</strong><span> sent {gift.name}</span>
+      </div>
+    </div>,
+    document.body,
+  );
 }
 
 function CatalogIconGiftAnimation({ giftId, onFinish }: {

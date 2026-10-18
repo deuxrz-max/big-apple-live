@@ -219,6 +219,72 @@
         }
       }
     },
+    "/social/admin/gift-motions": {
+      "get": {
+        "operationId": "getAdminGiftMotions",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "responses": {
+          "200": {"description": "Owner-managed 3D gift motions", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DeveloperGiftMotionList"}}}},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Owner access required"}
+        }
+      },
+      "post": {
+        "operationId": "uploadGiftMotion",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "requestBody": {"required": true, "content": {"multipart/form-data": {"schema": {"$ref": "#/components/schemas/DeveloperGiftMotionUploadInput"}}}},
+        "responses": {
+          "201": {"description": "3D gift saved and activated", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DeveloperGiftMotion"}}}},
+          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Owner access required"},
+          "413": {"description": "Model exceeds the upload limit"},
+          "415": {"description": "Unsupported or non-self-contained model"}
+        }
+      }
+    },
+    "/social/admin/gift-motions/{giftId}": {
+      "delete": {
+        "operationId": "deleteGiftMotion",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "parameters": [{"name": "giftId", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/SocialGiftCatalogId"}}],
+        "responses": {
+          "200": {"description": "Gift motion removed from the active catalog", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SocialAction"}}}},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Owner access required"},
+          "404": {"description": "Gift motion not found"}
+        }
+      }
+    },
+    "/social/gift-motions/{giftId}": {
+      "get": {
+        "operationId": "getGiftMotionPlayback",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "parameters": [{"name": "giftId", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/SocialGiftCatalogId"}}],
+        "responses": {
+          "200": {"description": "Active 3D gift motion playback data", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DeveloperGiftMotion"}}}},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "404": {"description": "Gift motion is unavailable"}
+        }
+      }
+    },
+    "/social/gift-motions/{giftId}/file": {
+      "get": {
+        "operationId": "getGiftMotionFile",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "parameters": [{"name": "giftId", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/SocialGiftCatalogId"}}],
+        "responses": {
+          "200": {"description": "Active gift model file", "content": {"model/gltf-binary": {"schema": {"type": "string", "format": "binary"}}, "model/gltf+json": {"schema": {"type": "string", "format": "binary"}}}},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "404": {"description": "Gift motion is unavailable"}
+        }
+      }
+    },
     "/social/admin/gift-studio/library": {
       "get": {
         "operationId": "getGiftStudioLibrary",
@@ -1279,13 +1345,69 @@
           "scale": {"type": "number", "minimum": 0.1, "maximum": 4}
         }
       },
+      "DeveloperGiftMotionPreset": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["version", "durationMs", "category", "entry", "exit", "speed", "spin", "drift", "bounce", "cameraYaw", "cameraPitch", "animationIndex"],
+        "properties": {
+          "version": {"type": "integer", "const": 1},
+          "durationMs": {"type": "integer", "const": 6000},
+          "category": {"type": "string", "enum": ["vehicle", "character", "object", "logo"]},
+          "entry": {"type": "string", "enum": ["left", "right", "top", "bottom", "depth"]},
+          "exit": {"type": "string", "enum": ["left", "right", "top", "bottom", "depth"]},
+          "speed": {"type": "number", "minimum": 0.5, "maximum": 1.5},
+          "spin": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "number", "minimum": -6.3, "maximum": 6.3}},
+          "drift": {"type": "number", "minimum": 0, "maximum": 1},
+          "bounce": {"type": "number", "minimum": 0, "maximum": 1},
+          "cameraYaw": {"type": "number", "minimum": -1.2, "maximum": 1.2},
+          "cameraPitch": {"type": "number", "minimum": -0.8, "maximum": 0.8},
+          "animationIndex": {"type": ["integer", "null"], "minimum": 0, "maximum": 100}
+        }
+      },
+      "DeveloperGiftMotion": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "cost", "format", "category", "animationNames", "motion", "byteSize", "fileUrl", "active", "createdAt"],
+        "properties": {
+          "id": {"$ref": "#/components/schemas/SocialGiftCatalogId"},
+          "name": {"type": "string"},
+          "cost": {"type": "integer", "minimum": 1},
+          "format": {"type": "string", "enum": ["glb", "gltf"]},
+          "category": {"type": "string", "enum": ["vehicle", "character", "object", "logo"]},
+          "animationNames": {"type": "array", "items": {"type": "string"}},
+          "motion": {"$ref": "#/components/schemas/DeveloperGiftMotionPreset"},
+          "byteSize": {"type": "integer", "minimum": 1},
+          "fileUrl": {"type": "string"},
+          "active": {"type": "boolean"},
+          "createdAt": {"type": "string", "format": "date-time"}
+        }
+      },
+      "DeveloperGiftMotionList": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["motions"],
+        "properties": {"motions": {"type": "array", "items": {"$ref": "#/components/schemas/DeveloperGiftMotion"}}}
+      },
+      "DeveloperGiftMotionUploadInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "cost", "category", "animationNames", "motion", "model"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1, "maxLength": 60},
+          "cost": {"type": "integer", "minimum": 1},
+          "category": {"type": "string", "enum": ["vehicle", "character", "object", "logo"]},
+          "animationNames": {"type": "string", "description": "JSON array of built-in animation clip names"},
+          "motion": {"type": "string", "description": "JSON-encoded deterministic 6-second motion preset"},
+          "model": {"type": "string", "description": "One self-contained GLB or GLTF model, up to 100 MB"}
+        }
+      },
       "GiftStudioGiftId": {
         "type": "string",
         "pattern": "^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$"
       },
       "SocialGiftCatalogId": {
         "type": "string",
-        "pattern": "^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$"
+        "pattern": "^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$"
       },
       "GiftStudioCatalogUpdate": {
         "type": "object",

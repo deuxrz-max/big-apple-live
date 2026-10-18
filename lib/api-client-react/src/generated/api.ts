@@ -36,6 +36,9 @@ import type {
   ChatReportReviewInput,
   ComedyVideoActionInput,
   ComedyVideoCatalogResponse,
+  DeveloperGiftMotion,
+  DeveloperGiftMotionList,
+  DeveloperGiftMotionUploadInput,
   DeveloperSceneModel,
   DeveloperSceneModelList,
   DeveloperSceneModelPlacementInput,
@@ -5358,6 +5361,362 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getUpdateSceneModelPlacementMutationOptions(options));
     }
+
+export const getGetAdminGiftMotionsUrl = () => {
+
+
+
+
+  return `/api/social/admin/gift-motions`
+}
+
+export const getAdminGiftMotions = async ( options?: Parameters<typeof customFetch>[1]): Promise<DeveloperGiftMotionList> => {
+
+  return customFetch<DeveloperGiftMotionList>(getGetAdminGiftMotionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAdminGiftMotionsQueryKey = () => {
+    return [
+    `/api/social/admin/gift-motions`
+    ] as const;
+    }
+
+
+export const getGetAdminGiftMotionsQueryOptions = <TData = Awaited<ReturnType<typeof getAdminGiftMotions>>, TError = ErrorType<ErrorResponse4b96100 | void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminGiftMotions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminGiftMotionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminGiftMotions>>> = ({ signal }) => getAdminGiftMotions({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminGiftMotions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAdminGiftMotionsQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminGiftMotions>>>
+export type GetAdminGiftMotionsQueryError = ErrorType<ErrorResponse4b96100 | void>
+
+
+
+export function useGetAdminGiftMotions<TData = Awaited<ReturnType<typeof getAdminGiftMotions>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminGiftMotions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAdminGiftMotionsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUploadGiftMotionUrl = () => {
+
+
+
+
+  return `/api/social/admin/gift-motions`
+}
+
+export const uploadGiftMotion = async (developerGiftMotionUploadInput: DeveloperGiftMotionUploadInput, options?: Parameters<typeof customFetch>[1]): Promise<DeveloperGiftMotion> => {
+    const formData = new FormData();
+formData.append(`name`, developerGiftMotionUploadInput.name);
+formData.append(`cost`, developerGiftMotionUploadInput.cost.toString())
+formData.append(`category`, developerGiftMotionUploadInput.category);
+formData.append(`animationNames`, developerGiftMotionUploadInput.animationNames);
+formData.append(`motion`, developerGiftMotionUploadInput.motion);
+formData.append(`model`, developerGiftMotionUploadInput.model);
+
+  return customFetch<DeveloperGiftMotion>(getUploadGiftMotionUrl(),
+  {
+    ...options,
+    method: 'POST'
+    ,
+    body: formData
+  }
+);}
+
+
+
+
+
+export const getUploadGiftMotionMutationKey = () => ['uploadGiftMotion'] as const;
+
+export const getUploadGiftMotionMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadGiftMotion>>, TError,UploadGiftMotionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof uploadGiftMotion>>, TError,UploadGiftMotionMutationVariables, TContext> => {
+
+const mutationKey = getUploadGiftMotionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadGiftMotion>>, UploadGiftMotionMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  uploadGiftMotion(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UploadGiftMotionMutationResult = NonNullable<Awaited<ReturnType<typeof uploadGiftMotion>>>
+    export type UploadGiftMotionMutationBody = BodyType<DeveloperGiftMotionUploadInput>
+    export type UploadGiftMotionMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type UploadGiftMotionMutationVariables = {data: BodyType<DeveloperGiftMotionUploadInput>}
+
+    export const useUploadGiftMotion = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadGiftMotion>>, TError,UploadGiftMotionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof uploadGiftMotion>>,
+        TError,
+        UploadGiftMotionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUploadGiftMotionMutationOptions(options));
+    }
+
+export const getDeleteGiftMotionUrl = (giftId: SocialGiftCatalogId,) => {
+
+
+
+
+  return `/api/social/admin/gift-motions/${giftId}`
+}
+
+export const deleteGiftMotion = async (giftId: SocialGiftCatalogId, options?: Parameters<typeof customFetch>[1]): Promise<SocialAction> => {
+
+  return customFetch<SocialAction>(getDeleteGiftMotionUrl(giftId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteGiftMotionMutationKey = () => ['deleteGiftMotion'] as const;
+
+export const getDeleteGiftMotionMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGiftMotion>>, TError,DeleteGiftMotionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteGiftMotion>>, TError,DeleteGiftMotionMutationVariables, TContext> => {
+
+const mutationKey = getDeleteGiftMotionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteGiftMotion>>, DeleteGiftMotionMutationVariables> = (props) => {
+          const {giftId} = props ?? {};
+
+          return  deleteGiftMotion(giftId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteGiftMotionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteGiftMotion>>>
+
+    export type DeleteGiftMotionMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type DeleteGiftMotionMutationVariables = {giftId: SocialGiftCatalogId}
+
+    export const useDeleteGiftMotion = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGiftMotion>>, TError,DeleteGiftMotionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteGiftMotion>>,
+        TError,
+        DeleteGiftMotionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteGiftMotionMutationOptions(options));
+    }
+
+export const getGetGiftMotionPlaybackUrl = (giftId: SocialGiftCatalogId,) => {
+
+
+
+
+  return `/api/social/gift-motions/${giftId}`
+}
+
+export const getGiftMotionPlayback = async (giftId: SocialGiftCatalogId, options?: Parameters<typeof customFetch>[1]): Promise<DeveloperGiftMotion> => {
+
+  return customFetch<DeveloperGiftMotion>(getGetGiftMotionPlaybackUrl(giftId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGiftMotionPlaybackQueryKey = (giftId: SocialGiftCatalogId,) => {
+    return [
+    `/api/social/gift-motions/${giftId}`
+    ] as const;
+    }
+
+
+export const getGetGiftMotionPlaybackQueryOptions = <TData = Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError = ErrorType<ErrorResponse4b96100 | void>>(giftId: SocialGiftCatalogId, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGiftMotionPlaybackQueryKey(giftId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGiftMotionPlayback>>> = ({ signal }) => getGiftMotionPlayback(giftId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: giftId !== null && giftId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGiftMotionPlaybackQueryResult = NonNullable<Awaited<ReturnType<typeof getGiftMotionPlayback>>>
+export type GetGiftMotionPlaybackQueryError = ErrorType<ErrorResponse4b96100 | void>
+
+
+
+export function useGetGiftMotionPlayback<TData = Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
+ giftId: SocialGiftCatalogId, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGiftMotionPlaybackQueryOptions(giftId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetGiftMotionFileUrl = (giftId: SocialGiftCatalogId,) => {
+
+
+
+
+  return `/api/social/gift-motions/${giftId}/file`
+}
+
+export const getGiftMotionFile = async (giftId: SocialGiftCatalogId, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+
+  return customFetch<Blob>(getGetGiftMotionFileUrl(giftId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGiftMotionFileQueryKey = (giftId: SocialGiftCatalogId,) => {
+    return [
+    `/api/social/gift-motions/${giftId}/file`
+    ] as const;
+    }
+
+
+export const getGetGiftMotionFileQueryOptions = <TData = Awaited<ReturnType<typeof getGiftMotionFile>>, TError = ErrorType<ErrorResponse4b96100 | void>>(giftId: SocialGiftCatalogId, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionFile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGiftMotionFileQueryKey(giftId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGiftMotionFile>>> = ({ signal }) => getGiftMotionFile(giftId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: giftId !== null && giftId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionFile>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGiftMotionFileQueryResult = NonNullable<Awaited<ReturnType<typeof getGiftMotionFile>>>
+export type GetGiftMotionFileQueryError = ErrorType<ErrorResponse4b96100 | void>
+
+
+
+export function useGetGiftMotionFile<TData = Awaited<ReturnType<typeof getGiftMotionFile>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
+ giftId: SocialGiftCatalogId, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionFile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGiftMotionFileQueryOptions(giftId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getUpdateGiftStudioCatalogItemUrl = (giftId: SocialGiftCatalogId,) => {
 

@@ -6,6 +6,7 @@ import { mkdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { accountProfiles, db } from "@workspace/db";
+import type { DeveloperGiftMotionPreset } from "@workspace/api-zod";
 import {
   SaveSocialProfileBody, SaveSocialProfileResponse, GetSocialMeResponse, GetSocialPeopleResponse,
   UpdateMyEntranceEffectSettingsBody, UpdateMyEntranceEffectSettingsResponse,
@@ -26,6 +27,9 @@ import {
   GetSceneModelsResponse, GetSceneModelFileParams, GetAdminSceneModelsResponse,
   UploadSceneModelBody, UploadSceneModelResponse,
   UpdateSceneModelPlacementParams, UpdateSceneModelPlacementBody, UpdateSceneModelPlacementResponse,
+  GetAdminGiftMotionsResponse, UploadGiftMotionBody, UploadGiftMotionResponse,
+  DeleteGiftMotionParams, DeleteGiftMotionResponse,
+  GetGiftMotionPlaybackParams, GetGiftMotionPlaybackResponse,
 } from "@workspace/api-zod";
 import { accountId, sameOrigin } from "./identity";
 import { RoomError, roomStore } from "../lib/room-store";
@@ -63,8 +67,12 @@ import {
 } from "../lib/gift-studio-processing-sessions";
 import {
   activeSceneModelFile, addSceneModel, listActiveSceneModels, listOwnerSceneModels,
-  updateOwnerSceneModelPlacement,
+  updateOwnerSceneModelPlacement, inspectSceneModelFile,
 } from "../lib/developer-scene-models";
+import {
+  addGiftMotion, deleteOwnerGiftMotion, getActiveGiftMotion, getActiveGiftMotionFile,
+  listOwnerGiftMotions,
+} from "../lib/developer-gift-motions";
 
 const router: IRouter = Router();
 router.get('/gift-media/spirit-pup/v1/:filename', serveGiftMedia);
@@ -85,6 +93,7 @@ router.use("/social", async (req, res, next) => {
 
 const studioTempDirs = new WeakMap<Request, string>();
 const sceneModelTempDirs = new WeakMap<Request, string>();
+const giftMotionTempDirs = new WeakMap<Request, string>();
 const studioUpload = multer({
   storage: multer.diskStorage({
     destination(req, _file, callback) {
@@ -140,6 +149,63 @@ const sceneModelUpload = multer({
   }),
   limits: { fileSize: 100 * 1024 * 1024, files: 1, fields: 1, fieldSize: 1024, parts: 2 },
 }).single("model");
+
+const giftMotionUpload = multer({
+  storage: multer.diskStorage({
+    destination(req, _file, callback) {
+      let directory = giftMotionTempDirs.get(req);
+      if (!directory) {
+        directory = path.join(tmpdir(), `streamtalk-gift-motion-${randomUUID()}`);
+        giftMotionTempDirs.set(req, directory);
+        mkdir(directory, { recursive: true }).then(
+          () => callback(null, directory!),
+          (error: Error) => callback(error, ""),
+        );
+        return;
+      }
+      callback(null, directory);
+    },
+    filename(_req, _file, callback) {
+      callback(null, randomUUID());
+    },
+  }),
+  limits: { fileSize: 100 * 1024 * 1024, files: 1, fields: 5, fieldSize: 32 * 1024, parts: 6 },
+});
+const uploadGiftMotionFile = giftMotionUpload.single("model");
+
+function parseGiftMotionUpload(req: Request, res: Response, next: (error?: unknown) => void) {
+  uploadGiftMotionFile(req, res, (error) => {
+    if (!error) {
+      next();
+      return;
+    }
+    const directory = giftMotionTempDirs.get(req);
+    if (directory) void rm(directory, { recursive: true, force: true }).finally(() => giftMotionTempDirs.delete(req));
+    if (error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE") {
+      next(new RoomError(413, "Choose a GLB or GLTF model no larger than 100 MB."));
+      return;
+    }
+    next(new RoomError(400, "Choose one GLB or GLTF model file."));
+  });
+}
+
+function parseGiftMotionPreset(value: unknown): DeveloperGiftMotionPreset | null {
+  if (!value || typeof value !== "object") return null;
+  const item = value as Record<string, unknown>;
+  const categoryValid = ["vehicle", "character", "object", "logo"].includes(String(item.category));
+  const validDirection = (candidate: unknown) => ["left", "right", "top", "bottom", "depth"].includes(String(candidate));
+  const bounded = (candidate: unknown, min: number, max: number) =>
+    typeof candidate === "number" && Number.isFinite(candidate) && candidate >= min && candidate <= max;
+  if (item.version !== 1 || item.durationMs !== 6000 || !categoryValid
+    || !validDirection(item.entry) || !validDirection(item.exit)) return null;
+  if (!bounded(item.speed, 0.5, 1.5) || !Array.isArray(item.spin) || item.spin.length !== 3
+    || item.spin.some((axis) => !bounded(axis, -6.3, 6.3))) return null;
+  if (!bounded(item.drift, 0, 1) || !bounded(item.bounce, 0, 1)
+    || !bounded(item.cameraYaw, -1.2, 1.2) || !bounded(item.cameraPitch, -0.8, 0.8)) return null;
+  if (item.animationIndex !== null
+    && (!Number.isInteger(item.animationIndex) || !bounded(item.animationIndex, 0, 100))) return null;
+  return value as DeveloperGiftMotionPreset;
+}
 
 function parseSceneModelUpload(req: Request, res: Response, next: (error?: unknown) => void) {
   sceneModelUpload(req, res, (error) => {
@@ -263,6 +329,96 @@ router.post("/social/admin/scene-models", ownerOnly, parseSceneModelUpload, asyn
       sceneModelTempDirs.delete(req);
     }
   }
+});
+
+router.get("/social/admin/gift-motions", ownerOnly, async (req, res): Promise<void> => {
+  res.json(GetAdminGiftMotionsResponse.parse({ motions: await listOwnerGiftMotions(accountId(req)) }));
+});
+
+router.post("/social/admin/gift-motions", ownerOnly, parseGiftMotionUpload, async (req, res): Promise<void> => {
+  const directory = giftMotionTempDirs.get(req);
+  try {
+    const file = req.file;
+    if (!directory || !file) throw new RoomError(400, "Choose one GLB or GLTF model file.");
+    const fields = UploadGiftMotionBody.safeParse({
+      name: req.body?.name,
+      cost: Number(req.body?.cost),
+      category: req.body?.category,
+      animationNames: req.body?.animationNames,
+      motion: req.body?.motion,
+      model: file.originalname,
+    });
+    if (!fields.success) throw new RoomError(400, "Check the gift name, coin price and motion settings.");
+    let animationNames: unknown;
+    let motionValue: unknown;
+    try {
+      animationNames = JSON.parse(fields.data.animationNames);
+      motionValue = JSON.parse(fields.data.motion);
+    } catch {
+      throw new RoomError(400, "The model animation or motion data is invalid.");
+    }
+    if (!Array.isArray(animationNames) || animationNames.length > 100
+      || animationNames.some((name) => typeof name !== "string" || name.length > 120)) {
+      throw new RoomError(400, "The model's animation list is invalid.");
+    }
+    const motion = parseGiftMotionPreset(motionValue);
+    if (!motion || motion.category !== fields.data.category) {
+      throw new RoomError(400, "The selected motion does not match the model category.");
+    }
+    if (motion.animationIndex !== null && motion.animationIndex >= animationNames.length) {
+      throw new RoomError(400, "Choose an animation included in this model.");
+    }
+    const checked = await inspectSceneModelFile(file.path, file.originalname);
+    const result = await addGiftMotion({
+      ownerId: accountId(req),
+      name: fields.data.name.trim(),
+      cost: fields.data.cost,
+      originalName: file.originalname,
+      filePath: file.path,
+      category: fields.data.category,
+      animationNames: animationNames as string[],
+      motion,
+      checked,
+    });
+    res.status(201).json(UploadGiftMotionResponse.parse(result));
+  } finally {
+    if (directory) {
+      await rm(directory, { recursive: true, force: true });
+      giftMotionTempDirs.delete(req);
+    }
+  }
+});
+
+router.delete("/social/admin/gift-motions/:giftId", ownerOnly, async (req, res): Promise<void> => {
+  const params = DeleteGiftMotionParams.safeParse(req.params);
+  if (!params.success) throw new RoomError(400, "Choose a valid saved 3D gift.");
+  const deleted = await deleteOwnerGiftMotion(accountId(req), params.data.giftId);
+  if (!deleted) throw new RoomError(404, "Saved 3D gift not found.");
+  res.json(DeleteGiftMotionResponse.parse({ ok: true }));
+});
+
+router.get("/social/gift-motions/:giftId", async (req, res): Promise<void> => {
+  const params = GetGiftMotionPlaybackParams.safeParse(req.params);
+  if (!params.success) throw new RoomError(404, "3D gift motion is unavailable.");
+  const motion = await getActiveGiftMotion(params.data.giftId);
+  if (!motion) throw new RoomError(404, "3D gift motion is unavailable.");
+  res.json(GetGiftMotionPlaybackResponse.parse(motion));
+});
+
+router.get("/social/gift-motions/:giftId/file", async (req, res): Promise<void> => {
+  const params = GetGiftMotionPlaybackParams.safeParse(req.params);
+  if (!params.success) throw new RoomError(404, "3D gift model is unavailable.");
+  const model = await getActiveGiftMotionFile(params.data.giftId);
+  if (!model) throw new RoomError(404, "3D gift model is unavailable.");
+  res.set({
+    "Content-Type": model.contentType,
+    "Content-Length": String(model.byteSize),
+    "Cache-Control": "public, max-age=31536000, immutable",
+    "X-Content-Type-Options": "nosniff",
+  });
+  const stream = model.file.createReadStream();
+  res.on("close", () => stream.destroy());
+  stream.on("error", () => res.destroy()).pipe(res);
 });
 
 router.patch("/social/admin/scene-models/:modelId/placement", ownerOnly, async (req, res): Promise<void> => {

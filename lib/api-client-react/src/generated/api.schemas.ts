@@ -2465,15 +2465,158 @@ export interface DeveloperSceneModelPlacementInput {
   scale: number;
 }
 
+export type DeveloperGiftMotionPresetCategory = typeof DeveloperGiftMotionPresetCategory[keyof typeof DeveloperGiftMotionPresetCategory];
+
+
+export const DeveloperGiftMotionPresetCategory = {
+  vehicle: 'vehicle',
+  character: 'character',
+  object: 'object',
+  logo: 'logo',
+} as const;
+
+export type DeveloperGiftMotionPresetEntry = typeof DeveloperGiftMotionPresetEntry[keyof typeof DeveloperGiftMotionPresetEntry];
+
+
+export const DeveloperGiftMotionPresetEntry = {
+  left: 'left',
+  right: 'right',
+  top: 'top',
+  bottom: 'bottom',
+  depth: 'depth',
+} as const;
+
+export type DeveloperGiftMotionPresetExit = typeof DeveloperGiftMotionPresetExit[keyof typeof DeveloperGiftMotionPresetExit];
+
+
+export const DeveloperGiftMotionPresetExit = {
+  left: 'left',
+  right: 'right',
+  top: 'top',
+  bottom: 'bottom',
+  depth: 'depth',
+} as const;
+
+export interface DeveloperGiftMotionPreset {
+  version: 1;
+  durationMs: 6000;
+  category: DeveloperGiftMotionPresetCategory;
+  entry: DeveloperGiftMotionPresetEntry;
+  exit: DeveloperGiftMotionPresetExit;
+  /**
+     * @minimum 0.5
+     * @maximum 1.5
+     */
+  speed: number;
+  /**
+     * @minItems 3
+     * @maxItems 3
+     * @items.minimum -6.3
+     * @items.maximum 6.3
+     */
+  spin: number[];
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  drift: number;
+  /**
+     * @minimum 0
+     * @maximum 1
+     */
+  bounce: number;
+  /**
+     * @minimum -1.2
+     * @maximum 1.2
+     */
+  cameraYaw: number;
+  /**
+     * @minimum -0.8
+     * @maximum 0.8
+     */
+  cameraPitch: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     * @nullable
+     */
+  animationIndex: number | null;
+}
+
+export type DeveloperGiftMotionFormat = typeof DeveloperGiftMotionFormat[keyof typeof DeveloperGiftMotionFormat];
+
+
+export const DeveloperGiftMotionFormat = {
+  glb: 'glb',
+  gltf: 'gltf',
+} as const;
+
+export type DeveloperGiftMotionCategory = typeof DeveloperGiftMotionCategory[keyof typeof DeveloperGiftMotionCategory];
+
+
+export const DeveloperGiftMotionCategory = {
+  vehicle: 'vehicle',
+  character: 'character',
+  object: 'object',
+  logo: 'logo',
+} as const;
+
 /**
- * @pattern ^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$
+ * @pattern ^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$
  */
-export type GiftStudioGiftId = string;
+export type SocialGiftCatalogId = string;
+
+export interface DeveloperGiftMotion {
+  id: SocialGiftCatalogId;
+  name: string;
+  /** @minimum 1 */
+  cost: number;
+  format: DeveloperGiftMotionFormat;
+  category: DeveloperGiftMotionCategory;
+  animationNames: string[];
+  motion: DeveloperGiftMotionPreset;
+  /** @minimum 1 */
+  byteSize: number;
+  fileUrl: string;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface DeveloperGiftMotionList {
+  motions: DeveloperGiftMotion[];
+}
+
+export type DeveloperGiftMotionUploadInputCategory = typeof DeveloperGiftMotionUploadInputCategory[keyof typeof DeveloperGiftMotionUploadInputCategory];
+
+
+export const DeveloperGiftMotionUploadInputCategory = {
+  vehicle: 'vehicle',
+  character: 'character',
+  object: 'object',
+  logo: 'logo',
+} as const;
+
+export interface DeveloperGiftMotionUploadInput {
+  /**
+     * @minLength 1
+     * @maxLength 60
+     */
+  name: string;
+  /** @minimum 1 */
+  cost: number;
+  category: DeveloperGiftMotionUploadInputCategory;
+  /** JSON array of built-in animation clip names */
+  animationNames: string;
+  /** JSON-encoded deterministic 6-second motion preset */
+  motion: string;
+  /** One self-contained GLB or GLTF model, up to 100 MB */
+  model: string;
+}
 
 /**
  * @pattern ^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$
  */
-export type SocialGiftCatalogId = string;
+export type GiftStudioGiftId = string;
 
 export type GiftStudioCatalogUpdateStatus = typeof GiftStudioCatalogUpdateStatus[keyof typeof GiftStudioCatalogUpdateStatus];
 

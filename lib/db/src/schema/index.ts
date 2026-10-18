@@ -38,3 +38,4 @@ export * from "./live-stream-sessions";
 export * from "./gift-studio-assets";
 export * from "./social-gift-catalog-settings";
 export * from "./developer-scene-models";
+export * from "./developer-gift-motions";

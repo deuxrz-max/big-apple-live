@@ -832,6 +832,14 @@ paths:
     $ref: './social.openapi.json#/paths/~1social~1admin~1scene-models'
   /social/admin/scene-models/{modelId}/placement:
     $ref: './social.openapi.json#/paths/~1social~1admin~1scene-models~1{modelId}~1placement'
+  /social/admin/gift-motions:
+    $ref: './social.openapi.json#/paths/~1social~1admin~1gift-motions'
+  /social/admin/gift-motions/{giftId}:
+    $ref: './social.openapi.json#/paths/~1social~1admin~1gift-motions~1{giftId}'
+  /social/gift-motions/{giftId}:
+    $ref: './social.openapi.json#/paths/~1social~1gift-motions~1{giftId}'
+  /social/gift-motions/{giftId}/file:
+    $ref: './social.openapi.json#/paths/~1social~1gift-motions~1{giftId}~1file'
   /social/admin/gift-studio/catalog/{giftId}:
     $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1catalog~1{giftId}'
   /social/admin/gift-studio/process:

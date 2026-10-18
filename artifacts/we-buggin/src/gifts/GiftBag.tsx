@@ -17,9 +17,11 @@ const FOCUSABLE = 'button:not([disabled]),[href],input,select,textarea,[tabindex
 const ROOM_GIFT_IDS = new Set<RoomGiftId>([
   'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip',
 ]);
-const isRoomGiftId = (id: string): id is RoomGiftId => ROOM_GIFT_IDS.has(id as RoomGiftId);
+const isBuiltInRoomGiftId = (id: string): id is RoomGiftId => ROOM_GIFT_IDS.has(id as RoomGiftId);
+const isMotionGiftId = (id: string) => /^motion-[0-9a-f-]{36}$/.test(id);
+const isRoomGiftId = (id: string) => isBuiltInRoomGiftId(id) || isMotionGiftId(id);
 function giftIcon(id: string) {
-  return isRoomGiftId(id) ? <RoomGiftIcon giftId={id} /> : <GiftIcon id={id} size={26} />;
+  return isBuiltInRoomGiftId(id) ? <RoomGiftIcon giftId={id} /> : <GiftIcon id={id} size={26} />;
 }
 
 export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamId, onClose }: {

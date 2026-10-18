@@ -1584,7 +1584,7 @@ export const getSocialMeResponseNameColorProgressCoinsToNextTierMin = 0;
 
 export const getSocialMeResponseNameColorTestOverrideCoinsMin = 0;
 
-export const getSocialMeResponseEntranceEffectsEquippedEffectIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
+export const getSocialMeResponseEntranceEffectsEquippedEffectIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
 export const getSocialMeResponseEntranceEffectsOwnerTestOneTiersMin = 5;
 export const getSocialMeResponseEntranceEffectsOwnerTestOneTiersMax = 5;
 
@@ -1866,7 +1866,7 @@ export const UpdateMyEntranceEffectSettingsBody = zod.object({
   "lionEffectEnabled": zod.boolean().optional()
 })
 
-export const updateMyEntranceEffectSettingsResponseEquippedEffectIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
+export const updateMyEntranceEffectSettingsResponseEquippedEffectIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
 export const updateMyEntranceEffectSettingsResponseOwnerTestOneTiersMin = 5;
 export const updateMyEntranceEffectSettingsResponseOwnerTestOneTiersMax = 5;
 
@@ -1889,7 +1889,7 @@ export const UpdateMyEntranceEffectSettingsResponse = zod.object({
 })
 
 
-export const getEntranceEffectShopResponseItemsItemIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
+export const getEntranceEffectShopResponseItemsItemIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
 
 
 
@@ -1913,7 +1913,7 @@ export const GetEntranceEffectShopResponse = zod.object({
 })
 
 
-export const purchaseEntranceEffectPathEffectIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
+export const purchaseEntranceEffectPathEffectIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
 
 
 export const PurchaseEntranceEffectParams = zod.object({
@@ -1924,7 +1924,7 @@ export const PurchaseEntranceEffectBody = zod.object({
   "requestId": zod.string().uuid()
 })
 
-export const purchaseEntranceEffectResponseEffectIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
+export const purchaseEntranceEffectResponseEffectIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
 
 
 export const PurchaseEntranceEffectResponse = zod.object({
@@ -1942,14 +1942,14 @@ export const PurchaseEntranceEffectResponse = zod.object({
 })
 
 
-export const equipEntranceEffectBodyEffectIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
+export const equipEntranceEffectBodyEffectIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
 
 
 export const EquipEntranceEffectBody = zod.object({
   "effectId": zod.union([zod.string().regex(equipEntranceEffectBodyEffectIdOneRegExp),zod.null()])
 })
 
-export const equipEntranceEffectResponseEffectIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
+export const equipEntranceEffectResponseEffectIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
 
 
 export const EquipEntranceEffectResponse = zod.object({
@@ -2150,7 +2150,7 @@ export const getGiftStudioLibraryResponseItemsItemSettingsSpillMax = 1;
 
 export const getGiftStudioLibraryResponseItemsItemSettingsDraftNameMax = 60;
 
-export const getGiftStudioLibraryResponseCatalogItemIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
+export const getGiftStudioLibraryResponseCatalogItemIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
 
 
 
@@ -2333,7 +2333,223 @@ export const UpdateSceneModelPlacementResponse = zod.object({
 })
 
 
-export const updateGiftStudioCatalogItemPathGiftIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
+export const getAdminGiftMotionsResponseMotionsItemIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
+
+export const getAdminGiftMotionsResponseMotionsItemMotionSpeedMin = 0.5;
+export const getAdminGiftMotionsResponseMotionsItemMotionSpeedMax = 1.5;
+
+export const getAdminGiftMotionsResponseMotionsItemMotionSpinItemMin = -6.3;
+export const getAdminGiftMotionsResponseMotionsItemMotionSpinItemMax = 6.3;
+
+export const getAdminGiftMotionsResponseMotionsItemMotionSpinMin = 3;
+export const getAdminGiftMotionsResponseMotionsItemMotionSpinMax = 3;
+
+export const getAdminGiftMotionsResponseMotionsItemMotionDriftMin = 0;
+export const getAdminGiftMotionsResponseMotionsItemMotionDriftMax = 1;
+
+export const getAdminGiftMotionsResponseMotionsItemMotionBounceMin = 0;
+export const getAdminGiftMotionsResponseMotionsItemMotionBounceMax = 1;
+
+export const getAdminGiftMotionsResponseMotionsItemMotionCameraYawMin = -1.2;
+export const getAdminGiftMotionsResponseMotionsItemMotionCameraYawMax = 1.2;
+
+export const getAdminGiftMotionsResponseMotionsItemMotionCameraPitchMin = -0.8;
+export const getAdminGiftMotionsResponseMotionsItemMotionCameraPitchMax = 0.8;
+
+export const getAdminGiftMotionsResponseMotionsItemMotionAnimationIndexMin = 0;
+export const getAdminGiftMotionsResponseMotionsItemMotionAnimationIndexMax = 100;
+
+
+
+
+export const GetAdminGiftMotionsResponse = zod.object({
+  "motions": zod.array(zod.object({
+  "id": zod.string().regex(getAdminGiftMotionsResponseMotionsItemIdRegExp),
+  "name": zod.string(),
+  "cost": zod.number().int().min(1),
+  "format": zod.enum(['glb', 'gltf']),
+  "category": zod.enum(['vehicle', 'character', 'object', 'logo']),
+  "animationNames": zod.array(zod.string()),
+  "motion": zod.object({
+  "version": zod.literal(1),
+  "durationMs": zod.literal(6000),
+  "category": zod.enum(['vehicle', 'character', 'object', 'logo']),
+  "entry": zod.enum(['left', 'right', 'top', 'bottom', 'depth']),
+  "exit": zod.enum(['left', 'right', 'top', 'bottom', 'depth']),
+  "speed": zod.number().min(getAdminGiftMotionsResponseMotionsItemMotionSpeedMin).max(getAdminGiftMotionsResponseMotionsItemMotionSpeedMax),
+  "spin": zod.array(zod.number().min(getAdminGiftMotionsResponseMotionsItemMotionSpinItemMin).max(getAdminGiftMotionsResponseMotionsItemMotionSpinItemMax)).min(getAdminGiftMotionsResponseMotionsItemMotionSpinMin).max(getAdminGiftMotionsResponseMotionsItemMotionSpinMax),
+  "drift": zod.number().min(getAdminGiftMotionsResponseMotionsItemMotionDriftMin).max(getAdminGiftMotionsResponseMotionsItemMotionDriftMax),
+  "bounce": zod.number().min(getAdminGiftMotionsResponseMotionsItemMotionBounceMin).max(getAdminGiftMotionsResponseMotionsItemMotionBounceMax),
+  "cameraYaw": zod.number().min(getAdminGiftMotionsResponseMotionsItemMotionCameraYawMin).max(getAdminGiftMotionsResponseMotionsItemMotionCameraYawMax),
+  "cameraPitch": zod.number().min(getAdminGiftMotionsResponseMotionsItemMotionCameraPitchMin).max(getAdminGiftMotionsResponseMotionsItemMotionCameraPitchMax),
+  "animationIndex": zod.number().int().min(getAdminGiftMotionsResponseMotionsItemMotionAnimationIndexMin).max(getAdminGiftMotionsResponseMotionsItemMotionAnimationIndexMax).nullable()
+}),
+  "byteSize": zod.number().int().min(1),
+  "fileUrl": zod.string(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+export const uploadGiftMotionBodyNameMax = 60;
+
+
+
+
+export const UploadGiftMotionBody = zod.object({
+  "name": zod.string().min(1).max(uploadGiftMotionBodyNameMax),
+  "cost": zod.number().int().min(1),
+  "category": zod.enum(['vehicle', 'character', 'object', 'logo']),
+  "animationNames": zod.string().describe('JSON array of built-in animation clip names'),
+  "motion": zod.string().describe('JSON-encoded deterministic 6-second motion preset'),
+  "model": zod.string().describe('One self-contained GLB or GLTF model, up to 100 MB')
+})
+
+export const uploadGiftMotionResponseIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
+
+export const uploadGiftMotionResponseMotionSpeedMin = 0.5;
+export const uploadGiftMotionResponseMotionSpeedMax = 1.5;
+
+export const uploadGiftMotionResponseMotionSpinItemMin = -6.3;
+export const uploadGiftMotionResponseMotionSpinItemMax = 6.3;
+
+export const uploadGiftMotionResponseMotionSpinMin = 3;
+export const uploadGiftMotionResponseMotionSpinMax = 3;
+
+export const uploadGiftMotionResponseMotionDriftMin = 0;
+export const uploadGiftMotionResponseMotionDriftMax = 1;
+
+export const uploadGiftMotionResponseMotionBounceMin = 0;
+export const uploadGiftMotionResponseMotionBounceMax = 1;
+
+export const uploadGiftMotionResponseMotionCameraYawMin = -1.2;
+export const uploadGiftMotionResponseMotionCameraYawMax = 1.2;
+
+export const uploadGiftMotionResponseMotionCameraPitchMin = -0.8;
+export const uploadGiftMotionResponseMotionCameraPitchMax = 0.8;
+
+export const uploadGiftMotionResponseMotionAnimationIndexMin = 0;
+export const uploadGiftMotionResponseMotionAnimationIndexMax = 100;
+
+
+
+
+export const UploadGiftMotionResponse = zod.object({
+  "id": zod.string().regex(uploadGiftMotionResponseIdRegExp),
+  "name": zod.string(),
+  "cost": zod.number().int().min(1),
+  "format": zod.enum(['glb', 'gltf']),
+  "category": zod.enum(['vehicle', 'character', 'object', 'logo']),
+  "animationNames": zod.array(zod.string()),
+  "motion": zod.object({
+  "version": zod.literal(1),
+  "durationMs": zod.literal(6000),
+  "category": zod.enum(['vehicle', 'character', 'object', 'logo']),
+  "entry": zod.enum(['left', 'right', 'top', 'bottom', 'depth']),
+  "exit": zod.enum(['left', 'right', 'top', 'bottom', 'depth']),
+  "speed": zod.number().min(uploadGiftMotionResponseMotionSpeedMin).max(uploadGiftMotionResponseMotionSpeedMax),
+  "spin": zod.array(zod.number().min(uploadGiftMotionResponseMotionSpinItemMin).max(uploadGiftMotionResponseMotionSpinItemMax)).min(uploadGiftMotionResponseMotionSpinMin).max(uploadGiftMotionResponseMotionSpinMax),
+  "drift": zod.number().min(uploadGiftMotionResponseMotionDriftMin).max(uploadGiftMotionResponseMotionDriftMax),
+  "bounce": zod.number().min(uploadGiftMotionResponseMotionBounceMin).max(uploadGiftMotionResponseMotionBounceMax),
+  "cameraYaw": zod.number().min(uploadGiftMotionResponseMotionCameraYawMin).max(uploadGiftMotionResponseMotionCameraYawMax),
+  "cameraPitch": zod.number().min(uploadGiftMotionResponseMotionCameraPitchMin).max(uploadGiftMotionResponseMotionCameraPitchMax),
+  "animationIndex": zod.number().int().min(uploadGiftMotionResponseMotionAnimationIndexMin).max(uploadGiftMotionResponseMotionAnimationIndexMax).nullable()
+}),
+  "byteSize": zod.number().int().min(1),
+  "fileUrl": zod.string(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+export const deleteGiftMotionPathGiftIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
+
+
+export const DeleteGiftMotionParams = zod.object({
+  "giftId": zod.coerce.string().regex(deleteGiftMotionPathGiftIdRegExp)
+})
+
+export const DeleteGiftMotionResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+export const getGiftMotionPlaybackPathGiftIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
+
+
+export const GetGiftMotionPlaybackParams = zod.object({
+  "giftId": zod.coerce.string().regex(getGiftMotionPlaybackPathGiftIdRegExp)
+})
+
+export const getGiftMotionPlaybackResponseIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
+
+export const getGiftMotionPlaybackResponseMotionSpeedMin = 0.5;
+export const getGiftMotionPlaybackResponseMotionSpeedMax = 1.5;
+
+export const getGiftMotionPlaybackResponseMotionSpinItemMin = -6.3;
+export const getGiftMotionPlaybackResponseMotionSpinItemMax = 6.3;
+
+export const getGiftMotionPlaybackResponseMotionSpinMin = 3;
+export const getGiftMotionPlaybackResponseMotionSpinMax = 3;
+
+export const getGiftMotionPlaybackResponseMotionDriftMin = 0;
+export const getGiftMotionPlaybackResponseMotionDriftMax = 1;
+
+export const getGiftMotionPlaybackResponseMotionBounceMin = 0;
+export const getGiftMotionPlaybackResponseMotionBounceMax = 1;
+
+export const getGiftMotionPlaybackResponseMotionCameraYawMin = -1.2;
+export const getGiftMotionPlaybackResponseMotionCameraYawMax = 1.2;
+
+export const getGiftMotionPlaybackResponseMotionCameraPitchMin = -0.8;
+export const getGiftMotionPlaybackResponseMotionCameraPitchMax = 0.8;
+
+export const getGiftMotionPlaybackResponseMotionAnimationIndexMin = 0;
+export const getGiftMotionPlaybackResponseMotionAnimationIndexMax = 100;
+
+
+
+
+export const GetGiftMotionPlaybackResponse = zod.object({
+  "id": zod.string().regex(getGiftMotionPlaybackResponseIdRegExp),
+  "name": zod.string(),
+  "cost": zod.number().int().min(1),
+  "format": zod.enum(['glb', 'gltf']),
+  "category": zod.enum(['vehicle', 'character', 'object', 'logo']),
+  "animationNames": zod.array(zod.string()),
+  "motion": zod.object({
+  "version": zod.literal(1),
+  "durationMs": zod.literal(6000),
+  "category": zod.enum(['vehicle', 'character', 'object', 'logo']),
+  "entry": zod.enum(['left', 'right', 'top', 'bottom', 'depth']),
+  "exit": zod.enum(['left', 'right', 'top', 'bottom', 'depth']),
+  "speed": zod.number().min(getGiftMotionPlaybackResponseMotionSpeedMin).max(getGiftMotionPlaybackResponseMotionSpeedMax),
+  "spin": zod.array(zod.number().min(getGiftMotionPlaybackResponseMotionSpinItemMin).max(getGiftMotionPlaybackResponseMotionSpinItemMax)).min(getGiftMotionPlaybackResponseMotionSpinMin).max(getGiftMotionPlaybackResponseMotionSpinMax),
+  "drift": zod.number().min(getGiftMotionPlaybackResponseMotionDriftMin).max(getGiftMotionPlaybackResponseMotionDriftMax),
+  "bounce": zod.number().min(getGiftMotionPlaybackResponseMotionBounceMin).max(getGiftMotionPlaybackResponseMotionBounceMax),
+  "cameraYaw": zod.number().min(getGiftMotionPlaybackResponseMotionCameraYawMin).max(getGiftMotionPlaybackResponseMotionCameraYawMax),
+  "cameraPitch": zod.number().min(getGiftMotionPlaybackResponseMotionCameraPitchMin).max(getGiftMotionPlaybackResponseMotionCameraPitchMax),
+  "animationIndex": zod.number().int().min(getGiftMotionPlaybackResponseMotionAnimationIndexMin).max(getGiftMotionPlaybackResponseMotionAnimationIndexMax).nullable()
+}),
+  "byteSize": zod.number().int().min(1),
+  "fileUrl": zod.string(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+export const getGiftMotionFilePathGiftIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
+
+
+export const GetGiftMotionFileParams = zod.object({
+  "giftId": zod.coerce.string().regex(getGiftMotionFilePathGiftIdRegExp)
+})
+
+export const GetGiftMotionFileResponse = zod.unknown()
+
+
+export const updateGiftStudioCatalogItemPathGiftIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
 
 
 export const UpdateGiftStudioCatalogItemParams = zod.object({
@@ -2352,7 +2568,7 @@ export const UpdateGiftStudioCatalogItemBody = zod.object({
   "status": zod.enum(['active', 'inactive', 'deleted']).optional()
 })
 
-export const updateGiftStudioCatalogItemResponseIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
+export const updateGiftStudioCatalogItemResponseIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
 
 
 

@@ -53,7 +53,7 @@ function parseGltfJson(bytes: Buffer) {
   }
 }
 
-async function inspectModel(filePath: string, originalName: string): Promise<{ format: "glb" | "gltf"; contentType: string; byteSize: number }> {
+export async function inspectSceneModelFile(filePath: string, originalName: string): Promise<{ format: "glb" | "gltf"; contentType: string; byteSize: number }> {
   const fileStats = await stat(filePath);
   if (!fileStats.isFile() || fileStats.size < 20 || fileStats.size > MAX_MODEL_BYTES) {
     throw new RoomError(fileStats.size > MAX_MODEL_BYTES ? 413 : 415, "Choose a valid GLB or glTF 2.0 model up to 100 MB.");
@@ -128,7 +128,7 @@ export async function addSceneModel(input: {
   originalName: string;
   filePath: string;
 }): Promise<DeveloperSceneModel> {
-  const checked = await inspectModel(input.filePath, input.originalName);
+  const checked = await inspectSceneModelFile(input.filePath, input.originalName);
   const { bucket, prefix } = objectStorageLocation();
   const id = randomUUID();
   const objectPath = `${prefix}/streamtalk/developer/scene-models/v1/${id}/model.${checked.format}`;

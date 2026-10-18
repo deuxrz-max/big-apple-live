@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import type { MouseEvent, ReactNode } from 'react';
 import { useAuth } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -31,6 +31,8 @@ import { createTransparentPngFramesZip } from './downloadPngFramesZip';
 import { SceneModelManager } from '@/scene/SceneModelManager';
 import './gift-studio.css';
 import './gift-studio-production.css';
+
+const GiftMotionStudio = lazy(() => import('@/gifts/GiftMotionStudio').then((module) => ({ default: module.GiftMotionStudio })));
 
 const GIFTS: { id: GiftStudioGiftId; label: string }[] = [
   { id: 'good-vibes', label: 'Good vibes' },
@@ -1263,6 +1265,9 @@ export function GiftStudioPage() {
           </section>
         </div>
         <SceneModelManager />
+        <Suspense fallback={<div className="gs-production-step" role="status">Loading 3D gift motion tools…</div>}>
+          <GiftMotionStudio />
+        </Suspense>
         <div className="gs-sr-only" aria-live="polite" data-testid="state-announcer">{status}</div>
       </div>
 

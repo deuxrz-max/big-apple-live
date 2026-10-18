@@ -1,9 +1,11 @@
 import { and, eq } from "drizzle-orm";
 import {
   db,
+  developerGiftMotions,
   giftStudioAssets,
   socialGiftCatalogSettings,
 } from "@workspace/db";
+import { inArray } from "drizzle-orm";
 import type { SocialGiftCatalogSettings } from "@workspace/db";
 import { RoomError } from "./room-store";
 import { GIFTS } from "./social/catalog";
@@ -77,6 +79,25 @@ export async function listGiftCatalogForOwner() {
 }
 
 export async function getGiftCatalogItem(giftId: string) {
+  const [motionGift] = await db.select({
+    giftId: developerGiftMotions.giftId,
+    name: developerGiftMotions.name,
+    cost: developerGiftMotions.cost,
+    active: developerGiftMotions.active,
+  }).from(developerGiftMotions)
+    .where(eq(developerGiftMotions.giftId, giftId))
+    .limit(1);
+  if (motionGift) {
+    return {
+      id: motionGift.giftId,
+      name: motionGift.name,
+      cost: motionGift.cost,
+      productType: "gift" as const,
+      status: motionGift.active ? "active" as const : "deleted" as const,
+      roomGift: true,
+      animationAvailable: true,
+    };
+  }
   const gift = DEFAULT_GIFTS.get(giftId as (typeof GIFTS)[number]["id"]);
   const data = await activeGiftData();
   if (gift && gift.id === giftId) {
@@ -96,9 +117,20 @@ export async function getGiftCatalogItem(giftId: string) {
 }
 
 export async function giftCatalogWithActiveNames() {
-  return (await listGiftCatalogForOwner())
-    .filter((gift) => gift.status === "active" && gift.productType === "gift" && gift.animationAvailable)
-    .map(({ id, name, cost }) => ({ id, name, cost }));
+  const [catalog, motionGifts] = await Promise.all([
+    listGiftCatalogForOwner(),
+    db.select({
+      id: developerGiftMotions.giftId,
+      name: developerGiftMotions.name,
+      cost: developerGiftMotions.cost,
+    }).from(developerGiftMotions).where(eq(developerGiftMotions.active, true)),
+  ]);
+  return [
+    ...catalog
+      .filter((gift) => gift.status === "active" && gift.productType === "gift" && gift.animationAvailable)
+      .map(({ id, name, cost }) => ({ id, name, cost })),
+    ...motionGifts,
+  ];
 }
 
 export function mergeActiveGiftNames(activeNames: Map<string, string>) {
@@ -108,7 +140,13 @@ export function mergeActiveGiftNames(activeNames: Map<string, string>) {
 export async function activeGiftNames(giftIds: string[]): Promise<Map<string, string>> {
   const catalog = await listGiftCatalogForOwner();
   const selected = new Set(giftIds);
-  return new Map(catalog.filter((gift) => selected.has(gift.id)).map((gift) => [gift.id, gift.name]));
+  const names = new Map(catalog.filter((gift) => selected.has(gift.id)).map((gift) => [gift.id, gift.name]));
+  if (giftIds.length) {
+    const motionRows = await db.select({ id: developerGiftMotions.giftId, name: developerGiftMotions.name })
+      .from(developerGiftMotions).where(inArray(developerGiftMotions.giftId, giftIds));
+    for (const row of motionRows) names.set(row.id, row.name);
+  }
+  return names;
 }
 
 export async function activeGiftDisplayName(giftId: string) {
