@@ -147,6 +147,54 @@ export class UniversityVideoBeamStore {
     return this.toState(beam);
   }
 
+  selectComedyRoomVideo(
+    roomId: string,
+    accountId: string,
+    selectedVideoId: string,
+    videos: UniversityVideoBeamTvVideoMetadata[],
+    durationMsByVideoId: Readonly<Record<string, number>> = {},
+  ): UniversityVideoBeamState {
+    const normalizedId = roomId.toUpperCase();
+    if ((this.rooms.communityParentId(normalizedId)?.toUpperCase() ?? normalizedId) !== "COMEDY") {
+      throw new RoomError(404, "That video list is not available in this room.");
+    }
+    if (!this.rooms.activeAccountIds(normalizedId).includes(accountId)) {
+      throw new RoomError(403, "Join the room before choosing a video.");
+    }
+    const beam = this.ensure(normalizedId);
+    const validVideos = videos.filter(video => /^[A-Za-z0-9_-]{11}$/.test(video.videoId)).slice(0, 50);
+    const selected = validVideos.find(video => video.videoId === selectedVideoId);
+    if (!selected) throw new RoomError(404, "That video is no longer in the Comedy room list.");
+
+    const ordered = [selected, ...validVideos.filter(video => video.videoId !== selectedVideoId)];
+    beam.tv.enabled = true;
+    beam.tv.sourceType = "search";
+    beam.tv.sourceValue = beam.tv.defaultSearch;
+    beam.tv.playlistId = null;
+    beam.tv.queue = ordered.map(video => video.videoId);
+    beam.tv.videoMetadata = ordered.map(video => this.normalizeMetadata(video));
+    beam.tv.currentVideoId = selectedVideoId;
+    beam.tv.startedAtMs = this.now();
+    beam.tv.breakEndsAtMs = null;
+    beam.tv.seriesTitle = null;
+    beam.tv.seriesDate = null;
+    beam.tv.seriesEpisodeNumber = null;
+    beam.videoDurationsMs.clear();
+    for (const [videoId, durationMs] of Object.entries(durationMsByVideoId)) {
+      if (beam.tv.queue.includes(videoId) && Number.isFinite(durationMs) && durationMs > 0) {
+        beam.videoDurationsMs.set(videoId, durationMs);
+      }
+    }
+    beam.skipVotes.clear();
+    beam.tv.skipSequence += 1;
+    this.automaticVideoStartListener?.(
+      beam.roomId,
+      selectedVideoId,
+      beam.tv.videoMetadata.find(video => video.videoId === selectedVideoId),
+    );
+    return this.toState(beam, accountId);
+  }
+
   replaceDailyWebSeries(
     roomId: string,
     query: string,

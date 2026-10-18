@@ -145,7 +145,7 @@ export function ChatDirectory() {
   const liveStreams = useGetLiveStreams({
     query: { queryKey: getGetLiveStreamsQueryKey(), refetchInterval: 8_000 },
   });
-  const topics = ['Music', 'Movies', 'Sports', 'Pro Wrestling', 'Web Series', 'History', 'News'];
+  const topics = ['Music', 'Movies', 'Comedy', 'Sports', 'Pro Wrestling', 'Web Series', 'History', 'News'];
   type DirectoryRoom = { roomId: string; label: string; headcount: number; nowPlayingVideoId?: string | null; nowPlayingTitle?: string | null };
   const rooms = (directory.data ?? []) as DirectoryRoom[];
   const topicFor = (room: DirectoryRoom) => {
@@ -334,6 +334,7 @@ function topicDescription(topic: string) {
   const descriptions: Record<string, string> = {
     Music: 'Live sets, new releases and late-night listening.',
     Movies: 'Trailers, film talk and box-office picks.',
+    Comedy: 'Sketches and stand-up from JkDAnimator, Comedy Central and a shared playlist.',
     Sports: 'Highlights, big games and fan conversation.',
     'Pro Wrestling': 'Promos, matches and wrestling talk.',
     'Web Series': 'Today’s series, episode by episode.',
@@ -348,7 +349,7 @@ function topicClass(topic: string) {
 }
 
 function topicInitial(topic: string) {
-  const initials: Record<string, string> = { 'Pro Wrestling': 'PW', 'Web Series': 'WS' };
+  const initials: Record<string, string> = { 'Pro Wrestling': 'PW', 'Web Series': 'WS', Comedy: '🎭' };
   return initials[topic] ?? topic.slice(0, 1).toUpperCase();
 }
 
@@ -356,6 +357,7 @@ function topicPhotoUrl(topic: string) {
   const photoIds: Record<string, string> = {
     Music: 'photo-1492684223066-81342ee5ff30',
     Movies: 'photo-1489599849927-2ee91cede3ba',
+    Comedy: 'photo-1527224857830-43a7acc85260',
     Sports: 'photo-1508098682722-e99c43a406b2',
     'Pro Wrestling': 'photo-1540747913346-19e32dc3e97e',
     'Web Series': 'photo-1485846234645-a62644f84728',

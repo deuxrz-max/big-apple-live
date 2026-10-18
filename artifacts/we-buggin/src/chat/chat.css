@@ -797,3 +797,5 @@ body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-
   body.streamtalk-directory-screen #root .ch.st-home .st-home-card-copy{bottom:39px}
   body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-bottom-link{font-size:9px!important}
 }
+.st-dir-art-comedy .st-dir-art-fallback{background:radial-gradient(ellipse at 52% 28%,rgba(255,214,107,.42),transparent 25%),linear-gradient(135deg,#724222,#4e293b 58%,#191326)}
+.st-dir-art-comedy .st-home-card-category{color:#ffd36c}

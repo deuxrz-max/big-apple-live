@@ -36,6 +36,13 @@ export type CommunityVideoUploadChannel = {
   channelHandle: string;
   channelTitle: string;
   titleTerms: readonly string[];
+  sourceTag?: "jkdanimator" | "comedycentral";
+};
+
+export type CommunityVideoPlaylist = {
+  playlistId: string;
+  sourceTag: "playlist";
+  sourceTitle: string;
 };
 
 const MOVIE_UPLOAD_CHANNELS: readonly CommunityVideoUploadChannel[] = [
@@ -56,6 +63,7 @@ type CommunityRoomConfig = {
   wrestlingSearchPolicy?: CommunityWrestlingSearchPolicy;
   officialChannelSearchPolicy?: CommunityOfficialChannelSearchPolicy;
   videoUploadChannels?: readonly CommunityVideoUploadChannel[];
+  videoPlaylists?: readonly CommunityVideoPlaylist[];
   dailyWebSeries?: boolean;
 };
 
@@ -112,6 +120,13 @@ export const COMMUNITY_ROOMS: CommunityRoomConfig[] = [
       "clean English improv comedy full performance",
     ],
     videoSearchPolicy: { order: "viewCount", publishedWithinDays: 90 },
+    videoUploadChannels: [
+      { channelHandle: "@JkDAnimator", channelTitle: "JkDAnimator", titleTerms: [], sourceTag: "jkdanimator" },
+      { channelHandle: "@ComedyCentral", channelTitle: "Comedy Central", titleTerms: [], sourceTag: "comedycentral" },
+    ],
+    videoPlaylists: [
+      { playlistId: "PLEMjCJwHb6w1UqDzZngrOKqbAW3AD9mxa", sourceTag: "playlist", sourceTitle: "Playlist" },
+    ],
   },
   {
     roomId: "VLOGS1",
@@ -327,6 +342,7 @@ export const COMMUNITY_ROOMS: CommunityRoomConfig[] = [
 export const DIRECTORY_COMMUNITY_ROOM_IDS = [
   "MUSIC1",
   "MOVIES",
+  "COMEDY",
   "SPORTS",
   "KIDS01",
   "WEBSER",
@@ -450,6 +466,17 @@ export function communityVideoUploadChannels(
   const room = COMMUNITY_ROOMS.find(item => item.roomId === parentRoomId)
     ?? COMMUNITY_ROOMS.find(item => item.roomId === normalizedId);
   return room?.videoUploadChannels?.map(channel => ({ ...channel, titleTerms: [...channel.titleTerms] })) ?? [];
+}
+
+export function communityVideoPlaylists(
+  roomId: string,
+  store?: CommunityParentLookup,
+): CommunityVideoPlaylist[] {
+  const normalizedId = roomId.toUpperCase();
+  const parentRoomId = store?.communityParentId(normalizedId)?.toUpperCase() ?? normalizedId;
+  const room = COMMUNITY_ROOMS.find(item => item.roomId === parentRoomId)
+    ?? COMMUNITY_ROOMS.find(item => item.roomId === normalizedId);
+  return room?.videoPlaylists?.map(playlist => ({ ...playlist })) ?? [];
 }
 
 export function isCommunityDailyWebSeriesRoom(

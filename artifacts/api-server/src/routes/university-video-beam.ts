@@ -4,6 +4,8 @@ import {
   GetUniversityVideoBeamTokenBody,
   GetUniversityVideoBeamTokenResponse,
   GetUniversityVideoBeamTvStateResponse,
+  GetComedyRoomVideoCatalogResponse,
+  PerformComedyRoomVideoActionBody,
   PerformUniversityVideoBeamActionBody,
   PerformUniversityVideoBeamActionResponse,
   PerformUniversityVideoBeamTvActionBody,
@@ -36,6 +38,7 @@ import {
 import { resolveYouTubeChannelId, searchCnnLiveStream } from "../lib/cnn-live-news";
 import {
   getNextCommunityVideoSelection,
+  getCommunityVideoPool,
   markCommunityVideoBad,
   recordCommunityVideoPlayed,
   reserveYouTubeApiUnits,
@@ -880,6 +883,72 @@ router.get("/account/rooms/:roomId/video-beam/tv", async (req, res) => {
   const state = await reconcileState(req.params.roomId, id);
   res.set("Cache-Control", "no-store")
     .json(GetUniversityVideoBeamTvStateResponse.parse(state.tv));
+});
+
+router.get("/account/rooms/:roomId/video-beam/tv/comedy/catalog", async (req, res) => {
+  const id = accountId(req);
+  requireMember(req, req.params.roomId, id);
+  if ((roomStore.communityParentId(req.params.roomId)?.toUpperCase() ?? req.params.roomId.toUpperCase()) !== "COMEDY") {
+    throw new RoomError(404, "That video list is not available in this room.");
+  }
+  const pool = await getCommunityVideoPool(
+    "COMEDY",
+    process.env.YOUTUBE_API_KEY?.trim() ?? "",
+    roomStore,
+  );
+  const state = (await reconcileState(req.params.roomId, id)).tv;
+  res.set("Cache-Control", "no-store").json(GetComedyRoomVideoCatalogResponse.parse({
+    videos: pool.map(video => ({
+      videoId: video.videoId,
+      title: video.title,
+      channelTitle: video.channelTitle,
+      source: video.sourceTag ?? "playlist",
+      durationMs: video.durationMs,
+    })),
+    currentVideoId: state.currentVideoId,
+  }));
+});
+
+router.post("/account/rooms/:roomId/video-beam/tv/comedy/action", async (req, res): Promise<void> => {
+  sameOrigin(req);
+  const id = accountId(req);
+  const { participant } = requireMember(req, req.params.roomId, id);
+  const roomId = req.params.roomId;
+  if ((roomStore.communityParentId(roomId)?.toUpperCase() ?? roomId.toUpperCase()) !== "COMEDY") {
+    throw new RoomError(404, "That video control is not available in this room.");
+  }
+  const parsedInput = PerformComedyRoomVideoActionBody.safeParse(req.body);
+  if (!parsedInput.success || (parsedInput.data.action === "select" && !parsedInput.data.videoId)) {
+    throw new RoomError(400, "Choose a video from the Comedy room list.");
+  }
+  const body = parsedInput.data;
+  const pool = await getCommunityVideoPool("COMEDY", process.env.YOUTUBE_API_KEY?.trim() ?? "", roomStore);
+  if (!pool.length) throw new RoomError(503, "The Comedy room video list is still loading. Try again shortly.");
+  let chosen = body.action === "select"
+    ? pool.find(video => video.videoId === body.videoId)
+    : (await getNextCommunityVideoSelection("COMEDY", process.env.YOUTUBE_API_KEY?.trim() ?? "", roomStore)).selected;
+  const before = (await reconcileState(roomId, id)).tv;
+  if (body.action === "next" && chosen?.videoId === before.currentVideoId) {
+    chosen = pool.find(video => video.videoId !== before.currentVideoId) ?? chosen;
+  }
+  if (!chosen) throw new RoomError(404, "That video is no longer available in the Comedy room.");
+  const queueItems = [chosen, ...pool.filter(video => video.videoId !== chosen!.videoId)].slice(0, 50);
+  const metadata = queueItems.map(video => ({
+    videoId: video.videoId,
+    title: video.title,
+    channelTitle: video.channelTitle,
+    description: video.description,
+  }));
+  const durations = Object.fromEntries(queueItems.map(video => [video.videoId, video.durationMs]));
+  const state = universityVideoBeamStore.selectComedyRoomVideo(
+    roomId, id, chosen.videoId, metadata, durations,
+  );
+  await recordCommunityVideoPlayed(roomId, chosen.videoId);
+  const identities = await refreshParticipantSnapshot(universityVideoBeamStore.getRoomName(roomId));
+  const synchronized = await synchronizeSpeakerMediaPermissions(roomId, state, identities, id);
+  schedulePublicPlaybackTransition(roomId);
+  res.set("Cache-Control", "no-store")
+    .json(PerformUniversityVideoBeamTvActionResponse.parse(synchronized.tv));
 });
 
 router.post("/account/rooms/:roomId/video-beam/tv/playback-failed", async (req, res): Promise<void> => {

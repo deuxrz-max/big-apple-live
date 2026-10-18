@@ -447,6 +447,53 @@ paths:
         "401": { $ref: "#/components/responses/SessionUnauthorized" }
         "403": { description: Only the current beam host can search for Beam TV videos }
         "503": { description: YouTube search is unavailable without YOUTUBE_API_KEY }
+  /account/rooms/{roomId}/video-beam/tv/comedy/catalog:
+    get:
+      operationId: getComedyRoomVideoCatalog
+      tags: [video]
+      summary: List screened Comedy room videos from its configured sources
+      security:
+        - AccountSession: []
+          AccountRoomSession: []
+      parameters:
+        - { $ref: "#/components/parameters/RoomId" }
+        - { $ref: "#/components/parameters/RoomSessionHeader" }
+      responses:
+        "200":
+          description: Cached room-safe videos with source labels
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ComedyVideoCatalogResponse" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "403": { description: Join the room before reading its video list }
+        "404": { description: The video picker is only available in the Comedy room }
+  /account/rooms/{roomId}/video-beam/tv/comedy/action:
+    post:
+      operationId: performComedyRoomVideoAction
+      tags: [video]
+      summary: Select a screened video or advance shared Comedy room playback
+      security:
+        - AccountSession: []
+          AccountRoomSession: []
+      parameters:
+        - { $ref: "#/components/parameters/RoomId" }
+        - { $ref: "#/components/parameters/RoomSessionHeader" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ComedyVideoActionInput" }
+      responses:
+        "200":
+          description: Updated room-synchronized TV state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UniversityVideoBeamTvState" }
+        "400": { $ref: "#/components/responses/InvalidInput" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "403": { description: Join the room before selecting a video }
+        "404": { description: The video or room is unavailable }
+        "503": { description: The Comedy room video list is still loading }
   /account/rooms/{roomId}/audio/actions:
     post:
       operationId: performUniversityAudioAction
@@ -1939,6 +1986,29 @@ components:
         channelTitle: { type: [string, "null"], maxLength: 120 }
         description: { type: [string, "null"], maxLength: 500 }
       required: [videoId, title, channelTitle, description]
+    ComedyVideoCatalogItem:
+      type: object
+      properties:
+        videoId: { type: string, pattern: "^[A-Za-z0-9_-]{11}$" }
+        title: { type: string, maxLength: 200 }
+        channelTitle: { type: [string, "null"], maxLength: 120 }
+        source: { type: string, enum: [jkdanimator, comedycentral, playlist] }
+        durationMs: { type: integer, minimum: 0 }
+      required: [videoId, title, channelTitle, source, durationMs]
+    ComedyVideoCatalogResponse:
+      type: object
+      properties:
+        videos:
+          type: array
+          items: { $ref: "#/components/schemas/ComedyVideoCatalogItem" }
+        currentVideoId: { type: [string, "null"], pattern: "^[A-Za-z0-9_-]{11}$" }
+      required: [videos, currentVideoId]
+    ComedyVideoActionInput:
+      type: object
+      properties:
+        action: { type: string, enum: [select, next] }
+        videoId: { type: string, pattern: "^[A-Za-z0-9_-]{11}$" }
+      required: [action]
     UniversityVideoBeamTvActionInput:
       type: object
       properties:

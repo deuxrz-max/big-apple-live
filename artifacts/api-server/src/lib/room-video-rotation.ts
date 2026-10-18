@@ -16,10 +16,12 @@ import {
   communityOfficialChannelSearchPolicy,
   communityVideoSearchPolicy,
   communityVideoSearchTerms,
+  communityVideoPlaylists,
   communityVideoUploadChannels,
   communityWrestlingSearchPolicy,
   type CommunityParentLookup,
   type CommunityOfficialChannelSearchPolicy,
+  type CommunityVideoPlaylist,
   type CommunityVideoUploadChannel,
   type CommunityWrestlingSearchPolicy,
 } from "./community-config";
@@ -33,6 +35,7 @@ import {
 } from "./youtube-video-selection";
 import { isOfficialMusicVideo } from "./music-video-policy";
 import { isCompleteFeatureFilm, MIN_FEATURE_FILM_DURATION_MS } from "./movies-video-policy";
+import { logger } from "./logger";
 
 const DIRECTORY_COMMUNITY_ROOM_ID_SET = new Set<string>(DIRECTORY_COMMUNITY_ROOM_IDS);
 
@@ -51,6 +54,7 @@ const POOL_REFRESH_MS = 6 * 60 * 60_000;
 const FAILED_REFRESH_BACKOFF_MS = 10 * 60_000;
 const TARGET_POOL_SIZE = 50;
 const MAX_POOL_SIZE = 300;
+const COMEDY_POOL_SIZE = 3_000;
 const MAX_SEARCH_PAGES_PER_REFRESH = 1;
 const MAX_UPLOAD_PAGES_PER_REFRESH = 1;
 const RECENT_PLAY_WINDOW_MS = 24 * 60 * 60_000;
@@ -136,11 +140,16 @@ function mergePool(
   return [...byId.values()]
     .sort((a, b) => englishChannelPreference(b.channelTitle) - englishChannelPreference(a.channelTitle)
       || b.discoveredAtMs - a.discoveredAtMs)
-    .slice(0, MAX_POOL_SIZE);
+    .slice(0, roomId.toUpperCase() === "COMEDY" ? COMEDY_POOL_SIZE : MAX_POOL_SIZE);
 }
 
 function isAllowedRoomSource(roomId: string, item: PoolItem, rooms?: RoomLookup): boolean {
   const parentRoomId = rooms?.communityParentId(roomId.toUpperCase())?.toUpperCase() ?? roomId.toUpperCase();
+  if (parentRoomId === "COMEDY") {
+    return item.sourceTag === "playlist"
+      || item.sourceTag === "jkdanimator"
+      || item.sourceTag === "comedycentral";
+  }
   if (parentRoomId === "MUSIC1" && !isOfficialMusicVideo(item)) return false;
   if (parentRoomId === "MOVIES" && !isCompleteFeatureFilm(item)) return false;
   const wrestling = communityWrestlingSearchPolicy(roomId, rooms);
@@ -509,32 +518,42 @@ async function resolveConfiguredUploadChannels(
   apiKey: string,
   specs: CommunityVideoUploadChannel[],
   savedCursors: Record<string, string>,
-): Promise<{ channels: Array<UploadChannel & { titleTerms: readonly string[] }>; sourceCursors: Record<string, string> }> {
+): Promise<{ channels: Array<UploadChannel & { titleTerms: readonly string[]; sourceTag?: PoolItem["sourceTag"] }>; sourceCursors: Record<string, string> }> {
   const cursors = { ...savedCursors };
   for (const [index, spec] of specs.entries()) {
     const cursorKey = `configured:${index}`;
     if (cursors[`uploads:${cursorKey}`]) continue;
-    const payload = await youtubeJson("channels", new URLSearchParams({
-      part: "snippet,contentDetails",
-      forHandle: spec.channelHandle,
-    }), apiKey, roomId, 1, DAILY_GENERIC_ROOM_BUDGET_UNITS);
-    const row = objectRecords(payload).find(candidate => {
-      const title = asText(asObject(candidate.snippet)?.title);
-      return title?.trim().toLocaleLowerCase("en-US") === spec.channelTitle.toLocaleLowerCase("en-US");
-    });
-    const channelId = asText(row?.id);
-    const related = asObject(asObject(row?.contentDetails)?.relatedPlaylists);
-    const playlistId = asText(related?.uploads);
-    if (channelId && playlistId) {
-      cursors[`__configuredChannelId:${index}`] = channelId;
-      cursors[`uploads:${cursorKey}`] = playlistId;
+    const unavailableUntil = Number(cursors[`__configuredUnavailableUntil:${index}`] ?? 0);
+    if (unavailableUntil > Date.now()) continue;
+    try {
+      const payload = await youtubeJson("channels", new URLSearchParams({
+        part: "snippet,contentDetails",
+        forHandle: spec.channelHandle,
+      }), apiKey, roomId, 1, DAILY_GENERIC_ROOM_BUDGET_UNITS);
+      const row = objectRecords(payload).find(candidate =>
+        Boolean(asText(candidate.id)) && Boolean(asText(asObject(asObject(candidate.contentDetails)?.relatedPlaylists)?.uploads)));
+      const channelId = asText(row?.id);
+      const channelTitle = asText(asObject(row?.snippet)?.title);
+      const related = asObject(asObject(row?.contentDetails)?.relatedPlaylists);
+      const playlistId = asText(related?.uploads);
+      if (channelId && playlistId) {
+        cursors[`__configuredChannelId:${index}`] = channelId;
+        if (channelTitle) cursors[`__configuredChannelTitle:${index}`] = channelTitle;
+        cursors[`uploads:${cursorKey}`] = playlistId;
+      } else {
+        cursors[`__configuredUnavailableUntil:${index}`] = String(Date.now() + 15 * 60_000);
+      }
+    } catch {
+      cursors[`__configuredUnavailableUntil:${index}`] = String(Date.now() + 15 * 60_000);
+      logger.warn({ roomId, sourceTag: spec.sourceTag }, "Configured Comedy channel could not be refreshed; other sources remain available");
     }
   }
   const channels = specs.flatMap((spec, index) => {
     const channelId = cursors[`__configuredChannelId:${index}`];
+    const channelTitle = cursors[`__configuredChannelTitle:${index}`] ?? spec.channelTitle;
     const playlistId = cursors[`uploads:configured:${index}`];
     return channelId && playlistId
-      ? [{ channelId, channelTitle: spec.channelTitle, playlistId, titleTerms: spec.titleTerms }]
+      ? [{ channelId, channelTitle, playlistId, titleTerms: spec.titleTerms, sourceTag: spec.sourceTag }]
       : [];
   });
   return { channels, sourceCursors: cursors };
@@ -547,6 +566,8 @@ async function fetchUploadPage(
   pageToken: string | undefined,
   isHistory: boolean,
   titleTerms?: readonly string[],
+  sourceTag?: PoolItem["sourceTag"],
+  playlistSource = false,
 ): Promise<{ videos: PoolItem[]; nextPageToken: string | null }> {
   const params = new URLSearchParams({ part: "snippet,contentDetails", playlistId: channel.playlistId, maxResults: "50" });
   if (pageToken) params.set("pageToken", pageToken);
@@ -560,8 +581,8 @@ async function fetchUploadPage(
     return [{
       videoId,
       title,
-      channelTitle: channel.channelTitle,
-      channelId: channel.channelId,
+      channelTitle: playlistSource ? asText(snippet?.videoOwnerChannelTitle) ?? channel.channelTitle : channel.channelTitle,
+      channelId: playlistSource ? asText(snippet?.videoOwnerChannelId) ?? channel.channelId : channel.channelId,
       description: asText(snippet?.description),
       publishedAt: asText(snippet?.publishedAt),
       defaultLanguage: asText(snippet?.defaultLanguage),
@@ -580,7 +601,12 @@ async function fetchUploadPage(
     id: topicCandidates.map(video => video.videoId).join(","),
   }), apiKey, roomId, 1, DAILY_GENERIC_ROOM_BUDGET_UNITS);
   const eligibility = readEligibility(details);
-  const accepted = selectPlayableYouTubeVideos(topicCandidates, eligibility, [channel.channelTitle], 50);
+  const accepted = selectPlayableYouTubeVideos(
+    topicCandidates,
+    eligibility,
+    playlistSource ? undefined : [channel.channelTitle],
+    50,
+  );
   const eligibilityById = new Map(eligibility.map(item => [item.videoId, item]));
   const isMovieRoom = roomId.toUpperCase() === "MOVIES";
   const minimumDuration = isMovieRoom
@@ -608,6 +634,7 @@ async function fetchUploadPage(
       embeddable: eligibilityById.get(video.videoId)?.embeddable ?? true,
       availableInUS: eligibilityById.get(video.videoId)?.availableInUS,
       ageRestricted: eligibilityById.get(video.videoId)?.ytRating === "ytAgeRestricted",
+      ...(sourceTag ? { sourceTag } : {}),
     }));
   return { videos, nextPageToken: asText(asObject(playlist)?.nextPageToken) };
 }
@@ -731,34 +758,69 @@ async function discoverNextBatch(
   const wrestling = communityWrestlingSearchPolicy(roomId, rooms);
   const history = communityOfficialChannelSearchPolicy(roomId, rooms);
   const configuredUploads = communityVideoUploadChannels(roomId, rooms);
+  const configuredPlaylists: CommunityVideoPlaylist[] = communityVideoPlaylists(roomId, rooms);
   const cursors = { ...(row.sourceCursors ?? {}) };
   let termIndex = row.termIndex;
   const pageTokens = { ...(row.pageTokens ?? {}) };
   const existing = row.videos ?? [];
   const additions: PoolItem[] = [];
-  const targetMet = existing.length >= TARGET_POOL_SIZE;
+  const targetMet = existing.length >= (roomId.toUpperCase() === "COMEDY" ? COMEDY_POOL_SIZE : TARGET_POOL_SIZE);
 
-  if (configuredUploads.length) {
+  if (configuredUploads.length || configuredPlaylists.length) {
     const resolved = await resolveConfiguredUploadChannels(roomId, apiKey, configuredUploads, cursors);
     Object.assign(cursors, resolved.sourceCursors);
-    const activeChannels = resolved.channels.filter(channel =>
-      cursors[`__musicExhausted:${channel.channelId}`] !== "yes");
-    if (activeChannels.length) {
-      let uploadIndex = Number(cursors.__musicChannelIndex ?? "0") || 0;
-      const channel = activeChannels[uploadIndex % activeChannels.length]!;
-      const cursorKey = `page:${channel.channelId}`;
-      const page = await fetchUploadPage(
-        roomId, apiKey, channel, cursors[cursorKey], false, channel.titleTerms,
-      );
-      additions.push(...page.videos);
-      if (page.nextPageToken) cursors[cursorKey] = page.nextPageToken;
-      else {
-        delete cursors[cursorKey];
-        cursors[`__musicExhausted:${channel.channelId}`] = "yes";
+    const sourceCount = resolved.channels.length + configuredPlaylists.length;
+    if (sourceCount > 0) {
+      const sourceIndex = Number(cursors.__configuredSourceIndex ?? "0") || 0;
+      const index = sourceIndex % sourceCount;
+      const nextIndex = (index + 1) % sourceCount;
+      try {
+        const isChannelSource = index < resolved.channels.length;
+        const channel = isChannelSource ? resolved.channels[index]! : null;
+        const playlist = isChannelSource ? null : configuredPlaylists[index - resolved.channels.length]!;
+        const cursorKey = channel
+          ? `page:${channel.channelId}`
+          : `page:playlist:${playlist!.playlistId}`;
+        const latestCheckKey = channel
+          ? `__configuredLatestCheckedAt:${channel.channelId}`
+          : `__configuredLatestCheckedAt:playlist:${playlist!.playlistId}`;
+        const lastLatestCheck = Number(cursors[latestCheckKey] ?? 0);
+        const refreshLatestPage = !lastLatestCheck || Date.now() - lastLatestCheck >= POOL_REFRESH_MS;
+        const pageToken = refreshLatestPage ? undefined : cursors[cursorKey];
+        const page = channel
+          ? await fetchUploadPage(roomId, apiKey, channel, pageToken, false, channel.titleTerms, channel.sourceTag)
+          : await fetchUploadPage(
+            roomId,
+            apiKey,
+            { channelId: "", channelTitle: playlist!.sourceTitle, playlistId: playlist!.playlistId },
+            pageToken,
+            false,
+            undefined,
+            playlist!.sourceTag,
+            true,
+          );
+        additions.push(...page.videos);
+        if (refreshLatestPage) {
+          cursors[latestCheckKey] = String(Date.now());
+          // Preserve an older backfill cursor when rechecking page one for new uploads.
+          if (!cursors[cursorKey] && page.nextPageToken) cursors[cursorKey] = page.nextPageToken;
+        } else if (page.nextPageToken) {
+          cursors[cursorKey] = page.nextPageToken;
+        } else {
+          delete cursors[cursorKey];
+        }
+      } catch {
+        logger.warn({
+          roomId,
+          sourceTag: index < resolved.channels.length
+            ? resolved.channels[index]?.sourceTag
+            : configuredPlaylists[index - resolved.channels.length]?.sourceTag,
+        }, "Configured Comedy video source could not be refreshed; skipping this source for now");
       }
-      cursors.__musicChannelIndex = String((uploadIndex + 1) % activeChannels.length);
+      cursors.__configuredSourceIndex = String(nextIndex);
       return { videos: additions, sourceCursors: cursors };
     }
+    return { videos: [], sourceCursors: cursors };
   }
 
   if (wrestling || history) {

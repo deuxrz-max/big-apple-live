@@ -1089,6 +1089,53 @@ export interface UniversityVideoBeamState {
   slots: UniversityVideoBeamSlot[];
 }
 
+export type ComedyVideoCatalogItemSource = typeof ComedyVideoCatalogItemSource[keyof typeof ComedyVideoCatalogItemSource];
+
+
+export const ComedyVideoCatalogItemSource = {
+  jkdanimator: 'jkdanimator',
+  comedycentral: 'comedycentral',
+  playlist: 'playlist',
+} as const;
+
+export interface ComedyVideoCatalogItem {
+  /** @pattern ^[A-Za-z0-9_-]{11}$ */
+  videoId: string;
+  /** @maxLength 200 */
+  title: string;
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  channelTitle: string | null;
+  source: ComedyVideoCatalogItemSource;
+  /** @minimum 0 */
+  durationMs: number;
+}
+
+export interface ComedyVideoCatalogResponse {
+  videos: ComedyVideoCatalogItem[];
+  /**
+     * @nullable
+     * @pattern ^[A-Za-z0-9_-]{11}$
+     */
+  currentVideoId: string | null;
+}
+
+export type ComedyVideoActionInputAction = typeof ComedyVideoActionInputAction[keyof typeof ComedyVideoActionInputAction];
+
+
+export const ComedyVideoActionInputAction = {
+  select: 'select',
+  next: 'next',
+} as const;
+
+export interface ComedyVideoActionInput {
+  action: ComedyVideoActionInputAction;
+  /** @pattern ^[A-Za-z0-9_-]{11}$ */
+  videoId?: string;
+}
+
 export type UniversityVideoBeamTvActionInputAction = typeof UniversityVideoBeamTvActionInputAction[keyof typeof UniversityVideoBeamTvActionInputAction];
 
 
@@ -2071,6 +2118,53 @@ export interface UniversityVideoBeamState4b96100 {
      * @maxItems 8
      */
   slots: UniversityVideoBeamSlot4b96100[];
+}
+
+export type ComedyVideoCatalogItem4b96100Source = typeof ComedyVideoCatalogItem4b96100Source[keyof typeof ComedyVideoCatalogItem4b96100Source];
+
+
+export const ComedyVideoCatalogItem4b96100Source = {
+  jkdanimator: 'jkdanimator',
+  comedycentral: 'comedycentral',
+  playlist: 'playlist',
+} as const;
+
+export interface ComedyVideoCatalogItem4b96100 {
+  /** @pattern ^[A-Za-z0-9_-]{11}$ */
+  videoId: string;
+  /** @maxLength 200 */
+  title: string;
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  channelTitle: string | null;
+  source: ComedyVideoCatalogItem4b96100Source;
+  /** @minimum 0 */
+  durationMs: number;
+}
+
+export interface ComedyVideoCatalogResponse4b96100 {
+  videos: ComedyVideoCatalogItem4b96100[];
+  /**
+     * @nullable
+     * @pattern ^[A-Za-z0-9_-]{11}$
+     */
+  currentVideoId: string | null;
+}
+
+export type ComedyVideoActionInput4b96100Action = typeof ComedyVideoActionInput4b96100Action[keyof typeof ComedyVideoActionInput4b96100Action];
+
+
+export const ComedyVideoActionInput4b96100Action = {
+  select: 'select',
+  next: 'next',
+} as const;
+
+export interface ComedyVideoActionInput4b96100 {
+  action: ComedyVideoActionInput4b96100Action;
+  /** @pattern ^[A-Za-z0-9_-]{11}$ */
+  videoId?: string;
 }
 
 export type UniversityVideoBeamTvActionInput4b96100Action = typeof UniversityVideoBeamTvActionInput4b96100Action[keyof typeof UniversityVideoBeamTvActionInput4b96100Action];

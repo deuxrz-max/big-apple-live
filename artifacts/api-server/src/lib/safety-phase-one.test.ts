@@ -129,14 +129,14 @@ test("real HTTP/DB/storage photo moderation and unlimited public rooms; syntheti
     assert.equal((await db.select().from(profilePhotos).where(inArray(profilePhotos.id, photos))).length, 2);
   });
   await initializeCommunities();
-  await t.test("the directory contains the seven selected rooms and hides old public rooms without deleting them", async () => {
+  await t.test("the directory includes Comedy and still hides removed rooms without deleting them", async () => {
     const directory = GetChatDirectoryResponse.parse(
       await (await request(owner, "/account/chat/rooms")).json(),
     );
     assert.deepEqual(directory.map(room => room.label), [
-      "Music", "Movies", "Sports", "Pro Wrestling", "Web Series", "History", "News",
+      "Music", "Movies", "Comedy", "Sports", "Pro Wrestling", "Web Series", "History", "News",
     ]);
-    assert.equal(directory.length, 7);
+    assert.equal(directory.length, 8);
     assert.equal(directory.some(room => room.roomId === "LIVEME" || room.roomId === "WORLDNEWS"), false);
     const oldRoomJoin = await request(owner, "/account/rooms/LIVEME/join", { method: "POST" });
     assert.equal(oldRoomJoin.status, 410, await oldRoomJoin.text());

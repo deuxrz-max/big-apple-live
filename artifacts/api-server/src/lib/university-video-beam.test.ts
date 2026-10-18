@@ -14,6 +14,8 @@ import {
   communityOfficialChannelSearchPolicy,
   communityLiveStreamPolicy,
   communityVideoSearchPolicy,
+  communityVideoUploadChannels,
+  communityVideoPlaylists,
   communityWrestlingSearchPolicy,
   isCommunityDailyWebSeriesRoom,
   isPublicTopicRoom,
@@ -23,6 +25,42 @@ import { beamTvReactionLine } from "./beam-tv-reaction-policy";
 const identity: EmojiIdentity = {
   emojiId: "1F642", gender: "Male", color: "#F7C531", hairColor: "#111111",
 };
+
+test("Comedy is a public topic room with the configured YouTube sources", () => {
+  assert.equal(DIRECTORY_COMMUNITY_ROOMS.find(room => room.roomId === "COMEDY")?.label, "Comedy");
+  assert.deepEqual(communityVideoUploadChannels("COMEDY").map(source => [source.channelHandle, source.sourceTag]), [
+    ["@JkDAnimator", "jkdanimator"],
+    ["@ComedyCentral", "comedycentral"],
+  ]);
+  assert.deepEqual(communityVideoPlaylists("COMEDY"), [{
+    playlistId: "PLEMjCJwHb6w1UqDzZngrOKqbAW3AD9mxa",
+    sourceTag: "playlist",
+    sourceTitle: "Playlist",
+  }]);
+});
+
+test("Comedy video choices are shared room state and are limited to joined Comedy members", () => {
+  const rooms = new RoomStore(() => 1_000);
+  createRoom(rooms, "COMEDY", "history-comedy", undefined, "Comedy");
+  createRoom(rooms, "NEWS01", "history-news", undefined, "News");
+  const member = addMember(rooms, "COMEDY", "comedy-member");
+  const beam = new UniversityVideoBeamStore(rooms, () => 1_000);
+  const selected = beam.selectComedyRoomVideo("COMEDY", "comedy-member", "abc12345678", [
+    { videoId: "abc12345678", title: "Joke video", channelTitle: "JkDAnimator", description: null },
+    { videoId: "def12345678", title: "Another joke", channelTitle: "Comedy Central", description: null },
+  ], { "abc12345678": 120_000, "def12345678": 180_000 });
+  assert.equal(selected.tv.currentVideoId, "abc12345678");
+  assert.deepEqual(selected.tv.queue, ["abc12345678", "def12345678"]);
+  assert.equal(selected.tv.micLockedDuringVideo, true);
+  assert.throws(() => beam.selectComedyRoomVideo("NEWS01", "comedy-member", "abc12345678", [
+    { videoId: "abc12345678", title: "Joke video", channelTitle: "JkDAnimator", description: null },
+  ]), (error: unknown) => error instanceof RoomError && error.status === 404);
+  assert.ok(member.participantId);
+  assert.throws(() => beam.selectComedyRoomVideo("COMEDY", "not-in-room", "abc12345678", [
+    { videoId: "abc12345678", title: "Joke video", channelTitle: "JkDAnimator", description: null },
+  ]), (error: unknown) => error instanceof RoomError && error.status === 403);
+});
+
 function createRoom(
   store: RoomStore,
   id = "MUSIC1",
@@ -59,10 +97,10 @@ test("public topic rooms and their overflow rooms use the ownerless policy", () 
   assert.equal(isPublicTopicRoom("LIVEME", rooms), false, "retired room IDs are no longer public topics");
   assert.equal(isPublicTopicRoom("NOT_A_ROOM", rooms), false);
   assert.deepEqual(DIRECTORY_COMMUNITY_ROOMS.map(room => room.label), [
-    "Music", "Movies", "Sports", "Pro Wrestling", "Web Series", "History", "News",
+    "Music", "Movies", "Comedy", "Sports", "Pro Wrestling", "Web Series", "History", "News",
   ]);
   assert.deepEqual(COMMUNITY_VIDEO_POOL_ROOMS.map(room => room.label), [
-    "Music", "Movies", "Sports", "Pro Wrestling", "History",
+    "Music", "Movies", "Comedy", "Sports", "Pro Wrestling", "History",
   ], "hidden rooms and the special News/Web Series sources are not scheduled for topic-pool searches");
 });
 
@@ -312,7 +350,7 @@ test("public Beam TV uses its curated topic search and holds a synchronized inte
     currentVideoId: "dQw4w9WgXcQ",
   }), (error: unknown) => error instanceof RoomError && error.status === 403,
   "audience members cannot inject a video before the server creates the default queue");
-  assert.equal(defaultSearch, "popular official music videos and new song releases");
+  assert.equal(defaultSearch, "popular official artist music videos");
   assert.equal(communityDefaultVideoSearch("A1B2C3D4E5F6", rooms), defaultSearch,
     "overflow rooms inherit their parent's category search");
   assert.notEqual(
@@ -466,9 +504,14 @@ test("all configured categories use their settings across overflow rooms", () =>
       assert.equal(isCommunityDailyWebSeriesRoom(room.roomId, rooms), true);
       assert.equal(isCommunityDailyWebSeriesRoom(overflowId, rooms), true,
         "Web Series overflow rooms inherit the daily series selection");
+    } else if (room.label === "Movies") {
+      assert.equal(policy?.order, "viewCount");
+      assert.equal(policy?.publishedWithinDays, undefined);
+      assert.ok((policy?.trustedChannelTitles?.length ?? 0) > 0);
     } else {
       assert.equal(policy?.order, "viewCount", `${room.label} sorts recent results by popularity`);
-      assert.ok(policy?.publishedWithinDays && policy.publishedWithinDays > 0);
+      assert.ok(policy?.publishedWithinDays && policy.publishedWithinDays > 0,
+        `${room.label} provides a bounded recent-search policy`);
     }
     assert.equal(
       isPublicTopicRoom(overflowId, rooms),

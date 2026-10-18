@@ -34,6 +34,8 @@ import type {
   ChatReportReceipt,
   ChatReportRecord,
   ChatReportReviewInput,
+  ComedyVideoActionInput,
+  ComedyVideoCatalogResponse,
   EmojiOption,
   EntranceEffectEquipInput,
   EntranceEffectEquipResponse,
@@ -2100,6 +2102,172 @@ export const useSearchYouTubeForVideoBeam = <TError = ErrorType<InvalidInputResp
         TContext
       > => {
       return useMutation(getSearchYouTubeForVideoBeamMutationOptions(options));
+    }
+
+export const getGetComedyRoomVideoCatalogUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/account/rooms/${roomId}/video-beam/tv/comedy/catalog`
+}
+
+/**
+ * @summary List screened Comedy room videos from its configured sources
+ */
+export const getComedyRoomVideoCatalog = async (roomId: string, options?: Parameters<typeof customFetch>[1]): Promise<ComedyVideoCatalogResponse> => {
+
+  return customFetch<ComedyVideoCatalogResponse>(getGetComedyRoomVideoCatalogUrl(roomId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetComedyRoomVideoCatalogQueryKey = (roomId: string,) => {
+    return [
+    `/api/account/rooms/${roomId}/video-beam/tv/comedy/catalog`
+    ] as const;
+    }
+
+
+export const getGetComedyRoomVideoCatalogQueryOptions = <TData = Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetComedyRoomVideoCatalogQueryKey(roomId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>> = ({ signal }) => getComedyRoomVideoCatalog(roomId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetComedyRoomVideoCatalogQueryResult = NonNullable<Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>>
+export type GetComedyRoomVideoCatalogQueryError = ErrorType<SessionUnauthorizedResponse | void>
+
+
+/**
+ * @summary List screened Comedy room videos from its configured sources
+ */
+
+export function useGetComedyRoomVideoCatalog<TData = Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetComedyRoomVideoCatalogQueryOptions(roomId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPerformComedyRoomVideoActionUrl = (roomId: string,) => {
+
+
+
+
+  return `/api/account/rooms/${roomId}/video-beam/tv/comedy/action`
+}
+
+/**
+ * @summary Select a screened video or advance shared Comedy room playback
+ */
+export const performComedyRoomVideoAction = async (roomId: string,
+    comedyVideoActionInput: ComedyVideoActionInput, options?: Parameters<typeof customFetch>[1]): Promise<UniversityVideoBeamTvState> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<UniversityVideoBeamTvState>(getPerformComedyRoomVideoActionUrl(roomId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(comedyVideoActionInput)
+  }
+);}
+
+
+
+
+
+export const getPerformComedyRoomVideoActionMutationKey = () => ['performComedyRoomVideoAction'] as const;
+
+export const getPerformComedyRoomVideoActionMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof performComedyRoomVideoAction>>, TError,PerformComedyRoomVideoActionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof performComedyRoomVideoAction>>, TError,PerformComedyRoomVideoActionMutationVariables, TContext> => {
+
+const mutationKey = getPerformComedyRoomVideoActionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof performComedyRoomVideoAction>>, PerformComedyRoomVideoActionMutationVariables> = (props) => {
+          const {roomId,data} = props ?? {};
+
+          return  performComedyRoomVideoAction(roomId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PerformComedyRoomVideoActionMutationResult = NonNullable<Awaited<ReturnType<typeof performComedyRoomVideoAction>>>
+    export type PerformComedyRoomVideoActionMutationBody = BodyType<ComedyVideoActionInput>
+    export type PerformComedyRoomVideoActionMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
+    export type PerformComedyRoomVideoActionMutationVariables = {roomId: string;data: BodyType<ComedyVideoActionInput>}
+
+    /**
+ * @summary Select a screened video or advance shared Comedy room playback
+ */
+export const usePerformComedyRoomVideoAction = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof performComedyRoomVideoAction>>, TError,PerformComedyRoomVideoActionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof performComedyRoomVideoAction>>,
+        TError,
+        PerformComedyRoomVideoActionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPerformComedyRoomVideoActionMutationOptions(options));
     }
 
 export const getPerformUniversityAudioActionUrl = (roomId: string,) => {

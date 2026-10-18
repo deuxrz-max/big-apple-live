@@ -249,3 +249,44 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 }
 @keyframes ur-drawer-in{from{transform:translateX(-100%)}to{transform:translateX(0)}}
 @media(prefers-reduced-motion:reduce){.ur-side.is-open{animation:none}.ur-slot.is-speaking .ur-slot-avatar{animation:none}.ur-slot::before{animation:none;background:linear-gradient(135deg,#d63391,#8f49d9 55%,#6f58c4);background-size:100% 100%}.ur-slot:not(.is-occupied)::before{opacity:.46}.ur-tv-frame::before{animation:none;background:linear-gradient(135deg,#d63391,#8f49d9 55%,#6f58c4)}.ur-entry-effect-webp,.ur-entry-effect-video{transition:none}}
+
+/* Comedy gets a warm stage accent while keeping the shared room layout intact. */
+.ur-comedy .ur-title{color:#fff3d1}
+.ur-comedy .ur-comedy-room-icon{margin-right:5px;font-size:.88em}
+.ur-comedy .ur-tv-frame{border-color:rgba(255,190,69,.62);box-shadow:0 0 13px rgba(255,162,35,.28),0 0 26px rgba(255,91,35,.12)}
+.ur-comedy .ur-tv-frame::before{background:repeating-linear-gradient(135deg,#ffe36a 0%,#ff9b35 33%,#ff5b45 66%,#ffe36a 100%,#ffe36a 125%)}
+.ur-comedy-toolbar{display:flex;align-items:center;gap:6px;width:100%;min-width:0;min-height:30px}
+.ur-comedy-now{display:flex;align-items:center;gap:5px;min-width:0;flex:1;color:#ffe2a0;font-size:10px;font-weight:700}
+.ur-comedy-now>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ur-comedy-browse,.ur-comedy-next{display:inline-flex;align-items:center;justify-content:center;gap:4px;flex:0 0 auto;min-height:28px;padding:4px 8px;border:1px solid rgba(255,189,71,.55);border-radius:999px;background:rgba(87,52,14,.5);color:#fff1d4;font:700 10px/1.1 'DM Sans',sans-serif;cursor:pointer}
+.ur-comedy-next{background:linear-gradient(135deg,#f7a526,#ed6333);border-color:#ffce71;color:#17100a}
+.ur-comedy-browse:hover,.ur-comedy-next:hover:not(:disabled){filter:brightness(1.12)}
+.ur-comedy-next:disabled{opacity:.48;cursor:not-allowed}
+.ur-comedy-modal{z-index:90}
+.ur-comedy-dialog{display:flex;flex-direction:column;gap:11px;width:min(520px,100%);max-height:min(88dvh,760px);padding:16px;border:1px solid rgba(255,190,69,.55);border-radius:19px;background:linear-gradient(155deg,#211a19,#121217 72%);box-shadow:0 20px 70px #000b,0 0 28px rgba(255,153,45,.15)}
+.ur-comedy-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ur-comedy-dialog-head h2{margin:2px 0 0;color:#fff;font-size:21px}
+.ur-comedy-kicker{color:#ffd269;font-size:10px;font-weight:850;letter-spacing:.1em}
+.ur-comedy-close{display:grid;place-items:center;width:36px;height:36px;border:1px solid #ffffff25;border-radius:50%;background:#ffffff0b;color:#fff;cursor:pointer}
+.ur-comedy-filters{display:flex;gap:6px;overflow-x:auto;padding:2px 0 5px;scrollbar-width:thin}
+.ur-comedy-filters button{flex:0 0 auto;padding:7px 11px;border:1px solid #ffffff24;border-radius:999px;background:#ffffff0b;color:#e9e4df;font:700 11px 'DM Sans',sans-serif;cursor:pointer}
+.ur-comedy-filters button.is-selected{border-color:#ffbd52;background:#4a2d10;color:#ffe3a1}
+.ur-comedy-error,.ur-comedy-empty{margin:0;padding:10px;border:1px solid #ffffff1b;border-radius:10px;color:#eee2d6;font-size:12px}
+.ur-comedy-error{border-color:#9d4c44;background:#3a1719;color:#ffd8d3}
+.ur-comedy-video-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;overflow-y:auto;overscroll-behavior:contain;min-height:0;padding:1px 2px 4px}
+.ur-comedy-video{min-width:0;display:flex;flex-direction:column;gap:6px;padding:6px;border:1px solid #ffffff20;border-radius:12px;background:#ffffff08;color:#fff;text-align:left;cursor:pointer}
+.ur-comedy-video.is-current{border-color:#ffc24c;box-shadow:0 0 0 1px #ffc24c55}
+.ur-comedy-video:disabled{opacity:.65;cursor:wait}
+.ur-comedy-thumb{position:relative;display:block;overflow:hidden;width:100%;aspect-ratio:16/9;border-radius:8px;background:#28231e}
+.ur-comedy-thumb img{display:block;width:100%;height:100%;object-fit:cover}
+.ur-comedy-thumb b{position:absolute;left:5px;bottom:5px;padding:3px 5px;border-radius:4px;background:#ffb93d;color:#160f08;font-size:7px;letter-spacing:.03em}
+.ur-comedy-video-copy{display:grid;gap:3px;min-width:0}
+.ur-comedy-video-copy strong{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-size:11px;line-height:1.25}
+.ur-comedy-video-copy small{overflow:hidden;color:#c2b8af;font-size:9px;text-overflow:ellipsis;white-space:nowrap}
+.ur-comedy-footnote{margin:0;color:#a9a09a;font-size:9px;text-align:center}
+@media(max-width:420px){
+  .ur-comedy-dialog{padding:12px}
+  .ur-comedy-video-list{gap:7px}
+  .ur-comedy-video{padding:4px}
+  .ur-comedy-video-copy strong{font-size:10px}
+}

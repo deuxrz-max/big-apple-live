@@ -15,6 +15,7 @@ export type CommunityVideoPoolItem = {
   embeddable?: boolean;
   availableInUS?: boolean;
   ageRestricted?: boolean;
+  sourceTag?: "jkdanimator" | "comedycentral" | "playlist";
 };
 
 export type CommunityWebSeriesEpisode = {

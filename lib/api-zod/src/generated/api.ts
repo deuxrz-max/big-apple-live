@@ -1033,6 +1033,126 @@ export const SearchYouTubeForVideoBeamResponse = zod.object({
 
 
 /**
+ * @summary List screened Comedy room videos from its configured sources
+ */
+export const getComedyRoomVideoCatalogPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
+
+
+export const GetComedyRoomVideoCatalogParams = zod.object({
+  "roomId": zod.coerce.string().regex(getComedyRoomVideoCatalogPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
+})
+
+export const GetComedyRoomVideoCatalogHeader = zod.object({
+  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+})
+
+export const getComedyRoomVideoCatalogResponseVideosItemVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const getComedyRoomVideoCatalogResponseVideosItemTitleMax = 200;
+
+export const getComedyRoomVideoCatalogResponseVideosItemChannelTitleMax = 120;
+
+export const getComedyRoomVideoCatalogResponseVideosItemDurationMsMin = 0;
+
+export const getComedyRoomVideoCatalogResponseCurrentVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+
+
+export const GetComedyRoomVideoCatalogResponse = zod.object({
+  "videos": zod.array(zod.object({
+  "videoId": zod.string().regex(getComedyRoomVideoCatalogResponseVideosItemVideoIdRegExp),
+  "title": zod.string().max(getComedyRoomVideoCatalogResponseVideosItemTitleMax),
+  "channelTitle": zod.string().max(getComedyRoomVideoCatalogResponseVideosItemChannelTitleMax).nullable(),
+  "source": zod.enum(['jkdanimator', 'comedycentral', 'playlist']),
+  "durationMs": zod.number().int().min(getComedyRoomVideoCatalogResponseVideosItemDurationMsMin)
+})),
+  "currentVideoId": zod.string().regex(getComedyRoomVideoCatalogResponseCurrentVideoIdRegExp).nullable()
+})
+
+
+/**
+ * @summary Select a screened video or advance shared Comedy room playback
+ */
+export const performComedyRoomVideoActionPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
+
+
+export const PerformComedyRoomVideoActionParams = zod.object({
+  "roomId": zod.coerce.string().regex(performComedyRoomVideoActionPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code')
+})
+
+export const PerformComedyRoomVideoActionHeader = zod.object({
+  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+})
+
+export const performComedyRoomVideoActionBodyVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+
+
+export const PerformComedyRoomVideoActionBody = zod.object({
+  "action": zod.enum(['select', 'next']),
+  "videoId": zod.string().regex(performComedyRoomVideoActionBodyVideoIdRegExp).optional()
+})
+
+export const performComedyRoomVideoActionResponseDefaultSearchMax = 120;
+
+export const performComedyRoomVideoActionResponseQueueItemRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const performComedyRoomVideoActionResponseQueueMax = 50;
+
+export const performComedyRoomVideoActionResponseVideoMetadataItemVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const performComedyRoomVideoActionResponseVideoMetadataItemTitleMax = 200;
+
+export const performComedyRoomVideoActionResponseVideoMetadataItemChannelTitleMax = 120;
+
+export const performComedyRoomVideoActionResponseVideoMetadataItemDescriptionMax = 500;
+
+export const performComedyRoomVideoActionResponseVideoMetadataMax = 50;
+
+export const performComedyRoomVideoActionResponseCurrentVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
+export const performComedyRoomVideoActionResponseStartedAtMsMin = 0;
+
+export const performComedyRoomVideoActionResponseBreakEndsAtMsMin = 0;
+
+export const performComedyRoomVideoActionResponseServerNowMsMin = 0;
+
+export const performComedyRoomVideoActionResponseSkipVoteCountMin = 0;
+
+export const performComedyRoomVideoActionResponseSkipVoteTotalMin = 0;
+
+export const performComedyRoomVideoActionResponseSkipSequenceMin = 0;
+
+export const performComedyRoomVideoActionResponseSeriesTitleMax = 160;
+
+
+
+
+export const PerformComedyRoomVideoActionResponse = zod.object({
+  "enabled": zod.boolean(),
+  "searchAvailable": zod.boolean(),
+  "defaultSearch": zod.string().max(performComedyRoomVideoActionResponseDefaultSearchMax),
+  "sourceType": zod.union([zod.literal('video'),zod.literal('playlist'),zod.literal('search'),zod.literal(null)]).nullable(),
+  "sourceValue": zod.string().nullable(),
+  "playlistId": zod.string().nullable(),
+  "queue": zod.array(zod.string().regex(performComedyRoomVideoActionResponseQueueItemRegExp)).max(performComedyRoomVideoActionResponseQueueMax),
+  "videoMetadata": zod.array(zod.object({
+  "videoId": zod.string().regex(performComedyRoomVideoActionResponseVideoMetadataItemVideoIdRegExp),
+  "title": zod.string().max(performComedyRoomVideoActionResponseVideoMetadataItemTitleMax),
+  "channelTitle": zod.string().max(performComedyRoomVideoActionResponseVideoMetadataItemChannelTitleMax).nullable(),
+  "description": zod.string().max(performComedyRoomVideoActionResponseVideoMetadataItemDescriptionMax).nullable()
+})).max(performComedyRoomVideoActionResponseVideoMetadataMax),
+  "currentVideoId": zod.string().regex(performComedyRoomVideoActionResponseCurrentVideoIdRegExp).nullable(),
+  "startedAtMs": zod.number().int().min(performComedyRoomVideoActionResponseStartedAtMsMin).nullable(),
+  "breakEndsAtMs": zod.number().int().min(performComedyRoomVideoActionResponseBreakEndsAtMsMin).nullable(),
+  "serverNowMs": zod.number().int().min(performComedyRoomVideoActionResponseServerNowMsMin),
+  "micLockedDuringVideo": zod.boolean(),
+  "skipVotingEnabled": zod.boolean(),
+  "skipVoteCount": zod.number().int().min(performComedyRoomVideoActionResponseSkipVoteCountMin),
+  "skipVoteTotal": zod.number().int().min(performComedyRoomVideoActionResponseSkipVoteTotalMin),
+  "hasVotedToSkip": zod.boolean(),
+  "skipSequence": zod.number().int().min(performComedyRoomVideoActionResponseSkipSequenceMin),
+  "seriesTitle": zod.string().max(performComedyRoomVideoActionResponseSeriesTitleMax).nullable(),
+  "seriesDate": zod.coerce.date().nullable(),
+  "seriesEpisodeNumber": zod.number().int().min(1).nullable()
+})
+
+
+/**
  * @summary Join, leave, or control an audio-only university beam
  */
 export const performUniversityAudioActionPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');

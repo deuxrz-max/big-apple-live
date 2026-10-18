@@ -11,8 +11,9 @@ import {
 
 const REFILL_INTERVAL_MS = 15 * 60_000;
 const FIRST_REFILL_DELAY_MS = 30_000;
-// Seven public rooms now share the topic-pool budget instead of the former 20+ rooms.
+// Active public rooms share a paced topic-pool budget instead of the former 20+ rooms.
 const REFILL_TARGET_SIZE = 150;
+const COMEDY_REFILL_TARGET_SIZE = 3_000;
 const REFRESH_AFTER_MS = 6 * 60 * 60_000;
 
 let nextRoomIndex = 0;
@@ -26,7 +27,7 @@ export async function refillNextCommunityVideoPoolOnce(
     throw new Error("Community video pool refills are preview-only.");
   }
   const apiKey = process.env.YOUTUBE_API_KEY?.trim() ?? "";
-  if (!apiKey || !(await canSpendGeneralYouTubeUnits(102))) return null;
+  if (!apiKey) return null;
 
   const orderedRooms = [...COMMUNITY_VIDEO_POOL_ROOMS]
     .sort((left, right) =>
@@ -40,10 +41,15 @@ export async function refillNextCommunityVideoPoolOnce(
   for (let offset = 0; offset < orderedRooms.length; offset += 1) {
     const index = (nextRoomIndex + offset) % orderedRooms.length;
     const room = orderedRooms[index]!;
+    // Comedy only uses channel/playlist pages and batched details; other rooms
+    // retain the larger reserve required by their search-based fallbacks.
+    const refillReserve = room.roomId === "COMEDY" ? 4 : 102;
+    if (!(await canSpendGeneralYouTubeUnits(refillReserve))) continue;
     const stat = byRoom.get(room.roomId.toUpperCase());
     const stale = stat?.refreshedAtMs === null || stat?.refreshedAtMs === undefined
       || now - stat.refreshedAtMs >= REFRESH_AFTER_MS;
-    if ((stat?.count ?? 0) >= REFILL_TARGET_SIZE && !stale) continue;
+    const targetSize = room.roomId === "COMEDY" ? COMEDY_REFILL_TARGET_SIZE : REFILL_TARGET_SIZE;
+    if ((stat?.count ?? 0) >= targetSize && !stale) continue;
 
     nextRoomIndex = (index + 1) % orderedRooms.length;
     const count = await refreshCommunityVideoPoolIncrementally(room.roomId, apiKey, rooms);

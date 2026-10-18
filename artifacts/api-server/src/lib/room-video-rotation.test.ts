@@ -146,6 +146,19 @@ test("saved History and Pro Wrestling pools retain only their approved channel t
   assert.equal(wrestling.untrustedSourceEntries, 1);
 });
 
+test("Comedy pools retain only tagged configured sources", () => {
+  const comedy = screenCommunityVideoPoolItems([
+    { ...item("JKD00000001"), channelTitle: "JkDAnimator", sourceTag: "jkdanimator" },
+    { ...item("CCN00000001"), channelTitle: "Comedy Central", sourceTag: "comedycentral" },
+    { ...item("PLAY0000001"), channelTitle: "Various playlist creators", sourceTag: "playlist" },
+    { ...item("RANDO000001"), channelTitle: "Random comedy reupload" },
+  ], Date.now(), "COMEDY");
+  assert.deepEqual(comedy.videos.map(video => video.videoId), [
+    "JKD00000001", "CCN00000001", "PLAY0000001",
+  ]);
+  assert.equal(comedy.untrustedSourceEntries, 1);
+});
+
 test("Music keeps only English Music-category official artist videos and VEVO uploads", () => {
   const screened = screenCommunityVideoPoolItems([
     {

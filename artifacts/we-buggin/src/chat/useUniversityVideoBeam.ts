@@ -7,6 +7,7 @@ import {
   type UniversityVideoBeamActionInput,
   type UniversityVideoBeamState,
   type UniversityVideoBeamTvSearchResponse,
+  type ComedyVideoCatalogResponse,
 } from "@workspace/api-client-react";
 import {
   createLocalTracks,
@@ -27,6 +28,7 @@ import type { RefObject } from "react";
 
 type BeamConnection = "idle" | "connecting" | "connected" | "error";
 type MediaMap = Record<string, { audio?: RemoteTrack | LocalTrack }>;
+export type ComedyVideoCatalogItem = ComedyVideoCatalogResponse["videos"][number];
 
 const emptyState = (roomId: string): UniversityVideoBeamState => ({
   roomId,
@@ -136,6 +138,41 @@ export function useUniversityVideoBeam(
     if (!response.ok) return;
     const nextTv = await response.json() as UniversityVideoBeamState["tv"];
     applyBeam({ ...beamRef.current, tv: nextTv });
+  }, [applyBeam, headers]);
+
+  const getComedyVideoCatalog = useCallback(async (): Promise<ComedyVideoCatalogItem[]> => {
+    const args = latest.current;
+    const response = await fetch(
+      `/api/account/rooms/${encodeURIComponent(args.roomId)}/video-beam/tv/comedy/catalog`,
+      { credentials: "include", headers: headers(args.roomSessionId), cache: "no-store" },
+    );
+    const payload = await response.json().catch(() => null) as {
+      videos?: ComedyVideoCatalogItem[];
+      error?: string;
+    } | null;
+    if (!response.ok) throw new Error(payload?.error || "Comedy videos are temporarily unavailable.");
+    return Array.isArray(payload?.videos) ? payload.videos : [];
+  }, [headers]);
+
+  const comedyVideoAction = useCallback(async (action: "select" | "next", videoId?: string) => {
+    const args = latest.current;
+    const response = await fetch(
+      `/api/account/rooms/${encodeURIComponent(args.roomId)}/video-beam/tv/comedy/action`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: { ...headers(args.roomSessionId), "Content-Type": "application/json" },
+        body: JSON.stringify({ action, ...(videoId ? { videoId } : {}) }),
+      },
+    );
+    const payload = await response.json().catch(() => null) as UniversityVideoBeamState["tv"] | { error?: string } | null;
+    if (!response.ok) {
+      const message = payload && "error" in payload ? payload.error : null;
+      throw new Error(message || "That Comedy room action could not be completed.");
+    }
+    const tv = payload as UniversityVideoBeamState["tv"];
+    applyBeam({ ...beamRef.current, tv });
+    return tv;
   }, [applyBeam, headers]);
 
   const clearRoom = useCallback((stopLocal: boolean) => {
@@ -558,6 +595,8 @@ export function useUniversityVideoBeam(
     kick,
     searchTv,
     reportTvPlaybackFailure,
+    getComedyVideoCatalog,
+    comedyVideoAction,
     resumePlayback,
     refresh,
   };
