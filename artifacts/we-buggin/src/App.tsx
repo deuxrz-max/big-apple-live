@@ -20,6 +20,7 @@ import SocialApp from '@/social/SocialApp';
 import { SignInArtwork } from '@/components/sign-in-artwork';
 import '@/theme.css';
 import '@/white-theme.css';
+import '@/dark-app-theme.css';
 
 const DevAudioHarnessPage = import.meta.env.DEV
   ? lazy(() => import('@/dev/AudioHarnessPage'))
@@ -35,7 +36,7 @@ function stripBase(path: string): string {
 }
 
 
-const INK = '#292630';
+const INK = '#f7f4ff';
 const clerkAppearance = {
   theme: shadcn,
   cssLayerName: 'clerk',
@@ -47,10 +48,10 @@ const clerkAppearance = {
   variables: {
     colorPrimary: '#9D1DFF',
     colorForeground: INK,
-    colorMutedForeground: '#77727e',
+    colorMutedForeground: '#c2bbd7',
     colorDanger: '#c83255',
-    colorBackground: '#ffffff',
-    colorInput: '#ffffff',
+    colorBackground: '#151126',
+    colorInput: '#100d21',
     colorInputForeground: INK,
     colorNeutral: INK,
     fontFamily: "'Nunito Sans', system-ui, sans-serif",
@@ -58,22 +59,22 @@ const clerkAppearance = {
   },
   elements: {
     rootBox: 'w-full flex justify-center',
-    cardBox: 'bg-white w-[440px] max-w-full overflow-hidden border border-[#e5e1eb] shadow-sm',
+    cardBox: 'bg-[#151126] w-[440px] max-w-full overflow-hidden border border-[#483765] shadow-sm',
     card: '!shadow-none !border-0 !bg-transparent !rounded-[16px]',
     footer: '!shadow-none !border-0 !bg-transparent !rounded-[16px]',
-    headerTitle: '!font-sans !font-extrabold !text-[#292630]',
-    headerSubtitle: { color: '#77727e' },
+    headerTitle: '!font-sans !font-extrabold !text-[#f7f4ff]',
+    headerSubtitle: { color: '#c2bbd7' },
     socialButtonsBlockButtonText: { color: INK, fontWeight: 700 },
     formFieldLabel: { color: INK, fontWeight: 700 },
     footerActionLink: { fontWeight: 800, color: '#cf2876', textDecoration: 'none' },
-    footerActionText: { color: '#77727e' },
-    dividerText: { color: '#77727e' },
+    footerActionText: { color: '#c2bbd7' },
+    dividerText: { color: '#c2bbd7' },
     identityPreviewEditButton: { color: INK },
     formFieldSuccessText: { color: '#267244' },
     alertText: { color: '#b42344' },
     logoBox: 'h-14 justify-center',
     logoImage: 'h-14 w-14',
-    socialButtonsBlockButton: 'border border-[#ded9e5] bg-white rounded-[12px]',
+    socialButtonsBlockButton: 'border border-[#483765] bg-[#1b1532] rounded-[12px]',
     formButtonPrimary: {
       color: '#ffffff',
       background: 'linear-gradient(110deg,#a522ed,#e63c9a)',
@@ -81,7 +82,7 @@ const clerkAppearance = {
       borderRadius: '12px',
       fontWeight: 700,
     },
-    formFieldInput: 'border border-[#ded9e5] bg-white rounded-[12px]',
+    formFieldInput: 'border border-[#483765] bg-[#100d21] rounded-[12px]',
     footerAction: '',
     dividerLine: 'bg-[#a522ed]/30',
     alert: 'border-2 border-[#d84b63] rounded-[12px]',
@@ -284,8 +285,8 @@ function ClerkProviderWithRoutes() {
   const isModerationScreen = currentPath === '/community/moderation';
   const isDirectoryScreen = currentPath === '/home';
   const isGiftStudioScreen = currentPath === '/community/gift-studio';
-  // The route flags below remain for layout/media behavior; the visual theme is unified.
-  const isLightScreen = !isGiftStudioScreen;
+  // Retained as a route-layout flag only; all app routes now share the dark theme.
+  const isLightScreen = false;
   useLayoutEffect(() => {
     document.body.classList.toggle('streamtalk-beam-screen', isBeamRoomScreen);
     document.body.classList.toggle('streamtalk-light-screen', isLightScreen);

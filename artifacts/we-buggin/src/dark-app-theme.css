@@ -1,0 +1,390 @@
+/* Shared Streamtalk dark theme. Loaded after legacy light-theme overrides. */
+:root {
+  color-scheme: dark;
+  --background: 252 30% 5%;
+  --foreground: 266 33% 96%;
+  --card: 258 35% 11%;
+  --card-foreground: 266 33% 96%;
+  --popover: 258 35% 11%;
+  --popover-foreground: 266 33% 96%;
+  --primary: 274 100% 56%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 258 28% 15%;
+  --secondary-foreground: 266 33% 96%;
+  --muted: 258 28% 15%;
+  --muted-foreground: 258 20% 76%;
+  --border: 258 28% 25%;
+  --input: 258 28% 22%;
+  --ring: 274 100% 68%;
+  --space-0: #080714;
+  --space-1: #100d21;
+  --space-2: #1b1532;
+  --space-ink: #f7f4ff;
+  --space-muted: #c2bbd7;
+  --space-lime: #b7ff75;
+  --space-purple: #aa76ff;
+  --space-pink: #ff9bc8;
+  --space-glass: rgba(26, 20, 51, .82);
+  --space-edge: rgba(193, 160, 255, .42);
+}
+
+html,
+body {
+  color-scheme: dark;
+  background-color: #080714;
+  color: #f7f4ff;
+}
+
+body {
+  background-image:
+    radial-gradient(ellipse at 12% -8%, rgba(102, 53, 175, .23), transparent 42%),
+    radial-gradient(ellipse at 96% 48%, rgba(46, 55, 128, .13), transparent 38%),
+    linear-gradient(150deg, #080714 0%, #100c22 52%, #0a0919 100%);
+  background-attachment: fixed;
+}
+
+#root,
+#root .app-page {
+  min-height: 100dvh;
+  color: #f7f4ff;
+  background: transparent;
+}
+
+#root :is(.ch, .beam-app, .sc-inbox-screen, .sc-following-screen, .pf, .gs) {
+  --bm-ink: #f7f4ff;
+  --bm-mute: #c2bbd7;
+  --bm-line: rgba(196, 170, 255, .27);
+  --bm-bg: transparent;
+  --st-panel: rgba(26, 20, 51, .82);
+  color: #f7f4ff;
+}
+
+#root :is(.ch:not(.ur), .ch-auth, .beam-app, .sc-inbox-screen, .sc-following-screen, .pf) {
+  background-color: transparent;
+}
+
+#root :is(.ch h1, .ch h2, .beam-app h1, .beam-app h2, .sc-h1, .sc-h2,
+  .pf h1, .pf h2, .pf h3, .ib-title, .fg-title, .sp-title, .gs-heading h1) {
+  color: #f7f4ff;
+}
+
+#root .app-page :is(h1, h2, h3, h4, h5, h6, .bm-room-name, .st-dir-intro h1,
+  .st-dir-section-head h2, .st-dir-feature-title) {
+  color: #f7f4ff;
+}
+
+#root :is(.ch-note, .sc-sub, .sc-count, .dh-note, .dh-sub, .ib-prev, .ib-time,
+  .fg-empty, .pf-h2, .pf-badge small, .gs-caption, .gs-mobile-note) {
+  color: #c2bbd7;
+}
+
+/* Shared panels across profile, social, moderation, settings and owner tools. */
+#root :is(.ch-list li, .sc-card, .sc-panel, .sc-empty, .sc-wallet, .ib-row, .fg-tile,
+  .bc-card, .bc-review, .dh-banner, .dh-card, .pf-panel, .pf-dialog, .pf-menu-list,
+  .pf-stats > div, .sp-card, .sp-review, .sp-modal-panel, .sp-review-item,
+  .sc-msgs, .sc-skel, .ch-photo-card, .ch-auth .ch-card, .gs-panel, .gs-preview,
+  .gs-library-card, .gs-empty-library) {
+  color: #f7f4ff;
+  border-color: rgba(193, 160, 255, .3);
+  background-color: rgba(20, 15, 39, .94);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, .32);
+}
+
+#root :is(.pf-hero, .pf-panel, .sc-msgs, .ib-msgs) {
+  color: #f7f4ff;
+  border-color: rgba(193, 160, 255, .32);
+  background: linear-gradient(145deg, rgba(28, 22, 54, .96), rgba(12, 10, 29, .96));
+}
+
+#root :is(.sc-msg, .ib-msg) {
+  color: #f7f4ff;
+  border-color: rgba(193, 160, 255, .25);
+  background: rgba(34, 26, 63, .82);
+}
+
+#root :is(input, textarea, select, .sc-select, .sc-text, .bm-input-box, .sp-field input,
+  .sp-field select, .gs-name-field input, .gs-target-field select, .gs-assign-row select) {
+  color: #f7f4ff;
+  border-color: rgba(193, 160, 255, .42);
+  background-color: #100d21;
+}
+
+#root :is(input, textarea, select)::placeholder {
+  color: #c2bbd7;
+  opacity: .82;
+}
+
+#root :is(.bm-btn:not(.bm-btn-primary), .pf-btn:not(.pf-btn-fill), .pf-edit,
+  .sc-nav-item:not(.is-on), .ur-slot-action, .ur-resume-audio, .sp-button,
+  .sp-modal-close, .gs-button:not(.primary), .gs-chip-button, .gs-icon-button) {
+  color: #f7f4ff;
+  border-color: rgba(193, 160, 255, .48);
+  background: rgba(38, 29, 71, .78);
+}
+
+#root :is(.bm-btn-primary, .btn-pink, .pf-btn-fill, .formButtonPrimary, .ur-slot-join,
+  .gift-framework .gift-send, .st-dir-enter, .st-dir-go-live, .st-topbar-live, .gs-button.primary) {
+  color: #fff !important;
+  border-color: transparent;
+  background: linear-gradient(115deg, #8e38e8 0%, #bc36c9 54%, #e63c9a 100%);
+}
+
+#root :is(.bm-btn-primary, .btn-pink, .pf-btn-fill, .formButtonPrimary,
+  .gift-framework .gift-send, .gs-button.primary):hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+#root :is(.sc-nav-item.is-on, .sc-nav-item[aria-current="page"],
+  .pf-tab[aria-selected="true"], .gs-production-step-link[aria-current="step"]) {
+  color: #c8ff8b;
+  border-color: rgba(183, 255, 117, .58);
+  background: rgba(109, 166, 56, .16);
+}
+
+#root :is(.ur-audio-connected .ur-status-dot, .ur-audio-ready .ur-status-dot,
+  .st-live::before, .st-dir-live-dot, .gs-topline-mark) {
+  background-color: #b7ff75;
+  box-shadow: 0 0 10px rgba(183, 255, 117, .55);
+}
+
+/* Public topic room: keep the controls, seats and chat on a unified dark canvas. */
+#root .ch.ur,
+#root .ch.ur .ur-in,
+#root .ch.ur .ur-body,
+#root .ch.ur .ch-room {
+  color: #f7f4ff;
+  background: #0b0918;
+}
+
+#root .ch.ur .ur-head {
+  padding: 9px 10px;
+  border: 1px solid rgba(193, 160, 255, .32);
+  border-radius: 16px;
+  background: linear-gradient(115deg, rgba(24, 18, 46, .98), rgba(15, 12, 32, .98));
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .24);
+}
+
+#root .ch.ur .ur-title { color: #f7f4ff !important; }
+#root .ch.ur .ur-topic,
+#root .ch.ur .ur-audio-status,
+#root .ch.ur .ur-mic-lock-indicator,
+#root .ch.ur .ur-room-sound-hint,
+#root .ch.ur .ur-beam-full { color: #d4cce5; }
+
+#root .ch.ur .ur-slot {
+  border-color: rgba(193, 160, 255, .44);
+  background-color: #17132a;
+}
+
+#root .ch.ur .ur-slot:not(.is-occupied) {
+  background-color: #110e21;
+}
+
+#root .ch.ur .ur-slot-media,
+#root .ch.ur .ur-slot-media:has(.ur-slot-empty-copy) {
+  background-color: rgba(8, 7, 20, .72);
+}
+
+#root .ch.ur .ur-slot-copy {
+  background: linear-gradient(180deg, transparent, rgba(8, 7, 20, .84) 45%, rgba(8, 7, 20, .96));
+}
+
+#root .ch.ur :is(.ur-slot-name, .ur-slot-caption, .ur-empty-name, .ur-pname) {
+  color: #f7f4ff;
+}
+
+#root .ch.ur .ur-slot-action,
+#root .ch.ur .ur-resume-audio {
+  color: #f7f4ff;
+  border-color: rgba(193, 160, 255, .52);
+  background: rgba(29, 22, 55, .94);
+}
+
+#root .ch.ur .ur-slot-leave {
+  color: #ffd3e4;
+  border-color: rgba(255, 130, 180, .58);
+  background: rgba(76, 24, 55, .82);
+}
+
+#root .ch.ur .ch-msg {
+  padding: 5px 9px;
+  border: 1px solid rgba(193, 160, 255, .2);
+  border-radius: 12px;
+  color: #f7f4ff;
+  background: rgba(24, 18, 46, .86) !important;
+  text-shadow: none;
+}
+
+#root .ch.ur .ch-msg p { color: #f7f4ff; }
+#root .ch.ur .ch-sender { color: #fff; }
+#root .ch.ur .ur-bot-chatter { background: rgba(24, 18, 46, .72) !important; }
+
+#root .ch.ur .ch-comp {
+  border: 1px solid rgba(193, 160, 255, .42);
+  border-radius: 18px;
+  background: rgba(16, 13, 33, .96);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .24);
+}
+
+#root .ch.ur .ch-comp input[type="text"] {
+  color: #f7f4ff;
+  background: transparent;
+}
+
+#root .ch.ur .ch-comp .bm-btn-primary { background: linear-gradient(115deg, #8e38e8, #e63c9a); }
+
+/* Dark glass treatment for dialogs, sheets, menus and popovers. */
+#root :is([role="dialog"], [role="alertdialog"], .ur-menu, .ur-rules, .ur-tv-dialog,
+  .bm-modal, .bm-mic-panel, .bm-tray, .pf-dialog, .pf-menu-list, .sp-modal-panel,
+  .sp-review-item, .gift-framework.gift-sheet, .gs-modal, .gs-save-destination,
+  .st-live-action-sheet) {
+  color: #f7f4ff;
+  border-color: rgba(193, 160, 255, .42);
+  background: linear-gradient(145deg, rgba(28, 22, 54, .98), rgba(12, 10, 29, .98));
+  box-shadow: 0 18px 54px rgba(0, 0, 0, .56);
+}
+
+#root :is(.ur-modal, .bm-modal-back, .sp-modal, .pf-modal, .gift-framework-backdrop, .gs-modal-wrap) {
+  background: rgba(4, 3, 12, .76);
+  backdrop-filter: blur(7px);
+}
+
+/* Live video remains untouched; its floating controls use dark glass instead of
+   the former white chrome so the whole product keeps one palette. */
+body.streamtalk-live-screen {
+  color-scheme: dark;
+}
+
+body.streamtalk-live-screen #root :is(.st-live-viewers, .st-live-gifters,
+  .st-live-close-button, .st-live-follow, .st-live-gift-button,
+  .st-live-host-controls button, .st-live-report-stream, .st-live-chat-form,
+  .st-live-action-sheet) {
+  border-color: rgba(222, 204, 255, .42);
+  background: rgba(13, 10, 29, .78);
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .76);
+  backdrop-filter: blur(12px);
+}
+
+body.streamtalk-live-screen #root :is(.st-live-viewers svg, .st-live-gift-button svg,
+  .st-live-host-controls button svg, .st-live-host-controls button span) {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
+}
+
+body.streamtalk-live-screen #root .st-live-chat-form input {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
+}
+
+body.streamtalk-live-screen #root .st-live-chat-form input::placeholder {
+  color: #d0c9df !important;
+  -webkit-text-fill-color: #d0c9df;
+}
+
+body.streamtalk-live-screen #root .st-live-chat-form button.bm-btn-primary {
+  background: linear-gradient(115deg, #8e38e8, #e63c9a);
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
+}
+
+body.streamtalk-live-screen #root .st-live-action-sheet > button:not(.st-live-action-close) {
+  color: #f7f4ff;
+  border-color: rgba(193, 160, 255, .3);
+  background: rgba(38, 29, 71, .9);
+}
+
+#root .app-page.is-live-screen { background: transparent !important; }
+
+#root :is(.ur-menu button, .ur-rules button:not(.bm-btn), .pf-menu-list button,
+  .st-live-action-sheet > button:not(.st-live-action-close)) {
+  color: #f7f4ff;
+  border-color: rgba(193, 160, 255, .3);
+  background: rgba(38, 29, 71, .82);
+}
+
+/* Gift Studio keeps transparency preview canvases, but all surrounding UI uses
+   the same purple-black panels, magenta actions and lime ready states as Home. */
+#root .gs {
+  --gs-bg: #080714;
+  --gs-panel: #151126;
+  --gs-panel-2: #1b1532;
+  --gs-line: rgba(193, 160, 255, .34);
+  --gs-text: #f7f4ff;
+  --gs-muted: #c2bbd7;
+  --gs-pink: #e63c9a;
+  --gs-lilac: #aa76ff;
+  min-height: 100dvh;
+  color: #f7f4ff;
+  background: linear-gradient(155deg, #100d21, #080714 65%);
+}
+
+#root .gs :is(.gs-panel, .gs-preview, .gs-library-card, .gs-after-actions, .gs-save-destination) {
+  color: #f7f4ff;
+  border-color: rgba(193, 160, 255, .32);
+  background: linear-gradient(145deg, rgba(28, 22, 54, .96), rgba(15, 12, 32, .98));
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .34);
+}
+
+#root .gs :is(.gs-topline, .gs-kicker, .gs-caption, .gs-heading p, .gs-mobile-note,
+  .gs-upload small, .gs-file-meta, .gs-version-info small, .gs-name-field small,
+  .gs-progress-copy, .gs-field-row label, .gs-field-row output, .gs-backdrop-tabs button) {
+  color: #d0c9df;
+}
+
+#root .gs :is(.gs-heading h1, .gs-panel-title, .gs-upload strong, .gs-name-field,
+  .gs-preview-label, .gs-version-info strong, .gs-mobile-note strong) {
+  color: #f7f4ff;
+}
+
+#root .gs :is(.gs-step-number, .gs-version-mark) {
+  color: #eadcff;
+  border-color: rgba(170, 118, 255, .56);
+  background: rgba(123, 67, 190, .25);
+}
+
+#root .gs .gs-topline-mark { background: #b7ff75; }
+#root .gs .gs-upload { color: #f7f4ff; border-color: rgba(193, 160, 255, .52); background: rgba(15, 12, 32, .92); }
+#root .gs .gs-upload-icon { color: #d6baff; border-color: rgba(193, 160, 255, .38); background: #1b1532; }
+#root .gs :is(.gs-choice, .gs-chip-button, .gs-icon-button, .gs-backdrop-tabs, .gs-preview-label) {
+  border-color: rgba(193, 160, 255, .38);
+  background-color: #17132a;
+  color: #f7f4ff;
+}
+#root .gs .gs-backdrop-tabs button[aria-pressed="true"],
+#root .gs .gs-choice[aria-pressed="true"] {
+  border-color: #b889ff;
+  background: rgba(142, 56, 232, .34);
+  color: #fff;
+}
+#root .gs .gs-button.primary {
+  border: 0;
+  color: #fff;
+  background: linear-gradient(115deg, #8e38e8, #bc36c9 54%, #e63c9a);
+}
+#root .gs .gs-name-field input,
+#root .gs .gs-target-field select,
+#root .gs .gs-assign-row select {
+  border-color: rgba(193, 160, 255, .42);
+  background: #100d21;
+  color: #f7f4ff;
+}
+#root .gs .gs-progress-track { background: #302642; }
+#root .gs .gs-progress-fill { background: linear-gradient(90deg, #9d55f5, #e63c9a); }
+#root .gs .gs-status.active,
+#root .gs .gs-success,
+#root .gs .gs-ready-label { color: #c8ff8b !important; }
+#root .gs .gs-status.active { border-color: rgba(183, 255, 117, .45); background: rgba(67, 112, 47, .22); }
+#root .gs .gs-preview-stage.dark { background: #100d21; }
+#root .gs .gs-preview-stage.light { background: #eeeaf0; }
+#root .gs .gs-save-confirmation { border-color: rgba(114, 219, 153, .44); background: rgba(24, 74, 47, .34); color: #d7ffe3; }
+#root .gs .gs-warning { border-color: rgba(246, 191, 100, .45); background: rgba(105, 69, 22, .24); color: #ffe8bd; }
+#root .gs .gs-error,
+#root .gs .gs-error-panel { border-color: rgba(255, 115, 145, .44); background: rgba(86, 22, 42, .34); color: #ffd3dc; }
+
+@media (prefers-reduced-motion: reduce) {
+  #root :is(.bm-btn, .pf-btn, .sc-nav-item, .gs-button, .gs-chip-button) {
+    transition-duration: .01ms !important;
+  }
+}
