@@ -249,6 +249,31 @@ body {
   backdrop-filter: blur(7px);
 }
 
+/* Social pages keep their secondary destinations in the header menu; the app bottom bar is the primary navigation. */
+#root .beam-app.sc .sc-nav { display: none !important; }
+#root .beam-app.sc .sc-more-menu { color: #f7f4ff; }
+#root .beam-app.sc .sc-more-menu > summary {
+  border-color: rgba(193, 160, 255, .36);
+  background: rgba(24, 18, 46, .92);
+  color: #f7f4ff;
+}
+#root .beam-app.sc .sc-more-menu > summary:hover,
+#root .beam-app.sc .sc-more-menu[open] > summary {
+  border-color: rgba(226, 61, 157, .68);
+  background: rgba(50, 28, 73, .96);
+}
+#root .beam-app.sc .sc-more-menu > nav {
+  border-color: rgba(193, 160, 255, .36);
+  background: linear-gradient(145deg, rgba(28, 22, 54, .98), rgba(12, 10, 29, .98));
+}
+#root .beam-app.sc .sc-more-menu > nav a { color: #f7f4ff; }
+#root .beam-app.sc .sc-more-menu > nav a:hover,
+#root .beam-app.sc .sc-more-menu > nav a:focus-visible {
+  background: rgba(91, 44, 130, .48);
+  color: #fff;
+}
+#root .beam-app.sc .sc-more-menu > nav svg { color: #b78cff; }
+
 /* Live video remains untouched; its floating controls use dark glass instead of
    the former white chrome so the whole product keeps one palette. */
 body.streamtalk-live-screen {

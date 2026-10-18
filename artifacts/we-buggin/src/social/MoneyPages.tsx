@@ -145,8 +145,14 @@ export function LeaderboardPage() {
       {q.isError && <ErrorBox error={q.error} retry={() => q.refetch()} />}
       {q.data && (q.data.people.length === 0 ? <Empty title="No ranking yet"><p>Gifts sent to opted-in people will show up here.</p></Empty> : (
         <ol className="sc-rank">{q.data.people.map((p, i) => (
-          <li key={p.username}><span className="sc-pos">{i + 1}</span>
-            <PersonCard p={p} extra={<b className="sc-score">{p.receivedCredits}</b>} /></li>))}</ol>))}
+          <li key={p.username}>
+            <span className="sc-pos" aria-label={`Rank ${i + 1}`}>{i + 1}</span>
+            <PersonCard p={p} className="sc-card-leaderboard" showBadgeInName={false}
+              extra={<span className="sc-rank-score">
+                <BadgeMark id={p.badgeId} label={p.badgeName} imageUrl={p.badgeImage} size={17} compact />
+                <b className="sc-score">{p.receivedCredits.toLocaleString()}</b>
+              </span>} />
+          </li>))}</ol>))}
     </section>
   );
 }

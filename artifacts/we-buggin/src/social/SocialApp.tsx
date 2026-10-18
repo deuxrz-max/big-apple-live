@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link, Route, Switch, useLocation, useParams } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
-import { Users, Heart, Ban, Flag, MessageCircle, Coins, Trophy, UserRound, House, Stamp, EllipsisVertical } from 'lucide-react';
+import { Users, Heart, Ban, Flag, MessageCircle, Coins, Trophy, UserRound, Stamp, EllipsisVertical } from 'lucide-react';
 import { useGetChatAccess, useGetSocialMe } from '@workspace/api-client-react';
 import '@/beam/beam.css';
 import './social.css';
@@ -55,10 +55,6 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
       {!bare && <nav className="bm-nav">
         <Wordmark href="/home" className="bm-logo" />
         <div className="sc-header-actions">
-          <Link href="/home" className="sc-header-home" aria-label="Home">
-            <House size={21} aria-hidden="true" />
-            <span>Home</span>
-          </Link>
           <details className="sc-more-menu">
             <summary aria-label="More pages" title="More pages"><EllipsisVertical size={21} aria-hidden="true" /></summary>
             <nav aria-label="More pages">

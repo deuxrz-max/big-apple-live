@@ -62,14 +62,17 @@ export const Avatar = ({ p, size = 56 }: { p: PhotoPerson; size?: number }) => (
     reviewStatus={p.photoReviews?.find(photo => photo.photoUrl === p.photoUrl)?.status} />
 );
 
-export function PersonCard({ p, extra }: { p: SocialPerson; extra?: ReactNode }) {
+export function PersonCard({ p, extra, showBadgeInName = true, className = '' }: {
+  p: SocialPerson; extra?: ReactNode; showBadgeInName?: boolean; className?: string;
+}) {
   return (
-    <article className="sc-card" data-testid={`card-person-${p.username}`}>
+    <article className={`sc-card${className ? ` ${className}` : ''}`} data-testid={`card-person-${p.username}`}>
       <Link href={`/community/people/${p.username}`} className="sc-card-main">
         <Avatar p={p} size={64} />
         <span className="sc-card-text">
           <span className="sc-name" style={{ color: p.displayNameColor ?? '#FFFFFF' }}>
-            <BadgeMark id={p.badgeId} label={p.badgeName} imageUrl={p.badgeImage} size={18} compact />{(p as PhotoPerson).displayName || p.username}
+            {showBadgeInName && <BadgeMark id={p.badgeId} label={p.badgeName} imageUrl={p.badgeImage} size={18} compact />}
+            <span className="sc-name-label">{(p as PhotoPerson).displayName || p.username}</span>
           </span>
           <span className="sc-sub">@{p.username}{p.country ? ` / ${p.country}` : ''}</span>
           {p.bio && <span className="sc-bio">{p.bio}</span>}

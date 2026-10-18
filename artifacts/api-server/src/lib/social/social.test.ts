@@ -18,7 +18,8 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     await db.$client.end();
   });
   await db.insert(accountProfiles).values(ids.map((id, i) => ({ accountId: id, username: names[i]!, nameKey: names[i]!.toLowerCase(),
-    emojiId: "1F600", gender: i === 1 ? "Female" as const : "Male" as const, color: "#ffffff", hairColor: "#000000" })));
+    emojiId: "1F600", gender: i === 1 ? "Female" as const : "Male" as const, color: "#ffffff", hairColor: "#000000",
+    isTestAccount: i === 2 })));
   const a = ids[0]!, b = ids[1]!, c = ids[2]!;
   const prefs = { bio: "A real community member", country: "US", interests: ["music"], discoverable: true, badgeId: null };
 
@@ -100,8 +101,10 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     const publicStats = await getPerson(a, names[1]!);
     assert.equal(publicStats.receivedCredits, 25);
     assert.equal(publicStats.sentCredits, 5);
+    await db.update(socialWallets).set({ received: 1000000 }).where(eq(socialWallets.accountId, c));
     const leader = await listPeople(b, { search: token }, true);
     assert.equal(leader.people[0]!.username, names[1]);
+    assert.equal(leader.people.some(person => person.username === names[2]), false, "test accounts are excluded from public leaderboards");
     assert.equal((await ledger(b)).transactions.filter(r => r.kind === "purchase").length, 0);
   });
   await t.test("blocking is bilateral and stops discovery, favorites, gifts and new messages without deleting other history", async () => {
