@@ -82,19 +82,6 @@
 .stgp-profile-card b { color:#fff; font-size:11px; }
 .stgp-profile-card small { color:#bdb1ca; font-size:9px; }
 .stgp-profile-card>button { display:grid; place-items:center; padding:4px; border:0; color:#cfc3d7; background:none; }
-.stgp-level { min-height:53px; display:flex; align-items:center; gap:9px; margin-top:8px; padding:7px 10px; border:1px solid rgba(207,184,115,.12); border-radius:12px; background:linear-gradient(105deg,rgba(114,75,128,.23),rgba(85,61,74,.1)); }
-.stgp-level-mark { width:30px; height:30px; display:grid; place-items:center; flex:0 0 30px; border:1px solid rgba(243,204,122,.2); border-radius:9px; color:#f3d27d; background:rgba(225,183,89,.09); }
-.stgp-level-meta { min-width:0; flex:1; }
-.stgp-level-meta>div:first-child { display:flex; align-items:center; gap:6px; }
-.stgp-level-meta>div:first-child b { color:#fff; font-size:10px; }
-.stgp-level-meta>div:first-child span { color:#b8aabc; font-size:9px; }
-.stgp-level-meta>div:first-child em { margin-left:auto; color:#c5d994; font-size:6px; font-style:normal; font-weight:850; letter-spacing:.08em; }
-.stgp-level-meta>strong { position:absolute; right:48px; color:#e5d8ec; font-size:8px; }
-.stgp-level-meta>strong small { color:#a99bb3; font-weight:500; }
-.stgp-progress { height:4px; margin-top:7px; overflow:hidden; border-radius:99px; background:rgba(255,255,255,.1); }
-.stgp-progress i { display:block; width:82%; height:100%; border-radius:inherit; background:linear-gradient(90deg,#bb69ed,#dc68c1,#d4ef78); }
-.stgp-level-next { color:var(--stgp-lime); font-size:10px; font-weight:900; text-align:right; }
-.stgp-level-next small { color:#afa2b9; font-size:8px; font-weight:600; white-space:nowrap; }
 .stgp-tabs { display:flex; flex:0 0 auto; gap:5px; overflow:auto; padding:8px 0 7px; scrollbar-width:none; }
 .stgp-tabs button { min-height:29px; display:inline-flex; align-items:center; justify-content:center; gap:5px; flex:0 0 auto; padding:0 10px; border:1px solid transparent; border-radius:999px; color:#a399ad; background:transparent; font-family:inherit; font-size:10px; font-weight:750; white-space:nowrap; }
 .stgp-tabs button.active { border-color:rgba(207,121,255,.25); color:#f8eaff; background:rgba(170,73,221,.19); }
@@ -147,6 +134,5 @@
 @media(max-width:370px) {
   .stgp-sheet { padding-right:10px; padding-left:10px; }
   .stgp-seats { gap:6px; }
-  .stgp-level-meta>strong { right:42px; }
 }
 @media(prefers-reduced-motion:reduce) { .stgp-sheet * { scroll-behavior:auto!important; } }

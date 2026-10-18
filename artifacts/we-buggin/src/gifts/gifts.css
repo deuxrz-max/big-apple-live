@@ -104,12 +104,6 @@
 .gift-room-panel .gift-panel-person.is-selected .gift-panel-person-name{color:#fff}
 .gift-room-panel .gift-panel-no-people{padding:0 6px;color:#b8b0c5;font-size:11px;white-space:nowrap}
 .gift-room-panel .gift-panel-profile-button:disabled{opacity:.36}
-.gift-room-panel .gift-panel-level{display:grid;grid-template-columns:49px minmax(0,1fr) auto;align-items:center;gap:7px;margin-top:7px;padding:7px 9px;border:1px solid rgba(185,136,241,.14);border-radius:11px;background:linear-gradient(105deg,rgba(125,70,159,.16),rgba(255,255,255,.025))}
-.gift-room-panel .gift-panel-level-value{color:#fff;font-size:11px;font-weight:900;white-space:nowrap}
-.gift-room-panel .gift-panel-level-track{height:5px;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.1)}
-.gift-room-panel .gift-panel-level-track i{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#ae62ed,#dc58c5,#b5e870)}
-.gift-room-panel .gift-panel-level-xp{color:#d8b5ff;font-size:10px;font-weight:850;white-space:nowrap}
-.gift-room-panel .gift-panel-level-unavailable{grid-column:2/-1;color:#a89eb5;font-size:8px;line-height:1}
 .gift-room-panel .gift-panel-categories{display:flex;flex:0 0 auto;gap:7px;overflow-x:auto;padding:9px 0 7px;scrollbar-width:none;overscroll-behavior-x:contain}
 .gift-room-panel .gift-panel-category{min-height:31px;display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:0 0 auto;padding:0 11px;border:1px solid transparent;border-radius:999px;background:transparent;color:#92899f;font-size:11px;font-weight:750;white-space:nowrap}
 .gift-room-panel .gift-panel-category.is-active{border-color:rgba(204,127,255,.27);background:rgba(154,76,230,.22);color:#fff}

@@ -280,13 +280,6 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
           </button>
         </div>}
 
-        <div className="gift-panel-level" aria-label="Sender level and gift experience are not available">
-          <span className="gift-panel-level-value"><strong>Lv —</strong></span>
-          <span className="gift-panel-level-track" aria-hidden="true"><i /></span>
-          <span className="gift-panel-level-xp">+— XP</span>
-          <span className="gift-panel-level-unavailable">Level and XP aren't tracked</span>
-        </div>
-
         {categories.length > 0 && <nav className="gift-panel-categories" aria-label="Gift categories">
           {categories.map(({ id, label, Icon }) => <button key={id} type="button"
             className={`gift-panel-category${activeCategory?.id === id ? ' is-active' : ''}`}
