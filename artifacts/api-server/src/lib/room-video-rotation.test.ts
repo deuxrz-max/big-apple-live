@@ -11,6 +11,7 @@ import {
 import {
   chooseUnplayedVideo,
   getNextCommunityVideoSelection,
+  isComedyWeeklyRefreshDue,
   isDirectoryCommunityPoolRoom,
   recordCommunityVideoPlayed,
   screenCommunityVideoPoolItems,
@@ -43,6 +44,13 @@ test("YouTube quota date rolls over at midnight Pacific, including daylight time
   assert.equal(youtubeQuotaDateKey(new Date("2026-10-14T07:00:00.000Z")), "2026-10-14");
   assert.equal(youtubeQuotaDateKey(new Date("2026-01-14T07:59:59.000Z")), "2026-01-13");
   assert.equal(youtubeQuotaDateKey(new Date("2026-01-14T08:00:00.000Z")), "2026-01-14");
+});
+
+test("Comedy's saved-pool refresh becomes due once per seven-day interval", () => {
+  const monday = Date.parse("2026-10-19T12:00:00.000Z");
+  assert.equal(isComedyWeeklyRefreshDue(null, monday), true);
+  assert.equal(isComedyWeeklyRefreshDue(monday, monday + 7 * 24 * 60 * 60_000 - 1), false);
+  assert.equal(isComedyWeeklyRefreshDue(monday, monday + 7 * 24 * 60 * 60_000), true);
 });
 
 test("saved-pool maintenance is limited to visible rooms and their overflow children", () => {

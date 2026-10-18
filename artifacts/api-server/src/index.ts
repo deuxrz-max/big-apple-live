@@ -6,7 +6,7 @@ import { initializeCommunities } from "./lib/community";
 import { startPhotoRetentionScheduler } from "./lib/profile-photo-retention";
 import { initializeModeratorBots, startModeratorBotChatter, startModeratorBotRotation } from "./lib/moderator-bots";
 import { startTestActorControl } from "./lib/test-actor-control";
-import { startWebSeriesDailySelection } from "./routes/university-video-beam";
+import { startComedyTvPlaybackScheduler, startWebSeriesDailySelection } from "./routes/university-video-beam";
 import { sanitizeAllSavedCommunityVideoPools } from "./lib/room-video-rotation";
 import { startCommunityVideoPoolRefillScheduler } from "./lib/community-video-pool-refill";
 
@@ -36,6 +36,7 @@ try {
   logger.error({ error }, "Saved community video pool screening failed; per-room screening remains enabled");
 }
 startWebSeriesDailySelection();
+startComedyTvPlaybackScheduler();
 startCommunityVideoPoolRefillScheduler(roomStore);
 await initializeModeratorBots();
 startModeratorBotRotation((err, context) => logger.error({ err, ...context }, "Bot rotation failed"));

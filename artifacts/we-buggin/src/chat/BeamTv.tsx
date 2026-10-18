@@ -161,6 +161,7 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
   const [searchUnavailable, setSearchUnavailable] = useState(false);
   const [playerUnavailable, setPlayerUnavailable] = useState(false);
   const reportedFailureVideoId = useRef<string | null>(null);
+  const lastFailureResetVideoId = useRef(tv.currentVideoId);
   const [soundHintDismissed, setSoundHintDismissed] = useState(false);
   const [now, setNow] = useState(Date.now());
   tvRef.current = tv;
@@ -210,6 +211,13 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
   useEffect(() => {
     serverClockOffsetMs.current = tv.serverNowMs - Date.now();
   }, [tv.currentVideoId, tv.startedAtMs, tv.breakEndsAtMs]);
+
+  useEffect(() => {
+    if (lastFailureResetVideoId.current === tv.currentVideoId) return;
+    lastFailureResetVideoId.current = tv.currentVideoId;
+    reportedFailureVideoId.current = null;
+    setPlayerUnavailable(false);
+  }, [tv.currentVideoId]);
 
   useEffect(() => {
     if (tv.breakEndsAtMs === null) return;
@@ -271,6 +279,7 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
     if (!videoIsPlaying || (!tv.currentVideoId && !tv.playlistId) || !playerHost.current) return;
     let active = true;
     let created: YtPlayer | null = null;
+    let readyTimeout: number | undefined;
     const stableHost = playerHost.current;
     setPlayerReady(false);
     setPlayerUnavailable(false);
@@ -299,6 +308,7 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
         events: {
           onReady: event => {
             if (!active) return;
+            if (readyTimeout !== undefined) window.clearTimeout(readyTimeout);
             if (!soundUnlockedRef.current) {
               event.target.mute();
               event.target.setVolume(0);
@@ -343,6 +353,7 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
             setPlayerReady(true);
           },
           onError: event => {
+            if (readyTimeout !== undefined) window.clearTimeout(readyTimeout);
             if (active) {
               setPlayerUnavailable(true);
               const failedVideoId = tvRef.current.currentVideoId;
@@ -355,12 +366,22 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
         },
       });
       player.current = created;
+      const timedVideoId = tvRef.current.currentVideoId;
+      readyTimeout = window.setTimeout(() => {
+        if (!active || !timedVideoId || tvRef.current.currentVideoId !== timedVideoId) return;
+        setPlayerUnavailable(true);
+        if (reportedFailureVideoId.current !== timedVideoId) {
+          reportedFailureVideoId.current = timedVideoId;
+          void reportPlaybackFailure(timedVideoId, 101).catch(() => undefined);
+        }
+      }, 20_000);
     }).catch(() => {
       if (active) setPlayerUnavailable(true);
     });
 
     return () => {
       active = false;
+      if (readyTimeout !== undefined) window.clearTimeout(readyTimeout);
       if (player.current === created) player.current = null;
       try { created?.stopVideo(); } catch { /* player may already be unloading */ }
       try { created?.destroy(); } catch { /* player may already have unloaded */ }

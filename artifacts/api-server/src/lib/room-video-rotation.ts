@@ -59,6 +59,10 @@ const MAX_SEARCH_PAGES_PER_REFRESH = 1;
 const MAX_UPLOAD_PAGES_PER_REFRESH = 1;
 const RECENT_PLAY_WINDOW_MS = 24 * 60 * 60_000;
 const HISTORY_MIN_DURATION_MS = 20 * 60_000;
+const COMEDY_WEEKLY_REFRESH_MS = 7 * 24 * 60 * 60_000;
+const COMEDY_WEEKLY_MIN_NEW_VIDEOS = 10;
+const COMEDY_PLAYBACK_SCHEDULE_KEY = "__comedyPlaybackSchedule";
+const COMEDY_WEEKLY_ATTEMPT_KEY = "__comedyWeeklyRefreshAttemptAt";
 
 type PoolItem = CommunityVideoPoolItem & {
   availableInUS?: boolean;
@@ -77,6 +81,15 @@ type SelectionResult = {
   queue: UniversityVideoBeamTvVideoMetadata[];
   durationMsByVideoId: Record<string, number>;
 };
+export type ComedyPlaybackSchedule = {
+  currentVideoId: string;
+  startedAtMs: number;
+  breakEndsAtMs: number | null;
+};
+
+export function isComedyWeeklyRefreshDue(lastAttemptAtMs: number | null, nowMs = Date.now()): boolean {
+  return lastAttemptAtMs === null || nowMs - lastAttemptAtMs >= COMEDY_WEEKLY_REFRESH_MS;
+}
 
 class QuotaUnavailableError extends Error {}
 
@@ -660,6 +673,108 @@ async function savePoolRow(
     .set({ ...patch, updatedAt: new Date() })
     .where(eq(communityVideoPools.roomId, roomId));
   return (await loadPoolRow(roomId)) ?? { ...current, ...patch, updatedAt: new Date() };
+}
+
+export async function getComedyPlaybackSchedule(): Promise<ComedyPlaybackSchedule | null> {
+  const row = await loadPoolRow("COMEDY");
+  const encoded = row?.sourceCursors?.[COMEDY_PLAYBACK_SCHEDULE_KEY];
+  if (!encoded) return null;
+  try {
+    const value = JSON.parse(encoded) as Partial<ComedyPlaybackSchedule>;
+    if (typeof value.currentVideoId !== "string"
+      || !/^[A-Za-z0-9_-]{11}$/.test(value.currentVideoId)
+      || !Number.isSafeInteger(value.startedAtMs)
+      || (value.breakEndsAtMs !== null && value.breakEndsAtMs !== undefined
+        && (!Number.isSafeInteger(value.breakEndsAtMs) || value.breakEndsAtMs < 0))) {
+      return null;
+    }
+    return {
+      currentVideoId: value.currentVideoId,
+      startedAtMs: value.startedAtMs!,
+      breakEndsAtMs: value.breakEndsAtMs ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function saveComedyPlaybackSchedule(schedule: ComedyPlaybackSchedule): Promise<void> {
+  if (!/^[A-Za-z0-9_-]{11}$/.test(schedule.currentVideoId)
+    || !Number.isSafeInteger(schedule.startedAtMs) || schedule.startedAtMs < 0
+    || (schedule.breakEndsAtMs !== null
+      && (!Number.isSafeInteger(schedule.breakEndsAtMs) || schedule.breakEndsAtMs < 0))) {
+    throw new Error("Invalid Comedy playback schedule.");
+  }
+  const row = await ensurePoolRow("COMEDY");
+  const sourceCursors = {
+    ...(row.sourceCursors ?? {}),
+    [COMEDY_PLAYBACK_SCHEDULE_KEY]: JSON.stringify(schedule),
+  };
+  await savePoolRow("COMEDY", row, { sourceCursors });
+}
+
+export async function getComedyWeeklyRefreshAttemptAtMs(): Promise<number | null> {
+  const row = await loadPoolRow("COMEDY");
+  const value = Number(row?.sourceCursors?.[COMEDY_WEEKLY_ATTEMPT_KEY]);
+  return Number.isSafeInteger(value) && value > 0 ? value : null;
+}
+
+/** Refresh all three configured Comedy sources once a week; keep the live pool if the refresh is thin. */
+export async function refreshComedyVideoPoolWeekly(
+  apiKey: string,
+  rooms: RoomLookup,
+  keepCurrentVideoId?: string | null,
+  nowMs = Date.now(),
+): Promise<{ swapped: boolean; count: number; newVideoCount: number }> {
+  if (!apiKey.trim()) return { swapped: false, count: 0, newVideoCount: 0 };
+  let original = await ensurePoolRow("COMEDY");
+  const previousAttemptAtMs = Number(original.sourceCursors?.[COMEDY_WEEKLY_ATTEMPT_KEY]);
+  if (!isComedyWeeklyRefreshDue(
+    Number.isSafeInteger(previousAttemptAtMs) && previousAttemptAtMs > 0 ? previousAttemptAtMs : null,
+    nowMs,
+  )) {
+    return { swapped: false, count: original.videos.length, newVideoCount: 0 };
+  }
+
+  const originalIds = new Set(original.videos.map(video => video.videoId));
+  const sourceCursors = { ...(original.sourceCursors ?? {}) };
+  sourceCursors[COMEDY_WEEKLY_ATTEMPT_KEY] = String(nowMs);
+  // Force the three configured sources to fetch their latest pages, not their
+  // backfill cursors, before deciding whether there are enough fresh videos.
+  for (const key of Object.keys(sourceCursors)) {
+    if (key.startsWith("__configuredLatestCheckedAt:")) delete sourceCursors[key];
+  }
+  original = await savePoolRow("COMEDY", original, { sourceCursors });
+
+  for (let source = 0; source < 3; source += 1) {
+    try {
+      await refreshCommunityVideoPoolIncrementally("COMEDY", apiKey, rooms);
+    } catch (error) {
+      logger.warn({ error: error instanceof Error ? error.message : "unknown", source },
+        "Comedy weekly source refresh failed; retaining its saved videos");
+    }
+  }
+
+  const refreshed = await ensurePoolRow("COMEDY");
+  const newVideos = refreshed.videos.filter(video => !originalIds.has(video.videoId));
+  const minimumFreshCount = original.videos.length === 0 ? 1 : COMEDY_WEEKLY_MIN_NEW_VIDEOS;
+  if (newVideos.length < minimumFreshCount) {
+    await savePoolRow("COMEDY", refreshed, {
+      videos: original.videos,
+      sourceCursors: refreshed.sourceCursors,
+    });
+    return { swapped: false, count: original.videos.length, newVideoCount: newVideos.length };
+  }
+
+  const currentVideo = keepCurrentVideoId
+    ? original.videos.find(video => video.videoId === keepCurrentVideoId)
+    : undefined;
+  const nextVideos = [
+    ...newVideos.sort((left, right) => right.discoveredAtMs - left.discoveredAtMs),
+    ...(currentVideo && !newVideos.some(video => video.videoId === currentVideo.videoId) ? [currentVideo] : []),
+  ].slice(0, COMEDY_POOL_SIZE);
+  await savePoolRow("COMEDY", refreshed, { videos: nextVideos });
+  return { swapped: true, count: nextVideos.length, newVideoCount: newVideos.length };
 }
 
 export async function sanitizeAllSavedCommunityVideoPools(rooms?: RoomLookup): Promise<{

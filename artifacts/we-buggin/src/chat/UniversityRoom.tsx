@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Clapperboard, LockKeyhole, LogOut, Mic, MicOff, SkipForward, X } from 'lucide-react';
+import { Clapperboard, LockKeyhole, LogOut, Mic, MicOff, X } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -82,12 +82,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const [giftBag, setGiftBag] = useState<{ recipient: Target | null } | null>(null);
   const [drawer, setDrawer] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
-  const [comedyVideos, setComedyVideos] = useState<import('./useUniversityVideoBeam').ComedyVideoCatalogItem[]>([]);
-  const [comedyVideoFilter, setComedyVideoFilter] = useState<'all' | 'jkdanimator' | 'comedycentral' | 'playlist'>('all');
-  const [comedyPickerOpen, setComedyPickerOpen] = useState(false);
-  const [comedyCatalogLoading, setComedyCatalogLoading] = useState(false);
-  const [comedyCatalogError, setComedyCatalogError] = useState<string | null>(null);
-  const [comedyActionBusy, setComedyActionBusy] = useState(false);
   const [ignored, setIgnored] = useState<Set<string>>(new Set());
   const [activeEntranceEffect, setActiveEntranceEffect] = useState<RoomEntranceEffectEvent | null>(null);
   const gifts = useRoomGifts(roomId, userId, sessionId, ignored);
@@ -105,50 +99,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const messageLongPress = useRef<number | null>(null);
   const handledEntranceEffects = useRef(new Set<string>());
   const isComedyRoom = roomId.toUpperCase() === 'COMEDY';
-
-  useEffect(() => {
-    if (!isComedyRoom || !sessionId) return;
-    let active = true;
-    let loading = false;
-    const refreshCatalog = async () => {
-      if (loading) return;
-      loading = true;
-      setComedyCatalogLoading(true);
-      try {
-        const videos = await videoBeam.getComedyVideoCatalog();
-        if (active) {
-          setComedyVideos(videos);
-          setComedyCatalogError(null);
-        }
-      } catch (failure) {
-        if (active) setComedyCatalogError(errMessage(failure, 'Comedy videos are still loading.'));
-      } finally {
-        loading = false;
-        if (active) setComedyCatalogLoading(false);
-      }
-    };
-    void refreshCatalog();
-    const timer = window.setInterval(() => void refreshCatalog(), 60_000);
-    return () => {
-      active = false;
-      window.clearInterval(timer);
-    };
-  }, [isComedyRoom, sessionId, videoBeam.getComedyVideoCatalog]);
-
-  const runComedyVideoAction = async (action: 'select' | 'next', videoId?: string) => {
-    if (comedyActionBusy) return;
-    setComedyActionBusy(true);
-    setComedyCatalogError(null);
-    try {
-      await videoBeam.comedyVideoAction(action, videoId);
-      setComedyPickerOpen(false);
-      setComedyVideos(await videoBeam.getComedyVideoCatalog());
-    } catch (failure) {
-      setComedyCatalogError(errMessage(failure, 'That video could not be started. Try another.'));
-    } finally {
-      setComedyActionBusy(false);
-    }
-  };
 
   useEffect(() => {
     setText(''); setWhisperTo(null); setMenu(null); setDrawer(false); setRulesOpen(false);
@@ -420,13 +370,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                     <Clapperboard size={13} aria-hidden="true" />
                     <span>{videoBeam.beam.tv.videoMetadata.find(item => item.videoId === videoBeam.beam.tv.currentVideoId)?.title ?? 'Comedy videos'}</span>
                   </span>
-                  <button type="button" className="ur-comedy-browse" onClick={() => setComedyPickerOpen(true)}>
-                    Browse videos{comedyVideos.length ? ` · ${comedyVideos.length}` : ''}
-                  </button>
-                  <button type="button" className="ur-comedy-next" disabled={comedyActionBusy || comedyVideos.length < 2}
-                    onClick={() => void runComedyVideoAction('next')} aria-label="Play next Comedy video">
-                    <SkipForward size={14} aria-hidden="true" />Next
-                  </button>
                 </div>
               )}
               {videoBeam.error && <p className="ur-beam-error" role="alert">{videoBeam.error}</p>}
@@ -735,48 +678,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                 onClick={dismissRules}>{ack.isPending ? 'Saving...' : 'Got it'}</button>
             </div>
           </div>
-        </div>
-      )}
-      {isComedyRoom && comedyPickerOpen && (
-        <div className="ur-modal ur-comedy-modal" onClick={() => setComedyPickerOpen(false)}>
-          <section className="ur-comedy-dialog" role="dialog" aria-modal="true" aria-labelledby="ur-comedy-picker-title"
-            onClick={event => event.stopPropagation()}>
-            <header className="ur-comedy-dialog-head">
-              <div><span className="ur-comedy-kicker">🎭 COMEDY ROOM</span><h2 id="ur-comedy-picker-title">Choose a video</h2></div>
-              <button type="button" className="ur-comedy-close" aria-label="Close video list" onClick={() => setComedyPickerOpen(false)}><X size={20} /></button>
-            </header>
-            <div className="ur-comedy-filters" role="group" aria-label="Filter Comedy video source">
-              {([
-                ['all', 'All'],
-                ['jkdanimator', 'JkDAnimator'],
-                ['comedycentral', 'Comedy Central'],
-                ['playlist', 'Playlist'],
-              ] as const).map(([filter, label]) => (
-                <button type="button" key={filter} className={comedyVideoFilter === filter ? 'is-selected' : ''}
-                  aria-pressed={comedyVideoFilter === filter} onClick={() => setComedyVideoFilter(filter)}>{label}</button>
-              ))}
-            </div>
-            {comedyCatalogError && <p className="ur-comedy-error" role="status">{comedyCatalogError}</p>}
-            {comedyCatalogLoading && comedyVideos.length === 0 && <p className="ur-comedy-empty" role="status">Loading videos…</p>}
-            {!comedyCatalogLoading && comedyVideos.length === 0 && <p className="ur-comedy-empty">The video list is being prepared. Check back shortly.</p>}
-            <div className="ur-comedy-video-list">
-              {comedyVideos.filter(video => comedyVideoFilter === 'all' || video.source === comedyVideoFilter).map(video => (
-                <button type="button" key={video.videoId} className={`ur-comedy-video${video.videoId === videoBeam.beam.tv.currentVideoId ? ' is-current' : ''}`}
-                  disabled={comedyActionBusy} onClick={() => void runComedyVideoAction('select', video.videoId)}
-                  aria-label={`Play ${video.title} from ${video.source === 'jkdanimator' ? 'JkDAnimator' : video.source === 'comedycentral' ? 'Comedy Central' : 'the playlist'}`}>
-                  <span className="ur-comedy-thumb">
-                    <img loading="lazy" src={`https://img.youtube.com/vi/${encodeURIComponent(video.videoId)}/mqdefault.jpg`} alt="" />
-                    {video.videoId === videoBeam.beam.tv.currentVideoId && <b>NOW PLAYING</b>}
-                  </span>
-                  <span className="ur-comedy-video-copy">
-                    <strong>{video.title}</strong>
-                    <small>{video.source === 'jkdanimator' ? 'JkDAnimator' : video.source === 'comedycentral' ? 'Comedy Central' : 'Playlist'}{video.channelTitle ? ` · ${video.channelTitle}` : ''}</small>
-                  </span>
-                </button>
-              ))}
-            </div>
-            <p className="ur-comedy-footnote">Official YouTube player · videos are screened for room playback</p>
-          </section>
         </div>
       )}
       <RoomEntranceEffectOverlay event={activeEntranceEffect} onFinish={finishEntranceEffect} />

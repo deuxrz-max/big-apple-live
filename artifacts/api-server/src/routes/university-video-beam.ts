@@ -5,7 +5,6 @@ import {
   GetUniversityVideoBeamTokenResponse,
   GetUniversityVideoBeamTvStateResponse,
   GetComedyRoomVideoCatalogResponse,
-  PerformComedyRoomVideoActionBody,
   PerformUniversityVideoBeamActionBody,
   PerformUniversityVideoBeamActionResponse,
   PerformUniversityVideoBeamTvActionBody,
@@ -37,11 +36,13 @@ import {
 } from "../lib/youtube-video-selection";
 import { resolveYouTubeChannelId, searchCnnLiveStream } from "../lib/cnn-live-news";
 import {
+  getComedyPlaybackSchedule,
   getNextCommunityVideoSelection,
   getCommunityVideoPool,
   markCommunityVideoBad,
   recordCommunityVideoPlayed,
   reserveYouTubeApiUnits,
+  saveComedyPlaybackSchedule,
 } from "../lib/room-video-rotation";
 import {
   WEB_SERIES_ROOM_ID,
@@ -65,6 +66,10 @@ universityVideoBeamStore.setAutomaticVideoStartListener((roomId, videoId, metada
 const participantSnapshots = new Map<string, { expiresAt: number; identities: Set<string> }>();
 const appliedSpeakerPolicies = new Map<string, Map<string, string>>();
 const publicPlaybackTimers = new Map<string, { dueAt: number; timer: ReturnType<typeof setTimeout> }>();
+let comedyScheduleInitialization: Promise<void> | null = null;
+let comedyScheduleRetryAtMs = 0;
+let comedyPlaybackSchedulerStarted = false;
+const persistedComedyScheduleSignatures = new Map<string, string>();
 const PARTICIPANT_SNAPSHOT_TTL_MS = 1_500;
 type YouTubeSearchResult = {
   videoIds: string[];
@@ -376,25 +381,164 @@ function requireMember(req: Request, roomId: string, id: string) {
   return { sessionId, participant };
 }
 
+function isComedyRoom(roomId: string) {
+  return (roomStore.communityParentId(roomId)?.toUpperCase() ?? roomId.toUpperCase()) === "COMEDY";
+}
+
+async function persistComedySchedule(
+  tv: UniversityVideoBeamState["tv"],
+): Promise<void> {
+  if (!tv.currentVideoId || tv.startedAtMs === null) return;
+  const schedule = {
+    currentVideoId: tv.currentVideoId,
+    startedAtMs: tv.startedAtMs,
+    breakEndsAtMs: tv.breakEndsAtMs,
+  };
+  const signature = JSON.stringify(schedule);
+  if (persistedComedyScheduleSignatures.get("COMEDY") === signature) return;
+  await saveComedyPlaybackSchedule(schedule);
+  persistedComedyScheduleSignatures.set("COMEDY", signature);
+}
+
+async function persistComedyScheduleBestEffort(
+  tv: UniversityVideoBeamState["tv"],
+): Promise<void> {
+  try {
+    await persistComedySchedule(tv);
+  } catch (error) {
+    logger.warn({ roomId: "COMEDY", error: error instanceof Error ? error.message : "unknown" },
+      "Comedy TV is still playing; its latest schedule checkpoint could not be saved");
+  }
+}
+
+async function ensureComedyTvSchedule(): Promise<void> {
+  const existingState = universityVideoBeamStore.getState("COMEDY");
+  if (existingState.tv.currentVideoId) {
+    await persistComedyScheduleBestEffort(existingState.tv);
+    schedulePublicPlaybackTransition("COMEDY");
+    return;
+  }
+  if (comedyScheduleInitialization) return comedyScheduleInitialization;
+  if (Date.now() < comedyScheduleRetryAtMs) return;
+
+  comedyScheduleInitialization = (async () => {
+    const pool = await getCommunityVideoPool("COMEDY", "", roomStore);
+    if (!pool.length) {
+      comedyScheduleRetryAtMs = Date.now() + 30_000;
+      return;
+    }
+    comedyScheduleRetryAtMs = 0;
+    const savedSchedule = await getComedyPlaybackSchedule();
+    const savedCurrent = savedSchedule
+      ? pool.find(video => video.videoId === savedSchedule.currentVideoId)
+      : undefined;
+    let state: UniversityVideoBeamState;
+    if (savedSchedule && savedCurrent) {
+      state = universityVideoBeamStore.restoreAutomaticDefaultTvQueue(
+        "COMEDY",
+        pool.map(video => ({
+          videoId: video.videoId,
+          title: video.title,
+          channelTitle: video.channelTitle,
+          description: video.description,
+        })),
+        Object.fromEntries(pool.map(video => [video.videoId, video.durationMs])),
+        savedSchedule.currentVideoId,
+        savedSchedule.startedAtMs,
+        savedSchedule.breakEndsAtMs,
+      );
+    } else {
+      const selection = await getNextCommunityVideoSelection(
+        "COMEDY", process.env.YOUTUBE_API_KEY?.trim() ?? "", roomStore,
+      );
+      if (!selection.selected || !selection.queue.length) {
+        comedyScheduleRetryAtMs = Date.now() + 30_000;
+        return;
+      }
+      state = universityVideoBeamStore.initializeDefaultTvQueue(
+        "COMEDY",
+        communityDefaultVideoSearch("COMEDY", roomStore) ?? "Comedy",
+        selection.queue,
+        selection.durationMsByVideoId,
+      );
+      if (!state.tv.currentVideoId) return;
+      await recordCommunityVideoPlayed("COMEDY", state.tv.currentVideoId);
+      scheduleBeamTvVideoStart(
+        "COMEDY",
+        state.tv.currentVideoId,
+        state.tv.videoMetadata.find(video => video.videoId === state.tv.currentVideoId),
+      );
+    }
+    logger.info({
+      roomId: "COMEDY",
+      currentVideoId: state.tv.currentVideoId,
+      restoredFromServerSchedule: Boolean(savedSchedule && savedCurrent),
+      savedPlayableVideoCount: pool.length,
+      startedAtMs: state.tv.startedAtMs,
+    }, "Comedy Beam TV is running from its server-owned saved-video schedule");
+    await persistComedyScheduleBestEffort(state.tv);
+    schedulePublicPlaybackTransition("COMEDY");
+  })().finally(() => {
+    comedyScheduleInitialization = null;
+  });
+  return comedyScheduleInitialization;
+}
+
+export function startComedyTvPlaybackScheduler(): void {
+  if (comedyPlaybackSchedulerStarted) return;
+  comedyPlaybackSchedulerStarted = true;
+  const tick = () => {
+    void ensureComedyTvSchedule().catch(error => {
+      logger.warn({ roomId: "COMEDY", error: error instanceof Error ? error.message : "unknown" },
+        "Comedy's saved TV schedule could not be restored");
+    });
+  };
+  tick();
+  const interval = setInterval(tick, 15_000);
+  interval.unref();
+  logger.info({ roomId: "COMEDY", intervalMs: 15_000 },
+    "Started server-owned Comedy TV playback schedule");
+}
+
 async function reconcileState(roomId: string, viewerAccountId?: string) {
+  if (isComedyRoom(roomId)) await ensureComedyTvSchedule();
   const roomName = universityVideoBeamStore.getRoomName(roomId);
   let snapshot = participantSnapshots.get(roomName);
   if (!snapshot || snapshot.expiresAt <= Date.now()) {
-    const participants = await liveKitBeamService.listParticipants(roomName);
-    snapshot = {
-      expiresAt: Date.now() + PARTICIPANT_SNAPSHOT_TTL_MS,
-      identities: new Set(participants.map(participant => participant.identity)),
-    };
-    participantSnapshots.set(roomName, snapshot);
+    try {
+      const participants = await liveKitBeamService.listParticipants(roomName);
+      snapshot = {
+        expiresAt: Date.now() + PARTICIPANT_SNAPSHOT_TTL_MS,
+        identities: new Set(participants.map(participant => participant.identity)),
+      };
+      participantSnapshots.set(roomName, snapshot);
+    } catch (error) {
+      if (!isComedyRoom(roomId)) throw error;
+      logger.warn({ roomId, error: error instanceof Error ? error.message : "unknown" },
+        "Comedy TV keeps its saved schedule while LiveKit presence is unavailable");
+      snapshot = {
+        expiresAt: Date.now() + PARTICIPANT_SNAPSHOT_TTL_MS,
+        identities: snapshot?.identities ?? new Set<string>(),
+      };
+      participantSnapshots.set(roomName, snapshot);
+    }
   }
   const state = universityVideoBeamStore.reconcileLiveKitParticipants(
     roomId,
     snapshot.identities,
     viewerAccountId,
   );
-  const synchronized = await synchronizeSpeakerMediaPermissions(
-    roomId, state, snapshot.identities, viewerAccountId,
-  );
+  let synchronized = state;
+  try {
+    synchronized = await synchronizeSpeakerMediaPermissions(
+      roomId, state, snapshot.identities, viewerAccountId,
+    );
+  } catch (error) {
+    if (!isComedyRoom(roomId)) throw error;
+    logger.warn({ roomId, error: error instanceof Error ? error.message : "unknown" },
+      "Comedy TV schedule continues while room audio permissions are temporarily unavailable");
+  }
+  if (isComedyRoom(roomId)) await persistComedyScheduleBestEffort(synchronized.tv);
   schedulePublicPlaybackTransition(roomId);
   if (isCommunityDailyWebSeriesRoom(roomId, roomStore)) {
     scheduleWebSeriesMidnight(roomId);
@@ -534,10 +678,18 @@ async function refreshTopicQueueAtTransition(
   const livePolicy = communityLiveStreamPolicy(roomId, roomStore);
   const defaultSearch = communityDefaultVideoSearch(roomId, roomStore);
   const tv = state.tv;
+  const comedyContinuous = isComedyRoom(roomId);
+  const currentDurationMs = comedyContinuous && tv.currentVideoId
+    ? universityVideoBeamStore.getAutomaticVideoDurationMs(roomId, tv.currentVideoId)
+    : null;
+  const comedyVideoEnded = comedyContinuous && tv.currentVideoId && tv.startedAtMs !== null
+    && currentDurationMs !== null && tv.startedAtMs + currentDurationMs <= Date.now();
   if (livePolicy || !defaultSearch || !tv.enabled || tv.sourceType !== "search"
     || normalizeSearchQuery(tv.sourceValue ?? "") !== normalizeSearchQuery(defaultSearch)
-    || tv.breakEndsAtMs === null || tv.breakEndsAtMs > Date.now()
-    || !tv.currentVideoId || tv.startedAtMs === null) {
+    || !tv.currentVideoId || tv.startedAtMs === null
+    || (comedyContinuous
+      ? !comedyVideoEnded
+      : tv.breakEndsAtMs === null || tv.breakEndsAtMs > Date.now())) {
     return;
   }
 
@@ -573,8 +725,13 @@ async function refreshTopicQueueAtTransition(
       if (advanced.tv.startedAtMs !== tv.startedAtMs
         && advanced.tv.currentVideoId === nextEpisode.videoId) {
         const roomName = universityVideoBeamStore.getRoomName(roomId);
-        const identities = await refreshParticipantSnapshot(roomName);
-        await synchronizeSpeakerMediaPermissions(roomId, advanced, identities);
+        try {
+          const identities = await refreshParticipantSnapshot(roomName);
+          await synchronizeSpeakerMediaPermissions(roomId, advanced, identities);
+        } catch (error) {
+          logger.warn({ roomId, error: error instanceof Error ? error.message : "unknown" },
+            "Could not refresh Web Series speaker media permissions");
+        }
         schedulePublicPlaybackTransition(roomId);
       }
     } catch (error) {
@@ -585,9 +742,9 @@ async function refreshTopicQueueAtTransition(
   }
 
   const apiKey = process.env.YOUTUBE_API_KEY?.trim();
-  if (!apiKey) return;
+  if (!apiKey && !comedyContinuous) return;
   try {
-    const selection = await getNextCommunityVideoSelection(roomId, apiKey, roomStore);
+    const selection = await getNextCommunityVideoSelection(roomId, apiKey ?? "", roomStore);
     if (!selection.selected || selection.queue.length === 0) return;
     const advanced = universityVideoBeamStore.advanceAutomaticDefaultTvVideo(
       roomId,
@@ -597,13 +754,23 @@ async function refreshTopicQueueAtTransition(
       tv.currentVideoId,
       tv.startedAtMs,
       tv.breakEndsAtMs,
+      undefined,
+      comedyContinuous && currentDurationMs !== null
+        ? tv.startedAtMs + currentDurationMs
+        : undefined,
     );
     if (advanced.tv.startedAtMs !== tv.startedAtMs
       && advanced.tv.currentVideoId === selection.selected.videoId) {
       await recordCommunityVideoPlayed(roomId, selection.selected.videoId);
       const roomName = universityVideoBeamStore.getRoomName(roomId);
-      const identities = await refreshParticipantSnapshot(roomName);
-      await synchronizeSpeakerMediaPermissions(roomId, advanced, identities);
+      if (comedyContinuous) await persistComedyScheduleBestEffort(advanced.tv);
+      try {
+        const identities = await refreshParticipantSnapshot(roomName);
+        await synchronizeSpeakerMediaPermissions(roomId, advanced, identities);
+      } catch (error) {
+        logger.warn({ roomId, error: error instanceof Error ? error.message : "unknown" },
+          "Could not refresh room speaker media permissions during video change");
+      }
       schedulePublicPlaybackTransition(roomId);
     }
   } catch (error) {
@@ -909,48 +1076,6 @@ router.get("/account/rooms/:roomId/video-beam/tv/comedy/catalog", async (req, re
   }));
 });
 
-router.post("/account/rooms/:roomId/video-beam/tv/comedy/action", async (req, res): Promise<void> => {
-  sameOrigin(req);
-  const id = accountId(req);
-  const { participant } = requireMember(req, req.params.roomId, id);
-  const roomId = req.params.roomId;
-  if ((roomStore.communityParentId(roomId)?.toUpperCase() ?? roomId.toUpperCase()) !== "COMEDY") {
-    throw new RoomError(404, "That video control is not available in this room.");
-  }
-  const parsedInput = PerformComedyRoomVideoActionBody.safeParse(req.body);
-  if (!parsedInput.success || (parsedInput.data.action === "select" && !parsedInput.data.videoId)) {
-    throw new RoomError(400, "Choose a video from the Comedy room list.");
-  }
-  const body = parsedInput.data;
-  const pool = await getCommunityVideoPool("COMEDY", process.env.YOUTUBE_API_KEY?.trim() ?? "", roomStore);
-  if (!pool.length) throw new RoomError(503, "The Comedy room video list is still loading. Try again shortly.");
-  let chosen = body.action === "select"
-    ? pool.find(video => video.videoId === body.videoId)
-    : (await getNextCommunityVideoSelection("COMEDY", process.env.YOUTUBE_API_KEY?.trim() ?? "", roomStore)).selected;
-  const before = (await reconcileState(roomId, id)).tv;
-  if (body.action === "next" && chosen?.videoId === before.currentVideoId) {
-    chosen = pool.find(video => video.videoId !== before.currentVideoId) ?? chosen;
-  }
-  if (!chosen) throw new RoomError(404, "That video is no longer available in the Comedy room.");
-  const queueItems = [chosen, ...pool.filter(video => video.videoId !== chosen!.videoId)].slice(0, 50);
-  const metadata = queueItems.map(video => ({
-    videoId: video.videoId,
-    title: video.title,
-    channelTitle: video.channelTitle,
-    description: video.description,
-  }));
-  const durations = Object.fromEntries(queueItems.map(video => [video.videoId, video.durationMs]));
-  const state = universityVideoBeamStore.selectComedyRoomVideo(
-    roomId, id, chosen.videoId, metadata, durations,
-  );
-  await recordCommunityVideoPlayed(roomId, chosen.videoId);
-  const identities = await refreshParticipantSnapshot(universityVideoBeamStore.getRoomName(roomId));
-  const synchronized = await synchronizeSpeakerMediaPermissions(roomId, state, identities, id);
-  schedulePublicPlaybackTransition(roomId);
-  res.set("Cache-Control", "no-store")
-    .json(PerformUniversityVideoBeamTvActionResponse.parse(synchronized.tv));
-});
-
 router.post("/account/rooms/:roomId/video-beam/tv/playback-failed", async (req, res): Promise<void> => {
   sameOrigin(req);
   const id = accountId(req);
@@ -984,14 +1109,21 @@ router.post("/account/rooms/:roomId/video-beam/tv/playback-failed", async (req, 
   );
   if (state.tv.currentVideoId) {
     await recordCommunityVideoPlayed(roomId, state.tv.currentVideoId);
+    if (isComedyRoom(roomId)) await persistComedyScheduleBestEffort(state.tv);
     scheduleBeamTvVideoStart(
       roomId,
       state.tv.currentVideoId,
       state.tv.videoMetadata.find(video => video.videoId === state.tv.currentVideoId),
     );
   }
-  const identities = await refreshParticipantSnapshot(universityVideoBeamStore.getRoomName(roomId));
-  const synchronized = await synchronizeSpeakerMediaPermissions(roomId, state, identities, id);
+  let synchronized = state;
+  try {
+    const identities = await refreshParticipantSnapshot(universityVideoBeamStore.getRoomName(roomId));
+    synchronized = await synchronizeSpeakerMediaPermissions(roomId, state, identities, id);
+  } catch (error) {
+    logger.warn({ roomId, error: error instanceof Error ? error.message : "unknown" },
+      "Could not refresh speaker media permissions after a failed video");
+  }
   schedulePublicPlaybackTransition(roomId);
   req.log.warn({
     roomId,
@@ -1007,6 +1139,10 @@ router.post("/account/rooms/:roomId/video-beam/tv", async (req, res): Promise<vo
   sameOrigin(req);
   const id = accountId(req);
   const { participant } = requireMember(req, req.params.roomId, id);
+  const roomId = req.params.roomId;
+  if (isComedyRoom(roomId)) {
+    throw new RoomError(403, "Comedy videos play automatically; manual video controls are unavailable.");
+  }
   const input = PerformUniversityVideoBeamTvActionBody.safeParse(req.body);
   const allowed = [
     "action", "sourceType", "sourceValue", "playlistId", "queue", "currentVideoId",
@@ -1015,7 +1151,6 @@ router.post("/account/rooms/:roomId/video-beam/tv", async (req, res): Promise<vo
   if (!input.success || Object.keys(req.body ?? {}).some(key => !allowed.includes(key))) {
     throw new RoomError(400, "Choose a valid Beam TV action.");
   }
-  const roomId = req.params.roomId;
   const before = (await reconcileState(roomId, id)).tv;
   const state = universityVideoBeamStore.actOnTv(roomId, participant.participantId, input.data, id);
   const videoChanged = state.tv.currentVideoId !== before.currentVideoId;
@@ -1101,6 +1236,7 @@ router.post("/account/rooms/:roomId/video-beam/tv/search", async (req, res) => {
       if (result.selectedVideoId && state.tv.currentVideoId === result.selectedVideoId) {
         await recordCommunityVideoPlayed(roomId, result.selectedVideoId);
       }
+      if (isComedyRoom(roomId)) await persistComedyScheduleBestEffort(state.tv);
       const identities = await refreshParticipantSnapshot(universityVideoBeamStore.getRoomName(roomId));
       await synchronizeSpeakerMediaPermissions(roomId, state, identities, id);
       schedulePublicPlaybackTransition(roomId);

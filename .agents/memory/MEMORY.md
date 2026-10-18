@@ -29,3 +29,4 @@
 - [Public topic-room ownership](public-topic-room-ownership.md) — public rooms are ownerless and audience-unlimited; Beam TV remains automatic and the separate speaker-seat count stays fixed.
 - [Beam TV video screening](beam-tv-video-screening.md) — English/widescreen checks are best-effort; persist pools, cursors and play history to avoid repeats after restart.
 - [Hidden topic rooms](hidden-topic-rooms.md) — hide rooms through an explicit Directory allowlist; preserve stored histories and pools, and refill/sanitize only visible rooms.
+- [Requested scope only](requested-scope-only.md) — for Streamtalk changes, do not add unrequested controls, features, or UI.

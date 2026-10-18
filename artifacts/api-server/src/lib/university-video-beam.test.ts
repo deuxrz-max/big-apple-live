@@ -39,26 +39,45 @@ test("Comedy is a public topic room with the configured YouTube sources", () => 
   }]);
 });
 
-test("Comedy video choices are shared room state and are limited to joined Comedy members", () => {
+test("Comedy playback restores the server schedule and advances continuously without a member action", () => {
   const rooms = new RoomStore(() => 1_000);
   createRoom(rooms, "COMEDY", "history-comedy", undefined, "Comedy");
-  createRoom(rooms, "NEWS01", "history-news", undefined, "News");
-  const member = addMember(rooms, "COMEDY", "comedy-member");
-  const beam = new UniversityVideoBeamStore(rooms, () => 1_000);
-  const selected = beam.selectComedyRoomVideo("COMEDY", "comedy-member", "abc12345678", [
+  let now = 1_000;
+  const beam = new UniversityVideoBeamStore(rooms, () => now);
+  const videos = [
     { videoId: "abc12345678", title: "Joke video", channelTitle: "JkDAnimator", description: null },
     { videoId: "def12345678", title: "Another joke", channelTitle: "Comedy Central", description: null },
-  ], { "abc12345678": 120_000, "def12345678": 180_000 });
-  assert.equal(selected.tv.currentVideoId, "abc12345678");
-  assert.deepEqual(selected.tv.queue, ["abc12345678", "def12345678"]);
-  assert.equal(selected.tv.micLockedDuringVideo, true);
-  assert.throws(() => beam.selectComedyRoomVideo("NEWS01", "comedy-member", "abc12345678", [
-    { videoId: "abc12345678", title: "Joke video", channelTitle: "JkDAnimator", description: null },
-  ]), (error: unknown) => error instanceof RoomError && error.status === 404);
-  assert.ok(member.participantId);
-  assert.throws(() => beam.selectComedyRoomVideo("COMEDY", "not-in-room", "abc12345678", [
-    { videoId: "abc12345678", title: "Joke video", channelTitle: "JkDAnimator", description: null },
-  ]), (error: unknown) => error instanceof RoomError && error.status === 403);
+  ];
+  const started = beam.initializeDefaultTvQueue(
+    "COMEDY", communityDefaultVideoSearch("COMEDY", rooms), videos,
+    { "abc12345678": 1_000, "def12345678": 1_000 },
+  );
+  assert.equal(started.tv.currentVideoId, "abc12345678");
+  assert.deepEqual(started.tv.queue, ["abc12345678", "def12345678"]);
+  assert.equal(started.tv.micLockedDuringVideo, true);
+
+  now = 2_000;
+  const next = beam.advanceAutomaticDefaultTvVideo(
+    "COMEDY", videos, { "abc12345678": 1_000, "def12345678": 1_000 },
+    "def12345678", "abc12345678", 1_000, null, undefined, 2_000,
+  );
+  assert.equal(next.tv.currentVideoId, "def12345678");
+  assert.equal(next.tv.startedAtMs, 2_000);
+  assert.equal(next.tv.breakEndsAtMs, null);
+  assert.equal(next.tv.micLockedDuringVideo, true);
+
+  const restoredStore = new UniversityVideoBeamStore(rooms, () => 2_500);
+  const restored = restoredStore.restoreAutomaticDefaultTvQueue(
+    "COMEDY",
+    videos,
+    { "abc12345678": 1_000, "def12345678": 1_000 },
+    "def12345678",
+    2_000,
+    null,
+  );
+  assert.equal(restored.tv.currentVideoId, "def12345678");
+  assert.equal(restored.tv.startedAtMs, 2_000);
+  assert.equal(restored.tv.micLockedDuringVideo, true);
 });
 
 function createRoom(

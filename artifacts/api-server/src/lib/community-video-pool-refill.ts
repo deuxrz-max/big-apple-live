@@ -5,7 +5,10 @@ import { logger } from "./logger";
 import { roomStore, type RoomStore } from "./room-store";
 import {
   canSpendGeneralYouTubeUnits,
+  getComedyWeeklyRefreshAttemptAtMs,
   getCommunityVideoPoolStats,
+  isComedyWeeklyRefreshDue,
+  refreshComedyVideoPoolWeekly,
   refreshCommunityVideoPoolIncrementally,
 } from "./room-video-rotation";
 
@@ -18,6 +21,19 @@ const REFRESH_AFTER_MS = 6 * 60 * 60_000;
 
 let nextRoomIndex = 0;
 let refillInFlight = false;
+
+async function refreshComedyWeeklyIfDue(rooms: RoomStore, apiKey: string) {
+  if (!apiKey || !(await isComedyWeeklyRefreshDue(await getComedyWeeklyRefreshAttemptAtMs()))) return null;
+  if (!(await canSpendGeneralYouTubeUnits(8))) return null;
+  const result = await refreshComedyVideoPoolWeekly(apiKey, rooms);
+  logger.info({
+    roomId: "COMEDY",
+    swapped: result.swapped,
+    savedPlayableVideoCount: result.count,
+    newVideoCount: result.newVideoCount,
+  }, "Comedy weekly saved-video refresh completed");
+  return result;
+}
 
 /** One bounded, server-side batch. Music is first; later calls rotate fairly. */
 export async function refillNextCommunityVideoPoolOnce(
@@ -41,17 +57,23 @@ export async function refillNextCommunityVideoPoolOnce(
   for (let offset = 0; offset < orderedRooms.length; offset += 1) {
     const index = (nextRoomIndex + offset) % orderedRooms.length;
     const room = orderedRooms[index]!;
+    const comedyWeeklyDue = room.roomId === "COMEDY"
+      && isComedyWeeklyRefreshDue(await getComedyWeeklyRefreshAttemptAtMs(), now);
     // Comedy only uses channel/playlist pages and batched details; other rooms
     // retain the larger reserve required by their search-based fallbacks.
-    const refillReserve = room.roomId === "COMEDY" ? 4 : 102;
+    const refillReserve = room.roomId === "COMEDY" ? (comedyWeeklyDue ? 8 : 4) : 102;
     if (!(await canSpendGeneralYouTubeUnits(refillReserve))) continue;
     const stat = byRoom.get(room.roomId.toUpperCase());
     const stale = stat?.refreshedAtMs === null || stat?.refreshedAtMs === undefined
       || now - stat.refreshedAtMs >= REFRESH_AFTER_MS;
     const targetSize = room.roomId === "COMEDY" ? COMEDY_REFILL_TARGET_SIZE : REFILL_TARGET_SIZE;
-    if ((stat?.count ?? 0) >= targetSize && !stale) continue;
+    if ((stat?.count ?? 0) >= targetSize && !stale && !comedyWeeklyDue) continue;
 
     nextRoomIndex = (index + 1) % orderedRooms.length;
+    if (comedyWeeklyDue) {
+      const result = await refreshComedyWeeklyIfDue(rooms, apiKey);
+      return { roomId: room.roomId, count: result?.count ?? stat?.count ?? 0 };
+    }
     const count = await refreshCommunityVideoPoolIncrementally(room.roomId, apiKey, rooms);
     logger.info({ roomId: room.roomId, savedPlayableVideoCount: count },
       "Refreshed one bounded room video-pool batch");
@@ -62,7 +84,24 @@ export async function refillNextCommunityVideoPoolOnce(
 
 export function startCommunityVideoPoolRefillScheduler(rooms: RoomStore = roomStore): void {
   if (process.env.NODE_ENV === "production") {
-    logger.info("Preview-only room video pool refills are disabled in production");
+    const tick = async () => {
+      if (refillInFlight) return;
+      refillInFlight = true;
+      try {
+        await refreshComedyWeeklyIfDue(rooms, process.env.YOUTUBE_API_KEY?.trim() ?? "");
+      } catch (error) {
+        logger.warn({ error }, "Comedy weekly refresh failed; the saved video pool remains available");
+      } finally {
+        refillInFlight = false;
+      }
+    };
+    const initial = setTimeout(() => {
+      void tick();
+      const interval = setInterval(() => void tick(), REFILL_INTERVAL_MS);
+      interval.unref();
+    }, FIRST_REFILL_DELAY_MS);
+    initial.unref();
+    logger.info({ intervalMs: REFILL_INTERVAL_MS }, "Started Comedy-only weekly video refresh in production");
     return;
   }
   let stopped = false;
