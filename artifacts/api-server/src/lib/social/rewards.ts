@@ -9,6 +9,7 @@ import { requireAdult } from '../community';
 import { hasDevelopmentUnlimitedCredits, planCreditSpend } from "./credits-policy";
 import { liveStreamIdForAccount, isLiveStreamActiveOrStarting } from "../live-stream-policy";
 import { getSendableGiftCatalogItem } from "../gift-studio-catalog";
+import { giftChargeTotal } from "./gift-quantity";
 
 /** Unlimited test gifts keep the wallet balance unchanged but retain their nominal value in the ledger. */
 export function giftLedgerDebit(debit: number, cost: number, unlimited: boolean): number {
@@ -29,11 +30,13 @@ export async function claimDaily(id: string) {
   });
 }
 export async function gift(id: string, recipient: string, giftId: string, key: string,
-  context?: { roomId: string; sessionId: string } | { streamId: string }) {
+  context?: { roomId: string; sessionId: string } | { streamId: string }, quantity = 1) {
   const sender = await requireAccount(id);
   const target = await targetAccount(recipient);
   const item = await getSendableGiftCatalogItem(giftId);
   if (!item) throw new RoomError(400, "This gift is no longer available. Refresh the gift list and choose another.");
+  const totalCost = giftChargeTotal(item.cost, quantity);
+  if (totalCost === null) throw new RoomError(400, "Choose a valid gift quantity and price.");
   const roomGift = item.roomGift;
   const roomContext = context && "roomId" in context ? context : null;
   const streamContext = context && "streamId" in context ? context : null;
@@ -62,18 +65,18 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
     if (roomGift && roomContext && historyId !== boundHistory) throw new RoomError(409, 'This university changed. Re-enter before sending.');
     const current = await wallet(id, tx, sender.username);
     const unlimited = hasDevelopmentUnlimitedCredits(sender.username);
-    const spend = planCreditSpend(current.balance, item.cost, unlimited);
+    const spend = planCreditSpend(current.balance, totalCost, unlimited);
     if (!spend.allowed) throw new RoomError(409, roomGift ? "Not enough coins. Open the coin store to get more." : "Not enough coins. Claim a daily coin reward first.");
-    const recipientCredits = roomGift ? spiritSplit(item.cost).recipientCredits : item.cost;
+    const recipientCredits = roomGift ? spiritSplit(totalCost).recipientCredits : totalCost;
     if (spend.debit > 0) {
-      await tx.update(socialWallets).set({ balance: sql`${socialWallets.balance} - ${spend.debit}`, sent: sql`${socialWallets.sent} + ${item.cost}` }).where(eq(socialWallets.accountId, id));
+      await tx.update(socialWallets).set({ balance: sql`${socialWallets.balance} - ${spend.debit}`, sent: sql`${socialWallets.sent} + ${totalCost}` }).where(eq(socialWallets.accountId, id));
     } else {
-      await tx.update(socialWallets).set({ sent: sql`${socialWallets.sent} + ${item.cost}` }).where(eq(socialWallets.accountId, id));
+      await tx.update(socialWallets).set({ sent: sql`${socialWallets.sent} + ${totalCost}` }).where(eq(socialWallets.accountId, id));
     }
     await tx.update(socialWallets).set({ balance: sql`${socialWallets.balance} + ${recipientCredits}`, received: sql`${socialWallets.received} + ${recipientCredits}` }).where(eq(socialWallets.accountId, target.accountId));
     await tx.insert(socialLedger).values([
-      { accountId: id, delta: -giftLedgerDebit(spend.debit, item.cost, unlimited), kind: "gift_sent", description: `${item.name} sent to ${target.username}${unlimited ? " (development unlimited coins)" : ""}`, peer: target.username, requestKey: key, refKey: ref },
-      { accountId: target.accountId, delta: recipientCredits, kind: "gift_received", description: `${item.name} from ${sender.username}`, peer: sender.username },
+      { accountId: id, delta: -giftLedgerDebit(spend.debit, totalCost, unlimited), kind: "gift_sent", description: `${item.name}${quantity > 1 ? ` ×${quantity}` : ""} sent to ${target.username}${unlimited ? " (development unlimited coins)" : ""}`, peer: target.username, requestKey: key, refKey: ref },
+      { accountId: target.accountId, delta: recipientCredits, kind: "gift_received", description: `${item.name}${quantity > 1 ? ` ×${quantity}` : ""} from ${sender.username}`, peer: sender.username },
     ]);
     let liveGiftEvent: {
       streamId: string; senderAccountId: string; senderUsername: string; senderName: string;
@@ -84,18 +87,18 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
         historyId: historyId!, senderId: id, recipientId: target.accountId,
         senderUsername: sender.username, recipientUsername: target.username,
         senderName: sender.displayName ?? sender.username, recipientName: target.displayName ?? target.username,
-        giftId: item.id, cost: item.cost, recipientCredits, houseCredits: item.cost - recipientCredits,
+        giftId: item.id, cost: totalCost, recipientCredits, houseCredits: totalCost - recipientCredits,
       });
-      await tx.insert(socialGiftBag).values({ accountId: target.accountId, giftId: item.id, quantity: 1 })
-        .onConflictDoUpdate({ target: [socialGiftBag.accountId, socialGiftBag.giftId], set: { quantity: sql`${socialGiftBag.quantity} + 1` } });
+      await tx.insert(socialGiftBag).values({ accountId: target.accountId, giftId: item.id, quantity })
+        .onConflictDoUpdate({ target: [socialGiftBag.accountId, socialGiftBag.giftId], set: { quantity: sql`${socialGiftBag.quantity} + ${quantity}` } });
     }
     if (roomGift && streamContext) {
-      await tx.insert(socialGiftBag).values({ accountId: target.accountId, giftId: item.id, quantity: 1 })
-        .onConflictDoUpdate({ target: [socialGiftBag.accountId, socialGiftBag.giftId], set: { quantity: sql`${socialGiftBag.quantity} + 1` } });
+      await tx.insert(socialGiftBag).values({ accountId: target.accountId, giftId: item.id, quantity })
+        .onConflictDoUpdate({ target: [socialGiftBag.accountId, socialGiftBag.giftId], set: { quantity: sql`${socialGiftBag.quantity} + ${quantity}` } });
       liveGiftEvent = {
         streamId: streamContext.streamId, senderAccountId: id, senderUsername: sender.username,
         senderName: sender.displayName ?? sender.username, recipientUsername: target.username,
-        recipientName: target.displayName ?? target.username, giftId: item.id, giftName: item.name, cost: item.cost,
+        recipientName: target.displayName ?? target.username, giftId: item.id, giftName: item.name, cost: totalCost,
       };
     }
     return { wallet: await wallet(id, tx, sender.username), liveGiftEvent };

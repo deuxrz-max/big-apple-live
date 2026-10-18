@@ -117,20 +117,13 @@ export async function getGiftCatalogItem(giftId: string) {
 }
 
 export async function giftCatalogWithActiveNames() {
-  const [catalog, motionGifts] = await Promise.all([
-    listGiftCatalogForOwner(),
-    db.select({
-      id: developerGiftMotions.giftId,
-      name: developerGiftMotions.name,
-      cost: developerGiftMotions.cost,
-    }).from(developerGiftMotions).where(eq(developerGiftMotions.active, true)),
-  ]);
-  return [
-    ...catalog
-      .filter((gift) => gift.status === "active" && gift.productType === "gift" && gift.animationAvailable)
-      .map(({ id, name, cost }) => ({ id, name, cost })),
-    ...motionGifts,
-  ];
+  const catalog = await listGiftCatalogForOwner();
+  return catalog.filter((gift) =>
+    !/^motion-[0-9a-f-]{36}$/.test(gift.id)
+      && gift.status === "active"
+      && gift.productType === "gift"
+      && gift.animationAvailable,
+  ).map(({ id, name, cost }) => ({ id, name, cost }));
 }
 
 export function mergeActiveGiftNames(activeNames: Map<string, string>) {
@@ -202,6 +195,7 @@ export async function updateGiftCatalogItem(input: {
 }
 
 export async function getSendableGiftCatalogItem(giftId: string) {
+  if (/^motion-[0-9a-f-]{36}$/.test(giftId)) return null;
   const item = await getGiftCatalogItem(giftId);
   if (!item || item.status !== "active" || item.productType !== "gift" || !item.animationAvailable) return null;
   return item;

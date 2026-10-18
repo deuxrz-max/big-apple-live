@@ -11,5 +11,10 @@ export interface SocialGiftInput {
   giftId: string;
   roomId?: string;
   streamId?: string;
+  /**
+     * @minimum 1
+     * @maximum 1314
+     */
+  quantity?: number;
   idempotencyKey: string;
 }

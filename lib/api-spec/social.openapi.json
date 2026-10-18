@@ -2188,6 +2188,11 @@
           },
           "roomId": {"type": "string"},
           "streamId": {"type": "string"},
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1314
+          },
           "idempotencyKey": {
             "type": "string",
             "format": "uuid"

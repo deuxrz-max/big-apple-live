@@ -29,7 +29,14 @@ import './bot-moderation.css';
 
 const RULES = "Stick to the room's topic. Be kind — no harassment or hate. Nothing sexual or explicit, in chat, names or photos. Don't share real names, phone numbers, addresses or other contact details. Don't hog the screen, no ALL CAPS, no ads or spam. Use Ignore on anyone bothering you, or Block and Report for anything serious. Public university chat is moderated by Streamtalk bots. Whispers and direct messages are private and are not scanned by these bots.";
 
-type Target = { username: string; displayName: string; displayNameColor?: string; displayNameTierIndex?: number };
+type Target = {
+  username: string;
+  displayName: string;
+  displayNameColor?: string;
+  displayNameTierIndex?: number;
+  photoUrl?: string | null;
+  isHost?: boolean;
+};
 type ReportTarget = {
   targetType: 'user' | 'message';
   targetUsername: string;
@@ -181,13 +188,20 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
 
   const people = session?.people ?? [];
   const me = people.find((p) => p.self);
-  const giftRecipients = people
-    .filter(person => !person.botId && !person.blocked)
-    .map(({ username, displayName, displayNameColor, displayNameTierIndex }) => ({ username, displayName, displayNameColor, displayNameTierIndex }));
-  if (me && !giftRecipients.some(person => person.username.toLowerCase() === me.username.toLowerCase())) {
-    giftRecipients.unshift({ username: me.username, displayName: me.displayName, displayNameColor: me.displayNameColor, displayNameTierIndex: me.displayNameTierIndex });
-  }
   const beamSlots = [...videoBeam.beam.slots].sort((a, b) => a.slotNumber - b.slotNumber);
+  const peopleByParticipantId = new Map(people.map(person => [person.participantId, person]));
+  const giftRecipients = beamSlots.flatMap(slot => {
+    if (!slot.participantId) return [];
+    const person = peopleByParticipantId.get(slot.participantId);
+    if (!person || person.botId || person.blocked) return [];
+    return [{
+      username: person.username,
+      displayName: person.displayName,
+      displayNameColor: person.displayNameColor,
+      displayNameTierIndex: person.displayNameTierIndex,
+      photoUrl: person.photoUrl,
+    }];
+  });
   const speakerCount = beamSlots.filter(slot => slot.participantId).length;
   const isSelf = (username: string, authorId?: string) => (!!authorId && authorId === r.creds?.participantId) || me?.username === username;
   const nameOf = (username: string, fallback?: string) => people.find((p) => p.username === username)?.displayName ?? fallback ?? username;

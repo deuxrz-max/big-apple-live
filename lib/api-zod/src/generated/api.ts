@@ -3173,11 +3173,16 @@ export const ClaimSocialDailyRewardResponse = zod.object({
 })
 
 
+export const sendSocialGiftBodyQuantityMax = 1314;
+
+
+
 export const SendSocialGiftBody = zod.object({
   "recipient": zod.string(),
   "giftId": zod.string(),
   "roomId": zod.string().optional(),
   "streamId": zod.string().optional(),
+  "quantity": zod.number().int().min(1).max(sendSocialGiftBodyQuantityMax).optional(),
   "idempotencyKey": zod.string().uuid()
 })
 

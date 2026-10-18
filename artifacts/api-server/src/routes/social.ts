@@ -810,7 +810,7 @@ router.post("/social/gifts", async (req, res): Promise<void> => {
     if (!recipient) throw new RoomError(404, "This livestream is no longer available.");
     await requireLiveStreamGiftAccess(senderId, recipient.accountId, input.data.streamId);
     const result = await gift(senderId, input.data.recipient, input.data.giftId, input.data.idempotencyKey,
-      { streamId: input.data.streamId });
+      { streamId: input.data.streamId }, input.data.quantity ?? 1);
     if ("liveGiftEvent" in result && result.liveGiftEvent) {
       const senderNameColor = await nameColorProfileForAccount(senderId);
       liveStreamChatHub.publishGift({
@@ -828,7 +828,8 @@ router.post("/social/gifts", async (req, res): Promise<void> => {
     return;
   }
   res.json(await gift(senderId, input.data.recipient, input.data.giftId, input.data.idempotencyKey,
-    input.data.roomId ? { roomId: input.data.roomId, sessionId: req.get('X-Room-Session') ?? '' } : undefined));
+    input.data.roomId ? { roomId: input.data.roomId, sessionId: req.get('X-Room-Session') ?? '' } : undefined,
+    input.data.quantity ?? 1));
 });
 router.post("/social/store/purchase", async (req, res): Promise<void> => {
   const input = PurchaseSocialProductBody.safeParse(req.body);

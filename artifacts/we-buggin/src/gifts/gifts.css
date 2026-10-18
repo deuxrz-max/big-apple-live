@@ -76,3 +76,100 @@
   62%{opacity:1;transform:translateY(-6px) scale(1)}
   100%{opacity:0;transform:translateY(-42px) scale(.86)}
 }
+
+/* Room gift picker: compact, phone-first bottom sheet. */
+.gift-panel-backdrop{background:linear-gradient(180deg,rgba(5,4,12,.04) 0%,rgba(5,4,12,.22) 45%,rgba(5,4,12,.4) 100%)}
+.gift-framework.gift-room-panel{display:flex;flex-direction:column;gap:0;width:100%;max-width:520px;height:min(82dvh,760px);max-height:82dvh;min-height:0;overflow:hidden;padding:8px 14px calc(9px + env(safe-area-inset-bottom));border:1px solid rgba(188,128,255,.34);border-bottom:0;border-radius:21px 21px 0 0;background:linear-gradient(180deg,#201735 0%,#151022 42%,#0b0912 100%);box-shadow:0 -16px 60px rgba(0,0,0,.42);color:#fff}
+.gift-framework.gift-room-panel :is(button,select){font-family:inherit}
+.gift-room-panel .gift-panel-handle{height:14px;flex:0 0 14px;display:flex;justify-content:center;align-items:flex-start}
+.gift-room-panel .gift-panel-handle span{display:block;width:38px;height:4px;border-radius:999px;background:rgba(255,255,255,.28)}
+.gift-room-panel .gift-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex:0 0 auto;padding:0 0 9px}
+.gift-room-panel .gift-panel-heading h2{margin:0;color:#fff;font-size:17px;font-weight:850;letter-spacing:-.02em}
+.gift-room-panel .gift-panel-heading p{margin:2px 0 0;color:#bdb5ce;font-size:11px;line-height:1.3}
+.gift-room-panel .gift-panel-icon-button,.gift-room-panel .gift-panel-profile-button{width:36px;height:36px;display:grid;place-items:center;flex:0 0 auto;border:1px solid rgba(255,255,255,.15);border-radius:50%;background:rgba(255,255,255,.06);color:#fff}
+.gift-room-panel .gift-panel-icon-button:active,.gift-room-panel .gift-panel-profile-button:active{transform:scale(.96)}
+.gift-room-panel .gift-panel-recipients{min-height:62px;display:grid;grid-template-columns:47px minmax(0,1fr) 36px;align-items:center;gap:8px;padding:8px 0;border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.08)}
+.gift-room-panel .gift-panel-all{width:44px;height:34px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(255,255,255,.06);color:#d4cde0;font-size:11px;font-weight:850;letter-spacing:.08em}
+.gift-room-panel .gift-panel-all.is-selected{border-color:#b46cff;background:linear-gradient(115deg,#762df4,#d432b8);color:#fff;box-shadow:0 0 14px rgba(183,77,255,.27)}
+.gift-room-panel .gift-panel-people{min-width:0;display:flex;align-items:flex-start;gap:9px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
+.gift-room-panel .gift-panel-people::-webkit-scrollbar,.gift-room-panel .gift-panel-categories::-webkit-scrollbar,.gift-room-panel .gift-panel-pager::-webkit-scrollbar{display:none}
+.gift-room-panel .gift-panel-person{position:relative;min-width:47px;max-width:54px;display:flex;flex:0 0 auto;flex-direction:column;align-items:center;gap:3px;padding:0;border:0;background:transparent;color:#bcb5c9}
+.gift-room-panel .gift-panel-avatar{position:relative;width:44px;height:44px;display:block;border:2px solid transparent;border-radius:50%;transition:border-color .15s ease,box-shadow .15s ease}
+.gift-room-panel .gift-panel-person.is-selected .gift-panel-avatar{border-color:#ca72ff;box-shadow:0 0 0 2px rgba(183,78,255,.24),0 0 14px rgba(172,76,255,.4)}
+.gift-room-panel .gift-panel-avatar>span:not(.gift-panel-host-mark),.gift-room-panel .gift-panel-avatar img{width:100%!important;height:100%!important;border-radius:50%!important}
+.gift-room-panel .gift-panel-avatar img{object-fit:cover}
+.gift-room-panel .gift-panel-host-mark{position:absolute;right:-2px;bottom:-2px;width:17px;height:17px;display:grid;place-items:center;border:1.5px solid #181126;border-radius:50%;background:#a745e8;color:#fff}
+.gift-room-panel .gift-panel-avatar .gift-panel-host-mark{width:17px!important;height:17px!important}
+.gift-room-panel .gift-panel-person-name{display:block;width:100%;overflow:hidden;color:#c3bbd0;font-size:9px;font-weight:750;text-align:center;text-overflow:ellipsis;white-space:nowrap}
+.gift-room-panel .gift-panel-person.is-selected .gift-panel-person-name{color:#fff}
+.gift-room-panel .gift-panel-no-people{padding:0 6px;color:#b8b0c5;font-size:11px;white-space:nowrap}
+.gift-room-panel .gift-panel-profile-button:disabled{opacity:.36}
+.gift-room-panel .gift-panel-level{display:grid;grid-template-columns:49px minmax(0,1fr) auto;align-items:center;gap:7px;margin-top:7px;padding:7px 9px;border:1px solid rgba(185,136,241,.14);border-radius:11px;background:linear-gradient(105deg,rgba(125,70,159,.16),rgba(255,255,255,.025))}
+.gift-room-panel .gift-panel-level-value{color:#fff;font-size:11px;font-weight:900;white-space:nowrap}
+.gift-room-panel .gift-panel-level-track{height:5px;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.1)}
+.gift-room-panel .gift-panel-level-track i{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#ae62ed,#dc58c5,#b5e870)}
+.gift-room-panel .gift-panel-level-xp{color:#d8b5ff;font-size:10px;font-weight:850;white-space:nowrap}
+.gift-room-panel .gift-panel-level-unavailable{grid-column:2/-1;color:#a89eb5;font-size:8px;line-height:1}
+.gift-room-panel .gift-panel-categories{display:flex;flex:0 0 auto;gap:7px;overflow-x:auto;padding:9px 0 7px;scrollbar-width:none;overscroll-behavior-x:contain}
+.gift-room-panel .gift-panel-category{min-height:31px;display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:0 0 auto;padding:0 11px;border:1px solid transparent;border-radius:999px;background:transparent;color:#92899f;font-size:11px;font-weight:750;white-space:nowrap}
+.gift-room-panel .gift-panel-category.is-active{border-color:rgba(204,127,255,.27);background:rgba(154,76,230,.22);color:#fff}
+.gift-room-panel .gift-panel-category.is-active svg{color:#d8a3ff}
+.gift-room-panel .gift-panel-scroll{position:relative;flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:0 0 6px}
+.gift-room-panel .gift-panel-pager{display:flex;width:100%;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none}
+.gift-room-panel .gift-panel-page{min-width:100%;max-width:100%;flex:0 0 100%;scroll-snap-align:start}
+.gift-room-panel .gift-panel-featured{position:relative;width:100%;min-height:78px;display:flex;align-items:center;gap:10px;overflow:hidden;margin:1px 0 9px;padding:9px 11px;border:1px solid rgba(211,165,255,.22);border-radius:15px;background:radial-gradient(circle at 85% 0%,rgba(255,183,68,.28),transparent 34%),linear-gradient(112deg,#422078 0%,#8e2bad 54%,#b64478 100%);color:#fff;text-align:left}
+.gift-room-panel .gift-panel-featured:active{transform:scale(.99)}
+.gift-room-panel .gift-panel-featured-art{position:relative;width:56px;height:56px;display:grid;place-items:center;flex:0 0 56px;border-radius:13px;background:rgba(11,7,19,.29)}
+.gift-room-panel .gift-panel-featured.is-selected{border-color:#e0a0ff;box-shadow:0 0 0 2px rgba(191,104,255,.32),0 0 20px rgba(174,74,255,.3)}
+.gift-room-panel .gift-panel-featured-art img,.gift-room-panel .gift-panel-featured-art svg{max-width:50px;max-height:50px;object-fit:contain}
+.gift-room-panel .gift-panel-featured-copy{min-width:0;display:grid;gap:2px}
+.gift-room-panel .gift-panel-featured-kicker{color:#f6d2ff;font-size:8px;font-weight:850;letter-spacing:.09em}
+.gift-room-panel .gift-panel-featured-copy strong{overflow:hidden;color:#fff;font-size:13px;font-weight:900;text-overflow:ellipsis;white-space:nowrap}
+.gift-room-panel .gift-panel-featured-copy>span:last-child{color:#f1e5f6;font-size:9px}
+.gift-room-panel .gift-panel-featured-price{margin-left:auto;align-self:flex-end;color:#ffe2a0;font-size:10px;font-weight:900;white-space:nowrap}
+.gift-room-panel .gift-panel-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.gift-room-panel .gift-panel-card,.gift-room-panel .gift-panel-owned-card{position:relative;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px 7px;border:1px solid rgba(255,255,255,.065);border-radius:13px;background:linear-gradient(155deg,rgba(255,255,255,.065),rgba(255,255,255,.025));color:#fff;text-align:center}
+.gift-room-panel .gift-panel-card{cursor:pointer}
+.gift-room-panel .gift-panel-card.is-selected{border-color:#c16dff;background:linear-gradient(145deg,rgba(157,67,243,.27),rgba(88,38,133,.2));box-shadow:0 0 0 1px rgba(196,99,255,.25),0 0 16px rgba(135,63,207,.2)}
+.gift-room-panel .gift-panel-card-art{position:relative;width:100%;height:58px;display:grid;place-items:center;overflow:hidden;border-radius:10px;background:radial-gradient(circle at 50% 35%,rgba(173,105,255,.16),transparent 65%)}
+.gift-room-panel .gift-panel-card-art>img,.gift-room-panel .gift-panel-card-art>svg{width:50px!important;height:50px!important;max-width:100%;max-height:100%;object-fit:contain}
+.gift-room-panel .gift-panel-card-art .spirit-gift-icon{width:55px!important;height:55px!important}
+.gift-room-panel .gift-panel-card-name{display:block;width:100%;min-height:24px;overflow:hidden;color:#fff;font-size:10px;font-weight:800;line-height:1.16;text-overflow:ellipsis}
+.gift-room-panel .gift-panel-card :is(.coin-amount,.coin-balance,.sc-coin-amount){display:inline-flex;align-items:center;gap:3px;color:#ffe4a2;font-size:10px;font-weight:850;white-space:nowrap}
+.gift-room-panel .gift-panel-card-quantity{position:absolute;top:3px;right:4px;min-width:23px;padding:3px 5px;border:1px solid rgba(255,255,255,.25);border-radius:999px;background:linear-gradient(125deg,#7b36e7,#c039bb);color:#fff;font-size:9px;font-weight:900;line-height:1;text-align:center}
+.gift-room-panel .gift-panel-3d-tag{position:absolute;left:4px;top:4px;padding:3px 5px;border-radius:5px;background:rgba(103,74,201,.92);color:#fff;font-size:8px;font-weight:900}
+.gift-room-panel .gift-panel-page-indicator{display:flex;justify-content:center;gap:5px;padding:8px 0 2px}
+.gift-room-panel .gift-panel-page-indicator button{width:6px;height:6px;padding:0;border:0;border-radius:99px;background:rgba(255,255,255,.25)}
+.gift-room-panel .gift-panel-page-indicator button.is-active{width:16px;background:#c66fff}
+.gift-room-panel .gift-panel-empty,.gift-room-panel .gift-panel-load-error{display:grid;justify-items:center;gap:8px;padding:28px 12px;color:#bdb5ce;text-align:center}
+.gift-room-panel .gift-panel-empty p,.gift-room-panel .gift-panel-load-error p{margin:0;color:#c9c2d2;font-size:12px}
+.gift-room-panel .gift-panel-empty svg{color:#b86bfa}
+.gift-room-panel .gift-panel-skeletons{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:8px 0}
+.gift-room-panel .gift-panel-skeletons div{height:94px;border-radius:12px;background:linear-gradient(90deg,#211b2d,#332544,#211b2d);background-size:200% 100%;animation:gift-panel-shimmer 1.25s linear infinite}
+@keyframes gift-panel-shimmer{to{background-position:-200% 0}}
+.gift-room-panel .gift-panel-send-zone{flex:0 0 auto;padding-top:6px;border-top:1px solid rgba(255,255,255,.09);background:linear-gradient(180deg,rgba(18,14,29,.7),#0b0912 22%)}
+.gift-room-panel .gift-panel-total{margin:0 0 5px;color:#e4dbea;font-size:10px;font-weight:750;line-height:1.35}
+.gift-room-panel .gift-panel-total .coin-amount,.gift-room-panel .gift-panel-total .coin-balance,.gift-room-panel .gift-panel-total .sc-coin-amount{color:#ffe1a0;font-weight:900}
+.gift-room-panel .gift-panel-message{margin:0 0 6px;padding:5px 8px;border-radius:8px;font-size:10px;line-height:1.3}
+.gift-room-panel .gift-panel-message.is-error{border:1px solid rgba(255,99,130,.3);background:rgba(150,35,68,.18);color:#ffcad5}
+.gift-room-panel .gift-panel-message.is-success{border:1px solid rgba(124,230,169,.25);background:rgba(43,124,88,.16);color:#aff5d0}
+.gift-room-panel .gift-panel-message a{color:#d4a0ff;font-weight:850}
+.gift-room-panel .gift-panel-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:46px}
+.gift-room-panel .gift-panel-wallet{min-width:0;display:grid;grid-template-columns:auto auto;align-items:center;justify-content:start;column-gap:7px;row-gap:1px}
+.gift-room-panel .gift-panel-wallet-balance{grid-column:1/-1;min-width:0;overflow:hidden;color:#ffe2a0;font-size:12px;font-weight:900;text-overflow:ellipsis;white-space:nowrap}
+.gift-room-panel .gift-panel-wallet-balance .coin-amount,.gift-room-panel .gift-panel-wallet-balance .coin-balance,.gift-room-panel .gift-panel-wallet-balance .sc-coin-amount{display:inline-flex;align-items:center;gap:4px;color:#ffe2a0}
+.gift-room-panel .gift-panel-recharge{color:#dfb1ff;font-size:9px;font-weight:850;text-decoration:none;white-space:nowrap}
+.gift-room-panel .gift-panel-points{display:inline-flex;align-items:center;gap:3px;color:#a8a0b5;font-size:9px;font-weight:750;white-space:nowrap}
+.gift-room-panel .gift-panel-points svg{color:#d8b24a}
+.gift-room-panel .gift-panel-points small{font-size:8px}
+.gift-room-panel .gift-panel-send-controls{display:flex;align-items:stretch;gap:5px;flex:0 0 auto}
+.gift-room-panel .gift-panel-quantity{position:relative;width:57px;min-height:38px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(185,131,255,.44);border-radius:11px;background:#21172f;color:#fff}
+.gift-room-panel .gift-panel-quantity select{width:100%;height:100%;padding:0 18px 0 8px;border:0;outline:0;appearance:none;background:transparent;color:#fff;font-size:12px;font-weight:850;text-align:center}
+.gift-room-panel .gift-panel-quantity option{background:#191222;color:#fff}
+.gift-room-panel .gift-panel-quantity svg{position:absolute;right:5px;pointer-events:none;color:#d7b6ff}
+.gift-room-panel .gift-panel-send{min-width:72px;min-height:38px;padding:0 16px;border:1px solid transparent;border-radius:11px;background:linear-gradient(115deg,#7634ec,#c02bbd);box-shadow:0 5px 16px rgba(133,42,194,.23);color:#fff;font-size:12px;font-weight:900}
+.gift-room-panel .gift-panel-send:disabled{opacity:.45;box-shadow:none}
+.gift-room-panel :is(.gift-panel-all,.gift-panel-person,.gift-panel-category,.gift-panel-featured,.gift-panel-card):disabled{cursor:not-allowed;opacity:.65}
+.gift-room-panel .gift-panel-secondary{padding:7px 12px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:#251a38;color:#fff;font-weight:800}
+@media(max-width:370px){.gift-framework.gift-room-panel{padding-right:10px;padding-left:10px}.gift-room-panel .gift-panel-footer{gap:5px}.gift-room-panel .gift-panel-wallet{column-gap:4px}.gift-room-panel .gift-panel-send{min-width:62px;padding:0 11px}}
+@media(prefers-reduced-motion:reduce){.gift-room-panel .gift-panel-card,.gift-room-panel .gift-panel-featured,.gift-room-panel .gift-panel-icon-button,.gift-room-panel .gift-panel-profile-button{transition:none}.gift-room-panel .gift-panel-skeletons div{animation:none}}

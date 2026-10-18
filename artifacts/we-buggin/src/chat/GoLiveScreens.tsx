@@ -211,37 +211,12 @@ function GifterAvatar({ username, name, credits }: { username: string; name: str
 
 function liveGiftRecipients(
   room: HostLiveSnapshot["room"],
-  ownUsername: string,
-  ownDisplayName: string,
   hostUsername: string,
   hostDisplayName: string,
   blocked: ReadonlySet<string>,
 ) {
-  if (!room) return [];
-  const own = ownUsername.toLowerCase();
-  const participants = [...room.remoteParticipants.values()].flatMap(participant => {
-    let username = participant.identity === "host" ? hostUsername : "";
-    if (participant.metadata) {
-      try {
-        const metadata = JSON.parse(participant.metadata) as { username?: unknown };
-        if (typeof metadata.username === "string") username = metadata.username;
-      } catch { /* Ignore malformed participant metadata. */ }
-    }
-    if (!username || username.toLowerCase() === own || blocked.has(username.toLowerCase())) return [];
-    return [{
-      username,
-      displayName: participant.identity === "host"
-        ? hostDisplayName
-        : participant.name?.trim() || username,
-    }];
-  });
-  if (ownUsername && !blocked.has(own)) {
-    participants.unshift({
-      username: ownUsername,
-      displayName: ownDisplayName || ownUsername,
-    });
-  }
-  return participants;
+  if (!room || !hostUsername || blocked.has(hostUsername.toLowerCase())) return [];
+  return [{ username: hostUsername, displayName: hostDisplayName || hostUsername, isHost: true }];
 }
 
 function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeave, ownUsername }: {
@@ -311,7 +286,7 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
   const myName = ownProfile.data?.profile.username ?? ownUsername;
   const myDisplayName = ownProfile.data?.profile.displayName || myName;
   const giftRoom = hostMode ? hostState?.room ?? null : viewerState?.room ?? null;
-  const giftRecipients = liveGiftRecipients(giftRoom, myName, myDisplayName, hostUsername, displayName, blockedLower);
+  const giftRecipients = liveGiftRecipients(giftRoom, hostUsername, displayName, blockedLower);
 
   const markCameraBlocked = useCallback(() => setCameraBlocked(true), []);
   const retryCameraPlayback = useCallback(async () => {
