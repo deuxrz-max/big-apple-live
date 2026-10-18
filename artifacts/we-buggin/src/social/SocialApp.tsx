@@ -41,7 +41,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
       document.title = path === '/community/moderation' ? 'Moderation — Streamtalk'
         : path === '/community/reports' ? 'Safety reports — Streamtalk'
         : path === '/community/gift-studio' ? 'Gift Studio — Streamtalk'
-        : path === '/community/messages' ? 'Messages — Streamtalk'
+        : isMessagesPath ? 'Messages — Streamtalk'
           : path === '/community/favorites' ? 'Following — Streamtalk'
             : 'People — Streamtalk';
       return () => { document.title = 'Streamtalk'; };
@@ -50,7 +50,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
   const bare = path.startsWith('/community/people/') || path.startsWith('/community/bots/');
   const needsIdentity = errStatus(me.error) === 409;
   return (
-      <div className={`beam-app sc${bare ? ' sc-profile-screen' : ''}${path === '/community/messages' ? ' sc-inbox-screen' : path === '/community/favorites' ? ' sc-following-screen' : path === '/community/moderation' ? ' sc-moderation-screen' : path === '/community/reports' ? ' sc-reports-screen' : ''}`}>
+      <div className={`beam-app sc${bare ? ' sc-profile-screen' : ''}${isMessagesPath ? ' sc-inbox-screen' : path === '/community/favorites' ? ' sc-following-screen' : path === '/community/moderation' ? ' sc-moderation-screen' : path === '/community/reports' ? ' sc-reports-screen' : ''}`}>
       <div className="bm-bg" aria-hidden="true"><i /><i /><i /></div>
       {!bare && <nav className="bm-nav">
         <Wordmark href="/home" className="bm-logo" />

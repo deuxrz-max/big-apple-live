@@ -61,13 +61,17 @@ export function InboxPage() {
                 </span>
                 <span className="ib-mid">
                   <span className="ib-heading">
-                     <span className="ib-name"><BadgeMark id={c.badgeId} label={c.badgeName} imageUrl={c.badgeImage} size={18} compact />{c.displayName || c.username}{c.blocked && <em className="ib-blocked">Blocked</em>}</span>
-                    {unread && <b className="ib-count ib-count-row" aria-label={`${c.unreadCount} unread`}>{c.unreadCount}</b>}
+                    <span className="ib-name">
+                      <BadgeMark id={c.badgeId} label={c.badgeName} imageUrl={c.badgeImage} size={16} compact />
+                      <span className="ib-name-text">{c.displayName?.trim() || c.username}</span>
+                      {c.blocked && <em className="ib-blocked">Blocked</em>}
+                    </span>
                   </span>
                   <span className="ib-prev">{c.lastMessageFromMe ? 'You: ' : ''}{c.lastMessage}</span>
                 </span>
                 <span className="ib-side">
                   <time className="ib-time" dateTime={c.updatedAt}>{stamp(c.updatedAt)}</time>
+                  {unread && <b className="ib-count ib-count-row" aria-label={`${c.unreadCount} unread`}>{c.unreadCount}</b>}
                 </span>
               </Link>
             </li>
