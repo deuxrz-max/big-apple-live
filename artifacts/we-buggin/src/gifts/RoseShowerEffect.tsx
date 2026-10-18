@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { ShinyName } from '@/components/ShinyName';
 
 type Petal = {
   angle: number;
@@ -184,7 +185,12 @@ function drawSpark(ctx: CanvasRenderingContext2D, x: number, y: number, size: nu
   ctx.restore();
 }
 
-export function RoseShowerEffect({ senderName, onFinish }: { senderName: string; onFinish: () => void }) {
+export function RoseShowerEffect({ senderName, senderNameColor, senderNameTierIndex, onFinish }: {
+  senderName: string;
+  senderNameColor?: string;
+  senderNameTierIndex?: number;
+  onFinish: () => void;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const finishRef = useRef(onFinish);
   finishRef.current = onFinish;
@@ -308,6 +314,6 @@ export function RoseShowerEffect({ senderName, onFinish }: { senderName: string;
     data-testid="big-tier-rose-shower-animation"
   >
     <canvas ref={canvasRef} className="rose-shower-canvas" aria-hidden="true" />
-    <span className="big-tier-gift-banner">{senderName} sent Rose Shower 🌹</span>
+    <span className="big-tier-gift-banner"><ShinyName displayNameColor={senderNameColor} displayNameTierIndex={senderNameTierIndex}>{senderName}</ShinyName> sent Rose Shower 🌹</span>
   </div>, document.body);
 }

@@ -39,11 +39,15 @@ const prefersAnimatedImage = () =>
 export function GiftAnimationPlayer({
   giftId,
   senderName,
+  senderNameColor,
+  senderNameTierIndex,
   onFinish,
   mediaOverride,
 }: {
   giftId: GiftStudioGiftId;
   senderName: string;
+  senderNameColor?: string;
+  senderNameTierIndex?: number;
   onFinish: () => void;
   mediaOverride?: GiftStudioPlaybackMedia;
 }) {
@@ -88,7 +92,8 @@ export function GiftAnimationPlayer({
     return <CatalogIconGiftAnimation giftId={giftId} onFinish={onFinish} />;
   }
   if (giftId === "cosmic-encore") return <CosmicEncoreAnimation onFinish={onFinish} />;
-  if (isBigTierGiftId(giftId)) return <BigTierGiftAnimation giftId={giftId} senderName={senderName} onFinish={onFinish} />;
+  if (isBigTierGiftId(giftId)) return <BigTierGiftAnimation giftId={giftId} senderName={senderName}
+    senderNameColor={senderNameColor} senderNameTierIndex={senderNameTierIndex} onFinish={onFinish} />;
   if (giftId === "moonfox") return <MoonfoxAnimation onFinish={onFinish} />;
   return <SpiritAnimation onFinish={onFinish} />;
 }

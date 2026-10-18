@@ -7,6 +7,8 @@
  */
 import type { EntranceEffectSettings } from './entranceEffectSettings';
 import type { MyOwnedBadge } from './myOwnedBadge';
+import type { NameColorProgress } from './nameColorProgress';
+import type { NameColorTestState } from './nameColorTestState';
 import type { SocialGift } from './socialGift';
 import type { SocialMeBadgeExpirations } from './socialMeBadgeExpirations';
 import type { SocialMeCountriesItem } from './socialMeCountriesItem';
@@ -16,6 +18,8 @@ import type { SocialProduct } from './socialProduct';
 import type { SocialWallet } from './socialWallet';
 
 export interface SocialMe {
+  nameColorProgress: NameColorProgress;
+  nameColorTest: NameColorTestState;
   entranceEffects: EntranceEffectSettings;
   badgeExpirations?: SocialMeBadgeExpirations;
   badges: MyOwnedBadge[];

@@ -13,6 +13,7 @@ import {
   getGetSocialInboxQueryKey, useGetSocialInbox,
 } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
+import { ShinyName } from '@/components/ShinyName';
 import { Wordmark } from '@/components/brand';
 import { errMessage } from '@/lib/errors';
 import { PhotoReviewQueue } from './PhotoReviewQueue';
@@ -81,7 +82,8 @@ function CreditsChip() {
   const me = useGetSocialMe();
   if (!me.data) return null;
   return <Link href="/community/rewards" className="st-credits" data-testid="text-credits">
-    {me.data.wallet.unlimited ? 'Unlimited test credits' : `${me.data.wallet.balance.toLocaleString()} credits`}
+    <Coins size={13} aria-hidden="true" style={{ color: '#f5cb8d' }} />
+    {me.data.wallet.unlimited ? 'Unlimited test coins' : `${me.data.wallet.balance.toLocaleString()} coins`}
   </Link>;
 }
 
@@ -172,8 +174,8 @@ export function ChatDirectory() {
               {socialMe.data?.wallet.unlimited
                 ? <><i aria-hidden="true" />Unlimited</>
                 : socialMe.data
-                  ? <><Coins size={13} aria-hidden="true" />{socialMe.data.wallet.balance.toLocaleString()} credits</>
-                  : socialMe.isLoading ? '…' : 'Credits'}
+                  ? <><Coins size={13} aria-hidden="true" style={{ color: '#f5cb8d' }} />{socialMe.data.wallet.balance.toLocaleString()} coins</>
+                  : socialMe.isLoading ? '…' : 'Coins'}
             </Link>
             <details className="st-dir-menu st-home-profile-menu">
               <summary className="st-dir-avatar st-home-avatar" aria-label={`Open profile menu${me.data?.profile?.username ? ` for ${me.data.profile.username}` : ''}`} data-testid="button-home-profile-menu">
@@ -233,7 +235,7 @@ export function ChatDirectory() {
                   {liveCreators.map((stream) => (
                     <Link href={`/live/${stream.streamId}`} className="st-dir-live-stream" key={stream.streamId} data-testid={`link-home-live-${stream.streamId}`}>
                       <span className="st-dir-live-stream-icon"><Radio size={17} /></span>
-                      <span className="st-dir-live-stream-copy"><strong>{stream.displayName}</strong><small><Users size={13} /> {stream.viewerCount} watching</small></span>
+                      <span className="st-dir-live-stream-copy"><strong><ShinyName displayNameColor={stream.displayNameColor} displayNameTierIndex={stream.displayNameTierIndex}>{stream.displayName}</ShinyName></strong><small><Users size={13} /> {stream.viewerCount} watching</small></span>
                       <b>Watch</b>
                     </Link>
                   ))}
@@ -571,7 +573,7 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
                       </article>
                     ))}
                   </div>
-                  : <p className="ch-my-badges-empty">No badges yet. Buy credits to earn one.</p>}
+                  : <p className="ch-my-badges-empty">No badges yet. Buy coins to earn one.</p>}
               {badgeMessage && <p className={equipBadge.isError ? 'ch-fe' : 'ch-my-badge-status'} role={equipBadge.isError ? 'alert' : 'status'}>{badgeMessage}</p>}
             </section>}
             {upErr && <div className="ch-err" role="alert">{upErr}</div>}

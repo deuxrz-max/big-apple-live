@@ -24,6 +24,8 @@ export type RoomEntranceEffectEvent = {
   effectId: string;
   participantId: string;
   displayName: string;
+  displayNameColor: string;
+  displayNameTierIndex: number;
   effectName?: string;
   badgeImage?: string;
   assetFolder?: string;
@@ -32,7 +34,7 @@ export type RoomEntranceEffectEvent = {
   durationMs: number;
 };
 type ActiveSession = { participant: Participant; lastSeenAt: number; accountId?: string; capExempt?: boolean };
-type AccountIdentity = { accountId: string; identity: EmojiIdentity; photoUrl?: string | null; capExempt?: boolean; displayNameColor?: string };
+type AccountIdentity = { accountId: string; identity: EmojiIdentity; photoUrl?: string | null; capExempt?: boolean; displayNameColor?: string; displayNameTierIndex?: number };
 function copyParticipant(participant: Participant): Participant {
   return {
     ...participant, joinedAt: new Date(participant.joinedAt),
@@ -237,6 +239,8 @@ export class RoomStore {
       effectId,
       participantId: participant.participantId,
       displayName: participant.displayName,
+      displayNameColor: participant.displayNameColor ?? "#FFFFFF",
+      displayNameTierIndex: participant.displayNameTierIndex ?? 0,
       ...(tier ? { effectName: tier.name, badgeImage: tier.badgeImage, assetFolder: tier.entranceEffectFolder } : {}),
       ...(custom?.studioVersionId ? { studioVersionId: custom.studioVersionId } : {}),
       ...(custom?.effectName ? { effectName: custom.effectName } : {}),
@@ -365,14 +369,17 @@ export class RoomStore {
     }
   }
 
-  /** Update existing room labels after a successful gift changes a member's tier. */
-  updateAccountNameColor(accountId: string, displayNameColor: string): void {
+  /** Update active room labels after a confirmed purchase or owner preview changes a name tier. */
+  updateAccountNameColor(accountId: string, displayNameColor: string, displayNameTierIndex: number): void {
     for (const room of this.rooms.values()) {
       this.expire(room);
       let changed = false;
       for (const session of room.sessions.values()) {
-        if (session.accountId !== accountId || session.participant.displayNameColor === displayNameColor) continue;
+        if (session.accountId !== accountId
+          || (session.participant.displayNameColor === displayNameColor
+            && session.participant.displayNameTierIndex === displayNameTierIndex)) continue;
         session.participant.displayNameColor = displayNameColor;
+        session.participant.displayNameTierIndex = displayNameTierIndex;
         changed = true;
       }
       if (changed) this.broadcast(room);
@@ -400,6 +407,7 @@ export class RoomStore {
         participantId,
         displayName,
         displayNameColor: account?.displayNameColor ?? "#FFFFFF",
+        displayNameTierIndex: account?.displayNameTierIndex ?? 0,
         photoUrl: room.community ? null : account?.photoUrl ?? null,
         joinedAt: new Date(this.now()),
         identity: account ? { ...account.identity } : null,

@@ -36,7 +36,7 @@ import {
 } from "../lib/live-stream-policy";
 import { pairBlocked } from "../lib/social/core";
 import { visibleMonthlyPurchaseBadgeSummary } from "../lib/social/monthly-credit-badges";
-import { giftNameColorsForAccounts } from "../lib/social/gift-name-color-data";
+import { nameColorProfileForAccount, nameColorProfilesForAccounts } from "../lib/social/gift-name-color-data";
 import { accountId, sameOrigin } from "./identity";
 import { logger } from "../lib/logger";
 
@@ -110,6 +110,7 @@ router.get("/account/live-streams", async (req, res) => {
     const rooms = await liveKitBeamService.listRooms();
     const liveRooms = rooms.filter(room => LIVE_ROOM_RE.test(room.name));
     const owners = await streamOwnerProfiles();
+    const nameColors = await nameColorProfilesForAccounts([...owners.values()].map(owner => owner.accountId));
     const streams = (await Promise.all(liveRooms.map(async room => {
       const match = LIVE_ROOM_RE.exec(room.name);
       if (!match) return null;
@@ -134,6 +135,8 @@ router.get("/account/live-streams", async (req, res) => {
         streamId,
         displayName: host.name?.trim() || "Live creator",
         username: usernameFromMetadata(host.metadata) ?? owner.username,
+        displayNameColor: nameColors.get(owner.accountId)?.color ?? "#FFFFFF",
+        displayNameTierIndex: nameColors.get(owner.accountId)?.tierIndex ?? 0,
         viewerCount: Math.max(0, participants.length - 1),
       };
     }))).filter((stream): stream is NonNullable<typeof stream> => stream !== null);
@@ -197,8 +200,10 @@ router.post("/account/live-streams", async (req, res) => {
         }
       }
       liveStreamChatHub.start(streamId);
+      const nameColor = await nameColorProfileForAccount(id);
       res.set("Cache-Control", "no-store").json(StartLiveStreamResponse.parse({
         streamId, ...token, displayName, username: profile.username,
+        displayNameColor: nameColor.color, displayNameTierIndex: nameColor.tierIndex,
       }));
     } catch (failure) {
       clearLiveStreamStart(id);
@@ -261,11 +266,13 @@ router.post("/account/live-streams/:streamId/rejoin", async (req, res) => {
       throw new RoomError(404, "That stream has already ended.");
     }
     const displayName = profile.displayName?.trim() || profile.username;
+    const nameColor = await nameColorProfileForAccount(id);
     const token = await liveKitBeamService.createLiveStreamToken({
       roomName, identity: "host", displayName, username: profile.username, role: "host",
     });
     res.set("Cache-Control", "no-store").json(StartLiveStreamResponse.parse({
       streamId: params.data.streamId, ...token, displayName, username: profile.username,
+      displayNameColor: nameColor.color, displayNameTierIndex: nameColor.tierIndex,
     }));
   } catch (failure) {
     throw publicLiveKitFailure(failure);
@@ -293,12 +300,16 @@ router.post("/account/live-streams/:streamId/token", async (req, res) => {
     const host = participants.find(participant => participant.identity === "host");
     if (!host) throw new RoomError(404, "This livestream is no longer available.");
     const hostUsername = await streamUsername(params.data.streamId, host.metadata);
+    const hostOwner = (await streamOwnerProfiles()).get(params.data.streamId);
+    const hostNameColor = hostOwner ? await nameColorProfileForAccount(hostOwner.accountId) : null;
     const token = await liveKitBeamService.createLiveStreamToken({
       roomName, identity: `viewer-${liveStreamIdForAccount(id)}`,
       displayName: profile.displayName?.trim() || profile.username, username: profile.username, role: "viewer",
     });
     res.set("Cache-Control", "no-store").json(JoinLiveStreamResponse.parse({
       ...token, displayName: host.name?.trim() || "Live creator", username: hostUsername,
+      displayNameColor: hostNameColor?.color ?? "#FFFFFF",
+      displayNameTierIndex: hostNameColor?.tierIndex ?? 0,
       viewerUsername: profile.username,
     }));
   } catch (failure) {
@@ -369,7 +380,7 @@ router.post("/account/live-streams/:streamId/chat", async (req, res) => {
   const body = input.data.text.trim();
   if (!body || body.length > 280) throw new RoomError(400, "Write 1–280 characters");
   const [nameColors, equippedBadge] = await Promise.all([
-    giftNameColorsForAccounts([id]),
+    nameColorProfilesForAccounts([id]),
     visibleMonthlyPurchaseBadgeSummary(id),
   ]);
   const message = liveStreamChatHub.publish({
@@ -377,7 +388,8 @@ router.post("/account/live-streams/:streamId/chat", async (req, res) => {
     accountId: id,
     username: profile.username,
     displayName: profile.displayName?.trim() || profile.username,
-    displayNameColor: nameColors.get(id) ?? "#FFFFFF",
+    displayNameColor: nameColors.get(id)?.color ?? "#FFFFFF",
+    displayNameTierIndex: nameColors.get(id)?.tierIndex ?? 0,
     badgeName: equippedBadge?.tier.name ?? null,
     badgeImage: equippedBadge?.tier.badgeImage ?? null,
     text: body,

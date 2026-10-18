@@ -1,6 +1,8 @@
-export const GIFT_NAME_COLOR_STEP_CREDITS = 10_000;
+export const NAME_COLOR_STEP_COINS = 10_000;
 
-export const GIFT_NAME_COLOR_TIERS = [
+// Preserve the existing color sequence and 10,000-coin thresholds. Keep edits
+// to the name-color ladder centralized here.
+export const NAME_COLOR_TIERS = [
   { name: "Pure White", color: "#FFFFFF" },
   { name: "Light Gray", color: "#E4E4E4" },
   { name: "Silver", color: "#C0C0C0" },
@@ -22,15 +24,34 @@ export const GIFT_NAME_COLOR_TIERS = [
   { name: "Electric Blue", color: "#09B0EC" },
 ] as const;
 
-export function giftNameTierForSentCredits(sentCredits: number) {
-  const safeCredits = Number.isFinite(sentCredits) ? Math.max(0, Math.floor(sentCredits)) : 0;
-  const index = Math.min(
-    Math.floor(safeCredits / GIFT_NAME_COLOR_STEP_CREDITS),
-    GIFT_NAME_COLOR_TIERS.length - 1,
-  );
-  return GIFT_NAME_COLOR_TIERS[index]!;
-}
+export type NameColorTierSummary = {
+  tierIndex: number;
+  tierName: string;
+  color: string;
+  lifetimeCoinsPurchased: number;
+  coinsToNextTier: number;
+  nextTierName: string | null;
+  nextTierThreshold: number | null;
+};
 
-export function giftNameColorForSentCredits(sentCredits: number) {
-  return giftNameTierForSentCredits(sentCredits).color;
+export function nameColorTierForLifetimeCoins(lifetimeCoinsPurchased: number): NameColorTierSummary {
+  const safeCoins = Number.isFinite(lifetimeCoinsPurchased)
+    ? Math.max(0, Math.floor(lifetimeCoinsPurchased))
+    : 0;
+  const index = Math.min(
+    Math.floor(safeCoins / NAME_COLOR_STEP_COINS),
+    NAME_COLOR_TIERS.length - 1,
+  );
+  const tier = NAME_COLOR_TIERS[index]!;
+  const nextTier = NAME_COLOR_TIERS[index + 1];
+  const nextTierThreshold = nextTier ? (index + 1) * NAME_COLOR_STEP_COINS : null;
+  return {
+    tierIndex: index,
+    tierName: tier.name,
+    color: tier.color,
+    lifetimeCoinsPurchased: safeCoins,
+    coinsToNextTier: nextTierThreshold === null ? 0 : Math.max(0, nextTierThreshold - safeCoins),
+    nextTierName: nextTier?.name ?? null,
+    nextTierThreshold,
+  };
 }

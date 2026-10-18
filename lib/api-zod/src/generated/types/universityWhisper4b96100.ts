@@ -13,6 +13,11 @@ export interface UniversityWhisper4b96100 {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex?: number;
   /** @nullable */
   badgeId: string | null;
   /** @nullable */

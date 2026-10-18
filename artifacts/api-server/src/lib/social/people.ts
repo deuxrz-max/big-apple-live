@@ -8,6 +8,8 @@ import { roomStore } from "../room-store";
 import { accountBadgeState, myBadgeViews, visibleMonthlyPurchaseBadgeSummaries } from "./monthly-credit-badges";
 import { getMyEntranceEffectSettings } from "./entrance-effect-preferences";
 import { giftCatalogWithActiveNames } from "../gift-studio-catalog";
+import { nameColorProfileForAccount, nameColorPurchaseTotalOverride } from "./gift-name-color-data";
+import { hasOwnerTierTestAccess } from "./owner-entrance-effects-policy";
 
 export async function getMe(id: string) {
   const profile = await requireAccount(id);
@@ -22,7 +24,21 @@ export async function getMe(id: string) {
     giftCatalogWithActiveNames(),
     getMyEntranceEffectSettings(id),
   ]);
-  return { profile: await person(id, profile, undefined, true), wallet: await wallet(id, db, profile.username), inventory: giftsOwned.map(g => g.giftId),
+  const nameColor = await nameColorProfileForAccount(id);
+  return { profile: await person(id, profile, undefined, true, undefined, nameColor),
+    nameColorProgress: {
+      tierName: nameColor.tierName,
+      tierIndex: nameColor.tierIndex,
+      lifetimeCoinsPurchased: nameColor.lifetimeCoinsPurchased,
+      nextTierName: nameColor.nextTierName,
+      nextTierThreshold: nameColor.nextTierThreshold,
+      coinsToNextTier: nameColor.coinsToNextTier,
+    },
+    nameColorTest: {
+      enabled: hasOwnerTierTestAccess(profile),
+      overrideCoins: hasOwnerTierTestAccess(profile) ? nameColorPurchaseTotalOverride(id) : null,
+    },
+    wallet: await wallet(id, db, profile.username), inventory: giftsOwned.map(g => g.giftId),
     giftQuantities: Object.fromEntries(giftsOwned.map(g => [g.giftId, g.quantity])),
     badges,
     equippedBadgeId: badgeState.equippedBadgeId,

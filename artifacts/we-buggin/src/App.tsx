@@ -4,6 +4,7 @@ import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { Link, Redirect, Route, Switch, useLocation, useParams, Router as WouterRouter } from 'wouter';
+import { getGetSocialMeQueryKey, useGetSocialMe } from '@workspace/api-client-react';
 import { ErrorBoundary, type ErrorFallbackProps } from '@/components/error-boundary';
 import { Wordmark } from '@/components/brand';
 import { BottomNavigation } from '@/components/bottom-navigation';
@@ -16,6 +17,8 @@ import { EmailSignUp } from '@/components/email-signup';
 import '@/chat/chat.css';
 import { OwnProfile } from '@/profile/OwnProfile';
 import '@/profile/profile.css';
+import { StorePage } from '@/store/StorePage';
+import { ShinyName } from '@/components/ShinyName';
 import SocialApp from '@/social/SocialApp';
 import { SignInArtwork } from '@/components/sign-in-artwork';
 import '@/theme.css';
@@ -148,6 +151,59 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
+function NameColorLevelUpToast() {
+  const { isLoaded, isSignedIn, user } = useUser();
+  const userId = user?.id ?? null;
+  const me = useGetSocialMe({
+    query: {
+      queryKey: getGetSocialMeQueryKey(),
+      enabled: isLoaded && Boolean(isSignedIn),
+      refetchInterval: 20_000,
+      refetchOnWindowFocus: true,
+    },
+  });
+  const lastTier = useRef<{ userId: string; tierIndex: number } | null>(null);
+  const [toast, setToast] = useState<{
+    displayName: string;
+    color: string;
+    tierIndex: number;
+    tierName: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!userId || !me.data) {
+      lastTier.current = null;
+      return;
+    }
+    const tierIndex = me.data.nameColorProgress.tierIndex;
+    if (lastTier.current?.userId === userId && tierIndex > lastTier.current.tierIndex) {
+      setToast({
+        displayName: me.data.profile.displayName || me.data.profile.username,
+        color: me.data.profile.displayNameColor ?? "#FFFFFF",
+        tierIndex,
+        tierName: me.data.nameColorProgress.tierName,
+      });
+    }
+    lastTier.current = { userId, tierIndex };
+  }, [userId, me.data]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timeout = window.setTimeout(() => setToast(null), 5_000);
+    return () => window.clearTimeout(timeout);
+  }, [toast]);
+
+  if (!toast) return null;
+  return (
+    <div className="st-name-tier-toast" role="status" aria-live="polite">
+      <span>Your name just leveled up to {toast.tierName}!</span>
+      <ShinyName displayNameColor={toast.color} displayNameTierIndex={toast.tierIndex}>
+        {toast.displayName}
+      </ShinyName>
+    </div>
+  );
+}
+
 function HomeRedirect() {
   return (
     <>
@@ -173,6 +229,16 @@ function OwnProfileRoute() {
     <>
       <Show when="signed-in">{user && <ProfileGate><OwnProfile key={user.id} /></ProfileGate>}</Show>
       <Show when="signed-out"><Redirect to="/" /></Show>
+    </>
+  );
+}
+
+function StoreRoute() {
+  const { user } = useUser();
+  return (
+    <>
+      <Show when="signed-in">{user && <ProfileGate><StorePage key={user.id} /></ProfileGate>}</Show>
+      <Show when="signed-out"><Redirect to="/sign-in?redirect_url=%2Fuser-portal" /></Show>
     </>
   );
 }
@@ -342,6 +408,7 @@ function ClerkProviderWithRoutes() {
             <Route path="/live/:streamId" component={WatchLiveStreamRoute} />
             <Route path="/community" component={CommunityRoute} />
             <Route path="/community/*?" component={CommunityRoute} />
+            <Route path="/user-portal/store" component={StoreRoute} />
             <Route path="/user-portal" component={OwnProfileRoute} />
             <Route path="/user-portal/edit" component={Portal} />
             <Route path="/rooms/:roomId" component={RoomRoute} />
@@ -349,6 +416,7 @@ function ClerkProviderWithRoutes() {
           </Switch>
         </RoutedErrorBoundary></div>
         <BottomNavigation />
+        <NameColorLevelUpToast />
       </QueryClientProvider>
     </ClerkProvider>
   );

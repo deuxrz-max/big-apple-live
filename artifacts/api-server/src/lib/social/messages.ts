@@ -79,6 +79,7 @@ export async function inbox(id: string) {
     const p = await person(id, profile, undefined, false, badgeSummaries.get(other) ?? null);
     conversations.push({ username: p.username, displayName: p.displayName, photoUrl: p.photoUrl,
       displayNameColor: p.displayNameColor,
+      displayNameTierIndex: p.displayNameTierIndex,
       badgeId: p.badgeId,
       badgeName: p.badgeName,
       badgeImage: p.badgeImage,

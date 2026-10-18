@@ -15,6 +15,11 @@ export interface ModeratorBotFlag4b96100 {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex?: number;
   text: string;
   reason: string;
   createdAt: Date;

@@ -28,6 +28,7 @@
 .pf-actions{display:flex;gap:10px;margin:16px 0}
 .pf-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:1;min-height:44px;padding:10px 18px;border-radius:999px;border:2px solid var(--pf-pink);background:transparent;color:var(--pf-pink);font:800 14px 'Montserrat',sans-serif;cursor:pointer;text-decoration:none}
 .pf-btn-fill{background:var(--pf-pink);color:#151518}
+.pf-btn-store{border-color:transparent;background:linear-gradient(110deg,#8e38e8,#bc36c9 54%,#e63c9a);color:#fff}
 .pf-btn:disabled{opacity:.5;cursor:not-allowed}
 .pf-h2{font-family:'Montserrat',system-ui,sans-serif!important;font-size:13px;line-height:1.35;letter-spacing:.08em;text-transform:uppercase;color:#bdbdc6;margin:22px 0 10px;font-weight:700}
 .pf-badges{list-style:none;padding:0;margin:0;display:flex;gap:14px;overflow-x:auto;padding-bottom:6px}
@@ -64,3 +65,18 @@
 .sc-profile-screen .sc-shell,.sc-profile-screen .sc-main{padding:0!important;margin:0!important;max-width:none!important;display:block}
 .sc-profile-screen .bm-bg{display:none}
 .sc-profile-screen .sc-main .pf-panel{display:block}
+.pf-name-tier{display:grid;gap:14px;padding:15px;margin:0 0 16px;background:var(--pf-bg);border:1px solid rgba(255,255,255,.13);border-radius:16px;color:#f7f4ff}
+.pf-name-tier-copy{display:grid;gap:5px;min-width:0}
+.pf-name-tier-kicker{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#c5c0d1;font-weight:800}
+.pf-name-tier-copy strong{font-size:18px;line-height:1.25;color:#fff}
+.pf-name-tier-copy>span:not(.pf-name-tier-kicker){font-size:14px;line-height:1.4;color:#f0edf7}
+.pf-name-tier-copy small,.pf-name-tier-test p{font-size:12px;line-height:1.45;color:#c5c0d1}
+.pf-name-tier-test{display:grid;gap:7px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12)}
+.pf-name-tier-test label{font-size:12px;font-weight:800;color:#fff}
+.pf-name-tier-test p{margin:0}
+.pf-name-tier-test-row{display:flex;gap:8px;align-items:stretch}
+.pf-name-tier-test-row input{width:min(145px,42%);min-width:0;border:1px solid #66517e;border-radius:11px;background:#15121d;color:#fff;padding:0 11px;font:700 14px 'Montserrat',system-ui,sans-serif}
+.pf-name-tier-test-row .pf-btn{flex:1;min-height:42px;justify-content:center}
+.pf-name-tier-reset{justify-self:start;border:0;background:transparent;color:#e5c8ff;text-decoration:underline;font:700 12px 'Montserrat',system-ui,sans-serif;padding:4px 0;cursor:pointer}
+.pf-name-tier-status{font-size:12px;color:#b9ff73}
+@media(max-width:380px){.pf-name-tier{padding:12px}.pf-name-tier-test-row{flex-wrap:wrap}.pf-name-tier-test-row input,.pf-name-tier-test-row .pf-btn{width:100%;flex:auto}}

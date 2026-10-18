@@ -17,8 +17,18 @@ export interface RoomGiftEvent {
   recipientName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   senderNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  senderNameTierIndex?: number;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   recipientNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  recipientNameTierIndex?: number;
   /** @nullable */
   senderBadgeId: string | null;
   /** @nullable */

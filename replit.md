@@ -9,6 +9,9 @@
   50-credit allocation in the immutable gift receipt, and increments the recipient's
   collectible bag quantity. Retry keys prevent duplicate charges, payouts or copies.
 - Bag copies are collectibles, not free resends; sending Spirit Pup always costs credits.
+- Store purchases of active gifts add a collectible copy to the buyer's bag; they do not
+  send a gift, create a gift receipt or grant free sends. Room/live sends keep their
+  existing recipient payouts and prices.
 - Additive gift receipts and bag tables only; no old data is rewritten or removed.
 - Public notices are isolated by university history identity and filtered for bilateral
   blocks; Ignore remains local to the viewer. Members poll gift events every two seconds.
@@ -120,18 +123,23 @@ reporting flow; there is no direct profile-report endpoint.
 Current color rule: page and section headings, the HTML Streamtalk wordmark,
 navigation labels and navigation icons use lime #A6FF00. The Home pill uses lime
 text, icon and outline; the active bottom tab retains a slightly lighter charcoal
-background. Personal display names stay plain white everywhere, including profile
-name headings, People lists, room senders and conversations; lime is for branding,
-page titles and navigation, not people's names. Keep typography, layout, body copy, message previews,
-timestamps, pink unread counts, pink action buttons, badges and logo artwork
-unchanged. This is a color-only owner-approved update, not a new theme or feature.
+background. Personal display names use the configured lifetime coin-purchase tier
+colors, with plain white for users with no confirmed purchases. Apply the shared
+name styling consistently in profiles, People lists, room/live chat, gifts,
+entrance notices, messages and leaderboards; lime remains for branding, page titles
+and navigation, not people's names. Spending coins never lowers a name tier.
+Keep typography, layout, body copy, message previews, timestamps, pink unread
+counts, pink action buttons, badges and logo artwork unchanged.
 
-Buy Credits is accessible from the owner's Me profile. Approved USD pricing is
-500 credits for $4.99, 1,000 for $8.99, and 2,500 for $17.99.
+User-facing currency is called coins throughout the app. Keep existing wallet,
+ledger, purchase-table, and API field names that say credits unchanged for
+compatibility; do not migrate or reset stored values without explicit approval.
+Buy Coins is accessible from the owner's Me profile. Existing approved USD pack
+values are 500, 1,000, and 2,500 coins at $4.99, $8.99, and $17.99 respectively.
 The store reads the existing persistent wallet; choosing a bundle only opens a
 review step. Checkout is unavailable until a payment provider and server-verified,
 idempotent fulfillment are configured. Never simulate payment success or award
-credits from a client click. No live charges are enabled; gift, bonus and cashout
+coins from a client click. No live charges are enabled; gift, bonus and cashout
 rules are outside this change.
 
 Gift framework: each university (including overflow) and Me can open a personal

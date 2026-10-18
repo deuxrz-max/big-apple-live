@@ -4,13 +4,14 @@ import { X } from 'lucide-react';
 import { Link } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGetSocialMe, getGetSocialMeQueryKey, sendSocialGift, getGetRoomGiftEventsQueryKey } from '@workspace/api-client-react';
-import { GiftIcon, refreshSocial, errMsg } from '@/social/common';
+import { CoinAmount, GiftIcon, refreshSocial, errMsg } from '@/social/common';
 import { RoomGiftIcon, cosmicEncoreMedia, type RoomGiftId } from './SpiritPup';
 import { bigTierGiftMedia } from './BigTierGift';
 import { ownedGiftItems } from './gift-items';
+import { ShinyName } from '@/components/ShinyName';
 import './gifts.css';
 
-type Recipient = { username: string; displayName: string; displayNameColor?: string } | null;
+type Recipient = { username: string; displayName: string; displayNameColor?: string; displayNameTierIndex?: number } | null;
 
 const FOCUSABLE = 'button:not([disabled]),[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
 const ROOM_GIFT_IDS = new Set<RoomGiftId>([
@@ -36,11 +37,13 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
   const retry = useRef<{ recipient: string; giftId: string; roomId: string; key: string } | null>(null);
   const [sel, setSel] = useState<string | null>(null);
   const [recipientUsername, setRecipientUsername] = useState(recipient?.username ?? '');
+  const [recipientPickerOpen, setRecipientPickerOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const opener = useRef<Element | null>(document.activeElement);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
   const titleId = useId();
+  const recipientListboxId = useId();
   useEffect(() => {
     if (!roomId && !streamId) return;
     const videos = [cosmicEncoreMedia.animation, ...Object.values(bigTierGiftMedia)].map(src => {
@@ -98,7 +101,12 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
   }, []);
 
   const onKey = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') { e.stopPropagation(); closeRef.current(); return; }
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      if (recipientPickerOpen) { setRecipientPickerOpen(false); return; }
+      closeRef.current();
+      return;
+    }
     if (e.key !== 'Tab' || !ref.current) return;
     const f = Array.from(ref.current.querySelectorAll<HTMLElement>(FOCUSABLE));
     if (!f.length) return;
@@ -114,37 +122,51 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
         <div className="gift-head">
           <div>
             <h2 className="gift-title" id={titleId} data-testid="gift-bag-title">{name
-              ? <>Gift bag for <span style={{ color: target?.displayNameColor ?? '#FFFFFF' }}>{name}</span></>
+              ? <>Gift bag for <ShinyName displayNameColor={target?.displayNameColor} displayNameTierIndex={target?.displayNameTierIndex}>{name}</ShinyName></>
               : roomId || streamId ? 'Send a gift' : 'Your gift bag'}</h2>
-            <p className="gift-sub">{name ? 'Choose a gift. Sending costs credits.' : roomId || streamId ? 'Choose someone here and a gift to send.' : 'Gifts you own.'}</p>
+            <p className="gift-sub">{name ? 'Choose a gift. Sending costs coins.' : roomId || streamId ? 'Choose someone here and a gift to send.' : 'Gifts you own.'}</p>
           </div>
           <button type="button" className="gift-btn" onClick={onClose} aria-label="Close gift bag" data-testid="gift-bag-close"><X size={16} aria-hidden /></button>
         </div>
-        {me.data && <p className="gift-balance">Balance: {unlimited ? 'Unlimited test credits' : `${me.data.wallet.balance} credits`}</p>}
+        {me.data && <p className="gift-balance">Balance: <CoinAmount>{unlimited ? 'Unlimited test coins' : `${me.data.wallet.balance.toLocaleString()} coins`}</CoinAmount></p>}
         {(roomId || streamId) && !recipient && (
           <label className="gift-recipient">
             <span>Send to</span>
-            <select
-              aria-label="Gift recipient"
-              data-testid="gift-recipient"
-              value={target?.username ?? ''}
-              disabled={recipients.length === 0}
-              onChange={e => { setRecipientUsername(e.target.value); setError(null); retry.current = null; }}
-            >
-              <option value="">{recipients.length
-                ? streamId ? 'Choose someone in this live stream' : 'Choose someone in this university'
-                : streamId ? 'No one else is watching yet' : 'No other people are here yet'}</option>
-              {recipients.map(person => <option key={person.username} value={person.username} style={{ color: person.displayNameColor ?? '#FFFFFF' }}>
-                {person.displayName} (@{person.username})
-              </option>)}
-            </select>
+            <button type="button" className="gift-recipient-trigger" aria-label="Gift recipient"
+              aria-haspopup="listbox" aria-expanded={recipientPickerOpen} aria-controls={recipientListboxId}
+              data-testid="gift-recipient" disabled={recipients.length === 0}
+              onClick={() => setRecipientPickerOpen(open => !open)}>
+              {target
+                ? <><ShinyName displayNameColor={target.displayNameColor} displayNameTierIndex={target.displayNameTierIndex}>{target.displayName || target.username}</ShinyName><span className="gift-recipient-handle">@{target.username}</span></>
+                : <span className="gift-recipient-placeholder">{recipients.length
+                  ? streamId ? 'Choose someone in this live stream' : 'Choose someone in this university'
+                  : streamId ? 'No one else is watching yet' : 'No other people are here yet'}</span>}
+              <span aria-hidden="true">{recipientPickerOpen ? '▲' : '▼'}</span>
+            </button>
+            {recipientPickerOpen && recipients.length > 0 && (
+              <div id={recipientListboxId} className="gift-recipient-options" role="listbox" aria-label="People to gift">
+                {recipients.map(person => <button key={person.username} type="button" role="option"
+                  aria-selected={person.username === target?.username}
+                  onClick={() => {
+                    setRecipientUsername(person.username);
+                    setRecipientPickerOpen(false);
+                    setError(null);
+                    retry.current = null;
+                  }}>
+                  <ShinyName displayNameColor={person.displayNameColor} displayNameTierIndex={person.displayNameTierIndex}>
+                    {person.displayName || person.username}
+                  </ShinyName>
+                  <span className="gift-recipient-handle">@{person.username}</span>
+                </button>)}
+              </div>
+            )}
           </label>
         )}
         {catalog.length > 0 && <section aria-label="Gift catalog">
           <h3 className="gift-catalog-heading">Gift catalog</h3>
           <ul className="gift-grid">{catalog.map(g => <li key={g.id}>
             <button type="button" className="gift-item" aria-pressed={sel === g.id} onClick={() => { setSel(g.id); setError(null); }} data-testid={`gift-catalog-${g.id}`}>
-              {giftIcon(g.id)}<span>{g.name}</span><span>{g.cost} credits</span>
+              {giftIcon(g.id)}<span>{g.name}</span><CoinAmount>{g.cost.toLocaleString()} coins</CoinAmount>
             </button>
           </li>)}</ul>
         </section>}
@@ -173,13 +195,13 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
         )}
         {selected && (
           <p role="status" data-testid="gift-bag-selection">
-            Selected: {selected.name}{name ? <> for <span style={{ color: target?.displayNameColor ?? '#FFFFFF' }}>{name}</span></> : ''}
+            Selected: {selected.name}{name ? <> for <ShinyName displayNameColor={target?.displayNameColor} displayNameTierIndex={target?.displayNameTierIndex}>{name}</ShinyName></> : ''}
           </p>
         )}
         {error && <p role="alert">{error}</p>}
-        {canSend && !enough && <p>Not enough credits. <Link href="/community/credits">Open credit store</Link></p>}
+        {canSend && !enough && <p>Not enough coins. <Link href="/community/coins">Open coin store</Link></p>}
         {canSend ? <>
-          <p>Send {selected?.name} to <span style={{ color: target?.displayNameColor ?? '#FFFFFF' }}>{name}</span> for {price} credits. The recipient gets half; the house gets half. Your owned copies are collectibles.</p>
+          <p>Send {selected?.name} to <ShinyName displayNameColor={target?.displayNameColor} displayNameTierIndex={target?.displayNameTierIndex}>{name}</ShinyName> for <CoinAmount>{price.toLocaleString()} coins</CoinAmount>. The recipient gets half; the house gets half. Your owned copies are collectibles.</p>
           <button type="button" className="gift-btn gift-send" disabled={busy || !enough} onClick={send} data-testid="gift-bag-send">{busy ? 'Sending…' : 'Send gift'}</button>
         </> : <>
           <button type="button" className="gift-btn gift-send" disabled data-testid="gift-bag-send">Send gift</button>

@@ -25,6 +25,7 @@ export interface Participant {
   id: string;
   handle: string;
   displayNameColor?: string;
+  displayNameTierIndex?: number;
   identity: Identity;
   simulated: boolean;
   joinedAt: number;
@@ -41,7 +42,7 @@ export interface BeamMessage {
   kind: MessageKind;
   authorId: string | null;
   /** snapshot used if the author has left */
-  authorSnapshot: { handle: string; identity: Identity; displayNameColor?: string } | null;
+  authorSnapshot: { handle: string; identity: Identity; displayNameColor?: string; displayNameTierIndex?: number } | null;
   text: string;
   ts: number;
 }

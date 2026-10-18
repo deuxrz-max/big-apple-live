@@ -1,6 +1,6 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db, profilePhotos, accountProfiles, chatModerators } from "@workspace/db";
-import { giftNameColorsForAccounts } from "./social/gift-name-color-data";
+import { nameColorProfilesForAccounts } from "./social/gift-name-color-data";
 
 export type PhotoStatus = "pending" | "approved" | "rejected" | "flagged";
 export function photoIdFromUrl(url: string | null | undefined) {
@@ -47,8 +47,9 @@ export async function pendingPhotoQueue() {
     .where(and(eq(profilePhotos.status, "pending"), sql`${profilePhotos.deletionStartedAt} IS NULL`,
       process.env.NODE_ENV === "production" ? eq(accountProfiles.isTestAccount, false) : undefined))
     .orderBy(profilePhotos.createdAt).limit(100);
-  const colors = await giftNameColorsForAccounts(rows.map(row => row.accountId).filter((id): id is string => !!id));
+  const colors = await nameColorProfilesForAccounts(rows.map(row => row.accountId).filter((id): id is string => !!id));
   return rows.map(({ accountId, ...photo }) => ({
-    ...photo, displayNameColor: accountId ? colors.get(accountId) ?? "#FFFFFF" : "#FFFFFF",
+    ...photo, displayNameColor: accountId ? colors.get(accountId)?.color ?? "#FFFFFF" : "#FFFFFF",
+    displayNameTierIndex: accountId ? colors.get(accountId)?.tierIndex ?? 0 : 0,
   }));
 }

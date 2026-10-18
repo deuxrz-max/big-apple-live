@@ -8,6 +8,7 @@ import {
 } from '@workspace/api-client-react';
 import { errMessage } from '@/lib/errors';
 import './bot-moderation.css';
+import { ShinyName } from '@/components/ShinyName';
 
 export function BotModerationPanel() {
   const qc = useQueryClient();
@@ -202,7 +203,7 @@ export function BotModerationPanel() {
       <ul>
         {open.map((f) => (
           <li key={f.id} className="bm-flag" data-testid={`row-bot-flag-${f.id}`}>
-            <span><b style={{ color: f.displayNameColor ?? '#FFFFFF' }}>{f.displayName}</b> (@{f.username}) in {f.roomLabel} · {new Date(f.createdAt).toLocaleString()}</span>
+            <span><b><ShinyName displayNameColor={f.displayNameColor} displayNameTierIndex={f.displayNameTierIndex}>{f.displayName}</ShinyName></b> (@{f.username}) in {f.roomLabel} · {new Date(f.createdAt).toLocaleString()}</span>
             <span className="ch-note">Reason: {f.reason}</span>
             <q>{f.text}</q>
             <div><button type="button" className="bm-btn bm-btn-sm" disabled={ack.isPending}

@@ -5,6 +5,7 @@ import {
   getGetSocialInboxQueryKey, getGetFavoritesGalleryQueryKey,
 } from '@workspace/api-client-react';
 import { Avatar, BadgeMark, Empty, ErrorBox } from './common';
+import { ShinyName } from '@/components/ShinyName';
 import './inbox.css';
 
 function stamp(s: string): string {
@@ -43,7 +44,7 @@ export function InboxPage() {
                   <i className="ib-dot" aria-hidden="true" />
                   <b className="ib-count">{c.unreadCount}</b>
                 </span>
-                 <span className="ib-live-name"><BadgeMark id={c.badgeId} label={c.badgeName} imageUrl={c.badgeImage} size={16} compact />{c.displayName || c.username}</span>
+                 <ShinyName className="ib-live-name" displayNameColor={c.displayNameColor} displayNameTierIndex={c.displayNameTierIndex}><BadgeMark id={c.badgeId} label={c.badgeName} imageUrl={c.badgeImage} size={16} compact />{c.displayName || c.username}</ShinyName>
               </Link>
             </li>
           ))}
@@ -63,7 +64,7 @@ export function InboxPage() {
                   <span className="ib-heading">
                     <span className="ib-name">
                       <BadgeMark id={c.badgeId} label={c.badgeName} imageUrl={c.badgeImage} size={16} compact />
-                      <span className="ib-name-text">{c.displayName?.trim() || c.username}</span>
+                      <ShinyName className="ib-name-text" displayNameColor={c.displayNameColor} displayNameTierIndex={c.displayNameTierIndex}>{c.displayName?.trim() || c.username}</ShinyName>
                       {c.blocked && <em className="ib-blocked">Blocked</em>}
                     </span>
                   </span>

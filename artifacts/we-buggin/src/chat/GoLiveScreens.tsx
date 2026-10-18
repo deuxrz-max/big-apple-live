@@ -13,6 +13,7 @@ import { GiftBag } from "@/gifts/GiftBag";
 import { GiftControl } from "@/gifts/GiftControl";
 import { GiftAnimationPlayer } from "@/gifts/GiftAnimationPlayer";
 import { SafetyReportDialog } from "@/safety/SafetyReportDialog";
+import { ShinyName } from "@/components/ShinyName";
 import {
   hostLiveSession, leaveViewerLiveSession, viewerLiveSession,
   type HostLiveSnapshot, type ViewerLiveSnapshot,
@@ -20,9 +21,10 @@ import {
 import "./live-stream.css";
 
 type GiftNotice = {
-  id: string; giftId: string; senderUsername: string; senderName: string; cost: number;
+  id: string; giftId: string; senderUsername: string; senderName: string;
+  senderNameColor?: string; senderNameTierIndex?: number; cost: number;
 };
-type ActionTarget = { username: string; displayName: string };
+type ActionTarget = { username: string; displayName: string; displayNameColor?: string; displayNameTierIndex?: number };
 type ReportTarget = {
   targetType: "user" | "message" | "stream";
   targetUsername: string;
@@ -202,7 +204,7 @@ function GifterAvatar({ username, name, credits }: { username: string; name: str
     query: { queryKey: getGetSocialPersonQueryKey(username), enabled: Boolean(username) },
   });
   const photo = person.data?.photoUrl;
-  return <span className="st-live-gifter-avatar" title={`${name} · ${credits} credits`}>
+  return <span className="st-live-gifter-avatar" title={`${name} · ${credits} coins`}>
     {photo ? <img src={photo} alt="" /> : [...name][0]?.toUpperCase() ?? "?"}
   </span>;
 }
@@ -266,6 +268,8 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
     query: { queryKey: getGetSocialMeQueryKey(), enabled: Boolean(ownUsername) },
   });
   const hostPhoto = hostMode ? ownProfile.data?.profile.photoUrl : hostPerson.data?.photoUrl;
+  const hostNameColor = hostMode ? ownProfile.data?.profile.displayNameColor : hostPerson.data?.displayNameColor;
+  const hostNameTier = hostMode ? ownProfile.data?.profile.displayNameTierIndex : hostPerson.data?.displayNameTierIndex;
   const avatar = leadingEmoji(displayName);
   const viewerController = viewerLiveSession(streamId);
   const chatReady = hostMode ? Boolean(hostState?.chatReady) : viewerState?.phase === "live";
@@ -334,8 +338,8 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
     return () => window.removeEventListener("streamtalk:open-live-gifts", open);
   }, [streamId]);
 
-  const profileFor = (username: string, name: string) => {
-    if (username && !blockedLower.has(username.toLowerCase())) setProfileAction({ username, displayName: name });
+  const profileFor = (username: string, name: string, color?: string, tier?: number) => {
+    if (username && !blockedLower.has(username.toLowerCase())) setProfileAction({ username, displayName: name, displayNameColor: color, displayNameTierIndex: tier });
   };
   const closeProfile = () => setProfileAction(null);
   const openStreamReport = () => hostUsername && setReportTarget({ targetType: "stream", targetUsername: hostUsername, streamId });
@@ -386,7 +390,7 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
           ? <RemoteVideo track={videoTrack} />
           : !hostMode && <div className="st-live-player-empty">
             <span className="st-live-avatar">{avatar ?? (hostPhoto ? <img src={hostPhoto} alt="" /> : displayName[0]?.toUpperCase() ?? "S")}</span>
-            <strong>{displayName}</strong><span>Waiting for the host’s camera…</span>
+            <strong><ShinyName displayNameColor={hostNameColor} displayNameTierIndex={hostNameTier}>{displayName}</ShinyName></strong><span>Waiting for the host’s camera…</span>
           </div>}
       {hostMode && (!localStream || cameraBlocked) && (
         <div className="st-live-camera-recovery" data-testid="live-camera-recovery">
@@ -403,9 +407,9 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
       <div className="st-live-topbar">
         <div className="st-live-creator">
           <button type="button" className="st-live-creator-profile" disabled={hostMode || !hostUsername}
-            onClick={() => profileFor(hostUsername, displayName)} data-testid="live-creator-profile">
+            onClick={() => profileFor(hostUsername, displayName, hostNameColor, hostNameTier)} data-testid="live-creator-profile">
             <span className="st-live-creator-avatar">{avatar ?? (hostPhoto ? <img src={hostPhoto} alt="" /> : displayName[0]?.toUpperCase() ?? "S")}</span>
-            <span className="st-live-creator-copy"><strong>{displayName}</strong>
+            <span className="st-live-creator-copy"><strong><ShinyName displayNameColor={hostNameColor} displayNameTierIndex={hostNameTier}>{displayName}</ShinyName></strong>
               <small><i className={status === "connected" ? "is-live" : ""} />{status === "connected" ? "LIVE NOW" : status === "reconnecting" ? "Reconnecting" : "Connecting"}</small>
             </span>
           </button>
@@ -467,9 +471,9 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
                 <span className="st-live-chat-author">
                   {message.badgeImage && <img className="st-live-chat-badge" src={message.badgeImage} alt={message.badgeName ? `${message.badgeName} badge` : "User badge"} />}
                   {message.username === myName
-                    ? <strong style={{ color: message.displayNameColor }}>{message.displayName}</strong>
-                    : <button type="button" className="st-live-chat-name" style={{ color: message.displayNameColor }}
-                      onClick={() => profileFor(message.username, message.displayName)}>{message.displayName}</button>}
+                    ? <strong><ShinyName displayNameColor={message.displayNameColor} displayNameTierIndex={message.displayNameTierIndex}>{message.displayName}</ShinyName></strong>
+                    : <button type="button" className="st-live-chat-name"
+                      onClick={() => profileFor(message.username, message.displayName, message.displayNameColor, message.displayNameTierIndex)}><ShinyName displayNameColor={message.displayNameColor} displayNameTierIndex={message.displayNameTierIndex}>{message.displayName}</ShinyName></button>}
                 </span>
                 <span className="st-live-chat-text">{message.text}</span>
               </p>
@@ -500,6 +504,8 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
       key={activeGift.id}
       giftId={activeGift.giftId as import("@workspace/api-client-react").GiftStudioGiftId}
       senderName={activeGift.senderName}
+      senderNameColor={activeGift.senderNameColor}
+      senderNameTierIndex={activeGift.senderNameTierIndex}
       onFinish={() => finishGift(activeGift.id)}
     />}
     {profileAction && <div className="st-live-action-scrim" onClick={() => setProfileAction(null)}>
@@ -507,7 +513,7 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
         onClick={event => event.stopPropagation()}>
         <button type="button" className="st-live-action-close" aria-label="Close" onClick={() => setProfileAction(null)}><X size={18} /></button>
         <span className="st-live-action-avatar">{leadingEmoji(profileAction.displayName) ?? profileAction.displayName[0]?.toUpperCase() ?? "S"}</span>
-        <h2>{profileAction.displayName}</h2>
+         <h2><ShinyName displayNameColor={profileAction.displayNameColor} displayNameTierIndex={profileAction.displayNameTierIndex}>{profileAction.displayName}</ShinyName></h2>
         <button type="button" onClick={() => { chat.setReport({ targetType: "user", targetUsername: profileAction.username, streamId }); setProfileAction(null); }}>
           <Flag size={16} /> Report user
         </button>
@@ -646,7 +652,7 @@ export function LiveStreamsDirectory() {
     {!loading && !error && streams.length === 0 && <section className="st-live-empty"><Radio size={28} /><strong>No creator streams right now</strong><span>When someone goes live, they’ll appear here.</span></section>}
     <div className="st-live-directory-grid">{streams.map(stream => <Link className="st-live-directory-card" href={`/live/${stream.streamId}`} key={stream.streamId}>
       <div className="st-live-directory-thumb"><Video size={30} /><span className="st-live-state is-live"><i /> LIVE</span></div>
-      <strong>{stream.displayName}</strong><span><Users size={15} /> {stream.viewerCount} watching</span><b>Watch live</b>
+      <strong><ShinyName displayNameColor={stream.displayNameColor} displayNameTierIndex={stream.displayNameTierIndex}>{stream.displayName}</ShinyName></strong><span><Users size={15} /> {stream.viewerCount} watching</span><b>Watch live</b>
     </Link>)}</div>
   </main>;
 }

@@ -7,6 +7,7 @@ import { monthlyPurchaseBadgeSummary } from "./monthly-credit-badges";
 import { evaluateMonthlyPurchaseBadges } from "./monthly-credit-badge-policy";
 import { claimRoomEntranceEffect } from "../room-entrance-effects";
 import { accountEntranceEffectSelection } from "./entrance-effect-preferences";
+import { nameColorProfileForAccount } from "./gift-name-color-data";
 
 /**
  * Call only after the payment provider's signature and completed transaction
@@ -20,6 +21,7 @@ export async function recordConfirmedCreditPurchase(
   confirmedAt = new Date(),
 ) {
   await requireAccount(accountId);
+  const previousNameColor = await nameColorProfileForAccount(accountId);
   const [profileFlags] = await db.select({
     isTestAccount: accountProfiles.isTestAccount,
     username: accountProfiles.username,
@@ -30,7 +32,7 @@ export async function recordConfirmedCreditPurchase(
     || !providerPurchaseId.trim() || providerPurchaseId.length > 255
     || !Number.isSafeInteger(credits) || credits < 1
     || !Number.isFinite(confirmedAt.getTime())) {
-    throw new RoomError(400, "Invalid confirmed credit-purchase record");
+    throw new RoomError(400, "Invalid confirmed coin-purchase record");
   }
 
   const saved = await db.transaction(async tx => {
@@ -63,7 +65,7 @@ export async function recordConfirmedCreditPurchase(
       .where(eq(socialWallets.accountId, accountId));
     await tx.insert(socialLedger).values({
       accountId, delta: credits, kind: "credit_purchase",
-      description: `Confirmed credit purchase · ${credits.toLocaleString("en-US")} credits`,
+      description: `Confirmed coin purchase · ${credits.toLocaleString("en-US")} coins`,
       requestKey: randomUUID(), refKey: `credit-purchase:${provider}:${providerPurchaseId}`,
     });
     const purchasesAfter = await tx.select({
@@ -90,6 +92,11 @@ export async function recordConfirmedCreditPurchase(
   });
 
   const after = await monthlyPurchaseBadgeSummary(accountId, confirmedAt);
+  const currentNameColor = await nameColorProfileForAccount(accountId);
+  if (!saved.duplicate && (currentNameColor.tierIndex !== previousNameColor.tierIndex
+    || currentNameColor.color !== previousNameColor.color)) {
+    roomStore.updateAccountNameColor(accountId, currentNameColor.color, currentNameColor.tierIndex);
+  }
   const activeRoomIds = roomStore.activeRoomIdsForAccount(accountId);
   if (!saved.duplicate && saved.newlyEarned && activeRoomIds.length > 0) {
     const selectedEffect = await accountEntranceEffectSelection(accountId);
@@ -109,5 +116,8 @@ export async function recordConfirmedCreditPurchase(
   }
   return { credited: !saved.duplicate, balance: (await db.select({ balance: socialWallets.balance })
     .from(socialWallets).where(eq(socialWallets.accountId, accountId)))[0]?.balance ?? 0,
-    badgeId: after?.tier.id ?? null };
+    badgeId: after?.tier.id ?? null,
+    nameColorTierUp: currentNameColor.tierIndex > previousNameColor.tierIndex
+      ? { tierName: currentNameColor.tierName, tierIndex: currentNameColor.tierIndex }
+      : null };
 }

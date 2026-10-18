@@ -559,7 +559,7 @@ export async function setGiftStudioVersionActive(
   const [asset] = await db.select().from(giftStudioAssets).where(eq(giftStudioAssets.id, versionId));
   if (!asset || asset.ownerId !== ownerId) throw new RoomError(404, "Gift animation version not found.");
   if (active && !asset.giftId && (!options?.productType || !options.cost || !Number.isSafeInteger(options.cost) || options.cost < 1)) {
-    throw new RoomError(400, "Choose Gift or Entrance effect and a whole positive credit price before activating this new item.");
+    throw new RoomError(400, "Choose Gift or Entrance effect and a whole positive coin price before activating this new item.");
   }
   const giftId = asset.giftId ?? (active ? `studio-${asset.id}` : null);
   const productType = options?.productType ?? (asset.settings as Record<string, unknown>).productType as GiftStudioProductType ?? "gift";

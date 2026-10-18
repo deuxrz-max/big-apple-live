@@ -6,8 +6,7 @@ import { roomStore, RoomError, type RoomStore } from "./room-store";
 import { ignoredAccounts } from "./university-chat";
 import { botSettings, botRotation, botMessageValues } from "./moderator-bots";
 import { BOT_WARNING_COOLDOWN_MS, publicViolation } from "./bot-policy";
-import { giftNameColorsForAccounts } from "./social/gift-name-color-data";
-import { giftNameColorForSentCredits } from "./social/gift-name-color";
+import { nameColorProfileForAccount, nameColorProfilesForAccounts } from "./social/gift-name-color-data";
 import { passportBadgeSummaries } from "./social/passport";
 import { visibleMonthlyPurchaseBadgeSummaries, visibleMonthlyPurchaseBadgeSummary } from "./social/monthly-credit-badges";
 
@@ -42,12 +41,13 @@ export async function getMessages(roomId: string, store: RoomStore = roomStore, 
     .leftJoin(accountProfiles, eq(accountProfiles.accountId, roomMessages.authorAccountId)).where(and(...conditions))
     .orderBy(desc(roomMessages.createdAt), desc(roomMessages.id)).limit(60);
   const authorIds = [...new Set(rows.map(row => row.message.authorAccountId).filter((id): id is string => !!id))];
-  const nameColors = await giftNameColorsForAccounts(authorIds);
+  const nameColors = await nameColorProfilesForAccounts(authorIds);
   const passports = await passportBadgeSummaries(authorIds);
   const badgeSummaries = await visibleMonthlyPurchaseBadgeSummaries(authorIds);
   return rows.reverse().map(row => ({
     ...publicMessage(row.message), photoUrl: null,
-    displayNameColor: row.message.authorAccountId ? nameColors.get(row.message.authorAccountId) ?? "#FFFFFF" : "#FFFFFF",
+    displayNameColor: row.message.authorAccountId ? nameColors.get(row.message.authorAccountId)?.color ?? "#FFFFFF" : "#FFFFFF",
+    displayNameTierIndex: row.message.authorAccountId ? nameColors.get(row.message.authorAccountId)?.tierIndex ?? 0 : 0,
     badgeId: row.message.authorAccountId ? badgeSummaries.get(row.message.authorAccountId)?.tier.id ?? null : null,
     badgeName: row.message.authorAccountId ? badgeSummaries.get(row.message.authorAccountId)?.tier.name ?? null : null,
     badgeImage: row.message.authorAccountId ? badgeSummaries.get(row.message.authorAccountId)?.tier.badgeImage ?? null : null,
@@ -61,6 +61,7 @@ export async function acceptMessage(
   const text = input.text.trim();
   if (!text || text.length > 280) throw new RoomError(400, "Write 1–280 characters");
   const sender = store.requireAccountMember(roomId, sessionId, accountId);
+  const senderNameColor = await nameColorProfileForAccount(accountId);
   const historyId = store.getHistoryId(roomId);
   const filter = store.isCommunity(roomId) ? await botSettings() : null;
   const senderBadge = await visibleMonthlyPurchaseBadgeSummary(accountId);
@@ -134,8 +135,8 @@ export async function acceptMessage(
     // A leave/expiry while the database was busy rolls back message, flag and warning.
     store.requireAccountMember(roomId, sessionId, accountId);
     return { message: { ...publicMessage(message), photoUrl: null,
-      displayNameColor: message.authorAccountId === accountId
-        ? giftNameColorForSentCredits(wallet?.sent ?? 0) : "#FFFFFF",
+      displayNameColor: message.authorAccountId === accountId ? senderNameColor.color : "#FFFFFF",
+      displayNameTierIndex: message.authorAccountId === accountId ? senderNameColor.tierIndex : 0,
       badgeId: message.authorAccountId === accountId ? badgeId : null,
       badgeName: message.authorAccountId === accountId ? senderBadge?.tier.name ?? null : null,
       badgeImage: message.authorAccountId === accountId ? senderBadge?.tier.badgeImage ?? null : null,

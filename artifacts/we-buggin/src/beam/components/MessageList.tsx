@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import type { BeamMessage, Participant } from '../types';
 import { ParticipantEmojiBadge } from './ParticipantEmojiBadge';
+import { ShinyName } from '@/components/ShinyName';
 
 const time = (ts: number) => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -48,10 +49,10 @@ export function MessageList({ messages, participants, selfId }: Props) {
         const mine = m.authorId === selfId;
         return (
           <li key={m.id} className={`bm-msg ${mine ? 'is-mine' : ''}`} data-testid={`message-${m.id}`}>
-            <ParticipantEmojiBadge handle={who.handle} displayNameColor={who.displayNameColor} identity={who.identity} size="sm" />
+            <ParticipantEmojiBadge handle={who.handle} displayNameColor={who.displayNameColor} displayNameTierIndex={who.displayNameTierIndex} identity={who.identity} size="sm" />
             <div className="bm-msg-body">
               <div className="bm-msg-meta">
-               <b style={{ color: who.displayNameColor ?? '#FFFFFF' }}>{who.handle}</b>
+               <b><ShinyName displayNameColor={who.displayNameColor} displayNameTierIndex={who.displayNameTierIndex}>{who.handle}</ShinyName></b>
                 <time>{time(m.ts)}</time>
               </div>
               {m.kind === 'reaction' ? <span className="bm-react">{m.text}</span> : <p>{m.text}</p>}

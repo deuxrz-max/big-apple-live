@@ -3,8 +3,9 @@ import { Link } from 'wouter';
 import { ArrowLeft, Pencil, MoreVertical, Ban, Flag, Undo2 } from 'lucide-react';
 import type { SocialPerson } from '@workspace/api-client-react';
 import { UserPhoto, photoSrc } from '@/components/user-photo';
+import { ShinyName } from '@/components/ShinyName';
 import { BotShield } from '@/chat/BotShield';
-import { BadgeMark } from '@/social/common';
+import { BadgeMark, CoinAmount } from '@/social/common';
 import { BadgeArt } from '@/social/BadgeArt';
 import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
 import './profile.css';
@@ -130,7 +131,7 @@ export function ProfileView({ person, own = false, countryName, products, backHr
         <h1 className="pf-name" data-testid="text-display-name">
           <span className="pf-name-emoji" aria-hidden="true">{emojiFromId(p.identity.emojiId)}</span>
           <BadgeMark id={p.badgeId ?? null} label={p.badgeName} imageUrl={p.badgeImage} size={26} />
-          <span className="pf-display-name">{name}</span>
+          <ShinyName className="pf-display-name" displayNameColor={p.displayNameColor} displayNameTierIndex={p.displayNameTierIndex}>{name}</ShinyName>
         </h1>
         {own && <Link href="/user-portal/edit" className="pf-edit" data-testid="link-edit-profile">Edit your profile</Link>}
         {actions}
@@ -148,8 +149,8 @@ export function ProfileView({ person, own = false, countryName, products, backHr
         <dl className="pf-stats">
           <div><dd data-testid="text-followers">{num(p.followerCount)}</dd><dt>Followers</dt></div>
           <div><dd data-testid="text-following">{num(p.followingCount)}</dd><dt>Following</dt></div>
-          <div><dd data-testid="text-received">{num(p.receivedCredits)}</dd><dt>Credits received in gifts</dt></div>
-          <div><dd data-testid="text-sent">{num(p.sentCredits)}</dd><dt>Credits sent in gifts</dt></div>
+          <div><dd data-testid="text-received"><CoinAmount>{num(p.receivedCredits)}</CoinAmount></dd><dt>Coins received in gifts</dt></div>
+          <div><dd data-testid="text-sent"><CoinAmount>{num(p.sentCredits)}</CoinAmount></dd><dt>Coins sent in gifts</dt></div>
         </dl>
         {children}
         {links}

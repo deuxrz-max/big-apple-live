@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { RoomEntranceEffectEvent } from "./useTextRoom";
+import { ShinyName } from "@/components/ShinyName";
 import { GiftAnimationPlayer } from "@/gifts/GiftAnimationPlayer";
 import type { GiftStudioGiftId } from "@workspace/api-client-react";
 
@@ -118,11 +119,13 @@ export function RoomEntranceEffectOverlay({
     return (
       <>
         <div className={`ur-room-entry-effect${fading ? " is-fading" : ""}`} aria-hidden="true">
-          <span className="ur-entry-effect-caption">{event.displayName} · {event.effectName ?? "Entrance effect"}</span>
+          <span className="ur-entry-effect-caption"><ShinyName displayNameColor={event.displayNameColor} displayNameTierIndex={event.displayNameTierIndex}>{event.displayName}</ShinyName> · {event.effectName ?? "Entrance effect"}</span>
         </div>
         <GiftAnimationPlayer
           giftId={event.effectId as GiftStudioGiftId}
           senderName={event.displayName}
+          senderNameColor={event.displayNameColor}
+          senderNameTierIndex={event.displayNameTierIndex}
           onFinish={() => onFinish(event.eventId)}
         />
       </>
@@ -147,7 +150,7 @@ export function RoomEntranceEffectOverlay({
       data-effect-id={event.effectId}
     >
       <span className="ur-entry-effect-caption">
-        {event.displayName} · {event.effectName ?? "Entrance effect"}
+        <ShinyName displayNameColor={event.displayNameColor} displayNameTierIndex={event.displayNameTierIndex}>{event.displayName}</ShinyName> · {event.effectName ?? "Entrance effect"}
       </span>
       {useWebp ? (
         <img

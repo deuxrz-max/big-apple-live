@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { MouseEvent } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 import { useAuth } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, Archive, Check, ChevronRight, Download, Pipette, FileVideo2, LockKeyhole, Pause, Play, RefreshCw, Scissors, ShieldCheck, Upload, X, Pencil, Trash2, Save } from 'lucide-react';
@@ -24,7 +24,7 @@ import type {
 } from '@workspace/api-client-react';
 import type { ClipSettings, KeyColor } from './processClip';
 import { GiftAnimationPlayer, giftStudioMediaUrl } from '@/gifts/GiftAnimationPlayer';
-import { GiftIcon } from '@/social/common';
+import { CoinAmount, GiftIcon } from '@/social/common';
 import { RoomGiftIcon, type RoomGiftId } from '@/gifts/SpiritPup';
 import { classifyKeyColor, detectVideoEdgeColor, drawKeyedPreview, sampleVideoColorAtPoint } from './liveKeyPreview';
 import { createTransparentPngFramesZip } from './downloadPngFramesZip';
@@ -212,7 +212,7 @@ export function GiftStudioPage() {
   const [livePreviewError, setLivePreviewError] = useState('');
   const [detectedKeyColor, setDetectedKeyColor] = useState<string | null>(null);
   const [keyDetecting, setKeyDetecting] = useState(false);
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState<ReactNode>('');
   const [error, setError] = useState('');
   const [saveError, setSaveError] = useState('');
   const [savingVersion, setSavingVersion] = useState(false);
@@ -696,8 +696,8 @@ export function GiftStudioPage() {
       ]);
       setSavedVersionId(saved.id);
       setStatus(replacing && giftId
-        ? `${catalogGifts.find((gift) => gift.id === giftId)?.name ?? 'The catalog item'} is now “${trimmedName}”, costs ${replacementPrice} credits, and its new animation is active. The previous version is kept in Saved versions as a backup.`
-        : `Saved “${trimmedName}” as a new ${productType === 'gift' ? 'gift' : 'entrance effect'} draft. Set a credit price in the library before activating it.`);
+        ? <>{catalogGifts.find((gift) => gift.id === giftId)?.name ?? 'The catalog item'} is now “{trimmedName}”, costs <CoinAmount>{replacementPrice.toLocaleString()} coins</CoinAmount>, and its new animation is active. The previous version is kept in Saved versions as a backup.</>
+        : <>Saved “{trimmedName}” as a new {productType === 'gift' ? 'gift' : 'entrance effect'} draft. Set a coin price in the library before activating it.</>);
       setSavedVersionPreview(saved);
       setSaveError('');
       setActiveProductionStep(5);
@@ -721,7 +721,7 @@ export function GiftStudioPage() {
         client.invalidateQueries({ queryKey: getGetSocialMeQueryKey() }),
       ]);
       setSavedVersionPreview(updated);
-      setStatus(`“${versionName(updated)}” is active as an ${productType === 'gift' ? 'gift' : 'entrance effect'} at ${cost} credits.`);
+      setStatus(<>“{versionName(updated)}” is active as an {productType === 'gift' ? 'gift' : 'entrance effect'} at <CoinAmount>{cost.toLocaleString()} coins</CoinAmount>.</>);
     } catch (cause) {
       setError(ownerErrorText(cause));
     }
@@ -875,7 +875,7 @@ export function GiftStudioPage() {
         client.invalidateQueries({ queryKey: getGetGiftStudioLibraryQueryKey() }),
         client.invalidateQueries({ queryKey: getGetSocialMeQueryKey() }),
       ]);
-      if (cost !== undefined) setStatus(`${updated.name} now costs ${updated.cost} credits.`);
+      if (cost !== undefined) setStatus(<>{updated.name} now costs <CoinAmount>{updated.cost.toLocaleString()} coins</CoinAmount>.</>);
       else if (status) setStatus(`${updated.name} is ${status === 'active' ? 'active in' : 'hidden from'} the ${updated.productType === 'gift' ? 'gift picker' : 'entrance effects shop'}.`);
       else setStatus(`Saved ${updated.name}.`);
     } catch (cause) {
@@ -996,7 +996,7 @@ export function GiftStudioPage() {
               <div className="gs-gift-mode" role="radiogroup" aria-label="New item or replacement">
                 <label className="gs-gift-mode-choice">
                   <input type="radio" name="gift-setup-mode" checked={giftMode === 'new'} onChange={() => changeGiftMode('new')} disabled={Boolean(savedVersionId)} data-testid="radio-new-gift" />
-                  <span><strong>New {productType === 'gift' ? 'gift' : 'effect'}</strong><small>Save as a new draft. Set its credit price before activation.</small></span>
+                  <span><strong>New {productType === 'gift' ? 'gift' : 'effect'}</strong><small>Save as a new draft. Set its coin price before activation.</small></span>
                 </label>
                 <label className="gs-gift-mode-choice">
                   <input type="radio" name="gift-setup-mode" checked={giftMode === 'replace'} onChange={() => changeGiftMode('replace')} disabled={Boolean(savedVersionId) || !catalogGifts.some((entry) => entry.productType === productType && entry.status !== 'deleted')} data-testid="radio-replace-gift" />
@@ -1165,10 +1165,10 @@ export function GiftStudioPage() {
                   : <><strong>New {productType === 'gift' ? 'gift' : 'entrance effect'}: {draftName || 'Enter a name above.'}</strong><br />It will be saved as a draft, then activated into the live catalog.</>}
               </div>
               {(giftMode === 'replace' || giftMode === 'new') && <label className="gs-name-field gs-catalog-price-field">
-                <span>{productType === 'gift' ? 'Gift' : 'Effect'} price · credits</span>
+                <span><CoinAmount size={13}>{productType === 'gift' ? 'Gift' : 'Effect'} price · coins</CoinAmount></span>
                 <input type="number" min="1" step="1" inputMode="numeric" value={giftPrice}
                   onChange={(event) => { catalogPriceEditedRef.current = true; setGiftPrice(event.target.value); }}
-                  aria-label={`${productType === 'gift' ? 'Gift' : 'Effect'} price in credits`} data-testid="input-activate-gift-price" />
+                  aria-label={`${productType === 'gift' ? 'Gift' : 'Effect'} price in coins`} data-testid="input-activate-gift-price" />
                 <small>Whole positive numbers only. This changes the price for future purchases; past history and balances stay unchanged.</small>
               </label>}
               {!previewConfirmed && <p className="gs-caption">Review the processed result in step 4 before activating.</p>}
@@ -1178,7 +1178,7 @@ export function GiftStudioPage() {
                   {savingVersion ? 'Saving…' : savedVersionId ? 'Saved' : giftMode === 'replace' ? `Activate ${productType === 'gift' ? 'gift' : 'effect'} replacement` : `Save new ${productType === 'gift' ? 'gift' : 'effect'} draft`} <Check size={15} />
                 </button>
                 {savedVersionPreview && !savedVersionPreview.giftId && savedVersionPreview.status !== 'active' && <button className="gs-button primary" type="button" onClick={() => void activateStandalone()} disabled={!validReplacementPrice || setActive.isPending} data-testid="button-activate-new-item">
-                  {setActive.isPending ? 'Activating…' : `Activate at ${validReplacementPrice ? replacementPrice : '—'} credits`} <Check size={15} />
+                  {setActive.isPending ? 'Activating…' : <>Activate at <CoinAmount>{validReplacementPrice ? `${replacementPrice.toLocaleString()} coins` : '—'}</CoinAmount></>} <Check size={15} />
                 </button>}
               </div>
               {saveError && <div className="gs-error" role="alert" data-testid="state-upload-error">{saveError}</div>}
@@ -1191,7 +1191,7 @@ export function GiftStudioPage() {
                 <div className="gs-library-preview checker">
                   <video src={giftStudioMediaUrl(savedVersionPreview.webmUrl)} muted playsInline loop autoPlay preload="metadata" aria-label={`Preview of ${versionName(savedVersionPreview)}`} data-testid="video-confirmed-active-gift" />
                 </div>
-                <p className="gs-caption">{savedVersionPreview.giftId ? `The previous animation is saved as a backup. The new price applies only to future purchases; past records and wallet balances are unchanged.` : savedVersionPreview.status === 'active' ? 'This entrance effect is available to users in the effect shop.' : 'This draft is stored in the library and is not available until it is activated with a credit price.'}</p>
+                <p className="gs-caption">{savedVersionPreview.giftId ? `The previous animation is saved as a backup. The new price applies only to future purchases; past records and wallet balances are unchanged.` : savedVersionPreview.status === 'active' ? 'This entrance effect is available to users in the effect shop.' : 'This draft is stored in the library and is not available until it is activated with a coin price.'}</p>
               </div>}
               {error && <div className="gs-error" role="alert" data-testid="state-error">{error}</div>}
               {status && !processing && <p className="gs-caption" role="status" aria-live="polite" data-testid="state-status">{status}</p>}
@@ -1337,7 +1337,7 @@ function CatalogGiftCard({
       </div>
       <div className="gs-catalog-summary">
         <strong>{gift.name}</strong>
-        <small>{gift.cost.toLocaleString()} credits · {gift.productType === 'gift' ? (gift.roomGift ? 'Room gift' : 'Catalog gift') : 'Entrance effect'}</small>
+        <small><CoinAmount>{gift.cost.toLocaleString()} coins</CoinAmount> · {gift.productType === 'gift' ? (gift.roomGift ? 'Room gift' : 'Catalog gift') : 'Entrance effect'}</small>
         {activeVersion && <small>Custom animation · version {activeVersion.version}</small>}
         <span className={`gs-status ${gift.status === 'active' ? 'active' : ''}`} data-testid={`status-catalog-${gift.id}`}>{gift.status}</span>
       </div>
@@ -1348,8 +1348,8 @@ function CatalogGiftCard({
         <input value={name} maxLength={MAX_DRAFT_NAME} onChange={(event) => setName(event.target.value)} aria-label={`${gift.productType === 'gift' ? 'Gift' : 'Effect'} name for ${gift.name}`} data-testid={`input-catalog-name-${gift.id}`} />
       </label>
       <label>
-        <span>Price · credits</span>
-        <input type="number" min="1" step="1" inputMode="numeric" value={price} onChange={(event) => setPrice(event.target.value)} aria-label={`Price in credits for ${gift.name}`} data-testid={`input-catalog-price-${gift.id}`} />
+        <span><CoinAmount size={13}>Price · coins</CoinAmount></span>
+        <input type="number" min="1" step="1" inputMode="numeric" value={price} onChange={(event) => setPrice(event.target.value)} aria-label={`Price in coins for ${gift.name}`} data-testid={`input-catalog-price-${gift.id}`} />
       </label>
       <button className="gs-chip-button" type="submit" disabled={pending || !changed || !validPrice || !name.trim()} data-testid={`button-save-catalog-${gift.id}`}><Save size={14} /> Save name & price</button>
     </form>
@@ -1405,8 +1405,8 @@ function LibraryVersion({ version, catalogPrice, onPreview, onToggle, onAssign, 
       <button className="gs-chip-button" type="submit" disabled={pending || !name.trim() || name.trim() === label}><Save size={14} /> Save name</button>
     </form>
     {version.giftId && catalogPrice !== undefined && <form className="gs-library-pricing" onSubmit={(event) => { event.preventDefault(); if (validPrice) onSavePrice(version.giftId!, amount); }}>
-      <label htmlFor={`gift-price-${version.id}`}>Catalog price · credits</label>
-      <input id={`gift-price-${version.id}`} type="number" min="1" step="1" inputMode="numeric" value={price} onChange={(event) => setPrice(event.target.value)} aria-label={`Gift price in credits for ${label}`} data-testid={`input-version-price-${version.id}`} />
+      <label htmlFor={`gift-price-${version.id}`}><CoinAmount size={13}>Catalog price · coins</CoinAmount></label>
+      <input id={`gift-price-${version.id}`} type="number" min="1" step="1" inputMode="numeric" value={price} onChange={(event) => setPrice(event.target.value)} aria-label={`Gift price in coins for ${label}`} data-testid={`input-version-price-${version.id}`} />
       <button className="gs-chip-button" type="submit" disabled={pending || !validPrice || amount === catalogPrice}><Save size={14} /> Save price</button>
     </form>}
   </article>;

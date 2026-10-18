@@ -2,7 +2,7 @@ import { db, socialGiftEvents, socialRelations, accountProfiles } from '@workspa
 import { and, desc, eq, or } from 'drizzle-orm';
 import { requireAdult } from '../community';
 import { roomStore, RoomError } from '../room-store';
-import { giftNameColorsForAccounts } from './gift-name-color-data';
+import { nameColorProfilesForAccounts } from './gift-name-color-data';
 import { passportBadgeSummaries } from './passport';
 import { visibleMonthlyPurchaseBadgeSummaries } from './monthly-credit-badges';
 import { activeGiftNames } from '../gift-studio-catalog';
@@ -27,7 +27,7 @@ export async function roomGiftEvents(id: string, roomId: string, sessionId: stri
     .where(eq(socialGiftEvents.historyId, roomStore.getHistoryId(roomId)))
     .orderBy(desc(socialGiftEvents.createdAt), desc(socialGiftEvents.id)).limit(60);
   const [nameColors, giftNames] = await Promise.all([
-    giftNameColorsForAccounts(rows.flatMap(row =>
+    nameColorProfilesForAccounts(rows.flatMap(row =>
       [row.senderId, row.recipientId].filter((accountId): accountId is string => !!accountId))),
     activeGiftNames(rows.map((row) => row.giftId)),
   ]);
@@ -44,8 +44,10 @@ export async function roomGiftEvents(id: string, roomId: string, sessionId: stri
     id: r.id, giftId: r.giftId, giftName: giftNames.get(r.giftId) ?? r.giftId,
     senderUsername: r.senderUsername, recipientUsername: r.recipientUsername,
     senderName: r.senderName, recipientName: r.recipientName,
-    senderNameColor: r.senderId ? nameColors.get(r.senderId) ?? "#FFFFFF" : "#FFFFFF",
-    recipientNameColor: r.recipientId ? nameColors.get(r.recipientId) ?? "#FFFFFF" : "#FFFFFF",
+    senderNameColor: r.senderId ? nameColors.get(r.senderId)?.color ?? "#FFFFFF" : "#FFFFFF",
+    senderNameTierIndex: r.senderId ? nameColors.get(r.senderId)?.tierIndex ?? 0 : 0,
+    recipientNameColor: r.recipientId ? nameColors.get(r.recipientId)?.color ?? "#FFFFFF" : "#FFFFFF",
+    recipientNameTierIndex: r.recipientId ? nameColors.get(r.recipientId)?.tierIndex ?? 0 : 0,
     senderBadgeId: r.senderId ? badges.get(r.senderId)?.tier.id ?? null : null,
     recipientBadgeId: r.recipientId ? badges.get(r.recipientId)?.tier.id ?? null : null,
     senderBadgeName: r.senderId ? badges.get(r.senderId)?.tier.name ?? null : null,

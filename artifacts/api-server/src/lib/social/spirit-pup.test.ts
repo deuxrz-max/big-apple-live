@@ -53,7 +53,7 @@ test('development database: atomic split, bag, retry, funds, membership, blocks 
   const sessions = ids.map((accountId, i) => roomStore.join(roomId, names[i]!, { accountId, identity: profiles[i]!.identity }));
   const overflow = roomStore.join(overflowId, names[2]!, { accountId: ids[2]!, identity: profiles[2]!.identity });
   const context = { roomId, sessionId: sessions[0]!.participantSessionId };
-  await assert.rejects(gift(ids[0]!, names[1]!, SPIRIT_PUP.id, randomUUID(), context), /Not enough credits/);
+  await assert.rejects(gift(ids[0]!, names[1]!, SPIRIT_PUP.id, randomUUID(), context), /Not enough coins/);
   assert.equal((await getMe(ids[1]!)).giftQuantities[SPIRIT_PUP.id], undefined);
   await db.update(socialWallets).set({ balance: 200 }).where(eq(socialWallets.accountId, ids[0]!));
   await assert.rejects(gift(ids[0]!, names[1]!, SPIRIT_PUP.id, randomUUID()), /room or livestream gift panel/);
@@ -138,7 +138,7 @@ test('development database: Moonfox charges once, splits 250/250, enters the bag
   assert.equal(events[0]!.houseCredits, 250);
   assert.equal((await roomGiftEvents(ids[1]!, roomId, sessions[1]!.participantSessionId)).events.length, 1);
   assert.equal((await roomGiftEvents(ids[1]!, otherRoomId, otherSession.participantSessionId)).events.length, 0);
-  await assert.rejects(gift(ids[0]!, names[1]!, MOONFOX.id, randomUUID(), context), /Not enough credits/);
+  await assert.rejects(gift(ids[0]!, names[1]!, MOONFOX.id, randomUUID(), context), /Not enough coins/);
   assert.equal((await getMe(ids[1]!)).giftQuantities[MOONFOX.id], 1);
 
   await db.update(socialWallets).set({ balance: MOONFOX.cost }).where(eq(socialWallets.accountId, ids[0]!));

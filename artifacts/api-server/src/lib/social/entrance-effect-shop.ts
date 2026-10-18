@@ -69,7 +69,7 @@ export async function purchaseEntranceEffect(accountId: string, effectId: string
     const current = await wallet(accountId, tx, buyer.username);
     const unlimited = hasDevelopmentUnlimitedCredits(buyer.username);
     const spend = planCreditSpend(current.balance, item.cost, unlimited);
-    if (!spend.allowed) throw new RoomError(409, "You need more credits to buy this entrance effect.");
+    if (!spend.allowed) throw new RoomError(409, "You need more coins to buy this entrance effect.");
     if (spend.debit > 0) {
       await tx.update(socialWallets)
         .set({ balance: sql`${socialWallets.balance} - ${spend.debit}` })
@@ -79,7 +79,7 @@ export async function purchaseEntranceEffect(accountId: string, effectId: string
       accountId,
       delta: -(unlimited ? item.cost : spend.debit),
       kind: "purchase",
-      description: `${item.name} entrance effect${unlimited ? " (development unlimited credits)" : ""}`,
+      description: `${item.name} entrance effect${unlimited ? " (development unlimited coins)" : ""}`,
       requestKey: requestId,
       refKey: reference,
     });

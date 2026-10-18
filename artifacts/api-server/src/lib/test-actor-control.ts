@@ -146,7 +146,7 @@ async function execute(command: TestActorCommand): Promise<unknown> {
     testAccount(command.as), testAccount(command.to), targetRoom(command.room),
   ]);
   if (!isTestGiftPair(sender.isTestAccount, recipient.isTestAccount))
-    throw new RoomError(403, "Test-credit gifts must stay between test accounts");
+    throw new RoomError(403, "Test-coin gifts must stay between test accounts");
   const sessionId = requireDrivenSession(sender.accountId, room.roomId);
   requireDrivenSession(recipient.accountId, room.roomId);
   const result = await gift(sender.accountId, recipient.username, command.gift, crypto.randomUUID(), {

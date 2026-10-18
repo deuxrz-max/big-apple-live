@@ -110,6 +110,8 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
                   ? <Loading />
                   : <div className="sc-empty" role="status" data-testid="status-gift-studio-access"><h2>Owner access required</h2><p>Gift Studio is available only to the Streamtalk owner.</p><Link href="/community/profile" className="bm-btn">Back to Me</Link></div>}</Route>
               <Route path="/community/rewards"><RewardsPage /></Route>
+              <Route path="/community/coins" component={BuyCreditsPage} />
+              {/* Keep the old address working for saved links; new links use /coins. */}
               <Route path="/community/credits" component={BuyCreditsPage} />
               <Route path="/community/leaderboard" component={LeaderboardPage} />
               <Route><div className="sc-empty"><h2>Not found</h2><Link href="/community" className="bm-btn">People</Link></div></Route>

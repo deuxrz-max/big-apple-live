@@ -157,7 +157,8 @@ router.post("/session", async (req, res) => {
     ensureTestRoom();
     universityAudioBeamStore.assertCanJoin(DEV_AUDIO_HARNESS_ROOM.roomId, row.accountId);
     const joined = roomStore.join(DEV_AUDIO_HARNESS_ROOM.roomId, profile.displayName ?? profile.username, {
-      accountId: row.accountId, identity: profile.identity, capExempt: false, displayNameColor: "#FFFFFF",
+      accountId: row.accountId, identity: profile.identity, capExempt: false,
+      displayNameColor: "#FFFFFF", displayNameTierIndex: 0,
     });
     const token = randomBytes(32).toString("base64url");
     const tokenHash = digest(token);

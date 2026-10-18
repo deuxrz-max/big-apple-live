@@ -128,7 +128,7 @@ export async function updateGiftCatalogItem(input: {
     throw new RoomError(400, "Names must be 1 to 60 characters.");
   }
   if (input.cost !== undefined && (!Number.isSafeInteger(input.cost) || input.cost < 1)) {
-    throw new RoomError(400, "Prices must be whole positive credit amounts.");
+    throw new RoomError(400, "Prices must be whole positive coin amounts.");
   }
 
   await db.transaction(async (tx) => {

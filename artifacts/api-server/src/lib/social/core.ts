@@ -5,7 +5,8 @@ import { publicProfile } from "../account-profiles";
 import { DAILY_REWARD } from "./catalog";
 import { visibleProfilePhotos } from "../photo-visibility";
 import { hasDevelopmentUnlimitedCredits } from "./credits-policy";
-import { giftNameColorForSentCredits } from "./gift-name-color";
+import { nameColorProfileForAccount } from "./gift-name-color-data";
+import type { NameColorTierSummary } from "./gift-name-color";
 import { visibleMonthlyPurchaseBadgeSummary, type VisibleMonthlyBadgeSummary } from "./monthly-credit-badges";
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -61,10 +62,13 @@ export async function assertContact(tx: Tx | typeof db, actor: string, target: s
   }
 }
 export async function person(viewer: string, profile: ProfileRow, settings?: SettingsRow | null, includeStats = false,
-  monthlyBadgeOverride?: VisibleMonthlyBadgeSummary | null) {
+  monthlyBadgeOverride?: VisibleMonthlyBadgeSummary | null, nameColorOverride?: NameColorTierSummary) {
   const id = profile.accountId;
   const [prefs] = settings ? [settings] : await db.select().from(socialSettings).where(eq(socialSettings.accountId, id));
-  const [wallet] = await db.select().from(socialWallets).where(eq(socialWallets.accountId, id));
+  const [[wallet], nameColor] = await Promise.all([
+    db.select().from(socialWallets).where(eq(socialWallets.accountId, id)),
+    nameColorOverride ? Promise.resolve(nameColorOverride) : nameColorProfileForAccount(id),
+  ]);
   const [favorite] = await db.select().from(socialRelations).where(and(eq(socialRelations.ownerId, viewer), eq(socialRelations.targetId, id), eq(socialRelations.kind, "favorite")));
   const blocked = id !== viewer && await pairBlocked(viewer, id);
   const [ownBlock] = id !== viewer ? await db.select({ id: socialRelations.ownerId }).from(socialRelations)
@@ -87,7 +91,8 @@ export async function person(viewer: string, profile: ProfileRow, settings?: Set
     externalHandle: blocked ? null : prefs?.externalHandle ?? null,
     interests: blocked ? [] : prefs?.interests ?? [], discoverable: prefs?.discoverable ?? false,
     favorite: !!favorite, blocked: !!ownBlock, receivedCredits: wallet?.received ?? 0,
-    displayNameColor: giftNameColorForSentCredits(wallet?.sent ?? 0),
+    displayNameColor: nameColor.color,
+    displayNameTierIndex: nameColor.tierIndex,
     badgeId: monthlyBadge?.tier.id ?? null,
     badgeName: monthlyBadge?.tier.name ?? null,
     badgeImage: monthlyBadge?.tier.badgeImage ?? null,

@@ -24,6 +24,8 @@ export type RoomEntranceEffectEvent = {
   effectId: string;
   participantId: string;
   displayName: string;
+  displayNameColor?: string;
+  displayNameTierIndex?: number;
   effectName?: string;
   badgeImage?: string;
   assetFolder?: string;

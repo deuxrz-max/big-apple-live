@@ -5,7 +5,7 @@ import { targetAccount, pairBlocked } from "./social/core";
 import { sendMessage } from "./social/messages";
 import { visibleProfilePhotos } from "./photo-visibility";
 import { botRotation } from "./moderator-bots";
-import { giftNameColorsForAccounts } from "./social/gift-name-color-data";
+import { nameColorProfilesForAccounts } from "./social/gift-name-color-data";
 import { passportBadgeSummaries } from "./social/passport";
 import { visibleMonthlyPurchaseBadgeSummaries } from "./social/monthly-credit-badges";
 import type { UniversityPerson } from "@workspace/api-zod";
@@ -53,11 +53,12 @@ export async function roomWhispers(id: string, roomId: string) {
     if (peer) result.push({ accountId: peerId, id: row.id, username: peer.username, displayName: peer.displayName ?? peer.username,
       outgoing: row.senderId === id, body: row.body, createdAt: row.createdAt });
   }
-  const colors = await giftNameColorsForAccounts(result.map(row => row.accountId));
+  const colors = await nameColorProfilesForAccounts(result.map(row => row.accountId));
   const passports = await passportBadgeSummaries(result.map(row => row.accountId));
   const badges = await visibleMonthlyPurchaseBadgeSummaries(result.map(row => row.accountId));
   return result.map(({ accountId, ...whisper }) => ({
-    ...whisper, displayNameColor: colors.get(accountId) ?? "#FFFFFF",
+    ...whisper, displayNameColor: colors.get(accountId)?.color ?? "#FFFFFF",
+    displayNameTierIndex: colors.get(accountId)?.tierIndex ?? 0,
     badgeId: badges.get(accountId)?.tier.id ?? null,
     badgeName: badges.get(accountId)?.tier.name ?? null,
     badgeImage: badges.get(accountId)?.tier.badgeImage ?? null,
@@ -72,7 +73,7 @@ export async function universitySession(id: string, roomId: string, sessionId: s
   const presentAccountIds = [...new Set(snapshot.participants
     .map(participant => roomStore.sessionAccountId(roomId, participant.participantId))
     .filter((accountId): accountId is string => !!accountId))];
-  const nameColors = await giftNameColorsForAccounts(presentAccountIds);
+  const nameColors = await nameColorProfilesForAccounts(presentAccountIds);
   const blockedRelations = await db.select().from(socialRelations).where(and(
     eq(socialRelations.kind, "block"),
     or(eq(socialRelations.ownerId, id), eq(socialRelations.targetId, id)),
@@ -97,7 +98,8 @@ export async function universitySession(id: string, roomId: string, sessionId: s
         emojiId: profile.emojiId, gender: profile.gender, color: profile.color,
         hairColor: profile.hairColor, portraitId: profile.portraitId ?? null,
       },
-      displayNameColor: nameColors.get(ownerId) ?? "#FFFFFF",
+      displayNameColor: nameColors.get(ownerId)?.color ?? "#FFFFFF",
+      displayNameTierIndex: nameColors.get(ownerId)?.tierIndex ?? 0,
       photoStatus: photos.photoReviews?.find(r => r.photoUrl === photos.photoUrl)?.status ?? null,
       self: ownerId === id, moderator: moderators.has(ownerId), ignored: ignored.includes(ownerId),
       blocked: blockedIds.has(ownerId), botId: null,
@@ -108,7 +110,7 @@ export async function universitySession(id: string, roomId: string, sessionId: s
   }
   for (const bot of botRotation.people(roomId.toUpperCase())) people.push({
     participantId: bot.participantId, username: bot.name, displayName: bot.name, photoUrl: bot.avatarUrl,
-    displayNameColor: "#FFFFFF",
+    displayNameColor: "#FFFFFF", displayNameTierIndex: 0,
     photoStatus: "approved", self: false, moderator: true, ignored: false, blocked: false, botId: bot.id,
     badgeId: null, badgeName: null, badgeImage: null,
   });

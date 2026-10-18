@@ -447,6 +447,34 @@
         }
       }
     },
+    "/social/me/name-color-test-total": {
+      "put": {
+        "operationId": "setMyNameColorTestTotal",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/NameColorTestTotalInput"}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved the owner-only development name-color test override",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/NameColorTestTotalResponse"}
+              }
+            }
+          },
+          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Owner-only development test control"}
+        }
+      }
+    },
     "/social/me/entrance-effects": {
       "put": {
         "operationId": "updateMyEntranceEffectSettings",
@@ -1456,6 +1484,7 @@
           },
           "displayName": { "type": "string" },
           "displayNameColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+          "displayNameTierIndex": { "type": "integer", "minimum": 0, "maximum": 18 },
           "followerCount": { "type": "integer", "minimum": 0 },
           "followingCount": { "type": "integer", "minimum": 0 },
           "sentCredits": { "type": "integer", "minimum": 0 },
@@ -1702,6 +1731,8 @@
       "SocialMe": {
         "type": "object",
         "properties": {
+          "nameColorProgress": {"$ref": "#/components/schemas/NameColorProgress"},
+          "nameColorTest": {"$ref": "#/components/schemas/NameColorTestState"},
           "entranceEffects": {"$ref": "#/components/schemas/EntranceEffectSettings"},
           "badgeExpirations": {
             "type": "object",
@@ -1759,6 +1790,8 @@
         },
         "required": [
           "profile",
+          "nameColorProgress",
+          "nameColorTest",
           "wallet",
           "inventory",
           "products",
@@ -1768,6 +1801,42 @@
           "badges",
           "equippedBadgeId"
         ]
+      },
+      "NameColorProgress": {
+        "type": "object",
+        "properties": {
+          "tierName": {"type": "string"},
+          "tierIndex": {"type": "integer", "minimum": 0, "maximum": 18},
+          "lifetimeCoinsPurchased": {"type": "integer", "minimum": 0},
+          "nextTierName": {"type": ["string", "null"]},
+          "nextTierThreshold": {"type": ["integer", "null"], "minimum": 0},
+          "coinsToNextTier": {"type": "integer", "minimum": 0}
+        },
+        "required": ["tierName", "tierIndex", "lifetimeCoinsPurchased", "nextTierName", "nextTierThreshold", "coinsToNextTier"]
+      },
+      "NameColorTestState": {
+        "type": "object",
+        "properties": {
+          "enabled": {"type": "boolean"},
+          "overrideCoins": {"type": ["integer", "null"], "minimum": 0}
+        },
+        "required": ["enabled", "overrideCoins"]
+      },
+      "NameColorTestTotalInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "totalCoins": {"type": ["integer", "null"], "minimum": 0}
+        },
+        "required": ["totalCoins"]
+      },
+      "NameColorTestTotalResponse": {
+        "type": "object",
+        "properties": {
+          "overrideCoins": {"type": ["integer", "null"], "minimum": 0},
+          "progress": {"$ref": "#/components/schemas/NameColorProgress"}
+        },
+        "required": ["overrideCoins", "progress"]
       },
       "MyOwnedBadge": {
         "type": "object",
@@ -1856,7 +1925,9 @@
           "senderName": {"type": "string"},
           "recipientName": {"type": "string"},
           "senderNameColor": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+          "senderNameTierIndex": {"type": "integer", "minimum": 0, "maximum": 18},
           "recipientNameColor": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+          "recipientNameTierIndex": {"type": "integer", "minimum": 0, "maximum": 18},
           "senderBadgeId": {"type": ["string", "null"]},
           "recipientBadgeId": {"type": ["string", "null"]},
           "senderBadgeName": {"type": ["string", "null"]},
@@ -2069,6 +2140,7 @@
                   "type": "string",
                   "pattern": "^#[0-9A-Fa-f]{6}$"
                 },
+                "displayNameTierIndex": {"type": "integer", "minimum": 0, "maximum": 18},
                 "badgeId": {"type": ["string", "null"]},
                 "badgeName": {"type": ["string", "null"]},
                 "badgeImage": {"type": ["string", "null"]},

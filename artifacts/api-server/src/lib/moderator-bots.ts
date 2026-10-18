@@ -1,5 +1,5 @@
 import { db, accountProfiles, moderatorBotAccounts, moderatorBotSettings, moderatorBotChatterSettings, moderatorBotFlags, roomMessages, chatRooms } from "@workspace/db";
-import { giftNameColorsForAccounts } from "./social/gift-name-color-data";
+import { nameColorProfilesForAccounts } from "./social/gift-name-color-data";
 import { and, eq, desc, gt, inArray, isNotNull, isNull } from "drizzle-orm";
 import type { UniversityVideoBeamTvVideoMetadata } from "@workspace/api-zod";
 import { roomStore } from "./room-store";
@@ -346,9 +346,10 @@ export async function getBotFlags() {
     .from(moderatorBotFlags).innerJoin(roomMessages, eq(roomMessages.id, moderatorBotFlags.messageId))
     .innerJoin(chatRooms, eq(chatRooms.roomId, moderatorBotFlags.roomId))
     .where(isNull(moderatorBotFlags.reviewedAt)).orderBy(desc(moderatorBotFlags.createdAt)).limit(100);
-  const colors = await giftNameColorsForAccounts(rows.map(row => row.accountId));
+  const colors = await nameColorProfilesForAccounts(rows.map(row => row.accountId));
   return rows.map(({ accountId, ...flag }) => ({
-    ...flag, displayNameColor: colors.get(accountId) ?? "#FFFFFF",
+    ...flag, displayNameColor: colors.get(accountId)?.color ?? "#FFFFFF",
+    displayNameTierIndex: colors.get(accountId)?.tierIndex ?? 0,
   }));
 }
 export async function reviewBotFlag(id: string, reviewer: string) {

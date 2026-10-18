@@ -12,6 +12,7 @@ import {
   GetSocialPersonResponse, SetSocialRelationshipBody, SendSocialGiftBody, PurchaseSocialProductBody,
   SendSocialMessageBody, SendSocialMessageResponse, GetSocialConversationResponse, GetSocialInboxResponse,
   GetSocialLedgerResponse, GetSocialPeopleQueryParams, GetSocialConversationQueryParams,
+  SetMyNameColorTestTotalBody, SetMyNameColorTestTotalResponse,
   GetFavoritesGalleryResponse, GetFavoriteRoomResponse, SaveMyStreamerPassportPlatformBody,
   ReviewStreamerPassportRequestBody, SetStreamerPassportFoundingLeagueBody,
   EquipMyBadgeBody, EquipMyBadgeResponse,
@@ -24,8 +25,9 @@ import {
   GetActiveGiftStudioMediaParams, GetActiveGiftStudioMediaResponse,
 } from "@workspace/api-zod";
 import { accountId, sameOrigin } from "./identity";
-import { RoomError } from "../lib/room-store";
+import { RoomError, roomStore } from "../lib/room-store";
 import { requireAccount } from "../lib/social/core";
+import { nameColorProfileForAccount, setNameColorPurchaseTotalOverride } from "../lib/social/gift-name-color-data";
 import { accessFor, requireAdult, requireOwner } from "../lib/community";
 import { blocks, getMe, getPerson, listPeople, relationship, saveSocialProfile } from "../lib/social/people";
 import { claimDaily, gift, ledger, purchase } from "../lib/social/rewards";
@@ -175,7 +177,7 @@ router.patch("/social/admin/gift-studio/catalog/:giftId", ownerOnly, async (req,
   const params = UpdateGiftStudioCatalogItemParams.safeParse(req.params);
   const body = UpdateGiftStudioCatalogItemBody.safeParse(req.body);
   if (!params.success || !body.success || Object.keys(body.data).length === 0) {
-    throw new RoomError(400, "Choose a gift name, whole positive credit price, or availability.");
+    throw new RoomError(400, "Choose a gift name, whole positive coin price, or availability.");
   }
   const result = await updateGiftCatalogItem({ giftId: params.data.giftId, ...body.data });
   res.json(UpdateGiftStudioCatalogItemResponse.parse(result));
@@ -424,6 +426,28 @@ router.get("/social/favorites/:username/room", async (req, res): Promise<void> =
 router.get("/social/me", async (req, res): Promise<void> => {
   res.json(GetSocialMeResponse.parse(await getMe(accountId(req))));
 });
+router.put("/social/me/name-color-test-total", async (req, res): Promise<void> => {
+  sameOrigin(req);
+  const id = accountId(req);
+  await requireOwner(id);
+  if (process.env.NODE_ENV !== "development") throw new RoomError(404, "Not found");
+  const input = SetMyNameColorTestTotalBody.safeParse(req.body);
+  if (!input.success) throw new RoomError(400, "Use a non-negative whole coin total, or clear the test override");
+  setNameColorPurchaseTotalOverride(id, input.data.totalCoins);
+  const progress = await nameColorProfileForAccount(id);
+  roomStore.updateAccountNameColor(id, progress.color, progress.tierIndex);
+  res.json(SetMyNameColorTestTotalResponse.parse({
+    overrideCoins: input.data.totalCoins,
+    progress: {
+      tierName: progress.tierName,
+      tierIndex: progress.tierIndex,
+      lifetimeCoinsPurchased: progress.lifetimeCoinsPurchased,
+      nextTierName: progress.nextTierName,
+      nextTierThreshold: progress.nextTierThreshold,
+      coinsToNextTier: progress.coinsToNextTier,
+    },
+  }));
+});
 router.get("/social/entrance-effects/shop", async (req, res): Promise<void> => {
   res.set("Cache-Control", "no-store");
   res.json(await listEntranceEffectShop(accountId(req)));
@@ -519,7 +543,14 @@ router.post("/social/gifts", async (req, res): Promise<void> => {
     await requireLiveStreamGiftAccess(senderId, recipient.accountId, input.data.streamId);
     const result = await gift(senderId, input.data.recipient, input.data.giftId, input.data.idempotencyKey,
       { streamId: input.data.streamId });
-    if ("liveGiftEvent" in result && result.liveGiftEvent) liveStreamChatHub.publishGift(result.liveGiftEvent);
+    if ("liveGiftEvent" in result && result.liveGiftEvent) {
+      const senderNameColor = await nameColorProfileForAccount(senderId);
+      liveStreamChatHub.publishGift({
+        ...result.liveGiftEvent,
+        senderNameColor: senderNameColor.color,
+        senderNameTierIndex: senderNameColor.tierIndex,
+      });
+    }
     if ("liveGiftEvent" in result) {
       const { liveGiftEvent: _liveGiftEvent, ...wallet } = result;
       res.json(wallet);

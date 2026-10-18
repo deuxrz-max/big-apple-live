@@ -23,6 +23,11 @@ export interface SocialPerson {
   displayName?: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex?: number;
   /** @minimum 0 */
   followerCount?: number;
   /** @minimum 0 */

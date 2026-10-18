@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PromoBackground } from '../../src/chat/PromoBackground';
 import { TextChatRoom } from '../../src/chat/UniversityRoom';
 import { BuyCreditsPage } from '../../src/social/BuyCreditsPage';
+import { StorePage } from '../../src/store/StorePage';
 import { GiftBag, GiftControl, OPEN_ROOM_GIFTS_EVENT } from '../../src/gifts';
 import { RewardsPage } from '../../src/social/MoneyPages';
 import '../../src/social/social.css';
@@ -38,6 +39,7 @@ createRoot(document.getElementById('root')!).render(
       <main className="app-page">
         {new URLSearchParams(location.search).get('view') === 'credits'
           ? <BuyCreditsPage />
+          : new URLSearchParams(location.search).get('view') === 'store' ? <StorePage />
           : new URLSearchParams(location.search).get('view') === 'gifts' ? <GiftFixture />
           : new URLSearchParams(location.search).get('view') === 'badges' ? <RewardsPage />
           : <TextChatRoom roomId="promo-regression-room" userId="synthetic-browser-user" />}

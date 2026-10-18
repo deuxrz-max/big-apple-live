@@ -17,5 +17,10 @@ export interface PhotoReviewEntry4b96100 {
   displayName?: string | null;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex?: number;
   createdAt: Date;
 }

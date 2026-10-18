@@ -10,7 +10,7 @@ import {
   useUpdateMyEntranceEffectSettings,
   type EntranceEffectShopItem,
 } from '@workspace/api-client-react';
-import { ErrorBox, Loading, Msg, errMsg } from '@/social/common';
+import { CoinAmount, ErrorBox, Loading, Msg, errMsg } from '@/social/common';
 import { GiftIcon } from '@/social/common';
 import { giftStudioMediaUrl } from '@/gifts/GiftAnimationPlayer';
 import './entrance-effects-shop.css';
@@ -127,11 +127,11 @@ export function EntranceEffectsShop() {
               </div>
               <div className="ees-item-copy">
                 <div className="ees-name-line"><h3>{item.name}</h3>{item.equipped && <span className="ees-equipped">Equipped</span>}</div>
-                <p>{item.cost.toLocaleString()} credits{item.owned ? ' · Owned' : ''}</p>
+                <p><CoinAmount>{item.cost.toLocaleString()} coins</CoinAmount>{item.owned ? ' · Owned' : ''}</p>
               </div>
               <div className="ees-actions">
                 {!item.owned && item.availableForPurchase
-                  ? <button type="button" className="ees-button ees-buy" disabled={busy} onClick={() => buy(item)} data-testid={`button-buy-entrance-effect-${item.id}`}>{purchase.isPending ? 'Buying…' : `Buy · ${item.cost.toLocaleString()} credits`}</button>
+                  ? <button type="button" className="ees-button ees-buy" disabled={busy} onClick={() => buy(item)} data-testid={`button-buy-entrance-effect-${item.id}`}>{purchase.isPending ? 'Buying…' : <>Buy · <CoinAmount>{item.cost.toLocaleString()} coins</CoinAmount></>}</button>
                   : item.owned
                     ? <button type="button" className="ees-button" disabled={busy} onClick={() => equipItem(item.equipped ? null : item.id)} data-testid={`button-equip-entrance-effect-${item.id}`}>{equip.isPending ? 'Saving…' : item.equipped ? 'Unequip' : 'Equip'}</button>
                     : <span className="ees-unavailable">Not available</span>}

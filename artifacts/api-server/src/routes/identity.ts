@@ -11,7 +11,7 @@ import { recordDailyLogin } from '../lib/social/marathon';
 import { roomStore, RoomError } from "../lib/room-store";
 import { getClerkProxyHost } from "../middlewares/clerkProxyMiddleware";
 import { communityMembership, accessFor } from "../lib/community";
-import { giftNameColorsForAccounts } from "../lib/social/gift-name-color-data";
+import { nameColorProfilesForAccounts } from "../lib/social/gift-name-color-data";
 import { universityAudioBeamStore } from "../lib/university-audio-beam";
 import { coloredEmoji } from "../lib/emoji-library";
 import { claimRoomEntranceEffect } from "../lib/room-entrance-effects";
@@ -82,10 +82,11 @@ router.post("/account/rooms/:roomId/join", async (req, res) => {
   const profile = await requireCompletedProfile(id);
   const access = await accessFor(id);
   const member = await communityMembership(params.data.roomId, id);
-  const nameColors = await giftNameColorsForAccounts([id]);
+  const nameColors = await nameColorProfilesForAccounts([id]);
   const session = roomStore.join(params.data.roomId, profile.displayName ?? profile.username, {
     accountId: id, identity: profile.identity, capExempt: access.moderator,
-    displayNameColor: nameColors.get(id) ?? "#FFFFFF",
+    displayNameColor: nameColors.get(id)?.color ?? "#FFFFFF",
+    displayNameTierIndex: nameColors.get(id)?.tierIndex ?? 0,
   });
   roomStore.restoreParticipantId(params.data.roomId, id, member.participantId);
   try {

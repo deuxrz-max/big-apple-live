@@ -241,10 +241,10 @@ test('Moonfox can be sent for 500 credits and its room animation keeps transpare
   const giftIds = await page.locator('[data-testid^="gift-catalog-"]').evaluateAll(elements =>
     elements.map(element => element.getAttribute('data-testid')));
   expect(giftIds).toEqual(['gift-catalog-heart', 'gift-catalog-spirit-pup', 'gift-catalog-moonfox']);
-  await expect(page.getByTestId('gift-catalog-heart')).toContainText('50 credits');
+  await expect(page.getByTestId('gift-catalog-heart')).toContainText('50 coins');
   await expect(card).toBeVisible();
   await expect(card).toContainText('Moonfox');
-  await expect(card).toContainText('500 credits');
+  await expect(card).toContainText('500 coins');
   const icon = card.locator('img');
   await expect(icon).toBeVisible();
   const iconAlpha = await icon.evaluate(el => {
@@ -344,7 +344,7 @@ test('Heart is a 50-credit first gift and shows its lightweight room animation',
   const send = page.getByTestId('gift-bag-send');
   await expect(send).toBeDisabled();
   await expect(page.getByTestId('gift-catalog-heart')).toContainText('Heart');
-  await expect(page.getByTestId('gift-catalog-heart')).toContainText('50 credits');
+  await expect(page.getByTestId('gift-catalog-heart')).toContainText('50 coins');
   const heartIcon = page.getByTestId('gift-catalog-heart').locator('img');
   await expect(heartIcon).toHaveAttribute('src', /gift-icons\/heart\.svg$/);
   await expect(heartIcon).toHaveCSS('width', '64px');
@@ -506,7 +506,7 @@ test('real component reads saved inventory, selection cannot transfer or buy', a
   await expect(page.getByTestId('gift-item-unowned')).toHaveCount(0);
   await expect(page.getByTestId('gift-item-badge')).toHaveCount(0);
   await expect(page.getByTestId('gift-bag-send')).toBeDisabled();
-  await expect(page.getByTestId('gift-bag')).not.toContainText('10 credits');
+  await expect(page.getByTestId('gift-bag')).not.toContainText('10 coins');
   expect(writes).toEqual([]);
 });
 

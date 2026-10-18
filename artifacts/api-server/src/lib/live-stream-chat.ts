@@ -7,6 +7,7 @@ export type LiveStreamChatMessage = {
   username: string;
   displayName: string;
   displayNameColor: string;
+  displayNameTierIndex: number;
   badgeName: string | null;
   badgeImage: string | null;
   text: string;
@@ -19,6 +20,8 @@ export type LiveStreamGiftEvent = {
   senderAccountId: string;
   senderUsername: string;
   senderName: string;
+  senderNameColor: string;
+  senderNameTierIndex: number;
   recipientUsername: string;
   recipientName: string;
   giftId: string;

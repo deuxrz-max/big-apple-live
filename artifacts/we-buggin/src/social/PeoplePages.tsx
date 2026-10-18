@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { Gift, MessageCircle, Search } from 'lucide-react';
@@ -9,10 +9,11 @@ import {
   type GetSocialPeopleParams,
   useGetFavoritesGallery, getGetFavoritesGalleryQueryKey, getFavoriteRoom,
 } from '@workspace/api-client-react';
-import { Avatar, BadgeMark, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, refreshSocial, useIdemKey } from './common';
+import { Avatar, BadgeMark, CoinAmount, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, refreshSocial, useIdemKey } from './common';
 import { ProfileView, ProfileMenu } from '@/profile/ProfileView';
 import { FavoritesGallery, type FavoriteEntry } from './FavoritesGallery';
 import { PublicStreamerPassport } from '@/passport/StreamerPassport';
+import { ShinyName } from '@/components/ShinyName';
 
 export function CommunityPage() {
   const me = useGetSocialMe();
@@ -69,7 +70,7 @@ export function PersonPage({ username }: { username: string }) {
   const gift = useSendSocialGift();
   const idem = useIdemKey();
   const [giftId, setGiftId] = useState('');
-  const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null);
+  const [msg, setMsg] = useState<{ ok: boolean; t: ReactNode } | null>(null);
   useEffect(() => { setMsg(null); }, [username]);
   const p = q.data;
   const own = me.data?.profile.username === username;
@@ -85,7 +86,7 @@ export function PersonPage({ username }: { username: string }) {
     if (!g) return;
     setMsg(null);
     gift.mutate({ data: { recipient: username, giftId, idempotencyKey: idem.get(`${username}:${giftId}`) } }, {
-      onSuccess: () => { idem.clear(); setGiftId(''); setMsg({ ok: true, t: `Sent ${g.name} (${g.cost} credits).` }); refreshSocial(qc); },
+      onSuccess: () => { idem.clear(); setGiftId(''); setMsg({ ok: true, t: <>Sent {g.name} for <CoinAmount>{g.cost.toLocaleString()} coins</CoinAmount>.</> }); refreshSocial(qc); },
       onError: (e) => setMsg({ ok: false, t: errMsg(e) }),
     });
   };
@@ -107,12 +108,12 @@ export function PersonPage({ username }: { username: string }) {
       {!own && (p.blocked ? <p className="sc-sub">Blocked in either direction: no new gifts, messages or follows. Past messages stay readable.</p> : (
         <div className="sc-panel">
           <h2>Send a gift</h2>
-          <p className="sc-sub">Credits have no cash value. Balance: {me.data?.wallet.unlimited ? 'Unlimited test credits' : me.data?.wallet.balance ?? '...'}</p>
+          <p className="sc-sub">Coins have no cash value. Balance: <CoinAmount>{me.data?.wallet.unlimited ? 'Unlimited test coins' : `${me.data?.wallet.balance.toLocaleString() ?? '...'} coins`}</CoinAmount></p>
           <div className="sc-gifts" role="radiogroup" aria-label="Gift">
             {me.data?.gifts.map((g) => (
               <button key={g.id} type="button" role="radio" aria-checked={giftId === g.id} className={`sc-gift${giftId === g.id ? ' is-on' : ''}`}
                 disabled={gift.isPending || (!me.data?.wallet.unlimited && (me.data?.wallet.balance ?? 0) < g.cost)} onClick={() => setGiftId(g.id)} data-testid={`button-gift-${g.id}`}>
-                <GiftIcon id={g.id} size={26} /><b>{g.name}</b><span>{g.cost} credits</span></button>
+                <GiftIcon id={g.id} size={26} /><b>{g.name}</b><CoinAmount>{g.cost.toLocaleString()} coins</CoinAmount></button>
             ))}
           </div>
           <button type="button" className="bm-btn bm-btn-primary" disabled={!giftId || gift.isPending} onClick={send} data-testid="button-send-gift">
@@ -172,7 +173,7 @@ export function MyProfilePage() {
   return (
     <section>
       <h1 className="bm-h1 sc-h1">My profile</h1>
-      <div className="sc-hero"><Avatar p={d.profile} size={110} /><div><p className="sc-name" style={{ color: d.profile.displayNameColor ?? '#FFFFFF' }}><BadgeMark id={d.profile.badgeId} label={d.profile.badgeName} imageUrl={d.profile.badgeImage} size={18} compact />{d.profile.username}</p>
+      <div className="sc-hero"><Avatar p={d.profile} size={110} /><div><ShinyName className="sc-name" displayNameColor={d.profile.displayNameColor} displayNameTierIndex={d.profile.displayNameTierIndex}><BadgeMark id={d.profile.badgeId} label={d.profile.badgeName} imageUrl={d.profile.badgeImage} size={18} compact />{d.profile.username}</ShinyName>
         <p className="sc-sub">Change your display name, photo and bio in <Link href="/user-portal/edit" className="bm-link">Edit profile</Link>.</p></div></div>
       <form className="sc-form" onSubmit={submit}>
         <label className="sc-field"><span className="bm-label">Bio ({bio.length}/200)</span>
@@ -188,7 +189,7 @@ export function MyProfilePage() {
         <label className="sc-field"><span className="bm-label">Handle on that platform</span>
           <input className="bm-input" maxLength={64} value={handle} disabled={!platform} onChange={(e) => setHandle(e.target.value)} data-testid="input-handle" />
           <small>Self-listed. Not ownership checked or officially verified.</small></label>
-        <p className="sc-sub">Monthly purchase badges are applied automatically when a confirmed credit purchase qualifies. They cannot be selected manually.</p>
+        <p className="sc-sub">Monthly purchase badges are applied automatically when a confirmed coin purchase qualifies. They cannot be selected manually.</p>
         <label className="sc-check"><input type="checkbox" checked={discoverable} onChange={(e) => setDiscoverable(e.target.checked)} data-testid="checkbox-discoverable" />
           <span>Show me in People discovery. Off by default; only you decide.</span></label>
         {msg && <Msg ok={msg.ok}>{msg.t}</Msg>}

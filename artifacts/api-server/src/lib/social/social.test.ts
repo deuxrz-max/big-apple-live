@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { randomUUID } from "node:crypto";
-import { db, accountProfiles, socialWallets, socialLedger, profilePhotos } from "@workspace/db";
+import { db, accountProfiles, socialWallets, socialLedger, profilePhotos, chatAdmissions } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
 import { getMe, getPerson, listPeople, relationship, saveSocialProfile, blocks } from "./people";
 import { claimDaily, gift, purchase, ledger } from "./rewards";
@@ -13,6 +13,7 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
   const ids = ["a", "b", "c"].map(s => `social-fixture-${token}-${s}`);
   const names = ["a", "b", "c"].map(s => `Social_${token}_${s}`);
   t.after(async () => {
+    await db.delete(chatAdmissions).where(inArray(chatAdmissions.accountId, ids));
     await db.delete(profilePhotos).where(inArray(profilePhotos.accountId, ids));
     await db.delete(accountProfiles).where(inArray(accountProfiles.accountId, ids));
     await db.$client.end();
@@ -20,6 +21,7 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
   await db.insert(accountProfiles).values(ids.map((id, i) => ({ accountId: id, username: names[i]!, nameKey: names[i]!.toLowerCase(),
     emojiId: "1F600", gender: i === 1 ? "Female" as const : "Male" as const, color: "#ffffff", hairColor: "#000000",
     isTestAccount: i === 2 })));
+  await db.insert(chatAdmissions).values(ids.map(accountId => ({ accountId })));
   const a = ids[0]!, b = ids[1]!, c = ids[2]!;
   const prefs = { bio: "A real community member", country: "US", interests: ["music"], discoverable: true, badgeId: null };
 
@@ -82,18 +84,24 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     assert.equal(results.filter(r => r.status === "fulfilled").length, 5);
     assert.equal((await getMe(a)).wallet.balance, 0);
     assert.equal((await getMe(b)).wallet.balance, 50);
-    await assert.rejects(purchase(b, "good-neighbor", randomUUID()), /confirmed credit purchases/);
+    await assert.rejects(purchase(b, "good-neighbor", randomUUID()), /confirmed coin purchases/);
     const me = await getMe(b);
     assert.equal(me.wallet.balance, 50);
     assert.deepEqual(me.inventory, []);
     assert.equal(me.profile.badgeId, null);
     assert.deepEqual(me.profile.badges, []);
-    await assert.rejects(purchase(b, "night-owl", randomUUID()), /confirmed credit purchases/);
+    await assert.rejects(purchase(b, "night-owl", randomUUID()), /confirmed coin purchases/);
+    const storePurchaseKey = randomUUID();
+    await purchase(b, "good-vibes", storePurchaseKey);
+    await purchase(b, "good-vibes", storePurchaseKey);
+    assert.equal((await getMe(b)).wallet.balance, 45, "a repeated Store request does not debit twice");
+    assert.deepEqual((await getMe(b)).inventory, ["good-vibes"], "a Store purchase adds a collectible, not a sent gift");
+    assert.equal((await getMe(b)).giftQuantities?.["good-vibes"], 1);
     const giftKey = randomUUID();
     await gift(b, names[0]!, "good-vibes", giftKey);
     await gift(b, names[0]!, "good-vibes", giftKey);
     assert.equal((await getMe(a)).wallet.balance, 5);
-    assert.equal((await getMe(b)).wallet.balance, 45);
+    assert.equal((await getMe(b)).wallet.balance, 40);
     await assert.rejects(gift(b, names[0]!, "big-love", giftKey), /retry key/);
     const [row] = await db.select().from(socialWallets).where(eq(socialWallets.accountId, b));
     assert.equal(row!.received, 25);
@@ -105,7 +113,7 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     const leader = await listPeople(b, { search: token }, true);
     assert.equal(leader.people[0]!.username, names[1]);
     assert.equal(leader.people.some(person => person.username === names[2]), false, "test accounts are excluded from public leaderboards");
-    assert.equal((await ledger(b)).transactions.filter(r => r.kind === "purchase").length, 0);
+    assert.equal((await ledger(b)).transactions.filter(r => r.kind === "purchase").length, 1);
   });
   await t.test("blocking is bilateral and stops discovery, favorites, gifts and new messages without deleting other history", async () => {
     await relationship(a, names[1]!, "favorite", true);

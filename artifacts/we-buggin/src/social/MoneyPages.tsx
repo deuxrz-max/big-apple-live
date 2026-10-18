@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { Coins, Send, RefreshCw, Trash2, Trophy } from 'lucide-react';
@@ -7,8 +7,13 @@ import {
   useClaimSocialDailyReward, useGetSocialLedger, useGetSocialLeaderboard,
   getGetSocialMeQueryKey, getGetSocialConversationQueryKey,
 } from '@workspace/api-client-react';
-import { BadgeMark, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, fmt, refreshSocial, useIdemKey } from './common';
+import { BadgeMark, CoinAmount, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, fmt, refreshSocial, useIdemKey } from './common';
 import { BadgeArt } from './BadgeArt';
+import { ShinyName } from '@/components/ShinyName';
+
+const coinify = (text: string) => text.replace(/\bcredits?\b/gi, (word) =>
+  /s$/i.test(word) ? 'coins' : 'coin',
+);
 
 export function ThreadPage({ username }: { username: string }) {
   const qc = useQueryClient();
@@ -51,7 +56,7 @@ export function ThreadPage({ username }: { username: string }) {
         <Link href="/community/messages" aria-label="Back to My Messages" data-testid="link-my-messages">My Messages</Link>
       </h1>
       <header className="sc-thread-head">
-        <Link href={`/community/people/${username}`} className="sc-row"><span className="sc-name" style={{ color: d.person.displayNameColor ?? '#FFFFFF' }}><BadgeMark id={d.person.badgeId} label={d.person.badgeName} imageUrl={d.person.badgeImage} size={18} compact />{d.person.username}</span></Link>
+        <Link href={`/community/people/${username}`} className="sc-row"><ShinyName className="sc-name" displayNameColor={d.person.displayNameColor} displayNameTierIndex={d.person.displayNameTierIndex}><BadgeMark id={d.person.badgeId} label={d.person.badgeName} imageUrl={d.person.badgeImage} size={18} compact />{d.person.username}</ShinyName></Link>
         <div className="sc-actions">
           <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()} disabled={q.isFetching} data-testid="button-refresh"><RefreshCw size={14} /> Refresh</button>
           {confirmDel ? (
@@ -88,40 +93,44 @@ export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
   const me = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), refetchInterval: 10000 } });
   const ledger = useGetSocialLedger({ query: { queryKey: ['/api/social/wallet/transactions'], refetchInterval: 10000 } });
   const claim = useClaimSocialDailyReward();
-  const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null);
+  const [msg, setMsg] = useState<{ ok: boolean; t: ReactNode } | null>(null);
   if (me.isLoading) return <Loading />;
   if (me.isError || !me.data) return <ErrorBox error={me.error} retry={() => me.refetch()} />;
   const { wallet: w, products, gifts, inventory } = me.data;
   const doClaim = () => { setMsg(null); claim.mutate(undefined, {
-    onSuccess: () => { setMsg({ ok: true, t: `Claimed ${w.dailyReward} credits.` }); refreshSocial(qc); },
+    onSuccess: () => { setMsg({ ok: true, t: <>Claimed <CoinAmount>{w.dailyReward.toLocaleString()} coins</CoinAmount>.</> }); refreshSocial(qc); },
     onError: (e) => setMsg({ ok: false, t: errMsg(e) }) }); };
   return (
     <section>
       {embedded ? <h2 className="bm-h1 sc-h1">Rewards</h2> : <h1 className="bm-h1 sc-h1">Rewards</h1>}
-      <p className="bm-lede">Daily reward credits have no cash value. Purchase-tier badges count only completed credit purchases.</p>
+      <p className="bm-lede">Daily reward coins have no cash value. Purchase-tier badges count only completed coin purchases.</p>
       <div className="sc-wallet">
-        <div className="sc-balance"><Coins size={28} /><b data-testid="text-balance">{w.unlimited ? 'Unlimited test' : w.balance}</b><span>credits</span></div>
-        <dl><div><dt>Earned</dt><dd>{w.earned}</dd></div><div><dt>Received</dt><dd>{w.received}</dd></div><div><dt>Sent</dt><dd>{w.sent}</dd></div></dl>
+        <div className="sc-balance"><Coins size={28} style={{ color: '#f5cb8d' }} /><b data-testid="text-balance">{w.unlimited ? 'Unlimited test' : w.balance.toLocaleString()}</b><span>coins</span></div>
+        <dl>
+          <div><dt>Coins earned</dt><dd><CoinAmount>{w.earned.toLocaleString()}</CoinAmount></dd></div>
+          <div><dt>Coins received</dt><dd><CoinAmount>{w.received.toLocaleString()}</CoinAmount></dd></div>
+          <div><dt>Coins sent</dt><dd><CoinAmount>{w.sent.toLocaleString()}</CoinAmount></dd></div>
+        </dl>
         <button type="button" className="bm-btn bm-btn-primary" disabled={!w.canClaimDaily || claim.isPending} onClick={doClaim} data-testid="button-claim">
-          {claim.isPending ? 'Claiming...' : w.canClaimDaily ? `Claim ${w.dailyReward} daily credits` : 'Claimed today, back after 00:00 UTC'}</button>
+          {claim.isPending ? 'Claiming...' : w.canClaimDaily ? <>Claim <CoinAmount>{w.dailyReward.toLocaleString()} daily coins</CoinAmount></> : 'Claimed today, back after 00:00 UTC'}</button>
       </div>
       {msg && <Msg ok={msg.ok}>{msg.t}</Msg>}
       <h2 className="sc-h2">Badge store</h2>
-      <p className="sc-sub">Your highest qualifying tier is applied automatically. A tier earned in one UTC calendar month stays active through the end of the next month. Gift credits, daily rewards, and old badge purchases do not count.</p>
-      <p className="sc-sub" role="note">Credit checkout is currently unavailable, so no new purchase-tier badge can be earned in this preview. Only verified, completed real-money credit purchases will count when checkout is connected.</p>
+      <p className="sc-sub">Your highest qualifying tier is applied automatically. A tier earned in one UTC calendar month stays active through the end of the next month. Gift coins, daily rewards, and old badge purchases do not count.</p>
+      <p className="sc-sub" role="note">Coin checkout is currently unavailable, so no new purchase-tier badge can be earned in this preview. Only verified, completed real-money coin purchases will count when checkout is connected.</p>
       <div className="sc-gifts sc-store">{products.map((p) => {
         const earned = me.data.profile.badgeId === p.id;
         return (
         <div key={p.id} className="sc-gift sc-product" data-testid={`card-product-${p.id}`}>
           <BadgeArt id={p.id} name={p.name} imageUrl={p.badgeImage} /><b>{p.name}</b><strong>Monthly purchase threshold</strong>
-          <span>{p.cost.toLocaleString()} credits in completed credit purchases during one calendar month</span>
+          <span><CoinAmount>{p.cost.toLocaleString()} coins</CoinAmount> in completed coin purchases during one calendar month</span>
           {earned
             ? <span className="sc-tier-active" data-testid={`status-${p.id}`}>Your highest active tier</span>
             : <span>Not currently active</span>}
           </div>); })}</div>
       <h2 className="sc-h2">Gifts</h2>
       <p className="sc-sub">Send these from anyone's profile.</p>
-      <div className="sc-gifts">{gifts.map((g) => <div key={g.id} className="sc-gift"><GiftIcon id={g.id} size={26} /><b>{g.name}</b><span>{g.cost} credits</span></div>)}</div>
+      <div className="sc-gifts">{gifts.map((g) => <div key={g.id} className="sc-gift"><GiftIcon id={g.id} size={26} /><b>{g.name}</b><CoinAmount>{g.cost.toLocaleString()} coins</CoinAmount></div>)}</div>
        <h2 className="sc-h2">Gift bag</h2>
        {inventory.length === 0 ? <p className="sc-sub">No gifts in your bag yet.</p> : <p className="sc-tags">{inventory.map((id) => <i key={id}>{gifts.find((g) => g.id === id)?.name ?? id}</i>)}</p>}
       <h2 className="sc-h2">Ledger</h2>
@@ -129,8 +138,8 @@ export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
       {ledger.isError && <ErrorBox error={ledger.error} retry={() => ledger.refetch()} />}
       {ledger.data && (ledger.data.transactions.length === 0 ? <p className="sc-sub">No transactions yet.</p> : (
         <ul className="sc-list">{ledger.data.transactions.map((t) => (
-          <li key={t.id} className="sc-ledger"><span><b>{t.description}</b>{t.peer && <small> / {t.peer}</small>}<small className="sc-sub"> {fmt(t.createdAt)}</small></span>
-            <b className={t.delta >= 0 ? 'sc-plus' : 'sc-minus'}>{t.delta > 0 ? '+' : ''}{t.delta}</b></li>))}</ul>))}
+          <li key={t.id} className="sc-ledger"><span><b>{coinify(t.description)}</b>{t.peer && <small> / {t.peer}</small>}<small className="sc-sub"> {fmt(t.createdAt)}</small></span>
+            <b className={t.delta >= 0 ? 'sc-plus' : 'sc-minus'}><CoinAmount>{t.delta > 0 ? '+' : ''}{t.delta.toLocaleString()} coins</CoinAmount></b></li>))}</ul>))}
     </section>
   );
 }
@@ -140,7 +149,7 @@ export function LeaderboardPage() {
   return (
     <section>
       <h1 className="bm-h1 sc-h1"><Trophy size={36} /> Leaderboard</h1>
-      <p className="bm-lede">Ranked by credits received in gifts.</p>
+      <p className="bm-lede">Ranked by coins received in gifts.</p>
       {q.isLoading && <Loading />}
       {q.isError && <ErrorBox error={q.error} retry={() => q.refetch()} />}
       {q.data && (q.data.people.length === 0 ? <Empty title="No ranking yet"><p>Gifts sent to opted-in people will show up here.</p></Empty> : (
@@ -150,7 +159,7 @@ export function LeaderboardPage() {
             <PersonCard p={p} className="sc-card-leaderboard" showBadgeInName={false}
               extra={<span className="sc-rank-score">
                 <BadgeMark id={p.badgeId} label={p.badgeName} imageUrl={p.badgeImage} size={17} compact />
-                <b className="sc-score">{p.receivedCredits.toLocaleString()}</b>
+                <b className="sc-score"><CoinAmount>{p.receivedCredits.toLocaleString()}</CoinAmount></b>
               </span>} />
           </li>))}</ol>))}
     </section>

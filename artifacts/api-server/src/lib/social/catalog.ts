@@ -10,7 +10,7 @@ export const PRODUCTS = MONTHLY_CREDIT_BADGE_TIERS.map(tier => ({
   id: tier.id,
   name: tier.name,
   badgeImage: tier.badgeImage,
-  description: `Complete ${tier.monthlyCredits.toLocaleString("en-US")} credits in confirmed credit purchases during one UTC calendar month. Active through the end of the following month.`,
+  description: `Complete ${tier.monthlyCredits.toLocaleString("en-US")} coins in confirmed coin purchases during one UTC calendar month. Active through the end of the following month.`,
   cost: tier.monthlyCredits,
 }));
 export const GIFTS = [

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { BigTierGiftId } from './SpiritPup';
 import { RoseShowerEffect } from './RoseShowerEffect';
+import { ShinyName } from '@/components/ShinyName';
 import './gifts.css';
 
 export const bigTierGiftMedia: Record<BigTierGiftId, string> = {
@@ -28,20 +29,26 @@ const PRESENTATION: Record<BigTierGiftId, { name: string; emoji: string; positio
   whip: { name: 'Whip', emoji: '🏎️', position: 'bottom' },
 };
 
-export function BigTierGiftAnimation({ giftId, senderName, onFinish }: {
+export function BigTierGiftAnimation({ giftId, senderName, senderNameColor, senderNameTierIndex, onFinish }: {
   giftId: BigTierGiftId;
   senderName: string;
+  senderNameColor?: string;
+  senderNameTierIndex?: number;
   onFinish: () => void;
 }) {
   if (giftId === 'rose-shower') {
-    return <RoseShowerEffect senderName={senderName} onFinish={onFinish} />;
+    return <RoseShowerEffect senderName={senderName} senderNameColor={senderNameColor}
+      senderNameTierIndex={senderNameTierIndex} onFinish={onFinish} />;
   }
-  return <BigTierGiftVideoAnimation giftId={giftId} senderName={senderName} onFinish={onFinish} />;
+  return <BigTierGiftVideoAnimation giftId={giftId} senderName={senderName}
+    senderNameColor={senderNameColor} senderNameTierIndex={senderNameTierIndex} onFinish={onFinish} />;
 }
 
-function BigTierGiftVideoAnimation({ giftId, senderName, onFinish }: {
+function BigTierGiftVideoAnimation({ giftId, senderName, senderNameColor, senderNameTierIndex, onFinish }: {
   giftId: Exclude<BigTierGiftId, 'rose-shower'>;
   senderName: string;
+  senderNameColor?: string;
+  senderNameTierIndex?: number;
   onFinish: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -147,7 +154,7 @@ function BigTierGiftVideoAnimation({ giftId, senderName, onFinish }: {
         aria-hidden="true"
       />
     )}
-    <span className="big-tier-gift-banner">{senderName} sent {gift.name} {gift.emoji}</span>
+    <span className="big-tier-gift-banner"><ShinyName displayNameColor={senderNameColor} displayNameTierIndex={senderNameTierIndex}>{senderName}</ShinyName> sent {gift.name} {gift.emoji}</span>
     {mediaError && <span className="big-tier-gift-error" role="status">{gift.name} animation could not load.</span>}
   </div>, document.body);
 }

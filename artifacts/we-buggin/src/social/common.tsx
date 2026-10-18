@@ -4,6 +4,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import { Award, Crown, Flame, Gem, Gift, Heart, Rocket, Sparkles, Star, Zap, Coins, type LucideIcon } from 'lucide-react';
 import type { SocialPerson } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
+import { ShinyName } from '@/components/ShinyName';
 
 export function errMsg(e: unknown): string {
   const x = e as { data?: { error?: string } | null; message?: string };
@@ -25,6 +26,16 @@ export function GiftIcon({ id, size = 22 }: { id: string; size?: number }) {
   const I = id.toLowerCase().includes('coin') ? Coins : iconFor(id + 'g') ?? Gift;
   return <I size={size} aria-hidden />;
 }
+
+export function CoinAmount({ children, size = 14, className }: {
+  children: ReactNode; size?: number; className?: string;
+}) {
+  return <span className={className} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
+    <Coins size={size} aria-hidden="true" style={{ color: '#f5cb8d', flex: '0 0 auto' }} />
+    {children}
+  </span>;
+}
+
 export function BadgeMark({ id, label, imageUrl, size = 14, compact = false }: {
   id: string | null; label?: string | null; imageUrl?: string | null; size?: number; compact?: boolean;
 }) {
@@ -70,10 +81,10 @@ export function PersonCard({ p, extra, showBadgeInName = true, className = '' }:
       <Link href={`/community/people/${p.username}`} className="sc-card-main">
         <Avatar p={p} size={64} />
         <span className="sc-card-text">
-          <span className="sc-name" style={{ color: p.displayNameColor ?? '#FFFFFF' }}>
+          <ShinyName className="sc-name" displayNameColor={p.displayNameColor} displayNameTierIndex={p.displayNameTierIndex}>
             {showBadgeInName && <BadgeMark id={p.badgeId} label={p.badgeName} imageUrl={p.badgeImage} size={18} compact />}
             <span className="sc-name-label">{(p as PhotoPerson).displayName || p.username}</span>
-          </span>
+          </ShinyName>
           <span className="sc-sub">@{p.username}{p.country ? ` / ${p.country}` : ''}</span>
           {p.bio && <span className="sc-bio">{p.bio}</span>}
           {p.interests.length > 0 && <span className="sc-tags">{p.interests.slice(0, 4).map((i) => <i key={i}>{i}</i>)}</span>}

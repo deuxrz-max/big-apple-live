@@ -142,6 +142,11 @@ export interface SocialPerson {
   displayName?: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex?: number;
   /** @minimum 0 */
   followerCount?: number;
   /** @minimum 0 */
@@ -275,6 +280,11 @@ export interface UniversityPerson {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex?: number;
   passport?: StreamerPassportBadgeSummary;
   identity?: EmojiIdentity;
   /** @nullable */
@@ -294,6 +304,11 @@ export interface UniversityWhisper {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex?: number;
   /** @nullable */
   badgeId: string | null;
   /** @nullable */
@@ -334,6 +349,11 @@ export interface PhotoReviewEntry {
   displayName?: string | null;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex?: number;
   createdAt: string;
 }
 
@@ -603,6 +623,11 @@ export interface ChatMessage {
   text: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex?: number;
   passport?: StreamerPassportBadgeSummary;
   createdAt: string;
 }
@@ -698,6 +723,11 @@ export interface ModeratorBotFlag {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex?: number;
   text: string;
   reason: string;
   createdAt: string;
@@ -853,6 +883,13 @@ export interface LiveStreamEntry {
   displayName: string;
   /** @maxLength 40 */
   username: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex: number;
   /** @minimum 0 */
   viewerCount: number;
 }
@@ -878,6 +915,13 @@ export interface LiveStreamHostSession {
   displayName: string;
   /** @maxLength 40 */
   username: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex: number;
 }
 
 export interface LiveStreamViewerSession {
@@ -887,6 +931,13 @@ export interface LiveStreamViewerSession {
   displayName: string;
   /** @maxLength 40 */
   username: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex: number;
   /** @maxLength 40 */
   viewerUsername: string;
 }
@@ -909,6 +960,11 @@ export interface LiveStreamChatMessage {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex: number;
   /**
      * @maxLength 80
      * @nullable
@@ -1234,6 +1290,11 @@ export interface Participant {
   unmuteRequested: boolean;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex?: number;
   participantId: string;
   displayName: string;
   /** @nullable */
@@ -1321,6 +1382,11 @@ export interface UniversityPerson4b96100 {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex?: number;
   passport?: StreamerPassportBadgeSummary;
   identity?: EmojiIdentity4b96100;
   /** @nullable */
@@ -1340,6 +1406,11 @@ export interface UniversityWhisper4b96100 {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex?: number;
   /** @nullable */
   badgeId: string | null;
   /** @nullable */
@@ -1380,6 +1451,11 @@ export interface PhotoReviewEntry4b96100 {
   displayName?: string | null;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex?: number;
   createdAt: string;
 }
 
@@ -1634,6 +1710,11 @@ export interface ChatMessage4b96100 {
   text: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex?: number;
   passport?: StreamerPassportBadgeSummary;
   createdAt: string;
 }
@@ -1729,6 +1810,11 @@ export interface ModeratorBotFlag4b96100 {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex?: number;
   text: string;
   reason: string;
   createdAt: string;
@@ -1884,6 +1970,13 @@ export interface LiveStreamEntry4b96100 {
   displayName: string;
   /** @maxLength 40 */
   username: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex: number;
   /** @minimum 0 */
   viewerCount: number;
 }
@@ -1909,6 +2002,13 @@ export interface LiveStreamHostSession4b96100 {
   displayName: string;
   /** @maxLength 40 */
   username: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex: number;
 }
 
 export interface LiveStreamViewerSession4b96100 {
@@ -1918,6 +2018,13 @@ export interface LiveStreamViewerSession4b96100 {
   displayName: string;
   /** @maxLength 40 */
   username: string;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  displayNameColor: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex: number;
   /** @maxLength 40 */
   viewerUsername: string;
 }
@@ -1940,6 +2047,11 @@ export interface LiveStreamChatMessage4b96100 {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex: number;
   /**
      * @maxLength 80
      * @nullable
@@ -2265,6 +2377,11 @@ export interface Participant4b96100 {
   unmuteRequested: boolean;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex?: number;
   participantId: string;
   displayName: string;
   /** @nullable */
@@ -2786,6 +2903,35 @@ export type SocialMeCountriesItem = {
   name: string;
 };
 
+export interface NameColorProgress {
+  tierName: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  tierIndex: number;
+  /** @minimum 0 */
+  lifetimeCoinsPurchased: number;
+  /** @nullable */
+  nextTierName: string | null;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  nextTierThreshold: number | null;
+  /** @minimum 0 */
+  coinsToNextTier: number;
+}
+
+export interface NameColorTestState {
+  enabled: boolean;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  overrideCoins: number | null;
+}
+
 export interface MyOwnedBadge {
   id: string;
   name: string;
@@ -2804,6 +2950,8 @@ export interface MyOwnedBadge {
 }
 
 export interface SocialMe {
+  nameColorProgress: NameColorProgress;
+  nameColorTest: NameColorTestState;
   entranceEffects: EntranceEffectSettings;
   badgeExpirations?: SocialMeBadgeExpirations;
   badges: MyOwnedBadge[];
@@ -2818,6 +2966,23 @@ export interface SocialMe {
   gifts: SocialGift[];
   giftQuantities?: SocialMeGiftQuantities;
   countries: SocialMeCountriesItem[];
+}
+
+export interface NameColorTestTotalInput {
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  totalCoins: number | null;
+}
+
+export interface NameColorTestTotalResponse {
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  overrideCoins: number | null;
+  progress: NameColorProgress;
 }
 
 export interface EquipMyBadgeInput {
@@ -2862,8 +3027,18 @@ export interface RoomGiftEvent {
   recipientName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   senderNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  senderNameTierIndex?: number;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   recipientNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  recipientNameTierIndex?: number;
   /** @nullable */
   senderBadgeId: string | null;
   /** @nullable */
@@ -2937,6 +3112,11 @@ export type SocialInboxConversationsItem = {
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   displayNameColor?: string;
+  /**
+     * @minimum 0
+     * @maximum 18
+     */
+  displayNameTierIndex?: number;
   /** @nullable */
   badgeId: string | null;
   /** @nullable */

@@ -7,7 +7,6 @@ import { SPIRIT_PUP, spiritSplit } from './spirit-pup-policy';
 import { validateGiftRoom } from './room-gifts';
 import { requireAdult } from '../community';
 import { hasDevelopmentUnlimitedCredits, planCreditSpend } from "./credits-policy";
-import { giftNameColorForSentCredits } from "./gift-name-color";
 import { liveStreamIdForAccount, isLiveStreamActiveOrStarting } from "../live-stream-policy";
 import { getSendableGiftCatalogItem } from "../gift-studio-catalog";
 
@@ -64,7 +63,7 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
     const current = await wallet(id, tx, sender.username);
     const unlimited = hasDevelopmentUnlimitedCredits(sender.username);
     const spend = planCreditSpend(current.balance, item.cost, unlimited);
-    if (!spend.allowed) throw new RoomError(409, roomGift ? "Not enough credits. Open the credit store to get more." : "Not enough credits. Claim a daily reward first.");
+    if (!spend.allowed) throw new RoomError(409, roomGift ? "Not enough coins. Open the coin store to get more." : "Not enough coins. Claim a daily coin reward first.");
     const recipientCredits = roomGift ? spiritSplit(item.cost).recipientCredits : item.cost;
     if (spend.debit > 0) {
       await tx.update(socialWallets).set({ balance: sql`${socialWallets.balance} - ${spend.debit}`, sent: sql`${socialWallets.sent} + ${item.cost}` }).where(eq(socialWallets.accountId, id));
@@ -73,7 +72,7 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
     }
     await tx.update(socialWallets).set({ balance: sql`${socialWallets.balance} + ${recipientCredits}`, received: sql`${socialWallets.received} + ${recipientCredits}` }).where(eq(socialWallets.accountId, target.accountId));
     await tx.insert(socialLedger).values([
-      { accountId: id, delta: -giftLedgerDebit(spend.debit, item.cost, unlimited), kind: "gift_sent", description: `${item.name} sent to ${target.username}${unlimited ? " (development unlimited credits)" : ""}`, peer: target.username, requestKey: key, refKey: ref },
+      { accountId: id, delta: -giftLedgerDebit(spend.debit, item.cost, unlimited), kind: "gift_sent", description: `${item.name} sent to ${target.username}${unlimited ? " (development unlimited coins)" : ""}`, peer: target.username, requestKey: key, refKey: ref },
       { accountId: target.accountId, delta: recipientCredits, kind: "gift_received", description: `${item.name} from ${sender.username}`, peer: sender.username },
     ]);
     let liveGiftEvent: {
@@ -101,16 +100,44 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
     }
     return { wallet: await wallet(id, tx, sender.username), liveGiftEvent };
   });
-  const [updatedWallet] = await db.select({ sent: socialWallets.sent }).from(socialWallets)
-    .where(eq(socialWallets.accountId, id));
-  roomStore.updateAccountNameColor(id, giftNameColorForSentCredits(updatedWallet?.sent ?? 0));
   return streamContext ? { ...result.wallet, liveGiftEvent: result.liveGiftEvent } : result.wallet;
 }
 export async function purchase(id: string, itemId: string, key: string) {
-  await requireAccount(id);
-  void itemId;
-  void key;
-  throw new RoomError(410, "Badge tiers now come only from confirmed credit purchases recorded for a calendar month; direct badge purchases are disabled.");
+  const buyer = await requireAccount(id);
+  await requireAdult(id);
+  const item = await getSendableGiftCatalogItem(itemId);
+  if (!item || item.productType !== "gift") {
+    throw new RoomError(410, "Badge tiers are earned through confirmed coin purchases; they cannot be bought with wallet coins.");
+  }
+  const ref = `store-gift:${item.id}`;
+  return db.transaction(async tx => {
+    await lockAccounts(tx, [id]);
+    if (await replay(tx, id, key, ref)) return wallet(id, tx, buyer.username);
+    const [current] = await tx.select().from(socialWallets).where(eq(socialWallets.accountId, id));
+    if (!current) throw new RoomError(409, "Open Rewards to initialize your wallet");
+    const unlimited = hasDevelopmentUnlimitedCredits(buyer.username);
+    const spend = planCreditSpend(current.balance, item.cost, unlimited);
+    if (!spend.allowed) throw new RoomError(409, `You need ${item.cost} coins to add ${item.name} to your collection.`);
+    if (spend.debit > 0) {
+      await tx.update(socialWallets)
+        .set({ balance: sql`${socialWallets.balance} - ${spend.debit}` })
+        .where(eq(socialWallets.accountId, id));
+    }
+    await tx.insert(socialLedger).values({
+      accountId: id,
+      delta: -giftLedgerDebit(spend.debit, item.cost, unlimited),
+      kind: "purchase",
+      description: `Store collectible · ${item.name}`,
+      requestKey: key as `${string}-${string}-${string}-${string}-${string}`,
+      refKey: ref,
+    });
+    await tx.insert(socialGiftBag).values({ accountId: id, giftId: item.id, quantity: 1 })
+      .onConflictDoUpdate({
+        target: [socialGiftBag.accountId, socialGiftBag.giftId],
+        set: { quantity: sql`${socialGiftBag.quantity} + 1` },
+      });
+    return wallet(id, tx, buyer.username);
+  });
 }
 export async function ledger(id: string) {
   const rows = await db.select().from(socialLedger).where(eq(socialLedger.accountId, id)).orderBy(desc(socialLedger.createdAt), desc(socialLedger.id)).limit(100);

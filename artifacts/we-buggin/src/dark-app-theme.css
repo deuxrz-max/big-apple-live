@@ -408,8 +408,36 @@ body.streamtalk-live-screen #root .st-live-action-sheet > button:not(.st-live-ac
 #root .gs .gs-error,
 #root .gs .gs-error-panel { border-color: rgba(255, 115, 145, .44); background: rgba(86, 22, 42, .34); color: #ffd3dc; }
 
+.st-name-tier-toast {
+  position: fixed;
+  z-index: 950;
+  left: 12px;
+  right: 12px;
+  bottom: calc(92px + env(safe-area-inset-bottom));
+  width: max-content;
+  max-width: min(440px, calc(100vw - 24px));
+  margin-inline: auto;
+  display: grid;
+  gap: 4px;
+  padding: 12px 16px;
+  border: 1px solid rgba(190, 132, 255, .65);
+  border-radius: 15px;
+  background: rgba(25, 18, 39, .96);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, .38), 0 0 20px rgba(157, 29, 255, .18);
+  color: #fff;
+  font: 700 14px/1.35 'Montserrat', system-ui, sans-serif;
+  pointer-events: none;
+  animation: name-tier-toast-in .24s ease-out both;
+}
+.st-name-tier-toast .shiny-name { font-size: 16px; }
+@keyframes name-tier-toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   #root :is(.bm-btn, .pf-btn, .sc-nav-item, .gs-button, .gs-chip-button) {
     transition-duration: .01ms !important;
   }
+  .st-name-tier-toast { animation: none; }
 }

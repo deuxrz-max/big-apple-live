@@ -1,0 +1,104 @@
+.shiny-name {
+  --shiny-name-color: #fff;
+  color: #fff;
+}
+
+.shiny-name[data-tier]:not([data-tier='0']) {
+  color: transparent;
+  background-image:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--shiny-name-color), #fff 72%) 0%,
+      color-mix(in srgb, var(--shiny-name-color), #fff 24%) 22%,
+      var(--shiny-name-color) 39%,
+      color-mix(in srgb, var(--shiny-name-color), #17131f 42%) 52%,
+      color-mix(in srgb, var(--shiny-name-color), #fff 86%) 61%,
+      color-mix(in srgb, var(--shiny-name-color), #fff 8%) 75%,
+      color-mix(in srgb, var(--shiny-name-color), #17131f 25%) 100%
+    ),
+    linear-gradient(
+      108deg,
+      transparent 0%,
+      transparent 38%,
+      rgba(255, 255, 255, .08) 43%,
+      rgba(255, 255, 255, var(--shiny-sweep-brightness, .52)) 49%,
+      rgba(255, 255, 255, .24) 54%,
+      transparent 61%,
+      transparent 100%
+    );
+  background-size: 100% 100%, 260% 100%;
+  background-position: 0 0, -160% 0;
+  background-repeat: no-repeat;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shiny-name-sweep var(--shiny-name-speed, 5.6s) linear infinite;
+}
+
+.shiny-name[data-tier='1'] { --shiny-name-speed: 7.2s; --shiny-sweep-brightness: .52; }
+.shiny-name[data-tier='2'] { --shiny-name-speed: 6.9s; --shiny-sweep-brightness: .55; }
+.shiny-name[data-tier='3'] { --shiny-name-speed: 6.6s; --shiny-sweep-brightness: .58; }
+.shiny-name[data-tier='4'] { --shiny-name-speed: 6.3s; --shiny-sweep-brightness: .61; }
+.shiny-name[data-tier='5'] { --shiny-name-speed: 6s; --shiny-sweep-brightness: .64; }
+.shiny-name[data-tier='6'] { --shiny-name-speed: 5.7s; --shiny-sweep-brightness: .67; }
+.shiny-name[data-tier='7'] { --shiny-name-speed: 5.4s; --shiny-sweep-brightness: .7; }
+.shiny-name[data-tier='8'] { --shiny-name-speed: 5.1s; --shiny-sweep-brightness: .73; }
+.shiny-name[data-tier='9'] { --shiny-name-speed: 4.8s; --shiny-sweep-brightness: .76; }
+.shiny-name[data-tier='10'] { --shiny-name-speed: 4.5s; --shiny-sweep-brightness: .79; }
+.shiny-name[data-tier='11'] { --shiny-name-speed: 4.2s; --shiny-sweep-brightness: .82; }
+.shiny-name[data-tier='12'] { --shiny-name-speed: 3.9s; --shiny-sweep-brightness: .85; }
+.shiny-name[data-tier='13'] { --shiny-name-speed: 3.6s; --shiny-sweep-brightness: .88; }
+.shiny-name[data-tier='14'] { --shiny-name-speed: 3.3s; --shiny-sweep-brightness: .91; }
+.shiny-name[data-tier='15'] { --shiny-name-speed: 3s; --shiny-sweep-brightness: .94; }
+.shiny-name[data-tier='16'] { --shiny-name-speed: 2.7s; --shiny-sweep-brightness: .97; }
+.shiny-name[data-tier='17'] { --shiny-name-speed: 2.4s; --shiny-sweep-brightness: 1; }
+.shiny-name[data-tier='18'] {
+  --shiny-name-speed: 2.1s;
+  --shiny-sweep-brightness: 1;
+  position: relative;
+  filter: drop-shadow(0 0 2px color-mix(in srgb, var(--shiny-name-color), transparent 65%));
+}
+
+.shiny-name[data-tier='18']::after {
+  content: '';
+  position: absolute;
+  top: -.12em;
+  right: -.28em;
+  width: .22em;
+  height: .22em;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, #fff 0 18%, rgba(255, 255, 255, .62) 20% 32%, transparent 68%);
+  opacity: .58;
+  animation: shiny-name-sparkle 2.8s ease-in-out infinite;
+}
+
+@keyframes shiny-name-sweep {
+  from { background-position: 0 0, -160% 0; }
+  to { background-position: 0 0, 160% 0; }
+}
+
+@keyframes shiny-name-sparkle {
+  0%, 100% { opacity: .28; transform: scale(.72); }
+  48% { opacity: .72; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shiny-name[data-tier]:not([data-tier='0']),
+  .shiny-name[data-tier='18']::after {
+    animation: none;
+  }
+  .shiny-name[data-tier]:not([data-tier='0']) {
+    background-position: 0 0, -160% 0;
+  }
+}
+
+@supports not (color: color-mix(in srgb, #fff, #000)) {
+  .shiny-name[data-tier]:not([data-tier='0']) {
+    color: var(--shiny-name-color);
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    animation: none;
+    filter: none;
+  }
+}
