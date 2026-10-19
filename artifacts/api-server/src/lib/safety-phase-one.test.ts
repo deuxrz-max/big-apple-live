@@ -158,7 +158,7 @@ test("real HTTP/DB/storage photo moderation and unlimited public rooms; syntheti
     const publicDirectoryResponse = await fetch(`${base}/account/chat/rooms`);
     assert.equal(publicDirectoryResponse.status, 200);
     const publicDirectory = await publicDirectoryResponse.json() as Record<string, unknown>[];
-    assert.ok(publicDirectory.every(r => Object.keys(r).sort().join(",") === "headcount,label,nowPlayingTitle,nowPlayingVideoId,roomId"),
+    assert.ok(publicDirectory.every(r => Object.keys(r).sort().join(",") === "headcount,headcountSince,label,nowPlayingTitle,nowPlayingVideoId,roomId"),
       "Public headcounts must not disclose participants or chat");
     const beyondOldCap = await request(ids[30]!, "/account/rooms/MUSIC1/join", { method: "POST" });
     assert.equal(beyondOldCap.status, 201, "the 31st audience member joins the same room");

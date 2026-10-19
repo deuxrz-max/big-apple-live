@@ -800,3 +800,11 @@ body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-
 }
 .st-dir-art-comedy .st-dir-art-fallback{background:radial-gradient(ellipse at 52% 28%,rgba(255,214,107,.42),transparent 25%),linear-gradient(135deg,#724222,#4e293b 58%,#191326)}
 .st-dir-art-comedy .st-home-card-category{color:#ffd36c}
+
+/* Only the live room with the highest current audience receives this mark. */
+body.streamtalk-directory-screen #root .ch.st-home .st-home-featured-badge{
+  position:absolute;z-index:4;top:9px;right:9px;display:inline-flex;align-items:center;
+  min-height:24px;padding:0 9px;border:1px solid rgba(255,221,144,.5);border-radius:999px;
+  background:rgba(24,15,28,.9);color:#ffe6a5;box-shadow:0 3px 12px #0008;
+  font:850 9px/1 'DM Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;
+}

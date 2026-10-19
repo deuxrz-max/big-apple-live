@@ -50,6 +50,8 @@ type Room = {
   hostParticipantId: string;
   hostAccountId?: string;
   sessions: Map<string, ActiveSession>;
+  /** Time when this room most recently reached its current participant count. */
+  headcountSince: number;
   listeners: Set<Listener>;
   emptySince: number | null;
   community?: boolean;
@@ -78,7 +80,7 @@ export class RoomStore {
       // Public topic rooms have no audience cap. Capacity 0 is the API's
       // explicit unlimited value; the eight camera seats are tracked separately.
       name: input.label, capacity: 0, createdAt: input.createdAt, hostParticipantId: randomUUID(),
-      sessions: new Map(), listeners: new Set(), emptySince: null, community: true, testOnly: input.testOnly,
+      sessions: new Map(), headcountSince: this.now(), listeners: new Set(), emptySince: null, community: true, testOnly: input.testOnly,
       parentRoomId: input.parentRoomId, entranceEffects: [] });
   }
   communityParentId(roomId: string) {
@@ -158,6 +160,7 @@ export class RoomStore {
       hostParticipantId: "",
       hostAccountId: account?.accountId,
       sessions: new Map(),
+      headcountSince: this.now(),
       listeners: new Set(),
       emptySince: null,
       entranceEffects: [],
@@ -195,6 +198,12 @@ export class RoomStore {
 
   get(roomId: string): RoomState {
     return this.snapshot(this.requireRoom(roomId));
+  }
+
+  communityHeadcountSince(roomId: string): number {
+    const room = this.requireRoom(roomId);
+    if (!room.community) throw new RoomError(404, "Room not found");
+    return room.headcountSince;
   }
 
   activeAccountIds(roomId: string): string[] {
@@ -323,6 +332,7 @@ export class RoomStore {
     if (!room.sessions.delete(sessionId)) {
       throw new RoomError(404, "Active participant session not found");
     }
+    room.headcountSince = this.now();
     if (room.sessions.size === 0) room.emptySince = this.now();
     this.broadcast(room);
   }
@@ -333,6 +343,7 @@ export class RoomStore {
     for (const [sessionId, session] of room.sessions) {
       if (session.participant.participantId !== participantId) continue;
       room.sessions.delete(sessionId);
+      room.headcountSince = this.now();
       if (room.sessions.size === 0) room.emptySince = this.now();
       this.broadcast(room);
       return session.accountId ?? null;
@@ -420,6 +431,7 @@ export class RoomStore {
       accountId: account?.accountId,
       capExempt: !!account?.capExempt,
     });
+    room.headcountSince = this.now();
     room.emptySince = null;
     this.broadcast(room);
     return { participantSessionId, participantId, room: this.snapshot(room) };
@@ -435,6 +447,7 @@ export class RoomStore {
       }
     }
     if (changed) {
+      room.headcountSince = now;
       if (room.sessions.size === 0) room.emptySince = now;
       this.broadcast(room);
     }

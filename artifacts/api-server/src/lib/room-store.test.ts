@@ -107,6 +107,31 @@ test("test-only university rooms never appear in public occupied or follower pre
   assert.deepEqual(store.occupiedUniversities(), []);
 });
 
+test("community headcount tie timestamp advances only when membership count changes", () => {
+  let now = 1_000;
+  const store = new RoomStore(() => now);
+  store.registerCommunity({
+    roomId: "MUSIC",
+    historyId: "MUSIC-HISTORY",
+    label: "Music",
+    createdAt: new Date(now),
+  });
+  const creator = store.join("MUSIC", "Creator");
+  assert.equal(store.communityHeadcountSince("MUSIC"), 1_000);
+
+  now = 2_000;
+  const guest = store.join("MUSIC", "Guest");
+  assert.equal(store.communityHeadcountSince("MUSIC"), 2_000);
+
+  now = 3_000;
+  store.heartbeat("MUSIC", creator.participantSessionId);
+  assert.equal(store.communityHeadcountSince("MUSIC"), 2_000);
+
+  now = 4_000;
+  store.leave("MUSIC", guest.participantSessionId);
+  assert.equal(store.communityHeadcountSince("MUSIC"), 4_000);
+});
+
 test("room entrance effects are broadcast once and only replayed while recent", () => {
   let now = 1_000;
   const store = new RoomStore(() => now);

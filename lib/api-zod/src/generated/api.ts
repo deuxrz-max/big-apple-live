@@ -1463,6 +1463,8 @@ export const GetOlderRoomMessagesResponse = zod.array(GetOlderRoomMessagesRespon
 
 export const getChatDirectoryResponseHeadcountMin = 0;
 
+export const getChatDirectoryResponseHeadcountSinceMin = 0;
+
 export const getChatDirectoryResponseNowPlayingVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
 export const getChatDirectoryResponseNowPlayingTitleMax = 200;
 
@@ -1472,6 +1474,7 @@ export const GetChatDirectoryResponseItem = zod.object({
   "roomId": zod.string(),
   "label": zod.string(),
   "headcount": zod.number().int().min(getChatDirectoryResponseHeadcountMin).describe('Current heartbeat-based presence count; no participant identities are exposed.'),
+  "headcountSince": zod.number().int().min(getChatDirectoryResponseHeadcountSinceMin).describe('Epoch milliseconds when the room most recently reached its current headcount; used for deterministic Featured ties.'),
   "nowPlayingVideoId": zod.string().regex(getChatDirectoryResponseNowPlayingVideoIdRegExp).nullable().describe('Video currently playing in Beam TV, when a verified title is available.'),
   "nowPlayingTitle": zod.string().max(getChatDirectoryResponseNowPlayingTitleMax).nullable()
 })

@@ -15,6 +15,11 @@ export interface ChatDirectoryRoom {
      */
   headcount: number;
   /**
+     * Epoch milliseconds when the room most recently reached its current headcount; used for deterministic Featured ties.
+     * @minimum 0
+     */
+  headcountSince: number;
+  /**
      * Video currently playing in Beam TV, when a verified title is available.
      * @nullable
      * @pattern ^[A-Za-z0-9_-]{11}$

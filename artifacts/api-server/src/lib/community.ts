@@ -61,6 +61,7 @@ export async function communityDirectory() {
     return {
       ...r,
       headcount: roomStore.get(r.roomId).participants.length,
+      headcountSince: roomStore.communityHeadcountSince(r.roomId),
       nowPlayingVideoId: nowPlaying?.videoId ?? null,
       nowPlayingTitle: nowPlaying?.title ?? null,
     };

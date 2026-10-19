@@ -1538,7 +1538,7 @@ components:
         status: { type: string, enum: [pending, approved, rejected, flagged] }
     ChatDirectoryRoom:
       type: object
-      required: [roomId, label, headcount, nowPlayingVideoId, nowPlayingTitle]
+      required: [roomId, label, headcount, headcountSince, nowPlayingVideoId, nowPlayingTitle]
       properties:
         roomId: { type: string }
         label: { type: string }
@@ -1546,6 +1546,10 @@ components:
           type: integer
           minimum: 0
           description: Current heartbeat-based presence count; no participant identities are exposed.
+        headcountSince:
+          type: integer
+          minimum: 0
+          description: Epoch milliseconds when the room most recently reached its current headcount; used for deterministic Featured ties.
         nowPlayingVideoId:
           type: [string, "null"]
           pattern: "^[A-Za-z0-9_-]{11}$"

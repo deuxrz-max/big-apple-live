@@ -20,6 +20,7 @@ import { PhotoReviewQueue } from './PhotoReviewQueue';
 import { BotModerationPanel } from './BotModerationPanel';
 import { BadgeArt } from '@/social/BadgeArt';
 import { GoLiveButton } from './LiveStreamPages';
+import { selectFeaturedRoom } from './directory-utils';
 import './chat.css';
 
 const DISCLAIMER = 'Deux Wild is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
@@ -148,8 +149,12 @@ export function ChatDirectory() {
     query: { queryKey: getGetLiveStreamsQueryKey(), refetchInterval: 8_000 },
   });
   const topics = ['Music', 'Movies', 'Comedy', 'Sports', 'Pro Wrestling', 'Web Series', 'History', 'News'];
-  type DirectoryRoom = { roomId: string; label: string; headcount: number; nowPlayingVideoId?: string | null; nowPlayingTitle?: string | null };
+  type DirectoryRoom = { roomId: string; label: string; headcount: number; headcountSince: number; nowPlayingVideoId?: string | null; nowPlayingTitle?: string | null };
   const rooms = (directory.data ?? []) as DirectoryRoom[];
+  const featuredRoom = selectFeaturedRoom(rooms);
+  const displayedRooms = featuredRoom
+    ? [featuredRoom, ...rooms.filter((room) => room.roomId !== featuredRoom.roomId)]
+    : rooms;
   const topicFor = (room: DirectoryRoom) => {
     const source = `${room.label} ${room.roomId}`.toLowerCase().replace(/[^a-z0-9]+/g, ' ');
     return topics.find((topic) => source.includes(topic.toLowerCase())) ?? room.label;
@@ -157,8 +162,8 @@ export function ChatDirectory() {
   const liveCreators = (liveStreams.data?.streams ?? []).filter((stream) =>
     !!stream.streamId,
   );
-  const leftRooms = rooms.filter((_, index) => index % 2 === 0);
-  const rightRooms = rooms.filter((_, index) => index % 2 === 1);
+  const leftRooms = displayedRooms.filter((_, index) => index % 2 === 0);
+  const rightRooms = displayedRooms.filter((_, index) => index % 2 === 1);
   return (
     <Shell className="st-directory st-home">
       <header className="st-dir-header">
@@ -191,22 +196,14 @@ export function ChatDirectory() {
         </div>
       </header>
 
-      <nav className="st-home-categories" aria-label="Featured and Go Live">
-        <button type="button" className="is-active" aria-current="true" data-testid="category-featured">Featured</button>
-        <GoLiveButton className="st-home-featured-live">
-          <Camera size={16} strokeWidth={2.7} aria-hidden="true" />
-          <span>Go Live</span>
-        </GoLiveButton>
-      </nav>
-
-      <section className="st-dir-explore st-home-rooms" id="live-channels" aria-label="Featured rooms">
+      <section className="st-dir-explore st-home-rooms" id="live-channels" aria-label="Rooms">
         {directory.isError && <div className="st-dir-state st-dir-error" role="alert"><div className="st-dir-state-mark">!</div><h3>Rooms aren’t loading</h3><p>We couldn’t reach the directory. Give it another try.</p><button type="button" onClick={() => directory.refetch()}>Retry directory</button></div>}
         {directory.data && rooms.length === 0 && <div className="st-dir-state"><div className="st-dir-state-mark">—</div><h3>Quiet for a moment</h3><p>There are no rooms in the directory right now. Check back soon.</p></div>}
         <div className="st-home-grid" aria-label={directory.isLoading ? 'Loading rooms' : 'Rooms'} aria-busy={directory.isLoading}>
           <ul className="st-home-grid-column" aria-label="Room cards, first column">
             {directory.isLoading
               ? [0, 1, 2].map((n) => <li className="st-dir-skeleton" key={`left-loading-${n}`}><span /><div><i /><i /></div></li>)
-              : leftRooms.map((room, index) => <li key={room.roomId} className={index === 0 ? 'st-home-card-tall' : undefined}><DirectoryRoomCard room={room} topic={topicFor(room)} /></li>)}
+              : leftRooms.map((room) => <li key={room.roomId} className={room.roomId === featuredRoom?.roomId ? 'st-home-card-tall' : undefined}><DirectoryRoomCard room={room} topic={topicFor(room)} isFeatured={room.roomId === featuredRoom?.roomId} /></li>)}
           </ul>
           <ul className="st-home-grid-column" aria-label="Room cards, second column">
             <li className="st-home-go-live">
@@ -217,7 +214,7 @@ export function ChatDirectory() {
             </li>
             {directory.isLoading
               ? [0, 1, 2].map((n) => <li className="st-dir-skeleton" key={`right-loading-${n}`}><span /><div><i /><i /></div></li>)
-              : rightRooms.map((room) => <li key={room.roomId}><DirectoryRoomCard room={room} topic={topicFor(room)} /></li>)}
+              : rightRooms.map((room) => <li key={room.roomId} className={room.roomId === featuredRoom?.roomId ? 'st-home-card-tall' : undefined}><DirectoryRoomCard room={room} topic={topicFor(room)} isFeatured={room.roomId === featuredRoom?.roomId} /></li>)}
           </ul>
         </div>
       </section>
@@ -247,9 +244,10 @@ export function ChatDirectory() {
   );
 }
 
-function DirectoryRoomCard({ room, topic }: {
+function DirectoryRoomCard({ room, topic, isFeatured }: {
   room: { roomId: string; label: string; headcount: number; nowPlayingVideoId?: string | null; nowPlayingTitle?: string | null };
   topic: string;
+  isFeatured: boolean;
 }) {
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
   const [topicPhotoFailed, setTopicPhotoFailed] = useState(false);
@@ -259,7 +257,7 @@ function DirectoryRoomCard({ room, topic }: {
   const isWrestling = topic === 'Pro Wrestling';
   const displayTitle = room.nowPlayingTitle?.trim();
   return (
-    <Link href={`/rooms/${encodeURIComponent(room.roomId)}`} className="st-dir-card" aria-label={`Enter ${room.label}, ${room.headcount} ${room.headcount === 1 ? 'person' : 'people'} here`} data-testid={`card-home-room-${room.roomId}`}>
+    <Link href={`/rooms/${encodeURIComponent(room.roomId)}`} className={`st-dir-card${isFeatured ? ' is-featured' : ''}`} aria-label={`Enter ${room.label}, ${room.headcount} ${room.headcount === 1 ? 'person' : 'people'} here${isFeatured ? ', featured room' : ''}`} data-testid={`card-home-room-${room.roomId}`}>
       <div className={`st-dir-art st-dir-art-${topicClass(topic)}${hasThumbnail ? ' has-video' : ''}`}>
         {hasThumbnail
           ? <img src={`https://img.youtube.com/vi/${encodeURIComponent(videoId!)}/hqdefault.jpg`} alt="" loading="lazy" onError={() => setThumbnailFailed(true)} />
@@ -271,6 +269,7 @@ function DirectoryRoomCard({ room, topic }: {
         <span className={`st-home-live-label${room.headcount > 0 ? ' is-live' : ''}`} title={room.label}>
           <i aria-hidden="true" /><b>LIVE</b><span>{room.label}</span>
         </span>
+        {isFeatured && <span className="st-home-featured-badge">Featured</span>}
         <span className="st-dir-art-shade" />
         <div className="st-home-card-copy">
           <span className="st-home-card-category">{topic}</span>
