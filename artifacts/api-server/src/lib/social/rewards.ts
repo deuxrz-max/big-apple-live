@@ -9,6 +9,7 @@ import { requireAdult } from '../community';
 import { hasDevelopmentUnlimitedCredits, planCreditSpend } from "./credits-policy";
 import { liveStreamIdForAccount, isLiveStreamActiveOrStarting } from "../live-stream-policy";
 import { getSendableGiftCatalogItem } from "../gift-studio-catalog";
+import { requireSendableGift } from "../gift-availability";
 import { giftChargeTotal } from "./gift-quantity";
 
 const giftSendTails = new Map<string, Promise<void>>();
@@ -50,8 +51,10 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
   context?: { roomId: string; sessionId: string } | { streamId: string }, quantity = 1) {
   const sender = await requireAccount(id);
   const target = await targetAccount(recipient);
-  const item = await getSendableGiftCatalogItem(giftId);
-  if (!item) throw new RoomError(400, "This gift is no longer available. Refresh the gift list and choose another.");
+  const item = requireSendableGift(
+    await getSendableGiftCatalogItem(giftId),
+    () => new RoomError(409, "This gift isn't available right now."),
+  );
   const totalCost = giftChargeTotal(item.cost, quantity);
   if (totalCost === null) throw new RoomError(400, "Choose a valid gift quantity and price.");
   const roomGift = item.roomGift;

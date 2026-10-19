@@ -9,6 +9,8 @@ import { startTestActorControl } from "./lib/test-actor-control";
 import { startComedyTvPlaybackScheduler, startWebSeriesDailySelection } from "./routes/university-video-beam";
 import { sanitizeAllSavedCommunityVideoPools } from "./lib/room-video-rotation";
 import { startCommunityVideoPoolRefillScheduler } from "./lib/community-video-pool-refill";
+import { startDeveloperContentSyncScheduler } from "./lib/developer-content-sync";
+import { startHangoutRewardScheduler } from "./lib/community-hangout-rewards";
 
 const rawPort = process.env["PORT"];
 
@@ -38,6 +40,8 @@ try {
 startWebSeriesDailySelection();
 startComedyTvPlaybackScheduler();
 startCommunityVideoPoolRefillScheduler(roomStore);
+startDeveloperContentSyncScheduler();
+await startHangoutRewardScheduler();
 await initializeModeratorBots();
 startModeratorBotRotation((err, context) => logger.error({ err, ...context }, "Bot rotation failed"));
 startModeratorBotChatter((err, context) => logger.error({ err, ...context }, "Bot chatter failed"));

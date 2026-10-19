@@ -46,11 +46,20 @@ type Beam = {
   videoDurationsMs: Map<string, number>;
 };
 
+export type BeamSeatLifecycleEvent = {
+  type: "joined" | "left";
+  roomId: string;
+  accountId: string;
+  participantId: string;
+  at: number;
+};
+
 export class UniversityVideoBeamStore {
   private readonly beams = new Map<string, Beam>();
   private readonly kickedUntil = new Map<string, number>();
   private automaticVideoStartListener:
     ((roomId: string, videoId: string, metadata: UniversityVideoBeamTvVideoMetadata | undefined) => void) | null = null;
+  private seatLifecycleListener: ((event: BeamSeatLifecycleEvent) => void) | null = null;
 
   constructor(
     private readonly rooms: RoomStore = roomStore,
@@ -61,6 +70,22 @@ export class UniversityVideoBeamStore {
     listener: (roomId: string, videoId: string, metadata: UniversityVideoBeamTvVideoMetadata | undefined) => void,
   ) {
     this.automaticVideoStartListener = listener;
+  }
+
+  setSeatLifecycleListener(listener: ((event: BeamSeatLifecycleEvent) => void) | null): void {
+    this.seatLifecycleListener = listener;
+  }
+
+  /** Server-only identity view used by reward eligibility; never serialized to room clients. */
+  connectedSeatOccupants(roomId: string): { accountId: string; participantId: string; slotNumber: number }[] {
+    const id = roomId.toUpperCase();
+    if (!this.rooms.isCommunity(id)) return [];
+    const key = `${id}:${this.rooms.getHistoryId(id)}`;
+    const beam = this.beams.get(key);
+    if (!beam) return [];
+    return beam.slots.flatMap(slot => slot.accountId && slot.participantId && slot.connectedAt !== null
+      ? [{ accountId: slot.accountId, participantId: slot.participantId, slotNumber: slot.slotNumber }]
+      : []);
   }
 
   getRoomName(roomId: string): string {
@@ -623,9 +648,46 @@ export class UniversityVideoBeamStore {
     slot.cameraOff = true;
     slot.mutedByHost = false;
     slot.cameraDisabledByHost = false;
+    this.notifySeatLifecycle({
+      type: "joined", roomId: beam.roomId, accountId, participantId, at: this.now(),
+    });
     if (!this.isOwnerlessTopicRoom(beam.roomId) && !beam.hostParticipantId) {
       beam.hostParticipantId = participantId;
     }
+    return this.toState(beam);
+  }
+
+  moveSlot(roomId: string, participantId: string, accountId: string, targetSlotNumber: number): UniversityVideoBeamState {
+    const beam = this.ensure(roomId);
+    this.assertCanJoin(roomId, accountId);
+    if (this.rooms.sessionAccountId(beam.roomId, participantId) !== accountId) {
+      throw new RoomError(401, "This university session does not belong to your account.");
+    }
+    const current = beam.slots.find(slot => slot.participantId === participantId && slot.accountId === accountId);
+    if (!current) throw new RoomError(404, "You are not in a speaker spot.");
+    const target = beam.slots.find(slot => slot.slotNumber === targetSlotNumber);
+    if (!target) throw new RoomError(400, "Choose one of the eight speaker spots.");
+    if (target === current) return this.toState(beam);
+    if (target.participantId !== null) throw new RoomError(409, "That speaker spot is already occupied.");
+
+    // Move the existing seat state without ending the account's continuous
+    // room tenure or disrupting its LiveKit participant and microphone.
+    target.participantId = current.participantId;
+    target.accountId = current.accountId;
+    target.joinedAt = current.joinedAt;
+    target.connectedAt = current.connectedAt;
+    target.micMuted = current.micMuted;
+    target.cameraOff = current.cameraOff;
+    target.mutedByHost = current.mutedByHost;
+    target.cameraDisabledByHost = current.cameraDisabledByHost;
+    current.participantId = null;
+    current.accountId = null;
+    current.joinedAt = null;
+    current.connectedAt = null;
+    current.micMuted = false;
+    current.cameraOff = true;
+    current.mutedByHost = false;
+    current.cameraDisabledByHost = false;
     return this.toState(beam);
   }
 
@@ -888,6 +950,12 @@ export class UniversityVideoBeamStore {
   }
 
   private release(beam: Beam, slot: BeamSlot): void {
+    if (slot.accountId && slot.participantId) {
+      this.notifySeatLifecycle({
+        type: "left", roomId: beam.roomId, accountId: slot.accountId,
+        participantId: slot.participantId, at: this.now(),
+      });
+    }
     slot.participantId = null;
     slot.accountId = null;
     slot.joinedAt = null;
@@ -896,6 +964,14 @@ export class UniversityVideoBeamStore {
     slot.cameraOff = true;
     slot.mutedByHost = false;
     slot.cameraDisabledByHost = false;
+  }
+
+  private notifySeatLifecycle(event: BeamSeatLifecycleEvent): void {
+    try {
+      this.seatLifecycleListener?.(event);
+    } catch {
+      // Reward persistence must not prevent a room seat from being used or released.
+    }
   }
 
   private transferHostIfNeeded(beam: Beam): void {

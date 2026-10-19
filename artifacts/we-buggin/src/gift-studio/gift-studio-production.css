@@ -21,6 +21,136 @@
   box-sizing: border-box;
 }
 
+.gs .gs-content-sync {
+  display: grid;
+  gap: 12px;
+  width: min(100%, 760px);
+  margin: 0 auto 16px;
+  padding: 15px;
+  color: #f5f4f8;
+  border: 1px solid #34343e;
+  border-radius: 16px;
+  background:
+    radial-gradient(ellipse at 100% 0, rgba(182, 148, 255, .1), transparent 44%),
+    linear-gradient(145deg, #15161a, #0d0e11 76%);
+}
+
+.gs .gs-content-sync-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.gs .gs-content-sync-head h2 {
+  margin: 0;
+  color: #faf9fc;
+  font-size: 17px;
+  font-weight: 850;
+}
+
+.gs .gs-content-sync-head p {
+  max-width: 56ch;
+  margin: 6px 0 0;
+  color: #c4c3cd;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.gs .gs-content-sync-button {
+  flex: 0 0 auto;
+  min-height: 42px;
+}
+
+.gs .gs-content-sync-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  color: #c7c5d0;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.gs .gs-hangout-settings-form {
+  align-items: end;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.gs .gs-hangout-interval {
+  display: grid;
+  gap: 6px;
+  min-width: min(100%, 220px);
+  color: #f5f4f8;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.gs .gs-hangout-interval input {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid #6e5892;
+  border-radius: 10px;
+  background: #101116;
+  color: #fff;
+  font: inherit;
+}
+
+.gs .gs-hangout-interval input:focus-visible {
+  outline: 2px solid #b78cff;
+  outline-offset: 2px;
+}
+
+.gs .gs-content-sync-summary {
+  display: grid;
+  gap: 5px;
+  padding: 10px 11px;
+  border: 1px solid #33343c;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, .035);
+  color: #e9e7ef;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.gs .gs-content-sync-summary > strong {
+  color: #d9caff;
+  font-size: 13px;
+}
+
+.gs .gs-content-sync-summary ul {
+  display: grid;
+  gap: 3px;
+  max-height: 120px;
+  overflow: auto;
+  margin: 3px 0 0;
+  padding-left: 18px;
+  color: #c4c3cd;
+}
+
+.gs .gs-content-sync-summary b {
+  color: #f5f4f8;
+}
+
+.gs .gs-content-sync-error {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid #6d343c;
+  border-radius: 9px;
+  background: rgba(140, 35, 50, .18);
+  color: #ffced3;
+  font-size: 13px;
+}
+
+.gs .gs-sync-spinning {
+  animation: gs-sync-spin 1s linear infinite;
+}
+
+@keyframes gs-sync-spin {
+  to { transform: rotate(360deg); }
+}
+
 .gs .gs-production-intro {
   display: grid;
   gap: 7px;
@@ -718,6 +848,14 @@ body.streamtalk-gift-studio-screen #root .app-page {
   .gs {
     padding-right: 10px;
     padding-left: 10px;
+  }
+
+  .gs .gs-content-sync-head {
+    flex-direction: column;
+  }
+
+  .gs .gs-content-sync-button {
+    width: 100%;
   }
 
   .gs .gs-production-step {

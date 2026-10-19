@@ -33,6 +33,14 @@ export type RoomEntranceEffectEvent = {
   startedAt: number;
   durationMs: number;
 };
+export type RoomCoinDropEvent = {
+  eventId: string;
+  roomId: string;
+  amount: number;
+  startedAt: number;
+  qualified: boolean;
+};
+export type RoomHangoutStreakRewardEvent = { day: string; coins: number };
 
 /** Reuses the authenticated chat SSE and private membership header. No media SDK. */
 export function useTextRoom(roomId: string, userId: string) {
@@ -44,6 +52,8 @@ export function useTextRoom(roomId: string, userId: string) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [arrivals, setArrivals] = useState<{ id: string; participantId: string; displayName: string; at: number }[]>([]);
   const [entranceEffects, setEntranceEffects] = useState<RoomEntranceEffectEvent[]>([]);
+  const [coinDrops, setCoinDrops] = useState<RoomCoinDropEvent[]>([]);
+  const [streakReward, setStreakReward] = useState<RoomHangoutStreakRewardEvent | null>(null);
   const [creds, setCreds] = useState<RoomCreds | null>(null);
   const credential = useRef<RoomCreds | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,7 +102,7 @@ export function useTextRoom(roomId: string, userId: string) {
     let joining = false;
     let knownParticipantIds: Set<string> | null = null;
     const headers = () => ({ "X-Room-Session": credential.current!.participantSessionId });
-    setRoom(null); setMessages([]); setArrivals([]); setEntranceEffects([]); setLoading(true); setError(null);
+    setRoom(null); setMessages([]); setArrivals([]); setEntranceEffects([]); setCoinDrops([]); setStreakReward(null); setLoading(true); setError(null);
     setRoomUnavailable(false); setOverflow(null);
     credential.current = null; setCreds(null);
 
@@ -191,6 +201,20 @@ export function useTextRoom(roomId: string, userId: string) {
                   ? previous : [...previous, effect].slice(-20));
               }
             }
+            if (type === "room.coin-drop") {
+              const event = JSON.parse(data) as RoomCoinDropEvent;
+              if (event.roomId === roomId) {
+                setCoinDrops(previous => previous.some(item => item.eventId === event.eventId)
+                  ? previous : [...previous, event].slice(-20));
+                void qc.invalidateQueries({ queryKey: getGetMyProfileQueryKey() });
+              }
+            }
+            if (type === "room.hangout-streak-reward") {
+              const event = JSON.parse(data) as RoomHangoutStreakRewardEvent;
+              setStreakReward(event);
+              void qc.invalidateQueries({ queryKey: getGetMyProfileQueryKey() });
+              window.setTimeout(() => setStreakReward(current => current?.day === event.day ? null : current), 6500);
+            }
           }
         }
         if (active) throw new Error("Connection interrupted; reconnecting…");
@@ -228,6 +252,6 @@ export function useTextRoom(roomId: string, userId: string) {
       // via the existing heartbeat lease; persisted history/membership remains.
     };
   }, [roomId, userId]);
-  return { room, messages, arrivals, entranceEffects, creds, loading, connection, error, roomUnavailable,
+  return { room, messages, arrivals, entranceEffects, coinDrops, streakReward, creds, loading, connection, error, roomUnavailable,
     overflow, send, refresh, loadOlder, loadingOlder, hasOlder };
 }

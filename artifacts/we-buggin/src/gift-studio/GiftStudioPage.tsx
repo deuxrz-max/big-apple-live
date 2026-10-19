@@ -7,9 +7,15 @@ import {
   getGetActiveGiftStudioMediaQueryKey,
   getGetGiftStudioLibraryQueryKey,
   getGetSocialMeQueryKey,
+  getGetDeveloperContentSyncQueryKey,
+  getGetHangoutRewardSettingsQueryKey,
   useAssignGiftStudioVersionToGift,
   useGetActiveGiftStudioMedia,
+  useGetDeveloperContentSync,
+  useGetHangoutRewardSettings,
   useGetGiftStudioLibrary,
+  useRunDeveloperContentSync,
+  useSetHangoutRewardInterval,
   useSetGiftStudioVersionActive,
   useUpdateGiftStudioCatalogItem,
   useRenameGiftStudioVersion,
@@ -177,6 +183,36 @@ export function GiftStudioPage() {
   const { getToken } = useAuth();
   const client = useQueryClient();
   const library = useGetGiftStudioLibrary({ query: { queryKey: getGetGiftStudioLibraryQueryKey(), retry: false } });
+  const contentSync = useGetDeveloperContentSync({
+    query: { queryKey: getGetDeveloperContentSyncQueryKey(), retry: false, refetchInterval: 30_000 },
+  });
+  const hangoutSettings = useGetHangoutRewardSettings({
+    query: { queryKey: getGetHangoutRewardSettingsQueryKey(), retry: false },
+  });
+  const [hangoutIntervalDraft, setHangoutIntervalDraft] = useState('60');
+  const [hangoutNotice, setHangoutNotice] = useState('');
+  useEffect(() => {
+    if (hangoutSettings.data) setHangoutIntervalDraft(String(hangoutSettings.data.averageIntervalMinutes));
+  }, [hangoutSettings.data?.averageIntervalMinutes]);
+  const saveHangoutInterval = useSetHangoutRewardInterval({
+    mutation: {
+      onSuccess: result => {
+        client.setQueryData(getGetHangoutRewardSettingsQueryKey(), result);
+        setHangoutNotice(`Coin drops now average about ${result.averageIntervalMinutes} minutes apart.`);
+      },
+    },
+  });
+  const runContentSync = useRunDeveloperContentSync({
+    mutation: {
+      onSuccess: async result => {
+        client.setQueryData(getGetDeveloperContentSyncQueryKey(), result);
+        await Promise.all([
+          client.invalidateQueries({ queryKey: getGetGiftStudioLibraryQueryKey() }),
+          client.invalidateQueries({ queryKey: getGetSocialMeQueryKey() }),
+        ]);
+      },
+    },
+  });
   const setActive = useSetGiftStudioVersionActive();
   const assignVersion = useAssignGiftStudioVersionToGift();
   const updateCatalog = useUpdateGiftStudioCatalogItem();
@@ -930,6 +966,95 @@ export function GiftStudioPage() {
           <p>Name it, remove the screen, check the transparent animation, then activate it in Deux Wild.</p>
           <div className="gs-private"><LockKeyhole size={13} /> Owner-only workspace</div>
         </header>
+
+        <section className="gs-content-sync" aria-labelledby="gs-content-sync-title" data-testid="developer-content-sync">
+          <div className="gs-content-sync-head">
+            <div>
+              <h2 id="gs-content-sync-title">Daily content sync</h2>
+              <p>Refreshes the existing room video sources and checks the live Gift Studio catalog. Saved effects are registered when approved; drafts stay out of live lists.</p>
+            </div>
+            <button
+              className="gs-button primary gs-content-sync-button"
+              type="button"
+              onClick={() => runContentSync.mutate()}
+              disabled={runContentSync.isPending || contentSync.data?.isRunning}
+              data-testid="button-content-sync-now"
+            >
+              <RefreshCw size={15} className={runContentSync.isPending ? 'gs-sync-spinning' : undefined} />
+              {runContentSync.isPending ? 'Syncing…' : 'Sync now'}
+            </button>
+          </div>
+          <div className="gs-content-sync-meta">
+            <span>Scheduled for 3:00 AM Eastern when the server is awake</span>
+            <span>
+              Last synced: {contentSync.data?.lastSyncedAt
+                ? new Date(contentSync.data.lastSyncedAt).toLocaleString()
+                : 'Not yet'}
+            </span>
+          </div>
+          {runContentSync.error && <p className="gs-content-sync-error" role="alert">{ownerErrorText(runContentSync.error)}</p>}
+          {contentSync.data?.summary && <div className="gs-content-sync-summary" aria-live="polite">
+            <strong>
+              Added {contentSync.data.summary.added} · Updated {contentSync.data.summary.updated}
+              {' '}· Skipped {contentSync.data.summary.skipped}
+            </strong>
+            <span>
+              Gift effects: {contentSync.data.summary.giftEffects.active} active, {contentSync.data.summary.giftEffects.drafts} drafts.
+              {' '}Entrance effects: {contentSync.data.summary.entranceEffects.active} active, {contentSync.data.summary.entranceEffects.drafts} drafts.
+            </span>
+            <ul>
+              {contentSync.data.summary.videoPools.map(pool => <li key={pool.roomId}>
+                <b>{pool.roomId}</b>: +{pool.added} new, {pool.savedCount} saved
+                {pool.skipped > 0 ? ` · skipped: ${pool.message ?? 'refresh unavailable'}` : ''}
+              </li>)}
+            </ul>
+          </div>}
+        </section>
+
+        <section className="gs-content-sync" aria-labelledby="gs-hangout-rewards-title" data-testid="developer-hangout-rewards">
+          <div className="gs-content-sync-head">
+            <div>
+              <h2 id="gs-hangout-rewards-title">Hangout coin drops</h2>
+              <p>Random drops go to one or two rooms with seated speakers. Only people seated for 15 minutes qualify.</p>
+            </div>
+          </div>
+          <form className="gs-content-sync-meta gs-hangout-settings-form" onSubmit={event => {
+            event.preventDefault();
+            setHangoutNotice('');
+            saveHangoutInterval.mutate({ data: { averageIntervalMinutes: Number(hangoutIntervalDraft) } });
+          }}>
+            <label className="gs-hangout-interval">
+              <span>Average interval (15–360 minutes)</span>
+              <input
+                type="number"
+                min={15}
+                max={360}
+                step={1}
+                value={hangoutIntervalDraft}
+                onChange={event => setHangoutIntervalDraft(event.target.value)}
+                data-testid="input-hangout-drop-interval"
+              />
+            </label>
+            <button className="gs-button primary" type="submit" disabled={saveHangoutInterval.isPending}
+              data-testid="button-save-hangout-interval">
+              {saveHangoutInterval.isPending ? 'Saving…' : 'Save interval'}
+            </button>
+          </form>
+          <div className="gs-content-sync-meta">
+            <span>Default: 60 minutes; each gap varies randomly from half to one-and-a-half times the average.</span>
+            <span>
+              Next: {hangoutSettings.data?.nextDropAt
+                ? new Date(hangoutSettings.data.nextDropAt).toLocaleString()
+                : 'Loading…'}
+              {' · '}Last: {hangoutSettings.data?.lastDropAt
+                ? new Date(hangoutSettings.data.lastDropAt).toLocaleString()
+                : 'Not yet'}
+            </span>
+          </div>
+          {hangoutNotice && <p className="gs-content-sync-summary" role="status">{hangoutNotice}</p>}
+          {hangoutSettings.isError && <p className="gs-content-sync-error" role="alert">{ownerErrorText(hangoutSettings.error)}</p>}
+          {saveHangoutInterval.error && <p className="gs-content-sync-error" role="alert">{ownerErrorText(saveHangoutInterval.error)}</p>}
+        </section>
 
         <div className="gs-production">
           <nav className="gs-production-stepper" aria-label="Gift production progress" data-testid="gift-production-stepper">

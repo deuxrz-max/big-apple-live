@@ -526,10 +526,15 @@ export const PerformUniversityVideoBeamActionHeader = zod.object({
   "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
 })
 
+export const performUniversityVideoBeamActionBodyTargetSlotNumberMax = 8;
+
+
+
 export const PerformUniversityVideoBeamActionBody = zod.object({
-  "action": zod.enum(['reserve-slot', 'speaker-connected', 'leave-slot', 'set-self-mic', 'host-mute-mic', 'kick']),
+  "action": zod.enum(['reserve-slot', 'speaker-connected', 'leave-slot', 'move-slot', 'set-self-mic', 'host-mute-mic', 'kick']),
   "enabled": zod.boolean().optional(),
-  "targetParticipantId": zod.string().uuid().optional()
+  "targetParticipantId": zod.string().uuid().optional(),
+  "targetSlotNumber": zod.number().int().min(1).max(performUniversityVideoBeamActionBodyTargetSlotNumberMax).optional()
 })
 
 export const performUniversityVideoBeamActionResponseTvDefaultSearchMax = 120;
@@ -1594,6 +1599,9 @@ export const getSocialMeResponseEntranceEffectsOwnerTestOneTiersMax = 5;
 
 export const getSocialMeResponseLoginStreakMin = 0;
 
+export const getSocialMeResponseHangoutStreakDaysMin = 0;
+export const getSocialMeResponseHangoutStreakDaysMax = 7;
+
 export const getSocialMeResponseProfileExternalHandleMax = 64;
 
 export const getSocialMeResponseProfileDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -1658,6 +1666,10 @@ export const GetSocialMeResponse = zod.object({
 })),
   "equippedBadgeId": zod.string().nullable(),
   "loginStreak": zod.number().int().min(getSocialMeResponseLoginStreakMin).optional(),
+  "hangoutStreak": zod.object({
+  "days": zod.number().int().min(getSocialMeResponseHangoutStreakDaysMin).max(getSocialMeResponseHangoutStreakDaysMax),
+  "rewardClaimedToday": zod.boolean()
+}),
   "profile": zod.object({
   "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
   "externalHandle": zod.string().max(getSocialMeResponseProfileExternalHandleMax).nullish(),
@@ -2192,6 +2204,157 @@ export const GetGiftStudioLibraryResponse = zod.object({
   "roomGift": zod.boolean(),
   "animationAvailable": zod.boolean()
 }))
+})
+
+
+export const getDeveloperContentSyncResponseSummaryOneAddedMin = 0;
+
+export const getDeveloperContentSyncResponseSummaryOneUpdatedMin = 0;
+
+export const getDeveloperContentSyncResponseSummaryOneSkippedMin = 0;
+
+export const getDeveloperContentSyncResponseSummaryOneVideoPoolsItemAddedMin = 0;
+
+export const getDeveloperContentSyncResponseSummaryOneVideoPoolsItemUpdatedMin = 0;
+
+export const getDeveloperContentSyncResponseSummaryOneVideoPoolsItemSkippedMin = 0;
+
+export const getDeveloperContentSyncResponseSummaryOneVideoPoolsItemSavedCountMin = 0;
+
+export const getDeveloperContentSyncResponseSummaryOneGiftEffectsActiveMin = 0;
+
+export const getDeveloperContentSyncResponseSummaryOneGiftEffectsDraftsMin = 0;
+
+export const getDeveloperContentSyncResponseSummaryOneGiftEffectsSkippedMin = 0;
+
+export const getDeveloperContentSyncResponseSummaryOneEntranceEffectsActiveMin = 0;
+
+export const getDeveloperContentSyncResponseSummaryOneEntranceEffectsDraftsMin = 0;
+
+export const getDeveloperContentSyncResponseSummaryOneEntranceEffectsSkippedMin = 0;
+
+
+
+export const GetDeveloperContentSyncResponse = zod.object({
+  "lastSyncedAt": zod.union([zod.coerce.date(),zod.null()]),
+  "lastScheduledEasternDate": zod.union([zod.coerce.date(),zod.null()]),
+  "summary": zod.union([zod.object({
+  "trigger": zod.enum(['manual', 'scheduled', 'startup-catchup']),
+  "added": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneAddedMin),
+  "updated": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneUpdatedMin),
+  "skipped": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneSkippedMin),
+  "videoPools": zod.array(zod.object({
+  "roomId": zod.string(),
+  "added": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneVideoPoolsItemAddedMin),
+  "updated": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneVideoPoolsItemUpdatedMin),
+  "skipped": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneVideoPoolsItemSkippedMin),
+  "savedCount": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneVideoPoolsItemSavedCountMin),
+  "message": zod.string().optional()
+})),
+  "giftEffects": zod.object({
+  "active": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneGiftEffectsActiveMin),
+  "drafts": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneGiftEffectsDraftsMin),
+  "skipped": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneGiftEffectsSkippedMin)
+}),
+  "entranceEffects": zod.object({
+  "active": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneEntranceEffectsActiveMin),
+  "drafts": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneEntranceEffectsDraftsMin),
+  "skipped": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneEntranceEffectsSkippedMin)
+})
+}),zod.null()]),
+  "isRunning": zod.boolean()
+})
+
+
+export const runDeveloperContentSyncResponseSummaryOneAddedMin = 0;
+
+export const runDeveloperContentSyncResponseSummaryOneUpdatedMin = 0;
+
+export const runDeveloperContentSyncResponseSummaryOneSkippedMin = 0;
+
+export const runDeveloperContentSyncResponseSummaryOneVideoPoolsItemAddedMin = 0;
+
+export const runDeveloperContentSyncResponseSummaryOneVideoPoolsItemUpdatedMin = 0;
+
+export const runDeveloperContentSyncResponseSummaryOneVideoPoolsItemSkippedMin = 0;
+
+export const runDeveloperContentSyncResponseSummaryOneVideoPoolsItemSavedCountMin = 0;
+
+export const runDeveloperContentSyncResponseSummaryOneGiftEffectsActiveMin = 0;
+
+export const runDeveloperContentSyncResponseSummaryOneGiftEffectsDraftsMin = 0;
+
+export const runDeveloperContentSyncResponseSummaryOneGiftEffectsSkippedMin = 0;
+
+export const runDeveloperContentSyncResponseSummaryOneEntranceEffectsActiveMin = 0;
+
+export const runDeveloperContentSyncResponseSummaryOneEntranceEffectsDraftsMin = 0;
+
+export const runDeveloperContentSyncResponseSummaryOneEntranceEffectsSkippedMin = 0;
+
+
+
+export const RunDeveloperContentSyncResponse = zod.object({
+  "lastSyncedAt": zod.union([zod.coerce.date(),zod.null()]),
+  "lastScheduledEasternDate": zod.union([zod.coerce.date(),zod.null()]),
+  "summary": zod.union([zod.object({
+  "trigger": zod.enum(['manual', 'scheduled', 'startup-catchup']),
+  "added": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneAddedMin),
+  "updated": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneUpdatedMin),
+  "skipped": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneSkippedMin),
+  "videoPools": zod.array(zod.object({
+  "roomId": zod.string(),
+  "added": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneVideoPoolsItemAddedMin),
+  "updated": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneVideoPoolsItemUpdatedMin),
+  "skipped": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneVideoPoolsItemSkippedMin),
+  "savedCount": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneVideoPoolsItemSavedCountMin),
+  "message": zod.string().optional()
+})),
+  "giftEffects": zod.object({
+  "active": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneGiftEffectsActiveMin),
+  "drafts": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneGiftEffectsDraftsMin),
+  "skipped": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneGiftEffectsSkippedMin)
+}),
+  "entranceEffects": zod.object({
+  "active": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneEntranceEffectsActiveMin),
+  "drafts": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneEntranceEffectsDraftsMin),
+  "skipped": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneEntranceEffectsSkippedMin)
+})
+}),zod.null()]),
+  "isRunning": zod.boolean()
+})
+
+
+export const getHangoutRewardSettingsResponseAverageIntervalMinutesMin = 15;
+export const getHangoutRewardSettingsResponseAverageIntervalMinutesMax = 360;
+
+
+
+export const GetHangoutRewardSettingsResponse = zod.object({
+  "averageIntervalMinutes": zod.number().int().min(getHangoutRewardSettingsResponseAverageIntervalMinutesMin).max(getHangoutRewardSettingsResponseAverageIntervalMinutesMax),
+  "nextDropAt": zod.coerce.date(),
+  "lastDropAt": zod.coerce.date().nullable()
+})
+
+
+export const setHangoutRewardIntervalBodyAverageIntervalMinutesMin = 15;
+export const setHangoutRewardIntervalBodyAverageIntervalMinutesMax = 360;
+
+
+
+export const SetHangoutRewardIntervalBody = zod.object({
+  "averageIntervalMinutes": zod.number().int().min(setHangoutRewardIntervalBodyAverageIntervalMinutesMin).max(setHangoutRewardIntervalBodyAverageIntervalMinutesMax)
+})
+
+export const setHangoutRewardIntervalResponseAverageIntervalMinutesMin = 15;
+export const setHangoutRewardIntervalResponseAverageIntervalMinutesMax = 360;
+
+
+
+export const SetHangoutRewardIntervalResponse = zod.object({
+  "averageIntervalMinutes": zod.number().int().min(setHangoutRewardIntervalResponseAverageIntervalMinutesMin).max(setHangoutRewardIntervalResponseAverageIntervalMinutesMax),
+  "nextDropAt": zod.coerce.date(),
+  "lastDropAt": zod.coerce.date().nullable()
 })
 
 

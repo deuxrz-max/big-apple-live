@@ -553,6 +553,7 @@ export function useUniversityVideoBeam(
     isHost,
     joinSpeaker,
     leaveSlot: () => runAction({ action: "leave-slot" }),
+    moveToSlot: (targetSlotNumber: number) => runAction({ action: "move-slot", targetSlotNumber }),
     toggleMic,
     hostMuteMic,
     kick,

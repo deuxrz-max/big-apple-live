@@ -153,6 +153,17 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 .ur-room-entry-effect img,.ur-room-entry-effect video{display:block;width:min(72vw,360px);height:auto;max-width:100vw;max-height:72vh;max-height:72dvh;object-fit:contain;object-position:center;user-select:none;background:transparent!important;border:0!important;box-shadow:none!important}
 .ur-entry-effect-webp,.ur-entry-effect-video{opacity:1;transition:opacity 500ms ease-out;filter:none}
 .ur-room-entry-effect.is-fading .ur-entry-effect-webp,.ur-room-entry-effect.is-fading .ur-entry-effect-video{opacity:0}
+.ur-coin-drop{position:fixed;inset:0;z-index:120;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;pointer-events:none;text-align:center;background:transparent;animation:ur-coin-drop-in .28s ease-out both}
+.ur-coin-drop.is-fading{animation:ur-coin-drop-out .6s ease-in both}
+.ur-coin-drop-logo{display:grid;place-items:center;width:118px;height:118px;border:2px solid rgba(190,153,255,.75);border-radius:50%;background:rgba(18,12,30,.86);box-shadow:0 0 32px rgba(164,94,255,.55),inset 0 0 20px rgba(255,255,255,.14);animation:ur-coin-drop-spin 1.5s cubic-bezier(.15,.65,.25,1) both}
+.ur-coin-drop-amount{min-width:180px;padding:10px 20px;border:1px solid rgba(255,211,81,.75);border-radius:999px;background:rgba(23,15,32,.94);color:#ffdb67;font-size:clamp(24px,7vw,36px);font-weight:900;letter-spacing:.04em;text-shadow:0 2px 12px rgba(255,177,32,.45);opacity:.65;transform:scale(.88);transition:opacity .3s ease,transform .3s ease}
+.ur-coin-drop-amount.is-revealed{opacity:1;transform:scale(1)}
+.ur-coin-drop-message{max-width:320px;padding:8px 14px;border-radius:12px;background:rgba(12,10,18,.88);color:#fff;font-size:14px;font-weight:700;text-shadow:0 1px 3px #000}
+.ur-streak-reward-toast{position:fixed;z-index:121;top:calc(env(safe-area-inset-top,0px) + 76px);left:50%;transform:translateX(-50%);max-width:min(90vw,380px);padding:10px 16px;border:1px solid rgba(185,141,255,.65);border-radius:999px;background:rgba(27,15,42,.94);color:#fff;font-weight:800;text-align:center;box-shadow:0 8px 28px rgba(0,0,0,.4);pointer-events:none}
+@keyframes ur-coin-drop-spin{0%{opacity:0;transform:translateY(24px) rotate(-180deg) scale(.4)}45%{opacity:1;transform:translateY(-8px) rotate(25deg) scale(1.12)}100%{transform:translateY(0) rotate(360deg) scale(1)}}
+@keyframes ur-coin-drop-in{from{opacity:0}to{opacity:1}}
+@keyframes ur-coin-drop-out{to{opacity:0;visibility:hidden}}
+@media(prefers-reduced-motion:reduce){.ur-coin-drop-logo{animation-duration:.2s;animation-timing-function:ease-out}.ur-coin-drop-amount{transition:none}}
 .ur-mic-state{font-size:9px;color:#a9abb5;white-space:nowrap}
 .ur-mic-state.is-live{color:#8ee5c2}
 .ur-slot-action,.ur-slot-join,.ur-resume-audio{border:1px solid #4a4c56;border-radius:7px;background:#30323a;color:#f3f2f6;padding:5px 7px;font:inherit;font-size:10px;font-weight:700;white-space:nowrap;cursor:pointer}

@@ -13,6 +13,7 @@ export const UniversityVideoBeamActionInput4b96100Action = {
   'reserve-slot': 'reserve-slot',
   'speaker-connected': 'speaker-connected',
   'leave-slot': 'leave-slot',
+  'move-slot': 'move-slot',
   'set-self-mic': 'set-self-mic',
   'host-mute-mic': 'host-mute-mic',
   kick: 'kick',

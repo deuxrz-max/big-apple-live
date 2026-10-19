@@ -10,6 +10,7 @@ import { getMyEntranceEffectSettings } from "./entrance-effect-preferences";
 import { giftCatalogWithActiveNames } from "../gift-studio-catalog";
 import { nameColorProfileForAccount, nameColorPurchaseTotalOverride } from "./gift-name-color-data";
 import { hasOwnerTierTestAccess } from "./owner-entrance-effects-policy";
+import { getHangoutStreakSummary } from "../community-hangout-rewards";
 
 export async function getMe(id: string) {
   const profile = await requireAccount(id);
@@ -20,9 +21,10 @@ export async function getMe(id: string) {
     accountBadgeState(id),
     myBadgeViews(id),
   ]);
-  const [gifts, entranceEffects] = await Promise.all([
+  const [gifts, entranceEffects, hangoutStreak] = await Promise.all([
     giftCatalogWithActiveNames(),
     getMyEntranceEffectSettings(id),
+    getHangoutStreakSummary(id),
   ]);
   const nameColor = await nameColorProfileForAccount(id);
   return { profile: await person(id, profile, undefined, true, undefined, nameColor),
@@ -44,7 +46,7 @@ export async function getMe(id: string) {
     equippedBadgeId: badgeState.equippedBadgeId,
     badgeExpirations: Object.fromEntries(badges.filter(badge => badge.expiresAt)
       .map(badge => [badge.id, badge.expiresAt!])),
-    loginStreak: streak?.consecutiveDays ?? 0, products: PRODUCTS, gifts, countries: COUNTRIES,
+    loginStreak: streak?.consecutiveDays ?? 0, hangoutStreak, products: PRODUCTS, gifts, countries: COUNTRIES,
     entranceEffects };
 }
 export async function saveSocialProfile(id: string, input: SocialProfileInput) {

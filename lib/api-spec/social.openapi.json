@@ -297,6 +297,58 @@
         }
       }
     },
+    "/social/admin/content-sync": {
+      "get": {
+        "operationId": "getDeveloperContentSync",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "responses": {
+          "200": {"description": "Owner's latest content sync summary", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DeveloperContentSyncStatus"}}}},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Owner access required"}
+        }
+      }
+    },
+    "/social/admin/content-sync/run": {
+      "post": {
+        "operationId": "runDeveloperContentSync",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "responses": {
+          "200": {"description": "Content sync completed; individual source failures are included in the summary", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DeveloperContentSyncStatus"}}}},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Owner access required"},
+          "500": {"description": "The sync summary could not be saved"}
+        }
+      }
+    },
+    "/social/admin/hangout-rewards": {
+      "get": {
+        "operationId": "getHangoutRewardSettings",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "responses": {
+          "200": {"description": "Owner's hangout coin-drop schedule", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HangoutRewardSettings"}}}},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Owner access required"}
+        }
+      },
+      "patch": {
+        "operationId": "setHangoutRewardInterval",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "requestBody": {
+          "required": true,
+          "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SetHangoutRewardIntervalInput"}}}
+        },
+        "responses": {
+          "200": {"description": "Updated hangout coin-drop schedule", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HangoutRewardSettings"}}}},
+          "400": {"description": "Interval must be a whole number from 15 to 360 minutes"},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
+          "403": {"description": "Owner access required"}
+        }
+      }
+    },
     "/social/admin/gift-studio/catalog/{giftId}": {
       "patch": {
         "operationId": "updateGiftStudioCatalogItem",
@@ -1604,6 +1656,54 @@
           "catalog": {"type": "array", "items": {"$ref": "#/components/schemas/GiftStudioCatalogGift"}}
         }
       },
+      "DeveloperContentSyncPoolResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["roomId", "added", "updated", "skipped", "savedCount"],
+        "properties": {
+          "roomId": {"type": "string"},
+          "added": {"type": "integer", "minimum": 0},
+          "updated": {"type": "integer", "minimum": 0},
+          "skipped": {"type": "integer", "minimum": 0},
+          "savedCount": {"type": "integer", "minimum": 0},
+          "message": {"type": "string"}
+        }
+      },
+      "DeveloperContentSyncAssetResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["active", "drafts", "skipped"],
+        "properties": {
+          "active": {"type": "integer", "minimum": 0},
+          "drafts": {"type": "integer", "minimum": 0},
+          "skipped": {"type": "integer", "minimum": 0}
+        }
+      },
+      "DeveloperContentSyncSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["trigger", "added", "updated", "skipped", "videoPools", "giftEffects", "entranceEffects"],
+        "properties": {
+          "trigger": {"type": "string", "enum": ["manual", "scheduled", "startup-catchup"]},
+          "added": {"type": "integer", "minimum": 0},
+          "updated": {"type": "integer", "minimum": 0},
+          "skipped": {"type": "integer", "minimum": 0},
+          "videoPools": {"type": "array", "items": {"$ref": "#/components/schemas/DeveloperContentSyncPoolResult"}},
+          "giftEffects": {"$ref": "#/components/schemas/DeveloperContentSyncAssetResult"},
+          "entranceEffects": {"$ref": "#/components/schemas/DeveloperContentSyncAssetResult"}
+        }
+      },
+      "DeveloperContentSyncStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["lastSyncedAt", "lastScheduledEasternDate", "summary", "isRunning"],
+        "properties": {
+          "lastSyncedAt": {"anyOf": [{"type": "string", "format": "date-time"}, {"type": "null"}]},
+          "lastScheduledEasternDate": {"anyOf": [{"type": "string", "format": "date"}, {"type": "null"}]},
+          "summary": {"anyOf": [{"$ref": "#/components/schemas/DeveloperContentSyncSummary"}, {"type": "null"}]},
+          "isRunning": {"type": "boolean"}
+        }
+      },
       "GiftStudioPlaybackMedia": {
         "type": "object",
         "required": ["versionId", "name", "webmUrl", "safariUrl", "durationMs"],
@@ -1985,6 +2085,7 @@
           },
           "equippedBadgeId": {"type": ["string", "null"]},
           "loginStreak": { "type": "integer", "minimum": 0 },
+          "hangoutStreak": {"$ref": "#/components/schemas/HangoutStreakSummary"},
           "profile": {
             "$ref": "#/components/schemas/SocialPerson"
           },
@@ -2040,8 +2141,36 @@
           "countries",
           "entranceEffects",
           "badges",
-          "equippedBadgeId"
+          "equippedBadgeId",
+          "hangoutStreak"
         ]
+      },
+      "HangoutStreakSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["days", "rewardClaimedToday"],
+        "properties": {
+          "days": {"type": "integer", "minimum": 0, "maximum": 7},
+          "rewardClaimedToday": {"type": "boolean"}
+        }
+      },
+      "HangoutRewardSettings": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["averageIntervalMinutes", "nextDropAt", "lastDropAt"],
+        "properties": {
+          "averageIntervalMinutes": {"type": "integer", "minimum": 15, "maximum": 360},
+          "nextDropAt": {"type": "string", "format": "date-time"},
+          "lastDropAt": {"type": ["string", "null"], "format": "date-time"}
+        }
+      },
+      "SetHangoutRewardIntervalInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["averageIntervalMinutes"],
+        "properties": {
+          "averageIntervalMinutes": {"type": "integer", "minimum": 15, "maximum": 360}
+        }
       },
       "NameColorProgress": {
         "type": "object",

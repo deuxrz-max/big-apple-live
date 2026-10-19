@@ -10,6 +10,7 @@ import type { SocialGiftCatalogSettings } from "@workspace/db";
 import { RoomError } from "./room-store";
 import { GIFTS } from "./social/catalog";
 import { isRoomGift } from "./social/room-gift-policy";
+import { filterSendableGifts, isSendableGift } from "./gift-availability";
 
 const DEFAULT_GIFTS = new Map(GIFTS.map((gift) => [gift.id, gift] as const));
 type GiftCatalogStatus = "active" | "inactive" | "deleted";
@@ -118,12 +119,9 @@ export async function getGiftCatalogItem(giftId: string) {
 
 export async function giftCatalogWithActiveNames() {
   const catalog = await listGiftCatalogForOwner();
-  return catalog.filter((gift) =>
-    !/^motion-[0-9a-f-]{36}$/.test(gift.id)
-      && gift.status === "active"
-      && gift.productType === "gift"
-      && gift.animationAvailable,
-  ).map(({ id, name, cost }) => ({ id, name, cost }));
+  return filterSendableGifts(catalog)
+    .filter(gift => !/^motion-[0-9a-f-]{36}$/.test(gift.id))
+    .map(({ id, name, cost }) => ({ id, name, cost }));
 }
 
 export function mergeActiveGiftNames(activeNames: Map<string, string>) {
@@ -197,6 +195,6 @@ export async function updateGiftCatalogItem(input: {
 export async function getSendableGiftCatalogItem(giftId: string) {
   if (/^motion-[0-9a-f-]{36}$/.test(giftId)) return null;
   const item = await getGiftCatalogItem(giftId);
-  if (!item || item.status !== "active" || item.productType !== "gift" || !item.animationAvailable) return null;
+  if (!isSendableGift(item)) return null;
   return item;
 }

@@ -207,6 +207,29 @@ test("video beam reserves exactly eight slots under simultaneous joins and keeps
     (error: unknown) => error instanceof RoomError && error.status === 409);
 });
 
+test("moving a speaker to another open seat preserves the live seat session", () => {
+  let now = 10_000;
+  const rooms = new RoomStore(() => now);
+  createRoom(rooms);
+  const beam = new UniversityVideoBeamStore(rooms, () => now);
+  const speaker = addMember(rooms, "MUSIC1", "speaker");
+  const lifecycle: string[] = [];
+  beam.setSeatLifecycleListener(event => lifecycle.push(event.type));
+  beam.joinSlot("MUSIC1", speaker.participantId, "speaker");
+  beam.markConnected("MUSIC1", speaker.participantId);
+  beam.setSelfMedia("MUSIC1", speaker.participantId, "mic", true);
+  for (let minute = 0; minute < 15; minute += 1) {
+    now += 60_000;
+    rooms.heartbeat("MUSIC1", speaker.participantSessionId);
+  }
+
+  const moved = beam.moveSlot("MUSIC1", speaker.participantId, "speaker", 8);
+  assert.equal(moved.slots[0]!.participantId, null);
+  assert.equal(moved.slots[7]!.participantId, speaker.participantId);
+  assert.equal(moved.slots[7]!.micMuted, false);
+  assert.deepEqual(lifecycle, ["joined"], "a seat move must not emit a leave/reset event");
+});
+
 test("pending permission handoff survives briefly, connected speaker disconnects free the slot", () => {
   let now = 10_000;
   const rooms = new RoomStore(() => now);

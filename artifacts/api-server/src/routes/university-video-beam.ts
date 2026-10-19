@@ -957,7 +957,7 @@ router.post("/account/rooms/:roomId/video-beam/actions", async (req, res) => {
   const { participant } = requireMember(req, req.params.roomId, id);
   const input = PerformUniversityVideoBeamActionBody.safeParse(req.body);
   if (!input.success || Object.keys(req.body ?? {}).some(key =>
-    !["action", "enabled", "targetParticipantId"].includes(key))) {
+    !["action", "enabled", "targetParticipantId", "targetSlotNumber"].includes(key))) {
     throw new RoomError(400, "Choose a valid video beam action.");
   }
   const roomId = req.params.roomId;
@@ -990,6 +990,15 @@ router.post("/account/rooms/:roomId/video-beam/actions", async (req, res) => {
         }
         await refreshParticipantSnapshot(roomName);
         state = universityVideoBeamStore.leaveSlot(roomId, participant.participantId);
+        break;
+      }
+      case "move-slot": {
+        if (!Number.isInteger(input.data.targetSlotNumber)) {
+          throw new RoomError(400, "Choose one of the eight speaker spots.");
+        }
+        state = universityVideoBeamStore.moveSlot(
+          roomId, participant.participantId, id, input.data.targetSlotNumber!,
+        );
         break;
       }
       case "set-self-mic": {

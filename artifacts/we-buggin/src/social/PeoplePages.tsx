@@ -173,6 +173,12 @@ export function MyProfilePage() {
   return (
     <section>
       <h1 className="bm-h1 sc-h1">My profile</h1>
+      <p className="sc-sub" data-testid="room-hangout-streak">
+        Room hangout streak: <b>Day {d.hangoutStreak.days}/7</b>
+        {d.hangoutStreak.rewardClaimedToday
+          ? ' · Your 100-coin streak reward was earned today.'
+          : ' · Spend at least a minute in a room each hangout day.'}
+      </p>
       <div className="sc-hero"><Avatar p={d.profile} size={110} /><div><ShinyName className="sc-name" displayNameColor={d.profile.displayNameColor} displayNameTierIndex={d.profile.displayNameTierIndex}><BadgeMark id={d.profile.badgeId} label={d.profile.badgeName} imageUrl={d.profile.badgeImage} size={18} compact />{d.profile.username}</ShinyName>
         <p className="sc-sub">Change your display name, photo and bio in <Link href="/user-portal/edit" className="bm-link">Edit profile</Link>.</p></div></div>
       <form className="sc-form" onSubmit={submit}>

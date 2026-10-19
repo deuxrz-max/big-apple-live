@@ -23,7 +23,8 @@ import { GiftComboPlayer } from '@/gifts/GiftComboPlayer';
 import { PassportSummaryBadge } from '@/passport/StreamerPassport';
 import { RoomEntranceEffectOverlay } from './RoomEntranceEffectOverlay';
 import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
-import type { RoomEntranceEffectEvent } from './useTextRoom';
+import type { RoomCoinDropEvent, RoomEntranceEffectEvent } from './useTextRoom';
+import { RoomCoinDropOverlay } from './RoomCoinDropOverlay';
 import './university-room.css';
 import './bot-moderation.css';
 
@@ -91,6 +92,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const [rulesOpen, setRulesOpen] = useState(false);
   const [ignored, setIgnored] = useState<Set<string>>(new Set());
   const [activeEntranceEffect, setActiveEntranceEffect] = useState<RoomEntranceEffectEvent | null>(null);
+  const [coinDropQueue, setCoinDropQueue] = useState<RoomCoinDropEvent[]>([]);
   const gifts = useRoomGifts(roomId, userId, sessionId, ignored);
   const ignoreBusy = useRef(0);
   const idem = useRef<{ username: string; body: string; key: string } | null>(null);
@@ -105,13 +107,16 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const near = useRef(true);
   const messageLongPress = useRef<number | null>(null);
   const handledEntranceEffects = useRef(new Set<string>());
+  const handledCoinDrops = useRef(new Set<string>());
   const isComedyRoom = roomId.toUpperCase() === 'COMEDY';
 
   useEffect(() => {
     setText(''); setWhisperTo(null); setMenu(null); setDrawer(false); setRulesOpen(false);
     setGiftBag(null);
     setActiveEntranceEffect(null);
+    setCoinDropQueue([]);
     handledEntranceEffects.current.clear();
+    handledCoinDrops.current.clear();
     setIgnored(new Set()); setSendErr(null); setNote(null);
     autoRules.current = false; ignoreVersion.current = null; idem.current = null;
   }, [roomId, userId]);
@@ -132,8 +137,29 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
       if (Date.now() - effect.startedAt < effect.durationMs) setActiveEntranceEffect(effect);
     }
   }, [r.entranceEffects, userId]);
+  useEffect(() => {
+    for (const event of r.coinDrops) {
+      if (handledCoinDrops.current.has(event.eventId)) continue;
+      handledCoinDrops.current.add(event.eventId);
+      const storageKey = `deux-wild-coin-drop:${userId}:${event.eventId}`;
+      try {
+        if (window.localStorage.getItem(storageKey)) continue;
+        window.localStorage.setItem(storageKey, 'seen');
+      } catch {
+        // In-memory event de-duplication still protects this page session.
+      }
+      if (Date.now() - event.startedAt <= 30_000) {
+        setCoinDropQueue(previous => [...previous, event]);
+      }
+    }
+  }, [r.coinDrops, userId]);
   const finishEntranceEffect = useCallback((eventId: string) => {
     setActiveEntranceEffect(current => current?.eventId === eventId ? null : current);
+  }, []);
+  const finishCoinDrop = useCallback((eventId: string) => {
+    setCoinDropQueue(current => current[0]?.eventId === eventId
+      ? current.slice(1)
+      : current.filter(item => item.eventId !== eventId));
   }, []);
   useEffect(() => {
     const openGifts = () => {
@@ -395,7 +421,10 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                     ? people.find((p) => p.participantId === slot.participantId)
                     : undefined;
                   const mine = slot.participantId === participantId;
-                  const joinAvailable = !slot.participantId && !!sessionId && !!participantId && !videoBeam.ownSlot;
+                  const canSelectOpenSlot = !slot.participantId && !!sessionId && !!participantId
+                    && (!videoBeam.ownSlot || videoBeam.ownSlot.slotNumber !== slot.slotNumber);
+                  const moveAvailable = canSelectOpenSlot && !!videoBeam.ownSlot;
+                  const joinAvailable = canSelectOpenSlot && !videoBeam.ownSlot;
                   const isSpeaking = !!slot.participantId && videoBeam.speaking.has(slot.participantId);
                   const media = slot.participantId ? videoBeam.media[slot.participantId] : undefined;
                   const fallbackName = person ? (person.displayName?.trim() || person.username) : '';
@@ -419,14 +448,17 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                     <article className={`ur-slot${isSpeaking ? ' is-speaking' : ''}${slot.participantId ? ' is-occupied' : ''}${person ? ' has-person' : ''}`}
                       key={slot.slotNumber} aria-label={`Speaker slot ${slot.slotNumber}${slot.participantId ? `, ${person?.displayName ?? 'occupied'}` : ', empty'}`}>
                       <div className="ur-slot-media"
-                        role={joinAvailable && !videoBeam.busy ? 'button' : undefined}
-                        tabIndex={joinAvailable && !videoBeam.busy ? 0 : undefined}
-                        aria-label={joinAvailable && !videoBeam.busy ? `Join open speaker spot ${slot.slotNumber}` : undefined}
-                        onClick={joinAvailable && !videoBeam.busy ? () => void videoBeam.joinSpeaker() : undefined}
-                        onKeyDown={joinAvailable && !videoBeam.busy ? (event) => {
+                        role={(joinAvailable || moveAvailable) && !videoBeam.busy ? 'button' : undefined}
+                        tabIndex={(joinAvailable || moveAvailable) && !videoBeam.busy ? 0 : undefined}
+                        aria-label={(joinAvailable || moveAvailable) && !videoBeam.busy
+                          ? `${moveAvailable ? 'Move to' : 'Join'} speaker spot ${slot.slotNumber}` : undefined}
+                        onClick={(joinAvailable || moveAvailable) && !videoBeam.busy
+                          ? () => void (moveAvailable ? videoBeam.moveToSlot(slot.slotNumber) : videoBeam.joinSpeaker())
+                          : undefined}
+                        onKeyDown={(joinAvailable || moveAvailable) && !videoBeam.busy ? (event) => {
                           if (event.key === 'Enter' || event.key === ' ') {
                             event.preventDefault();
-                            void videoBeam.joinSpeaker();
+                            void (moveAvailable ? videoBeam.moveToSlot(slot.slotNumber) : videoBeam.joinSpeaker());
                           }
                         } : undefined}>
                         {person && <BeamAudioTrack track={media?.audio} />}
@@ -466,7 +498,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                         ) : (
                           <div className="ur-slot-empty-copy">
                             <span className="ur-empty-number" aria-hidden="true">{slot.slotNumber}</span>
-                            <span className="ur-slot-name ur-empty-name">{joinAvailable ? 'Tap to join' : 'Open spot'}</span>
+                            <span className="ur-slot-name ur-empty-name">{moveAvailable ? 'Move here' : joinAvailable ? 'Tap to join' : 'Open spot'}</span>
                           </div>
                         )}
                       </div>
@@ -691,6 +723,12 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
         </div>
       )}
       <RoomEntranceEffectOverlay event={activeEntranceEffect} onFinish={finishEntranceEffect} />
+      <RoomCoinDropOverlay event={coinDropQueue[0] ?? null} onFinish={finishCoinDrop} />
+      {r.streakReward && (
+        <div className="ur-streak-reward-toast" role="status">
+          Seven-day room streak! +{r.streakReward.coins} coins
+        </div>
+      )}
     </div>
   );
 }

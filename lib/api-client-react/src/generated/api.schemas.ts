@@ -1025,6 +1025,7 @@ export const UniversityVideoBeamActionInputAction = {
   'reserve-slot': 'reserve-slot',
   'speaker-connected': 'speaker-connected',
   'leave-slot': 'leave-slot',
+  'move-slot': 'move-slot',
   'set-self-mic': 'set-self-mic',
   'host-mute-mic': 'host-mute-mic',
   kick: 'kick',
@@ -1034,6 +1035,11 @@ export interface UniversityVideoBeamActionInput {
   action: UniversityVideoBeamActionInputAction;
   enabled?: boolean;
   targetParticipantId?: string;
+  /**
+     * @minimum 1
+     * @maximum 8
+     */
+  targetSlotNumber?: number;
 }
 
 export interface UniversityVideoBeamSlot {
@@ -2117,6 +2123,7 @@ export const UniversityVideoBeamActionInput4b96100Action = {
   'reserve-slot': 'reserve-slot',
   'speaker-connected': 'speaker-connected',
   'leave-slot': 'leave-slot',
+  'move-slot': 'move-slot',
   'set-self-mic': 'set-self-mic',
   'host-mute-mic': 'host-mute-mic',
   kick: 'kick',
@@ -2126,6 +2133,11 @@ export interface UniversityVideoBeamActionInput4b96100 {
   action: UniversityVideoBeamActionInput4b96100Action;
   enabled?: boolean;
   targetParticipantId?: string;
+  /**
+     * @minimum 1
+     * @maximum 8
+     */
+  targetSlotNumber?: number;
 }
 
 export interface UniversityVideoBeamSlot4b96100 {
@@ -2871,6 +2883,57 @@ export interface GiftStudioLibrary {
   catalog: GiftStudioCatalogGift[];
 }
 
+export interface DeveloperContentSyncPoolResult {
+  roomId: string;
+  /** @minimum 0 */
+  added: number;
+  /** @minimum 0 */
+  updated: number;
+  /** @minimum 0 */
+  skipped: number;
+  /** @minimum 0 */
+  savedCount: number;
+  message?: string;
+}
+
+export interface DeveloperContentSyncAssetResult {
+  /** @minimum 0 */
+  active: number;
+  /** @minimum 0 */
+  drafts: number;
+  /** @minimum 0 */
+  skipped: number;
+}
+
+export type DeveloperContentSyncSummaryTrigger = typeof DeveloperContentSyncSummaryTrigger[keyof typeof DeveloperContentSyncSummaryTrigger];
+
+
+export const DeveloperContentSyncSummaryTrigger = {
+  manual: 'manual',
+  scheduled: 'scheduled',
+  'startup-catchup': 'startup-catchup',
+} as const;
+
+export interface DeveloperContentSyncSummary {
+  trigger: DeveloperContentSyncSummaryTrigger;
+  /** @minimum 0 */
+  added: number;
+  /** @minimum 0 */
+  updated: number;
+  /** @minimum 0 */
+  skipped: number;
+  videoPools: DeveloperContentSyncPoolResult[];
+  giftEffects: DeveloperContentSyncAssetResult;
+  entranceEffects: DeveloperContentSyncAssetResult;
+}
+
+export interface DeveloperContentSyncStatus {
+  lastSyncedAt: string | null;
+  lastScheduledEasternDate: string | null;
+  summary: DeveloperContentSyncSummary | null;
+  isRunning: boolean;
+}
+
 export interface GiftStudioPlaybackMedia {
   versionId: string;
   /**
@@ -3157,6 +3220,15 @@ export interface MyOwnedBadge {
   equipped: boolean;
 }
 
+export interface HangoutStreakSummary {
+  /**
+     * @minimum 0
+     * @maximum 7
+     */
+  days: number;
+  rewardClaimedToday: boolean;
+}
+
 export interface SocialMe {
   nameColorProgress: NameColorProgress;
   nameColorTest: NameColorTestState;
@@ -3167,6 +3239,7 @@ export interface SocialMe {
   equippedBadgeId: string | null;
   /** @minimum 0 */
   loginStreak?: number;
+  hangoutStreak: HangoutStreakSummary;
   profile: SocialPerson;
   wallet: SocialWallet;
   inventory: string[];
@@ -3174,6 +3247,25 @@ export interface SocialMe {
   gifts: SocialGift[];
   giftQuantities?: SocialMeGiftQuantities;
   countries: SocialMeCountriesItem[];
+}
+
+export interface HangoutRewardSettings {
+  /**
+     * @minimum 15
+     * @maximum 360
+     */
+  averageIntervalMinutes: number;
+  nextDropAt: string;
+  /** @nullable */
+  lastDropAt: string | null;
+}
+
+export interface SetHangoutRewardIntervalInput {
+  /**
+     * @minimum 15
+     * @maximum 360
+     */
+  averageIntervalMinutes: number;
 }
 
 export interface NameColorTestTotalInput {

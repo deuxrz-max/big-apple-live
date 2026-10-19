@@ -15,6 +15,8 @@ type RoomEvent =
   | { type: "chat.accepted"; data: ChatAccepted; senderAccountId?: string }
   | { type: "chat.refresh"; data: { roomId: string } }
   | { type: "room.entrance-effect"; data: RoomEntranceEffectEvent }
+  | { type: "room.coin-drop"; data: RoomCoinDropEvent }
+  | { type: "room.hangout-streak-reward"; data: { roomId: string; accountId: string; day: string; coins: number } }
   | { type: "room.snapshot"; data: RoomState }
   | { type: "room.expired"; data: { roomId: string } };
 type Listener = (event: RoomEvent) => void;
@@ -32,6 +34,12 @@ export type RoomEntranceEffectEvent = {
   studioVersionId?: string;
   startedAt: number;
   durationMs: number;
+};
+export type RoomCoinDropEvent = {
+  eventId: string;
+  roomId: string;
+  amount: number;
+  startedAt: number;
 };
 type ActiveSession = { participant: Participant; lastSeenAt: number; accountId?: string; capExempt?: boolean };
 type AccountIdentity = { accountId: string; identity: EmojiIdentity; photoUrl?: string | null; capExempt?: boolean; displayNameColor?: string; displayNameTierIndex?: number };
@@ -58,6 +66,7 @@ type Room = {
   testOnly?: boolean;
   parentRoomId?: string | null;
   entranceEffects: RoomEntranceEffectEvent[];
+  coinDrops: RoomCoinDropEvent[];
 };
 
 /** Single-process, ephemeral presence store. Session credentials are never in snapshots. */
@@ -81,7 +90,7 @@ export class RoomStore {
       // explicit unlimited value; the eight camera seats are tracked separately.
       name: input.label, capacity: 0, createdAt: input.createdAt, hostParticipantId: randomUUID(),
       sessions: new Map(), headcountSince: this.now(), listeners: new Set(), emptySince: null, community: true, testOnly: input.testOnly,
-      parentRoomId: input.parentRoomId, entranceEffects: [] });
+      parentRoomId: input.parentRoomId, entranceEffects: [], coinDrops: [] });
   }
   communityParentId(roomId: string) {
     const normalized = roomId.toUpperCase();
@@ -108,6 +117,9 @@ export class RoomStore {
   }
   isCommunity(roomId: string) { return !!this.rooms.get(roomId.toUpperCase())?.community; }
   isTestOnly(roomId: string) { return !!this.rooms.get(roomId.toUpperCase())?.testOnly; }
+  publicCommunityRoomIds(): string[] {
+    return [...this.rooms.values()].filter(room => room.community && !room.testOnly).map(room => room.roomId);
+  }
   /** Bots use this read-only list, never a participant session or a real seat. */
   occupiedUniversities() {
     const now = this.now();
@@ -164,6 +176,7 @@ export class RoomStore {
       listeners: new Set(),
       emptySince: null,
       entranceEffects: [],
+      coinDrops: [],
     };
     this.rooms.set(roomId, room);
     return this.addSession(room, displayName, account);
@@ -264,6 +277,25 @@ export class RoomStore {
     }
     this.emit(room, { type: "room.entrance-effect", data: event });
     return { ...event };
+  }
+
+  publishRoomCoinDrop(input: RoomCoinDropEvent): void {
+    const room = this.requireRoom(input.roomId);
+    const event = { ...input, roomId: room.roomId };
+    room.coinDrops = [...room.coinDrops.filter(item => this.now() - item.startedAt < 60_000), event].slice(-20);
+    this.emit(room, { type: "room.coin-drop", data: event });
+  }
+
+  recentRoomCoinDrops(roomId: string, maxAgeMs = 30_000): RoomCoinDropEvent[] {
+    const room = this.requireRoom(roomId);
+    return room.coinDrops.filter(item => this.now() - item.startedAt <= maxAgeMs).map(item => ({ ...item }));
+  }
+
+  publishHangoutStreakReward(roomId: string, accountId: string, day: string): void {
+    const room = this.requireRoom(roomId);
+    this.emit(room, { type: "room.hangout-streak-reward", data: {
+      roomId: room.roomId, accountId, day, coins: 100,
+    } });
   }
 
   entranceEffectOwnerAccountId(eventId: string): string | undefined {

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { EntranceEffectSettings } from './entranceEffectSettings';
+import type { HangoutStreakSummary } from './hangoutStreakSummary';
 import type { MyOwnedBadge } from './myOwnedBadge';
 import type { NameColorProgress } from './nameColorProgress';
 import type { NameColorTestState } from './nameColorTestState';
@@ -27,6 +28,7 @@ export interface SocialMe {
   equippedBadgeId: string | null;
   /** @minimum 0 */
   loginStreak?: number;
+  hangoutStreak: HangoutStreakSummary;
   profile: SocialPerson;
   wallet: SocialWallet;
   inventory: string[];

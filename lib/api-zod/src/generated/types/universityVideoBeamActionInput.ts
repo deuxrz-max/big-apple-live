@@ -11,4 +11,9 @@ export interface UniversityVideoBeamActionInput {
   action: UniversityVideoBeamActionInputAction;
   enabled?: boolean;
   targetParticipantId?: string;
+  /**
+     * @minimum 1
+     * @maximum 8
+     */
+  targetSlotNumber?: number;
 }

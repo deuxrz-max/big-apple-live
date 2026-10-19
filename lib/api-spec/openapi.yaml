@@ -824,6 +824,12 @@ paths:
     $ref: './social.openapi.json#/paths/~1social~1admin~1passport~1founding-league'
   /social/admin/gift-studio/library:
     $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1library'
+  /social/admin/content-sync:
+    $ref: './social.openapi.json#/paths/~1social~1admin~1content-sync'
+  /social/admin/content-sync/run:
+    $ref: './social.openapi.json#/paths/~1social~1admin~1content-sync~1run'
+  /social/admin/hangout-rewards:
+    $ref: './social.openapi.json#/paths/~1social~1admin~1hangout-rewards'
   /social/scene-models:
     $ref: './social.openapi.json#/paths/~1social~1scene-models'
   /social/scene-models/{modelId}/file:
@@ -1952,9 +1958,10 @@ components:
       properties:
         action:
           type: string
-          enum: [reserve-slot, speaker-connected, leave-slot, set-self-mic, host-mute-mic, kick]
+          enum: [reserve-slot, speaker-connected, leave-slot, move-slot, set-self-mic, host-mute-mic, kick]
         enabled: { type: boolean }
         targetParticipantId: { type: string, format: uuid }
+        targetSlotNumber: { type: integer, minimum: 1, maximum: 8 }
       required: [action]
     UniversityVideoBeamSlot:
       type: object

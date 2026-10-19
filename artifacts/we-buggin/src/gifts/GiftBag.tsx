@@ -205,7 +205,13 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
     } catch (e) {
       refreshSocial(qc);
       if (roomId) void qc.invalidateQueries({ queryKey: getGetRoomGiftEventsQueryKey(roomId) });
-      setError(`${attempt.completed.size} of ${attempt.recipients.length} recipients sent. ${errMsg(e)}`);
+      const message = errMsg(e);
+      if (message.includes("This gift isn't available right now.")) {
+        void me.refetch();
+        setError("This gift isn't available right now. The gift list is refreshing.");
+      } else {
+        setError(`${attempt.completed.size} of ${attempt.recipients.length} recipients sent. ${message}`);
+      }
     } finally {
       setBusy(false);
       setBatchProgress(null);

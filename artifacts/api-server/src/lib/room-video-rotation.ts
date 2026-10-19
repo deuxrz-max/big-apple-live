@@ -36,6 +36,7 @@ import {
 import { isOfficialMusicVideo } from "./music-video-policy";
 import { isCompleteFeatureFilm, MIN_FEATURE_FILM_DURATION_MS } from "./movies-video-policy";
 import { logger } from "./logger";
+import { mergeUniqueRecordsByKey } from "./developer-content-sync-policy";
 
 const DIRECTORY_COMMUNITY_ROOM_ID_SET = new Set<string>(DIRECTORY_COMMUNITY_ROOM_IDS);
 
@@ -63,6 +64,7 @@ const COMEDY_WEEKLY_REFRESH_MS = 7 * 24 * 60 * 60_000;
 const COMEDY_WEEKLY_MIN_NEW_VIDEOS = 10;
 const COMEDY_PLAYBACK_SCHEDULE_KEY = "__comedyPlaybackSchedule";
 const COMEDY_WEEKLY_ATTEMPT_KEY = "__comedyWeeklyRefreshAttemptAt";
+const poolRefreshErrors = new Map<string, string>();
 
 type PoolItem = CommunityVideoPoolItem & {
   availableInUS?: boolean;
@@ -136,21 +138,25 @@ function mergePool(
   roomId: string,
   rooms?: RoomLookup,
 ): PoolItem[] {
-  const byId = new Map<string, PoolItem>();
-  for (const item of [...existing, ...incoming]) {
-    if (!/^[A-Za-z0-9_-]{11}$/.test(item.videoId)) continue;
+  const normalizeSafeItems = (items: readonly PoolItem[]) => items.flatMap(item => {
+    if (!/^[A-Za-z0-9_-]{11}$/.test(item.videoId)) return [];
     const reasons = poolVideoReasons(item);
     if (reasons.shortsMarker || reasons.underThreeMinutes || reasons.nonEnglish
       || reasons.nonWidescreen || reasons.notEmbeddable || reasons.notAvailableInUS || reasons.ageRestricted
-      || !isAllowedRoomSource(roomId, item, rooms)) continue;
-    byId.set(item.videoId, {
+      || !isAllowedRoomSource(roomId, item, rooms)) return [];
+    return [{
       ...item,
       channelTitle: item.channelTitle ?? null,
       description: item.description?.replace(/\s+/g, " ").trim().slice(0, 500) || null,
       discoveredAtMs: Number.isFinite(item.discoveredAtMs) ? item.discoveredAtMs : now,
-    });
-  }
-  return [...byId.values()]
+    }];
+  });
+  const byId = mergeUniqueRecordsByKey(
+    normalizeSafeItems(existing),
+    normalizeSafeItems(incoming),
+    item => item.videoId,
+  );
+  return byId
     .sort((a, b) => englishChannelPreference(b.channelTitle) - englishChannelPreference(a.channelTitle)
       || b.discoveredAtMs - a.discoveredAtMs)
     .slice(0, roomId.toUpperCase() === "COMEDY" ? COMEDY_POOL_SIZE : MAX_POOL_SIZE);
@@ -984,6 +990,7 @@ async function refreshRoomPool(
   forceRefresh = false,
   pageLimit = MAX_SEARCH_PAGES_PER_REFRESH,
 ): Promise<PoolRow> {
+  poolRefreshErrors.delete(roomId.toUpperCase());
   const now = Date.now();
   const lastAttempt = row.lastAttemptAt?.getTime() ?? 0;
   if (!forceRefresh && now - lastAttempt < FAILED_REFRESH_BACKOFF_MS) return row;
@@ -1014,9 +1021,11 @@ async function refreshRoomPool(
     });
   } catch (error) {
     const savedPool = (await loadPoolRow(roomId)) ?? current;
-    console.warn({
+    const message = error instanceof Error ? error.message : "Unknown YouTube pool error";
+    poolRefreshErrors.set(roomId.toUpperCase(), message);
+    logger.warn({
       roomId,
-      error: error instanceof Error ? error.message : "Unknown YouTube pool error",
+      error: message,
       savedVideoCount: savedPool.videos?.length ?? 0,
       message: "Room video pool refresh failed; serving the filtered saved pool",
     });
@@ -1065,6 +1074,10 @@ export async function refreshCommunityVideoPoolIncrementally(
 ): Promise<number> {
   const row = await getOrRefreshPool(roomId.toUpperCase(), apiKey, rooms, true, 1);
   return row.videos?.filter(video => video.availableInUS === true).length ?? 0;
+}
+
+export function getCommunityVideoPoolRefreshError(roomId: string): string | null {
+  return poolRefreshErrors.get(roomId.toUpperCase()) ?? null;
 }
 
 export async function markCommunityVideoBad(roomId: string, videoId: string): Promise<boolean> {

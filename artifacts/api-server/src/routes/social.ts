@@ -30,6 +30,9 @@ import {
   GetAdminGiftMotionsResponse, UploadGiftMotionBody, UploadGiftMotionResponse,
   DeleteGiftMotionParams, DeleteGiftMotionResponse,
   GetGiftMotionPlaybackParams, GetGiftMotionPlaybackResponse,
+  GetDeveloperContentSyncResponse, RunDeveloperContentSyncResponse,
+  GetHangoutRewardSettingsResponse, SetHangoutRewardIntervalBody,
+  SetHangoutRewardIntervalResponse,
 } from "@workspace/api-zod";
 import { accountId, sameOrigin } from "./identity";
 import { RoomError, roomStore } from "../lib/room-store";
@@ -48,6 +51,8 @@ import { clearThread, inbox, sendMessage, thread } from "../lib/social/messages"
 import { favoritesGallery, favoriteRoom } from "../lib/social/favorites";
 import { liveStreamIdForAccount, liveStreamRoomName, requireLiveStreamGiftAccess } from "../lib/live-stream-policy";
 import { liveKitBeamService } from "../lib/livekit";
+import { getDeveloperContentSyncStatus, runDeveloperContentSync } from "../lib/developer-content-sync";
+import { getHangoutRewardSettings, setHangoutRewardInterval } from "../lib/community-hangout-rewards";
 import { liveStreamChatHub } from "../lib/live-stream-chat";
 import {
   deletePassportPlatform, myStreamerPassport, passportReviewQueue, publicStreamerPassport,
@@ -283,6 +288,34 @@ async function streamStudioMedia(
 
 router.get("/social/admin/gift-studio/library", ownerOnly, async (req, res): Promise<void> => {
   res.json(GetGiftStudioLibraryResponse.parse(await listGiftStudioVersions(accountId(req))));
+});
+
+router.get("/social/admin/content-sync", ownerOnly, async (_req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
+  res.json(GetDeveloperContentSyncResponse.parse(await getDeveloperContentSyncStatus()));
+});
+
+router.post("/social/admin/content-sync/run", ownerOnly, async (req, res): Promise<void> => {
+  sameOrigin(req);
+  res.set("Cache-Control", "no-store");
+  res.json(RunDeveloperContentSyncResponse.parse(await runDeveloperContentSync("manual")));
+});
+
+router.get("/social/admin/hangout-rewards", ownerOnly, async (_req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
+  res.json(GetHangoutRewardSettingsResponse.parse(await getHangoutRewardSettings()));
+});
+
+router.patch("/social/admin/hangout-rewards", ownerOnly, async (req, res): Promise<void> => {
+  const input = SetHangoutRewardIntervalBody.safeParse(req.body);
+  if (!input.success) {
+    res.status(400).json({ error: "Choose an average interval from 15 to 360 minutes." });
+    return;
+  }
+  res.set("Cache-Control", "no-store");
+  res.json(SetHangoutRewardIntervalResponse.parse(
+    await setHangoutRewardInterval(input.data.averageIntervalMinutes),
+  ));
 });
 
 router.get("/social/scene-models", async (_req, res): Promise<void> => {

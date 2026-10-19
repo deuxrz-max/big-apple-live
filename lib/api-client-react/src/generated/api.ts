@@ -36,6 +36,7 @@ import type {
   ChatReportReviewInput,
   ComedyVideoActionInput,
   ComedyVideoCatalogResponse,
+  DeveloperContentSyncStatus,
   DeveloperGiftMotion,
   DeveloperGiftMotionList,
   DeveloperGiftMotionUploadInput,
@@ -74,6 +75,7 @@ import type {
   GiftStudioRenameInput,
   GiftStudioUploadInput,
   GiftStudioVersion,
+  HangoutRewardSettings,
   HealthStatus,
   InvalidInputResponse,
   LiveStreamChatInput,
@@ -105,6 +107,7 @@ import type {
   RoomSession,
   RoomState,
   SessionUnauthorizedResponse,
+  SetHangoutRewardIntervalInput,
   SocialAction,
   SocialConversation,
   SocialGiftCatalogId,
@@ -4995,6 +4998,298 @@ export function useGetGiftStudioLibrary<TData = Awaited<ReturnType<typeof getGif
 
 
 
+
+export const getGetDeveloperContentSyncUrl = () => {
+
+
+
+
+  return `/api/social/admin/content-sync`
+}
+
+export const getDeveloperContentSync = async ( options?: Parameters<typeof customFetch>[1]): Promise<DeveloperContentSyncStatus> => {
+
+  return customFetch<DeveloperContentSyncStatus>(getGetDeveloperContentSyncUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDeveloperContentSyncQueryKey = () => {
+    return [
+    `/api/social/admin/content-sync`
+    ] as const;
+    }
+
+
+export const getGetDeveloperContentSyncQueryOptions = <TData = Awaited<ReturnType<typeof getDeveloperContentSync>>, TError = ErrorType<ErrorResponse4b96100 | void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDeveloperContentSync>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDeveloperContentSyncQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDeveloperContentSync>>> = ({ signal }) => getDeveloperContentSync({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDeveloperContentSync>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDeveloperContentSyncQueryResult = NonNullable<Awaited<ReturnType<typeof getDeveloperContentSync>>>
+export type GetDeveloperContentSyncQueryError = ErrorType<ErrorResponse4b96100 | void>
+
+
+
+export function useGetDeveloperContentSync<TData = Awaited<ReturnType<typeof getDeveloperContentSync>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDeveloperContentSync>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDeveloperContentSyncQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRunDeveloperContentSyncUrl = () => {
+
+
+
+
+  return `/api/social/admin/content-sync/run`
+}
+
+export const runDeveloperContentSync = async ( options?: Parameters<typeof customFetch>[1]): Promise<DeveloperContentSyncStatus> => {
+
+  return customFetch<DeveloperContentSyncStatus>(getRunDeveloperContentSyncUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRunDeveloperContentSyncMutationKey = () => ['runDeveloperContentSync'] as const;
+
+export const getRunDeveloperContentSyncMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runDeveloperContentSync>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof runDeveloperContentSync>>, TError,void, TContext> => {
+
+const mutationKey = getRunDeveloperContentSyncMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runDeveloperContentSync>>, void> = () => {
+
+
+          return  runDeveloperContentSync(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RunDeveloperContentSyncMutationResult = NonNullable<Awaited<ReturnType<typeof runDeveloperContentSync>>>
+
+    export type RunDeveloperContentSyncMutationError = ErrorType<ErrorResponse4b96100 | void>
+
+
+    export const useRunDeveloperContentSync = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runDeveloperContentSync>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof runDeveloperContentSync>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRunDeveloperContentSyncMutationOptions(options));
+    }
+
+export const getGetHangoutRewardSettingsUrl = () => {
+
+
+
+
+  return `/api/social/admin/hangout-rewards`
+}
+
+export const getHangoutRewardSettings = async ( options?: Parameters<typeof customFetch>[1]): Promise<HangoutRewardSettings> => {
+
+  return customFetch<HangoutRewardSettings>(getGetHangoutRewardSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetHangoutRewardSettingsQueryKey = () => {
+    return [
+    `/api/social/admin/hangout-rewards`
+    ] as const;
+    }
+
+
+export const getGetHangoutRewardSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError = ErrorType<ErrorResponse4b96100 | void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetHangoutRewardSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getHangoutRewardSettings>>> = ({ signal }) => getHangoutRewardSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetHangoutRewardSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getHangoutRewardSettings>>>
+export type GetHangoutRewardSettingsQueryError = ErrorType<ErrorResponse4b96100 | void>
+
+
+
+export function useGetHangoutRewardSettings<TData = Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetHangoutRewardSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSetHangoutRewardIntervalUrl = () => {
+
+
+
+
+  return `/api/social/admin/hangout-rewards`
+}
+
+export const setHangoutRewardInterval = async (setHangoutRewardIntervalInput: SetHangoutRewardIntervalInput, options?: Parameters<typeof customFetch>[1]): Promise<HangoutRewardSettings> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<HangoutRewardSettings>(getSetHangoutRewardIntervalUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(setHangoutRewardIntervalInput)
+  }
+);}
+
+
+
+
+
+export const getSetHangoutRewardIntervalMutationKey = () => ['setHangoutRewardInterval'] as const;
+
+export const getSetHangoutRewardIntervalMutationOptions = <TError = ErrorType<void | ErrorResponse4b96100>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setHangoutRewardInterval>>, TError,SetHangoutRewardIntervalMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setHangoutRewardInterval>>, TError,SetHangoutRewardIntervalMutationVariables, TContext> => {
+
+const mutationKey = getSetHangoutRewardIntervalMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setHangoutRewardInterval>>, SetHangoutRewardIntervalMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  setHangoutRewardInterval(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetHangoutRewardIntervalMutationResult = NonNullable<Awaited<ReturnType<typeof setHangoutRewardInterval>>>
+    export type SetHangoutRewardIntervalMutationBody = BodyType<SetHangoutRewardIntervalInput>
+    export type SetHangoutRewardIntervalMutationError = ErrorType<void | ErrorResponse4b96100>
+    export type SetHangoutRewardIntervalMutationVariables = {data: BodyType<SetHangoutRewardIntervalInput>}
+
+    export const useSetHangoutRewardInterval = <TError = ErrorType<void | ErrorResponse4b96100>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setHangoutRewardInterval>>, TError,SetHangoutRewardIntervalMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setHangoutRewardInterval>>,
+        TError,
+        SetHangoutRewardIntervalMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetHangoutRewardIntervalMutationOptions(options));
+    }
 
 export const getGetSceneModelsUrl = () => {
 
