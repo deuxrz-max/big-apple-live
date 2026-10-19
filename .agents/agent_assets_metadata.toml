@@ -112,3 +112,17 @@ mtime_ms = 1791654584807
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/569403cc-7651-43f3-a4d2-55426de59644/f1108c82-74f6-4cd6-a9d4-2ca30047cdb2"
 storage_version_token = "1791654610950951"
 content_type = "video/webm"
+
+[[outputs]]
+id = "A_R3_iRb6-NnalkshO9IP"
+uri = "file://reports/room-video-always-on-verification.txt"
+type = "text"
+title = "Room video always-on verification"
+description = "Read-only dev-preview verification report. Live room playback checks were blocked by sign-in; no app code or data was changed."
+logical_id = "fc0550eb-3f8e-42eb-9eb0-6a9d3a2373f4"
+content_hash = "sha256:f972cddb63645cf0eff665ac15b75eac4beda4072677fe3772705bf2161437fb"
+size = 3289
+mtime_ms = 1792423795387
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/fc0550eb-3f8e-42eb-9eb0-6a9d3a2373f4/cfe404aa-2cf8-4a47-ad25-09172ed8f985"
+storage_version_token = "1792423802479856"
+content_type = "text/plain"

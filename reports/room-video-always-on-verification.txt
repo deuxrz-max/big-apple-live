@@ -1,0 +1,62 @@
+Deux Wild — room video always-on verification
+Date: 2026-10-19
+Environment: running development preview; phone-sized screenshot viewport 390x844
+Changes made: none. No code fixes, schema changes, or deployment.
+
+Summary
+The requested live occupied -> empty -> wait -> rejoin test was blocked before
+the room player could be opened. The preview browser is signed out. Visiting
+/rooms/HIST01 rendered the public home page instead of the room, and requesting
+the room's protected video-beam endpoint returned HTTP 401:
+  GET /api/account/rooms/HIST01/video-beam
+  {"error":"Sign in to use your profile"}
+No room video ID or playback position was visible, so there is no valid baseline
+for the requested comparisons. A live room test was not completed.
+
+Requested live-test steps
+1. Open a public room and record video ID and playback position: BLOCKED.
+   The signed-out preview redirected /rooms/HIST01 to the home page. Video ID:
+   unavailable. Playback position: unavailable.
+2. Leave and confirm the room is completely empty: NOT PERFORMED.
+   No authenticated viewer session could be opened or left.
+3. Wait at least two minutes with no viewers: NOT PERFORMED.
+   Without an observed room session and confirmed empty state, waiting would not
+   test the requested transition.
+4. Rejoin and compare the same video and later position: BLOCKED.
+   No baseline video ID or position was available. No rejoin occurred.
+5. Observe the playlist move to another video while empty: NOT PERFORMED.
+   No player or video IDs were accessible.
+6. Compare two simultaneous viewers: NOT PERFORMED.
+   No signed-in viewer sessions were available.
+7. Restart the API and confirm playback resumes at the expected point: NOT
+   PERFORMED. The API was not restarted because there was no baseline playback
+   observation; restarting would interrupt the running preview without producing
+   a meaningful comparison.
+
+Autoplay
+Runtime autoplay was NOT observed because no room player could be opened.
+Code inspection shows the YouTube player requests autoplay, mute and inline
+playback. If the player remains unstarted or paused after its check, the UI can
+show a "Tap to play" fallback. Therefore muted autoplay is intended to start
+without a tap, but a tap may be needed in a browser that blocks it. The separate
+"Tap anywhere for sound" hint enables sound and is not the playback-start
+fallback.
+
+Other evidence
+The captured signed-out home page at 390x844 showed room cards with zero
+viewers at that capture time; that does not establish that a room's video queue
+was loaded or show video playback.
+
+The source contains automated tests for schedule progress while nobody is
+watching, queue advancement/looping, restoring a saved schedule from a fresh
+database read, and synchronizing clients to a server-selected start time. These
+tests were inspected but were not run as part of this live-preview verification.
+They do not replace the requested live occupied/empty/rejoin, two-viewer,
+server-workflow-restart, or real-phone checks.
+
+Limitations
+- No signed-in flow was tested.
+- No real Android phone was tested.
+- No YouTube playback or autoplay behavior was observed.
+- No actual video IDs or positions could be recorded.
+- No app code or user data was changed, and nothing was published or deployed.
