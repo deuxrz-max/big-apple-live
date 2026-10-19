@@ -63,6 +63,7 @@ const HISTORY_MIN_DURATION_MS = 20 * 60_000;
 const COMEDY_WEEKLY_REFRESH_MS = 7 * 24 * 60 * 60_000;
 const COMEDY_WEEKLY_MIN_NEW_VIDEOS = 10;
 const COMEDY_PLAYBACK_SCHEDULE_KEY = "__comedyPlaybackSchedule";
+const COMMUNITY_PLAYBACK_SCHEDULE_KEY = "__communityPlaybackScheduleV1";
 const COMEDY_WEEKLY_ATTEMPT_KEY = "__comedyWeeklyRefreshAttemptAt";
 const poolRefreshErrors = new Map<string, string>();
 
@@ -88,6 +89,55 @@ export type ComedyPlaybackSchedule = {
   startedAtMs: number;
   breakEndsAtMs: number | null;
 };
+export type CommunityPlaybackScheduleVideo = UniversityVideoBeamTvVideoMetadata & {
+  durationMs: number;
+};
+export type CommunityPlaybackSchedule = {
+  currentVideoId: string;
+  startedAtMs: number;
+  breakEndsAtMs: number | null;
+  queue: CommunityPlaybackScheduleVideo[];
+  seriesTitle: string | null;
+  seriesDate: string | null;
+  seriesEpisodeNumber: number | null;
+};
+
+export function resolveCommunityPlaybackScheduleAt(
+  schedule: CommunityPlaybackSchedule,
+  nowMs: number,
+  breakMs: number,
+): CommunityPlaybackSchedule {
+  let currentVideoId = schedule.currentVideoId;
+  let startedAtMs = schedule.startedAtMs;
+  let breakEndsAtMs = schedule.breakEndsAtMs;
+  const queue = schedule.queue;
+  const durationById = new Map(queue.map(video => [video.videoId, video.durationMs]));
+  for (let steps = 0; steps < 20_000; steps += 1) {
+    if (breakEndsAtMs !== null) {
+      if (nowMs < breakEndsAtMs) break;
+      const currentIndex = queue.findIndex(video => video.videoId === currentVideoId);
+      const next = queue[(currentIndex + 1 + queue.length) % queue.length];
+      if (!next) break;
+      currentVideoId = next.videoId;
+      startedAtMs = breakEndsAtMs;
+      breakEndsAtMs = null;
+      continue;
+    }
+    const durationMs = durationById.get(currentVideoId);
+    if (!durationMs || startedAtMs + durationMs > nowMs) break;
+    breakEndsAtMs = startedAtMs + durationMs + breakMs;
+  }
+  return { ...schedule, currentVideoId, startedAtMs, breakEndsAtMs };
+}
+
+export function preservePlaybackScheduleCursors(cursors: Record<string, string> | null | undefined) {
+  const preserved: Record<string, string> = {};
+  for (const key of [COMMUNITY_PLAYBACK_SCHEDULE_KEY, COMEDY_PLAYBACK_SCHEDULE_KEY]) {
+    const value = cursors?.[key];
+    if (typeof value === "string") preserved[key] = value;
+  }
+  return preserved;
+}
 
 export function isComedyWeeklyRefreshDue(lastAttemptAtMs: number | null, nowMs = Date.now()): boolean {
   return lastAttemptAtMs === null || nowMs - lastAttemptAtMs >= COMEDY_WEEKLY_REFRESH_MS;
@@ -675,10 +725,85 @@ async function savePoolRow(
   current: PoolRow,
   patch: Partial<typeof communityVideoPools.$inferInsert>,
 ): Promise<PoolRow> {
+  const safePatch = patch.sourceCursors
+    ? {
+      ...patch,
+      sourceCursors: {
+        ...preservePlaybackScheduleCursors(current.sourceCursors),
+        ...patch.sourceCursors,
+      },
+    }
+    : patch;
   await db.update(communityVideoPools)
-    .set({ ...patch, updatedAt: new Date() })
+    .set({ ...safePatch, updatedAt: new Date() })
     .where(eq(communityVideoPools.roomId, roomId));
-  return (await loadPoolRow(roomId)) ?? { ...current, ...patch, updatedAt: new Date() };
+  return (await loadPoolRow(roomId)) ?? { ...current, ...safePatch, updatedAt: new Date() };
+}
+
+function parseCommunityPlaybackSchedule(encoded: string | undefined): CommunityPlaybackSchedule | null {
+  if (!encoded) return null;
+  try {
+    const value = JSON.parse(encoded) as Partial<CommunityPlaybackSchedule>;
+    if (typeof value.currentVideoId !== "string"
+      || !/^[A-Za-z0-9_-]{11}$/.test(value.currentVideoId)
+      || !Number.isSafeInteger(value.startedAtMs) || value.startedAtMs! < 0
+      || (value.breakEndsAtMs !== null && value.breakEndsAtMs !== undefined
+        && (!Number.isSafeInteger(value.breakEndsAtMs) || value.breakEndsAtMs < value.startedAtMs!))
+      || !Array.isArray(value.queue) || value.queue.length < 1 || value.queue.length > 50
+      || !value.queue.every(video => video
+        && typeof video.videoId === "string"
+        && /^[A-Za-z0-9_-]{11}$/.test(video.videoId)
+        && typeof video.title === "string"
+        && (video.channelTitle === null || typeof video.channelTitle === "string")
+        && (video.description === null || typeof video.description === "string")
+        && Number.isSafeInteger(video.durationMs) && video.durationMs > 0)
+      || !value.queue.some(video => video.videoId === value.currentVideoId)
+      || !(value.seriesTitle === null || value.seriesTitle === undefined || typeof value.seriesTitle === "string")
+      || !(value.seriesDate === null || value.seriesDate === undefined
+        || (typeof value.seriesDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value.seriesDate)))
+      || !(value.seriesEpisodeNumber === null || value.seriesEpisodeNumber === undefined
+        || (Number.isSafeInteger(value.seriesEpisodeNumber) && value.seriesEpisodeNumber > 0))) {
+      return null;
+    }
+    return {
+      currentVideoId: value.currentVideoId,
+      startedAtMs: value.startedAtMs!,
+      breakEndsAtMs: value.breakEndsAtMs ?? null,
+      queue: value.queue.map(video => ({
+        videoId: video.videoId,
+        title: video.title.slice(0, 500),
+        channelTitle: video.channelTitle?.slice(0, 200) ?? null,
+        description: video.description?.slice(0, 500) ?? null,
+        durationMs: video.durationMs,
+      })),
+      seriesTitle: value.seriesTitle?.slice(0, 300) ?? null,
+      seriesDate: value.seriesDate ?? null,
+      seriesEpisodeNumber: value.seriesEpisodeNumber ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function getCommunityPlaybackSchedule(roomId: string): Promise<CommunityPlaybackSchedule | null> {
+  const row = await loadPoolRow(roomId.toUpperCase());
+  return parseCommunityPlaybackSchedule(row?.sourceCursors?.[COMMUNITY_PLAYBACK_SCHEDULE_KEY]);
+}
+
+export async function saveCommunityPlaybackSchedule(
+  roomId: string,
+  schedule: CommunityPlaybackSchedule,
+): Promise<void> {
+  const checked = parseCommunityPlaybackSchedule(JSON.stringify(schedule));
+  if (!checked) throw new Error("Invalid community room playback schedule.");
+  const normalizedRoomId = roomId.toUpperCase();
+  const row = await ensurePoolRow(normalizedRoomId);
+  await savePoolRow(normalizedRoomId, row, {
+    sourceCursors: {
+      ...(row.sourceCursors ?? {}),
+      [COMMUNITY_PLAYBACK_SCHEDULE_KEY]: JSON.stringify(checked),
+    },
+  });
 }
 
 export async function getComedyPlaybackSchedule(): Promise<ComedyPlaybackSchedule | null> {
@@ -830,7 +955,12 @@ export async function sanitizeAllSavedCommunityVideoPools(rooms?: RoomLookup): P
       await savePoolRow(row.roomId, row, {
         videos: screened.videos,
         ...(refreshRoomSearch
-          ? { termIndex: 0, pageTokens: {}, sourceCursors: {}, refreshedAt: null }
+          ? {
+            termIndex: 0,
+            pageTokens: {},
+            sourceCursors: preservePlaybackScheduleCursors(row.sourceCursors),
+            refreshedAt: null,
+          }
           : {}),
       });
     }

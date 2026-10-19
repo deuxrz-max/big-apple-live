@@ -46,6 +46,7 @@ export function OwnProfile() {
       links={
         <nav className="pf-links" aria-label="Profile shortcuts">
           <Link href="/user-portal/store" className="pf-btn pf-btn-store" data-testid="link-profile-store"><ShoppingBag size={17} aria-hidden="true" /> Store</Link>
+          <Link href="/user-portal/transactions" className="pf-btn" data-testid="link-transaction-history">Transaction History</Link>
           <Link href="/community" className="pf-btn" data-testid="link-community">Community</Link>
           <Link href="/community/profile" className="pf-btn" data-testid="link-platform-bio">Platform and bio</Link>
           <Link href="#streamer-passport" className="pf-btn" data-testid="link-streamer-passport">Streamer passport</Link>

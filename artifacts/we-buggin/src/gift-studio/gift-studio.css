@@ -662,6 +662,13 @@ body.streamtalk-gift-studio-screen #root .app-bottom-link.is-active {
 .gs-catalog-summary { display:grid; min-width:0; gap:4px; }
 .gs-catalog-summary strong { overflow:hidden; color:#f7f7f4; font-size:16px; text-overflow:ellipsis; white-space:nowrap; }
 .gs-catalog-summary small { color:#c4c4be; font-size:13px; line-height:1.35; }
+.gs-catalog-icon-meta { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:10px; color:#e4e1e9; font-size:12px; font-weight:700; }
+.gs-catalog-icon-meta>img,.gs-catalog-icon-empty { display:grid; place-items:center; width:38px; height:38px; flex:0 0 38px; border:1px solid rgba(215,190,255,.25); border-radius:9px; object-fit:contain; background-color:#18151d; background-image:linear-gradient(45deg,#34313a 25%,transparent 25%),linear-gradient(-45deg,#34313a 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#34313a 75%),linear-gradient(-45deg,transparent 75%,#34313a 75%); background-size:12px 12px; background-position:0 0,0 6px,6px -6px,-6px 0; }
+.gs-catalog-icon-empty { color:#f4ca8b; }
+.gs-catalog-icon-actions { display:flex; flex-wrap:wrap; gap:6px; }
+.gs-catalog-icon-actions label { position:relative; display:inline-flex; align-items:center; gap:6px; cursor:pointer; }
+.gs-catalog-icon-actions input[type="file"] { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.gs-catalog-icon-actions label:focus-within { outline:2px solid #ffe600; outline-offset:2px; }
 .gs-catalog-edit {
   display:grid;
   grid-template-columns:minmax(0,1fr) minmax(100px,.55fr);

@@ -10,10 +10,14 @@ import {
 } from "@workspace/db";
 import {
   chooseUnplayedVideo,
+  getCommunityPlaybackSchedule,
   getNextCommunityVideoSelection,
   isComedyWeeklyRefreshDue,
   isDirectoryCommunityPoolRoom,
+  preservePlaybackScheduleCursors,
   recordCommunityVideoPlayed,
+  resolveCommunityPlaybackScheduleAt,
+  saveCommunityPlaybackSchedule,
   screenCommunityVideoPoolItems,
   youtubeQuotaDateKey,
 } from "./room-video-rotation";
@@ -51,6 +55,69 @@ test("Comedy's saved-pool refresh becomes due once per seven-day interval", () =
   assert.equal(isComedyWeeklyRefreshDue(null, monday), true);
   assert.equal(isComedyWeeklyRefreshDue(monday, monday + 7 * 24 * 60 * 60_000 - 1), false);
   assert.equal(isComedyWeeklyRefreshDue(monday, monday + 7 * 24 * 60 * 60_000), true);
+});
+
+test("room playback schedules resolve the right video and position while empty", () => {
+  const schedule = {
+    currentVideoId: "aaa11111111",
+    startedAtMs: 0,
+    breakEndsAtMs: null,
+    queue: [
+      { videoId: "aaa11111111", title: "A", channelTitle: "Channel", description: null, durationMs: 10 * 60_000 },
+      { videoId: "bbb22222222", title: "B", channelTitle: "Channel", description: null, durationMs: 10 * 60_000 },
+    ],
+    seriesTitle: null,
+    seriesDate: null,
+    seriesEpisodeNumber: null,
+  };
+  const duringBreak = resolveCommunityPlaybackScheduleAt(schedule, 11 * 60_000, 3 * 60_000);
+  assert.equal(duringBreak.currentVideoId, "aaa11111111");
+  assert.equal(duringBreak.startedAtMs, 0);
+  assert.equal(duringBreak.breakEndsAtMs, 13 * 60_000);
+
+  const afterRestart = resolveCommunityPlaybackScheduleAt(schedule, 15 * 60_000, 3 * 60_000);
+  assert.equal(afterRestart.currentVideoId, "bbb22222222");
+  assert.equal(afterRestart.startedAtMs, 13 * 60_000);
+  assert.equal(afterRestart.breakEndsAtMs, null);
+
+  const afterFullLoop = resolveCommunityPlaybackScheduleAt(schedule, 30 * 60_000, 3 * 60_000);
+  assert.equal(afterFullLoop.currentVideoId, "aaa11111111");
+  assert.equal(afterFullLoop.startedAtMs, 26 * 60_000);
+  assert.equal(afterFullLoop.breakEndsAtMs, null);
+});
+
+test("room playback schedule checkpoints survive a fresh database read", async () => {
+  const roomId = `TIMELINE${randomUUID().replaceAll("-", "").slice(0, 8)}`.toUpperCase();
+  const schedule = {
+    currentVideoId: "abc12345678",
+    startedAtMs: 123_000,
+    breakEndsAtMs: null,
+    queue: [{
+      videoId: "abc12345678",
+      title: "Saved video",
+      channelTitle: "Channel",
+      description: null,
+      durationMs: 5 * 60_000,
+    }],
+    seriesTitle: null,
+    seriesDate: null,
+    seriesEpisodeNumber: null,
+  };
+  try {
+    await saveCommunityPlaybackSchedule(roomId, schedule);
+    assert.deepEqual(await getCommunityPlaybackSchedule(roomId), schedule);
+    const preserved = preservePlaybackScheduleCursors({
+      __communityPlaybackScheduleV1: JSON.stringify(schedule),
+      __comedyPlaybackSchedule: JSON.stringify({ currentVideoId: "def12345678", startedAtMs: 1 }),
+      staleSearchCursor: "discard-me",
+    });
+    assert.deepEqual(Object.keys(preserved).sort(), [
+      "__comedyPlaybackSchedule",
+      "__communityPlaybackScheduleV1",
+    ]);
+  } finally {
+    await db.delete(communityVideoPools).where(eq(communityVideoPools.roomId, roomId));
+  }
 });
 
 test("saved-pool maintenance is limited to visible rooms and their overflow children", () => {

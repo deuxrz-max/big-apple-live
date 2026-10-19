@@ -24,9 +24,6 @@ import {
   AssignGiftStudioVersionToGiftResponse, GetGiftStudioVersionMediaParams,
   UpdateGiftStudioCatalogItemBody, UpdateGiftStudioCatalogItemParams, UpdateGiftStudioCatalogItemResponse,
   GetActiveGiftStudioMediaParams, GetActiveGiftStudioMediaResponse,
-  GetSceneModelsResponse, GetSceneModelFileParams, GetAdminSceneModelsResponse,
-  UploadSceneModelBody, UploadSceneModelResponse,
-  UpdateSceneModelPlacementParams, UpdateSceneModelPlacementBody, UpdateSceneModelPlacementResponse,
   GetAdminGiftMotionsResponse, UploadGiftMotionBody, UploadGiftMotionResponse,
   DeleteGiftMotionParams, DeleteGiftMotionResponse,
   GetGiftMotionPlaybackParams, GetGiftMotionPlaybackResponse,
@@ -63,6 +60,7 @@ import { equipEntranceEffect, listEntranceEffectShop, purchaseEntranceEffect } f
 import { saveEquippedBadge } from "../lib/social/monthly-credit-badges";
 import {
   createGiftStudioVersion, deleteGiftStudioVersion, getActiveGiftStudioMedia, giftStudioMediaFile,
+  giftStudioIconFile, overrideGiftStudioIcon, regenerateGiftStudioIcon,
   listGiftStudioVersions, processGiftStudioClipOnServer, renameGiftStudioVersion,
   setGiftStudioVersionActive, assignGiftStudioVersionToGift, updateGiftCatalogItem,
 } from "../lib/gift-studio";
@@ -71,13 +69,10 @@ import {
   releaseGiftStudioProcessingSession, retainGiftStudioProcessingSession,
 } from "../lib/gift-studio-processing-sessions";
 import {
-  activeSceneModelFile, addSceneModel, listActiveSceneModels, listOwnerSceneModels,
-  updateOwnerSceneModelPlacement, inspectSceneModelFile,
-} from "../lib/developer-scene-models";
-import {
   addGiftMotion, deleteOwnerGiftMotion, getActiveGiftMotion, getActiveGiftMotionFile,
   listOwnerGiftMotions,
 } from "../lib/developer-gift-motions";
+import { inspectGiftMotionModelFile } from "../lib/gift-motion-model-file";
 
 const router: IRouter = Router();
 router.get('/gift-media/spirit-pup/v1/:filename', serveGiftMedia);
@@ -97,7 +92,6 @@ router.use("/social", async (req, res, next) => {
 });
 
 const studioTempDirs = new WeakMap<Request, string>();
-const sceneModelTempDirs = new WeakMap<Request, string>();
 const giftMotionTempDirs = new WeakMap<Request, string>();
 const studioUpload = multer({
   storage: multer.diskStorage({
@@ -133,28 +127,6 @@ async function ownerOnly(req: Request, _res: Response, next: (error?: unknown) =
   }
 }
 
-const sceneModelUpload = multer({
-  storage: multer.diskStorage({
-    destination(req, _file, callback) {
-      let directory = sceneModelTempDirs.get(req);
-      if (!directory) {
-        directory = path.join(tmpdir(), `streamtalk-scene-model-${randomUUID()}`);
-        sceneModelTempDirs.set(req, directory);
-        mkdir(directory, { recursive: true }).then(
-          () => callback(null, directory!),
-          (error: Error) => callback(error, ""),
-        );
-        return;
-      }
-      callback(null, directory);
-    },
-    filename(_req, _file, callback) {
-      callback(null, randomUUID());
-    },
-  }),
-  limits: { fileSize: 100 * 1024 * 1024, files: 1, fields: 1, fieldSize: 1024, parts: 2 },
-}).single("model");
-
 const giftMotionUpload = multer({
   storage: multer.diskStorage({
     destination(req, _file, callback) {
@@ -176,6 +148,10 @@ const giftMotionUpload = multer({
   }),
   limits: { fileSize: 100 * 1024 * 1024, files: 1, fields: 5, fieldSize: 32 * 1024, parts: 6 },
 });
+const giftIconUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+}).single("icon");
 const uploadGiftMotionFile = giftMotionUpload.single("model");
 
 function parseGiftMotionUpload(req: Request, res: Response, next: (error?: unknown) => void) {
@@ -212,22 +188,6 @@ function parseGiftMotionPreset(value: unknown): DeveloperGiftMotionPreset | null
   return value as DeveloperGiftMotionPreset;
 }
 
-function parseSceneModelUpload(req: Request, res: Response, next: (error?: unknown) => void) {
-  sceneModelUpload(req, res, (error) => {
-    if (!error) {
-      next();
-      return;
-    }
-    const directory = sceneModelTempDirs.get(req);
-    if (directory) void rm(directory, { recursive: true, force: true }).finally(() => sceneModelTempDirs.delete(req));
-    if (error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE") {
-      next(new RoomError(413, "Choose a model file no larger than 100 MB."));
-      return;
-    }
-    next(new RoomError(400, "Choose one GLB or GLTF model file."));
-  });
-}
-
 function parseStudioUpload(req: Request, res: Response, next: (error?: unknown) => void) {
   studioUpload(req, res, (error) => {
     if (!error) {
@@ -241,6 +201,20 @@ function parseStudioUpload(req: Request, res: Response, next: (error?: unknown) 
       return;
     }
     next(new RoomError(400, "Choose a valid video file. Each file must be 100 MB or smaller."));
+  });
+}
+
+function parseGiftIconUpload(req: Request, res: Response, next: (error?: unknown) => void) {
+  giftIconUpload(req, res, (error) => {
+    if (!error) {
+      next();
+      return;
+    }
+    if (error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE") {
+      next(new RoomError(413, "Choose a PNG icon no larger than 5 MB."));
+      return;
+    }
+    next(new RoomError(400, "Choose one PNG icon image."));
   });
 }
 
@@ -286,6 +260,26 @@ async function streamStudioMedia(
   source.on("error", () => res.destroy()).pipe(res);
 }
 
+async function streamStudioIcon(req: Request, res: Response, versionId: string): Promise<void> {
+  const { file } = await giftStudioIconFile({ versionId, activeOnly: true });
+  const [metadata] = await file.getMetadata();
+  const size = Number(metadata.size);
+  if (!Number.isSafeInteger(size) || size <= 0) throw new RoomError(404, "Gift icon not found.");
+  res.set({
+    "Content-Type": "image/png",
+    "Content-Length": String(size),
+    "X-Content-Type-Options": "nosniff",
+    "Cache-Control": "public, max-age=31536000, immutable",
+  });
+  if (req.method === "HEAD") {
+    res.end();
+    return;
+  }
+  const source = file.createReadStream();
+  res.on("close", () => source.destroy());
+  source.on("error", () => res.destroy()).pipe(res);
+}
+
 router.get("/social/admin/gift-studio/library", ownerOnly, async (req, res): Promise<void> => {
   res.json(GetGiftStudioLibraryResponse.parse(await listGiftStudioVersions(accountId(req))));
 });
@@ -316,52 +310,6 @@ router.patch("/social/admin/hangout-rewards", ownerOnly, async (req, res): Promi
   res.json(SetHangoutRewardIntervalResponse.parse(
     await setHangoutRewardInterval(input.data.averageIntervalMinutes),
   ));
-});
-
-router.get("/social/scene-models", async (_req, res): Promise<void> => {
-  res.json(GetSceneModelsResponse.parse({ models: await listActiveSceneModels() }));
-});
-
-router.get("/social/scene-models/:modelId/file", async (req, res): Promise<void> => {
-  const params = GetSceneModelFileParams.safeParse(req.params);
-  if (!params.success) throw new RoomError(404, "Scene model is not available.");
-  const model = await activeSceneModelFile(params.data.modelId);
-  if (!model) throw new RoomError(404, "Scene model is not available.");
-  res.set({
-    "Content-Type": model.contentType,
-    "Content-Length": String(model.byteSize),
-    "Cache-Control": "public, max-age=31536000, immutable",
-    "X-Content-Type-Options": "nosniff",
-  });
-  const stream = model.file.createReadStream();
-  res.on("close", () => stream.destroy());
-  stream.on("error", () => res.destroy()).pipe(res);
-});
-
-router.get("/social/admin/scene-models", ownerOnly, async (req, res): Promise<void> => {
-  res.json(GetAdminSceneModelsResponse.parse({ models: await listOwnerSceneModels(accountId(req)) }));
-});
-
-router.post("/social/admin/scene-models", ownerOnly, parseSceneModelUpload, async (req, res): Promise<void> => {
-  const directory = sceneModelTempDirs.get(req);
-  try {
-    const file = req.file;
-    if (!directory || !file) throw new RoomError(400, "Choose one GLB or GLTF model file.");
-    const name = UploadSceneModelBody.shape.name.safeParse(req.body?.name);
-    if (!name.success) throw new RoomError(400, "Enter a model name of 1 to 80 characters.");
-    const result = await addSceneModel({
-      ownerId: accountId(req),
-      name: name.data.trim(),
-      originalName: file.originalname,
-      filePath: file.path,
-    });
-    res.status(201).json(UploadSceneModelResponse.parse(result));
-  } finally {
-    if (directory) {
-      await rm(directory, { recursive: true, force: true });
-      sceneModelTempDirs.delete(req);
-    }
-  }
 });
 
 router.get("/social/admin/gift-motions", ownerOnly, async (req, res): Promise<void> => {
@@ -401,7 +349,7 @@ router.post("/social/admin/gift-motions", ownerOnly, parseGiftMotionUpload, asyn
     if (motion.animationIndex !== null && motion.animationIndex >= animationNames.length) {
       throw new RoomError(400, "Choose an animation included in this model.");
     }
-    const checked = await inspectSceneModelFile(file.path, file.originalname);
+    const checked = await inspectGiftMotionModelFile(file.path, file.originalname);
     const result = await addGiftMotion({
       ownerId: accountId(req),
       name: fields.data.name.trim(),
@@ -454,26 +402,6 @@ router.get("/social/gift-motions/:giftId/file", async (req, res): Promise<void> 
   stream.on("error", () => res.destroy()).pipe(res);
 });
 
-router.patch("/social/admin/scene-models/:modelId/placement", ownerOnly, async (req, res): Promise<void> => {
-  const params = UpdateSceneModelPlacementParams.safeParse(req.params);
-  const body = UpdateSceneModelPlacementBody.safeParse(req.body);
-  if (!params.success || !body.success) throw new RoomError(400, "Check the model's position and scale.");
-  const [x, y, z] = body.data.position;
-  const [rx, ry, rz] = body.data.rotation;
-  if (x === undefined || y === undefined || z === undefined || rx === undefined || ry === undefined || rz === undefined
-    || x < -20 || x > 20 || y < -10 || y > 10 || z < -20 || z > 20
-    || Math.abs(rx) > 360 || Math.abs(ry) > 360 || Math.abs(rz) > 360) {
-    throw new RoomError(400, "Keep position within ±20 units and rotation within one turn.");
-  }
-  const result = await updateOwnerSceneModelPlacement(accountId(req), params.data.modelId, {
-    position: [x, y, z],
-    rotation: [rx, ry, rz],
-    scale: body.data.scale,
-  });
-  if (!result) throw new RoomError(404, "Scene model not found.");
-  res.json(UpdateSceneModelPlacementResponse.parse(result));
-});
-
 router.patch("/social/admin/gift-studio/catalog/:giftId", ownerOnly, async (req, res): Promise<void> => {
   const params = UpdateGiftStudioCatalogItemParams.safeParse(req.params);
   const body = UpdateGiftStudioCatalogItemBody.safeParse(req.body);
@@ -482,6 +410,22 @@ router.patch("/social/admin/gift-studio/catalog/:giftId", ownerOnly, async (req,
   }
   const result = await updateGiftCatalogItem({ giftId: params.data.giftId, ...body.data });
   res.json(UpdateGiftStudioCatalogItemResponse.parse(result));
+});
+
+router.post("/social/admin/gift-studio/catalog/:giftId/icon", ownerOnly, async (req, res): Promise<void> => {
+  const result = await regenerateGiftStudioIcon(accountId(req), String(req.params.giftId ?? ""));
+  res.set("Cache-Control", "no-store").json(result);
+});
+
+router.put("/social/admin/gift-studio/catalog/:giftId/icon", ownerOnly, parseGiftIconUpload, async (req, res): Promise<void> => {
+  if (!req.file?.buffer) throw new RoomError(400, "Choose a PNG icon image.");
+  const result = await overrideGiftStudioIcon(accountId(req), String(req.params.giftId ?? ""), req.file.buffer);
+  res.set("Cache-Control", "no-store").json(result);
+});
+
+router.get("/social/gift-studio/icons/:versionId", async (req, res): Promise<void> => {
+  const versionId = typeof req.params.versionId === "string" ? req.params.versionId : "";
+  await streamStudioIcon(req, res, versionId);
 });
 
 router.post("/social/admin/gift-studio/process", ownerOnly, parseStudioUpload, async (req, res): Promise<void> => {
@@ -725,6 +669,7 @@ router.get("/social/favorites/:username/room", async (req, res): Promise<void> =
   res.json(GetFavoriteRoomResponse.parse(await favoriteRoom(accountId(req), name(req.params.username))));
 });
 router.get("/social/me", async (req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
   res.json(GetSocialMeResponse.parse(await getMe(accountId(req))));
 });
 router.put("/social/me/name-color-test-total", async (req, res): Promise<void> => {

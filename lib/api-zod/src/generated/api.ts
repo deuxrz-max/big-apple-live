@@ -1738,7 +1738,9 @@ export const GetSocialMeResponse = zod.object({
   "gifts": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string(),
-  "cost": zod.number().int()
+  "cost": zod.number().int(),
+  "iconUrl": zod.string().nullable(),
+  "iconStatus": zod.enum(['transparent', 'fallback', 'manual-transparent', 'manual-fallback', 'builtin'])
 })),
   "giftQuantities": zod.record(zod.string(), zod.number().int().min(1)).optional(),
   "countries": zod.array(zod.object({
@@ -2202,7 +2204,9 @@ export const GetGiftStudioLibraryResponse = zod.object({
   "productType": zod.enum(['gift', 'entrance-effect']),
   "status": zod.enum(['active', 'inactive', 'deleted']),
   "roomGift": zod.boolean(),
-  "animationAvailable": zod.boolean()
+  "animationAvailable": zod.boolean(),
+  "iconUrl": zod.string().nullable(),
+  "iconStatus": zod.enum(['transparent', 'fallback', 'manual-transparent', 'manual-fallback', 'builtin'])
 }))
 })
 
@@ -2355,147 +2359,6 @@ export const SetHangoutRewardIntervalResponse = zod.object({
   "averageIntervalMinutes": zod.number().int().min(setHangoutRewardIntervalResponseAverageIntervalMinutesMin).max(setHangoutRewardIntervalResponseAverageIntervalMinutesMax),
   "nextDropAt": zod.coerce.date(),
   "lastDropAt": zod.coerce.date().nullable()
-})
-
-
-export const getSceneModelsResponseModelsItemPositionMin = 3;
-export const getSceneModelsResponseModelsItemPositionMax = 3;
-
-export const getSceneModelsResponseModelsItemRotationMin = 3;
-export const getSceneModelsResponseModelsItemRotationMax = 3;
-
-export const getSceneModelsResponseModelsItemScaleMin = 0.1;
-export const getSceneModelsResponseModelsItemScaleMax = 4;
-
-
-
-
-export const GetSceneModelsResponse = zod.object({
-  "models": zod.array(zod.object({
-  "id": zod.string().uuid(),
-  "name": zod.string(),
-  "format": zod.enum(['glb', 'gltf']),
-  "fileUrl": zod.string(),
-  "position": zod.array(zod.number()).min(getSceneModelsResponseModelsItemPositionMin).max(getSceneModelsResponseModelsItemPositionMax),
-  "rotation": zod.array(zod.number()).min(getSceneModelsResponseModelsItemRotationMin).max(getSceneModelsResponseModelsItemRotationMax),
-  "scale": zod.number().min(getSceneModelsResponseModelsItemScaleMin).max(getSceneModelsResponseModelsItemScaleMax),
-  "byteSize": zod.number().int().min(1),
-  "createdAt": zod.coerce.date()
-}))
-})
-
-
-export const GetSceneModelFileParams = zod.object({
-  "modelId": zod.coerce.string().uuid()
-})
-
-export const GetSceneModelFileResponse = zod.unknown()
-
-
-export const getAdminSceneModelsResponseModelsItemPositionMin = 3;
-export const getAdminSceneModelsResponseModelsItemPositionMax = 3;
-
-export const getAdminSceneModelsResponseModelsItemRotationMin = 3;
-export const getAdminSceneModelsResponseModelsItemRotationMax = 3;
-
-export const getAdminSceneModelsResponseModelsItemScaleMin = 0.1;
-export const getAdminSceneModelsResponseModelsItemScaleMax = 4;
-
-
-
-
-export const GetAdminSceneModelsResponse = zod.object({
-  "models": zod.array(zod.object({
-  "id": zod.string().uuid(),
-  "name": zod.string(),
-  "format": zod.enum(['glb', 'gltf']),
-  "fileUrl": zod.string(),
-  "position": zod.array(zod.number()).min(getAdminSceneModelsResponseModelsItemPositionMin).max(getAdminSceneModelsResponseModelsItemPositionMax),
-  "rotation": zod.array(zod.number()).min(getAdminSceneModelsResponseModelsItemRotationMin).max(getAdminSceneModelsResponseModelsItemRotationMax),
-  "scale": zod.number().min(getAdminSceneModelsResponseModelsItemScaleMin).max(getAdminSceneModelsResponseModelsItemScaleMax),
-  "byteSize": zod.number().int().min(1),
-  "createdAt": zod.coerce.date()
-}))
-})
-
-
-export const uploadSceneModelBodyNameMax = 80;
-
-
-
-export const UploadSceneModelBody = zod.object({
-  "name": zod.string().min(1).max(uploadSceneModelBodyNameMax),
-  "model": zod.string().describe('One self-contained GLB or GLTF model file sent as the multipart field named model, up to 100 MB')
-})
-
-export const uploadSceneModelResponsePositionMin = 3;
-export const uploadSceneModelResponsePositionMax = 3;
-
-export const uploadSceneModelResponseRotationMin = 3;
-export const uploadSceneModelResponseRotationMax = 3;
-
-export const uploadSceneModelResponseScaleMin = 0.1;
-export const uploadSceneModelResponseScaleMax = 4;
-
-
-
-
-export const UploadSceneModelResponse = zod.object({
-  "id": zod.string().uuid(),
-  "name": zod.string(),
-  "format": zod.enum(['glb', 'gltf']),
-  "fileUrl": zod.string(),
-  "position": zod.array(zod.number()).min(uploadSceneModelResponsePositionMin).max(uploadSceneModelResponsePositionMax),
-  "rotation": zod.array(zod.number()).min(uploadSceneModelResponseRotationMin).max(uploadSceneModelResponseRotationMax),
-  "scale": zod.number().min(uploadSceneModelResponseScaleMin).max(uploadSceneModelResponseScaleMax),
-  "byteSize": zod.number().int().min(1),
-  "createdAt": zod.coerce.date()
-})
-
-
-export const UpdateSceneModelPlacementParams = zod.object({
-  "modelId": zod.coerce.string().uuid()
-})
-
-export const updateSceneModelPlacementBodyPositionMin = 3;
-export const updateSceneModelPlacementBodyPositionMax = 3;
-
-export const updateSceneModelPlacementBodyRotationMin = 3;
-export const updateSceneModelPlacementBodyRotationMax = 3;
-
-export const updateSceneModelPlacementBodyScaleMin = 0.1;
-export const updateSceneModelPlacementBodyScaleMax = 4;
-
-
-
-export const UpdateSceneModelPlacementBody = zod.object({
-  "position": zod.array(zod.number()).min(updateSceneModelPlacementBodyPositionMin).max(updateSceneModelPlacementBodyPositionMax),
-  "rotation": zod.array(zod.number()).min(updateSceneModelPlacementBodyRotationMin).max(updateSceneModelPlacementBodyRotationMax),
-  "scale": zod.number().min(updateSceneModelPlacementBodyScaleMin).max(updateSceneModelPlacementBodyScaleMax)
-})
-
-export const updateSceneModelPlacementResponsePositionMin = 3;
-export const updateSceneModelPlacementResponsePositionMax = 3;
-
-export const updateSceneModelPlacementResponseRotationMin = 3;
-export const updateSceneModelPlacementResponseRotationMax = 3;
-
-export const updateSceneModelPlacementResponseScaleMin = 0.1;
-export const updateSceneModelPlacementResponseScaleMax = 4;
-
-
-
-
-export const UpdateSceneModelPlacementResponse = zod.object({
-  "id": zod.string().uuid(),
-  "name": zod.string(),
-  "format": zod.enum(['glb', 'gltf']),
-  "fileUrl": zod.string(),
-  "position": zod.array(zod.number()).min(updateSceneModelPlacementResponsePositionMin).max(updateSceneModelPlacementResponsePositionMax),
-  "rotation": zod.array(zod.number()).min(updateSceneModelPlacementResponseRotationMin).max(updateSceneModelPlacementResponseRotationMax),
-  "scale": zod.number().min(updateSceneModelPlacementResponseScaleMin).max(updateSceneModelPlacementResponseScaleMax),
-  "byteSize": zod.number().int().min(1),
-  "createdAt": zod.coerce.date()
 })
 
 
@@ -2745,7 +2608,9 @@ export const UpdateGiftStudioCatalogItemResponse = zod.object({
   "productType": zod.enum(['gift', 'entrance-effect']),
   "status": zod.enum(['active', 'inactive', 'deleted']),
   "roomGift": zod.boolean(),
-  "animationAvailable": zod.boolean()
+  "animationAvailable": zod.boolean(),
+  "iconUrl": zod.string().nullable(),
+  "iconStatus": zod.enum(['transparent', 'fallback', 'manual-transparent', 'manual-fallback', 'builtin'])
 })
 
 

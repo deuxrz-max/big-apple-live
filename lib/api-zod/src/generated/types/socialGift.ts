@@ -5,9 +5,13 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { GiftStudioIconStatus } from './giftStudioIconStatus';
 
 export interface SocialGift {
   id: string;
   name: string;
   cost: number;
+  /** @nullable */
+  iconUrl: string | null;
+  iconStatus: GiftStudioIconStatus;
 }

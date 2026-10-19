@@ -29,7 +29,7 @@ export function giftNameFromSettings(settings: unknown, giftId: string): string 
 async function activeGiftData() {
   const [settings, activeAssets] = await Promise.all([
     db.select().from(socialGiftCatalogSettings),
-    db.select({ giftId: giftStudioAssets.giftId, settings: giftStudioAssets.settings })
+    db.select({ id: giftStudioAssets.id, giftId: giftStudioAssets.giftId, settings: giftStudioAssets.settings })
       .from(giftStudioAssets)
       .where(eq(giftStudioAssets.status, "active")),
   ]);
@@ -38,6 +38,9 @@ async function activeGiftData() {
     activeNames: new Map(activeAssets.flatMap((row) => row.giftId
       ? [[row.giftId, giftNameFromSettings(row.settings, row.giftId)] as const]
       : [])),
+    activeAssets: new Map(activeAssets.flatMap((row) => row.giftId
+      ? [[row.giftId, { id: row.id, settings: row.settings }] as const]
+      : [])),
   };
 }
 
@@ -45,15 +48,24 @@ function catalogRecord(
   gift: (typeof GIFTS)[number],
   config: SocialGiftCatalogSettings | undefined,
   activeName: string | undefined,
+  activeAsset?: { id: string; settings: Record<string, unknown> },
 ) {
+  const iconStatus = activeAsset?.settings.iconStatus;
+  const status = (config?.status ?? "active") as GiftCatalogStatus;
   return {
     id: gift.id,
     name: activeName ?? (config?.displayName?.trim() || gift.name),
     cost: config?.cost ?? gift.cost,
     productType: (config?.productType ?? "gift") as GiftStudioProductType,
-    status: (config?.status ?? "active") as GiftCatalogStatus,
+    status,
     roomGift: (config?.productType ?? "gift") === "gift" && isRoomGift(gift.id),
     animationAvailable: true,
+    iconUrl: activeAsset && status !== "deleted"
+      ? `/api/social/gift-studio/icons/${activeAsset.id}?v=${encodeURIComponent(String(activeAsset.settings.iconRevision ?? 1))}`
+      : null,
+    iconStatus: activeAsset && (iconStatus === "transparent" || iconStatus === "fallback" || iconStatus === "manual-transparent" || iconStatus === "manual-fallback")
+      ? iconStatus
+      : activeAsset ? "fallback" : "builtin",
   };
 }
 
@@ -63,6 +75,7 @@ export async function listGiftCatalogForOwner() {
     gift,
     data.settings.get(gift.id),
     data.activeNames.get(gift.id),
+    data.activeAssets.get(gift.id),
   ));
   const builtInIds = new Set<string>(GIFTS.map((gift) => gift.id));
   const custom = [...data.settings.values()]
@@ -75,6 +88,16 @@ export async function listGiftCatalogForOwner() {
       status: config.status as GiftCatalogStatus,
       roomGift: (config.productType ?? "gift") === "gift",
       animationAvailable: data.activeNames.has(config.giftId),
+      iconUrl: config.status !== "deleted" && data.activeAssets.has(config.giftId)
+        ? `/api/social/gift-studio/icons/${data.activeAssets.get(config.giftId)!.id}?v=${encodeURIComponent(String(data.activeAssets.get(config.giftId)!.settings.iconRevision ?? 1))}`
+        : null,
+      iconStatus: (() => {
+        const activeAsset = data.activeAssets.get(config.giftId);
+        const status = activeAsset?.settings.iconStatus;
+        return activeAsset && (status === "transparent" || status === "fallback" || status === "manual-transparent" || status === "manual-fallback")
+          ? status
+          : activeAsset ? "fallback" : "builtin";
+      })(),
     }));
   return [...builtIns, ...custom];
 }
@@ -89,31 +112,46 @@ export async function getGiftCatalogItem(giftId: string) {
     .where(eq(developerGiftMotions.giftId, giftId))
     .limit(1);
   if (motionGift) {
+    const [config] = await db.select().from(socialGiftCatalogSettings)
+      .where(eq(socialGiftCatalogSettings.giftId, giftId)).limit(1);
     return {
       id: motionGift.giftId,
-      name: motionGift.name,
-      cost: motionGift.cost,
-      productType: "gift" as const,
-      status: motionGift.active ? "active" as const : "deleted" as const,
+      name: config?.displayName?.trim() || motionGift.name,
+      cost: config?.cost ?? motionGift.cost,
+      productType: (config?.productType ?? "gift") as GiftStudioProductType,
+      status: (config?.status ?? (motionGift.active ? "active" : "deleted")) as GiftCatalogStatus,
       roomGift: true,
       animationAvailable: true,
+      iconUrl: null,
+      iconStatus: "builtin" as const,
     };
   }
   const gift = DEFAULT_GIFTS.get(giftId as (typeof GIFTS)[number]["id"]);
   const data = await activeGiftData();
   if (gift && gift.id === giftId) {
-    return catalogRecord(gift, data.settings.get(giftId), data.activeNames.get(giftId));
+    return catalogRecord(gift, data.settings.get(giftId), data.activeNames.get(giftId), data.activeAssets.get(giftId));
   }
   const config = data.settings.get(giftId);
   if (!config) return null;
+  const status = (config.status ?? "active") as GiftCatalogStatus;
   return {
     id: config.giftId,
     name: data.activeNames.get(giftId) ?? config.displayName?.trim() ?? giftId,
     cost: config.cost ?? 1,
     productType: (config.productType ?? "gift") as GiftStudioProductType,
-    status: config.status as GiftCatalogStatus,
+    status,
     roomGift: (config.productType ?? "gift") === "gift",
     animationAvailable: data.activeNames.has(giftId),
+    iconUrl: status !== "deleted" && data.activeAssets.has(giftId)
+      ? `/api/social/gift-studio/icons/${data.activeAssets.get(giftId)!.id}?v=${encodeURIComponent(String(data.activeAssets.get(giftId)!.settings.iconRevision ?? 1))}`
+      : null,
+    iconStatus: (() => {
+      const activeAsset = data.activeAssets.get(giftId);
+      const status = activeAsset?.settings.iconStatus;
+      return activeAsset && (status === "transparent" || status === "fallback" || status === "manual-transparent" || status === "manual-fallback")
+        ? status
+        : activeAsset ? "fallback" : "builtin";
+    })(),
   };
 }
 
@@ -121,7 +159,7 @@ export async function giftCatalogWithActiveNames() {
   const catalog = await listGiftCatalogForOwner();
   return filterSendableGifts(catalog)
     .filter(gift => !/^motion-[0-9a-f-]{36}$/.test(gift.id))
-    .map(({ id, name, cost }) => ({ id, name, cost }));
+    .map(({ id, name, cost, iconUrl, iconStatus }) => ({ id, name, cost, iconUrl, iconStatus }));
 }
 
 export function mergeActiveGiftNames(activeNames: Map<string, string>) {
@@ -179,12 +217,18 @@ export async function updateGiftCatalogItem(input: {
     await tx.insert(socialGiftCatalogSettings).values(values)
       .onConflictDoUpdate({ target: socialGiftCatalogSettings.giftId, set });
 
-    if (input.name !== undefined) {
+    if (input.name !== undefined || input.status !== undefined) {
       const activeRows = await tx.select({ id: giftStudioAssets.id, settings: giftStudioAssets.settings })
         .from(giftStudioAssets)
         .where(and(eq(giftStudioAssets.giftId, gift.id), eq(giftStudioAssets.status, "active")));
       await Promise.all(activeRows.map((row) => tx.update(giftStudioAssets)
-        .set({ settings: { ...row.settings, draftName: input.name!.trim() } })
+        .set({ settings: {
+          ...row.settings,
+          ...(input.name !== undefined ? { draftName: input.name.trim() } : {}),
+          ...(input.status !== undefined
+            ? { iconRevision: Number(row.settings.iconRevision ?? 0) + 1 }
+            : {}),
+        } })
         .where(eq(giftStudioAssets.id, row.id))));
     }
   });

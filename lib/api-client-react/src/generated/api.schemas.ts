@@ -2432,61 +2432,6 @@ export interface ErrorResponse4b96100 {
   error: string;
 }
 
-/**
- * @minItems 3
- * @maxItems 3
- */
-export type DeveloperSceneModelVector3 = number[];
-
-export type DeveloperSceneModelFormat = typeof DeveloperSceneModelFormat[keyof typeof DeveloperSceneModelFormat];
-
-
-export const DeveloperSceneModelFormat = {
-  glb: 'glb',
-  gltf: 'gltf',
-} as const;
-
-export interface DeveloperSceneModel {
-  id: string;
-  name: string;
-  format: DeveloperSceneModelFormat;
-  fileUrl: string;
-  position: DeveloperSceneModelVector3;
-  rotation: DeveloperSceneModelVector3;
-  /**
-     * @minimum 0.1
-     * @maximum 4
-     */
-  scale: number;
-  /** @minimum 1 */
-  byteSize: number;
-  createdAt: string;
-}
-
-export interface DeveloperSceneModelList {
-  models: DeveloperSceneModel[];
-}
-
-export interface DeveloperSceneModelUploadInput {
-  /**
-     * @minLength 1
-     * @maxLength 80
-     */
-  name: string;
-  /** One self-contained GLB or GLTF model file sent as the multipart field named model, up to 100 MB */
-  model: string;
-}
-
-export interface DeveloperSceneModelPlacementInput {
-  position: DeveloperSceneModelVector3;
-  rotation: DeveloperSceneModelVector3;
-  /**
-     * @minimum 0.1
-     * @maximum 4
-     */
-  scale: number;
-}
-
 export type DeveloperGiftMotionPresetCategory = typeof DeveloperGiftMotionPresetCategory[keyof typeof DeveloperGiftMotionPresetCategory];
 
 
@@ -2678,6 +2623,17 @@ export const GiftStudioCatalogGiftStatus = {
   deleted: 'deleted',
 } as const;
 
+export type GiftStudioIconStatus = typeof GiftStudioIconStatus[keyof typeof GiftStudioIconStatus];
+
+
+export const GiftStudioIconStatus = {
+  transparent: 'transparent',
+  fallback: 'fallback',
+  'manual-transparent': 'manual-transparent',
+  'manual-fallback': 'manual-fallback',
+  builtin: 'builtin',
+} as const;
+
 export interface GiftStudioCatalogGift {
   id: SocialGiftCatalogId;
   name: string;
@@ -2687,6 +2643,15 @@ export interface GiftStudioCatalogGift {
   status: GiftStudioCatalogGiftStatus;
   roomGift: boolean;
   animationAvailable: boolean;
+  /** @nullable */
+  iconUrl: string | null;
+  iconStatus: GiftStudioIconStatus;
+}
+
+export interface GiftStudioIconUpdateResponse {
+  giftId: SocialGiftCatalogId;
+  iconStatus: GiftStudioIconStatus;
+  iconUrl: string;
 }
 
 export interface EntranceEffectShopMedia {
@@ -3093,6 +3058,9 @@ export interface SocialGift {
   id: string;
   name: string;
   cost: number;
+  /** @nullable */
+  iconUrl: string | null;
+  iconStatus: GiftStudioIconStatus;
 }
 
 export type EntranceEffectSettingsInputTierEffectId = typeof EntranceEffectSettingsInputTierEffectId[keyof typeof EntranceEffectSettingsInputTierEffectId];

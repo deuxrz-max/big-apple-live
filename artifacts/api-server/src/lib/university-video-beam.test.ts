@@ -123,7 +123,7 @@ test("public topic rooms and their overflow rooms use the ownerless policy", () 
   ], "hidden rooms and the special News/Web Series sources are not scheduled for topic-pool searches");
 });
 
-test("public topic playback waits for the durable rotation choice after the break", () => {
+test("public room timeline advances through its saved queue while nobody is watching", () => {
   let now = 1_000;
   const rooms = new RoomStore(() => now);
   createRoom(rooms);
@@ -131,20 +131,32 @@ test("public topic playback waits for the durable rotation choice after the brea
   const defaultSearch = communityDefaultVideoSearch("MUSIC1", rooms)!;
   const first = { videoId: "aaa11111111", title: "First", channelTitle: "Music", description: null };
   const second = { videoId: "bbb22222222", title: "Second", channelTitle: "Music", description: null };
-  beam.initializeDefaultTvQueue("MUSIC1", defaultSearch, [first], { [first.videoId]: 1_000 });
-  now += 1_000;
+  beam.initializeDefaultTvQueue("MUSIC1", defaultSearch, [first, second], {
+    [first.videoId]: 1_000,
+    [second.videoId]: 2_000,
+  });
+  now = 1_000 + 1_000 + 3 * 60_000;
   let state = beam.getState("MUSIC1");
   assert.equal(state.tv.currentVideoId, first.videoId);
   const transitionAt = state.tv.breakEndsAtMs!;
-  now = transitionAt;
   assert.equal(beam.getNextAutomaticPlaybackTransitionAt("MUSIC1"), null,
-    "the expired queue does not advance itself before the server selects an unplayed item");
-  state = beam.advanceAutomaticDefaultTvVideo(
-    "MUSIC1", [second], { [second.videoId]: 2_000 }, second.videoId,
-    first.videoId, 1_000, transitionAt,
+    "an expired break is ready for the room scheduler to advance");
+  state = beam.advanceAutomaticDefaultTvQueue(
+    "MUSIC1", second.videoId, first.videoId, 1_000, transitionAt, transitionAt,
   );
   assert.equal(state.tv.currentVideoId, second.videoId);
-  assert.equal(state.tv.breakEndsAtMs, null);
+  assert.equal(state.tv.startedAtMs, transitionAt);
+  assert.deepEqual(state.tv.queue, [first.videoId, second.videoId]);
+
+  now = transitionAt + 2_000 + 3 * 60_000;
+  state = beam.getState("MUSIC1");
+  const loopAt = state.tv.breakEndsAtMs!;
+  state = beam.advanceAutomaticDefaultTvQueue(
+    "MUSIC1", first.videoId, second.videoId, transitionAt, loopAt, loopAt,
+  );
+  assert.equal(state.tv.currentVideoId, first.videoId, "the saved room playlist loops");
+  assert.equal(state.tv.startedAtMs, loopAt);
+  assert.deepEqual(state.tv.queue, [first.videoId, second.videoId]);
 });
 
 test("an official player failure immediately advances the ownerless topic room", () => {

@@ -10,7 +10,13 @@ import path from "node:path";
 import { promisify } from "node:util";
 import sharp from "sharp";
 import { RoomError } from "./room-store";
-import { getGiftCatalogItem, giftNameFromSettings, listGiftCatalogForOwner, updateGiftCatalogItem, type GiftStudioProductType } from "./gift-studio-catalog";
+import {
+  getGiftCatalogItem,
+  giftNameFromSettings,
+  listGiftCatalogForOwner,
+  updateGiftCatalogItem as updateGiftCatalogRecord,
+  type GiftStudioProductType,
+} from "./gift-studio-catalog";
 
 const execFileAsync = promisify(execFile);
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
@@ -25,13 +31,15 @@ const storage = new Storage({
 });
 
 export type GiftStudioMediaVariant = "original" | "webm" | "safari";
+export type GiftStudioIconStatus = "transparent" | "fallback" | "manual-transparent" | "manual-fallback";
 
-function storageFile(id: string, variant: GiftStudioMediaVariant, extension?: string) {
+function storageFile(id: string, variant: GiftStudioMediaVariant | "icon", extension?: string) {
   if (!/^[0-9a-f-]{36}$/i.test(id)) throw new RoomError(404, "Gift media not found");
-  const names: Record<GiftStudioMediaVariant, string> = {
+  const names: Record<GiftStudioMediaVariant | "icon", string> = {
     original: `source.${extension === "mov" ? "mov" : extension === "webm" ? "webm" : "mp4"}`,
     webm: "animation.webm",
     safari: "animation.png",
+    icon: "icon.png",
   };
   if (variant !== "original" && extension !== undefined) throw new RoomError(404, "Gift media not found");
   const match = /^\/([^/]+)\/(.+)$/.exec(process.env.PRIVATE_OBJECT_DIR ?? "");
@@ -203,12 +211,85 @@ async function uploadFile(filePath: string, file: ReturnType<typeof storageFile>
   });
 }
 
+async function snapshotVideoFrame(videoPath: string, outputPath: string, durationMs: number, preserveVp9Alpha: boolean) {
+  const seek = Math.max(0, Math.min(durationMs / 1000 * 0.35, Math.max(0, durationMs / 1000 - 0.12)));
+  await execFileAsync(process.env.FFMPEG_PATH ?? "ffmpeg", [
+    "-hide_banner", "-loglevel", "error", "-y",
+    ...(preserveVp9Alpha ? ["-c:v", "libvpx-vp9"] : []),
+    "-ss", String(seek), "-i", videoPath,
+    "-frames:v", "1",
+    "-vf", "scale=512:512:force_original_aspect_ratio=decrease:force_divisible_by=2:flags=lanczos,format=rgba",
+    "-an", "-update", "1", outputPath,
+  ], { timeout: 45_000, maxBuffer: 2 * 1024 * 1024 });
+}
+
+async function hasUsefulPngAlpha(filePath: string | Buffer): Promise<boolean> {
+  const { data, info } = await sharp(filePath).ensureAlpha().resize(128, 128, { fit: "inside" })
+    .raw().toBuffer({ resolveWithObject: true });
+  if (info.channels !== 4 || data.length < 4) return false;
+  let transparent = 0;
+  let visible = 0;
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i]! < 32) transparent++;
+    if (data[i]! > 200) visible++;
+  }
+  const pixels = info.width * info.height;
+  return pixels > 0 && transparent / pixels >= 0.01 && visible / pixels >= 0.03;
+}
+
+async function createGiftIcon(
+  processedWebmPath: string,
+  fallbackSourcePath: string,
+  outputPath: string,
+  durationMs: number,
+): Promise<GiftStudioIconStatus> {
+  try {
+    await snapshotVideoFrame(processedWebmPath, outputPath, durationMs, true);
+    if (await hasUsefulPngAlpha(outputPath)) return "transparent";
+  } catch {
+    // A broken alpha decode falls through to the plain source snapshot.
+  }
+  try {
+    await fs.rm(outputPath, { force: true });
+    await snapshotVideoFrame(fallbackSourcePath, outputPath, durationMs, false);
+    await sharp(outputPath).metadata();
+    return "fallback";
+  } catch {
+    // Saving the gift should not fail because its optional icon could not be decoded.
+    const placeholder = Buffer.from(
+      '<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="#392060"/><stop offset="1" stop-color="#a22b83"/></linearGradient></defs><rect width="512" height="512" rx="72" fill="url(#g)"/><text x="256" y="278" text-anchor="middle" fill="white" font-family="sans-serif" font-size="56" font-weight="700">GIFT</text></svg>',
+    );
+    await sharp(placeholder).png().toFile(outputPath);
+    return "fallback";
+  }
+}
+
 async function deleteAssets(id: string, extension: string) {
   await Promise.all([
     storageFile(id, "original", extension).delete({ ignoreNotFound: true }),
     storageFile(id, "webm").delete({ ignoreNotFound: true }),
     storageFile(id, "safari").delete({ ignoreNotFound: true }),
+    storageFile(id, "icon").delete({ ignoreNotFound: true }),
   ]);
+}
+
+async function deleteGiftCatalogIcons(giftId: string) {
+  const activeAssets = await db.select({ id: giftStudioAssets.id })
+    .from(giftStudioAssets)
+    .where(and(eq(giftStudioAssets.giftId, giftId), eq(giftStudioAssets.status, "active")));
+  const results = await Promise.allSettled(activeAssets.map(({ id }) =>
+    storageFile(id, "icon").delete({ ignoreNotFound: true })));
+  for (const result of results) {
+    if (result.status === "rejected") {
+      console.warn("A deleted gift's optional icon could not be removed from storage.", result.reason);
+    }
+  }
+}
+
+export async function updateGiftCatalogItem(input: Parameters<typeof updateGiftCatalogRecord>[0]) {
+  const updated = await updateGiftCatalogRecord(input);
+  if (input.status === "deleted") await deleteGiftCatalogIcons(input.giftId);
+  return updated;
 }
 
 export async function listGiftStudioVersions(ownerId: string) {
@@ -410,16 +491,19 @@ export async function createGiftStudioVersion(input: {
 
   const temp = await fs.mkdtemp(path.join(tmpdir(), "streamtalk-gift-studio-"));
   const fallbackPath = path.join(temp, "animation.png");
+  const iconPath = path.join(temp, "gift-icon.png");
   const id = randomUUID();
   const safeName = input.originalName.replace(/^.*[\\/]/, "").replace(/[\u0000-\u001f\u007f]/g, "").slice(0, 120)
     || `source.${source.type}`;
   try {
     await createSafariFallback(input.processedWebmPath, fallbackPath);
+    const iconStatus = await createGiftIcon(input.processedWebmPath, input.originalPath, iconPath, source.durationMs);
     const fallbackBytes = (await fs.stat(fallbackPath)).size;
     const objects = [
       storageFile(id, "original", source.type),
       storageFile(id, "webm"),
       storageFile(id, "safari"),
+      storageFile(id, "icon"),
     ];
     const mime = source.type === "webm" ? "video/webm" : source.type === "mov" ? "video/quicktime" : "video/mp4";
     try {
@@ -427,6 +511,7 @@ export async function createGiftStudioVersion(input: {
         uploadFile(input.originalPath, objects[0]!, mime),
         uploadFile(input.processedWebmPath, objects[1]!, "video/webm"),
         uploadFile(fallbackPath, objects[2]!, "image/png"),
+        uploadFile(iconPath, objects[3]!, "image/png"),
       ]);
       const failedUpload = uploaded.find((result) => result.status === "rejected");
       if (failedUpload?.status === "rejected") throw failedUpload.reason;
@@ -463,7 +548,8 @@ export async function createGiftStudioVersion(input: {
           id, ownerId: input.ownerId, giftId: input.giftId, version, status,
           originalName: safeName, originalExtension: source.type, durationMs: source.durationMs,
           originalBytes: input.originalBytes, webmBytes: input.processedWebmBytes,
-          safariBytes: fallbackBytes, settings: { ...input.settings, productType },
+          safariBytes: fallbackBytes,
+          settings: { ...input.settings, productType, iconStatus, iconRevision: 1 },
           activatedAt: input.giftId ? new Date() : null,
         }).returning();
         return inserted;
@@ -503,8 +589,6 @@ export async function renameGiftStudioVersion(ownerId: string, versionId: string
   if (!updated) throw new RoomError(404, "Saved gift not found.");
   return toVersion(updated);
 }
-
-export { updateGiftCatalogItem };
 
 export async function deleteGiftStudioVersion(ownerId: string, versionId: string) {
   const [asset] = await db.select().from(giftStudioAssets).where(eq(giftStudioAssets.id, versionId));
@@ -563,6 +647,7 @@ export async function setGiftStudioVersionActive(
   }
   const giftId = asset.giftId ?? (active ? `studio-${asset.id}` : null);
   const productType = options?.productType ?? (asset.settings as Record<string, unknown>).productType as GiftStudioProductType ?? "gift";
+  if (active) await ensureGiftStudioIcon(asset);
   const row = await db.transaction(async (tx) => {
     if (active && !asset.giftId && giftId) {
       await tx.insert(socialGiftCatalogSettings).values({
@@ -634,6 +719,129 @@ export async function getActiveGiftStudioMedia(giftId: string) {
     safariUrl: mediaUrl(row.id, "safari", false),
     durationMs: row.durationMs,
   } };
+}
+
+async function activeOwnedGiftAsset(ownerId: string, giftId: string) {
+  const [row] = await db.select().from(giftStudioAssets)
+    .where(and(eq(giftStudioAssets.giftId, giftId), eq(giftStudioAssets.status, "active"), eq(giftStudioAssets.ownerId, ownerId)))
+    .limit(1);
+  if (!row) throw new RoomError(404, "No active saved animation exists for this catalog item.");
+  return row;
+}
+
+async function saveGiftIconForAsset(asset: GiftStudioAsset, sourcePath: string, processedPath: string, bumpRevision = true) {
+  const temp = await fs.mkdtemp(path.join(tmpdir(), "gift-studio-icon-"));
+  const iconPath = path.join(temp, "icon.png");
+  try {
+    const iconStatus = await createGiftIcon(processedPath, sourcePath, iconPath, asset.durationMs);
+    await uploadFile(iconPath, storageFile(asset.id, "icon"), "image/png");
+    const settings = asset.settings as Record<string, unknown>;
+    const [updated] = await db.update(giftStudioAssets)
+      .set({ settings: {
+        ...settings,
+        iconStatus,
+        iconRevision: bumpRevision ? Number(settings.iconRevision ?? 0) + 1 : Number(settings.iconRevision ?? 1),
+      } })
+      .where(and(eq(giftStudioAssets.id, asset.id), eq(giftStudioAssets.ownerId, asset.ownerId)))
+      .returning();
+    return { asset: updated ?? asset, iconStatus };
+  } finally {
+    await fs.rm(temp, { recursive: true, force: true });
+  }
+}
+
+async function ensureGiftStudioIcon(asset: GiftStudioAsset) {
+  const icon = storageFile(asset.id, "icon");
+  const [exists] = await icon.exists();
+  if (exists) return;
+  const temp = await fs.mkdtemp(path.join(tmpdir(), "gift-studio-icon-source-"));
+  const webmPath = path.join(temp, "animation.webm");
+  const sourcePath = path.join(temp, `source.${asset.originalExtension}`);
+  try {
+    await Promise.all([
+      storageFile(asset.id, "webm").download({ destination: webmPath }),
+      storageFile(asset.id, "original", asset.originalExtension).download({ destination: sourcePath }),
+    ]);
+    await saveGiftIconForAsset(asset, sourcePath, webmPath, false);
+  } finally {
+    await fs.rm(temp, { recursive: true, force: true });
+  }
+}
+
+export async function regenerateGiftStudioIcon(ownerId: string, giftId: string) {
+  const asset = await activeOwnedGiftAsset(ownerId, giftId);
+  const temp = await fs.mkdtemp(path.join(tmpdir(), "gift-studio-icon-regenerate-"));
+  const webmPath = path.join(temp, "animation.webm");
+  const sourcePath = path.join(temp, `source.${asset.originalExtension}`);
+  try {
+    await Promise.all([
+      storageFile(asset.id, "webm").download({ destination: webmPath }),
+      storageFile(asset.id, "original", asset.originalExtension).download({ destination: sourcePath }),
+    ]);
+    const result = await saveGiftIconForAsset(asset, sourcePath, webmPath);
+    return {
+      giftId,
+      iconStatus: result.iconStatus,
+      iconUrl: `/api/social/gift-studio/icons/${asset.id}?v=${encodeURIComponent(String((result.asset?.settings as Record<string, unknown> | undefined)?.iconRevision ?? 1))}`,
+    };
+  } finally {
+    await fs.rm(temp, { recursive: true, force: true });
+  }
+}
+
+export async function overrideGiftStudioIcon(ownerId: string, giftId: string, png: Buffer) {
+  if (!png.length || png.length > 5 * 1024 * 1024) throw new RoomError(413, "Choose a PNG icon no larger than 5 MB.");
+  let metadata;
+  try {
+    metadata = await sharp(png).metadata();
+  } catch {
+    throw new RoomError(415, "The icon must be a valid PNG image.");
+  }
+  if (metadata.format !== "png" || !metadata.width || !metadata.height || metadata.width > 2048 || metadata.height > 2048) {
+    throw new RoomError(415, "The icon must be a PNG no larger than 2048 by 2048 pixels.");
+  }
+  const asset = await activeOwnedGiftAsset(ownerId, giftId);
+  const iconStatus: GiftStudioIconStatus = await hasUsefulPngAlpha(png) ? "manual-transparent" : "manual-fallback";
+  const revision = Number((asset.settings as Record<string, unknown>).iconRevision ?? 0) + 1;
+  const normalized = await sharp(png).resize(512, 512, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
+  const temp = await fs.mkdtemp(path.join(tmpdir(), "gift-studio-icon-override-"));
+  const iconPath = path.join(temp, "icon.png");
+  try {
+    await fs.writeFile(iconPath, normalized);
+    await uploadFile(iconPath, storageFile(asset.id, "icon"), "image/png");
+    await db.update(giftStudioAssets)
+      .set({ settings: { ...(asset.settings as Record<string, unknown>), iconStatus, iconRevision: revision } })
+      .where(and(eq(giftStudioAssets.id, asset.id), eq(giftStudioAssets.ownerId, ownerId)));
+    return {
+      giftId,
+      iconStatus,
+      iconUrl: `/api/social/gift-studio/icons/${asset.id}?v=${encodeURIComponent(String(revision))}`,
+    };
+  } finally {
+    await fs.rm(temp, { recursive: true, force: true });
+  }
+}
+
+export async function giftStudioIconFile(input: { versionId: string; ownerId?: string; activeOnly?: boolean }) {
+  if (!/^[0-9a-f-]{36}$/i.test(input.versionId)) throw new RoomError(404, "Gift icon not found.");
+  const [row] = await db.select().from(giftStudioAssets).where(eq(giftStudioAssets.id, input.versionId)).limit(1);
+  if (!row || (input.ownerId && row.ownerId !== input.ownerId) ||
+    (input.activeOnly && row.status !== "active") || (!input.activeOnly && !input.ownerId)) {
+    throw new RoomError(404, "Gift icon not found.");
+  }
+  const catalogItem = row.giftId ? await getGiftCatalogItem(row.giftId) : null;
+  if (catalogItem?.status === "deleted"
+    || (input.activeOnly && row.giftId && catalogItem?.status !== "active")) {
+    throw new RoomError(404, "Gift icon not found.");
+  }
+  const file = storageFile(row.id, "icon");
+  let [exists] = await file.exists();
+  if (!exists && row.status === "active") {
+    await ensureGiftStudioIcon(row);
+    [exists] = await file.exists();
+  }
+  if (!exists) throw new RoomError(404, "Gift icon not found.");
+  return { file };
 }
 
 export async function giftStudioMediaFile(input: {

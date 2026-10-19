@@ -5,6 +5,7 @@ import { db, accountProfiles, socialCreditPurchases, socialLedger, socialSetting
 import { eq } from "drizzle-orm";
 import { recordConfirmedCreditPurchase } from "./credit-purchase-confirmation";
 import { accountBadgeState, saveEquippedBadge } from "./monthly-credit-badges";
+import { ledger } from "./rewards";
 
 test("confirmed credit purchases are idempotent and never count a duplicate twice", async t => {
   const suffix = randomUUID().replaceAll("-", "").slice(0, 12);
@@ -38,6 +39,9 @@ test("confirmed credit purchases are idempotent and never count a duplicate twic
   assert.equal(settings?.badgeEquipPreferenceSet, true);
   assert.equal((await db.select().from(socialCreditPurchases).where(eq(socialCreditPurchases.accountId, accountId))).length, 1);
   assert.equal((await db.select().from(socialLedger).where(eq(socialLedger.accountId, accountId))).length, 1);
+  const [purchaseTransaction] = (await ledger(accountId)).transactions;
+  assert.equal(purchaseTransaction?.kind, "credit_purchase");
+  assert.equal(purchaseTransaction?.delta, 1_000, "a confirmed coin purchase is recorded as coins in");
   assert.equal((await db.select().from(socialWallets).where(eq(socialWallets.accountId, accountId)))[0]?.balance, 1_000);
   await assert.rejects(saveEquippedBadge(accountId, "monthly-tier-5"), /do not have that active badge/i);
   await saveEquippedBadge(accountId, null);

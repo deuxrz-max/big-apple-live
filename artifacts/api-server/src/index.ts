@@ -6,7 +6,11 @@ import { initializeCommunities } from "./lib/community";
 import { startPhotoRetentionScheduler } from "./lib/profile-photo-retention";
 import { initializeModeratorBots, startModeratorBotChatter, startModeratorBotRotation } from "./lib/moderator-bots";
 import { startTestActorControl } from "./lib/test-actor-control";
-import { startComedyTvPlaybackScheduler, startWebSeriesDailySelection } from "./routes/university-video-beam";
+import {
+  startComedyTvPlaybackScheduler,
+  startCommunityRoomPlaybackScheduler,
+  startWebSeriesDailySelection,
+} from "./routes/university-video-beam";
 import { sanitizeAllSavedCommunityVideoPools } from "./lib/room-video-rotation";
 import { startCommunityVideoPoolRefillScheduler } from "./lib/community-video-pool-refill";
 import { startDeveloperContentSyncScheduler } from "./lib/developer-content-sync";
@@ -39,6 +43,7 @@ try {
 }
 startWebSeriesDailySelection();
 startComedyTvPlaybackScheduler();
+startCommunityRoomPlaybackScheduler();
 startCommunityVideoPoolRefillScheduler(roomStore);
 startDeveloperContentSyncScheduler();
 await startHangoutRewardScheduler();

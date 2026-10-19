@@ -26,6 +26,7 @@ import type {
   GiftStudioGiftId,
   GiftStudioProductType,
   GiftStudioVersion,
+  GiftStudioIconStatus,
   SocialGiftCatalogId,
 } from '@workspace/api-client-react';
 import type { ClipSettings, KeyColor } from './processClip';
@@ -34,7 +35,6 @@ import { CoinAmount, GiftIcon } from '@/social/common';
 import { RoomGiftIcon, type RoomGiftId } from '@/gifts/SpiritPup';
 import { classifyKeyColor, detectVideoEdgeColor, drawKeyedPreview, sampleVideoColorAtPoint } from './liveKeyPreview';
 import { createTransparentPngFramesZip } from './downloadPngFramesZip';
-import { SceneModelManager } from '@/scene/SceneModelManager';
 import './gift-studio.css';
 import './gift-studio-production.css';
 
@@ -922,6 +922,37 @@ export function GiftStudioPage() {
       setCatalogActionId(null);
     }
   };
+  const updateCatalogIcon = async (gift: GiftStudioCatalogGift, action: 'regenerate' | 'override', image?: File) => {
+    setCatalogActionId(gift.id);
+    setError('');
+    try {
+      const token = await getToken();
+      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+      const body = action === 'override' ? (() => {
+        const form = new FormData();
+        if (image) form.append('icon', image, image.name || 'gift-icon.png');
+        return form;
+      })() : undefined;
+      const response = await fetch(`/api/social/admin/gift-studio/catalog/${encodeURIComponent(gift.id)}/icon`, {
+        method: action === 'regenerate' ? 'POST' : 'PUT',
+        credentials: 'include',
+        headers,
+        body,
+      });
+      if (!response.ok) throw await responseError(response, `Gift icon update failed (server error ${response.status}).`);
+      const result = await response.json() as { iconStatus: string };
+      await Promise.all([
+        client.invalidateQueries({ queryKey: getGetGiftStudioLibraryQueryKey() }),
+        client.invalidateQueries({ queryKey: getGetSocialMeQueryKey() }),
+      ]);
+      const label = result.iconStatus.includes('transparent') ? 'transparent PNG' : 'fallback snapshot';
+      setStatus(`${gift.name} icon updated (${label}).`);
+    } catch (cause) {
+      setError(ownerErrorText(cause));
+    } finally {
+      setCatalogActionId(null);
+    }
+  };
   const changeCatalogStatus = async (gift: GiftStudioCatalogGift, status: GiftStudioCatalogGift['status']) => {
     if (status === 'deleted' && !window.confirm(`Delete ${gift.name} from the ${gift.productType === 'gift' ? 'gift picker' : 'entrance effect shop'}? It will be hidden, and saved clips and past history will remain.`)) return;
     try {
@@ -1348,6 +1379,8 @@ export function GiftStudioPage() {
                       onType={() => void changeCatalogType(gift)}
                       onReplace={() => beginReplacement(gift)}
                       onPlay={() => gift.animationAvailable ? setPlayingCatalogGift(gift.id as GiftStudioGiftId) : undefined}
+                      onRegenerateIcon={() => void updateCatalogIcon(gift, 'regenerate')}
+                      onOverrideIcon={(image) => void updateCatalogIcon(gift, 'override', image)}
                     />)}
                   </div>
                   <h3 className="gs-library-subheading">Entrance effects</h3>
@@ -1367,6 +1400,8 @@ export function GiftStudioPage() {
                         const version = libraryItems.find((item) => item.giftId === gift.id && item.status === 'active');
                         if (version) setSelectedPreview(version);
                       }}
+                      onRegenerateIcon={() => void updateCatalogIcon(gift, 'regenerate')}
+                      onOverrideIcon={(image) => void updateCatalogIcon(gift, 'override', image)}
                     />)}
                   </div>
                   <h3 className="gs-library-subheading">Saved versions and backups</h3>
@@ -1387,7 +1422,6 @@ export function GiftStudioPage() {
                 </>}
           </section>
         </div>
-        <SceneModelManager />
         <div className="gs-sr-only" aria-live="polite" data-testid="state-announcer">{status}</div>
       </div>
 
@@ -1432,7 +1466,7 @@ export function GiftStudioPage() {
 export default GiftStudioPage;
 
 function CatalogGiftCard({
-  gift, activeVersion, pending, onSave, onStatus, onType, onReplace, onPlay,
+  gift, activeVersion, pending, onSave, onStatus, onType, onReplace, onPlay, onRegenerateIcon, onOverrideIcon,
 }: {
   gift: GiftStudioCatalogGift;
   activeVersion?: GiftStudioVersion;
@@ -1442,6 +1476,8 @@ function CatalogGiftCard({
   onType: () => void;
   onReplace: () => void;
   onPlay: () => void;
+  onRegenerateIcon: () => void;
+  onOverrideIcon: (image: File) => void;
 }) {
   const [name, setName] = useState(gift.name);
   const [price, setPrice] = useState(String(gift.cost));
@@ -1453,6 +1489,13 @@ function CatalogGiftCard({
   const validPrice = /^\d+$/.test(price) && Number.isSafeInteger(amount) && amount > 0;
   const changed = name.trim() !== gift.name || amount !== gift.cost;
   const canPlay = gift.animationAvailable && (gift.productType === 'gift' || !gift.id.startsWith('studio-') || Boolean(activeVersion));
+  const iconLabels: Record<GiftStudioIconStatus, string> = {
+    transparent: 'Automatically generated · transparent',
+    fallback: 'Automatic fallback · plain snapshot',
+    'manual-transparent': 'Manual override · transparent',
+    'manual-fallback': 'Manual override · opaque fallback',
+    builtin: 'Built-in icon',
+  };
   return <article className="gs-catalog-card" data-testid={`card-catalog-gift-${gift.id}`}>
     <div className="gs-catalog-card-head">
       <div className="gs-catalog-preview checker">
@@ -1468,6 +1511,24 @@ function CatalogGiftCard({
         {activeVersion && <small>Custom animation · version {activeVersion.version}</small>}
         <span className={`gs-status ${gift.status === 'active' ? 'active' : ''}`} data-testid={`status-catalog-${gift.id}`}>{gift.status}</span>
       </div>
+    </div>
+    <div className="gs-catalog-icon-meta" data-testid={`gift-icon-status-${gift.id}`}>
+      {gift.iconUrl
+        ? <img src={giftStudioMediaUrl(gift.iconUrl)} alt={`${gift.name} gift picker icon`} />
+        : <span className="gs-catalog-icon-empty" aria-hidden="true"><GiftIcon id={gift.id} size={18} /></span>}
+      <span>{iconLabels[gift.iconStatus]}</span>
+      {activeVersion && <div className="gs-catalog-icon-actions">
+        <button className="gs-chip-button" type="button" onClick={onRegenerateIcon} disabled={pending} data-testid={`button-regenerate-icon-${gift.id}`}><RefreshCw size={13} /> Regenerate</button>
+        <label className="gs-chip-button" data-testid={`button-override-icon-${gift.id}`}>
+          <Upload size={13} /> Override PNG
+          <input type="file" accept="image/png,.png" aria-label={`Override icon for ${gift.name}`}
+            onChange={(event) => {
+              const selected = event.currentTarget.files?.[0];
+              if (selected) onOverrideIcon(selected);
+              event.currentTarget.value = '';
+            }} />
+        </label>
+      </div>}
     </div>
     <form className="gs-catalog-edit" onSubmit={(event) => { event.preventDefault(); if (validPrice && name.trim()) void onSave(name.trim(), amount); }}>
       <label>

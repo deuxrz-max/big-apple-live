@@ -26,9 +26,15 @@ const ROOM_GIFT_IDS = new Set<RoomGiftId>([
 ]);
 const SPECIAL_GIFT_IDS = new Set(['cosmic-encore', 'fireworks', 'rose-shower', 'whip']);
 const isBuiltInRoomGiftId = (id: string): id is RoomGiftId => ROOM_GIFT_IDS.has(id as RoomGiftId);
-const isRoomGiftId = (id: string) => isBuiltInRoomGiftId(id);
-function giftIcon(id: string, size = 48) {
-  return isBuiltInRoomGiftId(id) ? <RoomGiftIcon giftId={id} /> : <GiftIcon id={id} size={size} />;
+function GiftPanelIcon({ gift, size = 48 }: { gift: { id: string; iconUrl?: string | null }; size?: number }) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [gift.iconUrl]);
+  if (gift.iconUrl && !failed) {
+    const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
+    return <img className="spirit-gift-icon" src={`${base}${gift.iconUrl.replace(/^\/+/, '')}`}
+      width={size} height={size} alt="" aria-hidden="true" onError={() => setFailed(true)} />;
+  }
+  return isBuiltInRoomGiftId(gift.id) ? <RoomGiftIcon giftId={gift.id} /> : <GiftIcon id={gift.id} size={size} />;
 }
 
 export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamId, onClose }: {
@@ -39,7 +45,14 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
   streamId?: string;
   onClose: () => void;
 }) {
-  const me = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), staleTime: 0, refetchOnMount: 'always', refetchOnWindowFocus: 'always', refetchInterval: 10000 } });
+  const me = useGetSocialMe({ query: {
+    queryKey: getGetSocialMeQueryKey(),
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: 'always',
+    refetchOnReconnect: 'always',
+    refetchInterval: 3000,
+  } });
   const qc = useQueryClient();
   const [, nav] = useLocation();
   const [busy, setBusy] = useState(false);
@@ -90,17 +103,16 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
   }, [roomId, streamId]);
   const items = useMemo(() => (me.data ? ownedGiftItems(me.data) : []), [me.data]);
   const catalog = useMemo(
-    () => roomId || streamId ? me.data?.gifts.filter(g => isRoomGiftId(g.id)) ?? [] : [],
+    () => roomId || streamId ? me.data?.gifts ?? [] : [],
     [me.data?.gifts, roomId, streamId],
   );
   const categories = useMemo(() => {
-    const roomGifts = catalog.filter(g => isBuiltInRoomGiftId(g.id));
     const specialGifts = catalog.filter(g => SPECIAL_GIFT_IDS.has(g.id));
     const vipGifts = catalog.filter(g => /vip/i.test(`${g.id} ${g.name}`));
     const result: { id: string; label: string; Icon: LucideIcon; gifts: typeof catalog }[] = [
       { id: 'popular', label: 'Popular', Icon: Flame, gifts: catalog },
       ...(specialGifts.length ? [{ id: 'special', label: 'Special', Icon: Sparkles, gifts: specialGifts }] : []),
-      ...(roomGifts.length ? [{ id: 'room', label: 'Room', Icon: House, gifts: roomGifts }] : []),
+      ...(catalog.length > specialGifts.length ? [{ id: 'room', label: 'Room', Icon: House, gifts: catalog.filter(g => !SPECIAL_GIFT_IDS.has(g.id)) }] : []),
       ...(vipGifts.length ? [{ id: 'vip', label: 'VIP', Icon: Crown, gifts: vipGifts }] : []),
     ];
     return result;
@@ -123,10 +135,18 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
     ?? recipients.find(person => person.isHost)
     ?? recipients[0]
     ?? null;
-  const canSend = selectedRecipients.length > 0 && (!!streamId || (!!roomId && !!sessionId)) && !!sel && isRoomGiftId(sel);
+  const canSend = selectedRecipients.length > 0 && (!!streamId || (!!roomId && !!sessionId)) && !!sel && catalog.some(gift => gift.id === sel);
   const unlimited = me.data?.wallet.unlimited === true;
   const totalCost = price * quantity * selectedRecipients.length;
   const enough = unlimited || (me.data?.wallet.balance ?? 0) >= totalCost;
+
+  useEffect(() => {
+    if (!sel || catalog.some(gift => gift.id === sel)) return;
+    retry.current = null;
+    setSel(null);
+    setNotice(null);
+    setError("This gift isn't available right now. The gift list has been refreshed.");
+  }, [catalog, sel]);
 
   useEffect(() => {
     if (recipientSelection.mode === 'one' && !recipients.some(person =>
@@ -323,7 +343,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
                   return <section className="gift-panel-page" key={`${activeCategory.id}-${pageIndex}`} aria-label={`${activeCategory.label}, page ${pageIndex + 1}`}>
                     {featured && <button type="button" className={`gift-panel-featured${sel === featured.id ? ' is-selected' : ''}`}
                       disabled={busy} onClick={() => chooseGift(featured.id)} aria-label={`Select featured gift ${featured.name}`}>
-                      <span className="gift-panel-featured-art">{giftIcon(featured.id, 56)}
+                      <span className="gift-panel-featured-art"><GiftPanelIcon gift={featured} size={56} />
                         {sel === featured.id && <span className="gift-panel-card-quantity">×{quantity}</span>}
                       </span>
                       <span className="gift-panel-featured-copy">
@@ -338,7 +358,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
                         className={`gift-panel-card${sel === gift.id ? ' is-selected' : ''}`}
                         aria-pressed={sel === gift.id} disabled={busy} data-testid={`gift-catalog-${gift.id}`}
                         onClick={() => chooseGift(gift.id)}>
-                        <span className="gift-panel-card-art">{giftIcon(gift.id, 48)}
+                        <span className="gift-panel-card-art"><GiftPanelIcon gift={gift} size={48} />
                           {sel === gift.id && <span className="gift-panel-card-quantity">×{quantity}</span>}
                         </span>
                         <span className="gift-panel-card-name">{gift.name}</span>
@@ -358,7 +378,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
           ) : items.length > 0 ? (
             <div className="gift-panel-grid gift-panel-owned" data-testid="gift-bag-list">
               {items.map(gift => <div key={gift.id} className="gift-panel-owned-card">
-                <span className="gift-panel-card-art">{giftIcon(gift.id, 48)}</span>
+                <span className="gift-panel-card-art"><GiftPanelIcon gift={gift} size={48} /></span>
                 <span className="gift-panel-card-name">{gift.name}</span>
                 {gift.quantity && <span className="gift-panel-owned-count">Owned · {gift.quantity}</span>}
               </div>)}

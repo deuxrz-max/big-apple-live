@@ -130,6 +130,11 @@ export class UniversityVideoBeamStore {
     return durationMs ? tv.startedAtMs + durationMs : null;
   }
 
+  getAutomaticVideoDurationsMs(roomId: string): Record<string, number> {
+    const beam = this.ensure(roomId);
+    return Object.fromEntries(beam.videoDurationsMs);
+  }
+
   assertTvHost(roomId: string, participantId: string): void {
     this.requireHost(this.ensure(roomId), participantId);
   }
@@ -179,21 +184,24 @@ export class UniversityVideoBeamStore {
     currentVideoId: string,
     startedAtMs: number,
     breakEndsAtMs: number | null = null,
+    series?: { title: string | null; date: string | null; episodeNumber: number | null },
+    preserveQueueOrder = false,
   ): UniversityVideoBeamState {
     const beam = this.ensure(roomId);
-    const parentRoomId = this.rooms.communityParentId(beam.roomId)?.toUpperCase() ?? beam.roomId;
-    if (parentRoomId !== "COMEDY" || !this.isOwnerlessTopicRoom(beam.roomId)) {
-      throw new RoomError(404, "Automatic Comedy playback is not available in this room.");
+    if (!this.isOwnerlessTopicRoom(beam.roomId)) {
+      throw new RoomError(404, "Automatic topic playback is not available in this room.");
     }
     const validVideos = videos.filter(video => /^[A-Za-z0-9_-]{11}$/.test(video.videoId));
     if (!validVideos.some(video => video.videoId === currentVideoId)
       || !Number.isSafeInteger(startedAtMs) || startedAtMs < 0) {
-      throw new RoomError(400, "The saved Comedy playback schedule is invalid.");
+      throw new RoomError(400, "The saved room playback schedule is invalid.");
     }
-    const ordered = [
-      ...validVideos.filter(video => video.videoId === currentVideoId),
-      ...validVideos.filter(video => video.videoId !== currentVideoId),
-    ].slice(0, 50);
+    const ordered = (preserveQueueOrder
+      ? validVideos
+      : [
+        ...validVideos.filter(video => video.videoId === currentVideoId),
+        ...validVideos.filter(video => video.videoId !== currentVideoId),
+      ]).slice(0, 50);
     beam.tv.enabled = true;
     beam.tv.defaultSearch = communityDefaultVideoSearch(beam.roomId, this.rooms);
     beam.tv.sourceType = "search";
@@ -205,9 +213,9 @@ export class UniversityVideoBeamStore {
     beam.tv.startedAtMs = startedAtMs;
     beam.tv.breakEndsAtMs = breakEndsAtMs;
     beam.tv.skipVotingEnabled = false;
-    beam.tv.seriesTitle = null;
-    beam.tv.seriesDate = null;
-    beam.tv.seriesEpisodeNumber = null;
+    beam.tv.seriesTitle = series?.title ?? null;
+    beam.tv.seriesDate = series?.date ? utcDateFromKey(series.date) : null;
+    beam.tv.seriesEpisodeNumber = series?.episodeNumber ?? null;
     beam.skipVotes.clear();
     beam.videoDurationsMs.clear();
     for (const [videoId, durationMs] of Object.entries(durationMsByVideoId)) {
@@ -215,6 +223,39 @@ export class UniversityVideoBeamStore {
         beam.videoDurationsMs.set(videoId, durationMs);
       }
     }
+    return this.toState(beam);
+  }
+
+  advanceAutomaticDefaultTvQueue(
+    roomId: string,
+    nextVideoId: string,
+    expectedCurrentVideoId: string,
+    expectedStartedAtMs: number,
+    expectedBreakEndsAtMs: number,
+    nextStartedAtMs: number,
+  ): UniversityVideoBeamState {
+    const beam = this.ensure(roomId);
+    const tv = beam.tv;
+    const normalize = (value: string | null) => (value ?? "").trim().replace(/\s+/g, " ").toLocaleLowerCase("en-US");
+    if (!this.isOwnerlessTopicRoom(beam.roomId)
+      || communityLiveStreamPolicy(beam.roomId, this.rooms)
+      || !tv.enabled
+      || tv.sourceType !== "search"
+      || normalize(tv.sourceValue) !== normalize(tv.defaultSearch)
+      || tv.currentVideoId !== expectedCurrentVideoId
+      || tv.startedAtMs !== expectedStartedAtMs
+      || tv.breakEndsAtMs !== expectedBreakEndsAtMs
+      || expectedBreakEndsAtMs > this.now()
+      || !tv.queue.includes(nextVideoId)
+      || !Number.isSafeInteger(nextStartedAtMs)
+      || nextStartedAtMs !== expectedBreakEndsAtMs) {
+      return this.toState(beam);
+    }
+    tv.currentVideoId = nextVideoId;
+    tv.startedAtMs = nextStartedAtMs;
+    tv.breakEndsAtMs = null;
+    beam.skipVotes.clear();
+    tv.skipSequence += 1;
     return this.toState(beam);
   }
 
@@ -278,6 +319,7 @@ export class UniversityVideoBeamStore {
     durationMsByVideoId: Readonly<Record<string, number>>,
     expectedCurrentVideoId: string,
     expectedStartedAtMs: number,
+    nextStartedAtMs?: number,
   ): UniversityVideoBeamState {
     const beam = this.ensure(roomId);
     const tv = beam.tv;
@@ -306,7 +348,7 @@ export class UniversityVideoBeamStore {
       }
     }
     tv.currentVideoId = validIds[0]!;
-    tv.startedAtMs = this.now();
+    tv.startedAtMs = nextStartedAtMs ?? this.now();
     tv.breakEndsAtMs = null;
     tv.seriesTitle = null;
     tv.seriesDate = null;

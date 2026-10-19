@@ -113,7 +113,12 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     const leader = await listPeople(b, { search: token }, true);
     assert.equal(leader.people[0]!.username, names[1]);
     assert.equal(leader.people.some(person => person.username === names[2]), false, "test accounts are excluded from public leaderboards");
-    assert.equal((await ledger(b)).transactions.filter(r => r.kind === "purchase").length, 1);
+    const bTransactions = (await ledger(b)).transactions;
+    assert.equal(bTransactions.filter(r => r.kind === "purchase").length, 1);
+    assert.ok(bTransactions.some(r => r.kind === "purchase" && r.delta === -5), "a Store purchase is recorded as coins out");
+    assert.ok(bTransactions.some(r => r.kind === "gift_sent" && r.delta < 0), "a sent gift is recorded as coins out");
+    assert.ok(bTransactions.some(r => r.kind === "gift_received" && r.delta > 0), "a received gift is recorded as coins in");
+    assert.equal((await ledger(a)).transactions.some(r => r.kind === "purchase"), false, "one account's ledger never contains another account's purchase");
   });
   await t.test("blocking is bilateral and stops discovery, favorites, gifts and new messages without deleting other history", async () => {
     await relationship(a, names[1]!, "favorite", true);

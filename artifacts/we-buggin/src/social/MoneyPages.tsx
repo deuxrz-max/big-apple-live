@@ -1,19 +1,15 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
-import { Coins, Send, RefreshCw, Trash2, Trophy } from 'lucide-react';
+import { ArrowLeft, Coins, Send, RefreshCw, Trash2, Trophy } from 'lucide-react';
 import {
   useGetSocialMe, useGetSocialConversation, useSendSocialMessage, useDeleteSocialConversation,
   useClaimSocialDailyReward, useGetSocialLedger, useGetSocialLeaderboard,
-  getGetSocialMeQueryKey, getGetSocialConversationQueryKey,
+  getGetSocialMeQueryKey, getGetSocialConversationQueryKey, getGetSocialLedgerQueryKey,
 } from '@workspace/api-client-react';
 import { BadgeMark, CoinAmount, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, fmt, refreshSocial, useIdemKey } from './common';
 import { BadgeArt } from './BadgeArt';
 import { ShinyName } from '@/components/ShinyName';
-
-const coinify = (text: string) => text.replace(/\bcredits?\b/gi, (word) =>
-  /s$/i.test(word) ? 'coins' : 'coin',
-);
 
 export function ThreadPage({ username }: { username: string }) {
   const qc = useQueryClient();
@@ -91,7 +87,6 @@ export function ThreadPage({ username }: { username: string }) {
 export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
   const qc = useQueryClient();
   const me = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), refetchInterval: 10000 } });
-  const ledger = useGetSocialLedger({ query: { queryKey: ['/api/social/wallet/transactions'], refetchInterval: 10000 } });
   const claim = useClaimSocialDailyReward();
   const [msg, setMsg] = useState<{ ok: boolean; t: ReactNode } | null>(null);
   if (me.isLoading) return <Loading />;
@@ -133,13 +128,69 @@ export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
       <div className="sc-gifts">{gifts.map((g) => <div key={g.id} className="sc-gift"><GiftIcon id={g.id} size={26} /><b>{g.name}</b><CoinAmount>{g.cost.toLocaleString()} coins</CoinAmount></div>)}</div>
        <h2 className="sc-h2">Gift bag</h2>
        {inventory.length === 0 ? <p className="sc-sub">No gifts in your bag yet.</p> : <p className="sc-tags">{inventory.map((id) => <i key={id}>{gifts.find((g) => g.id === id)?.name ?? id}</i>)}</p>}
-      <h2 className="sc-h2">Ledger</h2>
-      {ledger.isLoading && <Loading />}
-      {ledger.isError && <ErrorBox error={ledger.error} retry={() => ledger.refetch()} />}
-      {ledger.data && (ledger.data.transactions.length === 0 ? <p className="sc-sub">No transactions yet.</p> : (
-        <ul className="sc-list">{ledger.data.transactions.map((t) => (
-          <li key={t.id} className="sc-ledger"><span><b>{coinify(t.description)}</b>{t.peer && <small> / {t.peer}</small>}<small className="sc-sub"> {fmt(t.createdAt)}</small></span>
-            <b className={t.delta >= 0 ? 'sc-plus' : 'sc-minus'}><CoinAmount>{t.delta > 0 ? '+' : ''}{t.delta.toLocaleString()} coins</CoinAmount></b></li>))}</ul>))}
+    </section>
+  );
+}
+
+const transactionKindLabel: Record<string, string> = {
+  credit_purchase: 'Coins purchased',
+  gift_sent: 'Gift sent',
+  gift_received: 'Gift received',
+  reward: 'Coin reward',
+  purchase: 'Purchase',
+};
+
+function transactionLabel(kind: string) {
+  return transactionKindLabel[kind]
+    ?? kind.split('_').filter(Boolean).map((word) => word[0]?.toUpperCase() + word.slice(1)).join(' ');
+}
+
+function transactionDate(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+export function TransactionHistoryPage() {
+  const transactions = useGetSocialLedger({
+    query: {
+      queryKey: getGetSocialLedgerQueryKey(),
+      staleTime: 0,
+      refetchOnMount: 'always',
+      refetchOnWindowFocus: 'always',
+    },
+  });
+
+  return (
+    <section className="sc-transaction-page" data-testid="page-transaction-history">
+      <Link href="/user-portal" className="bm-back" data-testid="link-transaction-history-back">
+        <ArrowLeft size={17} aria-hidden="true" /> Back to Me
+      </Link>
+      <h1 className="bm-h1 sc-h1">Transaction History</h1>
+      <p className="sc-sub">Your 100 most recent recorded coin transactions.</p>
+      {transactions.isLoading && <Loading />}
+      {transactions.isError && <ErrorBox error={transactions.error} retry={() => transactions.refetch()} />}
+      {transactions.data && (transactions.data.transactions.length === 0
+        ? <p className="sc-transaction-empty" data-testid="state-transactions-empty">No transactions yet.</p>
+        : <ul className="sc-transaction-list" data-testid="list-transaction-history">
+          {transactions.data.transactions.map((transaction) => {
+            const amount = Math.abs(transaction.delta);
+            const amountClass = transaction.delta > 0 ? 'sc-plus' : transaction.delta < 0 ? 'sc-minus' : 'sc-transaction-zero';
+            const sign = transaction.delta > 0 ? '+' : transaction.delta < 0 ? '−' : '';
+            return (
+              <li key={transaction.id} className="sc-transaction" data-testid={`transaction-${transaction.kind}`}>
+                <div className="sc-transaction-copy">
+                  <b className="sc-transaction-kind">{transactionLabel(transaction.kind)}</b>
+                  <span className="sc-transaction-description">{transaction.description}</span>
+                  {transaction.peer && <small className="sc-transaction-peer">With {transaction.peer}</small>}
+                  <time className="sc-transaction-date" dateTime={transaction.createdAt}>{transactionDate(transaction.createdAt)}</time>
+                </div>
+                <b className={`sc-transaction-amount ${amountClass}`}>
+                  <CoinAmount>{sign}{amount.toLocaleString()} coins</CoinAmount>
+                </b>
+              </li>
+            );
+          })}
+        </ul>)}
     </section>
   );
 }

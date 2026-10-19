@@ -8,6 +8,7 @@ import { BEAM_TV_PLAYBACK_STATE_EVENT } from "./beam-tv-playback-events";
 
 type PlayerErrorEvent = { data: number };
 type PlayerReadyEvent = { target: YtPlayer };
+type PlayerStateEvent = { data: number; target: YtPlayer };
 type YtPlayer = {
   destroy(): void;
   stopVideo(): void;
@@ -35,6 +36,7 @@ type YtNamespace = {
     events?: {
       onReady?: (event: PlayerReadyEvent) => void;
       onError?: (event: PlayerErrorEvent) => void;
+      onStateChange?: (event: PlayerStateEvent) => void;
     };
   }) => YtPlayer;
 };
@@ -132,6 +134,7 @@ export function beamTvPropsEqual(previous: BeamTvProps, next: BeamTvProps) {
     && a.playlistId === b.playlistId
     && a.startedAtMs === b.startedAtMs
     && a.breakEndsAtMs === b.breakEndsAtMs
+    && a.serverNowMs === b.serverNowMs
     && a.defaultSearch === b.defaultSearch
     && a.sourceType === b.sourceType
     && a.sourceValue === b.sourceValue
@@ -158,6 +161,7 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
   const soundUnlockedRef = useRef(false);
   const roomGestureSeenRef = useRef(false);
   const [playerReady, setPlayerReady] = useState(false);
+  const [autoplayBlocked, setAutoplayBlocked] = useState(false);
   const [searchUnavailable, setSearchUnavailable] = useState(false);
   const [playerUnavailable, setPlayerUnavailable] = useState(false);
   const reportedFailureVideoId = useRef<string | null>(null);
@@ -210,7 +214,7 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
 
   useEffect(() => {
     serverClockOffsetMs.current = tv.serverNowMs - Date.now();
-  }, [tv.currentVideoId, tv.startedAtMs, tv.breakEndsAtMs]);
+  }, [tv.serverNowMs, tv.currentVideoId, tv.startedAtMs, tv.breakEndsAtMs]);
 
   useEffect(() => {
     if (lastFailureResetVideoId.current === tv.currentVideoId) return;
@@ -280,9 +284,21 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
     let active = true;
     let created: YtPlayer | null = null;
     let readyTimeout: number | undefined;
+    let autoplayCheckTimer: number | undefined;
     const stableHost = playerHost.current;
     setPlayerReady(false);
     setPlayerUnavailable(false);
+    setAutoplayBlocked(false);
+    const checkMutedAutoplay = () => {
+      if (autoplayCheckTimer !== undefined) window.clearTimeout(autoplayCheckTimer);
+      autoplayCheckTimer = window.setTimeout(() => {
+        if (!active || !created || !videoIsPlaying) return;
+        try {
+          const state = created.getPlayerState();
+          if (state === -1 || state === 2) setAutoplayBlocked(true);
+        } catch { /* the player may still be initializing */ }
+      }, 2_500);
+    };
 
     void loadYoutubeApi().then(YT => {
       if (!active) return;
@@ -351,16 +367,28 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
             try { event.target.unloadModule("captions"); } catch { /* some embeds omit the captions module */ }
             if (soundUnlockedRef.current || roomGestureSeenRef.current) requestSound(event.target);
             setPlayerReady(true);
+            checkMutedAutoplay();
           },
           onError: event => {
             if (readyTimeout !== undefined) window.clearTimeout(readyTimeout);
+            if (autoplayCheckTimer !== undefined) window.clearTimeout(autoplayCheckTimer);
             if (active) {
+              setAutoplayBlocked(false);
               setPlayerUnavailable(true);
               const failedVideoId = tvRef.current.currentVideoId;
               if (failedVideoId && reportedFailureVideoId.current !== failedVideoId) {
                 reportedFailureVideoId.current = failedVideoId;
                 void reportPlaybackFailure(failedVideoId, Number(event.data)).catch(() => undefined);
               }
+            }
+          },
+          onStateChange: event => {
+            if (!active) return;
+            if (event.data === 1) {
+              if (autoplayCheckTimer !== undefined) window.clearTimeout(autoplayCheckTimer);
+              setAutoplayBlocked(false);
+            } else if (event.data === -1 || event.data === 2) {
+              checkMutedAutoplay();
             }
           },
         },
@@ -382,6 +410,7 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
     return () => {
       active = false;
       if (readyTimeout !== undefined) window.clearTimeout(readyTimeout);
+      if (autoplayCheckTimer !== undefined) window.clearTimeout(autoplayCheckTimer);
       if (player.current === created) player.current = null;
       try { created?.stopVideo(); } catch { /* player may already be unloading */ }
       try { created?.destroy(); } catch { /* player may already have unloaded */ }
@@ -438,7 +467,14 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
     const interval = window.setInterval(() => {
       syncPlayback();
     }, BEAM_TV_SYNC_CHECK_MS);
-    return () => window.clearInterval(interval);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") syncPlayback();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, [playerReady, requestSound, reportPlaybackFailure, tv.currentVideoId, videoIsPlaying]);
 
   const hasPlayableVideo = videoIsPlaying && !searchUnavailable && !playerUnavailable;
@@ -450,6 +486,28 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
             <div className="ur-tv-player" ref={playerHost} />
             {!soundHintDismissed && (
               <div className="ur-tv-sound-hint" role="status">Tap anywhere for sound</div>
+            )}
+            {playerReady && autoplayBlocked && (
+              <button
+                type="button"
+                className="ur-tv-autoplay-hint"
+                onPointerDown={event => event.stopPropagation()}
+                onClick={event => {
+                  event.stopPropagation();
+                  try {
+                    const instance = player.current;
+                    if (!instance) return;
+                    instance.mute();
+                    instance.setVolume(0);
+                    instance.playVideo();
+                    setAutoplayBlocked(false);
+                  } catch {
+                    setAutoplayBlocked(true);
+                  }
+                }}
+              >
+                Tap to play
+              </button>
             )}
             {!playerReady && (
               <div className="ur-tv-placeholder" role="status">Starting the room video…</div>

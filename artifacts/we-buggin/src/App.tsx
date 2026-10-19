@@ -4,7 +4,7 @@ import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { Link, Redirect, Route, Switch, useLocation, useParams, Router as WouterRouter } from 'wouter';
-import { getGetSceneModelsQueryKey, useGetSceneModels, getGetSocialMeQueryKey, useGetSocialMe } from '@workspace/api-client-react';
+import { getGetSocialMeQueryKey, useGetSocialMe } from '@workspace/api-client-react';
 import { ErrorBoundary, type ErrorFallbackProps } from '@/components/error-boundary';
 import { APP_NAME, Wordmark } from '@/components/brand';
 import { BottomNavigation } from '@/components/bottom-navigation';
@@ -20,8 +20,8 @@ import '@/profile/profile.css';
 import { StorePage } from '@/store/StorePage';
 import { ShinyName } from '@/components/ShinyName';
 import SocialApp from '@/social/SocialApp';
+import { TransactionHistoryPage } from '@/social/MoneyPages';
 import { SignInArtwork } from '@/components/sign-in-artwork';
-import { reportSceneModelLoad } from '@/scene/modelLoadStatus';
 import '@/theme.css';
 import '@/white-theme.css';
 import '@/dark-app-theme.css';
@@ -35,8 +35,6 @@ const queryClient = new QueryClient();
 
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
-const SceneBackdrop = lazy(() => import('@/scene/SceneBackdrop'));
-
 function stripBase(path: string): string {
   return basePath && path.startsWith(basePath) ? path.slice(basePath.length) || '/' : path;
 }
@@ -236,6 +234,16 @@ function OwnProfileRoute() {
   );
 }
 
+function TransactionHistoryRoute() {
+  const { user } = useUser();
+  return (
+    <>
+      <Show when="signed-in">{user && <ProfileGate><TransactionHistoryPage key={user.id} /></ProfileGate>}</Show>
+      <Show when="signed-out"><Redirect to="/sign-in?redirect_url=%2Fuser-portal%2Ftransactions" /></Show>
+    </>
+  );
+}
+
 function StoreRoute() {
   const { user } = useUser();
   return (
@@ -317,80 +325,6 @@ function RoutedErrorBoundary({ children }: { children: ReactNode }) {
     FallbackComponent={isLiveScreen ? LiveRouteErrorFallback : undefined}>{children}</ErrorBoundary>;
 }
 
-function SceneErrorFallback() {
-  // The 3D canvas is decorative; WebGL failures must never take down the app UI.
-  return null;
-}
-
-function canCreateWebGLContext() {
-  try {
-    const canvas = document.createElement("canvas");
-    const attributes: WebGLContextAttributes = {
-      alpha: true,
-      antialias: false,
-      powerPreference: "low-power",
-      failIfMajorPerformanceCaveat: false,
-    };
-    const context = canvas.getContext("webgl2", attributes)
-      ?? canvas.getContext("webgl", attributes)
-      ?? canvas.getContext("experimental-webgl", attributes);
-    if (!context) return false;
-    const loseContext = (context as WebGLRenderingContext).getExtension("WEBGL_lose_context");
-    loseContext?.loseContext();
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function SharedSceneBackdrop() {
-  const { isSignedIn } = useUser();
-  const [idleReady, setIdleReady] = useState(false);
-  const [webglAvailable, setWebglAvailable] = useState<boolean | null>(null);
-  const sceneModels = useGetSceneModels({
-    query: {
-      queryKey: getGetSceneModelsQueryKey(),
-      enabled: Boolean(isSignedIn),
-      retry: false,
-      staleTime: 5 * 60_000,
-      refetchOnWindowFocus: true,
-    },
-  });
-  useEffect(() => {
-    const idleWindow = window as Window & {
-      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
-      cancelIdleCallback?: (handle: number) => void;
-    };
-    const startWhenIdle = () => {
-      setWebglAvailable(canCreateWebGLContext());
-      setIdleReady(true);
-    };
-    const timeout = window.setTimeout(startWhenIdle, 1000);
-    const idle = idleWindow.requestIdleCallback?.(startWhenIdle, { timeout: 1800 });
-    return () => {
-      window.clearTimeout(timeout);
-      if (idle !== undefined) idleWindow.cancelIdleCallback?.(idle);
-    };
-  }, []);
-  const models = isSignedIn
-    ? (sceneModels.data?.models ?? []).map((model) => ({
-      id: model.id,
-      url: model.fileUrl,
-      position: model.position as [number, number, number],
-      rotation: model.rotation as [number, number, number],
-      scale: model.scale,
-    }))
-    : [];
-  if (!idleReady || webglAvailable !== true) return null;
-  return (
-    <ErrorBoundary FallbackComponent={SceneErrorFallback}>
-      <Suspense fallback={null}>
-        <SceneBackdrop models={models} onModelLoad={reportSceneModelLoad} />
-      </Suspense>
-    </ErrorBoundary>
-  );
-}
-
 function LiveRouteErrorFallback({ resetError }: ErrorFallbackProps) {
   return (
     <main className="st-live-page st-live-host-page" style={{
@@ -463,7 +397,6 @@ function ClerkProviderWithRoutes() {
       routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
     >
       <QueryClientProvider client={queryClient}>
-        <SharedSceneBackdrop />
         <ClerkQueryClientCacheInvalidator />
         <div className={`app-page ${isLightScreen ? 'is-light-screen' : ''} ${isLiveScreen ? 'is-live-screen' : ''} ${isBeamRoomScreen ? 'is-beam-screen' : ''} ${isModerationScreen ? 'is-moderation-screen' : ''} ${isDirectoryScreen ? 'is-directory-screen' : ''} ${isGiftStudioScreen ? 'is-gift-studio-screen' : ''}`}><RoutedErrorBoundary>
           <Switch>
@@ -486,6 +419,7 @@ function ClerkProviderWithRoutes() {
             <Route path="/live/:streamId" component={WatchLiveStreamRoute} />
             <Route path="/community" component={CommunityRoute} />
             <Route path="/community/*?" component={CommunityRoute} />
+            <Route path="/user-portal/transactions" component={TransactionHistoryRoute} />
             <Route path="/user-portal/store" component={StoreRoute} />
             <Route path="/user-portal" component={OwnProfileRoute} />
             <Route path="/user-portal/edit" component={Portal} />
