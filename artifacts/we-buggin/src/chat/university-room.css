@@ -250,6 +250,32 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 @keyframes ur-drawer-in{from{transform:translateX(-100%)}to{transform:translateX(0)}}
 @media(prefers-reduced-motion:reduce){.ur-side.is-open{animation:none}.ur-slot.is-speaking .ur-slot-avatar{animation:none}.ur-slot::before{animation:none;background:linear-gradient(135deg,#d63391,#8f49d9 55%,#6f58c4);background-size:100% 100%}.ur-slot:not(.is-occupied)::before{opacity:.46}.ur-tv-frame::before{animation:none;background:linear-gradient(135deg,#d63391,#8f49d9 55%,#6f58c4)}.ur-entry-effect-webp,.ur-entry-effect-video{transition:none}}
 
+/* Occupied seats use the profile image as the full tile surface. */
+.ur-slot.has-person{padding:0;gap:0;background:#17151e}
+.ur-slot.has-person .ur-slot-media{position:absolute;inset:0;display:block;flex:none;width:100%;height:100%;padding:0;border-radius:inherit;background:#15121d}
+.ur-slot.has-person::before,.ur-slot.has-person::after{z-index:4}
+.ur-slot-photo-action,.ur-slot-portrait-layer{position:absolute;inset:0;display:block;width:100%;height:100%;padding:0;border:0;border-radius:inherit;overflow:hidden}
+.ur-slot-photo-action{z-index:1;background:transparent;line-height:0}
+.ur-slot-photo-action:focus-visible{outline:2px solid #d7b7ff;outline-offset:-4px}
+.ur-slot-portrait{position:absolute;inset:0;overflow:hidden;background:radial-gradient(ellipse at 50% 28%,#59416f,#211a31 72%,#11121a)}
+.ur-slot-photo-fill{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
+.ur-slot-identity-fallback{position:absolute;inset:0;display:grid;place-items:center;overflow:hidden}
+.ur-slot-identity-fallback>span,.ur-slot-identity-fallback svg{display:block;width:100%;height:100%}
+.ur-slot-initial-fallback{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:clamp(22px,7vw,42px);font-weight:850;text-shadow:0 2px 12px #0008}
+.ur-slot.has-person .ur-slot-copy{z-index:5;left:0;right:0;bottom:0;display:block;padding:5px 6px;background:rgba(5,6,12,.76);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);text-align:left}
+.ur-slot-name-line{justify-content:flex-start;gap:4px;text-align:left}
+.ur-slot-name-line>.ur-badge-mark,.ur-slot-name-line>.sc-badge-compact{flex:0 0 auto}
+.ur-slot.has-person .ur-slot-name{display:block;flex:1;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;font-size:clamp(7px,2.1vw,9px);font-weight:800;line-height:1.2;text-align:left}
+.ur-slot.has-person .shiny-name{background:none!important;background-image:none!important;color:#fff!important;-webkit-text-fill-color:#fff!important;-webkit-background-clip:border-box!important;text-shadow:0 1px 2px #000;animation:none;filter:none}
+.ur-slot-copy .ur-seat-name-text{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:none!important;background-image:none!important;color:#fff!important;-webkit-text-fill-color:#fff!important;-webkit-background-clip:border-box!important;text-shadow:0 1px 2px #000}
+.ur-slot-copy .ur-name{color:#fff;text-align:left}
+.ur-slot-mic-icon{position:absolute;z-index:6;top:5px;left:5px;display:grid;place-items:center;width:23px;height:23px;border:1px solid rgba(255,255,255,.22);border-radius:8px;background:rgba(5,6,12,.78);color:#fff;box-shadow:0 1px 6px #0008}
+.ur-slot-mic-icon svg{width:13px;height:13px}
+.ur-slot.is-speaking.has-person .ur-slot-media{box-shadow:inset 0 0 0 2px #79dfbb,inset 0 0 14px rgba(121,223,187,.28),0 0 10px rgba(121,223,187,.42)}
+.ur-slot.is-speaking.has-person .ur-slot-media::after{content:"";position:absolute;z-index:7;inset:2px;border:2px solid #79dfbb;border-radius:inherit;box-shadow:0 0 8px rgba(121,223,187,.66);pointer-events:none}
+.ur-slot-actions{position:absolute;z-index:6;top:4px;right:4px;justify-content:flex-end;min-height:0;gap:3px}
+.ur-slot-actions .ur-slot-action{border-color:rgba(255,255,255,.24);background:rgba(5,6,12,.78);box-shadow:0 1px 6px #0008}
+
 /* Comedy gets a warm stage accent while keeping the shared room layout intact. */
 .ur-comedy .ur-title{color:#fff3d1}
 .ur-comedy .ur-comedy-room-icon{margin-right:5px;font-size:.88em}

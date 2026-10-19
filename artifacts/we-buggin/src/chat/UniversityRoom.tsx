@@ -8,7 +8,7 @@ import {
   type ChatMessage, type StreamerPassportBadgeSummary,
   type RoomGiftEvent,
 } from '@workspace/api-client-react';
-import { UserPhoto } from '@/components/user-photo';
+import { photoSrc, UserPhoto } from '@/components/user-photo';
 import { ShinyName } from '@/components/ShinyName';
 import { errMessage, errStatus } from '@/lib/errors';
 import { IdentityAvatar } from '@/lib/identity';
@@ -397,9 +397,26 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                   const mine = slot.participantId === participantId;
                   const joinAvailable = !slot.participantId && !!sessionId && !!participantId && !videoBeam.ownSlot;
                   const isSpeaking = !!slot.participantId && videoBeam.speaking.has(slot.participantId);
-                    const media = slot.participantId ? videoBeam.media[slot.participantId] : undefined;
+                  const media = slot.participantId ? videoBeam.media[slot.participantId] : undefined;
+                  const fallbackName = person ? (person.displayName?.trim() || person.username) : '';
+                  const initials = Array.from(fallbackName).slice(0, 2).join('').toUpperCase() || '?';
+                  const portrait = person ? (
+                    <div className="ur-slot-portrait" aria-hidden="true">
+                      {person.identity ? (
+                        <span className="ur-slot-identity-fallback">
+                          <IdentityAvatar identity={person.identity} size="100%" />
+                        </span>
+                      ) : (
+                        <span className="ur-slot-initial-fallback">{initials}</span>
+                      )}
+                      {person.photoUrl && (
+                        <img className="ur-slot-photo-fill" src={photoSrc(person.photoUrl)} alt=""
+                          onError={event => { event.currentTarget.style.display = 'none'; }} />
+                      )}
+                    </div>
+                  ) : null;
                   return (
-                    <article className={`ur-slot${isSpeaking ? ' is-speaking' : ''}${slot.participantId ? ' is-occupied' : ''}`}
+                    <article className={`ur-slot${isSpeaking ? ' is-speaking' : ''}${slot.participantId ? ' is-occupied' : ''}${person ? ' has-person' : ''}`}
                       key={slot.slotNumber} aria-label={`Speaker slot ${slot.slotNumber}${slot.participantId ? `, ${person?.displayName ?? 'occupied'}` : ', empty'}`}>
                       <div className="ur-slot-media"
                         role={joinAvailable && !videoBeam.busy ? 'button' : undefined}
@@ -420,43 +437,24 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                             {micsLockedDuringVideo ? <LockKeyhole size={13} aria-hidden="true" /> : <MicOff size={13} aria-hidden="true" />}
                           </span>
                         )}
-                        {person && !person.self && (person.photoUrl || person.identity) && (
-                          <button type="button" className="ur-slot-avatar-button"
+                        {person && (person.self ? (
+                          <div className="ur-slot-portrait-layer">{portrait}</div>
+                        ) : (
+                          <button type="button" className="ur-slot-avatar-button ur-slot-photo-action"
                             aria-label={`Actions for ${person.displayName}`}
-                            onClick={event => { event.stopPropagation(); openMenu(person.username, person.displayName, person.participantId, person.displayNameColor); }}>
-                            {person.photoUrl ? (
-                              <span className="ur-slot-avatar ur-slot-photo" aria-hidden="true">
-                                <UserPhoto username={person.username} displayName={person.displayName}
-                                  photoUrl={person.photoUrl} size={46} />
-                              </span>
-                            ) : person.identity ? (
-                              <IdentityAvatar identity={person.identity} size={46} className="ur-slot-avatar ur-slot-art" />
-                            ) : null}
+                            onClick={event => { event.stopPropagation(); openMenu(person.username, person.displayName, person.participantId, person.displayNameColor, person.displayNameTierIndex); }}>
+                            {portrait}
                           </button>
-                        )}
-                        {person && !person.self && !person.identity && !person.photoUrl && (
-                          <button type="button" className="ur-slot-avatar ur-slot-initial ur-slot-avatar-button"
-                            aria-label={`Actions for ${person.displayName}`}
-                            onClick={event => { event.stopPropagation(); openMenu(person.username, person.displayName, person.participantId, person.displayNameColor); }}>
-                            {person.displayName.slice(0, 1)}
-                          </button>
-                        )}
-                        {person?.self && (person.photoUrl ? (
-                          <span className="ur-slot-avatar ur-slot-photo" aria-hidden="true">
-                            <UserPhoto username={person.username} displayName={person.displayName} photoUrl={person.photoUrl} size={46} />
-                          </span>
-                        ) : person.identity ? <IdentityAvatar identity={person.identity} size={46} className="ur-slot-avatar ur-slot-art" /> : (
-                          <span className="ur-slot-avatar ur-slot-initial" aria-hidden="true">{person.displayName.slice(0, 1)}</span>
                         ))}
                         {person ? (
                           <div className="ur-slot-copy">
                             <span className="ur-slot-name-line">
-                              <BadgeMark id={person.badgeId ?? null} label={person.badgeName} imageUrl={person.badgeImage} size={16} compact />
+                              <BadgeMark id={person.badgeId ?? null} label={person.badgeName} imageUrl={person.badgeImage} size={13} compact />
                               {person.self ? <ShinyName className="ur-slot-name" displayNameColor={person.displayNameColor} displayNameTierIndex={person.displayNameTierIndex}>{person.displayName}</ShinyName>
                                 : <button type="button" className="ur-name ur-slot-name"
                                   aria-label={`Actions for ${person.displayName}`}
                                   onClick={event => { event.stopPropagation(); openMenu(person.username, person.displayName, person.participantId, person.displayNameColor, person.displayNameTierIndex); }}>
-                                  <ShinyName displayNameColor={person.displayNameColor} displayNameTierIndex={person.displayNameTierIndex}>{person.displayName}</ShinyName>
+                                  <ShinyName className="ur-seat-name-text" displayNameColor={person.displayNameColor} displayNameTierIndex={person.displayNameTierIndex}>{person.displayName}</ShinyName>
                                 </button>}
                             </span>
                           </div>
