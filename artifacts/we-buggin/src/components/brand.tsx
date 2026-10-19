@@ -3,10 +3,35 @@ import { Link } from 'wouter';
 export const APP_NAME = 'Deux Wild';
 export const BRAND_LOGO_PATH = `${import.meta.env.BASE_URL}brand/deux-wild-logo.png`;
 
+export function LogoImage({
+  size,
+  className = '',
+  alt = 'Deux Wild logo',
+  title,
+  animated = true,
+}: {
+  size?: number;
+  className?: string;
+  alt?: string;
+  title?: string;
+  animated?: boolean;
+}) {
+  return (
+    <span
+      className={`dw-logo-glass ${className}`.trim()}
+      style={size ? { width: size, height: size } : undefined}
+      title={title}
+    >
+      <img className="dw-logo-glass-image" src={BRAND_LOGO_PATH} alt={alt}
+        width={size} height={size} decoding="async" fetchPriority="high" />
+      <span className="dw-logo-glass-highlight" aria-hidden="true" />
+      {animated && <span className="dw-logo-glass-sweep" aria-hidden="true" />}
+    </span>
+  );
+}
+
 export function AppLogo({ size = 36 }: { size?: number }) {
-  return <img className="st-shield-logo" src={BRAND_LOGO_PATH} alt="Deux Wild logo"
-    width={size} height={size} decoding="async" fetchPriority="high"
-    style={{ objectFit: 'contain', flexShrink: 0 }} />;
+  return <LogoImage size={size} className="st-shield-logo" />;
 }
 
 export function Wordmark({ href = '/', className = '' }: { href?: string; className?: string }) {

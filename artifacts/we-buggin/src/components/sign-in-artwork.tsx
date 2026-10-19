@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { BRAND_LOGO_PATH, Wordmark } from './brand';
+import { LogoImage, Wordmark } from './brand';
 import './sign-in-artwork.css';
 
 export function SignInArtwork({ children }: { children: ReactNode }) {
@@ -8,8 +8,7 @@ export function SignInArtwork({ children }: { children: ReactNode }) {
       <Wordmark />
       <div className="st-sign-in-layout">
         <div className="st-sign-in-art" aria-hidden="true">
-          <img src={BRAND_LOGO_PATH} alt="Deux Wild logo"
-            decoding="async" fetchPriority="high" />
+          <LogoImage className="st-sign-in-art-logo" />
         </div>
         <div className="st-sign-in-form">{children}</div>
       </div>

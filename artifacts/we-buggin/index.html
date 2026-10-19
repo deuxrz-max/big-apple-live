@@ -21,17 +21,18 @@
     <link rel="icon" type="image/png" sizes="32x32" href="%BASE_URL%brand/deux-wild-favicon-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="%BASE_URL%brand/deux-wild-apple-touch-icon.png" />
     <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
+    <link rel="stylesheet" href="%BASE_URL%brand/logo-glass.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
       html, body, #root { min-height: 100%; margin: 0; background: #08070b; }
       .dw-brand-splash { min-height: 100dvh; display: grid; place-items: center; background: #08070b; }
-      .dw-brand-splash img { display: block; width: min(38vw, 170px); height: min(38vw, 170px); object-fit: contain; }
+      .dw-brand-splash .dw-logo-glass { width: min(38vw, 170px); height: min(38vw, 170px); }
     </style>
   </head>
   <body>
-    <div id="root"><div class="dw-brand-splash" role="status" aria-label="Loading Deux Wild"><img src="%BASE_URL%brand/deux-wild-logo.png" alt="Deux Wild" /></div></div>
+    <div id="root"><div class="dw-brand-splash" role="status" aria-label="Loading Deux Wild"><span class="dw-logo-glass"><img class="dw-logo-glass-image" src="%BASE_URL%brand/deux-wild-logo.png" alt="Deux Wild" /><span class="dw-logo-glass-highlight" aria-hidden="true"></span><span class="dw-logo-glass-sweep" aria-hidden="true"></span></span></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
