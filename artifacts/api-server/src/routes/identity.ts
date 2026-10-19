@@ -4,7 +4,7 @@ import { getAuth } from "@clerk/express";
 import {
   SaveMyProfileBody, SaveMyProfileResponse, GetMyProfileResponse,
   CreateAccountRoomResponse, JoinAccountRoomParams, JoinAccountRoomResponse,
-  CreateAccountRoomBody,
+  CreateAccountRoomBody, GetEmojiCatalogResponse,
 } from "@workspace/api-zod";
 import { getProfile, saveProfile, requireCompletedProfile } from "../lib/account-profiles";
 import { recordDailyLogin } from '../lib/social/marathon';
@@ -13,11 +13,16 @@ import { getClerkProxyHost } from "../middlewares/clerkProxyMiddleware";
 import { communityMembership, accessFor } from "../lib/community";
 import { nameColorProfilesForAccounts } from "../lib/social/gift-name-color-data";
 import { universityAudioBeamStore } from "../lib/university-audio-beam";
-import { coloredEmoji } from "../lib/emoji-library";
+import { coloredEmoji, emojiCatalog } from "../lib/emoji-library";
 import { claimRoomEntranceEffect } from "../lib/room-entrance-effects";
 import { accountEntranceEffectSelection } from "../lib/social/entrance-effect-preferences";
 
 const router: IRouter = Router();
+router.get("/emojis", (_req, res): void => {
+  res
+    .set("Cache-Control", "public, max-age=86400")
+    .json(GetEmojiCatalogResponse.parse(emojiCatalog));
+});
 router.get("/emojis/:emojiId/:color/image", (req, res): void => {
   const emojiId = Array.isArray(req.params.emojiId) ? req.params.emojiId[0] ?? "" : req.params.emojiId;
   const color = Array.isArray(req.params.color) ? req.params.color[0] ?? "" : req.params.color;

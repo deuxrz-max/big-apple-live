@@ -1,4 +1,4 @@
-# Streamtalk university promo backgrounds
+# Deux Wild university promo backgrounds
 
 The same ordered playlist is used in every university, including overflow rooms.
 Serving copies are mobile-optimized H.264 (up to 540×960, original aspect ratio

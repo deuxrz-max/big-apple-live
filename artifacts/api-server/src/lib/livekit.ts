@@ -80,7 +80,9 @@ export class LiveKitBeamService {
       canPublishSources: input.role === "host"
         ? [TrackSource.CAMERA, TrackSource.MICROPHONE]
         : [],
-      canPublishData: false,
+      // Viewers can send lightweight app data (including live chat) without
+      // gaining permission to publish camera or microphone tracks.
+      canPublishData: input.role === "viewer",
     });
     return { url: settings.url, token: await token.toJwt() };
   }

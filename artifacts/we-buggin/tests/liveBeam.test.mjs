@@ -5,6 +5,7 @@ import { build } from 'esbuild';
 const apiNames = [
   'createAccountRoom', 'joinAccountRoom', 'getRoom', 'getMyProfile', 'saveMyProfile',
   'getRoomMessages', 'sendRoomMessage', 'heartbeatParticipant', 'leaveRoom',
+  'controlRoomMicrophone',
 ];
 const compiled = await build({
   entryPoints: ['src/beam/services/beamService.ts'], bundle: true,
