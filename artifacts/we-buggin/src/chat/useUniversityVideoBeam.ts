@@ -17,6 +17,7 @@ import {
   type RemoteTrack,
 } from "livekit-client";
 import { errMessage, errStatus } from "@/lib/errors";
+import { isBeamMicEnabled, shouldSubscribeToBeamAudio } from "./beam-audio-policy";
 
 function safeBeamError(error: unknown, fallback: string): string {
   const message = errMessage(error, fallback);
@@ -71,6 +72,30 @@ function stopTracks(tracks: LocalTrack[]) {
   }
 }
 
+function syncAudioSubscriptions(
+  room: Room,
+  state: UniversityVideoBeamState,
+  listenerId: string,
+  blockedIds: ReadonlySet<string>,
+  speakerConversationEnabled = false,
+) {
+  const listenerMicEnabled = speakerConversationEnabled
+    && isBeamMicEnabled(state.slots.find(slot => slot.participantId === listenerId));
+  for (const participant of room.remoteParticipants.values()) {
+    const shouldSubscribe = !blockedIds.has(participant.identity)
+      && shouldSubscribeToBeamAudio({
+        listenerId,
+        listenerMicEnabled,
+        publisherId: participant.identity,
+        slots: state.slots,
+      });
+    for (const publication of participant.trackPublications.values()) {
+      if (publication.kind !== Track.Kind.Audio || publication.source !== Track.Source.Microphone) continue;
+      if (publication.isSubscribed !== shouldSubscribe) publication.setSubscribed(shouldSubscribe);
+    }
+  }
+}
+
 export function useUniversityVideoBeam(
   roomId: string,
   roomSessionId: string,
@@ -103,6 +128,13 @@ export function useUniversityVideoBeam(
 
   const applyBeam = useCallback((next: UniversityVideoBeamState) => {
     beamRef.current = next;
+    const room = roomRef.current;
+    if (room) {
+      syncAudioSubscriptions(
+        room, next, latest.current.participantId, blockedParticipantIdsRef.current,
+        roleRef.current === "speaker" && speakerReadyRef.current,
+      );
+    }
     setBeam(next);
   }, []);
 
@@ -175,19 +207,23 @@ export function useUniversityVideoBeam(
         for (const participant of room.remoteParticipants.values()) {
           const entry: { audio?: RemoteTrack | LocalTrack } = {};
           for (const publication of participant.trackPublications.values()) {
-            if (publication.kind === Track.Kind.Audio && blockedParticipantIdsRef.current.has(participant.identity)) {
-              publication.setSubscribed(false);
-              continue;
-            }
             const track = publication.track;
             if (!track) continue;
-            if (track.kind === Track.Kind.Audio) entry.audio = track as RemoteTrack;
+            if (track.kind === Track.Kind.Audio && publication.source === Track.Source.Microphone) {
+              entry.audio = track as RemoteTrack;
+            }
           }
           snapshot[participant.identity] = entry;
         }
         setMedia(snapshot);
         setMediaVersion(version => version + 1);
       };
+      const refreshSubscriptions = () => syncAudioSubscriptions(
+        room, beamRef.current, args.participantId, blockedParticipantIdsRef.current,
+      );
+      room.on(RoomEvent.ParticipantConnected, refreshSubscriptions);
+      room.on(RoomEvent.TrackPublished, refreshSubscriptions);
+      room.on(RoomEvent.TrackUnpublished, refreshMedia);
       room.on(RoomEvent.TrackSubscribed, refreshMedia);
       room.on(RoomEvent.TrackUnsubscribed, refreshMedia);
       room.on(RoomEvent.TrackMuted, refreshMedia);
@@ -211,12 +247,13 @@ export function useUniversityVideoBeam(
         setConnection("error");
         setError("The live connection ended. Rejoin an open speaker spot or wait for the room to reconnect.");
       });
-      await room.connect(token.url, token.token, { autoSubscribe: true });
+      await room.connect(token.url, token.token, { autoSubscribe: false });
       if (!activeRef.current) {
         room.removeAllListeners();
         await room.disconnect();
         return;
       }
+      refreshSubscriptions();
       refreshMedia();
       setConnection("connected");
       try {
@@ -239,13 +276,11 @@ export function useUniversityVideoBeam(
   useEffect(() => {
     const room = roomRef.current;
     if (!room) return;
-    for (const participant of room.remoteParticipants.values()) {
-      const blocked = blockedParticipantIdsRef.current.has(participant.identity);
-      for (const publication of participant.trackPublications.values()) {
-        if (publication.kind === Track.Kind.Audio) publication.setSubscribed(!blocked);
-      }
-    }
-  }, [blockedParticipantIds.join("|")]);
+    syncAudioSubscriptions(
+      room, beamRef.current, participantId, blockedParticipantIdsRef.current,
+      roleRef.current === "speaker" && speakerReadyRef.current,
+    );
+  }, [blockedParticipantIds.join("|"), participantId]);
 
   useEffect(() => {
     activeRef.current = true;
@@ -326,6 +361,7 @@ export function useUniversityVideoBeam(
     let localTracks: LocalTrack[] = [];
     let room: Room | null = null;
     try {
+      if (roleRef.current === "audience") clearRoom(false);
       const latestBeam = await getUniversityVideoBeamState(args.roomId, {
         headers: headers(args.roomSessionId),
         credentials: "include",
@@ -364,20 +400,22 @@ export function useUniversityVideoBeam(
           for (const publication of participant.trackPublications.values()) {
             const track = publication.track;
             if (!track) continue;
-            if (track.kind === Track.Kind.Audio) entry.audio = track as RemoteTrack;
+            if (track.kind === Track.Kind.Audio && publication.source === Track.Source.Microphone) {
+              entry.audio = track as RemoteTrack;
+            }
           }
           snapshot[participant.identity] = entry;
         }
-        const self: { audio?: RemoteTrack | LocalTrack } = {};
-        for (const publication of room!.localParticipant.trackPublications.values()) {
-          const track = publication.track;
-          if (!track) continue;
-          if (track.kind === Track.Kind.Audio) self.audio = track as LocalTrack;
-        }
-        snapshot[args.participantId] = self;
         setMedia(snapshot);
         setMediaVersion(version => version + 1);
       };
+      const refreshSubscriptions = () => syncAudioSubscriptions(
+        room!, beamRef.current, args.participantId, blockedParticipantIdsRef.current,
+        roleRef.current === "speaker" && speakerReadyRef.current,
+      );
+      room.on(RoomEvent.ParticipantConnected, refreshSubscriptions);
+      room.on(RoomEvent.TrackPublished, refreshSubscriptions);
+      room.on(RoomEvent.TrackUnpublished, refreshMedia);
       room.on(RoomEvent.TrackSubscribed, refreshMedia);
       room.on(RoomEvent.TrackUnsubscribed, refreshMedia);
       room.on(RoomEvent.TrackMuted, refreshMedia);
@@ -401,12 +439,13 @@ export function useUniversityVideoBeam(
         setError("Your live connection ended. Your speaker spot was released; tap to rejoin.");
         void doAction(args, { action: "leave-slot" }).catch(() => undefined);
       });
-      await room.connect(token.url, token.token, { autoSubscribe: true });
-      // The server grants microphone publishing only after the speaker connects
-      // and re-checks the room's current Beam TV mic lock.
+      await room.connect(token.url, token.token, { autoSubscribe: false });
+      // The server grants publishing and listening only after validating the
+      // speaker's current seat and microphone state.
       const state = await doAction(args, { action: "speaker-connected" });
       applyBeam(state);
       speakerReadyRef.current = true;
+      refreshSubscriptions();
       refreshMedia();
       setConnection("connected");
       try {
@@ -441,17 +480,19 @@ export function useUniversityVideoBeam(
       setBusy(false);
       try { await refresh(); } catch { /* polling reports the next failure */ }
     }
-  }, [applyBeam, doAction, headers, refresh]);
+  }, [applyBeam, clearRoom, doAction, headers, refresh]);
 
   const runAction = useCallback(async (data: UniversityVideoBeamActionInput) => {
     const args = latest.current;
-    if (actionRef.current || !args.roomSessionId) return;
+    if (actionRef.current || !args.roomSessionId) return false;
     actionRef.current = true;
     setBusy(true);
     setError(null);
+    let succeeded = false;
     try {
       const state = await doAction(args, data);
       applyBeam(state);
+      succeeded = true;
       if (data.action === "leave-slot") {
         const room = roomRef.current;
         roomRef.current = null;
@@ -471,6 +512,7 @@ export function useUniversityVideoBeam(
       setBusy(false);
       try { await refresh(); } catch { /* next scheduled refresh will retry */ }
     }
+    return succeeded;
   }, [applyBeam, doAction, refresh]);
 
   const ownSlot = beam.slots.find(slot => slot.participantId === participantId);
@@ -478,8 +520,7 @@ export function useUniversityVideoBeam(
     const room = roomRef.current;
     if (!room || roleRef.current !== "speaker" || !speakerReadyRef.current || connection !== "connected"
       || !ownSlot || ownSlot.participantId !== participantId) return;
-    const microphoneShouldBeEnabled = !beam.tv.micLockedDuringVideo
-      && !ownSlot.micMuted && !ownSlot.mutedByHost;
+    const microphoneShouldBeEnabled = !ownSlot.micMuted && !ownSlot.mutedByHost;
     let active = true;
     void (async () => {
       try {
@@ -496,8 +537,7 @@ export function useUniversityVideoBeam(
           await room.localParticipant.publishTrack(unpublishedTrack);
           await unpublishedTrack.unmute();
         } else {
-          // A speaker who joined during a video did not get a mic track. They
-          // can opt in after the intermission by tapping Unmute.
+          // A speaker can enable their mic after joining with it muted.
           await room.localParticipant.setMicrophoneEnabled(true);
         }
       } catch (failure) {
@@ -513,7 +553,6 @@ export function useUniversityVideoBeam(
     return () => { active = false; };
   }, [
     applyBeam,
-    beam.tv.micLockedDuringVideo,
     connection,
     doAction,
     ownSlot?.micMuted,

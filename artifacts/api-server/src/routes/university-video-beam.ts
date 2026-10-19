@@ -1218,11 +1218,9 @@ async function refreshParticipantSnapshot(roomName: string) {
 
 function sourcesForSlot(
   slot: UniversityVideoBeamState["slots"][number],
-  micLockedDuringVideo: boolean,
   micOverride?: boolean,
 ): { sources: TrackSource[]; microphoneEnabled: boolean } {
-  const microphoneEnabled = !micLockedDuringVideo
-    && (micOverride ?? (!slot.micMuted && !slot.mutedByHost));
+  const microphoneEnabled = micOverride ?? (!slot.micMuted && !slot.mutedByHost);
   return {
     sources: microphoneEnabled ? [TrackSource.MICROPHONE] : [],
     microphoneEnabled,
@@ -1250,14 +1248,14 @@ async function synchronizeSpeakerMediaPermissions(
     const participantId = slot.participantId;
     if (!participantId || !liveIdentities.has(participantId)) continue;
     let currentState = state;
-    if (!state.tv.micLockedDuringVideo && !slot.micMuted && !slot.mutedByHost) {
+    if (!slot.micMuted && !slot.mutedByHost) {
       const accountId = universityVideoBeamStore.accountIdForParticipant(roomId, participantId);
       if (accountId && isLiveStreamStarting(accountId)) {
         currentState = universityVideoBeamStore.setSelfMedia(roomId, participantId, "mic", false);
       }
     }
     const currentSlot = currentState.slots.find(candidate => candidate.participantId === participantId) ?? slot;
-    const policy = sourcesForSlot(currentSlot, currentState.tv.micLockedDuringVideo);
+    const policy = sourcesForSlot(currentSlot);
     const signature = `${policy.microphoneEnabled}:${policy.sources.join(",")}`;
     if (policies.get(participantId) === signature) continue;
     try {
@@ -1266,16 +1264,6 @@ async function synchronizeSpeakerMediaPermissions(
       );
       policies.set(participantId, signature);
     } catch (failure) {
-      if (state.tv.micLockedDuringVideo) {
-        try {
-          await liveKitBeamService.removeParticipant(roomName, participantId);
-          universityVideoBeamStore.leaveSlot(roomId, participantId);
-          policies.delete(participantId);
-          continue;
-        } catch {
-          throw publicLiveKitFailure(failure);
-        }
-      }
       throw publicLiveKitFailure(failure);
     }
   }
@@ -1320,11 +1308,15 @@ router.post("/account/rooms/:roomId/video-beam/token", async (req, res) => {
   }
 
   try {
+    const ownSlot = input.data.role === "speaker"
+      ? universityVideoBeamStore.slotFor(req.params.roomId, participant.participantId)
+      : null;
     const token = await liveKitBeamService.createToken({
       roomName,
       participantId: participant.participantId,
       displayName: profile.displayName || profile.username,
       role: input.data.role,
+      canSubscribe: ownSlot ? !ownSlot.micMuted && !ownSlot.mutedByHost : false,
     });
     res.set("Cache-Control", "no-store").json(GetUniversityVideoBeamTokenResponse.parse({
       ...token,
@@ -1398,7 +1390,7 @@ router.post("/account/rooms/:roomId/video-beam/actions", async (req, res) => {
         universityVideoBeamStore.assertSelfMedia(roomId, participant.participantId, media, input.data.enabled);
         const slot = universityVideoBeamStore.slotFor(roomId, participant.participantId);
         const current = universityVideoBeamStore.getState(roomId);
-        const policy = sourcesForSlot(slot, current.tv.micLockedDuringVideo, input.data.enabled);
+        const policy = sourcesForSlot(slot, input.data.enabled);
         await liveKitBeamService.setSelfTrackEnabled(
           roomName, participant.participantId, media, input.data.enabled, policy.sources,
         );
@@ -1413,7 +1405,7 @@ router.post("/account/rooms/:roomId/video-beam/actions", async (req, res) => {
         const media = "mic";
         const slot = universityVideoBeamStore.assertHostControl(roomId, participant.participantId, target);
         const current = universityVideoBeamStore.getState(roomId);
-        const policy = sourcesForSlot(slot, current.tv.micLockedDuringVideo, false);
+        const policy = sourcesForSlot(slot, false);
         await liveKitBeamService.disableTrack(roomName, target, media, policy.sources);
         state = universityVideoBeamStore.hostDisableMedia(
           roomId, participant.participantId, target, media,

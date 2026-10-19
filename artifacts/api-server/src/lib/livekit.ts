@@ -30,6 +30,7 @@ export class LiveKitBeamService {
     participantId: string;
     displayName: string;
     role: BeamRole;
+    canSubscribe?: boolean;
   }): Promise<{ url: string; token: string }> {
     const settings = this.getSettings();
     const token = new AccessToken(settings.apiKey, settings.apiSecret, {
@@ -40,10 +41,12 @@ export class LiveKitBeamService {
     token.addGrant({
       roomJoin: true,
       room: input.roomName,
-      canSubscribe: true,
+      // Video-only audience connections cannot hear the seat conversation.
+      // Speaker subscriptions are opened only when their mic is enabled.
+      canSubscribe: input.role === "speaker" && (input.canSubscribe ?? true),
       canPublish: input.role === "speaker",
-      // Speaker tokens start with no media permission. The server grants only
-      // microphone publishing after validating the slot and Beam TV mic lock.
+      // Speaker tokens start with no publish source. The server grants mic
+      // publishing only after validating the slot and current mic state.
       canPublishSources: [],
       canPublishData: false,
     });
@@ -125,7 +128,11 @@ export class LiveKitBeamService {
     const client = this.clientFactory(this.getSettings());
     const participant = await client.getParticipant(roomName, participantId);
     await client.updateParticipant(roomName, participantId, {
-      permission: { canPublish: allowedSources.length > 0, canPublishSources: allowedSources },
+      permission: {
+        canPublish: allowedSources.length > 0,
+        canPublishSources: allowedSources,
+        canSubscribe: microphoneEnabled,
+      },
     });
     const microphone = participant.tracks.find(item => item.source === TrackSource.MICROPHONE);
     if (microphone) {
@@ -150,7 +157,11 @@ export class LiveKitBeamService {
     const targetSource = source === "mic" ? TrackSource.MICROPHONE : TrackSource.CAMERA;
     const track = participant.tracks.find(item => item.source === targetSource);
     await client.updateParticipant(roomName, participantId, {
-      permission: { canPublish: allowedSources.length > 0, canPublishSources: allowedSources },
+      permission: {
+        canPublish: allowedSources.length > 0,
+        canPublishSources: allowedSources,
+        canSubscribe: allowedSources.includes(TrackSource.MICROPHONE),
+      },
     });
     if (track) await client.mutePublishedTrack(roomName, participantId, track.sid, !enabled);
   }

@@ -684,9 +684,9 @@ export class UniversityVideoBeamStore {
     slot.accountId = accountId;
     slot.joinedAt = this.now();
     slot.connectedAt = null;
-    // A person who first joins while a video is already playing starts muted.
-    // Existing speakers keep their saved mic preference through the lock.
-    slot.micMuted = this.isMicLocked(beam);
+    // Joining during playback stays opt-in for the conversation; microphone
+    // use can then be enabled independently of the room video's sound.
+    slot.micMuted = this.isVideoActivelyPlaying(beam);
     slot.cameraOff = true;
     slot.mutedByHost = false;
     slot.cameraDisabledByHost = false;
@@ -771,9 +771,6 @@ export class UniversityVideoBeamStore {
     if (media === "camera") {
       throw new RoomError(410, "University beam seats are audio-only. Camera access is available through Go Live.");
     }
-    if (media === "mic" && enabled && this.isMicLocked(beam)) {
-      throw new RoomError(409, "Microphones are off while a Beam TV video is playing.");
-    }
   }
 
   setSelfMedia(roomId: string, participantId: string, media: "mic" | "camera", enabled: boolean): UniversityVideoBeamState {
@@ -831,7 +828,6 @@ export class UniversityVideoBeamStore {
 
   isAccountMicrophoneActive(accountId: string): boolean {
     for (const beam of this.beams.values()) {
-      if (this.isMicLocked(beam)) continue;
       if (beam.slots.some(slot => slot.accountId === accountId && slot.connectedAt !== null
         && !slot.micMuted && !slot.mutedByHost)) return true;
     }
@@ -1070,7 +1066,9 @@ export class UniversityVideoBeamStore {
         ...beam.tv,
         searchAvailable: Boolean(process.env.YOUTUBE_API_KEY?.trim()),
         videoMetadata: beam.tv.videoMetadata.map(item => ({ ...item })),
-          micLockedDuringVideo: this.isMicLocked(beam),
+          // Retained in the response for API compatibility; video no longer
+          // locks the seat microphone.
+          micLockedDuringVideo: false,
           serverNowMs: this.now(),
         skipVoteCount: beam.skipVotes.size,
         skipVoteTotal: activeAccounts.size,
@@ -1087,7 +1085,7 @@ export class UniversityVideoBeamStore {
     };
   }
 
-  private isMicLocked(beam: Beam): boolean {
+  private isVideoActivelyPlaying(beam: Beam): boolean {
     return this.isOwnerlessTopicRoom(beam.roomId)
       && beam.tv.enabled
       && beam.tv.currentVideoId !== null

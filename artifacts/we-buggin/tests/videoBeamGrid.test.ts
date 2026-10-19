@@ -50,10 +50,25 @@ test('YouTube sound unlocks from the first room gesture without adding a player 
   assert.doesNotMatch(roomComponent, /Tap to hear/);
 });
 
+test('the own seat mic toggles only local video sound and gates seat-conversation audio', () => {
+  assert.match(roomComponent, /data-testid={mine \? `beam-seat-\$\{slot\.slotNumber\}` : undefined}/);
+  assert.match(roomComponent, /toggleOwnMic\(!ownMicEnabled\)/);
+  assert.match(roomComponent, /microphoneEnabled={ownMicEnabled}/);
+  assert.match(beamTv, /setMicrophoneAudioMode/);
+  assert.match(beamTv, /setBeamTvSoundMuted\(instance, enabled\)/);
+  assert.match(beamTv, /microphoneEnabledRef\.current = enabled;\s*soundUnlockedRef\.current = !enabled/);
+  assert.match(beamTv, /if \(!instance\) return true/);
+  assert.match(beamHook, /autoSubscribe:\s*false/);
+  assert.match(beamHook, /shouldSubscribeToBeamAudio/);
+  assert.match(beamHook, /setSubscribed\(shouldSubscribe\)/);
+  assert.doesNotMatch(beamHook, /snapshot\[args\.participantId\]/);
+  assert.match(roomComponent, /onClick=\{leaveOwnSeat\}/);
+});
+
 test('empty slots remain full tiles that viewers can join by tapping or keyboard', () => {
-  assert.match(roomComponent, /className="ur-slot-media"[\s\S]*?role={joinAvailable && !videoBeam\.busy \? 'button' : undefined}/);
-  assert.match(roomComponent, /Join open speaker spot \$\{slot\.slotNumber\}/);
-  assert.match(roomComponent, /joinAvailable \? 'Tap to join' : 'Open spot'/);
+  assert.match(roomComponent, /className="ur-slot-media"[\s\S]*?role={\(mine \|\| joinAvailable \|\| moveAvailable\) && !videoBeam\.busy \? 'button' : undefined}/);
+  assert.match(roomComponent, /\$\{moveAvailable \? 'Move to' : 'Join'\} speaker spot \$\{slot\.slotNumber\}/);
+  assert.match(roomComponent, /moveAvailable \? 'Move here' : joinAvailable \? 'Tap to join' : 'Open spot'/);
   assert.match(roomComponent, /className="ur-slot-empty-copy">[\s\S]*?className="ur-empty-number"[\s\S]*?className="ur-slot-name ur-empty-name"/);
   assert.match(themeCss, /#root \.ur-slot \.ur-slot-empty-copy\s*\{[^}]*align-content:\s*center/);
   assert.doesNotMatch(roomComponent, /Camera and mic start only after you join/);
@@ -65,7 +80,7 @@ test('beam seats ask for microphone only and show an avatar instead of camera vi
   assert.doesNotMatch(beamHook, /facingMode|LocalVideoTrack/);
   assert.match(roomComponent, /<BeamAudioTrack track={media\?\.audio}/);
   assert.doesNotMatch(roomComponent, /VideoBeamMedia|Camera off|Cam off|Flip camera/);
-  assert.match(roomComponent, /<UserPhoto[\s\S]*?photoUrl={person\.photoUrl}/);
+  assert.match(roomComponent, /src={photoSrc\(person\.photoUrl\)}/);
   assert.match(roomComponent, /<IdentityAvatar identity={person\.identity}/);
   assert.match(roomComponent, /ur-slot-initial/);
 });

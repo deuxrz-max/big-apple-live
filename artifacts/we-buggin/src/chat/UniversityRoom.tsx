@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Clapperboard, LockKeyhole, LogOut, Mic, MicOff, X } from 'lucide-react';
+import { Clapperboard, LogOut, Mic, MicOff, X } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -15,6 +15,7 @@ import { IdentityAvatar } from '@/lib/identity';
 import { BadgeMark } from '@/social/common';
 import { useTextRoom } from './useTextRoom';
 import { BeamAudioTrack, useUniversityVideoBeam } from './useUniversityVideoBeam';
+import { isBeamMicEnabled } from './beam-audio-policy';
 import { BeamTv, type BeamTvHandle } from './BeamTv';
 import { BotShield } from './BotShield';
 import { GiftBag, OPEN_ROOM_GIFTS_EVENT } from '@/gifts';
@@ -73,7 +74,21 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
     beamTvRef.current?.activateSoundFromUserGesture();
     if (videoBeam.playbackBlocked) void videoBeam.resumePlayback();
   }, [videoBeam.playbackBlocked, videoBeam.resumePlayback]);
-  const micsLockedDuringVideo = videoBeam.beam.tv.micLockedDuringVideo;
+  const ownMicEnabled = isBeamMicEnabled(videoBeam.ownSlot);
+  const toggleOwnMic = useCallback((enabled: boolean) => {
+    const previousMicState = ownMicEnabled;
+    beamTvRef.current?.setMicrophoneAudioMode(enabled);
+    void videoBeam.toggleMic(enabled).then(succeeded => {
+      if (!succeeded) beamTvRef.current?.setMicrophoneAudioMode(previousMicState);
+    });
+  }, [ownMicEnabled, videoBeam.toggleMic]);
+  const leaveOwnSeat = useCallback(() => {
+    const previousMicState = ownMicEnabled;
+    beamTvRef.current?.setMicrophoneAudioMode(false);
+    void videoBeam.leaveSlot().then(succeeded => {
+      if (!succeeded && previousMicState) beamTvRef.current?.setMicrophoneAudioMode(true);
+    });
+  }, [ownMicEnabled, videoBeam.leaveSlot]);
   const ignoreMut = useSetUniversityIgnore({ request: { headers } });
   const whisperMut = useSendUniversityWhisper({ request: { headers } });
   const ack = useAcknowledgeUniversityRules();
@@ -392,16 +407,12 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                       : videoBeam.connection === 'error' ? 'Connection issue'
                         : videoBeam.beam.beamActive ? 'Joining live room' : 'Start the beam'}
                 </span>
-                {micsLockedDuringVideo && (
-                  <span className="ur-mic-lock-indicator" role="status">
-                    <LockKeyhole size={12} aria-hidden="true" /> Mics off during video
-                  </span>
-                )}
                 {videoBeam.playbackBlocked && (
                   <span className="ur-room-sound-hint" role="status">Tap anywhere for sound</span>
                 )}
               </div>
               <BeamTv ref={beamTvRef} roomName={r.room?.name ?? 'University'}
+                microphoneEnabled={ownMicEnabled}
                 tv={videoBeam.beam.tv} search={videoBeam.searchTv}
                 reportPlaybackFailure={videoBeam.reportTvPlaybackFailure} />
               {isComedyRoom && (
@@ -446,27 +457,36 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                   ) : null;
                   return (
                     <article className={`ur-slot${isSpeaking ? ' is-speaking' : ''}${slot.participantId ? ' is-occupied' : ''}${person ? ' has-person' : ''}`}
-                      key={slot.slotNumber} aria-label={`Speaker slot ${slot.slotNumber}${slot.participantId ? `, ${person?.displayName ?? 'occupied'}` : ', empty'}`}>
+                      key={slot.slotNumber}
+                      aria-label={`Speaker slot ${slot.slotNumber}${slot.participantId ? `, ${person?.displayName ?? 'occupied'}` : ', empty'}`}>
                       <div className="ur-slot-media"
-                        role={(joinAvailable || moveAvailable) && !videoBeam.busy ? 'button' : undefined}
-                        tabIndex={(joinAvailable || moveAvailable) && !videoBeam.busy ? 0 : undefined}
-                        aria-label={(joinAvailable || moveAvailable) && !videoBeam.busy
-                          ? `${moveAvailable ? 'Move to' : 'Join'} speaker spot ${slot.slotNumber}` : undefined}
-                        onClick={(joinAvailable || moveAvailable) && !videoBeam.busy
-                          ? () => void (moveAvailable ? videoBeam.moveToSlot(slot.slotNumber) : videoBeam.joinSpeaker())
+                        role={(mine || joinAvailable || moveAvailable) && !videoBeam.busy ? 'button' : undefined}
+                        tabIndex={(mine || joinAvailable || moveAvailable) && !videoBeam.busy ? 0 : undefined}
+                        aria-pressed={mine ? ownMicEnabled : undefined}
+                        aria-disabled={mine ? videoBeam.busy : undefined}
+                        aria-label={mine
+                          ? `Your speaker spot ${slot.slotNumber}, microphone ${ownMicEnabled ? 'on' : 'off'}. Tap to toggle.`
+                          : (joinAvailable || moveAvailable) && !videoBeam.busy
+                            ? `${moveAvailable ? 'Move to' : 'Join'} speaker spot ${slot.slotNumber}` : undefined}
+                        data-testid={mine ? `beam-seat-${slot.slotNumber}` : undefined}
+                        onClick={(mine || joinAvailable || moveAvailable) && !videoBeam.busy
+                          ? () => mine
+                            ? toggleOwnMic(!ownMicEnabled)
+                            : void (moveAvailable ? videoBeam.moveToSlot(slot.slotNumber) : videoBeam.joinSpeaker())
                           : undefined}
-                        onKeyDown={(joinAvailable || moveAvailable) && !videoBeam.busy ? (event) => {
+                        onKeyDown={(mine || joinAvailable || moveAvailable) && !videoBeam.busy ? (event) => {
                           if (event.key === 'Enter' || event.key === ' ') {
                             event.preventDefault();
-                            void (moveAvailable ? videoBeam.moveToSlot(slot.slotNumber) : videoBeam.joinSpeaker());
+                            if (mine) toggleOwnMic(!ownMicEnabled);
+                            else void (moveAvailable ? videoBeam.moveToSlot(slot.slotNumber) : videoBeam.joinSpeaker());
                           }
                         } : undefined}>
                         {person && <BeamAudioTrack track={media?.audio} />}
-                        {person && (slot.micMuted || slot.mutedByHost || micsLockedDuringVideo) && (
+                        {person && (slot.micMuted || slot.mutedByHost) && (
                           <span className="ur-slot-mic-icon" role="img"
-                            aria-label={micsLockedDuringVideo ? 'Microphone locked off during video' : 'Microphone muted'}
-                            title={micsLockedDuringVideo ? 'Microphone locked off during video' : 'Microphone muted'}>
-                            {micsLockedDuringVideo ? <LockKeyhole size={13} aria-hidden="true" /> : <MicOff size={13} aria-hidden="true" />}
+                            aria-label="Microphone muted"
+                            title="Microphone muted">
+                            <MicOff size={13} aria-hidden="true" />
                           </span>
                         )}
                         {person && (person.self ? (
@@ -505,15 +525,11 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                       {person && !mine && videoBeam.isHost ? (
                         <div className="ur-slot-actions">
                           <button type="button" className="ur-slot-action"
-                            disabled={videoBeam.busy || slot.micMuted || micsLockedDuringVideo}
-                            aria-label={micsLockedDuringVideo
-                              ? `${person.displayName}'s microphone is locked off during the video`
-                              : `Mute ${person.displayName}'s microphone`}
-                            title={micsLockedDuringVideo
-                              ? `${person.displayName}'s microphone is locked off during the video`
-                              : `Mute ${person.displayName}'s microphone`}
+                            disabled={videoBeam.busy || slot.micMuted}
+                            aria-label={`Mute ${person.displayName}'s microphone`}
+                            title={`Mute ${person.displayName}'s microphone`}
                             onClick={() => void videoBeam.hostMuteMic(slot.participantId!)}>
-                            {micsLockedDuringVideo ? <LockKeyhole size={16} /> : <MicOff size={16} />}
+                            <MicOff size={16} />
                           </button>
                           <button type="button" className="ur-slot-action ur-slot-leave" disabled={videoBeam.busy}
                             aria-label={`Remove ${person.displayName} from the beam`} title={`Remove ${person.displayName} from the beam`}
@@ -527,19 +543,16 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
               {videoBeam.ownSlot && (
                 <div className="ur-beam-self-controls" role="group" aria-label="Your beam controls">
                   <button type="button" className="ur-slot-action"
-                    disabled={videoBeam.busy || micsLockedDuringVideo}
-                    aria-pressed={!videoBeam.ownSlot.micMuted && !micsLockedDuringVideo}
-                    aria-label={micsLockedDuringVideo ? 'Microphone locked off during video'
-                      : videoBeam.ownSlot.micMuted ? 'Turn microphone on' : 'Mute microphone'}
-                    title={micsLockedDuringVideo ? 'Microphone locked off during video'
-                      : videoBeam.ownSlot.micMuted ? 'Turn microphone on' : 'Mute microphone'}
-                    onClick={() => void videoBeam.toggleMic(videoBeam.ownSlot!.micMuted)}>
-                    {micsLockedDuringVideo ? <LockKeyhole size={16} />
-                      : videoBeam.ownSlot.micMuted ? <MicOff size={16} /> : <Mic size={16} />}
-                    {micsLockedDuringVideo ? 'Locked' : videoBeam.ownSlot.micMuted ? 'Unmute' : 'Mute'}
+                    disabled={videoBeam.busy}
+                    aria-pressed={ownMicEnabled}
+                    aria-label={ownMicEnabled ? 'Mute microphone' : 'Turn microphone on'}
+                    title={ownMicEnabled ? 'Mute microphone' : 'Turn microphone on'}
+                    onClick={() => toggleOwnMic(!ownMicEnabled)}>
+                    {ownMicEnabled ? <Mic size={16} /> : <MicOff size={16} />}
+                    {ownMicEnabled ? 'Mute' : 'Unmute'}
                   </button>
                   <button type="button" className="ur-slot-action ur-slot-leave"
-                    disabled={videoBeam.busy} onClick={() => void videoBeam.leaveSlot()}
+                    disabled={videoBeam.busy} onClick={leaveOwnSeat}
                     aria-label="Leave beam" title="Leave beam">
                     <LogOut size={16} /> Leave
                   </button>

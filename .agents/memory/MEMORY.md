@@ -17,7 +17,7 @@
 - [Room gift display receipts](room-gift-display-receipts.md) — every successful room-context send needs a shared animation event; payout and inventory classification must stay separate.
 - [Additive schema guards](additive-schema-guards.md) — stop unrelated truncation prompts; apply only approved development additions without deleting histories.
 - [Beam screen layout](beam-screen-layout.md) — participant boxes stay anchored; chat is borderless below them and older messages require chat-only scrolling.
-- [University beam transport](audio-beam-constraints.md) — room seats are audio-only; separate LiveKit Go Live must never overlap a beam microphone.
+- [Eight-seat audio split](audio-beam-constraints.md) — mic-on seats hear one another and locally mute video; mic-off seats and audience hear video only.
 - [Living Beam rooms](living-beam-goal.md) — archived Beam goal; superseded for active routes by the text-chat pivot.
 - [Text-chat follow-ons](text-chat-pivot.md) — optional ownership checks require a unique bio code and reviewer, never an official platform verification claim.
 - [Artifact command environment](artifact-command-environment.md) — one-off shell checks do not necessarily inherit managed service routing variables.

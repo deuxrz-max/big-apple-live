@@ -5,6 +5,7 @@ import {
   shouldCorrectBeamTvDrift,
 } from "./beam-tv-sync";
 import { BEAM_TV_PLAYBACK_STATE_EVENT } from "./beam-tv-playback-events";
+import { setBeamTvSoundMuted } from "./beam-audio-policy";
 
 type PlayerErrorEvent = { data: number };
 type PlayerReadyEvent = { target: YtPlayer };
@@ -104,11 +105,13 @@ function isCnnLiveStream(tv: UniversityVideoBeamTvState) {
 
 export type BeamTvHandle = {
   activateSoundFromUserGesture: () => boolean;
+  setMicrophoneAudioMode: (microphoneEnabled: boolean) => boolean;
 };
 
 type BeamTvProps = {
   roomName: string;
   tv: UniversityVideoBeamTvState;
+  microphoneEnabled: boolean;
   search: (query: string) => Promise<UniversityVideoBeamTvSearchResponse>;
   reportPlaybackFailure: (videoId: string, errorCode: number) => Promise<void>;
 };
@@ -129,6 +132,7 @@ export function beamTvPropsEqual(previous: BeamTvProps, next: BeamTvProps) {
   return previous.roomName === next.roomName
     && previous.search === next.search
     && previous.reportPlaybackFailure === next.reportPlaybackFailure
+    && previous.microphoneEnabled === next.microphoneEnabled
     && a.enabled === b.enabled
     && a.currentVideoId === b.currentVideoId
     && a.playlistId === b.playlistId
@@ -147,6 +151,7 @@ export function beamTvPropsEqual(previous: BeamTvProps, next: BeamTvProps) {
 export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
   roomName,
   tv,
+  microphoneEnabled,
   search,
   reportPlaybackFailure,
 }, ref) {
@@ -155,6 +160,7 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
   const loadedVideoId = useRef<string | null>(null);
   const lastSyncCorrectionAtMs = useRef(0);
   const tvRef = useRef(tv);
+  const microphoneEnabledRef = useRef(microphoneEnabled);
   const serverClockOffsetMs = useRef(tv.serverNowMs - Date.now());
   const autoSearchRef = useRef("");
   const [searchRetryNonce, setSearchRetryNonce] = useState(0);
@@ -169,6 +175,7 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
   const [soundHintDismissed, setSoundHintDismissed] = useState(false);
   const [now, setNow] = useState(Date.now());
   tvRef.current = tv;
+  microphoneEnabledRef.current = microphoneEnabled;
 
   const searchQuery = tv.defaultSearch.trim();
   const videoIsPlaying = tv.enabled
@@ -184,9 +191,13 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
 
   const requestSound = useCallback((instance: YtPlayer) => {
     try {
+      if (microphoneEnabledRef.current) {
+        setBeamTvSoundMuted(instance, true);
+        return false;
+      }
       instance.unMute();
       instance.setVolume(100);
-      instance.playVideo();
+      if (instance.getPlayerState() !== 1) instance.playVideo();
       window.setTimeout(() => {
         try {
           if (player.current === instance && !instance.isMuted()) {
@@ -203,14 +214,48 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
   const activateSoundFromUserGesture = useCallback(() => {
     roomGestureSeenRef.current = true;
     if (videoIsPlaying) setSoundHintDismissed(true);
+    if (microphoneEnabledRef.current) {
+      try {
+        if (player.current) setBeamTvSoundMuted(player.current, true);
+      } catch { /* keep the microphone/video split even if the iframe is unloading */ }
+      return false;
+    }
     if (soundUnlockedRef.current) return true;
     const instance = player.current;
     return instance && videoIsPlaying ? requestSound(instance) : false;
   }, [reportPlaybackFailure, requestSound, videoIsPlaying]);
 
+  const setMicrophoneAudioMode = useCallback((enabled: boolean) => {
+    roomGestureSeenRef.current = true;
+    if (videoIsPlaying) setSoundHintDismissed(true);
+    microphoneEnabledRef.current = enabled;
+    soundUnlockedRef.current = !enabled;
+    const instance = player.current;
+    if (!instance) return true;
+    try {
+      setBeamTvSoundMuted(instance, enabled);
+      return true;
+    } catch {
+      return false;
+    }
+  }, [videoIsPlaying]);
+
   useImperativeHandle(ref, () => ({
     activateSoundFromUserGesture,
-  }), [activateSoundFromUserGesture]);
+    setMicrophoneAudioMode,
+  }), [activateSoundFromUserGesture, setMicrophoneAudioMode]);
+
+  useEffect(() => {
+    const instance = player.current;
+    if (!instance) return;
+    try {
+      if (microphoneEnabled) {
+        setBeamTvSoundMuted(instance, true);
+      } else if (soundUnlockedRef.current) {
+        setBeamTvSoundMuted(instance, false);
+      }
+    } catch { /* the player may be closing during a room transition */ }
+  }, [microphoneEnabled, playerReady]);
 
   useEffect(() => {
     serverClockOffsetMs.current = tv.serverNowMs - Date.now();
@@ -325,10 +370,11 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
           onReady: event => {
             if (!active) return;
             if (readyTimeout !== undefined) window.clearTimeout(readyTimeout);
-            if (!soundUnlockedRef.current) {
-              event.target.mute();
-              event.target.setVolume(0);
-            }
+            try {
+              if (microphoneEnabledRef.current || !soundUnlockedRef.current) {
+                setBeamTvSoundMuted(event.target, true);
+              }
+            } catch { /* continue initializing the player if sound control is unavailable */ }
             const latest = tvRef.current;
             if (isAutomaticTopicQueue(latest) && latest.currentVideoId) {
               const liveStream = isCnnLiveStream(latest);
@@ -365,7 +411,11 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
             }
             lastSyncCorrectionAtMs.current = Date.now();
             try { event.target.unloadModule("captions"); } catch { /* some embeds omit the captions module */ }
-            if (soundUnlockedRef.current || roomGestureSeenRef.current) requestSound(event.target);
+            if (microphoneEnabledRef.current) {
+              try { setBeamTvSoundMuted(event.target, true); } catch { /* player may be unloading */ }
+            } else if (soundUnlockedRef.current || roomGestureSeenRef.current) {
+              requestSound(event.target);
+            }
             setPlayerReady(true);
             checkMutedAutoplay();
           },
@@ -436,11 +486,12 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
           : { videoId: current.currentVideoId, startSeconds: desired });
         loadedVideoId.current = current.currentVideoId;
         lastSyncCorrectionAtMs.current = Date.now();
-        if (soundUnlockedRef.current) {
+        if (microphoneEnabledRef.current) {
+          try { setBeamTvSoundMuted(instance, true); } catch { /* player may be unloading */ }
+        } else if (soundUnlockedRef.current) {
           requestSound(instance);
         } else {
-          instance.mute();
-          instance.setVolume(0);
+          try { setBeamTvSoundMuted(instance, true); } catch { /* player may be unloading */ }
         }
         return;
       }

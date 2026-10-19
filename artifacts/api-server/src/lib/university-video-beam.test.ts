@@ -54,7 +54,7 @@ test("Comedy playback restores the server schedule and advances continuously wit
   );
   assert.equal(started.tv.currentVideoId, "abc12345678");
   assert.deepEqual(started.tv.queue, ["abc12345678", "def12345678"]);
-  assert.equal(started.tv.micLockedDuringVideo, true);
+  assert.equal(started.tv.micLockedDuringVideo, false);
 
   now = 2_000;
   const next = beam.advanceAutomaticDefaultTvVideo(
@@ -64,7 +64,7 @@ test("Comedy playback restores the server schedule and advances continuously wit
   assert.equal(next.tv.currentVideoId, "def12345678");
   assert.equal(next.tv.startedAtMs, 2_000);
   assert.equal(next.tv.breakEndsAtMs, null);
-  assert.equal(next.tv.micLockedDuringVideo, true);
+  assert.equal(next.tv.micLockedDuringVideo, false);
 
   const restoredStore = new UniversityVideoBeamStore(rooms, () => 2_500);
   const restored = restoredStore.restoreAutomaticDefaultTvQueue(
@@ -77,7 +77,7 @@ test("Comedy playback restores the server schedule and advances continuously wit
   );
   assert.equal(restored.tv.currentVideoId, "def12345678");
   assert.equal(restored.tv.startedAtMs, 2_000);
-  assert.equal(restored.tv.micLockedDuringVideo, true);
+  assert.equal(restored.tv.micLockedDuringVideo, false);
 });
 
 function createRoom(
@@ -420,11 +420,13 @@ test("public Beam TV uses its curated topic search and holds a synchronized inte
   assert.deepEqual(state.tv.queue, ["dQw4w9WgXcQ", "5qap5aO4i9A"]);
   assert.equal(state.tv.startedAtMs, now);
   assert.equal(beam.getNextAutomaticPlaybackTransitionAt("MUSIC1"), now + 10_000);
-  assert.equal(state.tv.micLockedDuringVideo, true);
+  assert.equal(state.tv.micLockedDuringVideo, false);
   assert.equal(state.tv.breakEndsAtMs, null);
-  assert.throws(() => beam.setSelfMedia("MUSIC1", host.participantId, "mic", true),
-    (error: unknown) => error instanceof RoomError && error.status === 409,
-    "the server rejects attempts to enable a microphone during playback");
+  state = beam.setSelfMedia("MUSIC1", host.participantId, "mic", true);
+  assert.equal(state.slots.find(slot => slot.participantId === host.participantId)?.micMuted, false,
+    "a seated participant can enable their mic during playback");
+  assert.equal(state.tv.currentVideoId, "dQw4w9WgXcQ");
+  assert.equal(state.tv.startedAtMs, now, "changing microphone state preserves the shared video clock");
   state = beam.joinSlot("MUSIC1", viewer.participantId, "viewer");
   assert.equal(state.slots.find(slot => slot.participantId === viewer.participantId)?.micMuted, true,
     "a speaker joining mid-video starts muted");
@@ -439,7 +441,7 @@ test("public Beam TV uses its curated topic search and holds a synchronized inte
   state = beam.getState("MUSIC1");
   assert.equal(state.tv.currentVideoId, "dQw4w9WgXcQ", "the current video remains selected during its intermission");
   assert.equal(state.tv.breakEndsAtMs, now + 180_000);
-  assert.equal(state.tv.micLockedDuringVideo, false, "microphones unlock during the intermission");
+  assert.equal(state.tv.micLockedDuringVideo, false, "video intermission does not change microphone availability");
   assert.equal(state.tv.serverNowMs, now);
   assert.throws(() => beam.actOnTv("MUSIC1", viewer.participantId, {
     action: "publish-playback",
@@ -476,7 +478,7 @@ test("public Beam TV uses its curated topic search and holds a synchronized inte
   assert.equal(state.tv.currentVideoId, "5qap5aO4i9A", "the next video starts when the shared break ends");
   assert.equal(state.tv.startedAtMs, breakEndsAt);
   assert.equal(state.tv.breakEndsAtMs, null);
-  assert.equal(state.tv.micLockedDuringVideo, true);
+  assert.equal(state.tv.micLockedDuringVideo, false);
   assert.equal(beam.getNextAutomaticPlaybackTransitionAt("MUSIC1"), breakEndsAt + 10_000);
   state = beam.actOnTv("MUSIC1", viewer.participantId, {
     action: "publish-playback",
@@ -488,8 +490,9 @@ test("public Beam TV uses its curated topic search and holds a synchronized inte
   assert.equal(state.slots.find(slot => slot.participantId === host.participantId)?.micMuted, true,
     "a manual mute during the break remains in effect for the next video");
   assert.equal(state.slots.find(slot => slot.participantId === viewer.participantId)?.micMuted, true);
-  assert.throws(() => beam.setSelfMedia("MUSIC1", viewer.participantId, "mic", true),
-    (error: unknown) => error instanceof RoomError && error.status === 409);
+  state = beam.setSelfMedia("MUSIC1", viewer.participantId, "mic", true);
+  assert.equal(state.slots.find(slot => slot.participantId === viewer.participantId)?.micMuted, false,
+    "a seated participant can toggle the mic on during the next video as well");
   state = beam.actOnTv("MUSIC1", viewer.participantId, {
     action: "publish-playback",
     currentVideoId: "5qap5aO4i9A",
@@ -546,7 +549,9 @@ test("all configured categories use their settings across overflow rooms", () =>
     } else if (room.label === "Pro Wrestling") {
       assert.equal(policy?.order, "date");
       assert.equal(policy?.publishedWithinDays, undefined);
-      assert.deepEqual(policy?.trustedChannelTitles, ["All Elite Wrestling", "WWE", "TNA Wrestling"]);
+      assert.deepEqual(policy?.trustedChannelTitles, [
+        "All Elite Wrestling", "WWE", "TNA Wrestling", "Ring of Honor Wrestling",
+      ]);
     } else if (room.label === "History") {
       assert.equal(policy?.order, "date");
       assert.deepEqual(policy?.trustedChannelTitles, ["HISTORY"]);
@@ -576,7 +581,7 @@ test("all configured categories use their settings across overflow rooms", () =>
   assert.equal(COMMUNITY_ROOMS.length, 21);
   const wrestlingPolicy = communityWrestlingSearchPolicy("KIDS01", rooms);
   assert.deepEqual(wrestlingPolicy?.channels.map(channel => channel.channelTitle),
-    ["All Elite Wrestling", "WWE", "TNA Wrestling"]);
+    ["All Elite Wrestling", "WWE", "TNA Wrestling", "Ring of Honor Wrestling"]);
   assert.deepEqual(
     communityWrestlingSearchPolicy("KIDS012", rooms)?.channels.map(channel => channel.channelId),
     wrestlingPolicy?.channels.map(channel => channel.channelId),
@@ -643,13 +648,13 @@ test("Web Series plays episodes in order, loops, and carries its title through t
   }
 });
 
-test("Pro Wrestling keeps the full mixed newest-first lineup from all three official channels", () => {
+test("Pro Wrestling keeps the full mixed newest-first lineup from all four official channels", () => {
   const rooms = new RoomStore();
   createRoom(rooms, "KIDS01", "history-pro-wrestling", undefined, "Pro Wrestling");
   const beam = new UniversityVideoBeamStore(rooms, () => 900_000);
   const viewer = addMember(rooms, "KIDS01", "viewer");
   beam.joinSlot("KIDS01", viewer.participantId, "viewer");
-  const channels = ["All Elite Wrestling", "WWE", "TNA Wrestling"];
+  const channels = ["All Elite Wrestling", "WWE", "TNA Wrestling", "Ring of Honor Wrestling"];
   const videos = Array.from({ length: 30 }, (_, index) => ({
     videoId: `PW${String(index).padStart(9, "0")}`,
     title: `Official match highlight ${index + 1}`,
@@ -685,7 +690,7 @@ test("a speaker muted by choice stays muted when a video ends and the break begi
   assert.equal(state.slots.find(slot => slot.participantId === speaker.participantId)?.micMuted, true);
 });
 
-test("Movies keeps the room microphone locked during playback and unlocks for the three-minute break", () => {
+test("Movies allows mic toggles during playback and starts newly seated users muted", () => {
   let now = 800_000;
   const rooms = new RoomStore(() => now);
   createRoom(rooms, "MOVIES", "history-movies", undefined, "Movies");
@@ -695,11 +700,9 @@ test("Movies keeps the room microphone locked during playback and unlocks for th
   const state = beam.initializeDefaultTvQueue("MOVIES", communityDefaultVideoSearch("MOVIES", rooms), [
     { videoId: "movie123456", title: "Feature film", channelTitle: "Licensed Movies", description: null },
   ], { movie123456: 5_000 });
-  assert.equal(state.tv.micLockedDuringVideo, true);
-  assert.throws(
-    () => beam.setSelfMedia("MOVIES", speaker.participantId, "mic", true),
-    (error: unknown) => error instanceof RoomError && error.status === 409,
-  );
+  assert.equal(state.tv.micLockedDuringVideo, false);
+  const talking = beam.setSelfMedia("MOVIES", speaker.participantId, "mic", true);
+  assert.equal(talking.slots.find(slot => slot.participantId === speaker.participantId)?.micMuted, false);
 
   now += 5_000;
   const breakState = beam.getState("MOVIES");
@@ -880,7 +883,7 @@ test("Beam TV accepts a keyless playlist URL flow and synchronizes its player qu
   assert.equal(state.tv.startedAtMs, now - 8_000);
 });
 
-test("LiveKit audience access is subscribe-only and tokens are room-scoped", async () => {
+test("only active seat microphones can subscribe to the room audio conversation", async () => {
   const fakeSettings: LiveKitSettings = {
     url: "wss://live.example.test",
     apiKey: "test-public-key",
@@ -897,7 +900,8 @@ test("LiveKit audience access is subscribe-only and tokens are room-scoped", asy
   assert.equal(audience.url, fakeSettings.url);
   assert.equal(claims.video.room, "streamtalk-test-room");
   assert.equal(claims.video.roomJoin, true);
-  assert.equal(claims.video.canSubscribe, true);
+  assert.equal(claims.video.canSubscribe, false,
+    "video-only audience connections cannot subscribe to seat conversation audio");
   assert.equal(claims.video.canPublish, false);
   assert.equal(audience.token.includes(fakeSettings.apiSecret), false);
 
@@ -906,6 +910,7 @@ test("LiveKit audience access is subscribe-only and tokens are room-scoped", asy
     participantId: "00000000-0000-4000-8000-000000000002",
     displayName: "Speaker",
     role: "speaker",
+    canSubscribe: true,
   });
   const speakerClaims = JSON.parse(Buffer.from(speaker.token.split(".")[1]!, "base64url").toString("utf8"));
   assert.equal(speakerClaims.video.canPublish, true);
@@ -914,12 +919,12 @@ test("LiveKit audience access is subscribe-only and tokens are room-scoped", asy
     "audio beam speaker tokens start with no media sources; server policy grants microphone only after validation");
   assert.equal(speaker.token.includes(fakeSettings.apiSecret), false);
 
-  const policyUpdates: Array<{ sources: TrackSource[]; muted: boolean }> = [];
+  const policyUpdates: Array<{ sources: TrackSource[]; muted: boolean; canSubscribe: boolean }> = [];
   const policyClient = {
     getParticipant: async () => ({ tracks: [{ source: TrackSource.MICROPHONE, sid: "mic-track" }] }),
     updateParticipant: async (_room: string, _participant: string,
-      update: { permission: { canPublish: boolean; canPublishSources: TrackSource[] } }) => {
-      policyUpdates.push({ sources: update.permission.canPublishSources, muted: false });
+      update: { permission: { canPublish: boolean; canPublishSources: TrackSource[]; canSubscribe: boolean } }) => {
+      policyUpdates.push({ sources: update.permission.canPublishSources, muted: false, canSubscribe: update.permission.canSubscribe });
     },
     mutePublishedTrack: async (_room: string, _participant: string, _track: string, muted: boolean) => {
       policyUpdates.at(-1)!.muted = muted;
@@ -929,12 +934,19 @@ test("LiveKit audience access is subscribe-only and tokens are room-scoped", asy
     () => fakeSettings,
     () => policyClient as unknown as import("livekit-server-sdk").RoomServiceClient,
   );
+  await policyService.setSelfTrackEnabled("streamtalk-test-room", "speaker", "mic", false, []);
+  await policyService.setSelfTrackEnabled(
+    "streamtalk-test-room", "speaker", "mic", true, [TrackSource.MICROPHONE],
+  );
   await policyService.applySpeakerMediaPolicy("streamtalk-test-room", "speaker", [], false);
   await policyService.applySpeakerMediaPolicy("streamtalk-test-room", "speaker", [TrackSource.MICROPHONE], true);
-  assert.deepEqual(policyUpdates.map(update => update.muted), [true, false],
-    "server-side media policy mutes during video and restores only the previously allowed state");
+  assert.deepEqual(policyUpdates.map(update => update.muted), [true, false, true, false],
+    "server-side mic policy disables and enables the publisher track with the toggle");
   assert.deepEqual(policyUpdates[0]?.sources, []);
   assert.deepEqual(policyUpdates[1]?.sources, [TrackSource.MICROPHONE]);
+  assert.deepEqual(policyUpdates.slice(0, 2).map(update => update.canSubscribe), [false, true],
+    "seat conversation subscription follows the same mic toggle");
+  assert.deepEqual(policyUpdates.slice(2).map(update => update.canSubscribe), [false, true]);
 });
 
 test("standalone Go Live tokens publish camera and mic only for the host", async () => {
@@ -983,7 +995,7 @@ test("CNN News plays 15-minute live segments, opens the three-minute mic break, 
   now = state.tv.breakEndsAtMs!;
   state = beam.getState("NEWS01");
   assert.equal(state.tv.currentVideoId, liveVideoId);
-  assert.equal(state.tv.micLockedDuringVideo, true);
+  assert.equal(state.tv.micLockedDuringVideo, false);
   assert.equal(state.tv.startedAtMs, now);
 
   state = beam.refreshAutomaticDefaultTvQueue("NEWS01", defaultSearch, [{
