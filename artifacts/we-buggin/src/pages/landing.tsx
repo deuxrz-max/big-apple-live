@@ -30,7 +30,7 @@ export default function Landing() {
               Know your friends by <span className="text-primary">face</span>, hear them by <span className="text-[hsl(200_92%_42%)]">voice</span>.
             </h1>
             <p className="mt-6 max-w-lg text-lg">
-              Streamtalk is a room for talking. Everyone keeps one dedicated name and one hand-built emoji identity. No cameras. No avatars that wiggle when you speak.
+              Deux Wild is a room for talking. Everyone keeps one dedicated name and one hand-built emoji identity. No cameras. No avatars that wiggle when you speak.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/sign-up" className="btn btn-pink text-lg" data-testid="button-hero-sign-up">Claim your name</Link>

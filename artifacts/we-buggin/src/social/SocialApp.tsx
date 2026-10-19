@@ -8,7 +8,7 @@ import './social.css';
 import { ErrorBox, Loading, errStatus, refreshSocial } from './common';
 import { BlocksPage, CommunityPage, FavoritesPage, MyProfilePage, PersonPage } from './PeoplePages';
 import { ModerationQueue } from '@/chat/ChatApp';
-import { Wordmark } from '@/components/brand';
+import { APP_NAME, Wordmark } from '@/components/brand';
 import { BotProfile } from '@/profile/ProfileView';
 import { BuyCreditsPage } from './BuyCreditsPage';
 import { InboxPage } from './InboxPage';
@@ -38,13 +38,13 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
   const me = useGetSocialMe();
   useEffect(() => { refreshSocial(qc); }, [path, qc]);
     useEffect(() => {
-      document.title = path === '/community/moderation' ? 'Moderation — Streamtalk'
-        : path === '/community/reports' ? 'Safety reports — Streamtalk'
-        : path === '/community/gift-studio' ? 'Gift Studio — Streamtalk'
-        : isMessagesPath ? 'Messages — Streamtalk'
-          : path === '/community/favorites' ? 'Following — Streamtalk'
-            : 'People — Streamtalk';
-      return () => { document.title = 'Streamtalk'; };
+      document.title = path === '/community/moderation' ? `Moderation — ${APP_NAME}`
+        : path === '/community/reports' ? `Safety reports — ${APP_NAME}`
+        : path === '/community/gift-studio' ? `Gift Studio — ${APP_NAME}`
+        : isMessagesPath ? `Messages — ${APP_NAME}`
+          : path === '/community/favorites' ? `Following — ${APP_NAME}`
+            : `People — ${APP_NAME}`;
+      return () => { document.title = APP_NAME; };
     }, [path]);
   const access = useGetChatAccess();
   const bare = path.startsWith('/community/people/') || path.startsWith('/community/bots/');
@@ -100,7 +100,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
               <Route path="/community/moderation" component={ModerationQueue} />
               <Route path="/community/reports">{() => access.data?.owner
                 ? <SafetyReportsPage />
-                : <div className="sc-empty" role="status" data-testid="status-reports-access"><h2>Owner access required</h2><p>Safety reports are private to the Streamtalk owner.</p><Link href="/community" className="bm-btn">Back to People</Link></div>}</Route>
+                : <div className="sc-empty" role="status" data-testid="status-reports-access"><h2>Owner access required</h2><p>Safety reports are private to the Deux Wild owner.</p><Link href="/community" className="bm-btn">Back to People</Link></div>}</Route>
               <Route path="/community/passport-review">{() => access.data?.owner
                 ? <StreamerPassportReview />
                 : <div className="sc-empty" role="status" data-testid="status-passport-review-access"><h2>Moderator access required</h2><p>This review desk is limited to authorized moderators.</p><Link href="/community" className="bm-btn">Back to People</Link></div>}</Route>
@@ -108,7 +108,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
                 ? <GiftStudioPage />
                 : access.isLoading
                   ? <Loading />
-                  : <div className="sc-empty" role="status" data-testid="status-gift-studio-access"><h2>Owner access required</h2><p>Gift Studio is available only to the Streamtalk owner.</p><Link href="/community/profile" className="bm-btn">Back to Me</Link></div>}</Route>
+                  : <div className="sc-empty" role="status" data-testid="status-gift-studio-access"><h2>Owner access required</h2><p>Gift Studio is available only to the Deux Wild owner.</p><Link href="/community/profile" className="bm-btn">Back to Me</Link></div>}</Route>
               <Route path="/community/rewards"><RewardsPage /></Route>
               <Route path="/community/coins" component={BuyCreditsPage} />
               {/* Keep the old address working for saved links; new links use /coins. */}

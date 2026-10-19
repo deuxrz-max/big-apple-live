@@ -487,7 +487,8 @@ body.streamtalk-directory-screen #root .app-bottom-link{position:relative}
 .ch.st-home .ch-in{max-width:650px}
 .ch.st-home .st-dir-lockup .st-brand{display:grid;place-items:center;width:38px;height:38px;border:1px solid rgba(238,194,255,.24);border-radius:12px;background:linear-gradient(145deg,#2b1834,#17121d);box-shadow:0 4px 13px #0005}
 .ch.st-home .st-dir-lockup .st-shield-logo{width:29px;height:29px}
-.ch.st-home .st-home-app-logo{display:grid;place-items:center;width:38px;height:38px;border:1px solid rgba(238,194,255,.24);border-radius:12px;background:linear-gradient(145deg,#32203b,#17121d);box-shadow:0 4px 13px #0005;color:#a6ff00;text-decoration:none;font:900 15px 'Bricolage Grotesque','DM Sans',sans-serif;letter-spacing:-.06em}
+.ch.st-home .st-home-app-logo{display:grid;place-items:center;width:38px;height:38px;overflow:hidden;border:1px solid rgba(238,194,255,.24);border-radius:12px;background:#050505;box-shadow:0 4px 13px #0005;text-decoration:none}
+.ch.st-home .st-home-app-logo .st-shield-logo{width:100%;height:100%;object-fit:cover}
 .ch.st-home .st-dir-wallet{gap:6px;border-color:rgba(155,218,161,.16);background:#132019;color:#e2f2e4}
 .ch.st-home .st-dir-wallet.is-unlimited{border-color:rgba(115,225,129,.2);background:#12251a;color:#d5f5d8}
 .st-dir-wallet.is-unlimited i{width:6px;height:6px;border-radius:50%;background:#54e878;box-shadow:0 0 8px #54e87880}

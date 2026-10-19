@@ -78,7 +78,7 @@ function httpStatus(error: unknown): number {
 export function cameraFailureMessage(error: unknown): string {
   const name = error instanceof Error ? error.name : "";
   if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-    return "This browser cannot access the camera. Open Streamtalk in Chrome or Brave and allow camera access.";
+    return "This browser cannot access the camera. Open Deux Wild in Chrome or Brave and allow camera access.";
   }
   if (["NotAllowedError", "PermissionDeniedError", "SecurityError"].includes(name)) {
     return "Camera or microphone permission was denied. Allow access in browser settings, then try again.";

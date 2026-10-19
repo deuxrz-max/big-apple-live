@@ -27,7 +27,7 @@ import type { RoomEntranceEffectEvent } from './useTextRoom';
 import './university-room.css';
 import './bot-moderation.css';
 
-const RULES = "Stick to the room's topic. Be kind — no harassment or hate. Nothing sexual or explicit, in chat, names or photos. Don't share real names, phone numbers, addresses or other contact details. Don't hog the screen, no ALL CAPS, no ads or spam. Use Ignore on anyone bothering you, or Block and Report for anything serious. Public university chat is moderated by Streamtalk bots. Whispers and direct messages are private and are not scanned by these bots.";
+const RULES = "Stick to the room's topic. Be kind — no harassment or hate. Nothing sexual or explicit, in chat, names or photos. Don't share real names, phone numbers, addresses or other contact details. Don't hog the screen, no ALL CAPS, no ads or spam. Use Ignore on anyone bothering you, or Block and Report for anything serious. Public university chat is moderated by Deux Wild bots. Whispers and direct messages are private and are not scanned by these bots.";
 
 type Target = {
   username: string;

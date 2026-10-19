@@ -68,7 +68,7 @@ export function PassportSummaryBadge({ passport, username, context }: { passport
   });
   if (!passport?.platforms.length) return null;
   const labels = passport.platforms.map((p) => p.label);
-  const title = `Open ${username}'s streamer passport: ${labels.join(', ')}${passport.verified ? ', ownership checked by Streamtalk' : ', self-listed'}`;
+  const title = `Open ${username}'s streamer passport: ${labels.join(', ')}${passport.verified ? ', ownership checked by Deux Wild' : ', self-listed'}`;
   return <>
     <button ref={buttonRef} type="button" className={`sp-summary-badge${passport.verified ? ' is-checked' : ''}`} title={title} aria-label={title} aria-haspopup="dialog" aria-expanded={open}
       onClick={() => setOpen(true)} data-testid={`button-passport-${username}${context ? `-${context}` : ''}`}>
@@ -89,12 +89,12 @@ export function PassportSummaryBadge({ passport, username, context }: { passport
 
 function FoundingStamp() {
   return <div className="sp-founding-stamp" data-testid="stamp-founding-league" aria-label="Founding League member">
-    <span>STREAMTALK</span><strong>FOUNDING<br />LEAGUE</strong><span>ORIGINAL MEMBER</span>
+    <span>DEUX WILD</span><strong>FOUNDING<br />LEAGUE</strong><span>ORIGINAL MEMBER</span>
   </div>;
 }
 
 function PassportIntro({ title, detail, titleId }: { title: string; detail: string; titleId?: string }) {
-  return <header className="sp-intro"><div className="sp-kicker"><span /> STREAMTALK / CREATOR RECORD</div><h2 id={titleId}>{title}</h2><p>{detail}</p></header>;
+  return <header className="sp-intro"><div className="sp-kicker"><span /> DEUX WILD / CREATOR RECORD</div><h2 id={titleId}>{title}</h2><p>{detail}</p></header>;
 }
 
 function PassportCard({ passport, titleId }: { passport: PublicStreamerPassport; titleId?: string }) {
@@ -104,9 +104,9 @@ function PassportCard({ passport, titleId }: { passport: PublicStreamerPassport;
       <div><strong>{passport.displayName}</strong><span>@{passport.username}</span></div>
     </div>
     {passport.foundingLeague && <FoundingStamp />}
-    <PassportIntro title="Streamer passport" titleId={titleId} detail="Public creator profiles, listed by this member. A Streamtalk community record, not platform verification." />
+    <PassportIntro title="Streamer passport" titleId={titleId} detail="Public creator profiles, listed by this member. A Deux Wild community record, not platform verification." />
     {passport.platforms.length ? <PlatformStamps entries={passport.platforms} /> : <div className="sp-empty" data-testid="empty-public-passport">No public creator profiles listed yet.</div>}
-    <footer className="sp-footnote"><ShieldCheck size={15} aria-hidden="true" /> A Verified marker means ownership checked by Streamtalk (manual bio check). No platform login or endorsement.</footer>
+    <footer className="sp-footnote"><ShieldCheck size={15} aria-hidden="true" /> A Verified marker means ownership checked by Deux Wild (manual bio check). No platform login or endorsement.</footer>
   </section>;
 }
 
@@ -228,7 +228,7 @@ export function MyStreamerPassport() {
       </div>
     </form>
     {notice && <p className={`sp-notice${notice.ok ? ' is-ok' : ' is-error'}`} role={notice.ok ? 'status' : 'alert'} data-testid="status-passport-feedback">{notice.text}</p>}
-    <footer className="sp-footnote"><ShieldCheck size={15} aria-hidden="true" /> Manual bio-code review only. Streamtalk does not sign in to or verify accounts with platforms.</footer>
+    <footer className="sp-footnote"><ShieldCheck size={15} aria-hidden="true" /> Manual bio-code review only. Deux Wild does not sign in to or verify accounts with platforms.</footer>
   </section>;
 }
 

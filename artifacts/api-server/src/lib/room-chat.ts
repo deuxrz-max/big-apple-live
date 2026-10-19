@@ -126,7 +126,7 @@ export async function acceptMessage(
       await tx.insert(chatReports).values({
         historyId, roomId: roomId.toUpperCase(), messageId: original!.id,
         reporterId: `moderator-bot:${botRotation.people(roomId.toUpperCase())[0]?.id ?? "system"}`,
-        reporterUsername: botRotation.people(roomId.toUpperCase())[0]?.name ?? "Streamtalk moderator bot",
+        reporterUsername: botRotation.people(roomId.toUpperCase())[0]?.name ?? "Deux Wild moderator bot",
         reportedAccountId: accountId, reportedUsername: profile.username, targetType: "message",
         source: "moderator_bot", messageText: original!.text, reason: "other",
         details: `Moderator bot flag: ${violation}`,

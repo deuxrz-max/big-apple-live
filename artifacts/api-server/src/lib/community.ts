@@ -98,11 +98,11 @@ export async function accessFor(accountId: string) {
     moderator: !!moderator, owner: profile ? isOwnerAccount(profile) : false,
     chatMuted: !!admission?.chatMuted, reportsMuted: !!admission?.reportsMuted,
     warning: admission?.warningAt && Date.now() - admission.warningAt.getTime() < 24 * 60 * 60_000
-      ? admission.moderationWarning ?? null : null };
+      ? admission.moderationWarning?.replace(/stream ?talk/gi, "Deux Wild") ?? null : null };
 }
 export async function requireAdult(accountId: string) {
   if (!(await accessFor(accountId)).adultConfirmed)
-    throw new RoomError(403, "Streamtalk is adults-only. Confirm that you are 18 or older before entering chat.");
+    throw new RoomError(403, "Deux Wild is adults-only. Confirm that you are 18 or older before entering chat.");
 }
 export async function requireModerator(accountId: string) {
   await requireAdult(accountId);

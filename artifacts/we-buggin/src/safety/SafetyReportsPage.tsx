@@ -132,7 +132,7 @@ export function SafetyReportsPage() {
 
   return (
     <main className="st-safety st-reports-page">
-      <div className="st-reports-topline">Streamtalk · trust & safety</div>
+      <div className="st-reports-topline">Deux Wild · trust & safety</div>
       <header className="st-reports-header">
         <h1>Community reports</h1>
         <p>A private review space for keeping conversations, audio beams, and streams respectful.</p>
@@ -149,7 +149,7 @@ export function SafetyReportsPage() {
       {forbidden && (
         <section className="st-reports-state" role="alert" data-testid="status-reports-forbidden">
           <h2>Owner access only</h2>
-          <p>This private report queue is available to the Streamtalk owner account.</p>
+          <p>This private report queue is available to the Deux Wild owner account.</p>
         </section>
       )}
       {reportsQuery.isError && !forbidden && (

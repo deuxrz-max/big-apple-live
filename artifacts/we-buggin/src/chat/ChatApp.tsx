@@ -14,7 +14,7 @@ import {
 } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
 import { ShinyName } from '@/components/ShinyName';
-import { Wordmark } from '@/components/brand';
+import { AppLogo, Wordmark } from '@/components/brand';
 import { errMessage } from '@/lib/errors';
 import { PhotoReviewQueue } from './PhotoReviewQueue';
 import { BotModerationPanel } from './BotModerationPanel';
@@ -22,7 +22,7 @@ import { BadgeArt } from '@/social/BadgeArt';
 import { GoLiveButton } from './LiveStreamPages';
 import './chat.css';
 
-const DISCLAIMER = 'Streamtalk is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
+const DISCLAIMER = 'Deux Wild is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
 
 function Shell({ children, className = '' }: { children: ReactNode; className?: string }) {
   return <div className={`ch ${className}`.trim()}><div className="ch-in">{children}</div></div>;
@@ -102,7 +102,7 @@ export function PublicChatLanding() {
   return (
     <Shell>
       <TopBar signedIn={false} query={query} setQuery={setQuery} />
-      <h1>Streamtalk</h1>
+      <h1>Deux Wild</h1>
       <p>Text chat universities. One account works in any university. Universities are listed by platform label.</p>
       <List preview query={query} />
       <p className="ch-note">{DISCLAIMER}</p>
@@ -124,7 +124,7 @@ export function AdultGate({ children, keepMountedOnTransientError = false }: {
   const access = q.data ?? (keepMountedOnTransientError ? lastSuccessfulAccess.current : undefined);
   if (q.isLoading && !access) return <Shell><p role="status">Checking access...</p></Shell>;
   if ((q.isError && !keepMountedOnTransientError) || !access) return <Shell><div className="ch-err" role="alert">Could not check access. <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button></div></Shell>;
-  if (access.suspended) return <Shell><h1>Chat access restricted</h1><p>Your access requires review by a Streamtalk moderator. A new age confirmation cannot remove this restriction.</p><Link href="/" className="bm-btn">Home</Link></Shell>;
+  if (access.suspended) return <Shell><h1>Chat access restricted</h1><p>Your access requires review by a Deux Wild moderator. A new age confirmation cannot remove this restriction.</p><Link href="/" className="bm-btn">Home</Link></Shell>;
   if (access.adultConfirmed) return <>{children}</>;
   return (
     <Shell>
@@ -164,7 +164,7 @@ export function ChatDirectory() {
       <header className="st-dir-header">
         <div className="st-dir-topline">
           <div className="st-dir-lockup">
-            <Link href="/home" className="st-home-app-logo" aria-label="Streamtalk home" data-testid="link-home-logo">ST</Link>
+            <Link href="/home" className="st-home-app-logo" aria-label="Deux Wild home" data-testid="link-home-logo"><AppLogo size={36} /></Link>
           </div>
           <div className="st-dir-account">
             <Link href="/community/leaderboard" className="st-dir-rewards" aria-label="Open leaderboard" data-testid="link-leaderboard">
@@ -242,7 +242,7 @@ export function ChatDirectory() {
                 </div>
                 : <div className="st-dir-state"><h3>No creator streams right now</h3><p>When someone goes live, their stream will appear here.</p></div>}
       </section>
-      <footer className="st-dir-footer"><span>STREAMTALK · FIND YOUR PEOPLE</span></footer>
+      <footer className="st-dir-footer"><span>DEUX WILD · FIND YOUR PEOPLE</span></footer>
     </Shell>
   );
 }

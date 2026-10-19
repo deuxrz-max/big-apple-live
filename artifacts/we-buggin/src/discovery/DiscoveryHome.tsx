@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'wouter';
+import { APP_NAME } from '@/components/brand';
 import { Heart, House, MessageCircle, UserRound, Video, Hash } from 'lucide-react';
 import { useGetMyProfile } from '@workspace/api-client-react';
 import { useBeamState } from '@/beam/hooks/useBeam';
@@ -79,8 +80,8 @@ export default function DiscoveryHome({ userId }: { userId: string }) {
   const profile = profileQ.data?.profile ?? null;
 
   useEffect(() => {
-    document.title = 'Home — Streamtalk';
-    return () => { document.title = 'Streamtalk'; };
+    document.title = `Home — ${APP_NAME}`;
+    return () => { document.title = APP_NAME; };
   }, []);
 
   const navBtn = (t: Tab, label: string, icon: ReactNode) => (

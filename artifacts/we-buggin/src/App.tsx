@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import { Link, Redirect, Route, Switch, useLocation, useParams, Router as WouterRouter } from 'wouter';
 import { getGetSceneModelsQueryKey, useGetSceneModels, getGetSocialMeQueryKey, useGetSocialMe } from '@workspace/api-client-react';
 import { ErrorBoundary, type ErrorFallbackProps } from '@/components/error-boundary';
-import { Wordmark } from '@/components/brand';
+import { APP_NAME, Wordmark } from '@/components/brand';
 import { BottomNavigation } from '@/components/bottom-navigation';
 import NotFound from '@/pages/not-found';
 import { clearAllCreds } from '@/lib/room-creds';
@@ -49,7 +49,7 @@ const clerkAppearance = {
   options: {
     logoPlacement: 'inside' as const,
     logoLinkUrl: basePath || '/',
-    logoImageUrl: `${window.location.origin}${basePath}/streamtalk-shield-512.png`,
+    logoImageUrl: `${window.location.origin}${basePath}/brand/deux-wild-icon-512.png`,
   },
   variables: {
     colorPrimary: '#9D1DFF',
@@ -401,7 +401,7 @@ function LiveRouteErrorFallback({ resetError }: ErrorFallbackProps) {
         <strong>Live could not load.</strong>
         <span>Try opening the live screen again.</span>
         <button type="button" className="st-live-start-button" onClick={resetError}>Try again</button>
-        <Link className="st-live-start-button" href="/home">Back to Streamtalk</Link>
+        <Link className="st-live-start-button" href="/home">Back to Deux Wild</Link>
       </section>
     </main>
   );
@@ -456,7 +456,7 @@ function ClerkProviderWithRoutes() {
       signUpFallbackRedirectUrl={`${basePath}/home`}
       signUpForceRedirectUrl={`${basePath}/home`}
       localization={{
-        signIn: { start: { title: 'Welcome back', subtitle: 'Sign in to your Streamtalk account' } },
+        signIn: { start: { title: 'Welcome back', subtitle: `Sign in to your ${APP_NAME} account` } },
         signUp: { start: { title: 'Get your name', subtitle: 'One account, one dedicated username' } },
       }}
       routerPush={(to) => setLocation(stripBase(to))}
@@ -507,7 +507,7 @@ function AppRoutes() {
 
 function App() {
   useEffect(() => {
-    const shareImage = new URL(`${basePath}/streamtalk-shield-512.png`, window.location.origin).href;
+    const shareImage = new URL(`${basePath}/brand/deux-wild-icon-512.png`, window.location.origin).href;
     document.querySelector('meta[property="og:image"]')?.setAttribute('content', shareImage);
     document.querySelector('meta[name="twitter:image"]')?.setAttribute('content', shareImage);
   }, []);

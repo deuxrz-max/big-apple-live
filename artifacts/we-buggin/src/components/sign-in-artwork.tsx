@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Wordmark } from './brand';
+import { BRAND_LOGO_PATH, Wordmark } from './brand';
 import './sign-in-artwork.css';
 
 export function SignInArtwork({ children }: { children: ReactNode }) {
@@ -8,7 +8,7 @@ export function SignInArtwork({ children }: { children: ReactNode }) {
       <Wordmark />
       <div className="st-sign-in-layout">
         <div className="st-sign-in-art" aria-hidden="true">
-          <img src={`${import.meta.env.BASE_URL}streamtalk-shield.svg`} alt="Streamtalk shield"
+          <img src={BRAND_LOGO_PATH} alt="Deux Wild logo"
             decoding="async" fetchPriority="high" />
         </div>
         <div className="st-sign-in-form">{children}</div>

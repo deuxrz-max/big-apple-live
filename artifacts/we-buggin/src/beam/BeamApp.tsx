@@ -3,7 +3,7 @@ import { Link, Route, Switch, useLocation, useParams } from 'wouter';
 import { Show, useUser } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getGetMyProfileQueryKey } from '@workspace/api-client-react';
-import { Wordmark } from '@/components/brand';
+import { APP_NAME, Wordmark } from '@/components/brand';
 import './beam.css';
 import { useBeamRoom, useBeamState } from './hooks/useBeam';
 import { configureBeamAccount, getPersistenceNotice, restoreBeam, subscribe, getProfileSnapshot } from './services/beamService';
@@ -62,8 +62,8 @@ function BeamApp() {
   const roomName = rooms[path.split('/')[2]?.toUpperCase()]?.name;
   const title = path === '/beams/new' ? 'Start a beam' : path === '/beams/join' ? 'Join a beam' : roomName;
   useEffect(() => {
-    document.title = title ? `${title} — Streamtalk` : 'Streamtalk — Your beam. Your people.';
-    return () => { document.title = 'Streamtalk'; };
+    document.title = title ? `${title} — ${APP_NAME}` : `${APP_NAME} — Your beam. Your people.`;
+    return () => { document.title = APP_NAME; };
   }, [title]);
   const storageNotice = getPersistenceNotice();
   return (

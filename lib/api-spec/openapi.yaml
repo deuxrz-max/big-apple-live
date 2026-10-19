@@ -761,7 +761,7 @@ paths:
             schema: { $ref: "#/components/schemas/ChatReportInput" }
       responses:
         "201":
-          description: Report queued for a Streamtalk moderator
+          description: Report queued for a Deux Wild moderator
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ChatReportReceipt" }
