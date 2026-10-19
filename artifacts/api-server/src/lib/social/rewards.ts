@@ -63,12 +63,11 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
   if (roomGift) {
     if (!context) throw new RoomError(400, `Send ${item.name} from a room or livestream gift panel`);
   }
-  if (roomGift || roomContext) {
+  if (roomGift || roomContext || streamContext) {
     await requireAdult(id);
     await requireAdult(target.accountId);
   }
   if (streamContext) {
-    if (!roomGift) throw new RoomError(400, "Only room gifts are available during livestreams.");
     if (target.accountId !== id && (liveStreamIdForAccount(target.accountId) !== streamContext.streamId
       || !(await isLiveStreamActiveOrStarting(target.accountId)))) {
       throw new RoomError(404, "This livestream is no longer available.");
@@ -116,9 +115,11 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
       await tx.insert(socialGiftBag).values({ accountId: target.accountId, giftId: item.id, quantity })
         .onConflictDoUpdate({ target: [socialGiftBag.accountId, socialGiftBag.giftId], set: { quantity: sql`${socialGiftBag.quantity} + ${quantity}` } });
     }
-    if (roomGift && streamContext) {
-      await tx.insert(socialGiftBag).values({ accountId: target.accountId, giftId: item.id, quantity })
-        .onConflictDoUpdate({ target: [socialGiftBag.accountId, socialGiftBag.giftId], set: { quantity: sql`${socialGiftBag.quantity} + ${quantity}` } });
+    if (streamContext) {
+      if (roomGift) {
+        await tx.insert(socialGiftBag).values({ accountId: target.accountId, giftId: item.id, quantity })
+          .onConflictDoUpdate({ target: [socialGiftBag.accountId, socialGiftBag.giftId], set: { quantity: sql`${socialGiftBag.quantity} + ${quantity}` } });
+      }
       liveGiftEvent = {
         streamId: streamContext.streamId, senderAccountId: id, senderUsername: sender.username,
         senderName: sender.displayName ?? sender.username, recipientUsername: target.username,
