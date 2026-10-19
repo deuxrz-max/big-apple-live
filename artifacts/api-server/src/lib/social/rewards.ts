@@ -62,6 +62,8 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
   const streamContext = context && "streamId" in context ? context : null;
   if (roomGift) {
     if (!context) throw new RoomError(400, `Send ${item.name} from a room or livestream gift panel`);
+  }
+  if (roomGift || roomContext) {
     await requireAdult(id);
     await requireAdult(target.accountId);
   }
@@ -76,13 +78,13 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
     await lockPair(tx, id, target.accountId);
     if (id !== target.accountId) await assertContact(tx, id, target.accountId);
     await lockAccounts(tx, [id, target.accountId]);
-    const boundHistory = roomGift && roomContext ? roomStore.getHistoryId(roomContext.roomId.toUpperCase()) : null;
+    const boundHistory = roomContext ? roomStore.getHistoryId(roomContext.roomId.toUpperCase()) : null;
     const ref = `gift:${giftId}:${target.accountId}${boundHistory ? ':' + boundHistory : streamContext ? ':live:' + streamContext.streamId : ''}`;
     if (await replay(tx, id, key, ref)) return { wallet: await wallet(id, tx, sender.username), liveGiftEvent: null };
-    const historyId = roomGift && roomContext
+    const historyId = roomContext
       ? validateGiftRoom(roomContext.roomId.toUpperCase(), roomContext.sessionId, id, target.accountId)
       : null;
-    if (roomGift && roomContext && historyId !== boundHistory) throw new RoomError(409, 'This university changed. Re-enter before sending.');
+    if (roomContext && historyId !== boundHistory) throw new RoomError(409, 'This university changed. Re-enter before sending.');
     const current = await wallet(id, tx, sender.username);
     const unlimited = hasDevelopmentUnlimitedCredits(sender.username);
     const spend = planCreditSpend(current.balance, totalCost, unlimited);
@@ -102,13 +104,15 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
       streamId: string; senderAccountId: string; senderUsername: string; senderName: string;
       recipientUsername: string; recipientName: string; giftId: string; giftName: string; cost: number; quantity: number;
     } | null = null;
-    if (roomGift && roomContext) {
+    if (roomContext) {
       await tx.insert(socialGiftEvents).values({
         historyId: historyId!, senderId: id, recipientId: target.accountId,
         senderUsername: sender.username, recipientUsername: target.username,
         senderName: sender.displayName ?? sender.username, recipientName: target.displayName ?? target.username,
         giftId: item.id, cost: totalCost, quantity, recipientCredits, houseCredits: totalCost - recipientCredits,
       });
+    }
+    if (roomGift && roomContext) {
       await tx.insert(socialGiftBag).values({ accountId: target.accountId, giftId: item.id, quantity })
         .onConflictDoUpdate({ target: [socialGiftBag.accountId, socialGiftBag.giftId], set: { quantity: sql`${socialGiftBag.quantity} + ${quantity}` } });
     }

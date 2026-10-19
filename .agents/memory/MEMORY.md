@@ -14,6 +14,7 @@
 - [OpenAPI generation](openapi-generation.md) — modular refs need an allowlist before codegen; combined path/query schemas can collide in Zod barrel exports.
 - [Clerk route middleware](clerk-route-middleware.md) — routes that call `getAuth` must be mounted inside the scoped Clerk middleware or they fail with 500s.
 - [Gift catalog test isolation](gift-catalog-test-isolation.md) — gift tests must use isolated catalog settings, not assume default prices or product types from the shared dev database.
+- [Room gift display receipts](room-gift-display-receipts.md) — every successful room-context send needs a shared animation event; payout and inventory classification must stay separate.
 - [Additive schema guards](additive-schema-guards.md) — stop unrelated truncation prompts; apply only approved development additions without deleting histories.
 - [Beam screen layout](beam-screen-layout.md) — participant boxes stay anchored; chat is borderless below them and older messages require chat-only scrolling.
 - [University beam transport](audio-beam-constraints.md) — room seats are audio-only; separate LiveKit Go Live must never overlap a beam microphone.

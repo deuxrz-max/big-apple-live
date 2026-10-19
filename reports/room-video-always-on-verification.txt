@@ -47,12 +47,13 @@ The captured signed-out home page at 390x844 showed room cards with zero
 viewers at that capture time; that does not establish that a room's video queue
 was loaded or show video playback.
 
-The source contains automated tests for schedule progress while nobody is
-watching, queue advancement/looping, restoring a saved schedule from a fresh
-database read, and synchronizing clients to a server-selected start time. These
-tests were inspected but were not run as part of this live-preview verification.
-They do not replace the requested live occupied/empty/rejoin, two-viewer,
-server-workflow-restart, or real-phone checks.
+Automated tests were run after the blocked live-preview attempt:
+- `test:university-video`: 29 passed, including Comedy schedule restoration and
+  queue advancement while nobody is watching.
+- `test:room-video-rotation`: 15 passed, including resolving the current video
+  and position while empty and restoring a schedule after a fresh database read.
+These verify server-side schedule logic, but do not replace the requested live
+occupied/empty/rejoin, two-viewer, server-workflow-restart, or real-phone checks.
 
 Limitations
 - No signed-in flow was tested.

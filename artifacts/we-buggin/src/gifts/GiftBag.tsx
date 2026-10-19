@@ -4,9 +4,10 @@ import { ChevronDown, Crown, Flame, Gift, House, Sparkles, Star, UserRound, X, t
 import { Link, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGetSocialMe, getGetSocialMeQueryKey, sendSocialGift, getGetRoomGiftEventsQueryKey } from '@workspace/api-client-react';
-import { CoinAmount, GiftIcon, refreshSocial, errMsg } from '@/social/common';
+import { CoinAmount, refreshSocial, errMsg } from '@/social/common';
 import { UserPhoto } from '@/components/user-photo';
-import { RoomGiftIcon, cosmicEncoreMedia, type RoomGiftId } from './SpiritPup';
+import { cosmicEncoreMedia } from './SpiritPup';
+import { GiftArtwork } from './GiftArtwork';
 import { bigTierGiftMedia } from './BigTierGift';
 import { ownedGiftItems } from './gift-items';
 import './gifts.css';
@@ -21,21 +22,7 @@ type Recipient = {
 } | null;
 
 const FOCUSABLE = 'button:not([disabled]),[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
-const ROOM_GIFT_IDS = new Set<RoomGiftId>([
-  'heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip',
-]);
 const SPECIAL_GIFT_IDS = new Set(['cosmic-encore', 'fireworks', 'rose-shower', 'whip']);
-const isBuiltInRoomGiftId = (id: string): id is RoomGiftId => ROOM_GIFT_IDS.has(id as RoomGiftId);
-function GiftPanelIcon({ gift, size = 48 }: { gift: { id: string; iconUrl?: string | null }; size?: number }) {
-  const [failed, setFailed] = useState(false);
-  useEffect(() => setFailed(false), [gift.iconUrl]);
-  if (gift.iconUrl && !failed) {
-    const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
-    return <img className="spirit-gift-icon" src={`${base}${gift.iconUrl.replace(/^\/+/, '')}`}
-      width={size} height={size} alt="" aria-hidden="true" onError={() => setFailed(true)} />;
-  }
-  return isBuiltInRoomGiftId(gift.id) ? <RoomGiftIcon giftId={gift.id} /> : <GiftIcon id={gift.id} size={size} />;
-}
 
 export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamId, onClose }: {
   recipient?: Recipient;
@@ -343,7 +330,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
                   return <section className="gift-panel-page" key={`${activeCategory.id}-${pageIndex}`} aria-label={`${activeCategory.label}, page ${pageIndex + 1}`}>
                     {featured && <button type="button" className={`gift-panel-featured${sel === featured.id ? ' is-selected' : ''}`}
                       disabled={busy} onClick={() => chooseGift(featured.id)} aria-label={`Select featured gift ${featured.name}`}>
-                      <span className="gift-panel-featured-art"><GiftPanelIcon gift={featured} size={56} />
+                      <span className="gift-panel-featured-art"><GiftArtwork gift={featured} size={50} />
                         {sel === featured.id && <span className="gift-panel-card-quantity">×{quantity}</span>}
                       </span>
                       <span className="gift-panel-featured-copy">
@@ -358,7 +345,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
                         className={`gift-panel-card${sel === gift.id ? ' is-selected' : ''}`}
                         aria-pressed={sel === gift.id} disabled={busy} data-testid={`gift-catalog-${gift.id}`}
                         onClick={() => chooseGift(gift.id)}>
-                        <span className="gift-panel-card-art"><GiftPanelIcon gift={gift} size={48} />
+                        <span className="gift-panel-card-art"><GiftArtwork gift={gift} size={48} />
                           {sel === gift.id && <span className="gift-panel-card-quantity">×{quantity}</span>}
                         </span>
                         <span className="gift-panel-card-name">{gift.name}</span>
@@ -378,7 +365,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
           ) : items.length > 0 ? (
             <div className="gift-panel-grid gift-panel-owned" data-testid="gift-bag-list">
               {items.map(gift => <div key={gift.id} className="gift-panel-owned-card">
-                <span className="gift-panel-card-art"><GiftPanelIcon gift={gift} size={48} /></span>
+                <span className="gift-panel-card-art"><GiftArtwork gift={gift} size={48} /></span>
                 <span className="gift-panel-card-name">{gift.name}</span>
                 {gift.quantity && <span className="gift-panel-owned-count">Owned · {gift.quantity}</span>}
               </div>)}

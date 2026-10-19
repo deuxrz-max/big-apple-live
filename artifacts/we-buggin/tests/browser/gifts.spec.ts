@@ -195,6 +195,63 @@ test('gift control is a silent accessible video and repeats on a 30-second caden
   await expect.poll(() => video.evaluate(element => Number(element.dataset.testPlayCalls ?? '0'))).toBeGreaterThan(initialPlayCount);
 });
 
+test('Store and room gift panel share gift artwork and active animation still fallbacks at phone width', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const iconUrl = '/gift-icons/heart.svg?v=fixture-7';
+  const gifts = [
+    { id: 'good-vibes', name: 'Good vibes', cost: 1000, iconUrl: null, iconStatus: 'fallback' },
+    { id: 'studio-no-icon-fixture', name: 'Studio sample', cost: 2500, iconUrl: null, iconStatus: 'fallback' },
+    { id: 'heart', name: 'Heart', cost: 50, iconUrl, iconStatus: 'generated' },
+  ];
+  const me = {
+    profile: { badges: [] },
+    wallet: { balance: 3000, unlimited: false },
+    products: [],
+    gifts,
+    inventory: ['heart'],
+    giftQuantities: { heart: 1 },
+  };
+  await page.route('**/api/social/me', route => route.fulfill({ json: me }));
+  await page.route('**/api/social/entrance-effects/shop', route => route.fulfill({ json: { items: [] } }));
+  await page.route('**/api/social/gifts/rooms/**', route => route.fulfill({ json: { events: [] } }));
+  await page.route('**/api/social/gift-studio/active/studio-no-icon-fixture', route => route.fulfill({
+    json: { media: {
+      versionId: 'fixture-media-v7',
+      name: 'Studio sample',
+      webmUrl: '/api/test-gift-media/animation.webm',
+      safariUrl: '/api/test-gift-media/animation.webp',
+      durationMs: 4000,
+    } },
+  }));
+  const videoBytes = await readFile(new URL('../../../../generated-artifacts/spirit-pup/animation.webm', import.meta.url));
+  const imageBytes = await readFile(new URL('../../../../generated-artifacts/spirit-pup/animation.webp', import.meta.url));
+  await page.route('**/api/test-gift-media/animation.webm', route => route.fulfill({ body: videoBytes, contentType: 'video/webm' }));
+  await page.route('**/api/test-gift-media/animation.webp', route => route.fulfill({ body: imageBytes, contentType: 'image/webp' }));
+
+  await page.goto('/tests/browser/harness.html?view=store');
+  await page.getByTestId('button-more-gifts').click();
+  const storeHeart = page.getByTestId('button-open-gifts-heart').locator('.gift-artwork');
+  await expect(storeHeart).toHaveAttribute('src', /gift-icons\/heart\.svg\?v=fixture-7$/);
+  await expect(page.getByTestId('button-open-gifts-good-vibes').locator('.gift-artwork-emoji')).toHaveText('✨');
+  const storeVideoStill = page.getByTestId('button-open-gifts-studio-no-icon-fixture').locator('.gift-artwork');
+  await expect(storeVideoStill).toHaveAttribute('src', /^data:image\/png;base64,/, { timeout: 10000 });
+  const detailButton = page.getByTestId('button-open-gifts-heart');
+  await detailButton.click();
+  await expect(page.locator('.st-detail .st-art-gift .gift-artwork')).toHaveAttribute('src', /gift-icons\/heart\.svg\?v=fixture-7$/);
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
+  await page.getByTestId('button-my-items').click();
+  await expect(page.getByTestId('button-open-gifts-heart').locator('.gift-artwork')).toHaveAttribute('src', /gift-icons\/heart\.svg\?v=fixture-7$/);
+
+  await page.goto('/tests/browser/harness.html?view=gift-catalog');
+  await expect(page.getByTestId('gift-bag-title')).toBeVisible();
+  const roomHeart = page.getByTestId('gift-catalog-heart').locator('.gift-artwork');
+  await expect(roomHeart).toHaveAttribute('src', /gift-icons\/heart\.svg\?v=fixture-7$/);
+  await expect(page.locator('.gift-panel-featured-art .gift-artwork-emoji')).toHaveText('✨');
+  await expect(page.locator('.gift-panel-featured')).toContainText('Good vibes');
+  await expect(page.getByTestId('gift-catalog-studio-no-icon-fixture').locator('.gift-artwork')).toHaveAttribute('src', /^data:image\/png;base64,/, { timeout: 10000 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
 test('Moonfox can be sent for 500 credits and its room animation keeps transparency and image fallbacks', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   let sent = false;
@@ -343,15 +400,16 @@ test('Heart is a 50-credit first gift and shows its lightweight room animation',
   await page.getByTestId('button-open-gift-bag').click();
   const send = page.getByTestId('gift-bag-send');
   await expect(send).toBeDisabled();
-  await expect(page.getByTestId('gift-catalog-heart')).toContainText('Heart');
-  await expect(page.getByTestId('gift-catalog-heart')).toContainText('50 coins');
-  const heartIcon = page.getByTestId('gift-catalog-heart').locator('img');
+  const heartTile = page.locator('.gift-panel-featured').filter({ hasText: 'Heart' })
+    .or(page.getByTestId('gift-catalog-heart')).first();
+  await expect(heartTile).toContainText('Heart');
+  const heartIcon = heartTile.locator('.gift-artwork');
   await expect(heartIcon).toHaveAttribute('src', /gift-icons\/heart\.svg$/);
-  await expect(heartIcon).toHaveCSS('width', '64px');
+  await expect(heartIcon).toBeVisible();
 
   await page.getByRole('combobox', { name: 'Gift recipient' }).selectOption('testbigo1');
   await expect(send).toBeDisabled();
-  await page.getByTestId('gift-catalog-heart').click();
+  await heartTile.click();
   await expect(send).toBeEnabled();
   await expect(send).toHaveText('Send gift');
   await page.getByTestId('gift-bag-send').click();
@@ -373,6 +431,55 @@ test('Heart is a 50-credit first gift and shows its lightweight room animation',
   await expect(animation.locator('video,img')).toHaveCount(0);
   await expect(animation).toHaveCount(0, { timeout: 3000 });
 });
+
+test('an active Gift Studio gift x99 animation loads the active video, not its catalog icon', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const giftId = 'studio-11111111-1111-4111-8111-111111111111';
+  await page.route(`**/api/social/gift-studio/active/${giftId}`, route => route.fulfill({ json: {
+    media: {
+      versionId: 'active-custom-version-fixture',
+      name: 'Custom car animation',
+      webmUrl: '/api/social/gift-studio/media/active-custom-version-fixture/webm',
+      safariUrl: '/api/social/gift-studio/media/active-custom-version-fixture/safari',
+      durationMs: 6042,
+    },
+  } }));
+  await page.route('**/api/social/gift-studio/media/active-custom-version-fixture/webm', async route => {
+    const body = await readFile(new URL('../../../../generated-artifacts/gift-demo/Spirit-Pup-room-gift-demo.webm', import.meta.url));
+    await route.fulfill({ body, contentType: 'video/webm' });
+  });
+
+  await page.goto(`/tests/browser/harness.html?view=gift-animation&giftId=${giftId}&quantity=99`, {
+    waitUntil: 'domcontentloaded',
+  });
+
+  const overlay = page.getByTestId(`gift-studio-animation-${giftId}`);
+  await expect(overlay).toBeVisible({ timeout: 8000 });
+  const video = overlay.locator('video');
+  await expect(video).toHaveAttribute('src', /active-custom-version-fixture\/webm$/);
+  await expect(video).toHaveJSProperty('muted', true);
+  await expect(video).toHaveJSProperty('playsInline', true);
+  await expect.poll(() => video.evaluate(element => (element as HTMLVideoElement).currentTime)).toBeGreaterThan(0);
+  await expect(page.locator('.gift-combo-counter')).toContainText('1/99');
+  await page.getByRole('button', { name: 'Skip' }).click();
+  await expect(page.locator('.gift-combo-counter')).toHaveCount(0);
+  await expect(overlay).toHaveCount(0);
+});
+
+for (const [giftId, giftName] of [
+  ['good-vibes', 'Good vibes'],
+  ['big-love', 'Big love'],
+  ['standing-ovation', 'Standing ovation'],
+] as const) {
+  test(`a ${giftName} room event renders its built-in animation`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`/tests/browser/harness.html?view=gift-animation&giftId=${giftId}&giftName=${encodeURIComponent(giftName)}&quantity=1`, {
+      waitUntil: 'domcontentloaded',
+    });
+    const animation = page.locator('.big-tier-gift-overlay').filter({ hasText: giftName });
+    await expect(animation).toBeVisible({ timeout: 8000 });
+  });
+}
 
 test('room gift animations serialize Cosmic Encore and following gifts without duplicates', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });

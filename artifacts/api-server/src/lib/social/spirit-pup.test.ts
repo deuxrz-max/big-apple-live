@@ -1,8 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { and, eq, inArray } from 'drizzle-orm';
-import { db, accountProfiles, socialWallets, socialSettings, chatAdmissions, socialGiftEvents, socialGiftBag } from '@workspace/db';
+import { and, asc, eq, inArray } from 'drizzle-orm';
+import {
+  db, accountProfiles, socialWallets, socialSettings, chatAdmissions, socialGiftEvents,
+  socialGiftBag, giftStudioAssets, socialGiftCatalogSettings,
+} from '@workspace/db';
 import { gift, giftLedgerDebit, serializeGiftSends } from './rewards';
 import { getMe } from './people';
 import { relationship } from './people';
@@ -11,7 +14,7 @@ import { roomGiftEvents } from './room-gifts';
 import { roomStore } from '../room-store';
 import { SPIRIT_PUP, spiritSplit } from './spirit-pup-policy';
 import { MOONFOX } from './moonfox-policy';
-import { listGiftCatalogForOwner } from '../gift-studio-catalog';
+import { giftCatalogWithActiveNames, listGiftCatalogForOwner, updateGiftCatalogItem } from '../gift-studio-catalog';
 import { giftChargeTotal } from './gift-quantity';
 
 test('Spirit Pup has one changeable price and an exact 50/50 split', () => {
@@ -184,6 +187,135 @@ test('development database: custom gift quantity is charged atomically, recorded
   assert.ok(page.nextCursor);
   const nextPage = await roomGiftEvents(ids[1]!, roomId, recipientSession, { after: page.nextCursor! });
   assert.equal(nextPage.events.length, 0);
+});
+
+test('development database: active catalog gifts create room animation events without changing their economics', async t => {
+  if (process.env.NODE_ENV === 'production') throw new Error('Development fixtures only');
+  const genericGift = (await listGiftCatalogForOwner()).find(item =>
+    item.id === 'good-vibes' && item.status === 'active' && item.productType === 'gift');
+  assert.ok(genericGift, 'Good vibes is an active built-in gift fixture');
+  const token = randomUUID().replaceAll('-', '').slice(0, 10);
+  const ids = [0, 1].map(index => `gift-display-fixture-${token}-${index}`);
+  const names = [0, 1].map(index => `display${token}${index}`);
+  const historyId = randomUUID();
+  const roomId = `DISPLAY${token}`.toUpperCase();
+  const assetId = randomUUID();
+  const studioGiftId = `studio-${assetId}`;
+  const customUnitCost = 37;
+  const genericUnits = genericGift ? 100 : 0;
+  const senderStartingBalance = (genericGift?.cost ?? 0) * genericUnits + customUnitCost * 100;
+  const sessions: Array<{ participantSessionId: string }> = [];
+
+  t.after(async () => {
+    for (const session of sessions) roomStore.leave(roomId, session.participantSessionId);
+    await db.delete(socialGiftEvents).where(eq(socialGiftEvents.historyId, historyId));
+    await db.delete(socialGiftBag).where(inArray(socialGiftBag.accountId, ids));
+    await db.delete(giftStudioAssets).where(eq(giftStudioAssets.id, assetId));
+    await db.delete(socialGiftCatalogSettings).where(eq(socialGiftCatalogSettings.giftId, studioGiftId));
+    await db.delete(socialWallets).where(inArray(socialWallets.accountId, ids));
+    await db.delete(socialSettings).where(inArray(socialSettings.accountId, ids));
+    await db.delete(chatAdmissions).where(inArray(chatAdmissions.accountId, ids));
+    await db.delete(accountProfiles).where(inArray(accountProfiles.accountId, ids));
+  });
+
+  await db.insert(accountProfiles).values(ids.map((accountId, index) => ({
+    accountId, username: names[index]!, nameKey: names[index]!.toLowerCase(),
+    displayName: `Gift display fixture ${index}`, emojiId: 'neutral', gender: 'Male' as const,
+    color: '#ffffff', hairColor: '#000000',
+  })));
+  await db.insert(socialSettings).values(ids.map(accountId => ({ accountId, discoverable: true })));
+  await db.insert(socialWallets).values(ids.map((accountId, index) => ({
+    accountId, balance: index === 0 ? senderStartingBalance : 0,
+  })));
+  await db.insert(chatAdmissions).values(ids.map(accountId => ({ accountId })));
+  await db.insert(socialGiftCatalogSettings).values({
+    giftId: studioGiftId, displayName: 'Custom animation fixture', cost: customUnitCost,
+    productType: 'gift', status: 'active',
+  });
+  await db.insert(giftStudioAssets).values({
+    id: assetId, ownerId: ids[0]!, giftId: studioGiftId, version: 1, status: 'active',
+    originalName: 'fixture.mp4', originalExtension: 'mp4', durationMs: 1000,
+    originalBytes: 1, webmBytes: 1, safariBytes: 1,
+    settings: { draftName: 'Custom animation fixture', productType: 'gift' },
+    activatedAt: new Date(),
+  });
+  const meCatalog = (await getMe(ids[0]!)).gifts;
+  assert.ok(meCatalog.some(item => item.id === studioGiftId && item.name === 'Custom animation fixture' && item.cost === customUnitCost),
+    'an active Gift Studio gift is present in the same /social/me catalog consumed by Store and room gift box');
+  const sendableCatalog = await giftCatalogWithActiveNames();
+  assert.deepEqual(
+    meCatalog.map(({ id, name, cost, iconUrl }) => ({ id, name, cost, iconUrl })).sort((a, b) => a.id.localeCompare(b.id)),
+    sendableCatalog.map(({ id, name, cost, iconUrl }) => ({ id, name, cost, iconUrl })).sort((a, b) => a.id.localeCompare(b.id)),
+    'the profile/Store feed and the room gift catalog serialize the same active sendable items',
+  );
+  roomStore.registerCommunity({ roomId, label: 'Gift display fixture room', historyId, createdAt: new Date() });
+  const profiles = await Promise.all(ids.map(getProfile));
+  sessions.push(...ids.map((accountId, index) =>
+    roomStore.join(roomId, names[index]!, { accountId, identity: profiles[index]!.identity })));
+
+  const expected: Array<{ giftId: string; quantity: number }> = [];
+  if (genericGift) {
+    for (const quantity of [1, 99]) {
+      await gift(ids[0]!, names[1]!, genericGift.id, randomUUID(),
+        { roomId, sessionId: sessions[0]!.participantSessionId }, quantity);
+      expected.push({ giftId: genericGift.id, quantity });
+    }
+  }
+  for (const quantity of [1, 99]) {
+    await gift(ids[0]!, names[1]!, studioGiftId, randomUUID(),
+      { roomId, sessionId: sessions[0]!.participantSessionId }, quantity);
+    expected.push({ giftId: studioGiftId, quantity });
+  }
+
+  const totalGenericCost = (genericGift?.cost ?? 0) * genericUnits;
+  const totalCustomCost = customUnitCost * 100;
+  const customRecipientCredits = spiritSplit(customUnitCost).recipientCredits
+    + spiritSplit(customUnitCost * 99).recipientCredits;
+  const senderAfter = await getMe(ids[0]!);
+  const recipientAfter = await getMe(ids[1]!);
+  assert.equal(senderAfter.wallet.balance, 0);
+  assert.equal(senderAfter.wallet.sent, totalGenericCost + totalCustomCost);
+  assert.equal(recipientAfter.wallet.balance,
+    totalGenericCost + customRecipientCredits,
+    'the pre-existing full-credit generic-gift path and room-gift split remain unchanged');
+  assert.equal(recipientAfter.giftQuantities[studioGiftId], 100);
+  assert.equal(recipientAfter.giftQuantities[genericGift?.id ?? 'not-present'], undefined,
+    'the generic gift inventory behavior is unchanged');
+
+  const receipts = await db.select().from(socialGiftEvents)
+    .where(eq(socialGiftEvents.historyId, historyId))
+    .orderBy(asc(socialGiftEvents.eventOrder));
+  assert.deepEqual(receipts.map(({ giftId, quantity }) => ({ giftId, quantity })), expected);
+  assert.equal(receipts.reduce((sum, event) => sum + event.cost, 0), totalGenericCost + totalCustomCost);
+
+  const senderEvents = await roomGiftEvents(ids[0]!, roomId, sessions[0]!.participantSessionId);
+  const viewerEvents = await roomGiftEvents(ids[1]!, roomId, sessions[1]!.participantSessionId);
+  assert.deepEqual(senderEvents.events.map(({ id, giftId, quantity }) => ({ id, giftId, quantity })),
+    viewerEvents.events.map(({ id, giftId, quantity }) => ({ id, giftId, quantity })),
+    'the sender and a second room member receive the same animation events');
+  assert.deepEqual(viewerEvents.events.map(({ giftId, quantity }) => ({ giftId, quantity })), expected);
+
+  await updateGiftCatalogItem({ giftId: studioGiftId, status: 'inactive' });
+  assert.equal((await getMe(ids[0]!)).gifts.some(item => item.id === studioGiftId), false,
+    'an inactive gift disappears from the shared catalog used by Store and room panels');
+  await updateGiftCatalogItem({ giftId: studioGiftId, status: 'active' });
+  assert.equal((await getMe(ids[0]!)).gifts.some(item => item.id === studioGiftId), true,
+    'reactivating the gift makes it available in both panels again');
+  await updateGiftCatalogItem({ giftId: studioGiftId, status: 'deleted' });
+  assert.equal((await getMe(ids[0]!)).gifts.some(item => item.id === studioGiftId), false,
+    'a deleted gift disappears from the shared Store and room gift catalog');
+  assert.equal((await giftCatalogWithActiveNames()).some(item => item.id === studioGiftId), false);
+  await db.update(socialWallets).set({ balance: 10_000 }).where(eq(socialWallets.accountId, ids[0]!));
+  const beforeRejectedSend = await getMe(ids[0]!);
+  await assert.rejects(
+    gift(ids[0]!, names[1]!, studioGiftId, randomUUID(),
+      { roomId, sessionId: sessions[0]!.participantSessionId }, 1),
+    /This gift isn't available right now\./,
+  );
+  assert.equal((await getMe(ids[0]!)).wallet.balance, beforeRejectedSend.wallet.balance,
+    'a stale deleted-gift send is rejected before any coin is charged');
+  assert.equal((await db.select().from(socialGiftEvents).where(eq(socialGiftEvents.historyId, historyId))).length,
+    receipts.length, 'a rejected send does not create a room animation receipt');
 });
 
 test('development database: Moonfox charges once, splits 250/250, enters the bag and stays room-isolated', async t => {

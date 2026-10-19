@@ -11,9 +11,9 @@ import {
   type SocialGiftCatalogId,
 } from '@workspace/api-client-react';
 import { BadgeArt } from '@/social/BadgeArt';
-import { ErrorBox, GiftIcon, Loading, Msg, errMsg } from '@/social/common';
+import { ErrorBox, Loading, Msg, errMsg } from '@/social/common';
 import { giftStudioMediaUrl } from '@/gifts/GiftAnimationPlayer';
-import { RoomGiftIcon } from '@/gifts/SpiritPup';
+import { GiftArtwork } from '@/gifts/GiftArtwork';
 import './store-page.css';
 
 type StoreSection = 'badges' | 'effects' | 'gifts';
@@ -46,7 +46,14 @@ function prefersSafariImage() {
 export function StorePage() {
   const queryClient = useQueryClient();
   const me = useGetSocialMe({
-    query: { queryKey: getGetSocialMeQueryKey(), refetchInterval: 15000 },
+    query: {
+      queryKey: getGetSocialMeQueryKey(),
+      staleTime: 0,
+      refetchOnMount: 'always',
+      refetchOnWindowFocus: 'always',
+      refetchOnReconnect: 'always',
+      refetchInterval: 15000,
+    },
   });
   const shop = useGetEntranceEffectShop({
     query: {
@@ -142,9 +149,7 @@ export function StorePage() {
       </div>;
     }
     return <div className={`st-art st-art-gift ${size}`}>
-      {['heart', 'spirit-pup', 'moonfox', 'cosmic-encore', 'fireworks', 'rose-shower', 'whip'].includes(item.id)
-        ? <RoomGiftIcon giftId={item.id as 'heart' | 'spirit-pup' | 'moonfox' | 'cosmic-encore' | 'fireworks' | 'rose-shower' | 'whip'} />
-        : <GiftIcon id={item.id} size={size === 'large' ? 80 : 56} />}
+      <GiftArtwork gift={item} size={size === 'large' ? 80 : 56} />
     </div>;
   };
 

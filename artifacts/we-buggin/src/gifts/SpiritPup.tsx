@@ -27,11 +27,18 @@ const DURATION: Record<AnimatedGiftId, number> = {
   moonfox: 4000,
 };
 
-export function RoomGiftIcon({ giftId }: { giftId: RoomGiftId }) {
+export function RoomGiftIcon({ giftId, size = 64, className = 'spirit-gift-icon' }: {
+  giftId: RoomGiftId;
+  size?: number;
+  className?: string;
+}) {
   const [failed, setFailed] = useState(false);
   return failed
-    ? <GiftIcon id={giftId} />
-    : <img className="spirit-gift-icon" src={CATALOG_ICON[giftId]} width={64} height={64} alt="" aria-hidden="true" onError={() => setFailed(true)} />;
+    ? <span className={className} style={{ width: size, height: size, display: 'grid', placeItems: 'center' }}>
+      <GiftIcon id={giftId} size={Math.round(size * 0.62)} />
+    </span>
+    : <img className={className} src={CATALOG_ICON[giftId]} width={size} height={size}
+      style={{ width: size, height: size, objectFit: 'contain' }} alt="" aria-hidden="true" onError={() => setFailed(true)} />;
 }
 
 export function SpiritIcon() { return <RoomGiftIcon giftId="spirit-pup" />; }
