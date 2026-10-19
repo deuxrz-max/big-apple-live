@@ -58,6 +58,7 @@ import type {
   FavoriteGalleryEntry,
   FavoriteRoomResult,
   GetRoomGiftEvents200,
+  GetRoomGiftEventsParams,
   GetSocialConversationParams,
   GetSocialPeopleParams,
   GiftStudioActivationInput,
@@ -7028,17 +7029,26 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getSendSocialGiftMutationOptions(options));
     }
 
-export const getGetRoomGiftEventsUrl = (roomId: string,) => {
+export const getGetRoomGiftEventsUrl = (roomId: string,
+    params?: GetRoomGiftEventsParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/social/gifts/rooms/${roomId}`
+  return stringifiedParams.length > 0 ? `/api/social/gifts/rooms/${roomId}?${stringifiedParams}` : `/api/social/gifts/rooms/${roomId}`
 }
 
-export const getRoomGiftEvents = async (roomId: string, options?: Parameters<typeof customFetch>[1]): Promise<GetRoomGiftEvents200> => {
+export const getRoomGiftEvents = async (roomId: string,
+    params?: GetRoomGiftEventsParams, options?: Parameters<typeof customFetch>[1]): Promise<GetRoomGiftEvents200> => {
 
-  return customFetch<GetRoomGiftEvents200>(getGetRoomGiftEventsUrl(roomId),
+  return customFetch<GetRoomGiftEvents200>(getGetRoomGiftEventsUrl(roomId,params),
   {
     ...options,
     method: 'GET'
@@ -7051,23 +7061,25 @@ export const getRoomGiftEvents = async (roomId: string, options?: Parameters<typ
 
 
 
-export const getGetRoomGiftEventsQueryKey = (roomId: string,) => {
+export const getGetRoomGiftEventsQueryKey = (roomId: string,
+    params?: GetRoomGiftEventsParams,) => {
     return [
-    `/api/social/gifts/rooms/${roomId}`
+    `/api/social/gifts/rooms/${roomId}`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetRoomGiftEventsQueryOptions = <TData = Awaited<ReturnType<typeof getRoomGiftEvents>>, TError = ErrorType<unknown>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetRoomGiftEventsQueryOptions = <TData = Awaited<ReturnType<typeof getRoomGiftEvents>>, TError = ErrorType<unknown>>(roomId: string,
+    params?: GetRoomGiftEventsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetRoomGiftEventsQueryKey(roomId);
+  const queryKey =  queryOptions?.queryKey ?? getGetRoomGiftEventsQueryKey(roomId,params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRoomGiftEvents>>> = ({ signal }) => getRoomGiftEvents(roomId, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRoomGiftEvents>>> = ({ signal }) => getRoomGiftEvents(roomId,params, { signal, ...requestOptions });
 
 
 
@@ -7082,11 +7094,12 @@ export type GetRoomGiftEventsQueryError = ErrorType<unknown>
 
 
 export function useGetRoomGiftEvents<TData = Awaited<ReturnType<typeof getRoomGiftEvents>>, TError = ErrorType<unknown>>(
- roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ roomId: string,
+    params?: GetRoomGiftEventsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetRoomGiftEventsQueryOptions(roomId,options)
+  const queryOptions = getGetRoomGiftEventsQueryOptions(roomId,params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

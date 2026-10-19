@@ -923,8 +923,12 @@
       "get": {
         "operationId": "getRoomGiftEvents",
         "tags": ["Social"],
-        "parameters": [{"name": "roomId", "in": "path", "required": true, "schema": {"type": "string"}}],
-        "responses": {"200": {"description": "Recent gift notices in the authorized university", "content": {"application/json": {"schema": {"type": "object", "properties": {"events": {"type": "array", "items": {"$ref": "#/components/schemas/RoomGiftEvent"}}}, "required": ["events"]}}}}}
+        "parameters": [
+          {"name": "roomId", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "after", "in": "query", "required": false, "schema": {"type": "string"}, "description": "Opaque cursor returned by the previous page"},
+          {"name": "since", "in": "query", "required": false, "schema": {"type": "string", "format": "date-time"}, "description": "Return gift events from this time, in FIFO pages"}
+        ],
+        "responses": {"200": {"description": "Recent or cursor-paged gift notices in the authorized university", "content": {"application/json": {"schema": {"type": "object", "properties": {"events": {"type": "array", "items": {"$ref": "#/components/schemas/RoomGiftEvent"}}, "nextCursor": {"type": ["string", "null"]}, "hasMore": {"type": "boolean"}}, "required": ["events", "nextCursor", "hasMore"]}}}}}
       }
     },
     "/social/gifts": {
@@ -2157,6 +2161,7 @@
           "id": {"type": "string"},
           "giftId": {"type": "string"},
           "giftName": {"type": "string"},
+          "quantity": {"type": "integer", "minimum": 1, "maximum": 1314},
           "senderUsername": {"type": "string"},
           "recipientUsername": {"type": "string"},
           "senderName": {"type": "string"},
@@ -2175,7 +2180,7 @@
           "recipientPassport": {"$ref": "#/components/schemas/StreamerPassportBadgeSummary"},
           "createdAt": {"type": "string", "format": "date-time"}
         },
-        "required": ["id", "giftId", "giftName", "senderUsername", "recipientUsername", "senderName", "recipientName", "senderBadgeId", "recipientBadgeId", "senderBadgeName", "recipientBadgeName", "senderBadgeImage", "recipientBadgeImage", "createdAt"]
+        "required": ["id", "giftId", "giftName", "quantity", "senderUsername", "recipientUsername", "senderName", "recipientName", "senderBadgeId", "recipientBadgeId", "senderBadgeName", "recipientBadgeName", "senderBadgeImage", "recipientBadgeImage", "createdAt"]
       },
       "SocialGiftInput": {
         "type": "object",

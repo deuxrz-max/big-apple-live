@@ -41,6 +41,16 @@ export const cosmicEncoreMedia = {
   fallback: `${MEDIA['cosmic-encore']}fallback.webp`,
 };
 
+export const roomGiftMiniMedia: Record<RoomGiftId, { video?: string; image?: string; still: string }> = {
+  heart: { still: CATALOG_ICON.heart },
+  'spirit-pup': { video: `${MEDIA['spirit-pup']}animation.webm`, image: `${MEDIA['spirit-pup']}animation.webp`, still: CATALOG_ICON['spirit-pup'] },
+  moonfox: { video: `${MEDIA.moonfox}animation.webm`, image: `${MEDIA.moonfox}animation.webp`, still: CATALOG_ICON.moonfox },
+  'cosmic-encore': { video: cosmicEncoreMedia.animation, image: cosmicEncoreMedia.fallback, still: CATALOG_ICON['cosmic-encore'] },
+  fireworks: { video: `${MEDIA.fireworks}animation.webm`, image: `${MEDIA.fireworks}animation.webp`, still: CATALOG_ICON.fireworks },
+  'rose-shower': { video: `${MEDIA['rose-shower']}animation.webm`, image: `${MEDIA['rose-shower']}animation.webp`, still: CATALOG_ICON['rose-shower'] },
+  whip: { video: `${MEDIA.whip}animation.webm`, image: `${MEDIA.whip}animation.webp`, still: CATALOG_ICON.whip },
+};
+
 function preferImages() {
   return /iPhone|iPad|iPod/.test(navigator.userAgent)
     || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent))

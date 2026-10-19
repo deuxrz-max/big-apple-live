@@ -19,7 +19,7 @@ import { BeamTv, type BeamTvHandle } from './BeamTv';
 import { BotShield } from './BotShield';
 import { GiftBag, OPEN_ROOM_GIFTS_EVENT } from '@/gifts';
 import { useRoomGifts } from '@/gifts/useRoomGifts';
-import { GiftAnimationPlayer } from '@/gifts/GiftAnimationPlayer';
+import { GiftComboPlayer } from '@/gifts/GiftComboPlayer';
 import { PassportSummaryBadge } from '@/passport/StreamerPassport';
 import { RoomEntranceEffectOverlay } from './RoomEntranceEffectOverlay';
 import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
@@ -669,12 +669,10 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
       )}
 
       {giftBag && <GiftBag recipient={giftBag.recipient} recipients={giftRecipients} roomId={roomId} sessionId={sessionId} onClose={() => setGiftBag(null)} />}
-      {gifts.animation && <GiftAnimationPlayer
+      {gifts.animation && <GiftComboPlayer
         key={gifts.animation.id}
-        giftId={gifts.animation.giftId as import('@workspace/api-client-react').GiftStudioGiftId}
-        senderName={gifts.animation.senderName}
-        senderNameColor={gifts.animation.senderNameColor}
-        senderNameTierIndex={gifts.animation.senderNameTierIndex}
+        gift={gifts.animation}
+        waitingCount={gifts.waitingCount}
         onFinish={gifts.finish}
       />}
 

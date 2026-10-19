@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "test:marathon": "esbuild src/lib/social/marathon.test.ts --bundle --platform=node --format=esm --banner:js=\"import { createRequire as createTestRequire } from 'node:module'; const require = createTestRequire(import.meta.url);\" --outfile=.tests/marathon.test.mjs && node --test .tests/marathon.test.mjs",
-    "test:spirit-pup": "esbuild src/lib/social/spirit-pup.test.ts --bundle --platform=node --format=esm --banner:js=\"import { createRequire as cr } from 'node:module'; const require = cr(import.meta.url);\" --outfile=.tests/spirit-pup.test.mjs && node --test .tests/spirit-pup.test.mjs",
+    "test:spirit-pup": "esbuild src/lib/social/spirit-pup.test.ts --bundle --platform=node --format=esm --external:sharp --external:pino --banner:js=\"import { createRequire as cr } from 'node:module'; const require = cr(import.meta.url);\" --outfile=.tests/spirit-pup.test.mjs && node --test .tests/spirit-pup.test.mjs",
+    "test:gift-quantity": "esbuild src/lib/social/gift-quantity.test.ts --bundle --platform=node --format=esm --outfile=.tests/gift-quantity.test.mjs && node --test .tests/gift-quantity.test.mjs",
+    "test:live-stream-chat": "esbuild src/lib/live-stream-chat.test.ts --bundle --platform=node --format=esm --outfile=.tests/live-stream-chat.test.mjs && node --test .tests/live-stream-chat.test.mjs",
     "test:passport": "esbuild src/lib/social/passport-policy.test.ts --bundle --platform=node --format=esm --outfile=.tests/passport-policy.test.mjs && node --test .tests/passport-policy.test.mjs",
     "test:bot-policy": "esbuild src/lib/bot-policy.test.ts --bundle --platform=node --format=esm --outfile=.tests/bot-policy.test.mjs && node --test .tests/bot-policy.test.mjs",
     "test:bot-chatter": "esbuild src/lib/bot-chatter-policy.test.ts --bundle --platform=node --format=esm --outfile=.tests/bot-chatter-policy.test.mjs && node --test .tests/bot-chatter-policy.test.mjs",

@@ -3204,6 +3204,13 @@ export const GetRoomGiftEventsParams = zod.object({
   "roomId": zod.coerce.string()
 })
 
+export const GetRoomGiftEventsQueryParams = zod.object({
+  "after": zod.coerce.string().optional().describe('Opaque cursor returned by the previous page'),
+  "since": zod.date().optional().describe('Return gift events from this time, in FIFO pages')
+})
+
+export const getRoomGiftEventsResponseEventsItemQuantityMax = 1314;
+
 export const getRoomGiftEventsResponseEventsItemSenderNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getRoomGiftEventsResponseEventsItemSenderNameTierIndexMin = 0;
 export const getRoomGiftEventsResponseEventsItemSenderNameTierIndexMax = 18;
@@ -3221,6 +3228,7 @@ export const GetRoomGiftEventsResponse = zod.object({
   "id": zod.string(),
   "giftId": zod.string(),
   "giftName": zod.string(),
+  "quantity": zod.number().int().min(1).max(getRoomGiftEventsResponseEventsItemQuantityMax),
   "senderUsername": zod.string(),
   "recipientUsername": zod.string(),
   "senderName": zod.string(),
@@ -3254,7 +3262,9 @@ export const GetRoomGiftEventsResponse = zod.object({
   "foundingLeague": zod.boolean()
 }).optional(),
   "createdAt": zod.coerce.date()
-}))
+})),
+  "nextCursor": zod.string().nullable(),
+  "hasMore": zod.boolean()
 })
 
 

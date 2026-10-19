@@ -11,6 +11,11 @@ export interface RoomGiftEvent {
   id: string;
   giftId: string;
   giftName: string;
+  /**
+     * @minimum 1
+     * @maximum 1314
+     */
+  quantity: number;
   senderUsername: string;
   recipientUsername: string;
   senderName: string;

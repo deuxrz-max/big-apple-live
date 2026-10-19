@@ -11,6 +11,23 @@ import { liveStreamIdForAccount, isLiveStreamActiveOrStarting } from "../live-st
 import { getSendableGiftCatalogItem } from "../gift-studio-catalog";
 import { giftChargeTotal } from "./gift-quantity";
 
+const giftSendTails = new Map<string, Promise<void>>();
+
+/** Preserve the accepted order of gift sends within a room or live stream. */
+export async function serializeGiftSends<T>(scope: string, operation: () => Promise<T>): Promise<T> {
+  const prior = giftSendTails.get(scope) ?? Promise.resolve();
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  giftSendTails.set(scope, gate);
+  await prior;
+  try {
+    return await operation();
+  } finally {
+    release();
+    if (giftSendTails.get(scope) === gate) giftSendTails.delete(scope);
+  }
+}
+
 /** Unlimited test gifts keep the wallet balance unchanged but retain their nominal value in the ledger. */
 export function giftLedgerDebit(debit: number, cost: number, unlimited: boolean): number {
   return unlimited ? cost : debit;
@@ -80,14 +97,14 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
     ]);
     let liveGiftEvent: {
       streamId: string; senderAccountId: string; senderUsername: string; senderName: string;
-      recipientUsername: string; recipientName: string; giftId: string; giftName: string; cost: number;
+      recipientUsername: string; recipientName: string; giftId: string; giftName: string; cost: number; quantity: number;
     } | null = null;
     if (roomGift && roomContext) {
       await tx.insert(socialGiftEvents).values({
         historyId: historyId!, senderId: id, recipientId: target.accountId,
         senderUsername: sender.username, recipientUsername: target.username,
         senderName: sender.displayName ?? sender.username, recipientName: target.displayName ?? target.username,
-        giftId: item.id, cost: totalCost, recipientCredits, houseCredits: totalCost - recipientCredits,
+        giftId: item.id, cost: totalCost, quantity, recipientCredits, houseCredits: totalCost - recipientCredits,
       });
       await tx.insert(socialGiftBag).values({ accountId: target.accountId, giftId: item.id, quantity })
         .onConflictDoUpdate({ target: [socialGiftBag.accountId, socialGiftBag.giftId], set: { quantity: sql`${socialGiftBag.quantity} + ${quantity}` } });
@@ -98,7 +115,7 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
       liveGiftEvent = {
         streamId: streamContext.streamId, senderAccountId: id, senderUsername: sender.username,
         senderName: sender.displayName ?? sender.username, recipientUsername: target.username,
-        recipientName: target.displayName ?? target.username, giftId: item.id, giftName: item.name, cost: totalCost,
+        recipientName: target.displayName ?? target.username, giftId: item.id, giftName: item.name, cost: totalCost, quantity,
       };
     }
     return { wallet: await wallet(id, tx, sender.username), liveGiftEvent };

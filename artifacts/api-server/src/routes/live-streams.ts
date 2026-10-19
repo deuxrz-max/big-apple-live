@@ -341,6 +341,15 @@ router.get("/account/live-streams/:streamId/chat/events", async (req, res) => {
     const { senderAccountId: _privateAccountId, ...publicGift } = gift;
     if (!res.destroyed && !res.writableEnded) res.write(`event: ${eventName}\ndata: ${JSON.stringify(publicGift)}\n\n`);
   };
+  let flushingGiftHistory = true;
+  const pendingGifts: ReturnType<typeof liveStreamChatHub.recentGifts> = [];
+  const giftHistoryIds = new Set<string>();
+  let giftWriteTail = Promise.resolve();
+  const enqueueGift = (gift: ReturnType<typeof liveStreamChatHub.recentGifts>[number], eventName = "gift") => {
+    giftWriteTail = giftWriteTail.then(() => writeGift(gift, eventName)).catch(error => {
+      req.log.warn({ error }, "Live stream gift event could not be delivered");
+    });
+  };
   const unsubscribe = liveStreamChatHub.subscribe(params.data.streamId, message => {
     if (!message) { res.end(); return; }
     void writeMessage(message).catch(error => {
@@ -349,13 +358,19 @@ router.get("/account/live-streams/:streamId/chat/events", async (req, res) => {
   });
   const unsubscribeGifts = liveStreamChatHub.subscribeGifts(params.data.streamId, gift => {
     if (!gift) { res.end(); return; }
-    void writeGift(gift).catch(error => {
-      req.log.warn({ error }, "Live stream gift event could not be delivered");
-    });
+    if (flushingGiftHistory) pendingGifts.push(gift);
+    else enqueueGift(gift);
   });
   for (const message of liveStreamChatHub.recent(params.data.streamId)) await writeMessage(message);
   const gifts = liveStreamChatHub.recentGifts(params.data.streamId);
-  for (const gift of gifts) await writeGift(gift, "gift-history-item");
+  for (const gift of gifts) {
+    giftHistoryIds.add(gift.id);
+    await writeGift(gift, "gift-history-item");
+  }
+  flushingGiftHistory = false;
+  for (const gift of pendingGifts) {
+    if (!giftHistoryIds.has(gift.id)) enqueueGift(gift);
+  }
   const keepalive = setInterval(() => {
     void requireLiveParticipant(id, params.data.streamId).catch(() => res.end());
     if (!res.destroyed && !res.writableEnded) res.write(": keepalive\n\n");

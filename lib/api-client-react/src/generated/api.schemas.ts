@@ -3229,6 +3229,11 @@ export interface RoomGiftEvent {
   id: string;
   giftId: string;
   giftName: string;
+  /**
+     * @minimum 1
+     * @maximum 1314
+     */
+  quantity: number;
   senderUsername: string;
   recipientUsername: string;
   senderName: string;
@@ -3416,8 +3421,22 @@ export const GetSocialPeopleGender = {
   Female: 'Female',
 } as const;
 
+export type GetRoomGiftEventsParams = {
+/**
+ * Opaque cursor returned by the previous page
+ */
+after?: string;
+/**
+ * Return gift events from this time, in FIFO pages
+ */
+since?: string;
+};
+
 export type GetRoomGiftEvents200 = {
   events: RoomGiftEvent[];
+  /** @nullable */
+  nextCursor: string | null;
+  hasMore: boolean;
 };
 
 export type GetSocialConversationParams = {

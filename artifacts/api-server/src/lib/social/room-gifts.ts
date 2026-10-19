@@ -1,5 +1,5 @@
 import { db, socialGiftEvents, socialRelations, accountProfiles } from '@workspace/db';
-import { and, desc, eq, or } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, gte, or } from 'drizzle-orm';
 import { requireAdult } from '../community';
 import { roomStore, RoomError } from '../room-store';
 import { nameColorProfilesForAccounts } from './gift-name-color-data';
@@ -16,16 +16,61 @@ export function validateGiftRoom(roomId: string, sessionId: string, senderId: st
   return roomStore.getHistoryId(roomId);
 }
 
-export async function roomGiftEvents(id: string, roomId: string, sessionId: string) {
+const PAGE_SIZE = 100;
+function encodeGiftCursor(eventOrder: number): string {
+  return Buffer.from(String(eventOrder)).toString('base64url');
+}
+
+function decodeGiftCursor(value: string): number | null {
+  try {
+    const order = Number(Buffer.from(value, 'base64url').toString('utf8'));
+    return Number.isSafeInteger(order) && order > 0 ? order : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function roomGiftEvents(
+  id: string,
+  roomId: string,
+  sessionId: string,
+  page: { after?: string; since?: string } = {},
+) {
   await requireAdult(id);
   if (!roomStore.isCommunity(roomId)) throw new RoomError(404, 'University not found');
   roomStore.requireAccountMember(roomId, sessionId, id);
+  const historyId = roomStore.getHistoryId(roomId);
   const blocks = await db.select().from(socialRelations).where(and(eq(socialRelations.kind, 'block'),
     or(eq(socialRelations.ownerId, id), eq(socialRelations.targetId, id))));
   const hidden = new Set(blocks.map(r => r.ownerId === id ? r.targetId : r.ownerId));
-  const rows = await db.select().from(socialGiftEvents)
-    .where(eq(socialGiftEvents.historyId, roomStore.getHistoryId(roomId)))
-    .orderBy(desc(socialGiftEvents.createdAt), desc(socialGiftEvents.id)).limit(60);
+  let rows: typeof socialGiftEvents.$inferSelect[];
+  let hasMore = false;
+  if (page.after) {
+    const cursor = decodeGiftCursor(page.after);
+    if (cursor === null) throw new RoomError(400, 'The room gift queue needs a refresh. Re-enter the room and try again.');
+    const ordered = await db.select().from(socialGiftEvents)
+      .where(and(eq(socialGiftEvents.historyId, historyId), gt(socialGiftEvents.eventOrder, cursor)))
+      .orderBy(asc(socialGiftEvents.eventOrder))
+      .limit(PAGE_SIZE + 1);
+    hasMore = ordered.length > PAGE_SIZE;
+    rows = ordered.slice(0, PAGE_SIZE);
+  } else if (page.since) {
+    const sinceTime = Date.parse(page.since);
+    if (!Number.isFinite(sinceTime)) throw new RoomError(400, 'The room gift queue needs a refresh. Re-enter the room and try again.');
+    const ordered = await db.select().from(socialGiftEvents)
+      .where(and(eq(socialGiftEvents.historyId, historyId), gte(socialGiftEvents.createdAt, new Date(sinceTime))))
+      .orderBy(asc(socialGiftEvents.eventOrder))
+      .limit(PAGE_SIZE + 1);
+    hasMore = ordered.length > PAGE_SIZE;
+    rows = ordered.slice(0, PAGE_SIZE);
+  } else {
+    rows = (await db.select().from(socialGiftEvents)
+      .where(eq(socialGiftEvents.historyId, historyId))
+      .orderBy(desc(socialGiftEvents.eventOrder)).limit(60)).reverse();
+  }
+  const nextCursor = rows.length
+    ? encodeGiftCursor(rows[rows.length - 1]!.eventOrder)
+    : page.after ?? null;
   const [nameColors, giftNames] = await Promise.all([
     nameColorProfilesForAccounts(rows.flatMap(row =>
       [row.senderId, row.recipientId].filter((accountId): accountId is string => !!accountId))),
@@ -39,9 +84,11 @@ export async function roomGiftEvents(id: string, roomId: string, sessionId: stri
     ? new Set((await db.select({ id: accountProfiles.accountId }).from(accountProfiles)
       .where(eq(accountProfiles.isTestAccount, true))).map(row => row.id))
     : new Set<string>();
-  return { events: rows.filter(r => !hidden.has(r.senderId ?? '') && !hidden.has(r.recipientId ?? '')
-    && !testIds.has(r.senderId ?? '') && !testIds.has(r.recipientId ?? '')).reverse().map(r => ({
+  return {
+    events: rows.filter(r => !hidden.has(r.senderId ?? '') && !hidden.has(r.recipientId ?? '')
+      && !testIds.has(r.senderId ?? '') && !testIds.has(r.recipientId ?? '')).map(r => ({
     id: r.id, giftId: r.giftId, giftName: giftNames.get(r.giftId) ?? r.giftId,
+    quantity: r.quantity,
     senderUsername: r.senderUsername, recipientUsername: r.recipientUsername,
     senderName: r.senderName, recipientName: r.recipientName,
     senderNameColor: r.senderId ? nameColors.get(r.senderId)?.color ?? "#FFFFFF" : "#FFFFFF",
@@ -57,5 +104,8 @@ export async function roomGiftEvents(id: string, roomId: string, sessionId: stri
     senderPassport: r.senderId ? passports.get(r.senderId) : undefined,
     recipientPassport: r.recipientId ? passports.get(r.recipientId) : undefined,
     createdAt: r.createdAt.toISOString(),
-  })) };
+    })),
+    nextCursor,
+    hasMore,
+  };
 }

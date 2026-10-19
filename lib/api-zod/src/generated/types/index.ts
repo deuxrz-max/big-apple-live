@@ -117,6 +117,7 @@ export * from './favoriteRoom4b96100';
 export * from './favoriteRoomResult';
 export * from './favoriteRoomResult4b96100';
 export * from './getRoomGiftEvents200';
+export * from './getRoomGiftEventsParams';
 export * from './getSocialConversationParams';
 export * from './getSocialPeopleGender';
 export * from './getSocialPeopleParams';

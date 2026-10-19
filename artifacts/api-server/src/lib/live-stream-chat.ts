@@ -27,6 +27,7 @@ export type LiveStreamGiftEvent = {
   giftId: string;
   giftName: string;
   cost: number;
+  quantity: number;
   createdAt: string;
 };
 
@@ -73,7 +74,6 @@ class LiveStreamChatHub {
     const gift = { ...input, id: randomUUID(), createdAt: new Date().toISOString() };
     if (state.ended) return gift;
     state.gifts.push(gift);
-    if (state.gifts.length > 100) state.gifts.splice(0, state.gifts.length - 100);
     for (const listener of state.giftListeners) listener(gift);
     return gift;
   }

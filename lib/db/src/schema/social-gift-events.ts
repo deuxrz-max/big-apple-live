@@ -1,10 +1,11 @@
-import { pgTable, uuid, text, integer, timestamp, index, primaryKey, check } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, integer, timestamp, index, primaryKey, check, bigserial } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { accountProfiles } from './account-profiles';
 
 /** Immutable gift receipts also retain the house's allocation, without a fake user wallet. */
 export const socialGiftEvents = pgTable('social_gift_events', {
   id: uuid('id').primaryKey().defaultRandom(),
+  eventOrder: bigserial('event_order', { mode: 'number' }).notNull(),
   historyId: text('history_id').notNull(),
   senderId: text('sender_id').references(() => accountProfiles.accountId, { onDelete: 'set null' }),
   recipientId: text('recipient_id').references(() => accountProfiles.accountId, { onDelete: 'set null' }),
@@ -14,12 +15,15 @@ export const socialGiftEvents = pgTable('social_gift_events', {
   recipientName: text('recipient_name').notNull(),
   giftId: text('gift_id').notNull(),
   cost: integer('cost').notNull(),
+  quantity: integer('quantity').notNull().default(1),
   recipientCredits: integer('recipient_credits').notNull(),
   houseCredits: integer('house_credits').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, t => [
   index('social_gift_events_room_time').on(t.historyId, t.createdAt),
+  index('social_gift_events_room_sequence').on(t.historyId, t.eventOrder),
   check('social_gift_split', sql`${t.cost} > 0 AND ${t.recipientCredits} >= 0 AND ${t.houseCredits} >= 0 AND ${t.cost} = ${t.recipientCredits} + ${t.houseCredits}`),
+  check('social_gift_event_quantity', sql`${t.quantity} BETWEEN 1 AND 1314`),
 ]);
 
 export const socialGiftBag = pgTable('social_gift_bag', {

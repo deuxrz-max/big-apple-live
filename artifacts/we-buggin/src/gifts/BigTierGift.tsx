@@ -10,7 +10,7 @@ export const bigTierGiftMedia: Record<BigTierGiftId, string> = {
   'rose-shower': `${import.meta.env.BASE_URL}api/gift-media/rose-shower/v3/animation.webm`,
   whip: `${import.meta.env.BASE_URL}api/gift-media/whip/v3/animation.webm`,
 };
-const bigTierGiftFallback: Partial<Record<BigTierGiftId, string>> = {
+export const bigTierGiftFallback: Partial<Record<BigTierGiftId, string>> = {
   fireworks: `${import.meta.env.BASE_URL}api/gift-media/fireworks/v3/animation.webp`,
   'rose-shower': `${import.meta.env.BASE_URL}api/gift-media/rose-shower/v3/animation.webp`,
   whip: `${import.meta.env.BASE_URL}api/gift-media/whip/v3/animation.webp`,
@@ -29,27 +29,30 @@ const PRESENTATION: Record<BigTierGiftId, { name: string; emoji: string; positio
   whip: { name: 'Whip', emoji: '🏎️', position: 'bottom' },
 };
 
-export function BigTierGiftAnimation({ giftId, senderName, senderNameColor, senderNameTierIndex, onFinish }: {
+export function BigTierGiftAnimation({ giftId, senderName, senderNameColor, senderNameTierIndex, onFinish, showSenderBanner = true }: {
   giftId: BigTierGiftId;
   senderName: string;
   senderNameColor?: string;
   senderNameTierIndex?: number;
   onFinish: () => void;
+  showSenderBanner?: boolean;
 }) {
   if (giftId === 'rose-shower') {
     return <RoseShowerEffect senderName={senderName} senderNameColor={senderNameColor}
-      senderNameTierIndex={senderNameTierIndex} onFinish={onFinish} />;
+      senderNameTierIndex={senderNameTierIndex} onFinish={onFinish} showSenderBanner={showSenderBanner} />;
   }
   return <BigTierGiftVideoAnimation giftId={giftId} senderName={senderName}
-    senderNameColor={senderNameColor} senderNameTierIndex={senderNameTierIndex} onFinish={onFinish} />;
+    senderNameColor={senderNameColor} senderNameTierIndex={senderNameTierIndex} onFinish={onFinish}
+    showSenderBanner={showSenderBanner} />;
 }
 
-function BigTierGiftVideoAnimation({ giftId, senderName, senderNameColor, senderNameTierIndex, onFinish }: {
+function BigTierGiftVideoAnimation({ giftId, senderName, senderNameColor, senderNameTierIndex, onFinish, showSenderBanner }: {
   giftId: Exclude<BigTierGiftId, 'rose-shower'>;
   senderName: string;
   senderNameColor?: string;
   senderNameTierIndex?: number;
   onFinish: () => void;
+  showSenderBanner: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const finishRef = useRef(onFinish);
@@ -154,7 +157,7 @@ function BigTierGiftVideoAnimation({ giftId, senderName, senderNameColor, sender
         aria-hidden="true"
       />
     )}
-    <span className="big-tier-gift-banner"><ShinyName displayNameColor={senderNameColor} displayNameTierIndex={senderNameTierIndex}>{senderName}</ShinyName> sent {gift.name} {gift.emoji}</span>
+    {showSenderBanner && <span className="big-tier-gift-banner"><ShinyName displayNameColor={senderNameColor} displayNameTierIndex={senderNameTierIndex}>{senderName}</ShinyName> sent {gift.name} {gift.emoji}</span>}
     {mediaError && <span className="big-tier-gift-error" role="status">{gift.name} animation could not load.</span>}
   </div>, document.body);
 }

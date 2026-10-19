@@ -9,4 +9,7 @@ import type { RoomGiftEvent } from './roomGiftEvent';
 
 export type GetRoomGiftEvents200 = {
   events: RoomGiftEvent[];
+  /** @nullable */
+  nextCursor: string | null;
+  hasMore: boolean;
 };

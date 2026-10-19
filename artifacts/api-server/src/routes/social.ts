@@ -37,7 +37,7 @@ import { requireAccount } from "../lib/social/core";
 import { nameColorProfileForAccount, setNameColorPurchaseTotalOverride } from "../lib/social/gift-name-color-data";
 import { accessFor, requireAdult, requireOwner } from "../lib/community";
 import { blocks, getMe, getPerson, listPeople, relationship, saveSocialProfile } from "../lib/social/people";
-import { claimDaily, gift, ledger, purchase } from "../lib/social/rewards";
+import { claimDaily, gift, ledger, purchase, serializeGiftSends } from "../lib/social/rewards";
 import { roomGiftEvents } from '../lib/social/room-gifts';
 import {
   serveGiftMedia, serveMoonfoxGiftMedia, serveCosmicEncoreGiftMedia,
@@ -796,7 +796,11 @@ router.put("/social/people/:username/relationship", async (req, res): Promise<vo
 router.get("/social/blocks", async (req, res): Promise<void> => { res.json(GetSocialPeopleResponse.parse(await blocks(accountId(req)))); });
 router.post("/social/wallet/claim", async (req, res): Promise<void> => { res.json(await claimDaily(accountId(req))); });
 router.get("/social/gifts/rooms/:roomId", async (req, res) => {
-  res.json(await roomGiftEvents(accountId(req), String(req.params.roomId).toUpperCase(), req.get('X-Room-Session') ?? ''));
+  res.json(await roomGiftEvents(accountId(req), String(req.params.roomId).toUpperCase(),
+    req.get('X-Room-Session') ?? '', {
+      after: typeof req.query.after === 'string' ? req.query.after : undefined,
+      since: typeof req.query.since === 'string' ? req.query.since : undefined,
+    }));
 });
 router.post("/social/gifts", async (req, res): Promise<void> => {
   const input = SendSocialGiftBody.safeParse(req.body);
@@ -805,12 +809,14 @@ router.post("/social/gifts", async (req, res): Promise<void> => {
   const senderId = accountId(req);
   if (input.data.streamId) {
     sameOrigin(req);
-    const [recipient] = await db.select({ accountId: accountProfiles.accountId })
-      .from(accountProfiles).where(eq(accountProfiles.username, input.data.recipient));
-    if (!recipient) throw new RoomError(404, "This livestream is no longer available.");
-    await requireLiveStreamGiftAccess(senderId, recipient.accountId, input.data.streamId);
-    const result = await gift(senderId, input.data.recipient, input.data.giftId, input.data.idempotencyKey,
-      { streamId: input.data.streamId }, input.data.quantity ?? 1);
+    const result = await serializeGiftSends(`live:${input.data.streamId}`, async () => {
+      const [recipient] = await db.select({ accountId: accountProfiles.accountId })
+        .from(accountProfiles).where(eq(accountProfiles.username, input.data.recipient));
+      if (!recipient) throw new RoomError(404, "This livestream is no longer available.");
+      await requireLiveStreamGiftAccess(senderId, recipient.accountId, input.data.streamId!);
+      return gift(senderId, input.data.recipient, input.data.giftId, input.data.idempotencyKey,
+        { streamId: input.data.streamId! }, input.data.quantity ?? 1);
+    });
     if ("liveGiftEvent" in result && result.liveGiftEvent) {
       const senderNameColor = await nameColorProfileForAccount(senderId);
       liveStreamChatHub.publishGift({
@@ -827,9 +833,14 @@ router.post("/social/gifts", async (req, res): Promise<void> => {
     }
     return;
   }
-  res.json(await gift(senderId, input.data.recipient, input.data.giftId, input.data.idempotencyKey,
-    input.data.roomId ? { roomId: input.data.roomId, sessionId: req.get('X-Room-Session') ?? '' } : undefined,
-    input.data.quantity ?? 1));
+  const context = input.data.roomId
+    ? { roomId: input.data.roomId, sessionId: req.get('X-Room-Session') ?? '' }
+    : undefined;
+  const operation = () => gift(senderId, input.data.recipient, input.data.giftId, input.data.idempotencyKey,
+    context, input.data.quantity ?? 1);
+  res.json(context
+    ? await serializeGiftSends(`room:${context.roomId.toUpperCase()}`, operation)
+    : await operation());
 });
 router.post("/social/store/purchase", async (req, res): Promise<void> => {
   const input = PurchaseSocialProductBody.safeParse(req.body);

@@ -68,6 +68,7 @@ test("live stream gifts are retained briefly and delivered to viewers", () => {
     giftId: "heart",
     giftName: "Heart",
     cost: 50,
+    quantity: 1,
   });
 
   assert.equal(received[0], gift.id);
@@ -75,4 +76,39 @@ test("live stream gifts are retained briefly and delivered to viewers", () => {
   liveStreamChatHub.end(streamId);
   assert.equal(received.at(-1), null);
   unsubscribe();
+});
+
+test("a large gift queue retains ordered, quantity-bearing events for all live viewers", () => {
+  const streamId = "d".repeat(32);
+  const receivedByOne: string[] = [];
+  const receivedByTwo: string[] = [];
+  liveStreamChatHub.subscribeGifts(streamId, gift => {
+    if (gift) receivedByOne.push(`${gift.senderUsername}:${gift.quantity}`);
+  });
+  liveStreamChatHub.subscribeGifts(streamId, gift => {
+    if (gift) receivedByTwo.push(`${gift.senderUsername}:${gift.quantity}`);
+  });
+  const sent: string[] = [];
+  for (let index = 0; index < 150; index += 1) {
+    const senderUsername = `sender-${index % 2}`;
+    sent.push(`${senderUsername}:${index + 1}`);
+    liveStreamChatHub.publishGift({
+      streamId,
+      senderAccountId: `account-${index % 2}`,
+      senderUsername,
+      senderName: senderUsername,
+      senderNameColor: "#FFFFFF",
+      senderNameTierIndex: 0,
+      recipientUsername: "Creator",
+      recipientName: "Creator",
+      giftId: "heart",
+      giftName: "Heart",
+      cost: (index + 1) * 50,
+      quantity: index + 1,
+    });
+  }
+  assert.deepEqual(receivedByOne, sent);
+  assert.deepEqual(receivedByTwo, sent);
+  assert.deepEqual(liveStreamChatHub.recentGifts(streamId).map(gift => `${gift.senderUsername}:${gift.quantity}`), sent);
+  liveStreamChatHub.end(streamId);
 });

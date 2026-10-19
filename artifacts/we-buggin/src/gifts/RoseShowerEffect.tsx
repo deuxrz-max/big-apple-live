@@ -185,11 +185,12 @@ function drawSpark(ctx: CanvasRenderingContext2D, x: number, y: number, size: nu
   ctx.restore();
 }
 
-export function RoseShowerEffect({ senderName, senderNameColor, senderNameTierIndex, onFinish }: {
+export function RoseShowerEffect({ senderName, senderNameColor, senderNameTierIndex, onFinish, showSenderBanner = true }: {
   senderName: string;
   senderNameColor?: string;
   senderNameTierIndex?: number;
   onFinish: () => void;
+  showSenderBanner?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const finishRef = useRef(onFinish);
@@ -314,6 +315,6 @@ export function RoseShowerEffect({ senderName, senderNameColor, senderNameTierIn
     data-testid="big-tier-rose-shower-animation"
   >
     <canvas ref={canvasRef} className="rose-shower-canvas" aria-hidden="true" />
-    <span className="big-tier-gift-banner"><ShinyName displayNameColor={senderNameColor} displayNameTierIndex={senderNameTierIndex}>{senderName}</ShinyName> sent Rose Shower 🌹</span>
+    {showSenderBanner && <span className="big-tier-gift-banner"><ShinyName displayNameColor={senderNameColor} displayNameTierIndex={senderNameTierIndex}>{senderName}</ShinyName> sent Rose Shower 🌹</span>}
   </div>, document.body);
 }

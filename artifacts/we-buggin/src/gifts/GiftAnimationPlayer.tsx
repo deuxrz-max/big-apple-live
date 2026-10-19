@@ -45,17 +45,21 @@ const prefersAnimatedImage = () =>
 export function GiftAnimationPlayer({
   giftId,
   senderName,
+  giftName,
   senderNameColor,
   senderNameTierIndex,
   onFinish,
   mediaOverride,
+  showSenderBanner = true,
 }: {
   giftId: GiftStudioGiftId;
   senderName: string;
+  giftName?: string;
   senderNameColor?: string;
   senderNameTierIndex?: number;
   onFinish: () => void;
   mediaOverride?: GiftStudioPlaybackMedia;
+  showSenderBanner?: boolean;
 }) {
   const isMotionGift = isMotionGiftId(giftId);
   const activeQuery = useGetActiveGiftStudioMedia(giftId, {
@@ -93,6 +97,7 @@ export function GiftAnimationPlayer({
       key={motionQuery.data.id}
       gift={motionQuery.data}
       senderName={senderName}
+      showSenderBanner={showSenderBanner}
       onFinish={onFinish}
     />;
   }
@@ -115,7 +120,9 @@ export function GiftAnimationPlayer({
       key={customMedia.versionId}
       giftId={giftId}
       senderName={senderName}
+      giftName={giftName}
       media={customMedia}
+      showSenderBanner={showSenderBanner}
       onFinish={onFinish}
     />;
   }
@@ -123,22 +130,26 @@ export function GiftAnimationPlayer({
 
   if (giftId === "heart") return <HeartAnimation onFinish={onFinish} />;
   if (giftId === "good-vibes" || giftId === "big-love" || giftId === "standing-ovation") {
-    return <CatalogIconGiftAnimation giftId={giftId} onFinish={onFinish} />;
+    return <CatalogIconGiftAnimation giftId={giftId} giftName={giftName} onFinish={onFinish} />;
   }
   if (giftId === "cosmic-encore") return <CosmicEncoreAnimation onFinish={onFinish} />;
   if (isBigTierGiftId(giftId)) return <BigTierGiftAnimation giftId={giftId} senderName={senderName}
-    senderNameColor={senderNameColor} senderNameTierIndex={senderNameTierIndex} onFinish={onFinish} />;
+    senderNameColor={senderNameColor} senderNameTierIndex={senderNameTierIndex} onFinish={onFinish}
+    showSenderBanner={showSenderBanner} />;
   if (giftId === "moonfox") return <MoonfoxAnimation onFinish={onFinish} />;
+  if (!PRESENTATION[giftId]) return <UnknownGiftAnimation giftName={giftName ?? giftId} onFinish={onFinish} />;
   return <SpiritAnimation onFinish={onFinish} />;
 }
 
 function ThreeDimensionalGiftAnimation({
   gift,
   senderName,
+  showSenderBanner,
   onFinish,
 }: {
   gift: DeveloperGiftMotion;
   senderName: string;
+  showSenderBanner: boolean;
   onFinish: () => void;
 }) {
   const finishRef = useRef(onFinish);
@@ -184,16 +195,17 @@ function ThreeDimensionalGiftAnimation({
       {previewError && <div className="gift-motion-simple-fallback">
         <strong>{gift.name}</strong><span>3D gift preview is not available on this device.</span>
       </div>}
-      <div className="gift-motion-sender-banner">
+      {showSenderBanner && <div className="gift-motion-sender-banner">
         <strong>{senderName}</strong><span> sent {gift.name}</span>
-      </div>
+      </div>}
     </div>,
     document.body,
   );
 }
 
-function CatalogIconGiftAnimation({ giftId, onFinish }: {
+function CatalogIconGiftAnimation({ giftId, giftName, onFinish }: {
   giftId: "good-vibes" | "big-love" | "standing-ovation";
+  giftName?: string;
   onFinish: () => void;
 }) {
   const [fading, setFading] = useState(false);
@@ -210,7 +222,25 @@ function CatalogIconGiftAnimation({ giftId, onFinish }: {
   const item = PRESENTATION[giftId];
   return createPortal(
     <div className={`big-tier-gift-overlay big-tier-gift-overlay--center${fading ? " is-fading-out" : ""}`} role="status" aria-live="polite">
-      <div className="catalog-icon-gift-preview"><span>{item.emoji}</span><strong>{item.name}</strong></div>
+      <div className="catalog-icon-gift-preview"><span>{item.emoji}</span><strong>{giftName || item.name}</strong></div>
+    </div>,
+    document.body,
+  );
+}
+
+function UnknownGiftAnimation({ giftName, onFinish }: { giftName: string; onFinish: () => void }) {
+  const [fading, setFading] = useState(false);
+  const finishRef = useRef(onFinish);
+  finishRef.current = onFinish;
+  useEffect(() => {
+    const fade = window.setTimeout(() => setFading(true), 1900);
+    const finish = window.setTimeout(() => finishRef.current(), 2300);
+    return () => { window.clearTimeout(fade); window.clearTimeout(finish); };
+  }, [giftName]);
+  return createPortal(
+    <div className={`big-tier-gift-overlay big-tier-gift-overlay--center${fading ? " is-fading-out" : ""}`}
+      role="status" aria-live="polite">
+      <div className="catalog-icon-gift-preview"><span>🎁</span><strong>{giftName}</strong></div>
     </div>,
     document.body,
   );
@@ -219,13 +249,17 @@ function CatalogIconGiftAnimation({ giftId, onFinish }: {
 function TransparentGiftAnimation({
   giftId,
   senderName,
+  giftName,
   media,
   onFinish,
+  showSenderBanner,
 }: {
   giftId: GiftStudioGiftId;
   senderName: string;
+  giftName?: string;
   media: GiftStudioPlaybackMedia;
   onFinish: () => void;
+  showSenderBanner: boolean;
 }) {
   const finishRef = useRef(onFinish);
   finishRef.current = onFinish;
@@ -269,7 +303,8 @@ function TransparentGiftAnimation({
     };
   }, [media.versionId, media.durationMs]);
 
-  const presentation = { ...PRESENTATION[giftId], name: media.name || PRESENTATION[giftId].name };
+  const fallback = PRESENTATION[giftId] ?? { name: giftName || media.name || String(giftId), emoji: "🎁", position: "center" as const };
+  const presentation = { ...fallback, name: giftName || media.name || fallback.name };
   const positionClass = `big-tier-gift-overlay--${presentation.position}`;
   const mediaClass = `big-tier-gift-video big-tier-gift-video--alpha gift-studio-custom-media${fading ? " is-fading-out" : ""}`;
   const src = useImage ? giftStudioMediaUrl(media.safariUrl) : giftStudioMediaUrl(media.webmUrl);
@@ -325,7 +360,7 @@ function TransparentGiftAnimation({
           }}
         />
       )}
-      <span className="big-tier-gift-banner">{senderName} sent {presentation.name} {presentation.emoji}</span>
+      {showSenderBanner && <span className="big-tier-gift-banner">{senderName} sent {presentation.name} {presentation.emoji}</span>}
       {mediaError && <span className="big-tier-gift-error" role="status">{presentation.name} animation could not load.</span>}
     </div>,
     document.body,

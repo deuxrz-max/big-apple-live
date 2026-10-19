@@ -11,7 +11,8 @@ import {
 import type { LiveStreamEntry, LiveStreamChatMessage } from "@workspace/api-client-react";
 import { GiftBag } from "@/gifts/GiftBag";
 import { GiftControl } from "@/gifts/GiftControl";
-import { GiftAnimationPlayer } from "@/gifts/GiftAnimationPlayer";
+import { GiftComboPlayer, type GiftComboNotice } from "@/gifts/GiftComboPlayer";
+import { appendUniqueGiftEvents, finishGiftQueueItem } from "@/gifts/gift-combo-policy";
 import { SafetyReportDialog } from "@/safety/SafetyReportDialog";
 import { ShinyName } from "@/components/ShinyName";
 import {
@@ -20,9 +21,11 @@ import {
 } from "./liveSessionController";
 import "./live-stream.css";
 
-type GiftNotice = {
-  id: string; giftId: string; senderUsername: string; senderName: string;
-  senderNameColor?: string; senderNameTierIndex?: number; cost: number;
+type GiftNotice = GiftComboNotice & {
+  senderUsername: string;
+  giftName: string;
+  quantity: number;
+  cost: number;
 };
 type ActionTarget = { username: string; displayName: string; displayNameColor?: string; displayNameTierIndex?: number };
 type ReportTarget = {
@@ -60,6 +63,8 @@ function useLiveChat(streamId: string, enabled: boolean, blocked: string[], onGi
   const [report, setReport] = useState<ReportTarget | null>(null);
   const [profile, setProfile] = useState<ActionTarget | null>(null);
   const blockedKey = blocked.join("|");
+  const seenGiftIds = useRef(new Set<string>());
+  useEffect(() => { seenGiftIds.current.clear(); }, [streamId]);
 
   useEffect(() => {
     if (!enabled || !streamId) return;
@@ -81,8 +86,12 @@ function useLiveChat(streamId: string, enabled: boolean, blocked: string[], onGi
     const receiveGift = (event: MessageEvent<string>, animate: boolean) => {
       try {
         const gift = JSON.parse(event.data) as GiftNotice;
-        if (gift.id && gift.senderUsername && gift.giftId
-          && !blockedNames.has(gift.senderUsername.toLowerCase())) onGift(gift, animate);
+        if (!gift.id || !gift.senderUsername || !gift.giftId || seenGiftIds.current.has(gift.id)
+          || blockedNames.has(gift.senderUsername.toLowerCase())) return;
+        seenGiftIds.current.add(gift.id);
+        const age = gift.createdAt ? Date.now() - new Date(gift.createdAt).getTime() : Number.POSITIVE_INFINITY;
+        const recentHistoryEvent = !animate && age >= -5000 && age <= 10_000;
+        onGift({ ...gift, quantity: gift.quantity || 1 }, animate || recentHistoryEvent);
       } catch { /* Ignore malformed events. */ }
     };
     const connect = () => {
@@ -199,12 +208,12 @@ function RemoteAudio({ track }: { track: RemoteTrack }) {
   return <div className="st-live-remote-audio" ref={ref} />;
 }
 
-function GifterAvatar({ username, name, credits }: { username: string; name: string; credits: number }) {
+function GifterAvatar({ username, name, coins }: { username: string; name: string; coins: number }) {
   const person = useGetSocialPerson(username, {
     query: { queryKey: getGetSocialPersonQueryKey(username), enabled: Boolean(username) },
   });
   const photo = person.data?.photoUrl;
-  return <span className="st-live-gifter-avatar" title={`${name} · ${credits} coins`}>
+  return <span className="st-live-gifter-avatar" title={`${name} · ${coins} coins`}>
     {photo ? <img src={photo} alt="" /> : [...name][0]?.toUpperCase() ?? "?"}
   </span>;
 }
@@ -249,7 +258,7 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
   const viewerController = viewerLiveSession(streamId);
   const chatReady = hostMode ? Boolean(hostState?.chatReady) : viewerState?.phase === "live";
   const [giftOpen, setGiftOpen] = useState(false);
-  const [liveGiftEvents, setLiveGiftEvents] = useState<GiftNotice[]>([]);
+  const [liveGifters, setLiveGifters] = useState<Map<string, { username: string; name: string; coins: number }>>(() => new Map());
   const [giftQueue, setGiftQueue] = useState<GiftNotice[]>([]);
   const activeGift = giftQueue[0] ?? null;
   const [error, setError] = useState("");
@@ -268,20 +277,27 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
   const viewerCount = hostMode ? hostState?.viewerCount ?? 0 : viewerState?.viewerCount ?? 0;
   const muted = hostMode ? !hostState?.microphoneEnabled : false;
   const audioEnabled = viewerState?.audioEnabled ?? false;
+  useEffect(() => { setLiveGifters(new Map()); setGiftQueue([]); }, [streamId]);
   const chat = useLiveChat(streamId, chatReady, blocked, useCallback((gift: GiftNotice, animate: boolean) => {
-    setLiveGiftEvents(current => current.some(item => item.id === gift.id) ? current : [...current, gift].slice(-100));
-    if (animate) setGiftQueue(current => current.some(item => item.id === gift.id) ? current : [...current, gift].slice(-100));
+    setLiveGifters(current => {
+      const usernameKey = gift.senderUsername.toLowerCase();
+      const next = new Map(current);
+      const existing = next.get(usernameKey);
+      next.set(usernameKey, {
+        username: gift.senderUsername,
+        name: gift.senderName,
+        coins: (existing?.coins ?? 0) + gift.cost,
+      });
+      return next;
+    });
+    if (animate) setGiftQueue(current => appendUniqueGiftEvents(current, [gift]));
   }, []));
   const gifterTotals = useMemo(() => {
-    const totals = new Map<string, { username: string; name: string; credits: number }>();
-    for (const item of liveGiftEvents) {
-      if (blockedLower.has(item.senderUsername.toLowerCase())) continue;
-      const total = totals.get(item.senderUsername) ?? { username: item.senderUsername, name: item.senderName, credits: 0 };
-      total.credits += item.cost;
-      totals.set(item.senderUsername, total);
-    }
-    return [...totals.values()].sort((a, b) => b.credits - a.credits).slice(0, 3);
-  }, [blockedLower, liveGiftEvents]);
+    return [...liveGifters.values()]
+      .filter(item => !blockedLower.has(item.username.toLowerCase()))
+      .sort((a, b) => b.coins - a.coins)
+      .slice(0, 3);
+  }, [blockedLower, liveGifters]);
   const following = hostPerson.data?.favorite ?? false;
   const myName = ownProfile.data?.profile.username ?? ownUsername;
   const myDisplayName = ownProfile.data?.profile.displayName || myName;
@@ -337,8 +353,7 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
       onError: () => setError("Could not update your follow right now. Try again."),
     });
   };
-  const finishGift = (giftId: string) => setGiftQueue(current =>
-    current[0]?.id === giftId ? current.slice(1) : current.filter(item => item.id !== giftId));
+  const finishGift = (giftId: string) => setGiftQueue(current => finishGiftQueueItem(current, giftId));
   const share = async () => {
     const path = base.endsWith("/") ? base : `${base}/`;
     const url = new URL(`${path}live/${encodeURIComponent(streamId)}`, window.location.origin).toString();
@@ -475,12 +490,10 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
     </div>
     {audioTrack && <RemoteAudio track={audioTrack} />}
     {giftOpen && <GiftBag recipients={giftRecipients} streamId={streamId} onClose={() => setGiftOpen(false)} />}
-    {activeGift && <GiftAnimationPlayer
+    {activeGift && <GiftComboPlayer
       key={activeGift.id}
-      giftId={activeGift.giftId as import("@workspace/api-client-react").GiftStudioGiftId}
-      senderName={activeGift.senderName}
-      senderNameColor={activeGift.senderNameColor}
-      senderNameTierIndex={activeGift.senderNameTierIndex}
+      gift={activeGift}
+      waitingCount={Math.max(0, giftQueue.length - 1)}
       onFinish={() => finishGift(activeGift.id)}
     />}
     {profileAction && <div className="st-live-action-scrim" onClick={() => setProfileAction(null)}>
