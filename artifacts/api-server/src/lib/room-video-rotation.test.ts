@@ -14,6 +14,7 @@ import {
   getNextCommunityVideoSelection,
   isComedyWeeklyRefreshDue,
   isDirectoryCommunityPoolRoom,
+  planWrestlingUploadPages,
   preservePlaybackScheduleCursors,
   recordCommunityVideoPlayed,
   resolveCommunityPlaybackScheduleAt,
@@ -23,6 +24,7 @@ import {
 } from "./room-video-rotation";
 import { isOfficialMusicVideo } from "./music-video-policy";
 import {
+  communityWrestlingSearchPolicy,
   communityVideoSearchPolicy,
   communityVideoSearchTerms,
   communityVideoUploadChannels,
@@ -216,9 +218,37 @@ test("saved History and Pro Wrestling pools retain only their approved channel t
   const wrestling = screenCommunityVideoPoolItems([
     { ...item("WWE00000001"), channelTitle: "WWE" },
     { ...item("WWE00000002"), channelTitle: "WWE fan edits" },
+    { ...item("ROH00000001"), channelTitle: "Ring of Honor Wrestling" },
+    { ...item("ROH00000002"), channelTitle: "Ring of Honor Wrestling fan clips" },
   ], Date.now(), "KIDS01");
-  assert.deepEqual(wrestling.videos.map(video => video.videoId), ["WWE00000001"]);
-  assert.equal(wrestling.untrustedSourceEntries, 1);
+  assert.deepEqual(wrestling.videos.map(video => video.videoId), ["WWE00000001", "ROH00000001"]);
+  assert.equal(wrestling.untrustedSourceEntries, 2);
+});
+
+test("Pro Wrestling daily refresh checks the latest page for every official upload channel", () => {
+  const policy = communityWrestlingSearchPolicy("KIDS01")!;
+  assert.equal(policy.channels.length, 4);
+  const channels = policy.channels.map(channel => ({
+    ...channel,
+    playlistId: `uploads-${channel.channelId}`,
+  }));
+  const now = 1_800_000_000_000;
+  const cursors = Object.fromEntries(channels.flatMap(channel => [
+    [`page:${channel.channelId}`, `backfill-${channel.channelId}`],
+    [`__wrestlingLatestCheckedAt:${channel.channelId}`, String(now - 7 * 60 * 60_000)],
+  ]));
+  const duePlans = planWrestlingUploadPages(channels, cursors, now);
+  assert.equal(duePlans.length, 4);
+  assert.ok(duePlans.every(plan => plan.refreshLatestPage && plan.pageToken === undefined));
+  assert.deepEqual(duePlans.map(plan => plan.savedPageToken), channels.map(channel => `backfill-${channel.channelId}`));
+
+  const recentCursors = Object.fromEntries(channels.flatMap(channel => [
+    [`page:${channel.channelId}`, `page-token-${channel.channelId}`],
+    [`__wrestlingLatestCheckedAt:${channel.channelId}`, String(now - 60 * 60_000)],
+  ]));
+  const backfillPlans = planWrestlingUploadPages(channels, recentCursors, now);
+  assert.ok(backfillPlans.every(plan => !plan.refreshLatestPage
+    && plan.pageToken === `page-token-${plan.channel.channelId}`));
 });
 
 test("Comedy pools retain only tagged configured sources", () => {

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { communityWrestlingSearchPolicy } from "./community-config";
 import { searchOfficialProWrestlingVideos } from "./pro-wrestling-youtube";
 
-test("Pro Wrestling queries only the three official channels and globally orders embeddable videos newest first", async () => {
+test("Pro Wrestling queries only the four official channels and globally orders embeddable videos newest first", async () => {
   const originalFetch = globalThis.fetch;
   const requested: URL[] = [];
   const policy = communityWrestlingSearchPolicy("KIDS01")!;
@@ -11,11 +11,12 @@ test("Pro Wrestling queries only the three official channels and globally orders
   const channelVideo = new Map(policy.channels.map((channel, index) => [
     channel.channelId,
     {
-      videoId: ["AEWvid00001", "WWEvid00001", "TNAvid00001"][index]!,
+      videoId: ["AEWvid00001", "WWEvid00001", "TNAvid00001", "ROHvid00001"][index]!,
       publishedAt: [
         "2026-10-12T12:00:00Z",
         "2026-10-13T12:00:00Z",
         "2026-10-11T12:00:00Z",
+        "2026-10-14T12:00:00Z",
       ][index]!,
       channel,
     },
@@ -83,7 +84,7 @@ test("Pro Wrestling queries only the three official channels and globally orders
       ...policy,
       query: "official wrestling test queue",
     });
-    assert.equal(requested.filter(url => url.pathname.endsWith("/search")).length, 3);
+    assert.equal(requested.filter(url => url.pathname.endsWith("/search")).length, 4);
     for (const url of requested.filter(item => item.pathname.endsWith("/search"))) {
       assert.equal(url.searchParams.get("order"), "date");
       assert.equal(url.searchParams.get("safeSearch"), "none");
@@ -94,12 +95,13 @@ test("Pro Wrestling queries only the three official channels and globally orders
       assert.ok(channels.has(url.searchParams.get("channelId")!));
     }
     assert.deepEqual(result.videos.map(video => video.videoId), [
+      "ROHvid00001",
       "WWEvid00001",
       "AEWvid00001",
       "TNAvid00001",
     ]);
     assert.deepEqual(new Set(result.videos.map(video => video.channelTitle)),
-      new Set(["All Elite Wrestling", "WWE", "TNA Wrestling"]));
+      new Set(["All Elite Wrestling", "WWE", "TNA Wrestling", "Ring of Honor Wrestling"]));
     assert.equal(result.videos.some(video => video.videoId === "FanEdit0001"), false);
     assert.equal(result.videos.some(video => video.videoId === "WWEgame0001"), false);
   } finally {

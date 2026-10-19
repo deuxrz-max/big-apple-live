@@ -527,6 +527,30 @@ async function fetchSearchPage(
 
 type UploadChannel = { channelId: string; channelTitle: string; playlistId: string };
 
+export function planWrestlingUploadPages(
+  channels: readonly UploadChannel[],
+  sourceCursors: Readonly<Record<string, string>>,
+  nowMs: number,
+) {
+  return channels.map(channel => {
+    const cursorKey = `page:${channel.channelId}`;
+    const latestCheckKey = `__wrestlingLatestCheckedAt:${channel.channelId}`;
+    const lastLatestCheck = Number(sourceCursors[latestCheckKey] ?? 0);
+    const refreshLatestPage = !Number.isFinite(lastLatestCheck)
+      || lastLatestCheck <= 0
+      || nowMs - lastLatestCheck >= POOL_REFRESH_MS;
+    const savedPageToken = sourceCursors[cursorKey];
+    return {
+      channel,
+      cursorKey,
+      latestCheckKey,
+      refreshLatestPage,
+      savedPageToken,
+      ...(!refreshLatestPage && savedPageToken ? { pageToken: savedPageToken } : {}),
+    };
+  });
+}
+
 async function resolveUploadChannels(
   roomId: string,
   apiKey: string,
@@ -1078,6 +1102,30 @@ async function discoverNextBatch(
     const resolved = await resolveUploadChannels(roomId, apiKey, wrestling, history, cursors);
     Object.assign(cursors, resolved.sourceCursors);
     if (resolved.channels.length === 0) return { videos: [], sourceCursors: cursors };
+
+    if (wrestling) {
+      const checkedAt = Date.now();
+      const pagePlans = planWrestlingUploadPages(resolved.channels, cursors, checkedAt);
+      for (const plan of pagePlans.slice(0, Math.min(pageLimit, pagePlans.length))) {
+        const page = await fetchUploadPage(
+          roomId, apiKey, plan.channel, plan.pageToken, false,
+        );
+        additions.push(...page.videos);
+        if (plan.refreshLatestPage) {
+          cursors[plan.latestCheckKey] = String(checkedAt);
+          // A newest-page check must not erase the channel's backfill cursor.
+          if (!plan.savedPageToken && page.nextPageToken) {
+            cursors[plan.cursorKey] = page.nextPageToken;
+          }
+        } else if (page.nextPageToken) {
+          cursors[plan.cursorKey] = page.nextPageToken;
+        } else {
+          delete cursors[plan.cursorKey];
+        }
+      }
+      return { videos: additions, sourceCursors: cursors };
+    }
+
     let uploadIndex = Number(cursors.__uploadChannelIndex ?? "0") || 0;
     const maxPages = Math.min(
       pageLimit,
@@ -1202,7 +1250,9 @@ export async function refreshCommunityVideoPoolIncrementally(
   apiKey: string,
   rooms: RoomLookup,
 ): Promise<number> {
-  const row = await getOrRefreshPool(roomId.toUpperCase(), apiKey, rooms, true, 1);
+  const wrestling = communityWrestlingSearchPolicy(roomId, rooms);
+  const pageLimit = wrestling?.channels.length ?? 1;
+  const row = await getOrRefreshPool(roomId.toUpperCase(), apiKey, rooms, true, pageLimit);
   return row.videos?.filter(video => video.availableInUS === true).length ?? 0;
 }
 

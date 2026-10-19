@@ -97,7 +97,7 @@ export const COMMUNITY_ROOMS: CommunityRoomConfig[] = [
     defaultVideoSearch: "Pro Wrestling highlights full matches and promos",
     videoSearchPolicy: {
       order: "date",
-      trustedChannelTitles: ["All Elite Wrestling", "WWE", "TNA Wrestling"],
+      trustedChannelTitles: ["All Elite Wrestling", "WWE", "TNA Wrestling", "Ring of Honor Wrestling"],
     },
     wrestlingSearchPolicy: {
       query: "highlights full matches promos",
@@ -106,6 +106,7 @@ export const COMMUNITY_ROOMS: CommunityRoomConfig[] = [
         { channelId: "UCFN4JkGP_bVhAdBsoV9xftA", channelTitle: "All Elite Wrestling" },
         { channelId: "UCJ5v_MCY6GNUBTO8-D3XoAg", channelTitle: "WWE" },
         { channelId: "UCOp8wkVqdrWbFYHjDv946QQ", channelTitle: "TNA Wrestling" },
+        { channelId: "UC4_uDa6w1kOyzsikIzReCKQ", channelTitle: "Ring of Honor Wrestling" },
       ],
     },
   },
