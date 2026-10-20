@@ -20,6 +20,7 @@
 - [Eight-seat audio split](audio-beam-constraints.md) — mic-on seats hear one another and locally mute video; mic-off seats and audience hear video only.
 - [Living Beam rooms](living-beam-goal.md) — archived Beam goal; superseded for active routes by the text-chat pivot.
 - [Text-chat follow-ons](text-chat-pivot.md) — optional ownership checks require a unique bio code and reviewer, never an official platform verification claim.
+- [Passport country](passport-country.md) — reuse the saved self-reported country for the Me photo flag; no second country field or verification claim.
 - [Artifact command environment](artifact-command-environment.md) — one-off shell checks do not necessarily inherit managed service routing variables.
 - [Photo retention approval](profile-photo-retention.md) — user approved 30 days unused; protect current images and saves, and never expand to other data.
 - [Photo visibility cache precedence](photo-visibility-cache-precedence.md) — never replace a fresh hidden-photo response with an older cached image.

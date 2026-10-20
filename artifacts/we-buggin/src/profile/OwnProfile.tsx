@@ -28,7 +28,8 @@ export function OwnProfile() {
   if (me.isLoading) return <div className="pf pf-panel pf-panel-solo"><Loading /></div>;
   if (me.isError || !me.data) return <div className="pf pf-panel pf-panel-solo"><ErrorBox error={me.error} retry={() => me.refetch()} /></div>;
   const p = me.data.profile;
-  const countryName = p.country ? (me.data.countries.find((c) => c.code === p.country)?.name ?? p.country) : undefined;
+  const passportCountry = me.data.countries.find((c) => c.code === p.country);
+  const countryName = p.country ? (passportCountry?.name ?? p.country) : undefined;
   const nameProgress = me.data.nameColorProgress;
   const saveNameColorTestTotal = (totalCoins: number | null) => {
     setTestMessage(null);
@@ -42,7 +43,7 @@ export function OwnProfile() {
     });
   };
   return (
-    <ProfileView person={p} own countryName={countryName} products={me.data.products} backHref="/home"
+    <ProfileView person={p} own countryName={countryName} passportCountry={passportCountry} products={me.data.products} backHref="/home"
       links={
         <nav className="pf-links" aria-label="Profile shortcuts">
           <Link href="/user-portal/store" className="pf-btn pf-btn-store" data-testid="link-profile-store"><ShoppingBag size={17} aria-hidden="true" /> Store</Link>

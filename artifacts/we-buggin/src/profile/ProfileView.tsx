@@ -10,6 +10,7 @@ import { BadgeArt } from '@/social/BadgeArt';
 import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
 import './profile.css';
 import { approvedPhotos } from './profile-model';
+import { PassportCountryBadge, type PassportCountry } from '@/passport/PassportCountryBadge';
 
 type EarnedBadge = { id: string; earnedAt?: string | null };
 type Product = { id: string; name: string };
@@ -33,7 +34,7 @@ function emojiFromId(emojiId: string) {
   }
 }
 
-export function Hero({ urls, name, username, left, right }: { urls: string[]; name: string; username: string; left: ReactNode; right?: ReactNode }) {
+export function Hero({ urls, name, username, left, right, countryBadge }: { urls: string[]; name: string; username: string; left: ReactNode; right?: ReactNode; countryBadge?: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const [idx, setIdx] = useState(0);
   const slides: (string | null)[] = urls.length ? urls : [null];
@@ -44,6 +45,7 @@ export function Hero({ urls, name, username, left, right }: { urls: string[]; na
         {slides.map((u, i) => <Slide key={u ?? 'none'} url={u} name={name} username={username} />)}
       </div>
       <div className="pf-hero-bar">{left}{right}</div>
+      {countryBadge}
       {slides.length > 1 && <div className="pf-dots" role="tablist" aria-label="Photo position">
         {slides.map((u, i) => <button key={u ?? i} type="button" role="tab" aria-selected={i === idx} aria-label={`Photo ${i + 1} of ${slides.length}`} className={i === idx ? 'is-on' : ''}
           onClick={() => ref.current?.scrollTo({ left: i * ref.current.clientWidth, behavior: 'smooth' })} />)}
@@ -111,8 +113,8 @@ function Shield({ id, name, imageUrl, date, equipped }: { id: string; name: stri
   );
 }
 
-export function ProfileView({ person, own = false, countryName, products, backHref, menu, actions, links, children }: {
-  person: SocialPerson; own?: boolean; countryName?: string; products?: Product[]; backHref: string;
+export function ProfileView({ person, own = false, countryName, passportCountry, products, backHref, menu, actions, links, children }: {
+  person: SocialPerson; own?: boolean; countryName?: string; passportCountry?: PassportCountry; products?: Product[]; backHref: string;
   menu?: ReactNode; actions?: ReactNode; links?: ReactNode; children?: ReactNode;
 }) {
   const p = person;
@@ -125,6 +127,7 @@ export function ProfileView({ person, own = false, countryName, products, backHr
   return (
     <div className="beam-app pf" data-testid="profile-view">
       <Hero urls={approvedPhotos(p, own)} name={name} username={p.username}
+        countryBadge={own && <PassportCountryBadge country={passportCountry} />}
         left={<BackButton href={backHref} label="Back" />}
         right={own ? <Link href="/user-portal/edit" className="pf-round" aria-label="Edit your profile" data-testid="link-edit-hero"><Pencil size={18} aria-hidden /></Link> : menu} />
       <section className="pf-panel">
