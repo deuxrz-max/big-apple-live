@@ -42,3 +42,9 @@ Native FFmpeg tests do not validate the browser-side FFmpeg WebAssembly worker. 
 **Why:** A headless preview run stayed in the local-engine loading stage and the test workspace restarted before it completed, despite native FFmpeg alpha conversion succeeding.
 
 **How to apply:** Keep native alpha verification and browser-worker startup as separate checks, and confirm processing on a real supported phone before claiming the on-device workflow is verified.
+
+Gift Studio background mode is per version: old and see-through assets remain the default and still require real alpha; black-background assets remain opaque in storage and use screen blending in every playback surface. Only generated icons remove the black matte.
+
+**Why:** The owner confirmed the simple two-option switch; keeping black-matte removal out of the animation file preserves bright colors and leaves existing gifts unchanged.
+
+**How to apply:** Carry the mode through saved settings and active-media responses, apply black blending to both full and mini playback, and keep alpha checks limited to see-through videos.

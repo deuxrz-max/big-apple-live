@@ -2726,6 +2726,14 @@ export const GiftStudioProcessingSettingsMaxDimension = {
   NUMBER_1080: 1080,
 } as const;
 
+export type GiftStudioProcessingSettingsBackgroundMode = typeof GiftStudioProcessingSettingsBackgroundMode[keyof typeof GiftStudioProcessingSettingsBackgroundMode];
+
+
+export const GiftStudioProcessingSettingsBackgroundMode = {
+  'see-through': 'see-through',
+  black: 'black',
+} as const;
+
 export interface GiftStudioProcessingSettings {
   preset: GiftStudioProcessingSettingsPreset;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
@@ -2746,6 +2754,9 @@ export interface GiftStudioProcessingSettings {
      */
   spill: number;
   maxDimension: GiftStudioProcessingSettingsMaxDimension;
+  backgroundMode?: GiftStudioProcessingSettingsBackgroundMode;
+  /** The uploaded clip already contains real transparency; do not apply a color key */
+  preserveSourceAlpha?: boolean;
   /**
      * Owner-provided name shown for this saved Gift Studio draft
      * @minLength 1
@@ -2767,7 +2778,7 @@ export interface GiftStudioUploadInput {
   settings: string;
   /** Video file part */
   sourceVideo: string;
-  /** Processed transparent WebM file part */
+  /** Processed WebM file part; transparent for see-through videos and opaque for black-background videos */
   processedWebm: string;
 }
 
@@ -2899,6 +2910,14 @@ export interface DeveloperContentSyncStatus {
   isRunning: boolean;
 }
 
+export type GiftStudioPlaybackMediaBackgroundMode = typeof GiftStudioPlaybackMediaBackgroundMode[keyof typeof GiftStudioPlaybackMediaBackgroundMode];
+
+
+export const GiftStudioPlaybackMediaBackgroundMode = {
+  'see-through': 'see-through',
+  black: 'black',
+} as const;
+
 export interface GiftStudioPlaybackMedia {
   versionId: string;
   /**
@@ -2913,6 +2932,7 @@ export interface GiftStudioPlaybackMedia {
      * @maximum 15000
      */
   durationMs: number;
+  backgroundMode: GiftStudioPlaybackMediaBackgroundMode;
 }
 
 export interface GiftStudioActiveMediaResponse {

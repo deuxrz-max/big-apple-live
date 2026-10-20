@@ -520,7 +520,7 @@ router.post("/social/admin/gift-studio/versions", ownerOnly, parseStudioUpload, 
   const original = files?.sourceVideo?.[0];
   const processed = files?.processedWebm?.[0];
   try {
-    if (!directory || !original || !processed) throw new RoomError(400, "Choose both the original clip and processed transparent WebM.");
+    if (!directory || !original || !processed) throw new RoomError(400, "Choose both the original clip and processed animation WebM.");
     const parsedBody = CreateGiftStudioVersionBody.safeParse({
       giftId: req.body?.giftId,
       productType: req.body?.productType,

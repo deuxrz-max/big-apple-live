@@ -240,7 +240,11 @@ export const GiftMiniAnimationCanvas = memo(function GiftMiniAnimationCanvas({
         alt=""
         onError={() => mode === "image" ? setImageFailed(true) : setStillFailed(true)}
       />}
-      <canvas ref={canvasRef} className="gift-mini-canvas" aria-hidden="true" />
+      <canvas
+        ref={canvasRef}
+        className={`gift-mini-canvas${customMedia?.backgroundMode === "black" ? " is-black-background" : ""}`}
+        aria-hidden="true"
+      />
     </div>
   ), document.body);
 });

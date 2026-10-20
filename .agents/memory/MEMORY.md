@@ -27,7 +27,7 @@
 - [Gift-flow demos](gift-flow-demos.md) — show existing gift UI in an isolated phone-sized browser recording and disclose synthetic responses.
 - [Gift Studio processing](gift-studio-ffmpeg-worker.md) — preserve Vite worker handling; use bounded server FFmpeg for Android and local Wasm elsewhere with timeout fallback.
 - [Gift Studio catalog activation](gift-studio-catalog.md) — saving to an existing gift activates its new media and name while preserving the old active version as a draft backup.
-- [Transparent media assets](gift-media-transparency.md) — verify decoded per-frame alpha and composites; container alpha flags alone are not proof.
+- [Transparent media assets](gift-media-transparency.md) — verify decoded alpha; legacy gifts stay see-through, while black-backed effects stay opaque and use screen blending.
 - [Safe preview schema pushes](safe-preview-schema-pushes.md) — stop when Drizzle proposes truncating unrelated Passport rows; preserve data and apply only additive preview changes.
 - [Public topic-room ownership](public-topic-room-ownership.md) — public rooms are ownerless and audience-unlimited; Beam TV remains automatic and the separate speaker-seat count stays fixed.
 - [Beam TV video screening](beam-tv-video-screening.md) — English/widescreen checks are best-effort; persist pools, cursors and play history to avoid repeats after restart.

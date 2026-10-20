@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   AssignGiftStudioVersionToGiftBody,
   CreateGiftStudioVersionBody,
+  CreateGiftStudioVersionResponse,
   GetActiveGiftStudioMediaResponse,
   GetRoomGiftEventsResponse,
   SaveGiftStudioProcessedBody,
@@ -18,6 +19,20 @@ test("Gift Studio accepts an explicitly unassigned named draft", () => {
     processedWebm: "transparent.webm",
   });
   assert.equal(parsed.success, true);
+});
+
+test("legacy Gift Studio settings default to see-through video", () => {
+  const settings = CreateGiftStudioVersionResponse.shape.settings.parse({
+    preset: "green",
+    keyColor: "#00ff00",
+    tolerance: 0.24,
+    softness: 0.08,
+    spill: 0.35,
+    maxDimension: 720,
+    draftName: "Legacy clip",
+  });
+  assert.equal(settings.backgroundMode, "see-through");
+  assert.equal(settings.preserveSourceAlpha, false);
 });
 
 test("Gift Studio still accepts a draft targeted to an existing catalog gift", () => {
@@ -70,9 +85,21 @@ test("active Gift Studio media contract carries its display name to animation pl
       webmUrl: "/api/social/gift-studio/media/c1c0e6f4-a9af-4c09-9ce4-93b53ed6f118/webm",
       safariUrl: "/api/social/gift-studio/media/c1c0e6f4-a9af-4c09-9ce4-93b53ed6f118/safari",
       durationMs: 5000,
+      backgroundMode: "see-through",
     },
   });
   assert.equal(parsed.success, true);
+  const blackMedia = GetActiveGiftStudioMediaResponse.safeParse({
+    media: {
+      versionId: "c1c0e6f4-a9af-4c09-9ce4-93b53ed6f118",
+      name: "Firefly",
+      webmUrl: "/api/social/gift-studio/media/c1c0e6f4-a9af-4c09-9ce4-93b53ed6f118/webm",
+      safariUrl: "/api/social/gift-studio/media/c1c0e6f4-a9af-4c09-9ce4-93b53ed6f118/safari",
+      durationMs: 5000,
+      backgroundMode: "black",
+    },
+  });
+  assert.equal(blackMedia.success, true);
 });
 
 test("active custom display names replace catalog labels without changing gift price", () => {

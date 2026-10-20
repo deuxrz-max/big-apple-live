@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { GiftStudioProcessingSettingsBackgroundMode } from './giftStudioProcessingSettingsBackgroundMode';
 import type { GiftStudioProcessingSettingsMaxDimension } from './giftStudioProcessingSettingsMaxDimension';
 import type { GiftStudioProcessingSettingsPreset } from './giftStudioProcessingSettingsPreset';
 import type { GiftStudioProductType } from './giftStudioProductType';
@@ -29,6 +30,9 @@ export interface GiftStudioProcessingSettings {
      */
   spill: number;
   maxDimension: GiftStudioProcessingSettingsMaxDimension;
+  backgroundMode?: GiftStudioProcessingSettingsBackgroundMode;
+  /** The uploaded clip already contains real transparency; do not apply a color key */
+  preserveSourceAlpha?: boolean;
   /**
      * Owner-provided name shown for this saved Gift Studio draft
      * @minLength 1

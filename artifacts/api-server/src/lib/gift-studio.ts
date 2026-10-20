@@ -32,6 +32,11 @@ const storage = new Storage({
 
 export type GiftStudioMediaVariant = "original" | "webm" | "safari";
 export type GiftStudioIconStatus = "transparent" | "fallback" | "manual-transparent" | "manual-fallback";
+type GiftStudioBackgroundMode = "see-through" | "black";
+
+function getBackgroundMode(settings: Pick<GiftStudioProcessingSettings, "backgroundMode">): GiftStudioBackgroundMode {
+  return settings.backgroundMode === "black" ? "black" : "see-through";
+}
 
 function storageFile(id: string, variant: GiftStudioMediaVariant | "icon", extension?: string) {
   if (!/^[0-9a-f-]{36}$/i.test(id)) throw new RoomError(404, "Gift media not found");
@@ -63,7 +68,10 @@ function toVersion(row: GiftStudioAsset): GiftStudioVersion {
     status: row.status as "draft" | "active",
     originalName: row.originalName,
     durationMs: row.durationMs,
-    settings: row.settings as unknown as GiftStudioProcessingSettings,
+    settings: {
+      ...row.settings,
+      backgroundMode: getBackgroundMode(row.settings as unknown as GiftStudioProcessingSettings),
+    } as unknown as GiftStudioProcessingSettings,
     createdAt: row.createdAt,
     originalUrl: mediaUrl(row.id, "original", true),
     webmUrl: mediaUrl(row.id, "webm", true),
@@ -129,7 +137,7 @@ async function validateSource(filePath: string, fileSize: number, originalName =
   if (!formatMatches || !video?.width || !video.height || !Number.isFinite(duration) || duration <= 0 || duration > 15.05) {
     throw new RoomError(422, "Use a decodable video up to 15 seconds long.");
   }
-  return { type, durationMs: Math.round(duration * 1000) };
+  return { type, durationMs: Math.round(duration * 1000), codecName: video.codec_name ?? "" };
 }
 
 async function verifyAlpha(filePath: string, decoder?: "libvpx-vp9"): Promise<void> {
@@ -183,7 +191,7 @@ async function verifyAlpha(filePath: string, decoder?: "libvpx-vp9"): Promise<vo
   }
 }
 
-async function createSafariFallback(webmPath: string, outputPath: string) {
+async function createSafariFallback(webmPath: string, outputPath: string, backgroundMode: GiftStudioBackgroundMode) {
   try {
     await execFileAsync(process.env.FFMPEG_PATH ?? "ffmpeg", [
       "-hide_banner", "-loglevel", "error", "-y", "-c:v", "libvpx-vp9", "-i", webmPath,
@@ -192,10 +200,10 @@ async function createSafariFallback(webmPath: string, outputPath: string) {
     ], { timeout: 180_000, maxBuffer: 2 * 1024 * 1024 });
     const stat = await fs.stat(outputPath);
     if (!stat.size || stat.size > MAX_VIDEO_BYTES) throw new Error("Fallback file size is outside the allowed range");
-    await verifyAlpha(outputPath);
+    if (backgroundMode === "see-through") await verifyAlpha(outputPath);
   } catch (error) {
     if (error instanceof RoomError) throw error;
-    throw new RoomError(422, "The transparent iPhone playback version could not be created. Nothing was added.");
+    throw new RoomError(422, "The iPhone playback version could not be created. Nothing was added.");
   }
 }
 
@@ -237,12 +245,44 @@ async function hasUsefulPngAlpha(filePath: string | Buffer): Promise<boolean> {
   return pixels > 0 && transparent / pixels >= 0.01 && visible / pixels >= 0.03;
 }
 
+export async function removeBlackBackgroundFromIcon(filePath: string) {
+  const { data, info } = await sharp(filePath).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  if (info.channels !== 4) throw new Error("The gift icon could not be decoded as RGBA.");
+  for (let offset = 0; offset + 3 < data.length; offset += 4) {
+    const brightest = Math.max(data[offset]!, data[offset + 1]!, data[offset + 2]!);
+    const t = Math.max(0, Math.min(1, (brightest - 5) / 50));
+    const matte = t * t * (3 - 2 * t);
+    data[offset + 3] = Math.round(data[offset + 3]! * matte);
+  }
+  await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } })
+    .png({ compressionLevel: 8 })
+    .toFile(filePath);
+}
+
 async function createGiftIcon(
   processedWebmPath: string,
   fallbackSourcePath: string,
   outputPath: string,
   durationMs: number,
+  backgroundMode: GiftStudioBackgroundMode,
 ): Promise<GiftStudioIconStatus> {
+  if (backgroundMode === "black") {
+    for (const [source, preserveVp9Alpha] of [[processedWebmPath, true], [fallbackSourcePath, false]] as const) {
+      try {
+        await fs.rm(outputPath, { force: true });
+        await snapshotVideoFrame(source, outputPath, durationMs, preserveVp9Alpha);
+        await removeBlackBackgroundFromIcon(outputPath);
+        if (await hasUsefulPngAlpha(outputPath)) return "transparent";
+      } catch {
+        // Try the other source before using a neutral placeholder.
+      }
+    }
+    const placeholder = Buffer.from(
+      '<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="#392060"/><stop offset="1" stop-color="#a22b83"/></linearGradient></defs><rect width="512" height="512" rx="72" fill="url(#g)"/><text x="256" y="278" text-anchor="middle" fill="white" font-family="sans-serif" font-size="56" font-weight="700">GIFT</text></svg>',
+    );
+    await sharp(placeholder).png().toFile(outputPath);
+    return "fallback";
+  }
   try {
     await snapshotVideoFrame(processedWebmPath, outputPath, durationMs, true);
     if (await hasUsefulPngAlpha(outputPath)) return "transparent";
@@ -388,7 +428,7 @@ export async function processGiftStudioClipOnServer(input: {
   settings: GiftStudioProcessingSettings;
   signal?: AbortSignal;
 }) {
-  await validateSource(input.sourcePath, input.sourceBytes, input.sourceName);
+  const sourceInfo = await validateSource(input.sourcePath, input.sourceBytes, input.sourceName);
   const outputPath = path.join(path.dirname(input.sourcePath), `processed-${randomUUID()}.webm`);
   const workPath = path.join(path.dirname(input.sourcePath), `frames-${randomUUID()}`);
   const sourceFrames = path.join(workPath, "source");
@@ -396,10 +436,37 @@ export async function processGiftStudioClipOnServer(input: {
   const boundedDimension = Math.min(input.settings.maxDimension ?? 480, 480);
 
   try {
+    if (getBackgroundMode(input.settings) === "black") {
+      await execFileAsync(process.env.FFMPEG_PATH ?? "ffmpeg", [
+        "-hide_banner", "-loglevel", "error", "-y",
+        "-i", input.sourcePath,
+        "-vf", `fps=24,scale='if(gte(iw,ih),min(iw,${boundedDimension}),-2)':'if(gte(iw,ih),-2,min(ih,${boundedDimension}))':flags=lanczos,crop=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p`,
+        "-an", "-t", "15", "-vsync", "0",
+        "-c:v", "libvpx-vp9", "-pix_fmt", "yuv420p",
+        "-b:v", "0", "-crf", "30", "-deadline", "realtime", "-cpu-used", "5",
+        outputPath,
+      ], {
+        timeout: 90_000,
+        maxBuffer: 2 * 1024 * 1024,
+        ...(input.signal ? { signal: input.signal } : {}),
+      });
+      const stat = await fs.stat(outputPath);
+      if (!stat.size || stat.size > MAX_VIDEO_BYTES) {
+        throw new RoomError(413, "The black-background result is too large. Use a shorter clip.");
+      }
+      const encoded = await probe(outputPath);
+      const video = encoded.streams?.find((stream) => stream.codec_type === "video");
+      if (!video || video.codec_name !== "vp9" || video.pix_fmt?.includes("a") ||
+        (encoded.streams ?? []).some((stream) => stream.codec_type === "audio")) {
+        throw new RoomError(422, "The black-background result must be a silent, opaque VP9 WebM.");
+      }
+      return { path: outputPath, bytes: stat.size };
+    }
     await fs.mkdir(sourceFrames, { recursive: true });
     await fs.mkdir(keyedFrames, { recursive: true });
     await execFileAsync(process.env.FFMPEG_PATH ?? "ffmpeg", [
       "-hide_banner", "-loglevel", "error", "-y",
+      ...(input.settings.preserveSourceAlpha && sourceInfo.codecName === "vp9" ? ["-c:v", "libvpx-vp9"] : []),
       "-i", input.sourcePath,
       "-vf", `fps=24,scale='if(gte(iw,ih),min(iw,${boundedDimension}),-2)':'if(gte(iw,ih),-2,min(ih,${boundedDimension}))':flags=lanczos,format=rgba`,
       "-an", "-t", "15", "-vsync", "0", "-start_number", "1",
@@ -416,7 +483,7 @@ export async function processGiftStudioClipOnServer(input: {
       const sourceFrame = path.join(sourceFrames, name);
       const { data, info } = await sharp(sourceFrame).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
       if (info.channels !== 4) throw new Error("A decoded frame did not contain RGBA pixels.");
-      applyGiftStudioKey(data, input.settings);
+      if (!input.settings.preserveSourceAlpha) applyGiftStudioKey(data, input.settings);
       await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } })
         .png({ compressionLevel: 1 })
         .toFile(path.join(keyedFrames, name));
@@ -435,7 +502,9 @@ export async function processGiftStudioClipOnServer(input: {
     });
     const stat = await fs.stat(outputPath);
     if (!stat.size || stat.size > MAX_VIDEO_BYTES) {
-      throw new RoomError(413, "The transparent result is too large. Use a shorter clip.");
+      throw new RoomError(413, getBackgroundMode(input.settings) === "black"
+        ? "The black-background result is too large. Use a shorter clip."
+        : "The transparent result is too large. Use a shorter clip.");
     }
     await verifyAlpha(outputPath, "libvpx-vp9");
     return { path: outputPath, bytes: stat.size };
@@ -446,7 +515,9 @@ export async function processGiftStudioClipOnServer(input: {
     if (code === "ETIMEDOUT") {
       throw new RoomError(422, "Server processing took too long. Try a shorter clip.");
     }
-    throw new RoomError(422, "Server processing could not encode and verify this clip. Try another key color or a shorter source video.");
+    throw new RoomError(422, getBackgroundMode(input.settings) === "black"
+      ? "Server processing could not encode this black-background clip. Try a shorter source video."
+      : "Server processing could not encode and verify this clip. Try another key color or a shorter source video.");
   } finally {
     await fs.rm(workPath, { recursive: true, force: true });
   }
@@ -464,6 +535,8 @@ export async function createGiftStudioVersion(input: {
   processedWebmPath: string;
   processedWebmBytes: number;
 }) {
+  const backgroundMode = getBackgroundMode(input.settings);
+  const savedSettings = { ...input.settings, backgroundMode };
   if (input.processedWebmBytes <= 0 || input.processedWebmBytes > MAX_VIDEO_BYTES) {
     throw new RoomError(413, "The processed animation must be 100 MB or smaller.");
   }
@@ -477,7 +550,7 @@ export async function createGiftStudioVersion(input: {
     throw new RoomError(400, "The selected item must match the chosen production type.");
   }
   if (await sniffVideo(input.processedWebmPath) !== "webm") {
-    throw new RoomError(415, "The processed animation must be a transparent WebM video.");
+    throw new RoomError(415, "The processed animation must be a WebM video.");
   }
   const processed = await probe(input.processedWebmPath);
   const video = processed.streams?.find((stream) => stream.codec_type === "video");
@@ -487,7 +560,11 @@ export async function createGiftStudioVersion(input: {
     !((processed.format?.format_name ?? "").includes("webm") || (processed.format?.format_name ?? "").includes("matroska"))) {
     throw new RoomError(422, "The processed file must be a silent VP9 WebM animation up to 15 seconds long.");
   }
-  await verifyAlpha(input.processedWebmPath, "libvpx-vp9");
+  if (backgroundMode === "see-through") {
+    await verifyAlpha(input.processedWebmPath, "libvpx-vp9");
+  } else if (!video.pix_fmt || video.pix_fmt.includes("a")) {
+    throw new RoomError(422, "Black-background videos must be opaque; choose See-through video for clips with transparency.");
+  }
 
   const temp = await fs.mkdtemp(path.join(tmpdir(), "streamtalk-gift-studio-"));
   const fallbackPath = path.join(temp, "animation.png");
@@ -496,8 +573,8 @@ export async function createGiftStudioVersion(input: {
   const safeName = input.originalName.replace(/^.*[\\/]/, "").replace(/[\u0000-\u001f\u007f]/g, "").slice(0, 120)
     || `source.${source.type}`;
   try {
-    await createSafariFallback(input.processedWebmPath, fallbackPath);
-    const iconStatus = await createGiftIcon(input.processedWebmPath, input.originalPath, iconPath, source.durationMs);
+    await createSafariFallback(input.processedWebmPath, fallbackPath, backgroundMode);
+    const iconStatus = await createGiftIcon(input.processedWebmPath, input.originalPath, iconPath, source.durationMs, backgroundMode);
     const fallbackBytes = (await fs.stat(fallbackPath)).size;
     const objects = [
       storageFile(id, "original", source.type),
@@ -549,7 +626,7 @@ export async function createGiftStudioVersion(input: {
           originalName: safeName, originalExtension: source.type, durationMs: source.durationMs,
           originalBytes: input.originalBytes, webmBytes: input.processedWebmBytes,
           safariBytes: fallbackBytes,
-          settings: { ...input.settings, productType, iconStatus, iconRevision: 1 },
+          settings: { ...savedSettings, productType, iconStatus, iconRevision: 1 },
           activatedAt: input.giftId ? new Date() : null,
         }).returning();
         return inserted;
@@ -718,6 +795,7 @@ export async function getActiveGiftStudioMedia(giftId: string) {
     webmUrl: mediaUrl(row.id, "webm", false),
     safariUrl: mediaUrl(row.id, "safari", false),
     durationMs: row.durationMs,
+    backgroundMode: getBackgroundMode(row.settings as unknown as GiftStudioProcessingSettings),
   } };
 }
 
@@ -733,14 +811,15 @@ async function saveGiftIconForAsset(asset: GiftStudioAsset, sourcePath: string, 
   const temp = await fs.mkdtemp(path.join(tmpdir(), "gift-studio-icon-"));
   const iconPath = path.join(temp, "icon.png");
   try {
-    const iconStatus = await createGiftIcon(processedPath, sourcePath, iconPath, asset.durationMs);
+    const settings = asset.settings as unknown as GiftStudioProcessingSettings;
+    const iconStatus = await createGiftIcon(processedPath, sourcePath, iconPath, asset.durationMs, getBackgroundMode(settings));
     await uploadFile(iconPath, storageFile(asset.id, "icon"), "image/png");
-    const settings = asset.settings as Record<string, unknown>;
+    const savedSettings = asset.settings as Record<string, unknown>;
     const [updated] = await db.update(giftStudioAssets)
       .set({ settings: {
-        ...settings,
+        ...savedSettings,
         iconStatus,
-        iconRevision: bumpRevision ? Number(settings.iconRevision ?? 0) + 1 : Number(settings.iconRevision ?? 1),
+        iconRevision: bumpRevision ? Number(savedSettings.iconRevision ?? 0) + 1 : Number(savedSettings.iconRevision ?? 1),
       } })
       .where(and(eq(giftStudioAssets.id, asset.id), eq(giftStudioAssets.ownerId, asset.ownerId)))
       .returning();

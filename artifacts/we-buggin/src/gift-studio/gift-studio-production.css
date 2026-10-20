@@ -552,6 +552,53 @@
   object-fit: contain;
 }
 
+.gs .gs-background-mode {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 13px;
+}
+
+.gs .gs-background-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.gs .gs-background-toggle .gs-choice {
+  flex: 1 1 150px;
+  min-height: 42px;
+}
+
+.gs .gs-background-hint {
+  margin: 0;
+  color: #c9c7d0;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.gs .gs-background-mode-note {
+  align-self: center;
+  color: #c6f36a;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.gs .gs-background-warning {
+  margin: 0;
+  padding: 8px 10px;
+  border-left: 2px solid #e5b15b;
+  border-radius: 4px;
+  background: rgba(229, 177, 91, .08);
+  color: #f0d5a6;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.gs .gs-preview-stage.is-black-background :is(video, canvas),
+.gs .gs-result-preview.is-black-background > video {
+  mix-blend-mode: screen;
+}
+
 .gs .gs-result-preview.is-sample {
   background:
     radial-gradient(ellipse at 18% 82%, rgba(182, 148, 255, .32), transparent 46%),

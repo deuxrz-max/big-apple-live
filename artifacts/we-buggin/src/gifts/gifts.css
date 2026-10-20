@@ -25,6 +25,7 @@
 .big-tier-gift-overlay--top .gift-studio-custom-media{top:0;left:0;width:100vw;height:42dvh;object-fit:contain;mix-blend-mode:normal}
 .big-tier-gift-overlay--full .gift-studio-custom-media{inset:0;width:100vw;height:100dvh;object-fit:contain;mix-blend-mode:normal}
 .big-tier-gift-overlay--bottom .gift-studio-custom-media{left:0;bottom:0;width:100vw;height:34dvh;object-fit:contain;mix-blend-mode:normal}
+.big-tier-gift-overlay .gift-studio-custom-media--black{mix-blend-mode:screen!important}
 .big-tier-gift-overlay--center .big-tier-gift-banner{top:72dvh}
 .big-tier-gift-overlay.is-fading-out :is(.big-tier-gift-video,.rose-shower-canvas,.big-tier-gift-banner){animation:big-tier-gift-fade-out .5s ease-out forwards}
 @keyframes big-tier-gift-fade-out{to{opacity:0}}

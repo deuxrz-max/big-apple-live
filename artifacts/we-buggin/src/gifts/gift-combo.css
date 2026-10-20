@@ -29,6 +29,7 @@
   background: transparent;
   pointer-events: none;
 }
+.gift-mini-canvas.is-black-background { mix-blend-mode: screen; }
 
 .gift-combo-hud {
   position: fixed;

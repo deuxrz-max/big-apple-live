@@ -442,6 +442,7 @@ test('an active Gift Studio gift x99 animation loads the active video, not its c
       webmUrl: '/api/social/gift-studio/media/active-custom-version-fixture/webm',
       safariUrl: '/api/social/gift-studio/media/active-custom-version-fixture/safari',
       durationMs: 6042,
+      backgroundMode: 'see-through',
     },
   } }));
   await page.route('**/api/social/gift-studio/media/active-custom-version-fixture/webm', async route => {
@@ -457,6 +458,7 @@ test('an active Gift Studio gift x99 animation loads the active video, not its c
   await expect(overlay).toBeVisible({ timeout: 8000 });
   const video = overlay.locator('video');
   await expect(video).toHaveAttribute('src', /active-custom-version-fixture\/webm$/);
+  await expect.poll(() => video.evaluate(element => getComputedStyle(element).mixBlendMode)).toBe('normal');
   await expect(video).toHaveJSProperty('muted', true);
   await expect(video).toHaveJSProperty('playsInline', true);
   await expect.poll(() => video.evaluate(element => (element as HTMLVideoElement).currentTime)).toBeGreaterThan(0);
@@ -464,6 +466,47 @@ test('an active Gift Studio gift x99 animation loads the active video, not its c
   await page.getByRole('button', { name: 'Skip' }).click();
   await expect(page.locator('.gift-combo-counter')).toHaveCount(0);
   await expect(overlay).toHaveCount(0);
+});
+
+test('black-background Gift Studio media screens away black for single and x10 room animations', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const giftId = 'studio-22222222-2222-4222-8222-222222222222';
+  await page.route(`**/api/social/gift-studio/active/${giftId}`, route => route.fulfill({ json: {
+    media: {
+      versionId: 'black-background-fixture',
+      name: 'Spark effect',
+      webmUrl: '/api/social/gift-studio/media/black-background-fixture/webm',
+      safariUrl: '/api/social/gift-studio/media/black-background-fixture/safari',
+      durationMs: 800,
+      backgroundMode: 'black',
+    },
+  } }));
+  await page.route('**/api/social/gift-studio/media/black-background-fixture/webm', async route => {
+    const body = await readFile(new URL('../../../../generated-artifacts/gift-demo/Spirit-Pup-room-gift-demo.webm', import.meta.url));
+    await route.fulfill({ body, contentType: 'video/webm' });
+  });
+
+  await page.goto(`/tests/browser/harness.html?view=gift-animation&giftId=${giftId}&quantity=1`, {
+    waitUntil: 'domcontentloaded',
+  });
+  const singleOverlay = page.getByTestId(`gift-studio-animation-${giftId}`);
+  await expect(singleOverlay).toBeVisible({ timeout: 8000 });
+  const singleVideo = singleOverlay.locator('video');
+  await expect(singleVideo).toHaveClass(/gift-studio-custom-media--black/);
+  await expect.poll(() => singleVideo.evaluate(element => getComputedStyle(element).mixBlendMode)).toBe('screen');
+
+  await page.goto(`/tests/browser/harness.html?view=gift-animation&giftId=${giftId}&quantity=10`, {
+    waitUntil: 'domcontentloaded',
+  });
+  const comboOverlay = page.getByTestId(`gift-studio-animation-${giftId}`);
+  await expect(comboOverlay).toBeVisible({ timeout: 8000 });
+  await expect(page.locator('.gift-combo-counter')).toContainText('1/10');
+  const comboVideo = comboOverlay.locator('video');
+  await expect(comboVideo).toHaveClass(/gift-studio-custom-media--black/);
+  await expect.poll(() => comboVideo.evaluate(element => getComputedStyle(element).mixBlendMode)).toBe('screen');
+  const miniCanvas = page.locator('canvas.gift-mini-canvas.is-black-background');
+  await expect(miniCanvas).toHaveCount(1);
+  await expect.poll(() => miniCanvas.evaluate(element => getComputedStyle(element).mixBlendMode)).toBe('screen');
 });
 
 for (const [giftId, giftName] of [

@@ -33,7 +33,7 @@ import type { ClipSettings, KeyColor } from './processClip';
 import { GiftAnimationPlayer, giftStudioMediaUrl } from '@/gifts/GiftAnimationPlayer';
 import { CoinAmount, GiftIcon } from '@/social/common';
 import { RoomGiftIcon, type RoomGiftId } from '@/gifts/SpiritPup';
-import { classifyKeyColor, detectVideoEdgeColor, drawKeyedPreview, sampleVideoColorAtPoint } from './liveKeyPreview';
+import { classifyKeyColor, detectVideoBackground, detectVideoEdgeColor, drawKeyedPreview, sampleVideoColorAtPoint } from './liveKeyPreview';
 import { createTransparentPngFramesZip } from './downloadPngFramesZip';
 import './gift-studio.css';
 import './gift-studio-production.css';
@@ -60,7 +60,7 @@ const MAX_SECONDS = 15;
 const MAX_DRAFT_NAME = 60;
 const formatBytes = (bytes: number) => bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(0)} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 type GiftSetupMode = 'new' | 'replace';
-const PRODUCTION_STEPS = ['Name & type', 'Upload', 'Remove background', 'Review', 'Activate'];
+const PRODUCTION_STEPS = ['Name & type', 'Upload', 'Background', 'Review', 'Activate'];
 
 const errorText = (error: unknown) => {
   if (!error) return 'Something went wrong. Please try again.';
@@ -163,7 +163,11 @@ async function saveGiftStudioClip(input: {
   const form = new FormData();
   form.append('sourceVideo', input.original, input.original.name || 'source.mp4');
   const baseName = trimmedName.normalize('NFKD').replace(/[^\w-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'gift';
-  const processedFile = new File([input.processed], `${baseName}-alpha.webm`, { type: 'video/webm' });
+  const processedFile = new File(
+    [input.processed],
+    `${baseName}-${input.settings.backgroundMode === 'black' ? 'black-background' : 'alpha'}.webm`,
+    { type: 'video/webm' },
+  );
   form.append('processedWebm', processedFile, processedFile.name);
   form.append('settings', JSON.stringify({ ...input.settings, draftName: trimmedName }));
   if (input.giftId) form.append('giftId', input.giftId);
@@ -234,6 +238,10 @@ export function GiftStudioPage() {
   const [previewConfirmed, setPreviewConfirmed] = useState(false);
   const [activeProductionStep, setActiveProductionStep] = useState(1);
   const [keyPreset, setKeyPreset] = useState<KeyColor>('green');
+  const [backgroundMode, setBackgroundMode] = useState<ClipSettings['backgroundMode']>('see-through');
+  const [preserveSourceAlpha, setPreserveSourceAlpha] = useState(false);
+  const [backgroundModeNote, setBackgroundModeNote] = useState('');
+  const [backgroundWarning, setBackgroundWarning] = useState('');
   const [keyColor, setKeyColor] = useState('#00ff00');
   const [tolerance, setTolerance] = useState(.12);
   const [softness, setSoftness] = useState(.08);
@@ -271,14 +279,16 @@ export function GiftStudioPage() {
   const keyWasChangedRef = useRef(false);
   const nameWasEditedRef = useRef(false);
   const catalogPriceEditedRef = useRef(false);
+  const backgroundModeEditedGiftIdRef = useRef<GiftStudioGiftId | ''>('');
+  const manualBackgroundChoiceRef = useRef(false);
   const metadataHandledUrlRef = useRef<string | null>(null);
   const processedSettingsRef = useRef<string | null>(null);
   const productionStepRefs = useRef<Array<HTMLElement | null>>([]);
   const [playhead, setPlayhead] = useState(0);
 
   const settings = useMemo<ClipSettings>(() => ({
-    preset: keyPreset, keyColor, tolerance, softness, spill, maxDimension,
-  }), [keyPreset, keyColor, tolerance, softness, spill, maxDimension]);
+    backgroundMode, preserveSourceAlpha, preset: keyPreset, keyColor, tolerance, softness, spill, maxDimension,
+  }), [backgroundMode, preserveSourceAlpha, keyPreset, keyColor, tolerance, softness, spill, maxDimension]);
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
   const activeGiftId = (giftId || 'heart') as GiftStudioGiftId;
@@ -294,6 +304,18 @@ export function GiftStudioPage() {
     || GIFTS.find((gift) => gift.id === giftId)?.label
     || '';
   const selectedCatalogGift = library.data?.catalog.find((gift) => gift.id === giftId);
+
+  useEffect(() => {
+    if (giftMode !== 'replace' || !giftId) {
+      backgroundModeEditedGiftIdRef.current = '';
+      setBackgroundMode('see-through');
+      return;
+    }
+    if (file) return;
+    if (activeGiftQuery.data && backgroundModeEditedGiftIdRef.current !== giftId) {
+      setBackgroundMode(activeGiftQuery.data.media?.backgroundMode ?? 'see-through');
+    }
+  }, [giftMode, giftId, file, activeGiftQuery.data?.media?.versionId, activeGiftQuery.data?.media?.backgroundMode]);
 
   useEffect(() => {
     if (giftMode !== 'replace' || !giftId || catalogPriceEditedRef.current || !selectedCatalogGift) return;
@@ -381,6 +403,8 @@ export function GiftStudioPage() {
   }, [settings]);
   const loadFile = (candidate?: File) => {
     if (!candidate) return;
+    const manualChoiceBeforeUpload = !file && manualBackgroundChoiceRef.current;
+    if (file) manualBackgroundChoiceRef.current = false;
     setError('');
     if (!/\.(mp4|webm|mov)$/i.test(candidate.name) || !['video/mp4', 'video/webm', 'video/quicktime', ''].includes(candidate.type)) {
       setError('Choose an MP4, WebM, or MOV video.');
@@ -395,6 +419,10 @@ export function GiftStudioPage() {
     metadataHandledUrlRef.current = null;
     setKeyDetecting(true);
     setDetectedKeyColor(null);
+    setPreserveSourceAlpha(false);
+    setBackgroundWarning('');
+    setBackgroundModeNote(manualChoiceBeforeUpload ? 'Manual choice' : '');
+    if (!manualChoiceBeforeUpload) setBackgroundMode('see-through');
     if (originalUrl) URL.revokeObjectURL(originalUrl);
     const nextUrl = URL.createObjectURL(candidate);
     setOriginalUrl(nextUrl);
@@ -420,36 +448,80 @@ export function GiftStudioPage() {
       setKeyDetecting(false);
       return;
     }
-    setStatus('Detecting the background color…');
+    const sourceUrl = originalUrl;
+    setStatus('Checking transparency and background color…');
     setKeyDetecting(true);
-    void video.play().catch(() => setStatus('Tap Play to start the clip preview.')).then(() => detectVideoEdgeColor(video)).then((color) => {
-      if (keyWasChangedRef.current) return;
-      if (!color) {
-        setStatus('No solid edge color was detected. Tap the background in the video to choose it.');
-        return;
-      }
-      const family = classifyKeyColor(color);
+    void detectVideoBackground(video).then((analysis) => {
+      if (metadataHandledUrlRef.current !== sourceUrl || originalVideoRef.current !== video) return;
+      const manualChoice = manualBackgroundChoiceRef.current;
+      const detectedMode = analysis.hasTransparency || !analysis.mostlyBlack ? 'see-through' : 'black';
+      const selectedMode = manualChoice ? settingsRef.current.backgroundMode : detectedMode;
       const detectedSettings: ClipSettings = {
         ...settingsRef.current,
+        backgroundMode: selectedMode,
+        preserveSourceAlpha: analysis.hasTransparency,
+      };
+      if (!manualChoice) setBackgroundMode(detectedMode);
+      setPreserveSourceAlpha(analysis.hasTransparency);
+      setBackgroundModeNote(manualChoice
+        ? 'Manual choice'
+        : `Auto-detected: ${detectedMode === 'black' ? 'Black background' : 'See-through video'}`);
+      const warning = !analysis.hasTransparency && !analysis.mostlyBlack
+        ? 'This video has a background that may not drop out in the selected mode. Try a black-backed clip or remove the background first. Upload is still allowed.'
+        : !analysis.hasTransparency && selectedMode === 'see-through'
+          ? 'This video has no transparency, so its black background will stay visible in See-through mode. Switch to Black background or remove the background first. Upload is still allowed.'
+          : '';
+      setBackgroundWarning(warning);
+      if (selectedMode === 'black') {
+        setDetectedKeyColor(null);
+        setStatus('Black background detected. Preparing the normal video…');
+        void process(detectedSettings);
+        return;
+      }
+      if (analysis.hasTransparency) {
+        setDetectedKeyColor(null);
+        setStatus('Transparency detected. Preparing the clip without applying a color key…');
+        void process(detectedSettings);
+        return;
+      }
+      if (!analysis.edgeColor) {
+        setDetectedKeyColor(null);
+        setStatus('No solid edge color was detected. You can continue, but the video background may remain visible.');
+        return;
+      }
+      const family = classifyKeyColor(analysis.edgeColor);
+      const keyedSettings: ClipSettings = {
+        ...detectedSettings,
         preset: family === 'green' || family === 'magenta' ? family : 'custom',
-        keyColor: color,
+        keyColor: analysis.edgeColor,
         tolerance: .12,
         softness: .08,
         spill: .72,
       };
-      setDetectedKeyColor(color);
-      setKeyColor(color);
-      setKeyPreset(detectedSettings.preset);
+      setDetectedKeyColor(analysis.edgeColor);
+      setKeyColor(analysis.edgeColor);
+      setKeyPreset(keyedSettings.preset);
       setTolerance(.12);
       setSoftness(.08);
       setSpill(.72);
-      setStatus(`Background detected (${color.toUpperCase()}). Removing it now…`);
-      void process(detectedSettings);
+      setStatus(`Background detected (${analysis.edgeColor.toUpperCase()}). Removing it now…`);
+      void process(keyedSettings);
     }).catch((cause) => {
-      if (!keyWasChangedRef.current) {
-        setStatus(cause instanceof Error ? cause.message : 'Tap the background in the video to choose its color.');
+      if (metadataHandledUrlRef.current !== sourceUrl || originalVideoRef.current !== video) return;
+      const manualChoice = manualBackgroundChoiceRef.current;
+      if (!manualChoice) setBackgroundMode('see-through');
+      setPreserveSourceAlpha(false);
+      setBackgroundModeNote(manualChoice ? 'Manual choice' : 'Auto-detection unavailable');
+      setBackgroundWarning('Automatic detection could not inspect this clip. Choose a mode manually; the upload is still allowed.');
+      if (manualChoice && settingsRef.current.backgroundMode === 'black') {
+        setStatus('Using your manual Black background choice…');
+        void process({ ...settingsRef.current, preserveSourceAlpha: false });
+      } else {
+        setStatus(cause instanceof Error ? cause.message : 'Choose a background mode manually, then continue.');
       }
-    }).finally(() => setKeyDetecting(false));
+    }).finally(() => {
+      if (metadataHandledUrlRef.current === sourceUrl) setKeyDetecting(false);
+    });
   };
 
   useEffect(() => {
@@ -572,8 +644,12 @@ export function GiftStudioPage() {
       setActiveProductionStep(4);
       setPreviewConfirmed(false);
       setStatus(usedServerProcessor
-        ? 'Finished with low-memory server processing. The transparent WebM passed the alpha check.'
-        : 'Finished. The transparent WebM passed the local alpha check.');
+        ? processSettings.backgroundMode === 'black'
+          ? 'Finished with low-memory server processing. Black-background video is ready; the transparency check was skipped.'
+          : 'Finished with low-memory server processing. The transparent WebM passed the alpha check.'
+        : processSettings.backgroundMode === 'black'
+          ? 'Finished. Black-background video is ready; the transparency check was skipped.'
+          : 'Finished. The transparent WebM passed the local alpha check.');
     } catch (cause) {
       if (cancelledRef.current || String(cause).toLowerCase().includes('terminated')) {
         setStatus('Processing cancelled. Temporary clip data was cleared.');
@@ -587,6 +663,75 @@ export function GiftStudioPage() {
       serverAbortRef.current = null;
       engineRef.current = null;
     }
+  };
+
+  const chooseBackgroundMode = (nextMode: ClipSettings['backgroundMode']) => {
+    if (nextMode === backgroundMode || processing) return;
+    backgroundModeEditedGiftIdRef.current = giftMode === 'replace' ? giftId : '';
+    manualBackgroundChoiceRef.current = true;
+    keyWasChangedRef.current = nextMode === 'black';
+    setBackgroundMode(nextMode);
+    setBackgroundModeNote('Manual choice');
+    setDetectedKeyColor(null);
+    resetOutput();
+    if (!file || duration <= 0) {
+      setKeyDetecting(false);
+      setStatus('');
+      setBackgroundWarning('');
+      return;
+    }
+    if (keyDetecting) {
+      if (nextMode === 'see-through' && !preserveSourceAlpha) {
+        setBackgroundWarning('This video has no transparency, so its background may remain visible in See-through mode. You can still continue.');
+      }
+      return;
+    }
+    if (nextMode === 'black') {
+      setKeyDetecting(false);
+      setStatus('Keeping the black background and preparing the video…');
+      void process({ ...settingsRef.current, backgroundMode: 'black' });
+      return;
+    }
+    if (preserveSourceAlpha) {
+      setKeyDetecting(false);
+      setStatus('Keeping the source transparency and preparing the video…');
+      void process({ ...settingsRef.current, backgroundMode: 'see-through', preserveSourceAlpha: true });
+      return;
+    }
+    const source = originalVideoRef.current;
+    if (!source) return;
+    keyWasChangedRef.current = false;
+    setKeyDetecting(true);
+    setStatus('Detecting the background color…');
+    void detectVideoEdgeColor(source).then((color) => {
+      if (keyWasChangedRef.current) return;
+      if (!color) {
+        setStatus('No solid edge color was detected. Tap the background in the video to choose it.');
+        return;
+      }
+      const family = classifyKeyColor(color);
+      const detectedSettings: ClipSettings = {
+        ...settingsRef.current,
+        backgroundMode: 'see-through',
+        preset: family === 'green' || family === 'magenta' ? family : 'custom',
+        keyColor: color,
+        tolerance: .12,
+        softness: .08,
+        spill: .72,
+      };
+      setDetectedKeyColor(color);
+      setKeyColor(color);
+      setKeyPreset(detectedSettings.preset);
+      setTolerance(.12);
+      setSoftness(.08);
+      setSpill(.72);
+      setStatus(`Background detected (${color.toUpperCase()}). Removing it now…`);
+      void process(detectedSettings);
+    }).catch((cause) => {
+      if (!keyWasChangedRef.current) {
+        setStatus(cause instanceof Error ? cause.message : 'Tap the background in the video to choose its color.');
+      }
+    }).finally(() => setKeyDetecting(false));
   };
 
   const synchronizePlay = async () => {
@@ -1188,6 +1333,29 @@ export function GiftStudioPage() {
               <div><h2 id="gs-step-upload-title">Upload video</h2><p>MP4, WebM or MOV · up to 15 seconds and 100 MB.</p></div>
             </div>
             <div className="gs-production-step-body">
+              <div className="gs-background-mode">
+                <div className="gs-background-toggle" role="group" aria-label="Gift animation background mode">
+                  <button
+                    className="gs-choice"
+                    type="button"
+                    aria-pressed={backgroundMode === 'see-through'}
+                    disabled={processing}
+                    onClick={() => chooseBackgroundMode('see-through')}
+                    data-testid="button-background-see-through"
+                  >See-through video</button>
+                  <button
+                    className="gs-choice"
+                    type="button"
+                    aria-pressed={backgroundMode === 'black'}
+                    disabled={processing}
+                    onClick={() => chooseBackgroundMode('black')}
+                    data-testid="button-background-black"
+                  >Black background</button>
+                </div>
+                {backgroundModeNote && <span className="gs-background-mode-note" role="status" data-testid="text-background-auto-detection">{backgroundModeNote}</span>}
+                <p className="gs-background-hint">Black background: best for glows, fire, sparkles and fireworks. Dark parts of the video will turn see-through.</p>
+                {backgroundWarning && <p className="gs-background-warning" role="note" data-testid="warning-background-mode">{backgroundWarning}</p>}
+              </div>
               <label className="gs-upload gs-production-upload" htmlFor="gs-file-input" data-testid="upload-video-dropzone">
                 {file ? <><div className="gs-file-row"><span className="gs-file-name">{file.name}</span><span className="gs-file-meta">{formatBytes(file.size)}</span></div><small>{duration ? `${duration.toFixed(1)} seconds` : 'Checking clip length'} · tap to replace</small></> :
                   <><span className="gs-upload-icon"><FileVideo2 size={23} /></span><strong>Choose a gift video</strong><small>MP4, WebM or MOV. Maximum 15 seconds and 100 MB.</small><span className="gs-upload-cta"><Upload size={17} /> Browse phone</span></>}
@@ -1196,7 +1364,7 @@ export function GiftStudioPage() {
               {originalUrl && <div className="gs-upload-summary"><strong>Source clip ready</strong> · {file?.name} · {duration ? `${duration.toFixed(1)} sec` : 'Reading duration'} · {formatBytes(file?.size ?? 0)}</div>}
               {originalUrl && <div className="gs-preview">
                 <div className="gs-preview-label">Original clip <span>Source video</span></div>
-                <div className={`gs-preview-stage ${backdrop}`} style={previewStageStyle} onClick={pickVideoKeyColor} data-testid="preview-original" title="Tap the background to sample its color">
+                <div className={`gs-preview-stage ${backdrop}${backgroundMode === 'black' ? ' is-black-background' : ''}`} style={previewStageStyle} onClick={backgroundMode === 'see-through' ? pickVideoKeyColor : undefined} data-testid="preview-original" title={backgroundMode === 'see-through' ? 'Tap the background to sample its color' : undefined}>
                   <video ref={originalVideoRef} src={originalUrl} muted playsInline loop autoPlay preload="metadata" onLoadedMetadata={onOriginalMetadata} onError={() => { setKeyDetecting(false); setError('This clip could not be decoded in the browser. Try an MP4 or WebM export and reload it.'); }} onTimeUpdate={syncTime} />
                 </div>
               </div>}
@@ -1218,9 +1386,11 @@ export function GiftStudioPage() {
           >
             <div className="gs-production-step-head">
               <span className="gs-production-step-number">03</span>
-              <div><h2 id="gs-step-remove-title">Remove background</h2><p>Deux Wild detects the screen color and starts processing automatically.</p></div>
+              <div><h2 id="gs-step-remove-title">{backgroundMode === 'black' ? 'Black background' : 'Remove background'}</h2><p>{backgroundMode === 'black' ? 'Keep the normal video and blend its black background away during playback.' : 'Deux Wild detects the screen color and starts processing automatically.'}</p></div>
             </div>
             <div className="gs-production-step-body">
+              {backgroundMode === 'black' && <p className="gs-caption" data-testid="black-mode-processing-note">The black background stays in the video; it is blended away when the animation plays.</p>}
+              {backgroundMode === 'see-through' && <>
               <div className="gs-auto-key-status" role="status" data-testid="text-detected-key-color">
                 {keyDetecting ? <>Detecting background color… <span className="gs-progress-mini" /></> : detectedKeyColor
                   ? <><strong>Background detected</strong> <span className="gs-detected-swatch" style={{ backgroundColor: detectedKeyColor }} /> <code>{detectedKeyColor.toUpperCase()}</code>. Auto-removal starts as soon as detection finishes.</>
@@ -1247,8 +1417,9 @@ export function GiftStudioPage() {
                   <select className="gs-chip-button" id="gs-max-size" value={maxDimension ?? 'original'} onChange={(event) => setMaxDimension(event.target.value === 'original' ? null : Number(event.target.value) as 480 | 720 | 1080)} data-testid="select-max-dimension"><option value="original">Keep original size</option><option value="480">480 px · smallest</option><option value="720">720 px · balanced</option><option value="1080">1080 px · sharpest</option></select>
                 </fieldset>
               </details>
+              </>}
               {processing && <div className="gs-progress" role="status" aria-live="polite" data-testid="state-processing"><div className="gs-progress-track"><div className={`gs-progress-fill${serverProcessing ? ' is-indeterminate' : ''}`} style={serverProcessing ? undefined : { width: `${Math.round(progress * 100)}%` }} /></div><div className="gs-progress-copy"><span>{status}</span><span>{serverProcessing ? 'Working' : `${Math.round(progress * 100)}%`}</span></div><button className="gs-button quiet" type="button" onClick={cancelProcessing} data-testid="button-cancel-processing"><X size={15} /> Cancel</button></div>}
-              {!processing && file && !processedUrl && <button className="gs-button primary gs-auto-process" type="button" onClick={() => void process(settingsRef.current)} disabled={keyDetecting || duration <= 0 || duration > MAX_SECONDS} data-testid="button-process">{error ? 'Try background removal again' : detectedKeyColor ? 'Remove background again' : 'Process with current key'} <ChevronRight size={16} /></button>}
+              {!processing && file && !processedUrl && <button className="gs-button primary gs-auto-process" type="button" onClick={() => void process(settingsRef.current)} disabled={keyDetecting || duration <= 0 || duration > MAX_SECONDS} data-testid="button-process">{backgroundMode === 'black' ? error ? 'Try black-background video again' : 'Prepare black-background video' : error ? 'Try background removal again' : detectedKeyColor ? 'Remove background again' : 'Process with current key'} <ChevronRight size={16} /></button>}
               {error && <div className="gs-error" role="alert" data-testid="state-error">{error}</div>}
               {status && !processing && <p className="gs-caption" role="status" aria-live="polite" data-testid="state-status">{status}</p>}
               <div className="gs-activation-actions">
@@ -1268,24 +1439,25 @@ export function GiftStudioPage() {
           >
             <div className="gs-production-step-head">
               <span className="gs-production-step-number">04</span>
-              <div><h2 id="gs-step-review-title">Review the transparent result</h2><p>Fit the whole frame. Check transparency before activation.</p></div>
+              <div><h2 id="gs-step-review-title">{backgroundMode === 'black' ? 'Review the black-background result' : 'Review the transparent result'}</h2><p>{backgroundMode === 'black' ? 'Preview the effect over the checkerboard and sample stream.' : 'Fit the whole frame. Check transparency before activation.'}</p></div>
             </div>
             <div className="gs-production-step-body">
               <div className="gs-result-toggle" role="group" aria-label="Result preview mode">
                 <button type="button" aria-pressed={reviewMode === 'checker'} onClick={() => setReviewMode('checker')} data-testid="button-review-checker">Checkerboard</button>
                 <button type="button" aria-pressed={reviewMode === 'sample'} onClick={() => setReviewMode('sample')} data-testid="button-review-sample">Sample stream</button>
               </div>
-              <div className={`gs-result-preview${reviewMode === 'sample' ? ' is-sample' : ''}`} style={previewStageStyle} data-testid="preview-final-result">
+              <div className={`gs-result-preview${reviewMode === 'sample' ? ' is-sample' : ''}${backgroundMode === 'black' ? ' is-black-background' : ''}`} style={previewStageStyle} data-testid="preview-final-result">
                 {reviewMode === 'sample' && <><div className="gs-stream-mock-top"><span className="gs-live-dot" /> LIVE · DEUX WILD</div><div className="gs-stream-mock-chat">Chat stays visible under the gift.</div><div className="gs-stream-mock-name">{draftName || 'Gift preview'}</div></>}
                 {processedUrl
-                  ? <video key={processedUrl} ref={processedVideoRef} src={processedUrl} muted playsInline loop autoPlay preload="metadata" onLoadedMetadata={onProcessedMetadata} onTimeUpdate={syncTime} aria-label="Processed transparent gift animation" data-testid="video-final-result" />
+                  ? <video key={processedUrl} ref={processedVideoRef} src={processedUrl} muted playsInline loop autoPlay preload="metadata" onLoadedMetadata={onProcessedMetadata} onTimeUpdate={syncTime} aria-label={backgroundMode === 'black' ? 'Processed black-background gift animation' : 'Processed transparent gift animation'} data-testid="video-final-result" />
                   : originalUrl
-                    ? <canvas ref={livePreviewCanvasRef} onClick={pickVideoKeyColor} aria-label="Live transparent cutout preview while processing" data-testid="canvas-live-cutout" />
+                    ? <canvas ref={livePreviewCanvasRef} onClick={backgroundMode === 'see-through' ? pickVideoKeyColor : undefined} aria-label={backgroundMode === 'black' ? 'Live black-background blend preview while processing' : 'Live transparent cutout preview while processing'} data-testid="canvas-live-cutout" />
                     : <div className="gs-empty-preview">Upload a clip to preview the final animation here.</div>}
                 {livePreviewError && !processedUrl && <div className="gs-preview-note" role="status">{livePreviewError}</div>}
               </div>
-              {processedUrl ? <div className="gs-auto-key-status gs-transparency-passed" role="status" data-testid="status-alpha-check"><Check size={17} /><strong>Transparency check passed</strong><span>The exported animation is playing with its verified alpha channel.</span></div> :
-                error ? <div className="gs-error" role="alert">{error} Open Adjust to refine the key and try again.</div> :
+              {processedUrl && backgroundMode === 'see-through' ? <div className="gs-auto-key-status gs-transparency-passed" role="status" data-testid="status-alpha-check"><Check size={17} /><strong>Transparency check passed</strong><span>The exported animation is playing with its verified alpha channel.</span></div> :
+                processedUrl && backgroundMode === 'black' ? <div className="gs-auto-key-status" role="status" data-testid="status-black-background"><Check size={17} /><strong>Black-background video ready</strong><span>Black blends away during playback; the uploaded video was not required to have alpha.</span></div> :
+                error ? <div className="gs-error" role="alert">{error}{backgroundMode === 'see-through' ? ' Open Adjust to refine the key and try again.' : ''}</div> :
                   <div className="gs-upload-summary">The live cutout appears here while the finished transparent export is processing.</div>}
               <div className="gs-controls">
                 <button className="gs-icon-button" type="button" onClick={() => void synchronizePlay()} disabled={!file} aria-label={originalVideoRef.current?.paused ? 'Play both previews' : 'Pause both previews'} data-testid="button-play-pause">{originalVideoRef.current?.paused ? <Play size={16} /> : <Pause size={16} />}</button>
@@ -1293,7 +1465,7 @@ export function GiftStudioPage() {
                 <span className="gs-file-meta" data-testid="text-preview-time">{timeLabel(playhead)} / {timeLabel(duration)}</span>
               </div>
               {processedUrl && <div className="gs-after-downloads">
-                <button className="gs-button quiet" type="button" onClick={() => processedBlob && downloadBlob(processedBlob, `${safeGiftFilePrefix()}-transparent.webm`)} disabled={!processedBlob} data-testid="button-download-webm"><Download size={14} /> Download WebM</button>
+                 <button className="gs-button quiet" type="button" onClick={() => processedBlob && downloadBlob(processedBlob, `${safeGiftFilePrefix()}-${backgroundMode === 'black' ? 'black-background' : 'transparent'}.webm`)} disabled={!processedBlob} data-testid="button-download-webm"><Download size={14} /> Download WebM</button>
                 <button className="gs-button quiet" type="button" onClick={() => framesZipBlob ? downloadBlob(framesZipBlob, `${safeGiftFilePrefix()}-png-frames.zip`) : void downloadFramesZip()} disabled={downloadingFrames} data-testid="button-download-png-zip"><Archive size={14} /> {downloadingFrames ? `Preparing ZIP ${Math.round(frameZipProgress * 100)}%` : framesZipBlob ? 'Download PNG frames ZIP' : 'Prepare PNG frames ZIP'}</button>
               </div>}
               <div className="gs-activation-actions">
@@ -1449,6 +1621,7 @@ export function GiftStudioPage() {
           webmUrl: playingPreview.webmUrl,
           safariUrl: playingPreview.safariUrl,
           durationMs: playingPreview.durationMs,
+          backgroundMode: playingPreview.settings.backgroundMode ?? 'see-through',
         }}
         onFinish={() => setPlayingPreview(null)}
       />}

@@ -105,6 +105,56 @@ export function detectDominantEdgeColor(frames: ImageData[]): string | null {
   );
 }
 
+export interface VideoBackgroundAnalysis {
+  hasTransparency: boolean;
+  mostlyBlack: boolean;
+  edgeColor: string | null;
+}
+
+export function analyzeVideoBackgroundFrames(frames: ImageData[]): VideoBackgroundAnalysis {
+  let transparentFrames = 0;
+  let blackFrames = 0;
+  for (const frame of frames) {
+    const { width, height, data } = frame;
+    if (!width || !height) continue;
+    let transparent = 0;
+    for (let offset = 3; offset < data.length; offset += 4) {
+      if (data[offset]! < 245) transparent++;
+    }
+    if (transparent / (width * height) >= 0.01) transparentFrames++;
+
+    const borderX = Math.max(1, Math.ceil(width * 0.08));
+    const borderY = Math.max(1, Math.ceil(height * 0.08));
+    let edgePixels = 0;
+    let nearBlackPixels = 0;
+    let edgeLuminance = 0;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (x >= borderX && x < width - borderX && y >= borderY && y < height - borderY) continue;
+        const offset = (y * width + x) * 4;
+        if (data[offset + 3]! < 245) continue;
+        const red = data[offset]!;
+        const green = data[offset + 1]!;
+        const blue = data[offset + 2]!;
+        edgePixels++;
+        edgeLuminance += red * 0.2126 + green * 0.7152 + blue * 0.0722;
+        if (Math.max(red, green, blue) <= 48) nearBlackPixels++;
+      }
+    }
+    if (edgePixels > 0
+      && nearBlackPixels / edgePixels >= 0.78
+      && edgeLuminance / edgePixels <= 34) {
+      blackFrames++;
+    }
+  }
+  const requiredFrames = Math.max(2, Math.ceil(frames.length * 0.6));
+  return {
+    hasTransparency: frames.length > 0 && transparentFrames >= requiredFrames,
+    mostlyBlack: frames.length > 0 && blackFrames >= requiredFrames,
+    edgeColor: detectDominantEdgeColor(frames),
+  };
+}
+
 function waitForSeek(video: HTMLVideoElement, time: number): Promise<void> {
   if (Math.abs(video.currentTime - time) < 0.015) return Promise.resolve();
   return new Promise((resolve, reject) => {
@@ -122,8 +172,8 @@ function waitForSeek(video: HTMLVideoElement, time: number): Promise<void> {
   });
 }
 
-export async function detectVideoEdgeColor(video: HTMLVideoElement): Promise<string | null> {
-  if (!video.videoWidth || !video.videoHeight || !Number.isFinite(video.duration)) return null;
+async function sampleVideoFrames(video: HTMLVideoElement): Promise<ImageData[]> {
+  if (!video.videoWidth || !video.videoHeight || !Number.isFinite(video.duration)) return [];
   const scale = Math.min(1, 192 / Math.max(video.videoWidth, video.videoHeight));
   const width = Math.max(2, Math.floor(video.videoWidth * scale));
   const height = Math.max(2, Math.floor(video.videoHeight * scale));
@@ -131,10 +181,11 @@ export async function detectVideoEdgeColor(video: HTMLVideoElement): Promise<str
   canvas.width = width;
   canvas.height = height;
   const context = canvas.getContext("2d", { willReadFrequently: true });
-  if (!context) return null;
+  if (!context) return [];
   const wasPlaying = !video.paused;
   const previousTime = video.currentTime;
-  const frameTimes = [0, Math.min(0.18, video.duration * 0.08), Math.min(0.42, video.duration * 0.2)];
+  const frameInset = Math.min(0.03, video.duration / 10);
+  const frameTimes = [frameInset, video.duration / 2, Math.max(0, video.duration - frameInset)];
   const frames: ImageData[] = [];
   try {
     video.pause();
@@ -145,7 +196,7 @@ export async function detectVideoEdgeColor(video: HTMLVideoElement): Promise<str
       context.drawImage(video, 0, 0, width, height);
       frames.push(context.getImageData(0, 0, width, height));
     }
-    return detectDominantEdgeColor(frames);
+    return frames;
   } finally {
     try {
       await waitForSeek(video, Math.max(0, Math.min(previousTime, Math.max(0, video.duration - 0.02))));
@@ -154,6 +205,14 @@ export async function detectVideoEdgeColor(video: HTMLVideoElement): Promise<str
     }
     if (wasPlaying) void video.play().catch(() => undefined);
   }
+}
+
+export async function detectVideoBackground(video: HTMLVideoElement): Promise<VideoBackgroundAnalysis> {
+  return analyzeVideoBackgroundFrames(await sampleVideoFrames(video));
+}
+
+export async function detectVideoEdgeColor(video: HTMLVideoElement): Promise<string | null> {
+  return detectDominantEdgeColor(await sampleVideoFrames(video));
 }
 
 export function sampleVideoColorAtPoint(
@@ -251,6 +310,7 @@ export function drawKeyedPreview(
   const context = canvas.getContext("2d", { willReadFrequently: true });
   if (!context) throw new Error("This browser could not start the live cutout preview.");
   context.drawImage(source, 0, 0, width, height);
+  if (settings.backgroundMode === "black") return;
   const frame = context.getImageData(0, 0, width, height);
   applyKeyToPixels(frame.data, settings);
   context.putImageData(frame, 0, 0);

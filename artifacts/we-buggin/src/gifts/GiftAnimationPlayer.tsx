@@ -306,7 +306,7 @@ function TransparentGiftAnimation({
   const fallback = PRESENTATION[giftId] ?? { name: giftName || media.name || String(giftId), emoji: "🎁", position: "center" as const };
   const presentation = { ...fallback, name: giftName || media.name || fallback.name };
   const positionClass = `big-tier-gift-overlay--${presentation.position}`;
-  const mediaClass = `big-tier-gift-video big-tier-gift-video--alpha gift-studio-custom-media${fading ? " is-fading-out" : ""}`;
+  const mediaClass = `big-tier-gift-video big-tier-gift-video--${media.backgroundMode === "black" ? "black" : "alpha"} gift-studio-custom-media gift-studio-custom-media--${media.backgroundMode === "black" ? "black" : "see-through"}${fading ? " is-fading-out" : ""}`;
   const src = useImage ? giftStudioMediaUrl(media.safariUrl) : giftStudioMediaUrl(media.webmUrl);
 
   return createPortal(

@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { GiftStudioPlaybackMediaBackgroundMode } from './giftStudioPlaybackMediaBackgroundMode';
 
 export interface GiftStudioPlaybackMedia {
   versionId: string;
@@ -20,4 +21,5 @@ export interface GiftStudioPlaybackMedia {
      * @maximum 15000
      */
   durationMs: number;
+  backgroundMode: GiftStudioPlaybackMediaBackgroundMode;
 }

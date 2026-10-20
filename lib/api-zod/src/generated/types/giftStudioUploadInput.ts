@@ -20,6 +20,6 @@ export interface GiftStudioUploadInput {
   settings: string;
   /** Video file part */
   sourceVideo: string;
-  /** Processed transparent WebM file part */
+  /** Processed WebM file part; transparent for see-through videos and opaque for black-background videos */
   processedWebm: string;
 }

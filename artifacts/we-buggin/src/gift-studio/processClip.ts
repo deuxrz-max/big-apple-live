@@ -7,6 +7,8 @@ import { buildHueChromaKeyFilter } from './liveKeyPreview';
 export type KeyColor = 'green' | 'magenta' | 'black' | 'custom';
 
 export interface ClipSettings {
+  backgroundMode: 'see-through' | 'black';
+  preserveSourceAlpha: boolean;
   preset: KeyColor;
   keyColor: string;
   tolerance: number;
@@ -48,7 +50,7 @@ export async function processClipLocally(
   onEngine(engine);
   engine.on('progress', ({ progress }) => onProgress(Math.max(0, Math.min(1, progress))));
   const inputName = `source-${Date.now()}.${file.name.split('.').pop()?.toLowerCase() || 'mp4'}`;
-  const outputName = 'gift-alpha.webm';
+  const outputName = settings.backgroundMode === 'black' ? 'gift-black-background.webm' : 'gift-alpha.webm';
   const verifyName = 'verify-alpha.rgba';
   let engineLoaded = false;
   try {
@@ -64,21 +66,27 @@ export async function processClipLocally(
     onStage('Preparing the source clip…');
     await engine.writeFile(inputName, new Uint8Array(await file.arrayBuffer()));
     const filterParts: string[] = [];
+    const blackBackground = settings.backgroundMode === 'black';
     if (settings.maxDimension) {
       filterParts.push(`scale='if(gte(iw,ih),min(iw,${settings.maxDimension}),-2)':'if(gte(iw,ih),-2,min(ih,${settings.maxDimension}))':flags=lanczos`);
     }
-    filterParts.push(buildHueChromaKeyFilter(settings));
-    if (settings.spill > 0.01 && settings.preset !== 'black') {
+    if (blackBackground) filterParts.push("crop=trunc(iw/2)*2:trunc(ih/2)*2");
+    if (!blackBackground && !settings.preserveSourceAlpha) filterParts.push(buildHueChromaKeyFilter(settings));
+    if (!blackBackground && !settings.preserveSourceAlpha && settings.spill > 0.01 && settings.preset !== 'black') {
       const despillChannel = settings.preset === 'green' || settings.keyColor.toLowerCase() === '#00ff00' ? 'green' : 'blue';
       filterParts.push(`despill=type=${despillChannel}:mix=${settings.spill.toFixed(2)}:expand=0`);
     }
-    onStage('Removing the background and encoding transparent video…');
+    onStage(blackBackground
+      ? 'Keeping the black background and encoding a normal video…'
+      : settings.preserveSourceAlpha
+        ? 'Keeping the source transparency and encoding…'
+        : 'Removing the background and encoding transparent video…');
     const result = await withWorkerTimeout(engine.exec([
       '-i', inputName,
-      '-vf', filterParts.join(','),
+      ...(filterParts.length ? ['-vf', filterParts.join(',')] : []),
       '-an',
       '-c:v', 'libvpx-vp9',
-      '-pix_fmt', 'yuva420p',
+      '-pix_fmt', blackBackground ? 'yuv420p' : 'yuva420p',
       '-auto-alt-ref', '0',
       '-b:v', '0',
       '-crf', '32',
@@ -90,6 +98,10 @@ export async function processClipLocally(
     const output = await engine.readFile(outputName);
     if (typeof output === 'string') throw new Error('The processed clip could not be read.');
     const bytes = new Uint8Array(output);
+    if (blackBackground) {
+      onProgress(1);
+      return { blob: new Blob([bytes], { type: 'video/webm' }), bytes };
+    }
     onStage('Verifying transparency frame by frame…');
     const verification = await withWorkerTimeout(engine.exec([
       '-c:v', 'libvpx-vp9',

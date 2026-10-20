@@ -378,7 +378,7 @@
         },
         "responses": {
           "200": {
-            "description": "Server-processed transparent VP9 WebM",
+            "description": "Server-processed VP9 WebM: transparent for See-through video, opaque for Black background",
             "content": {"video/webm": {"schema": {"type": "string", "format": "binary"}}}
           },
           "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
@@ -386,7 +386,7 @@
           "403": {"description": "Owner access required"},
           "413": {"description": "Source clip exceeds the upload limit"},
           "415": {"description": "Unsupported video format"},
-          "422": {"description": "The clip could not be processed or transparency could not be verified"}
+          "422": {"description": "The clip could not be processed; See-through video also requires verified transparency"}
         }
       }
     },
@@ -404,7 +404,7 @@
           }
         },
         "responses": {
-          "201": {"description": "Server-processed transparent animation saved; activated immediately when an existing gift is selected", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioVersion"}}}},
+          "201": {"description": "Server-processed animation saved; activated immediately when an existing gift is selected", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioVersion"}}}},
           "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
           "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
           "403": {"description": "Owner access required"},
@@ -1504,6 +1504,8 @@
           "softness": {"type": "number", "minimum": 0, "maximum": 0.5},
           "spill": {"type": "number", "minimum": 0, "maximum": 1},
           "maxDimension": {"anyOf": [{"type": "integer", "enum": [480, 720, 1080]}, {"type": "null"}]},
+          "backgroundMode": {"type": "string", "enum": ["see-through", "black"], "default": "see-through"},
+          "preserveSourceAlpha": {"type": "boolean", "default": false, "description": "The uploaded clip already contains real transparency; do not apply a color key"},
           "draftName": {"type": "string", "minLength": 1, "maxLength": 60, "description": "Owner-provided name shown for this saved Gift Studio draft"},
           "productType": {"$ref": "#/components/schemas/GiftStudioProductType"}
         }
@@ -1518,7 +1520,7 @@
           "cost": {"type": "integer", "minimum": 1, "description": "Optional updated credit price for an existing catalog gift"},
           "settings": {"type": "string", "description": "JSON-serialized GiftStudioProcessingSettings"},
           "sourceVideo": {"type": "string", "description": "Video file part"},
-          "processedWebm": {"type": "string", "description": "Processed transparent WebM file part"}
+          "processedWebm": {"type": "string", "description": "Processed WebM file part; transparent for see-through videos and opaque for black-background videos"}
         }
       },
       "GiftStudioProcessInput": {
@@ -1647,13 +1649,14 @@
       },
       "GiftStudioPlaybackMedia": {
         "type": "object",
-        "required": ["versionId", "name", "webmUrl", "safariUrl", "durationMs"],
+        "required": ["versionId", "name", "webmUrl", "safariUrl", "durationMs", "backgroundMode"],
         "properties": {
           "versionId": {"type": "string", "format": "uuid"},
           "name": {"type": "string", "minLength": 1, "maxLength": 60},
           "webmUrl": {"type": "string"},
           "safariUrl": {"type": "string"},
-          "durationMs": {"type": "integer", "minimum": 1, "maximum": 15000}
+          "durationMs": {"type": "integer", "minimum": 1, "maximum": 15000},
+          "backgroundMode": {"type": "string", "enum": ["see-through", "black"]}
         }
       },
       "GiftStudioActiveMediaResponse": {
