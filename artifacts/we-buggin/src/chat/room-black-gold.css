@@ -1,0 +1,165 @@
+/* Rooms only: pure black canvas + thin luminous gold perimeter (edge light only).
+   Scoped to .ch.ur and the room-only route flag. No layout/geometry changes. */
+body.streamtalk-beam-screen { background: #000 !important; background-image: none !important; }
+body.streamtalk-beam-screen #root .app-page.is-beam-screen { background: #000 !important; }
+body.streamtalk-beam-screen #root :is(.app-bottom-nav, .app-bottom-nav-inner) {
+  background: #000 !important;
+  background-image: none !important;
+}
+body.streamtalk-beam-screen #root .app-bottom-nav :is(a, button, .app-bottom-link) {
+  background: #000 !important;
+  background-image: none !important;
+}
+/* Gift sheets are portalled to body; the room route flag keeps other pages intact. */
+body.streamtalk-beam-screen .gift-framework.gift-sheet {
+  background: #000 !important;
+  background-image: none !important;
+  border-color: rgba(255, 255, 255, .16);
+}
+
+#root .ch.ur,
+#root .ch.ur .ur-in,
+#root .ch.ur .ur-body,
+#root .ch.ur .ch-room,
+.ch.ur, .ch.ur .ur-in, .ch.ur .ur-body, .ch.ur .ch-room {
+  background: #000 !important;
+  background-image: none !important;
+}
+
+/* Panels: black fill, neutral hairline borders. Seat tiles/media untouched beyond base fill. */
+#root .ch.ur :is(.ur-head, .ur-side, .ch-comp, .ur-chip) {
+  background: #000 !important;
+  background-image: none !important;
+  border-color: rgba(255, 255, 255, .14) !important;
+  box-shadow: none !important;
+}
+#root .ch.ur .ch-msg {
+  background: #000 !important;
+  border-color: rgba(255, 255, 255, .12) !important;
+}
+#root .ch.ur .ur-bot-chatter { background: #000 !important; }
+#root .ch.ur :is(.ch-comp input, .ur-tv-frame, .ur-tv-player, .ur-tv-placeholder, .ur-slot-media, .ur-slot-join, .gift-framework.gift-sheet) {
+  background: #000 !important;
+  background-image: none !important;
+}
+#root .ch.ur .ch-comp input { color: #f7f4ff; border-color: rgba(255, 255, 255, .22); }
+#root .ch.ur .ur-slot,
+#root .ch.ur .ur-slot:not(.is-occupied) {
+  background-color: #000 !important;
+  background-image: none !important;
+}
+#root .ch.ur .ur-slot.has-person .ur-slot-media { background-color: #000; }
+
+/* Room modals / menus */
+#root .ch.ur :is(.ur-menu, .ur-rules, .ur-tv-dialog) {
+  background: #000 !important;
+  border-color: rgba(255, 255, 255, .16) !important;
+  box-shadow: 0 18px 54px rgba(0, 0, 0, .7) !important;
+}
+#root .ch.ur :is(.ur-menu button, .ur-rules button:not(.bm-btn)) {
+  background: #000;
+  border-color: rgba(255, 255, 255, .14);
+}
+
+/* One black for interface fills, including empty-seat circles and control states.
+   Never target img/video/canvas, gift artwork, profile badges, or status dots. */
+#root .ch.ur :is(
+  button, input, select, textarea, option,
+  .ur-empty-number, .ur-slot-avatar, .ur-slot-identity-fallback, .ur-slot-initial-fallback,
+  .ur-slot-empty-copy, .ur-slot-more, .ur-beam-self-controls, .ur-moderation-notice,
+  .ur-badge, .ur-ign, .ch-err,
+  .ur-slot-portrait, .ur-slot-copy, .ur-slot-mic-icon, .ur-entry-effect-caption,
+  .ur-coin-drop-logo, .ur-coin-drop-amount, .ur-coin-drop-message, .ur-streak-reward-toast,
+  .ur-tv-sound-hint, .ur-tv-autoplay-hint
+) {
+  background: #000 !important;
+  background-image: none !important;
+}
+#root .ch.ur :is(.bm-btn, .ur-empty-number, .ur-slot:not(.is-speaking)) {
+  box-shadow: none !important;
+}
+#root .ch.ur :is(.bm-btn, .ur-empty-number) {
+  border-color: rgba(255, 255, 255, .3);
+}
+#root .ch.ur .bm-btn::before { background: none !important; }
+/* Only the live video's backing/letterbox color; never its decoded image. */
+#root .ch.ur .ur-live-video { background-color: #000 !important; }
+
+/* Neutral existing seat/player hairlines; the only travelling shine is outside. */
+#root .ch.ur :is(.ur-slot, .ur-tv-frame)::before {
+  background: rgba(255, 255, 255, .18) !important;
+  animation: none !important;
+}
+body.streamtalk-beam-screen .gift-room-panel :is(
+  button, input, select, option, .gift-panel-recipients, .gift-panel-tabs,
+  .gift-panel-send-zone, .gift-panel-quantity, .gift-panel-message,
+  .gift-panel-wallet, .gift-panel-skeletons > div
+) {
+  background: #000 !important;
+  background-image: none !important;
+}
+body.streamtalk-beam-screen .gift-room-panel button {
+  box-shadow: none;
+}
+body.streamtalk-beam-screen .gift-room-panel :is(.gift-panel-send, .gift-panel-secondary) {
+  border-color: rgba(255, 255, 255, .3);
+}
+@media (max-width: 760px) {
+  #root .ch.ur .ur-side.is-open { background: #000 !important; }
+}
+
+/* Gold edge light: fixed, non-interactive frame at the room's viewport perimeter. */
+#root .ch.ur::after,
+.ch.ur::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  pointer-events: none;
+  border-radius: 12px;
+  box-shadow:
+    inset 0 0 0 1px rgba(232, 196, 112, .9),
+    inset 0 0 6px 1px rgba(255, 206, 110, .28),
+    inset 0 0 22px 2px rgba(214, 160, 60, .12);
+}
+
+/* Four thin SVG strokes, no JavaScript loop or full-screen moving gradient.
+   Normalized path lengths keep the highlight continuous through all corners. */
+.ch.ur .ur-perimeter-shine {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 56;
+  pointer-events: none;
+  fill: none;
+  contain: strict;
+}
+.ch.ur .ur-perimeter-shine rect {
+  width: calc(100% - 2px);
+  height: calc(100% - 2px);
+  stroke-linecap: round;
+  stroke-dasharray: 8 92;
+  animation: ur-perimeter-travel 12s linear infinite;
+}
+.ch.ur .ur-perimeter-halo { stroke: #ffcf70; stroke-width: 5; opacity: .16; }
+.ch.ur .ur-perimeter-trail { stroke: #e7b650; stroke-width: 1.4; }
+.ch.ur .ur-perimeter-highlight {
+  --ur-shine-start: -5px;
+  stroke: #ffdf93;
+  stroke-width: 1.6;
+  stroke-dasharray: 3 97 !important;
+}
+.ch.ur .ur-perimeter-tip {
+  --ur-shine-start: -7.3px;
+  stroke: #fff4cf;
+  stroke-width: 1.8;
+  stroke-dasharray: .7 99.3 !important;
+}
+@keyframes ur-perimeter-travel {
+  from { stroke-dashoffset: var(--ur-shine-start, 0px); }
+  to { stroke-dashoffset: calc(var(--ur-shine-start, 0px) - 100px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ch.ur .ur-perimeter-shine { display: none; }
+}

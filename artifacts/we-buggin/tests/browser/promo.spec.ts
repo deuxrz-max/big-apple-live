@@ -25,6 +25,133 @@ const test = base.extend<{ isolation: void }>({
 const video = (page: Page) => page.getByTestId('promo-video');
 const background = (page: Page) => page.getByTestId('promo-background');
 
+for (const width of [320, 390, 1280]) {
+  base(`black room and gold edge keep controls and layout intact at ${width}px`, async ({ page }, info) => {
+    await page.setViewportSize({ width, height: width === 320 ? 568 : 844 });
+    await page.goto('/tests/browser/harness.html');
+    await expect(page.getByTestId('text-university-name')).toBeVisible();
+    await expect(page.locator('.ur-slot')).toHaveCount(8);
+    const styles = await page.evaluate(() => {
+      const root = document.querySelector('.ch.ur')!;
+      const frame = getComputedStyle(root, '::after');
+      return {
+        backgrounds: ['.ch.ur', '.ur-in', '.ur-body', '.ch-room', '.ur-head', '.ch-comp', '.ch-comp input', '.ur-tv-placeholder', '.ur-slot-media', '.ur-empty-number', '.ur-people-btn', '.ur-rules-btn', '.ch-comp button']
+          .map(selector => getComputedStyle(document.querySelector(selector)!).backgroundColor),
+        pointerEvents: frame.pointerEvents,
+        frame: frame.boxShadow,
+        borderWidth: frame.borderWidth,
+      };
+    });
+    expect(styles.backgrounds.every(value => value === 'rgb(0, 0, 0)')).toBe(true);
+    expect(styles.pointerEvents).toBe('none');
+    expect(styles.frame).toContain('232, 196, 112');
+    expect(styles.borderWidth).toBe('0px');
+    const geometry = await page.evaluate(() => {
+      const sheet = document.querySelector<HTMLStyleElement>('style[data-vite-dev-id$="/room-black-gold.css"]')!.sheet!;
+      const measure = () => [...document.querySelectorAll('.ur-in,.ur-head,.ur-slots,.ur-slot,.ch-comp,.ch-room,video,img')]
+        .map(element => ({ box: element.getBoundingClientRect().toJSON(), source: element.getAttribute('src') }));
+      const themed = measure();
+      const shine = document.querySelector<SVGElement>('.ur-perimeter-shine')!;
+      shine.style.display = 'none'; // The original room had no decorative SVG.
+      sheet.disabled = true;
+      const original = measure();
+      sheet.disabled = false;
+      shine.style.display = '';
+      return { themed, original };
+    });
+    expect(geometry.themed).toEqual(geometry.original);
+    // Desktop keeps People in the persistent sidebar instead of the mobile button.
+    for (const id of [...(width <= 760 ? ['button-people'] : []), 'button-rules', 'input-message', 'button-send']) {
+      const control = page.getByTestId(id);
+      await expect(control).toBeInViewport();
+      expect(await control.evaluate(element => {
+        const r = element.getBoundingClientRect();
+        return element.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2));
+      })).toBe(true);
+    }
+    await page.getByTestId('input-message').fill('Unsent visual-check draft');
+    await expect(page.getByTestId('button-send')).toBeEnabled();
+    await page.screenshot({ path: info.outputPath('room-black-gold.png') });
+    await page.getByTestId('button-rules').click();
+    await expect(page.locator('.ur-rules')).toBeVisible();
+    await expect(page.locator('.ur-rules')).toHaveCSS('background-color', 'rgb(0, 0, 0)');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.goto('/tests/browser/harness.html');
+    if (width <= 760) await page.getByTestId('button-people').click();
+    await expect(page.locator('.ur-side')).toBeVisible();
+    await expect(page.locator('.ur-side')).toHaveCSS('background-color', 'rgb(0, 0, 0)');
+    await page.goto('/tests/browser/harness.html');
+    await page.getByTestId('button-open-gift-bag').click();
+    await expect(page.getByTestId('gift-bag')).toBeVisible();
+    await expect(page.getByTestId('gift-bag')).toHaveCSS('background-color', 'rgb(0, 0, 0)');
+    await page.getByTestId('gift-bag-close').click();
+    await expect(page.getByTestId('gift-bag')).toHaveCount(0);
+  });
+}
+
+base('room perimeter shine stays on the edge, runs smoothly, and respects reduced motion', async ({ page }, info) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/tests/browser/harness.html');
+  const shine = page.locator('.ur-perimeter-shine');
+  await expect(shine).toBeVisible();
+  await expect(shine).toHaveCSS('pointer-events', 'none');
+  await expect(shine).toHaveAttribute('aria-hidden', 'true');
+  expect(await shine.boundingBox()).toEqual({ x: 0, y: 0, width: 390, height: 844 });
+  const tip = shine.locator('.ur-perimeter-tip');
+  const before = await tip.evaluate(element => getComputedStyle(element).strokeDashoffset);
+  const metrics = await page.evaluate(async () => {
+    const times: number[] = [];
+    await new Promise<void>(resolve => {
+      const frame = (time: number) => {
+        times.push(time);
+        if (times.length === 46) resolve();
+        else requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+    });
+    const intervals = times.slice(1).map((time, index) => time - times[index]!);
+    return {
+      averageMs: intervals.reduce((sum, value) => sum + value, 0) / intervals.length,
+      longestMs: Math.max(...intervals),
+      animations: document.querySelector('.ur-perimeter-shine')!.getAnimations({ subtree: true }).map(animation => {
+        const timing = animation.effect!.getTiming();
+        return { duration: timing.duration, easing: timing.easing, iterations: timing.iterations };
+      }),
+    };
+  });
+  expect(await tip.evaluate(element => getComputedStyle(element).strokeDashoffset)).not.toBe(before);
+  expect(metrics.animations).toHaveLength(4);
+  for (const animation of metrics.animations) {
+    expect(animation).toEqual({ duration: 12000, easing: 'linear', iterations: Infinity });
+  }
+  expect(metrics.averageMs).toBeLessThan(50);
+  expect(metrics.longestMs).toBeLessThan(250);
+  await info.attach('emulated-phone-frame-timing', { body: JSON.stringify(metrics), contentType: 'application/json' });
+  await page.screenshot({ path: info.outputPath('moving-gold-perimeter.png') });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(shine).toBeHidden();
+  expect(await page.locator('.ch.ur').evaluate(element => getComputedStyle(element, '::after').boxShadow)).toContain('232, 196, 112');
+  await page.getByTestId('button-rules').click();
+  await expect(page.locator('.ur-rules')).toBeVisible();
+});
+
+base('black and gold room styling does not change the Store', async ({ page }) => {
+  await page.goto('/tests/browser/harness.html?view=store');
+  await expect(page.locator('.ch.ur')).toHaveCount(0);
+  await expect(page.locator('.ur-perimeter-shine')).toHaveCount(0);
+  const colors = await page.evaluate(() => {
+    const sheet = document.querySelector<HTMLStyleElement>('style[data-vite-dev-id$="/room-black-gold.css"]')!.sheet!;
+    const measure = () => [document.body, document.querySelector('.app-page')!, document.querySelector('.app-bottom-nav')!]
+      .map(element => ({ color: getComputedStyle(element).color, background: getComputedStyle(element).background }));
+    const enabled = measure();
+    sheet.disabled = true;
+    const disabled = measure();
+    sheet.disabled = false;
+    return { enabled, disabled };
+  });
+  expect(colors.enabled).toEqual(colors.disabled);
+});
+
 async function codecs(page: Page, info: TestInfo) {
   const support = await page.evaluate(() => {
     const el = document.createElement('video');

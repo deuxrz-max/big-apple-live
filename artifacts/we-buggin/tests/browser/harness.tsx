@@ -13,11 +13,18 @@ import '../../src/social/social.css';
 import '../../src/index.css';
 import '../../src/chat/chat.css';
 import '../../src/theme.css';
+import '../../src/white-theme.css';
+import '../../src/dark-app-theme.css';
+import '../../src/depth-ui.css';
 import '../../src/components/bottom-navigation.css';
+import '../../src/chat/room-black-gold.css';
 
 declare const __PROMO_REGRESSION__: boolean;
 if (typeof __PROMO_REGRESSION__ === 'undefined' || !__PROMO_REGRESSION__)
   throw new Error('This harness may only run on the isolated promo regression server');
+
+const roomThemeFixture = !new URLSearchParams(location.search).get('view');
+document.body.classList.toggle('streamtalk-beam-screen', roomThemeFixture);
 
 function PlayerFixture() {
   const [unavailable, setUnavailable] = useState(false);
@@ -70,7 +77,7 @@ function GiftAnimationFixture() {
 createRoot(document.getElementById('root')!).render(
   new URLSearchParams(location.search).get('view') === 'player' ? <PlayerFixture /> :
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-      <main className="app-page">
+      <main className={`app-page${roomThemeFixture ? ' is-beam-screen' : ''}`}>
         {new URLSearchParams(location.search).get('view') === 'credits'
           ? <BuyCreditsPage />
           : new URLSearchParams(location.search).get('view') === 'store' ? <StorePage />

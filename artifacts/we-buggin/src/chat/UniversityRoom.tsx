@@ -27,6 +27,7 @@ import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
 import type { RoomCoinDropEvent, RoomEntranceEffectEvent } from './useTextRoom';
 import { RoomCoinDropOverlay } from './RoomCoinDropOverlay';
 import './university-room.css';
+import { RoomPerimeter } from './RoomPerimeter';
 import './bot-moderation.css';
 
 const RULES = "Stick to the room's topic. Be kind — no harassment or hate. Nothing sexual or explicit, in chat, names or photos. Don't share real names, phone numbers, addresses or other contact details. Don't hog the screen, no ALL CAPS, no ads or spam. Use Ignore on anyone bothering you, or Block and Report for anything serious. Public university chat is moderated by Deux Wild bots. Whispers and direct messages are private and are not scanned by these bots.";
@@ -367,6 +368,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
       onPointerDownCapture={activateRoomAudio}
       onKeyDownCapture={activateRoomAudio}
       onWheelCapture={activateRoomAudio}>
+      <RoomPerimeter />
       <div className="ch-in ur-in">
         {chatAccess.data?.warning && <p className="ur-moderation-notice" role="alert">{chatAccess.data.warning}</p>}
         {(chatAccess.data?.chatMuted || chatAccess.data?.reportsMuted) && (
