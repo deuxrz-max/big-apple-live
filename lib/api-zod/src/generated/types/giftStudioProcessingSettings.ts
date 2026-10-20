@@ -33,6 +33,8 @@ export interface GiftStudioProcessingSettings {
   backgroundMode?: GiftStudioProcessingSettingsBackgroundMode;
   /** The uploaded clip already contains real transparency; do not apply a color key */
   preserveSourceAlpha?: boolean;
+  /** New nonblack opaque uploads may keep their background after a warning instead of being rejected */
+  retainOpaqueBackground?: boolean;
   /**
      * Owner-provided name shown for this saved Gift Studio draft
      * @minLength 1

@@ -1506,6 +1506,7 @@
           "maxDimension": {"anyOf": [{"type": "integer", "enum": [480, 720, 1080]}, {"type": "null"}]},
           "backgroundMode": {"type": "string", "enum": ["see-through", "black"], "default": "see-through"},
           "preserveSourceAlpha": {"type": "boolean", "default": false, "description": "The uploaded clip already contains real transparency; do not apply a color key"},
+          "retainOpaqueBackground": {"type": "boolean", "default": false, "description": "New nonblack opaque uploads may keep their background after a warning instead of being rejected"},
           "draftName": {"type": "string", "minLength": 1, "maxLength": 60, "description": "Owner-provided name shown for this saved Gift Studio draft"},
           "productType": {"$ref": "#/components/schemas/GiftStudioProductType"}
         }

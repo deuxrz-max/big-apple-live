@@ -43,8 +43,14 @@ Native FFmpeg tests do not validate the browser-side FFmpeg WebAssembly worker. 
 
 **How to apply:** Keep native alpha verification and browser-worker startup as separate checks, and confirm processing on a real supported phone before claiming the on-device workflow is verified.
 
-Gift Studio background mode is per version: old and see-through assets remain the default and still require real alpha; black-background assets remain opaque in storage and use screen blending in every playback surface. Only generated icons remove the black matte.
+Gift Studio background mode is per version: old assets keep their mode and alpha rules; black-background assets remain opaque in storage and use screen blending in every playback surface. Only generated icons remove the black matte.
 
 **Why:** The owner confirmed the simple two-option switch; keeping black-matte removal out of the animation file preserves bright colors and leaves existing gifts unchanged.
 
 **How to apply:** Carry the mode through saved settings and active-media responses, apply black blending to both full and mini playback, and keep alpha checks limited to see-through videos.
+
+Auto-detect only newly uploaded clips, never saved gifts on read. Real transparency takes priority over black-border detection; manual choices must win and persist. Nonblack opaque uploads stay labeled See-through with a warning, but may retain their opaque background rather than being blocked.
+
+**Why:** The owner explicitly requested automatic selection without changing existing gifts, manual override, and nonblocking warnings for scenery or green-screen clips. The See-through label must not imply that automatic detection invents transparency.
+
+**How to apply:** Preserve actual source alpha without chroma keying, sample several low-resolution frames, keep explicit warned opaque retention separate from legacy alpha-required processing, and leave existing saved media untouched.

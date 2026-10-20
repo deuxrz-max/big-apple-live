@@ -2167,6 +2167,7 @@ export const getGiftStudioLibraryResponseItemsItemSettingsSpillMax = 1;
 
 export const getGiftStudioLibraryResponseItemsItemSettingsBackgroundModeDefault = `see-through`;
 export const getGiftStudioLibraryResponseItemsItemSettingsPreserveSourceAlphaDefault = false;
+export const getGiftStudioLibraryResponseItemsItemSettingsRetainOpaqueBackgroundDefault = false;
 export const getGiftStudioLibraryResponseItemsItemSettingsDraftNameMax = 60;
 
 export const getGiftStudioLibraryResponseCatalogItemIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
@@ -2190,6 +2191,7 @@ export const GetGiftStudioLibraryResponse = zod.object({
   "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
   "backgroundMode": zod.enum(['see-through', 'black']).default(getGiftStudioLibraryResponseItemsItemSettingsBackgroundModeDefault),
   "preserveSourceAlpha": zod.boolean().default(getGiftStudioLibraryResponseItemsItemSettingsPreserveSourceAlphaDefault).describe('The uploaded clip already contains real transparency; do not apply a color key'),
+  "retainOpaqueBackground": zod.boolean().default(getGiftStudioLibraryResponseItemsItemSettingsRetainOpaqueBackgroundDefault).describe('New nonblack opaque uploads may keep their background after a warning instead of being rejected'),
   "draftName": zod.string().min(1).max(getGiftStudioLibraryResponseItemsItemSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft'),
   "productType": zod.enum(['gift', 'entrance-effect']).optional()
 }),
@@ -2653,6 +2655,7 @@ export const saveGiftStudioProcessedResponseSettingsSpillMax = 1;
 
 export const saveGiftStudioProcessedResponseSettingsBackgroundModeDefault = `see-through`;
 export const saveGiftStudioProcessedResponseSettingsPreserveSourceAlphaDefault = false;
+export const saveGiftStudioProcessedResponseSettingsRetainOpaqueBackgroundDefault = false;
 export const saveGiftStudioProcessedResponseSettingsDraftNameMax = 60;
 
 
@@ -2673,6 +2676,7 @@ export const SaveGiftStudioProcessedResponse = zod.object({
   "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
   "backgroundMode": zod.enum(['see-through', 'black']).default(saveGiftStudioProcessedResponseSettingsBackgroundModeDefault),
   "preserveSourceAlpha": zod.boolean().default(saveGiftStudioProcessedResponseSettingsPreserveSourceAlphaDefault).describe('The uploaded clip already contains real transparency; do not apply a color key'),
+  "retainOpaqueBackground": zod.boolean().default(saveGiftStudioProcessedResponseSettingsRetainOpaqueBackgroundDefault).describe('New nonblack opaque uploads may keep their background after a warning instead of being rejected'),
   "draftName": zod.string().min(1).max(saveGiftStudioProcessedResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft'),
   "productType": zod.enum(['gift', 'entrance-effect']).optional()
 }),
@@ -2712,6 +2716,7 @@ export const createGiftStudioVersionResponseSettingsSpillMax = 1;
 
 export const createGiftStudioVersionResponseSettingsBackgroundModeDefault = `see-through`;
 export const createGiftStudioVersionResponseSettingsPreserveSourceAlphaDefault = false;
+export const createGiftStudioVersionResponseSettingsRetainOpaqueBackgroundDefault = false;
 export const createGiftStudioVersionResponseSettingsDraftNameMax = 60;
 
 
@@ -2732,6 +2737,7 @@ export const CreateGiftStudioVersionResponse = zod.object({
   "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
   "backgroundMode": zod.enum(['see-through', 'black']).default(createGiftStudioVersionResponseSettingsBackgroundModeDefault),
   "preserveSourceAlpha": zod.boolean().default(createGiftStudioVersionResponseSettingsPreserveSourceAlphaDefault).describe('The uploaded clip already contains real transparency; do not apply a color key'),
+  "retainOpaqueBackground": zod.boolean().default(createGiftStudioVersionResponseSettingsRetainOpaqueBackgroundDefault).describe('New nonblack opaque uploads may keep their background after a warning instead of being rejected'),
   "draftName": zod.string().min(1).max(createGiftStudioVersionResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft'),
   "productType": zod.enum(['gift', 'entrance-effect']).optional()
 }),
@@ -2771,6 +2777,7 @@ export const setGiftStudioVersionActiveResponseSettingsSpillMax = 1;
 
 export const setGiftStudioVersionActiveResponseSettingsBackgroundModeDefault = `see-through`;
 export const setGiftStudioVersionActiveResponseSettingsPreserveSourceAlphaDefault = false;
+export const setGiftStudioVersionActiveResponseSettingsRetainOpaqueBackgroundDefault = false;
 export const setGiftStudioVersionActiveResponseSettingsDraftNameMax = 60;
 
 
@@ -2791,6 +2798,7 @@ export const SetGiftStudioVersionActiveResponse = zod.object({
   "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
   "backgroundMode": zod.enum(['see-through', 'black']).default(setGiftStudioVersionActiveResponseSettingsBackgroundModeDefault),
   "preserveSourceAlpha": zod.boolean().default(setGiftStudioVersionActiveResponseSettingsPreserveSourceAlphaDefault).describe('The uploaded clip already contains real transparency; do not apply a color key'),
+  "retainOpaqueBackground": zod.boolean().default(setGiftStudioVersionActiveResponseSettingsRetainOpaqueBackgroundDefault).describe('New nonblack opaque uploads may keep their background after a warning instead of being rejected'),
   "draftName": zod.string().min(1).max(setGiftStudioVersionActiveResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft'),
   "productType": zod.enum(['gift', 'entrance-effect']).optional()
 }),
@@ -2829,6 +2837,7 @@ export const renameGiftStudioVersionResponseSettingsSpillMax = 1;
 
 export const renameGiftStudioVersionResponseSettingsBackgroundModeDefault = `see-through`;
 export const renameGiftStudioVersionResponseSettingsPreserveSourceAlphaDefault = false;
+export const renameGiftStudioVersionResponseSettingsRetainOpaqueBackgroundDefault = false;
 export const renameGiftStudioVersionResponseSettingsDraftNameMax = 60;
 
 
@@ -2849,6 +2858,7 @@ export const RenameGiftStudioVersionResponse = zod.object({
   "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
   "backgroundMode": zod.enum(['see-through', 'black']).default(renameGiftStudioVersionResponseSettingsBackgroundModeDefault),
   "preserveSourceAlpha": zod.boolean().default(renameGiftStudioVersionResponseSettingsPreserveSourceAlphaDefault).describe('The uploaded clip already contains real transparency; do not apply a color key'),
+  "retainOpaqueBackground": zod.boolean().default(renameGiftStudioVersionResponseSettingsRetainOpaqueBackgroundDefault).describe('New nonblack opaque uploads may keep their background after a warning instead of being rejected'),
   "draftName": zod.string().min(1).max(renameGiftStudioVersionResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft'),
   "productType": zod.enum(['gift', 'entrance-effect']).optional()
 }),
@@ -2895,6 +2905,7 @@ export const assignGiftStudioVersionToGiftResponseSettingsSpillMax = 1;
 
 export const assignGiftStudioVersionToGiftResponseSettingsBackgroundModeDefault = `see-through`;
 export const assignGiftStudioVersionToGiftResponseSettingsPreserveSourceAlphaDefault = false;
+export const assignGiftStudioVersionToGiftResponseSettingsRetainOpaqueBackgroundDefault = false;
 export const assignGiftStudioVersionToGiftResponseSettingsDraftNameMax = 60;
 
 
@@ -2915,6 +2926,7 @@ export const AssignGiftStudioVersionToGiftResponse = zod.object({
   "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
   "backgroundMode": zod.enum(['see-through', 'black']).default(assignGiftStudioVersionToGiftResponseSettingsBackgroundModeDefault),
   "preserveSourceAlpha": zod.boolean().default(assignGiftStudioVersionToGiftResponseSettingsPreserveSourceAlphaDefault).describe('The uploaded clip already contains real transparency; do not apply a color key'),
+  "retainOpaqueBackground": zod.boolean().default(assignGiftStudioVersionToGiftResponseSettingsRetainOpaqueBackgroundDefault).describe('New nonblack opaque uploads may keep their background after a warning instead of being rejected'),
   "draftName": zod.string().min(1).max(assignGiftStudioVersionToGiftResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft'),
   "productType": zod.enum(['gift', 'entrance-effect']).optional()
 }),

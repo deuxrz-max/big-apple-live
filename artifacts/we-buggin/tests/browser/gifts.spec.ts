@@ -1,5 +1,58 @@
 import { test, expect } from '@playwright/test';
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+
+test('Gift Studio detects real transparency, black matte and scenery from actual uploaded videos', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const fixtureDirectory = new URL('../../../../generated-artifacts/background-auto-tests/', import.meta.url);
+  await mkdir(fixtureDirectory, { recursive: true });
+  for (const [filename, source, filter, codec, pixelFormat] of [
+    ['transparent.webm', 'color=c=black@0.0:s=320x180:r=12:d=1,format=rgba', 'drawbox=x=100:y=50:w=80:h=80:color=white:t=fill:replace=1', 'libvpx-vp9', 'yuva420p'],
+    ['black.mp4', 'color=c=black:s=320x180:r=12:d=1', 'drawbox=x=100:y=50:w=80:h=80:color=0xffc020:t=fill', 'libx264', 'yuv420p'],
+    ['scenery.mp4', 'color=c=0x347899:s=320x180:r=12:d=1', 'drawbox=x=0:y=0:w=320:h=20:color=0x78a14e:t=fill', 'libx264', 'yuv420p'],
+  ]) {
+    execFileSync(process.env.FFMPEG_PATH ?? 'ffmpeg', [
+      '-hide_banner', '-loglevel', 'error', '-y', '-f', 'lavfi', '-i', source!,
+      '-vf', filter!, '-an', '-c:v', codec!, '-pix_fmt', pixelFormat!,
+      ...(codec === 'libvpx-vp9' ? ['-auto-alt-ref', '0'] : []),
+      new URL(filename!, fixtureDirectory).pathname,
+    ]);
+  }
+  for (const [name, contentType] of [['transparent.webm', 'video/webm'], ['black.mp4', 'video/mp4'], ['scenery.mp4', 'video/mp4']]) {
+    await page.route(`**/background-detection/${name}`, async route => route.fulfill({
+      contentType,
+      body: await readFile(new URL(`../../../../generated-artifacts/background-auto-tests/${name}`, import.meta.url)),
+    }));
+  }
+  await page.goto('/tests/browser/harness.html?view=gift-animation&giftId=heart&quantity=1');
+  const results = await page.evaluate(async () => {
+    const modulePath = '/src/gift-studio/liveKeyPreview.ts';
+    const { detectVideoBackground } = await import(/* @vite-ignore */ modulePath);
+    const analyses = [];
+    for (const filename of ['transparent.webm', 'black.mp4', 'scenery.mp4']) {
+      const video = document.createElement('video');
+      video.muted = true;
+      video.playsInline = true;
+      video.preload = 'auto';
+      document.body.append(video);
+      const ready = new Promise<void>((resolve, reject) => {
+        video.onloadeddata = () => resolve();
+        video.onerror = () => reject(new Error(`Could not load ${filename}`));
+      });
+      video.src = `/background-detection/${filename}`;
+      await ready;
+      const started = performance.now();
+      const result = await detectVideoBackground(video);
+      analyses.push({ filename, ...result, elapsedMs: performance.now() - started });
+      video.remove();
+    }
+    return analyses;
+  });
+  expect(results[0]).toMatchObject({ hasTransparency: true, mostlyBlack: false });
+  expect(results[1]).toMatchObject({ hasTransparency: false, mostlyBlack: true });
+  expect(results[2]).toMatchObject({ hasTransparency: false, mostlyBlack: false });
+  for (const result of results) expect(result.elapsedMs).toBeLessThan(4000);
+});
 
 for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 1000 }]) {
   test(`Spirit Pup explicit send clears navigation; transparent media and fallbacks ${viewport.width}`, async ({ page }) => {

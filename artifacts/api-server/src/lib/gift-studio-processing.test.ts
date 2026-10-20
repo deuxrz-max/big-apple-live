@@ -7,6 +7,53 @@ import test from "node:test";
 import sharp from "sharp";
 import { processGiftStudioClipOnServer, removeBlackBackgroundFromIcon } from "./gift-studio";
 
+test("already-transparent uploads preserve source alpha and white artwork without color keying", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "gift-studio-source-alpha-"));
+  const sourcePath = path.join(directory, "transparent.webm");
+  try {
+    execFileSync(process.env.FFMPEG_PATH ?? "ffmpeg", [
+      "-hide_banner", "-loglevel", "error", "-y", "-f", "lavfi",
+      "-i", "color=c=black@0.0:s=320x180:r=12:d=1,format=rgba",
+      "-vf", "drawbox=x=100:y=50:w=80:h=80:color=white:t=fill:replace=1",
+      "-an", "-c:v", "libvpx-vp9", "-pix_fmt", "yuva420p", "-auto-alt-ref", "0", sourcePath,
+    ]);
+    const result = await processGiftStudioClipOnServer({
+      sourcePath, sourceBytes: (await stat(sourcePath)).size, sourceName: "transparent.webm",
+      settings: { backgroundMode: "see-through", preserveSourceAlpha: true, preset: "custom",
+        keyColor: "#ffffff", tolerance: .12, softness: .06, spill: .55, maxDimension: 480 },
+    });
+    const rgba = execFileSync(process.env.FFMPEG_PATH ?? "ffmpeg", [
+      "-hide_banner", "-loglevel", "error", "-c:v", "libvpx-vp9", "-i", result.path,
+      "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgba", "pipe:1",
+    ]);
+    assert.ok(rgba[3]! < 32, "transparent border stays transparent");
+    assert.ok(rgba[(80 * 320 + 130) * 4 + 3]! > 220, "white subject is not erased by a white key");
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+test("warned nonblack opaque uploads can be processed without alpha rejection or background removal", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "gift-studio-source-scenery-"));
+  const sourcePath = path.join(directory, "scenery.mp4");
+  try {
+    execFileSync(process.env.FFMPEG_PATH ?? "ffmpeg", [
+      "-hide_banner", "-loglevel", "error", "-y", "-f", "lavfi",
+      "-i", "color=c=0x347899:s=320x180:r=12:d=1", "-an", "-c:v", "libx264",
+      "-pix_fmt", "yuv420p", sourcePath,
+    ]);
+    const result = await processGiftStudioClipOnServer({
+      sourcePath, sourceBytes: (await stat(sourcePath)).size,
+      settings: { backgroundMode: "see-through", retainOpaqueBackground: true, preset: "custom",
+        keyColor: "#347899", tolerance: .12, softness: .06, spill: .55, maxDimension: 480 },
+    });
+    const rgba = execFileSync(process.env.FFMPEG_PATH ?? "ffmpeg", [
+      "-hide_banner", "-loglevel", "error", "-i", result.path,
+      "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgba", "pipe:1",
+    ]);
+    assert.equal(rgba[3], 255);
+    assert.ok(rgba[2]! > 120, "the colored background is retained, not keyed away");
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
 test("server Gift Studio processor makes a real transparent VP9 WebM from a green-screen clip", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "gift-studio-server-test-"));
   const sourcePath = path.join(directory, "sample.mp4");

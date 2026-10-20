@@ -161,7 +161,7 @@ function waitForSeek(video: HTMLVideoElement, time: number): Promise<void> {
     const timeout = window.setTimeout(() => {
       video.removeEventListener("seeked", finish);
       reject(new Error("The clip could not be sampled for automatic color detection."));
-    }, 2500);
+    }, 1200);
     const finish = () => {
       window.clearTimeout(timeout);
       video.removeEventListener("seeked", finish);
@@ -193,6 +193,7 @@ async function sampleVideoFrames(video: HTMLVideoElement): Promise<ImageData[]> 
       await waitForSeek(video, Math.max(0, time));
       await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
       if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) continue;
+      context.clearRect(0, 0, width, height);
       context.drawImage(video, 0, 0, width, height);
       frames.push(context.getImageData(0, 0, width, height));
     }
@@ -309,8 +310,9 @@ export function drawKeyedPreview(
   }
   const context = canvas.getContext("2d", { willReadFrequently: true });
   if (!context) throw new Error("This browser could not start the live cutout preview.");
+  context.clearRect(0, 0, width, height);
   context.drawImage(source, 0, 0, width, height);
-  if (settings.backgroundMode === "black") return;
+  if (settings.backgroundMode === "black" || settings.preserveSourceAlpha || settings.retainOpaqueBackground) return;
   const frame = context.getImageData(0, 0, width, height);
   applyKeyToPixels(frame.data, settings);
   context.putImageData(frame, 0, 0);

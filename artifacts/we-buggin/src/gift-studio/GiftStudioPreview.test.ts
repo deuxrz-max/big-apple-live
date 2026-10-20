@@ -18,6 +18,7 @@ import type { ClipSettings } from "./processClip";
 const greenSettings: ClipSettings = {
   backgroundMode: "see-through",
   preserveSourceAlpha: false,
+  retainOpaqueBackground: false,
   preset: "green",
   keyColor: "#00ff00",
   tolerance: 0.24,
@@ -145,8 +146,8 @@ test("auto-detection classifies decoded transparent, black-backed, and scenery c
   };
   try {
     createClip(
-      "color=c=black@0.0:s=320x180:r=12:d=3",
-      "format=rgba,drawbox=x=100:y=50:w=80:h=80:color=white:t=fill",
+      "color=c=black@0.0:s=320x180:r=12:d=3,format=rgba",
+      "drawbox=x=100:y=50:w=80:h=80:color=white:t=fill:replace=1",
       ["-c:v", "libvpx-vp9", "-pix_fmt", "yuva420p", "-auto-alt-ref", "0", "-b:v", "0", "-crf", "20", transparentPath],
     );
     createClip(

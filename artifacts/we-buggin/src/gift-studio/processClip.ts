@@ -9,6 +9,7 @@ export type KeyColor = 'green' | 'magenta' | 'black' | 'custom';
 export interface ClipSettings {
   backgroundMode: 'see-through' | 'black';
   preserveSourceAlpha: boolean;
+  retainOpaqueBackground: boolean;
   preset: KeyColor;
   keyColor: string;
   tolerance: number;
@@ -66,7 +67,7 @@ export async function processClipLocally(
     onStage('Preparing the source clip…');
     await engine.writeFile(inputName, new Uint8Array(await file.arrayBuffer()));
     const filterParts: string[] = [];
-    const blackBackground = settings.backgroundMode === 'black';
+    const blackBackground = settings.backgroundMode === 'black' || settings.retainOpaqueBackground;
     if (settings.maxDimension) {
       filterParts.push(`scale='if(gte(iw,ih),min(iw,${settings.maxDimension}),-2)':'if(gte(iw,ih),-2,min(ih,${settings.maxDimension}))':flags=lanczos`);
     }
@@ -82,6 +83,7 @@ export async function processClipLocally(
         ? 'Keeping the source transparency and encoding…'
         : 'Removing the background and encoding transparent video…');
     const result = await withWorkerTimeout(engine.exec([
+      ...(settings.preserveSourceAlpha && /webm/i.test(file.type || file.name) ? ['-c:v', 'libvpx-vp9'] : []),
       '-i', inputName,
       ...(filterParts.length ? ['-vf', filterParts.join(',')] : []),
       '-an',

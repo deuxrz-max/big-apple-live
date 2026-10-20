@@ -436,7 +436,7 @@ export async function processGiftStudioClipOnServer(input: {
   const boundedDimension = Math.min(input.settings.maxDimension ?? 480, 480);
 
   try {
-    if (getBackgroundMode(input.settings) === "black") {
+    if (getBackgroundMode(input.settings) === "black" || input.settings.retainOpaqueBackground) {
       await execFileAsync(process.env.FFMPEG_PATH ?? "ffmpeg", [
         "-hide_banner", "-loglevel", "error", "-y",
         "-i", input.sourcePath,
@@ -466,7 +466,8 @@ export async function processGiftStudioClipOnServer(input: {
     await fs.mkdir(keyedFrames, { recursive: true });
     await execFileAsync(process.env.FFMPEG_PATH ?? "ffmpeg", [
       "-hide_banner", "-loglevel", "error", "-y",
-      ...(input.settings.preserveSourceAlpha && sourceInfo.codecName === "vp9" ? ["-c:v", "libvpx-vp9"] : []),
+      ...(input.settings.preserveSourceAlpha && ["vp8", "vp9"].includes(sourceInfo.codecName)
+        ? ["-c:v", sourceInfo.codecName === "vp9" ? "libvpx-vp9" : "libvpx"] : []),
       "-i", input.sourcePath,
       "-vf", `fps=24,scale='if(gte(iw,ih),min(iw,${boundedDimension}),-2)':'if(gte(iw,ih),-2,min(ih,${boundedDimension}))':flags=lanczos,format=rgba`,
       "-an", "-t", "15", "-vsync", "0", "-start_number", "1",
@@ -560,7 +561,7 @@ export async function createGiftStudioVersion(input: {
     !((processed.format?.format_name ?? "").includes("webm") || (processed.format?.format_name ?? "").includes("matroska"))) {
     throw new RoomError(422, "The processed file must be a silent VP9 WebM animation up to 15 seconds long.");
   }
-  if (backgroundMode === "see-through") {
+  if (backgroundMode === "see-through" && !input.settings.retainOpaqueBackground) {
     await verifyAlpha(input.processedWebmPath, "libvpx-vp9");
   } else if (!video.pix_fmt || video.pix_fmt.includes("a")) {
     throw new RoomError(422, "Black-background videos must be opaque; choose See-through video for clips with transparency.");
@@ -573,7 +574,7 @@ export async function createGiftStudioVersion(input: {
   const safeName = input.originalName.replace(/^.*[\\/]/, "").replace(/[\u0000-\u001f\u007f]/g, "").slice(0, 120)
     || `source.${source.type}`;
   try {
-    await createSafariFallback(input.processedWebmPath, fallbackPath, backgroundMode);
+    await createSafariFallback(input.processedWebmPath, fallbackPath, input.settings.retainOpaqueBackground ? "black" : backgroundMode);
     const iconStatus = await createGiftIcon(input.processedWebmPath, input.originalPath, iconPath, source.durationMs, backgroundMode);
     const fallbackBytes = (await fs.stat(fallbackPath)).size;
     const objects = [

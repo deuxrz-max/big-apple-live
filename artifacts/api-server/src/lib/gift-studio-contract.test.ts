@@ -33,8 +33,18 @@ test("legacy Gift Studio settings default to see-through video", () => {
   });
   assert.equal(settings.backgroundMode, "see-through");
   assert.equal(settings.preserveSourceAlpha, false);
+  assert.equal(settings.retainOpaqueBackground, false);
 });
 
+test("saved manual background mode survives a settings JSON reload", () => {
+  for (const backgroundMode of ["see-through", "black"]) {
+    const saved = { preset: "green", keyColor: "#00ff00", tolerance: .12, softness: .08,
+      spill: .5, maxDimension: 480, backgroundMode, retainOpaqueBackground: true };
+    const reloaded = CreateGiftStudioVersionResponse.shape.settings.parse(JSON.parse(JSON.stringify(saved)));
+    assert.equal(reloaded.backgroundMode, backgroundMode);
+    assert.equal(reloaded.retainOpaqueBackground, true);
+  }
+});
 test("Gift Studio still accepts a draft targeted to an existing catalog gift", () => {
   const parsed = CreateGiftStudioVersionBody.safeParse({
     giftId: "rose-shower",

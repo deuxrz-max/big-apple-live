@@ -240,6 +240,7 @@ export function GiftStudioPage() {
   const [keyPreset, setKeyPreset] = useState<KeyColor>('green');
   const [backgroundMode, setBackgroundMode] = useState<ClipSettings['backgroundMode']>('see-through');
   const [preserveSourceAlpha, setPreserveSourceAlpha] = useState(false);
+  const [retainOpaqueBackground, setRetainOpaqueBackground] = useState(false);
   const [backgroundModeNote, setBackgroundModeNote] = useState('');
   const [backgroundWarning, setBackgroundWarning] = useState('');
   const [keyColor, setKeyColor] = useState('#00ff00');
@@ -287,8 +288,8 @@ export function GiftStudioPage() {
   const [playhead, setPlayhead] = useState(0);
 
   const settings = useMemo<ClipSettings>(() => ({
-    backgroundMode, preserveSourceAlpha, preset: keyPreset, keyColor, tolerance, softness, spill, maxDimension,
-  }), [backgroundMode, preserveSourceAlpha, keyPreset, keyColor, tolerance, softness, spill, maxDimension]);
+    backgroundMode, preserveSourceAlpha, retainOpaqueBackground, preset: keyPreset, keyColor, tolerance, softness, spill, maxDimension,
+  }), [backgroundMode, preserveSourceAlpha, retainOpaqueBackground, keyPreset, keyColor, tolerance, softness, spill, maxDimension]);
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
   const activeGiftId = (giftId || 'heart') as GiftStudioGiftId;
@@ -306,12 +307,12 @@ export function GiftStudioPage() {
   const selectedCatalogGift = library.data?.catalog.find((gift) => gift.id === giftId);
 
   useEffect(() => {
+    if (file) return;
     if (giftMode !== 'replace' || !giftId) {
       backgroundModeEditedGiftIdRef.current = '';
       setBackgroundMode('see-through');
       return;
     }
-    if (file) return;
     if (activeGiftQuery.data && backgroundModeEditedGiftIdRef.current !== giftId) {
       setBackgroundMode(activeGiftQuery.data.media?.backgroundMode ?? 'see-through');
     }
@@ -420,6 +421,7 @@ export function GiftStudioPage() {
     setKeyDetecting(true);
     setDetectedKeyColor(null);
     setPreserveSourceAlpha(false);
+    setRetainOpaqueBackground(false);
     setBackgroundWarning('');
     setBackgroundModeNote(manualChoiceBeforeUpload ? 'Manual choice' : '');
     if (!manualChoiceBeforeUpload) setBackgroundMode('see-through');
@@ -456,13 +458,16 @@ export function GiftStudioPage() {
       const manualChoice = manualBackgroundChoiceRef.current;
       const detectedMode = analysis.hasTransparency || !analysis.mostlyBlack ? 'see-through' : 'black';
       const selectedMode = manualChoice ? settingsRef.current.backgroundMode : detectedMode;
+      const manualKey = keyWasChangedRef.current && selectedMode === 'see-through';
       const detectedSettings: ClipSettings = {
         ...settingsRef.current,
         backgroundMode: selectedMode,
-        preserveSourceAlpha: analysis.hasTransparency,
+        preserveSourceAlpha: analysis.hasTransparency && !manualKey,
+        retainOpaqueBackground: !analysis.hasTransparency && !analysis.mostlyBlack && !manualKey,
       };
       if (!manualChoice) setBackgroundMode(detectedMode);
-      setPreserveSourceAlpha(analysis.hasTransparency);
+      setPreserveSourceAlpha(detectedSettings.preserveSourceAlpha);
+      setRetainOpaqueBackground(detectedSettings.retainOpaqueBackground);
       setBackgroundModeNote(manualChoice
         ? 'Manual choice'
         : `Auto-detected: ${detectedMode === 'black' ? 'Black background' : 'See-through video'}`);
@@ -478,9 +483,19 @@ export function GiftStudioPage() {
         void process(detectedSettings);
         return;
       }
-      if (analysis.hasTransparency) {
+      if (detectedSettings.preserveSourceAlpha) {
         setDetectedKeyColor(null);
         setStatus('Transparency detected. Preparing the clip without applying a color key…');
+        void process(detectedSettings);
+        return;
+      }
+      if (detectedSettings.retainOpaqueBackground) {
+        setDetectedKeyColor(null);
+        setStatus('Keeping this video background. You can still save it or change the background mode.');
+        void process(detectedSettings);
+        return;
+      }
+      if (manualKey) {
         void process(detectedSettings);
         return;
       }
@@ -592,14 +607,15 @@ export function GiftStudioPage() {
     setProgress(0);
     setError('');
     setStatus('Loading local video engine…');
-    const preferServer = /Android/i.test(navigator.userAgent);
+    const preferServer = /Android/i.test(navigator.userAgent) || processSettings.preserveSourceAlpha
+      || processSettings.retainOpaqueBackground || processSettings.backgroundMode === 'black';
     try {
       let resultBlob: Blob;
       let resultSession: string | null = null;
       let usedServerProcessor = preferServer;
       if (preferServer) {
         setServerProcessing(true);
-        setStatus('Using Deux Wild’s Android-safe processor (480 px, 24 fps)…');
+        setStatus('Using Deux Wild’s low-memory processor (480 px, 24 fps)…');
         const controller = new AbortController();
         serverAbortRef.current = controller;
         const result = await processClipOnServer(file, processSettings, controller.signal, getToken);
@@ -666,12 +682,13 @@ export function GiftStudioPage() {
   };
 
   const chooseBackgroundMode = (nextMode: ClipSettings['backgroundMode']) => {
-    if (nextMode === backgroundMode || processing) return;
+    if (processing) return;
     backgroundModeEditedGiftIdRef.current = giftMode === 'replace' ? giftId : '';
     manualBackgroundChoiceRef.current = true;
+    setBackgroundModeNote('Manual choice');
+    if (nextMode === backgroundMode) return;
     keyWasChangedRef.current = nextMode === 'black';
     setBackgroundMode(nextMode);
-    setBackgroundModeNote('Manual choice');
     setDetectedKeyColor(null);
     resetOutput();
     if (!file || duration <= 0) {
@@ -696,6 +713,12 @@ export function GiftStudioPage() {
       setKeyDetecting(false);
       setStatus('Keeping the source transparency and preparing the video…');
       void process({ ...settingsRef.current, backgroundMode: 'see-through', preserveSourceAlpha: true });
+      return;
+    }
+    if (retainOpaqueBackground) {
+      setKeyDetecting(false);
+      setStatus('Keeping the source background after your manual mode choice…');
+      void process({ ...settingsRef.current, backgroundMode: 'see-through' });
       return;
     }
     const source = originalVideoRef.current;
@@ -794,6 +817,10 @@ export function GiftStudioPage() {
   };
 
   const choosePreset = (preset: KeyColor) => {
+    manualBackgroundChoiceRef.current = true;
+    setBackgroundModeNote('Manual choice');
+    setPreserveSourceAlpha(false);
+    setRetainOpaqueBackground(false);
     keyWasChangedRef.current = true;
     setKeyDetecting(false);
     setKeyPreset(preset);
@@ -801,7 +828,7 @@ export function GiftStudioPage() {
     if (found) {
       setKeyColor(found.value);
       setDetectedKeyColor(found.value);
-      const nextSettings = { ...settingsRef.current, preset, keyColor: found.value };
+      const nextSettings = { ...settingsRef.current, preserveSourceAlpha: false, retainOpaqueBackground: false, preset, keyColor: found.value };
       if (file && duration > 0 && !processing) void process(nextSettings);
     }
   };
@@ -811,6 +838,10 @@ export function GiftStudioPage() {
     const color = sampleVideoColorAtPoint(source, event.clientX, event.clientY, event.currentTarget.getBoundingClientRect());
     if (!color) return;
     keyWasChangedRef.current = true;
+    manualBackgroundChoiceRef.current = true;
+    setBackgroundModeNote('Manual choice');
+    setPreserveSourceAlpha(false);
+    setRetainOpaqueBackground(false);
     setKeyDetecting(false);
     setDetectedKeyColor(color);
     const family = classifyKeyColor(color);
@@ -818,7 +849,7 @@ export function GiftStudioPage() {
     setKeyPreset(preset);
     setKeyColor(color);
     setStatus(`Sampled ${color.toUpperCase()} from the clip. The live preview updated.`);
-    if (file && duration > 0 && !processing) void process({ ...settingsRef.current, preset, keyColor: color });
+    if (file && duration > 0 && !processing) void process({ ...settingsRef.current, preserveSourceAlpha: false, retainOpaqueBackground: false, preset, keyColor: color });
   };
   const sampleColor = async () => {
     const EyeDropperApi = (window as Window & { EyeDropper?: new () => { open: () => Promise<{ sRGBHex: string }> } }).EyeDropper;
@@ -830,6 +861,10 @@ export function GiftStudioPage() {
     try {
       const result = await new EyeDropperApi().open();
       keyWasChangedRef.current = true;
+      manualBackgroundChoiceRef.current = true;
+      setBackgroundModeNote('Manual choice');
+      setPreserveSourceAlpha(false);
+      setRetainOpaqueBackground(false);
       setKeyDetecting(false);
       setDetectedKeyColor(result.sRGBHex.toLowerCase());
       const family = classifyKeyColor(result.sRGBHex);
@@ -838,7 +873,7 @@ export function GiftStudioPage() {
       setKeyColor(result.sRGBHex.toLowerCase());
       setStatus(`Custom key color set to ${result.sRGBHex}.`);
       if (file && duration > 0 && !processing) {
-        void process({ ...settingsRef.current, preset, keyColor: result.sRGBHex.toLowerCase() });
+        void process({ ...settingsRef.current, preserveSourceAlpha: false, retainOpaqueBackground: false, preset, keyColor: result.sRGBHex.toLowerCase() });
       }
     } catch {
       setStatus('Color selection cancelled.');
@@ -1407,7 +1442,19 @@ export function GiftStudioPage() {
                       {KEY_PRESETS.map((preset) => <button className="gs-choice" type="button" key={preset.id} aria-pressed={keyPreset === preset.id} onClick={() => choosePreset(preset.id)} data-testid={`button-key-${preset.id}`}><span className="gs-swatch" style={{ backgroundColor: preset.value }} />{preset.label}</button>)}
                       <button className="gs-choice" type="button" aria-pressed={keyPreset === 'custom'} onClick={() => void sampleColor()} data-testid="button-eyedropper"><Pipette size={14} /> Eyedropper</button>
                       <label className="gs-sr-only" htmlFor="gs-key-color">Custom key color</label>
-                      <input className="gs-color-input" id="gs-key-color" type="color" value={keyColor} onChange={(event) => { keyWasChangedRef.current = true; setKeyDetecting(false); setDetectedKeyColor(event.target.value); const family = classifyKeyColor(event.target.value); const preset = family === 'green' || family === 'magenta' ? family : 'custom'; setKeyPreset(preset); setKeyColor(event.target.value); }} aria-label="Choose custom key color" data-testid="input-key-color" />
+                      <input className="gs-color-input" id="gs-key-color" type="color" value={keyColor} onChange={(event) => {
+                        keyWasChangedRef.current = true;
+                        manualBackgroundChoiceRef.current = true;
+                        setBackgroundModeNote('Manual choice');
+                        setPreserveSourceAlpha(false);
+                        setRetainOpaqueBackground(false);
+                        setKeyDetecting(false);
+                        setDetectedKeyColor(event.target.value);
+                        const family = classifyKeyColor(event.target.value);
+                        const preset = family === 'green' || family === 'magenta' ? family : 'custom';
+                        setKeyPreset(preset);
+                        setKeyColor(event.target.value);
+                      }} aria-label="Choose custom key color" data-testid="input-key-color" />
                     </div>
                   </div>
                   <div className="gs-field-row"><div><label htmlFor="gs-tolerance">Tolerance <output>{tolerance.toFixed(2)}</output></label><input className="gs-range" id="gs-tolerance" type="range" min=".02" max=".65" step=".01" value={tolerance} onChange={(event) => setTolerance(Number(event.target.value))} data-testid="input-tolerance" /></div></div>
