@@ -1,6 +1,7 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db, profilePhotos, accountProfiles, chatModerators } from "@workspace/db";
 import { nameColorProfilesForAccounts } from "./social/gift-name-color-data";
+import { isOwnerAccount } from "./social/owner-entrance-effects-policy";
 
 export type PhotoStatus = "pending" | "approved" | "rejected" | "flagged";
 export function photoIdFromUrl(url: string | null | undefined) {
@@ -34,8 +35,12 @@ export async function visibleProfilePhotos(
   };
 }
 export async function canReviewPhotos(viewerId: string) {
-  const [mod] = await db.select().from(chatModerators).where(eq(chatModerators.accountId, viewerId));
-  return !!mod;
+  const [[mod], [profile]] = await Promise.all([
+    db.select().from(chatModerators).where(eq(chatModerators.accountId, viewerId)),
+    db.select({ username: accountProfiles.username, isTestAccount: accountProfiles.isTestAccount })
+      .from(accountProfiles).where(eq(accountProfiles.accountId, viewerId)),
+  ]);
+  return !!mod || (!!profile && isOwnerAccount(profile));
 }
 export async function pendingPhotoQueue() {
   const rows = await db.select({

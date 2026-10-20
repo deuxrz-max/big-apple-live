@@ -24,6 +24,7 @@
 - [Artifact command environment](artifact-command-environment.md) — one-off shell checks do not necessarily inherit managed service routing variables.
 - [Photo retention approval](profile-photo-retention.md) — user approved 30 days unused; protect current images and saves, and never expand to other data.
 - [Photo visibility cache precedence](photo-visibility-cache-precedence.md) — never replace a fresh hidden-photo response with an older cached image.
+- [Manual profile-photo review](manual-profile-photo-review.md) — keep new profile photos pending for human review; do not send them for automatic AI moderation.
 - [Sesame MCP handoff](sesame-mcp-handoff.md) — use official Replit MCP for Agent recommendations; do not publish Streamtalk to enable access.
 - [Gift-flow demos](gift-flow-demos.md) — show existing gift UI in an isolated phone-sized browser recording and disclose synthetic responses.
 - [Gift Studio processing](gift-studio-ffmpeg-worker.md) — preserve Vite worker handling; use bounded server FFmpeg for Android and local Wasm elsewhere with timeout fallback.

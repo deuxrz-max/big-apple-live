@@ -638,7 +638,7 @@ paths:
       operationId: getPhotoReviewQueue
       responses:
         "200":
-          description: Pending photos, accessible only to adult moderators
+          description: Pending photos, accessible to adult moderators and the Deux Wild owner
           content:
             application/json:
               schema: { type: array, items: { $ref: "#/components/schemas/PhotoReviewEntry" } }

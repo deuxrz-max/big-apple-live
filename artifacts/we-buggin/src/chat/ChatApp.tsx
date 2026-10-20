@@ -605,3 +605,18 @@ export function ModerationQueue() {
     </section>
   );
 }
+
+export function ProfilePhotoReviewPage() {
+  const access = useGetChatAccess();
+  if (access.isLoading) return <Shell><p role="status">Loading photo review…</p></Shell>;
+  if (access.isError) return <Shell><p role="alert">{errMessage(access.error)} <button className="bm-btn bm-btn-sm" onClick={() => access.refetch()}>Retry</button></p></Shell>;
+  if (!access.data?.adultConfirmed)
+    return <Shell><div className="sc-empty" role="status"><h1>Access required</h1><p>Confirm adult access before reviewing profile photos.</p></div></Shell>;
+  if (!access.data?.moderator && !access.data?.owner)
+    return <Shell><div className="sc-empty" role="status"><h1>Restricted</h1><p>Photo review is limited to the Deux Wild owner and authorized moderators.</p></div></Shell>;
+  return <Shell>
+    <div className="ch-top"><Link href="/user-portal" className="bm-btn bm-btn-sm">Back to Me</Link></div>
+    <h1 className="bm-h1">Profile photo review</h1>
+    <PhotoReviewQueue />
+  </Shell>;
+}

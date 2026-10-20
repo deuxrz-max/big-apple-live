@@ -27,7 +27,12 @@ for (const width of [320, 390]) {
       nameColorProgress: { tierIndex: 18, tierName: 'Bright Blue', color: '#09B0EC',
         lifetimeCoinsPurchased: 180000, coinsToNextTier: 0, nextTierName: null, nextTierThreshold: null },
     } }));
+    await page.route('**/api/account/chat/access', route => route.fulfill({ json: {
+      adultConfirmed: true, moderator: false, owner: true, suspended: false,
+      chatMuted: false, reportsMuted: false, warning: null,
+    } }));
     await page.goto('/tests/browser/harness.html?view=passport-country');
+    await expect(page.getByTestId('link-profile-photo-review')).toHaveAttribute('href', '/user-portal/photo-reviews');
     const badge = page.getByTestId('passport-country-badge');
     await expect(badge).toHaveAccessibleName('Country: United States — self-listed');
     await expect(badge).toHaveAttribute('title', 'United States — self-listed');

@@ -10,7 +10,7 @@ import { APP_NAME, Wordmark } from '@/components/brand';
 import { BottomNavigation } from '@/components/bottom-navigation';
 import NotFound from '@/pages/not-found';
 import { clearAllCreds } from '@/lib/room-creds';
-import { AdultGate, ChatDirectory, ChatProfile, LiveProfileGate, ProfileGate, PublicChatLanding, TextChatRoom } from '@/chat/ChatApp';
+import { AdultGate, ChatDirectory, ChatProfile, LiveProfileGate, ProfileGate, ProfilePhotoReviewPage, PublicChatLanding, TextChatRoom } from '@/chat/ChatApp';
 import { LiveStreamsDirectory, StartLiveStreamPage, WatchLiveStreamPage } from '@/chat/LiveStreamPages';
 import { endHostLiveSessionForRouteChange, leaveViewerLiveSession } from '@/chat/liveSessionController';
 import { EmailSignUp } from '@/components/email-signup';
@@ -245,6 +245,16 @@ function TransactionHistoryRoute() {
   );
 }
 
+function ProfilePhotoReviewsRoute() {
+  const { user } = useUser();
+  return (
+    <>
+      <Show when="signed-in">{user && <ProfileGate><ProfilePhotoReviewPage key={user.id} /></ProfileGate>}</Show>
+      <Show when="signed-out"><Redirect to="/sign-in?redirect_url=%2Fuser-portal%2Fphoto-reviews" /></Show>
+    </>
+  );
+}
+
 function StoreRoute() {
   const { user } = useUser();
   return (
@@ -421,6 +431,7 @@ function ClerkProviderWithRoutes() {
             <Route path="/community" component={CommunityRoute} />
             <Route path="/community/*?" component={CommunityRoute} />
             <Route path="/user-portal/transactions" component={TransactionHistoryRoute} />
+            <Route path="/user-portal/photo-reviews" component={ProfilePhotoReviewsRoute} />
             <Route path="/user-portal/store" component={StoreRoute} />
             <Route path="/user-portal" component={OwnProfileRoute} />
             <Route path="/user-portal/edit" component={Portal} />

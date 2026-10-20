@@ -51,6 +51,7 @@ export function OwnProfile() {
           <Link href="/community" className="pf-btn" data-testid="link-community">Community</Link>
           <Link href="/community/profile" className="pf-btn" data-testid="link-platform-bio">Platform and bio</Link>
           <Link href="#streamer-passport" className="pf-btn" data-testid="link-streamer-passport">Streamer passport</Link>
+          {access.data?.owner && access.data.adultConfirmed && <Link href="/user-portal/photo-reviews" className="pf-btn" data-testid="link-profile-photo-review">Review pending photos</Link>}
           {access.data?.moderator && <Link href="/community/moderation" className="pf-btn" data-testid="link-moderation">Moderation</Link>}
           {access.data?.owner && <Link href="/community/gift-studio" className="pf-btn" data-testid="link-gift-studio">Gift Studio</Link>}
         </nav>

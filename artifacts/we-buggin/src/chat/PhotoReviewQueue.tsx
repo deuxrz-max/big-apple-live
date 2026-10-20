@@ -12,7 +12,7 @@ export function PhotoReviewQueue() {
   const review = useReviewProfilePhoto();
   return <section aria-label="Profile photo review">
     <h2>Profile photo review</h2>
-    <p className="ch-note">No sexual or explicit photos. Keep profiles appropriate for a professional room.</p>
+    <p className="ch-note">Review each photo for sexually explicit or violent content before approving it.</p>
     {q.isLoading && <p role="status">Loading photos…</p>}
     {q.isError && <p role="alert">{errMessage(q.error)} <button className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button></p>}
     {review.isError && <p role="alert">{errMessage(review.error)}</p>}

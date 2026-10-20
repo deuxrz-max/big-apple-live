@@ -13,6 +13,7 @@ import { ShinyName } from '../../src/components/ShinyName';
 import { BeamTv, type BeamTvHandle } from '../../src/chat/BeamTv';
 import { RoomPerimeter } from '../../src/chat/RoomPerimeter';
 import { OwnProfile } from '../../src/profile/OwnProfile';
+import { ProfilePhotoReviewPage } from '../../src/chat/ChatApp';
 import type { UniversityVideoBeamTvState } from '@workspace/api-client-react';
 import '../../src/social/social.css';
 import '../../src/index.css';
@@ -146,6 +147,7 @@ createRoot(document.getElementById('root')!).render(
           : new URLSearchParams(location.search).get('view') === 'gift-artwork' ? <GiftArtworkFixture />
           : new URLSearchParams(location.search).get('view') === 'gifting-levels' ? <GiftingLevelsFixture />
           : new URLSearchParams(location.search).get('view') === 'passport-country' ? <OwnProfile />
+          : new URLSearchParams(location.search).get('view') === 'photo-review' ? <ProfilePhotoReviewPage />
           : new URLSearchParams(location.search).get('view') === 'room-playback' ? <RoomPlaybackFixture />
           : new URLSearchParams(location.search).get('view') === 'gifts' ? <GiftFixture />
           : new URLSearchParams(location.search).get('view') === 'gift-animation' ? <GiftAnimationFixture />

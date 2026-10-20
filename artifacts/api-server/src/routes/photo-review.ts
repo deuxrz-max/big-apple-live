@@ -2,21 +2,32 @@ import { Router } from "express";
 import { eq, and } from "drizzle-orm";
 import { db, profilePhotos } from "@workspace/db";
 import { accountId, sameOrigin } from "./identity";
-import { requireModerator } from "../lib/community";
+import { accessFor } from "../lib/community";
+import { hasPhotoReviewAccess } from "../lib/photo-review-policy";
 import { pendingPhotoQueue } from "../lib/photo-visibility";
 import { RoomError } from "../lib/room-store";
 import { GetPhotoReviewQueueResponse, ReviewProfilePhotoBody, ReviewProfilePhotoParams } from "@workspace/api-zod";
 
 const router = Router();
+async function requirePhotoReviewer(id: string) {
+  const access = await accessFor(id);
+  if (!hasPhotoReviewAccess(access)) {
+    const message = access.adultConfirmed
+      ? "Photo review access required"
+      : "Deux Wild is adults-only. Confirm that you are 18 or older before entering chat.";
+    throw new RoomError(403, message);
+  }
+}
+
 router.get("/account/chat/photo-reviews", async (req, res) => {
-  await requireModerator(accountId(req));
+  await requirePhotoReviewer(accountId(req));
   res.set("Cache-Control", "no-store");
   res.json(GetPhotoReviewQueueResponse.parse(await pendingPhotoQueue()));
 });
 router.patch("/account/chat/photo-reviews/:photoId", async (req, res) => {
   sameOrigin(req);
   const id = accountId(req);
-  await requireModerator(id);
+  await requirePhotoReviewer(id);
   const params = ReviewProfilePhotoParams.safeParse(req.params);
   const input = ReviewProfilePhotoBody.safeParse(req.body);
   if (!params.success || !input.success) throw new RoomError(400, "Choose a photo and approve or reject it");
