@@ -36,3 +36,4 @@
 - [Shared 3D preview limits](shared-scene-webgl.md) — the screenshot browser lacked WebGL; keep the decorative scene isolated and fall back to the app UI.
 - [Gift send ordering](gift-send-ordering.md) — room/stream FIFO is serialized in one API process; multi-instance delivery needs a database-backed ordering primitive.
 - [Room visual theme](room-visual-theme.md) — solid black room surfaces with a restrained glowing gold perimeter; no redesign, media recoloring or other-page changes.
+- [App positioning](app-positioning.md) — owner-approved live-streaming and social media description for app metadata, sharing previews and welcome/about copy.

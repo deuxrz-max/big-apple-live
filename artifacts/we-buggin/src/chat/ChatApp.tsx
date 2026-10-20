@@ -104,7 +104,7 @@ export function PublicChatLanding() {
     <Shell>
       <TopBar signedIn={false} query={query} setQuery={setQuery} />
       <h1>Deux Wild</h1>
-      <p>Text chat universities. One account works in any university. Universities are listed by platform label.</p>
+      <p>Deux Wild is a live-streaming and social media platform where users can broadcast video in real time, watch others, watch categorized videos, chat, and send virtual gifts.</p>
       <List preview query={query} />
       <p className="ch-note">{DISCLAIMER}</p>
       <p><Link href="/sign-in" className="bm-btn bm-btn-primary">Sign in</Link> <Link href="/sign-up" className="bm-btn">Create account</Link></p>
