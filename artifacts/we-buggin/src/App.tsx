@@ -198,7 +198,7 @@ function NameColorLevelUpToast() {
   if (!toast) return null;
   return (
     <div className="st-name-tier-toast" role="status" aria-live="polite">
-      <span>Your name just leveled up to {toast.tierName}!</span>
+      <span>Your gifting level just reached {toast.tierName}!</span>
       <ShinyName displayNameColor={toast.color} displayNameTierIndex={toast.tierIndex}>
         {toast.displayName}
       </ShinyName>

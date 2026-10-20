@@ -3,6 +3,25 @@
   color: #fff;
 }
 
+/* Luminance preserves the real logo's jester details without its black square.
+   The masked child is tinted; only its parent glows. Username styling is untouched. */
+.gifting-level-logo {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin-right: 4px;
+  vertical-align: -5px;
+  filter: drop-shadow(0 0 1px var(--gifting-level-color)) drop-shadow(0 0 4px var(--gifting-level-color));
+}
+.gifting-level-logo-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(155deg, color-mix(in srgb, var(--gifting-level-color), white 40%), var(--gifting-level-color) 48%, color-mix(in srgb, var(--gifting-level-color), black 15%));
+  mask: var(--gifting-logo-url) center / contain no-repeat;
+  mask-mode: luminance;
+}
+
 .shiny-name[data-tier]:not([data-tier='0']) {
   color: transparent;
   background-image:

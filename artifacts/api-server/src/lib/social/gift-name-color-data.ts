@@ -1,11 +1,11 @@
-import { db, socialCreditPurchases } from "@workspace/db";
-import { inArray, sql } from "drizzle-orm";
-import { nameColorTierForLifetimeCoins, type NameColorTierSummary } from "./gift-name-color";
+import { db, socialCreditPurchases, socialLedger } from "@workspace/db";
+import { and, eq, inArray, lt, sql } from "drizzle-orm";
+import { existingUsernameColor, nameColorTierForLifetimeCoins, type NameColorTierSummary } from "./gift-name-color";
 
 const developmentPurchaseTotalOverrides = new Map<string, number>();
 
 /**
- * Preview-only override used by the owner to test name-color tiers without
+ * Preview-only override used by the owner to test gifting-logo levels without
  * creating purchase, wallet, ledger, or gift-history records.
  */
 export function setNameColorPurchaseTotalOverride(accountId: string, totalCoins: number | null) {
@@ -19,22 +19,39 @@ export function nameColorPurchaseTotalOverride(accountId: string): number | null
   return developmentPurchaseTotalOverrides.get(accountId) ?? null;
 }
 
-export async function nameColorProfilesForAccounts(accountIds: readonly string[]) {
+export async function nameColorProfilesForAccounts(
+  accountIds: readonly string[],
+  executor: Pick<typeof db, "select"> = db,
+) {
   const ids = [...new Set(accountIds.filter(Boolean))];
   if (!ids.length) return new Map<string, NameColorTierSummary>();
 
-  const rows = await db.select({
+  // Purchases preserve the existing username appearance ONLY; they never advance gifting.
+  const [rows, giftRows] = await Promise.all([executor.select({
     accountId: socialCreditPurchases.accountId,
     totalCoins: sql<string>`coalesce(sum(${socialCreditPurchases.credits}), 0)::text`,
   }).from(socialCreditPurchases)
     .where(inArray(socialCreditPurchases.accountId, ids))
-    .groupBy(socialCreditPurchases.accountId);
+    .groupBy(socialCreditPurchases.accountId),
+    executor.select({
+      accountId: socialLedger.accountId,
+      totalCoins: sql<string>`coalesce(sum(-${socialLedger.delta}), 0)::text`,
+    }).from(socialLedger)
+      .where(and(inArray(socialLedger.accountId, ids), eq(socialLedger.kind, "gift_sent"), lt(socialLedger.delta, 0)))
+      .groupBy(socialLedger.accountId),
+  ]);
   const totals = new Map(rows.map(row => [row.accountId, Number(row.totalCoins) || 0]));
+  const giftTotals = new Map(giftRows.map(row => [row.accountId, Number(row.totalCoins) || 0]));
 
   return new Map(ids.map(accountId => {
     const override = nameColorPurchaseTotalOverride(accountId);
-    const total = override ?? totals.get(accountId) ?? 0;
-    return [accountId, nameColorTierForLifetimeCoins(total)];
+    const total = override ?? giftTotals.get(accountId) ?? 0;
+    // Keep the established wire fields: tierIndex is now the gifting-logo level,
+    // while color remains the independently preserved username color.
+    return [accountId, {
+      ...nameColorTierForLifetimeCoins(total),
+      color: existingUsernameColor(totals.get(accountId) ?? 0),
+    }];
   }));
 }
 

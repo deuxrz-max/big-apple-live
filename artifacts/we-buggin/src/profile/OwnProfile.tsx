@@ -54,25 +54,25 @@ export function OwnProfile() {
           {access.data?.owner && <Link href="/community/gift-studio" className="pf-btn" data-testid="link-gift-studio">Gift Studio</Link>}
         </nav>
       }>
-      <section className="pf-name-tier" aria-label="Name color tier">
+      <section className="pf-name-tier" aria-label="Gifting level">
         <div className="pf-name-tier-copy">
-          <span className="pf-name-tier-kicker">Name color level</span>
+          <span className="pf-name-tier-kicker">Gifting level</span>
           <strong>{nameProgress.tierName}</strong>
           <span>
             {nameProgress.nextTierName
               ? `${nameProgress.coinsToNextTier.toLocaleString()} more coins to ${nameProgress.nextTierName}`
-              : 'You have reached the highest name color level.'}
+              : 'You have reached the highest gifting level.'}
           </span>
-          <small>Based on lifetime coin purchases. Spending coins never lowers your level.</small>
+          <small>Based on the cumulative coin value of gifts successfully sent. Recharges and failed sends do not count.</small>
         </div>
         {me.data.nameColorTest.enabled && (
           <div className="pf-name-tier-test">
             <label htmlFor="name-color-test-total">Development-only tier preview</label>
-            <p>This changes only your preview level, not your wallet or purchase history.</p>
+            <p>This changes only your preview gifting level, not your wallet or gift history.</p>
             <div className="pf-name-tier-test-row">
               <input id="name-color-test-total" type="number" min="0" step="1"
                 value={testTotal ?? ''} onChange={(event) => setTestTotal(event.target.value)}
-                aria-label="Lifetime coin total for name-tier preview" />
+                aria-label="Successful gift coin value for gifting-level preview" />
               <button type="button" className="pf-btn" disabled={nameColorTest.isPending}
                 onClick={() => {
                   const value = testTotal?.trim() ?? '';

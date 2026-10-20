@@ -51,8 +51,8 @@ for (const width of [320, 390, 1280]) {
       const measure = () => [...document.querySelectorAll('.ur-in,.ur-head,.ur-slots,.ur-slot,.ch-comp,.ch-room,video,img')]
         .map(element => ({ box: element.getBoundingClientRect().toJSON(), source: element.getAttribute('src') }));
       const themed = measure();
-      const shine = document.querySelector<SVGElement>('.ur-perimeter-shine')!;
-      shine.style.display = 'none'; // The original room had no decorative SVG.
+      const shine = document.querySelector<HTMLElement>('.ur-perimeter-shine')!;
+      shine.style.display = 'none'; // The original room had no decorative perimeter.
       sheet.disabled = true;
       const original = measure();
       sheet.disabled = false;
@@ -97,8 +97,8 @@ base('room perimeter shine stays on the edge, runs smoothly, and respects reduce
   await expect(shine).toHaveCSS('pointer-events', 'none');
   await expect(shine).toHaveAttribute('aria-hidden', 'true');
   expect(await shine.boundingBox()).toEqual({ x: 0, y: 0, width: 390, height: 844 });
-  const tip = shine.locator('.ur-perimeter-tip');
-  const before = await tip.evaluate(element => getComputedStyle(element).strokeDashoffset);
+  const tip = shine.locator('.ur-perimeter-glint');
+  const before = await tip.evaluate(element => getComputedStyle(element).transform);
   const metrics = await page.evaluate(async () => {
     const times: number[] = [];
     await new Promise<void>(resolve => {
@@ -119,8 +119,8 @@ base('room perimeter shine stays on the edge, runs smoothly, and respects reduce
       }),
     };
   });
-  expect(await tip.evaluate(element => getComputedStyle(element).strokeDashoffset)).not.toBe(before);
-  expect(metrics.animations).toHaveLength(4);
+  expect(await tip.evaluate(element => getComputedStyle(element).transform)).not.toBe(before);
+  expect(metrics.animations).toHaveLength(1);
   for (const animation of metrics.animations) {
     expect(animation).toEqual({ duration: 12000, easing: 'linear', iterations: Infinity });
   }
