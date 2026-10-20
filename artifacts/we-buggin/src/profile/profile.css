@@ -12,6 +12,7 @@
 .pf-round{width:44px;height:44px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:rgba(21,21,24,.62);color:#fff;border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(6px);cursor:pointer;text-decoration:none}
 .pf-round:focus-visible,.pf-btn:focus-visible,.pf-edit:focus-visible,.pf-dots button:focus-visible{outline:2px solid var(--pf-lime);outline-offset:2px}
 .pf-dots{position:absolute;left:0;right:0;bottom:38px;display:flex;justify-content:center;gap:4px}
+.pf-hero-with-country .pf-dots{right:174px}
 .pf-dots button{width:24px;height:24px;background:none;border:0;padding:0;cursor:pointer;position:relative}
 .pf-dots button::after{content:'';position:absolute;left:8px;top:8px;width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.45)}
 .pf-dots button.is-on::after{background:#fff;width:16px;left:4px;border-radius:4px}

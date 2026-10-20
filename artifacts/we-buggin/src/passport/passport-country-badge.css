@@ -4,17 +4,101 @@
   /* The existing profile card overlaps the hero by 28px. */
   bottom: 40px;
   z-index: 2;
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 30px;
-  border: 1px solid #e8cb8a;
-  border-radius: 8px;
-  background: #000;
-  box-shadow: 0 0 0 1px #000, 0 2px 6px #0009;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 162px;
+  height: 60px;
+  padding: 4px 8px 4px 5px;
+  border: 1px solid rgba(244, 111, 155, .9);
+  border-radius: 999px;
+  background: linear-gradient(110deg, rgba(48, 35, 67, .97), rgba(28, 21, 41, .97));
+  box-shadow: 0 0 0 2px rgba(7, 6, 10, .86), 0 3px 12px #000b;
   color: #fff;
-  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
-  font-size: 23px;
-  line-height: 1;
   user-select: none;
+}
+
+.pf-passport-country__seal {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  flex: 0 0 50px;
+  width: 50px;
+  height: 50px;
+  place-items: center;
+  border-radius: 50%;
+}
+
+.pf-passport-country__seal::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 50%;
+  background: repeating-conic-gradient(#f46f9b 0deg 8deg, transparent 8deg 14deg);
+  content: "";
+  mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+}
+
+.pf-passport-country__seal::after {
+  position: absolute;
+  inset: 5px;
+  z-index: -1;
+  border: 2px solid #f46f9b;
+  border-radius: 50%;
+  background: #0b0910;
+  box-shadow: 0 0 0 3px #09070c;
+  content: "";
+}
+
+.pf-passport-country__code {
+  color: #f785a9;
+  font-family: "Montserrat", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: -.04em;
+  line-height: 1;
+}
+
+.pf-passport-country__details {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  justify-items: start;
+}
+
+.pf-passport-country__name {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  gap: 4px;
+  color: #fff;
+  font-family: "Montserrat", system-ui, sans-serif;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .035em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.pf-passport-country__name > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pf-passport-country__flag {
+  flex: 0 0 auto;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.pf-passport-country__self-listed {
+  color: #d2c1d1;
+  font-family: "Montserrat", system-ui, sans-serif;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  line-height: 1;
 }

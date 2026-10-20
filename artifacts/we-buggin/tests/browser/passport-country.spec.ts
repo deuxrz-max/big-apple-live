@@ -29,9 +29,12 @@ for (const width of [320, 390]) {
     } }));
     await page.goto('/tests/browser/harness.html?view=passport-country');
     const badge = page.getByTestId('passport-country-badge');
-    await expect(badge).toHaveAccessibleName('Country: United States');
-    await expect(badge).toHaveAttribute('title', 'United States');
+    await expect(badge).toHaveAccessibleName('Country: United States — self-listed');
+    await expect(badge).toHaveAttribute('title', 'United States — self-listed');
     await expect(badge).toContainText('🇺🇸');
+    await expect(badge).toContainText('US');
+    await expect(badge).toContainText('United States');
+    await expect(badge).toContainText('SELF-LISTED');
     await page.evaluate(() => document.fonts.ready);
     const hero = page.locator('.pf-hero');
     const rect = (await hero.boundingBox())!;
@@ -40,7 +43,8 @@ for (const width of [320, 390]) {
     expect(Math.abs(rect.y + rect.height - flagRect.y - flagRect.height - 40)).toBeLessThan(1);
     const panel = (await page.locator('.pf-panel').first().boundingBox())!;
     expect(flagRect.y + flagRect.height).toBeLessThanOrEqual(panel.y - 8);
-    expect(flagRect.width * flagRect.height / (rect.width * rect.height)).toBeLessThan(.02);
+    expect(flagRect.width * flagRect.height / (rect.width * rect.height)).toBeLessThan(.11);
+    await expect(badge).toHaveCSS('border-radius', '999px');
     await expect(hero.locator('.pf-slide img')).toHaveAttribute('src', photo);
     await expect(page.getByTestId('text-display-name').getByRole('img', { name: 'Bright Blue gifting level' })).toBeVisible();
     const title = await page.getByTestId('text-display-name').boundingBox();
@@ -55,9 +59,12 @@ for (const width of [320, 390]) {
 
     country = 'GB'; pictures = 2;
     await page.reload();
-    await expect(badge).toHaveAccessibleName('Country: United Kingdom');
+    await expect(badge).toHaveAccessibleName('Country: United Kingdom — self-listed');
     await expect(badge).toContainText('🇬🇧');
-    await page.getByRole('tab', { name: 'Photo 2 of 2' }).click();
+    const secondPhotoTab = page.getByRole('tab', { name: 'Photo 2 of 2' });
+    const tabRect = (await secondPhotoTab.boundingBox())!;
+    expect(tabRect.x + tabRect.width).toBeLessThanOrEqual(flagRect.x);
+    await secondPhotoTab.click();
     await expect(page.getByRole('tab', { name: 'Photo 2 of 2' })).toHaveAttribute('aria-selected', 'true');
     await expect(badge).toBeVisible();
     expect(await badge.boundingBox()).toEqual(flagRect);

@@ -39,7 +39,7 @@ export function Hero({ urls, name, username, left, right, countryBadge }: { urls
   const [idx, setIdx] = useState(0);
   const slides: (string | null)[] = urls.length ? urls : [null];
   return (
-    <div className="pf-hero">
+    <div className={`pf-hero${countryBadge ? ' pf-hero-with-country' : ''}`}>
       <div className="pf-track" ref={ref} tabIndex={slides.length > 1 ? 0 : -1} aria-label="Profile photos, swipe for more"
         onScroll={(e) => { const el = e.currentTarget; setIdx(Math.round(el.scrollLeft / Math.max(1, el.clientWidth))); }}>
         {slides.map((u, i) => <Slide key={u ?? 'none'} url={u} name={name} username={username} />)}

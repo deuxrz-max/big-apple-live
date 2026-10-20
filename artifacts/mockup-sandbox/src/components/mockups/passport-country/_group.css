@@ -1,0 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
+
+.passport-country-mockup {
+  display: grid;
+  min-height: 350px;
+  place-items: center;
+  padding: 18px;
+  background: #08070b;
+  color: #fff;
+  font-family: 'Montserrat', system-ui, sans-serif;
+}
+
+.passport-country-mockup__photo {
+  position: relative;
+  width: min(100%, 354px);
+  height: 290px;
+  overflow: hidden;
+  border-radius: 18px;
+  background:
+    radial-gradient(ellipse at 55% 36%, #c4a393 0 15%, transparent 15.5%),
+    radial-gradient(ellipse at 54% 108%, #515a71 0 39%, transparent 39.5%),
+    linear-gradient(145deg, #666273, #252331 55%, #101017);
+}
+
+.passport-country-mockup__frame {
+  width: min(100%, 354px);
+}
+
+.passport-country-mockup__caption {
+  margin: 8px 0 0;
+  color: #b6b1c0;
+  font-size: 11px;
+}
+
+.pf-passport-country--current {
+  position: absolute;
+  right: 12px;
+  bottom: 40px;
+  display: grid;
+  width: 36px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid #e8cb8a;
+  border-radius: 8px;
+  background: #000;
+  box-shadow: 0 0 0 1px #000, 0 2px 6px #0009;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-size: 23px;
+  line-height: 1;
+}
+
+.pf-passport-country--inspired {
+  position: absolute;
+  right: 12px;
+  bottom: 40px;
+  display: flex;
+  width: 162px;
+  height: 60px;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 8px 4px 5px;
+  border: 1px solid rgba(244, 111, 155, .9);
+  border-radius: 999px;
+  background: linear-gradient(110deg, rgba(48, 35, 67, .97), rgba(28, 21, 41, .97));
+  box-shadow: 0 0 0 2px rgba(7, 6, 10, .86), 0 3px 12px #000b;
+}
+
+.pf-passport-country--inspired .seal {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  flex: 0 0 50px;
+  width: 50px;
+  height: 50px;
+  place-items: center;
+  border-radius: 50%;
+}
+
+.pf-passport-country--inspired .seal::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 50%;
+  background: repeating-conic-gradient(#f46f9b 0deg 8deg, transparent 8deg 14deg);
+  content: "";
+  mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+}
+
+.pf-passport-country--inspired .seal::after {
+  position: absolute;
+  inset: 5px;
+  z-index: -1;
+  border: 2px solid #f46f9b;
+  border-radius: 50%;
+  background: #0b0910;
+  box-shadow: 0 0 0 3px #09070c;
+  content: "";
+}
+
+.pf-passport-country--inspired .code {
+  color: #f785a9;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: -.04em;
+  line-height: 1;
+}
+
+.pf-passport-country--inspired .details {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  justify-items: start;
+}
+
+.pf-passport-country--inspired .name {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  gap: 4px;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .035em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.pf-passport-country--inspired .name > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pf-passport-country--inspired .flag {
+  flex: 0 0 auto;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.pf-passport-country--inspired .self-listed {
+  color: #d2c1d1;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  line-height: 1;
+}
