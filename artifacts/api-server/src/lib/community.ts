@@ -70,10 +70,10 @@ export async function communityDirectory() {
 /** Stable identifiers and history rows survive empty rooms/restarts. No history is reused. */
 export async function offerOverflow(roomId: string, accountId: string) {
   const [current] = await db.select().from(chatRooms).where(eq(chatRooms.roomId, roomId.toUpperCase()));
-  if (!current) throw new RoomError(404, "University not found");
+  if (!current) throw new RoomError(404, "Room not found");
   const parent = current.parentRoomId ?? current.roomId;
   const base = DIRECTORY_COMMUNITY_ROOMS.find(r => r.roomId === parent);
-  if (!base) throw new RoomError(404, "University not found");
+  if (!base) throw new RoomError(404, "Room not found");
   let number = Number(current.overflowNumber ?? 1) + 1;
   for (;;) {
     const id = createHash("sha256").update(`university:${parent}:${number}`).digest("hex").slice(0, 12).toUpperCase();

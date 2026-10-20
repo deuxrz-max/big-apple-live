@@ -379,7 +379,7 @@ function ClerkProviderWithRoutes() {
     window.location.hostname,
     import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
   );
-  if (!clerkPubKey) throw new Error('Account universities require a configured Clerk publishable key.');
+  if (!clerkPubKey) throw new Error('Account rooms require a configured Clerk publishable key.');
   return (
     <ClerkProvider
       publishableKey={clerkPubKey}

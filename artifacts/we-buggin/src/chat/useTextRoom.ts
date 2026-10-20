@@ -9,7 +9,7 @@ import { saveCreds, type RoomCreds } from "@/lib/room-creds";
 import { errStatus, errMessage } from "@/lib/errors";
 
 const messageError = (error: unknown) => {
-  const message = errMessage(error, "University request failed");
+  const message = errMessage(error, "Room request failed");
   if ((errStatus(error) ?? 0) >= 500 || /internal server error/i.test(message)) {
     return "Room chat is reconnecting. Please keep this page open.";
   }
@@ -82,7 +82,7 @@ export function useTextRoom(roomId: string, userId: string) {
   }, [roomId, messages, loadingOlder]);
   const send = useCallback(async (text: string, kind: "text" | "reaction" = "text"): Promise<ChatAccepted> => {
     const c = credential.current;
-    if (!c || !alive.current) throw new Error("Wait for your university connection");
+    if (!c || !alive.current) throw new Error("Wait for your room connection");
     const accepted = await sendRoomMessage(roomId, { text, kind }, {
       headers: { "X-Room-Session": c.participantSessionId },
     });
@@ -148,7 +148,7 @@ export function useTextRoom(roomId: string, userId: string) {
         const response = await fetch(getStreamAccountRoomEventsUrl(roomId), {
           credentials: "same-origin", headers: headers(), signal: controller.signal,
         });
-        if (!response.ok || !response.body) throw new Error("Could not connect to university chat");
+        if (!response.ok || !response.body) throw new Error("Could not connect to room chat");
         // Subscribe before fetching history, then consume buffered events:
         // messages committed between those operations cannot be lost.
         await history();

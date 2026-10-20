@@ -39,7 +39,7 @@ function displayName(value: string): string {
 router.post("/rooms", async (req, res) => {
   const body = CreateRoomBody.safeParse(req.body);
   if (!body.success) {
-    res.status(400).json({ error: "Valid university ID and display name are required" });
+    res.status(400).json({ error: "Valid room ID and display name are required" });
     return;
   }
   const name = displayName(body.data.displayName);
@@ -50,7 +50,7 @@ router.post("/rooms", async (req, res) => {
 router.get("/rooms/:roomId", (req, res) => {
   const params = GetRoomParams.safeParse(req.params);
   if (!params.success) {
-    res.status(400).json({ error: "Invalid university ID" });
+    res.status(400).json({ error: "Invalid room ID" });
     return;
   }
   res.json(GetRoomResponse.parse(roomStore.get(params.data.roomId)));
@@ -60,7 +60,7 @@ router.post("/rooms/:roomId/join", async (req, res) => {
   const params = JoinRoomParams.safeParse(req.params);
   const body = JoinRoomBody.safeParse(req.body);
   if (!params.success || !body.success) {
-    res.status(400).json({ error: "Valid university ID and display name are required" });
+    res.status(400).json({ error: "Valid room ID and display name are required" });
     return;
   }
   const name = displayName(body.data.displayName);
@@ -72,7 +72,7 @@ router.post("/rooms/:roomId/join", async (req, res) => {
 router.post("/rooms/:roomId/participants/:sessionId/heartbeat", async (req, res): Promise<void> => {
   const params = HeartbeatParticipantParams.safeParse(req.params);
   if (!params.success) {
-    res.status(400).json({ error: "Invalid university ID or session ID" });
+    res.status(400).json({ error: "Invalid room ID or session ID" });
     return;
   }
   const participant = roomStore.heartbeat(params.data.roomId, params.data.sessionId);
@@ -93,7 +93,7 @@ router.post("/rooms/:roomId/participants/:sessionId/heartbeat", async (req, res)
 router.delete("/rooms/:roomId/participants/:sessionId", (req, res) => {
   const params = LeaveRoomParams.safeParse(req.params);
   if (!params.success) {
-    res.status(400).json({ error: "Invalid university ID or session ID" });
+    res.status(400).json({ error: "Invalid room ID or session ID" });
     return;
   }
   roomStore.leave(params.data.roomId, params.data.sessionId);
@@ -105,7 +105,7 @@ router.put("/rooms/:roomId/participants/:participantId/microphone", (req, res) =
   const body = ControlRoomMicrophoneBody.safeParse(req.body);
   if (!params.success || !body.success) throw new RoomError(400, "Invalid microphone action or participant");
   const match = /^Bearer ([0-9a-f-]{36})$/i.exec(req.get("Authorization") ?? "");
-  if (!match) throw new RoomError(401, "Private university session credential required");
+  if (!match) throw new RoomError(401, "Private room session credential required");
   const room = roomStore.controlMicrophone(params.data.roomId, match[1]!, params.data.participantId, body.data.action);
   res.json(ControlRoomMicrophoneResponse.parse(room));
 });
@@ -113,7 +113,7 @@ router.put("/rooms/:roomId/participants/:participantId/microphone", (req, res) =
 router.get("/rooms/:roomId/events", (req, res) => {
   const params = StreamRoomEventsParams.safeParse(req.params);
   if (!params.success) {
-    res.status(400).json({ error: "Invalid university ID" });
+    res.status(400).json({ error: "Invalid room ID" });
     return;
   }
   const snapshot = GetRoomResponse.parse(roomStore.get(params.data.roomId));

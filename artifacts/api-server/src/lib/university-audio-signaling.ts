@@ -35,7 +35,7 @@ export class UniversityAudioSignaling {
 
   connect(roomId: string, sessionId: string, accountId: string, sink: UniversityAudioSink): () => void {
     const id = roomId.toUpperCase();
-    if (!this.rooms.isCommunity(id)) throw new RoomError(404, "University not found.");
+    if (!this.rooms.isCommunity(id)) throw new RoomError(404, "Room not found.");
     const participant = this.rooms.requireAccountMember(id, sessionId, accountId);
     let group = this.groups.get(id);
     if (!group) {

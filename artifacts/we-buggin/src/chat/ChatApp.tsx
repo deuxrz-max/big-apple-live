@@ -71,7 +71,7 @@ function List({ preview, query = '' }: { preview?: boolean; query?: string }) {
       {q.isLoading && <p role="status">Loading directory...</p>}
       {q.isError && <div className="ch-err" role="alert">{preview ? 'Sign in to see the directory.' : 'Could not load the directory.'} {!preview && <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button>}</div>}
       {q.data && q.data.length === 0 && <p>No entries.</p>}
-      {q.data && q.data.length > 0 && rows.length === 0 && <p>No university matches your search.</p>}
+      {q.data && q.data.length > 0 && rows.length === 0 && <p>No room matches your search.</p>}
       <ul className="ch-list st-grid">
         {rows.map((r) => <UniCard key={r.roomId} roomId={r.roomId} label={r.label} headcount={r.headcount} i={(q.data ?? []).findIndex((entry) => entry.roomId === r.roomId)} preview={preview} />)}
       </ul>
@@ -92,7 +92,7 @@ function TopBar({ signedIn, query, setQuery }: { signedIn: boolean; query: strin
   return (
     <div className="st-topbar">
       <Wordmark href={signedIn ? '/home' : '/'} className="st-brand" />
-      <input type="search" className="st-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search" aria-label="Search universities" />
+      <input type="search" className="st-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search" aria-label="Search rooms" />
       {signedIn ? <><GoLiveButton className="st-topbar-live"><Radio size={15} /> Go Live</GoLiveButton><CreditsChip /></> : <Link href="/sign-in" className="bm-btn bm-btn-sm bm-btn-primary">Sign in</Link>}
     </div>
   );

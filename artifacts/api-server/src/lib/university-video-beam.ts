@@ -90,7 +90,7 @@ export class UniversityVideoBeamStore {
 
   getRoomName(roomId: string): string {
     const id = roomId.toUpperCase();
-    if (!this.rooms.isCommunity(id)) throw new RoomError(404, "University not found.");
+    if (!this.rooms.isCommunity(id)) throw new RoomError(404, "Room not found.");
     return `streamtalk-${createHash("sha256")
       .update(`${id}:${this.rooms.getHistoryId(id)}`)
       .digest("hex")
@@ -671,7 +671,7 @@ export class UniversityVideoBeamStore {
     const beam = this.ensure(roomId);
     this.assertCanJoin(roomId, accountId);
     if (this.rooms.sessionAccountId(beam.roomId, participantId) !== accountId) {
-      throw new RoomError(401, "This university session does not belong to your account.");
+      throw new RoomError(401, "This room session does not belong to your account.");
     }
     const existing = beam.slots.find(slot => slot.participantId === participantId);
     if (existing) return this.toState(beam);
@@ -703,7 +703,7 @@ export class UniversityVideoBeamStore {
     const beam = this.ensure(roomId);
     this.assertCanJoin(roomId, accountId);
     if (this.rooms.sessionAccountId(beam.roomId, participantId) !== accountId) {
-      throw new RoomError(401, "This university session does not belong to your account.");
+      throw new RoomError(401, "This room session does not belong to your account.");
     }
     const current = beam.slots.find(slot => slot.participantId === participantId && slot.accountId === accountId);
     if (!current) throw new RoomError(404, "You are not in a speaker spot.");
@@ -769,7 +769,7 @@ export class UniversityVideoBeamStore {
     const beam = this.ensure(roomId);
     this.requireSlot(beam, participantId);
     if (media === "camera") {
-      throw new RoomError(410, "University beam seats are audio-only. Camera access is available through Go Live.");
+      throw new RoomError(410, "Room beam seats are audio-only. Camera access is available through Go Live.");
     }
   }
 
@@ -796,7 +796,7 @@ export class UniversityVideoBeamStore {
 
   hostDisableMedia(roomId: string, actorId: string, targetId: string, media: "mic" | "camera"): UniversityVideoBeamState {
     if (media === "camera") {
-      throw new RoomError(410, "University beam seats are audio-only. Camera access is available through Go Live.");
+      throw new RoomError(410, "Room beam seats are audio-only. Camera access is available through Go Live.");
     }
     const beam = this.ensure(roomId);
     const slot = this.assertHostControl(roomId, actorId, targetId);
@@ -852,7 +852,7 @@ export class UniversityVideoBeamStore {
 
   private ensure(roomId: string): Beam {
     const id = roomId.toUpperCase();
-    if (!this.rooms.isCommunity(id)) throw new RoomError(404, "University not found.");
+    if (!this.rooms.isCommunity(id)) throw new RoomError(404, "Room not found.");
     const historyId = this.rooms.getHistoryId(id);
     const key = `${id}:${historyId}`;
     let beam = this.beams.get(key);

@@ -43,7 +43,7 @@ if (devAudioHarnessEnabled(process.env.NODE_ENV))
 router.use((req, res, next) => {
   if (req.path.includes("/audio") || req.path.endsWith("/microphone")
     || (req.method === "POST" && (req.path === "/rooms" || /^\/rooms\/[^/]+\/join$/.test(req.path)))) {
-    res.status(410).json({ error: "Broadcasting is disabled. Choose a university." }); return;
+    res.status(410).json({ error: "Broadcasting is disabled. Choose a room." }); return;
   }
   next();
 });

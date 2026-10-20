@@ -32,7 +32,7 @@ export async function markRulesSeen(id: string) {
 }
 export async function universityTopic(roomId: string) {
   const [room] = await db.select().from(chatRooms).where(eq(chatRooms.roomId, roomId.toUpperCase()));
-  if (!room) throw new RoomError(404, "University not found");
+  if (!room) throw new RoomError(404, "Room not found");
   return "";
 }
 /** The only inline-whisper read path: membership AND sender/recipient are checked on the server. */

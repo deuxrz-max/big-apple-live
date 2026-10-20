@@ -36,7 +36,7 @@ export async function getProfile(accountId: string): Promise<AccountProfile | nu
 }
 export async function requireCompletedProfile(accountId: string): Promise<AccountProfile> {
   const profile = await getProfile(accountId);
-  if (!profile) throw new RoomError(409, "Complete your profile before entering a university");
+  if (!profile) throw new RoomError(409, "Complete your profile before entering a room");
   return profile;
 }
 export async function ensureGuestNameAvailable(name: string): Promise<void> {

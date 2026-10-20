@@ -45,7 +45,7 @@ export function useUniversityAudioBeam(
   const headers = useCallback(() => ({ "X-Room-Session": latestArgs.current.roomSessionId }), []);
 
   const action = useCallback(async (input: UniversityAudioActionInput) => {
-    if (!latestArgs.current.roomSessionId) throw new Error("Join the university first.");
+    if (!latestArgs.current.roomSessionId) throw new Error("Join the room first.");
     const state = await performUniversityAudioAction(
       latestArgs.current.roomId, input,
       { headers: headers(), credentials: "include" },

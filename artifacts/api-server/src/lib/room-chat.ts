@@ -25,7 +25,7 @@ export async function getMessages(roomId: string, store: RoomStore = roomStore, 
   if (beforeId) {
     const [cursor] = await db.select().from(roomMessages).where(and(
       eq(roomMessages.id, beforeId), eq(roomMessages.historyId, store.getHistoryId(roomId))));
-    if (!cursor) throw new RoomError(404, "History cursor not found in this university");
+    if (!cursor) throw new RoomError(404, "History cursor not found in this room");
     conditions.push(or(lt(roomMessages.createdAt, cursor.createdAt),
       and(eq(roomMessages.createdAt, cursor.createdAt), lt(roomMessages.id, cursor.id)))!);
   }
@@ -82,7 +82,7 @@ export async function acceptMessage(
       }
       const [membership] = await tx.select().from(chatMemberships).where(and(
         eq(chatMemberships.historyId, historyId), eq(chatMemberships.accountId, accountId)));
-      if (!membership || membership.muted) throw new RoomError(403, "You cannot send messages in this university");
+      if (!membership || membership.muted) throw new RoomError(403, "You cannot send messages in this room");
       const recent = await tx.select({ text: roomMessages.text, createdAt: roomMessages.createdAt }).from(roomMessages)
         .where(and(eq(roomMessages.authorAccountId, accountId),
           gte(roomMessages.createdAt, new Date(Date.now() - 30_000)))).limit(1000);

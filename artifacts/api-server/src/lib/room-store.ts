@@ -102,8 +102,8 @@ export class RoomStore {
   }
   unregisterCommunity(roomId: string): void {
     const room = this.requireRoom(roomId);
-    if (!room.community) throw new RoomError(409, "Only a university room can be unregistered");
-    if (room.sessions.size) throw new RoomError(409, "A university room with active participants cannot be unregistered");
+    if (!room.community) throw new RoomError(409, "Only a topic room can be unregistered");
+    if (room.sessions.size) throw new RoomError(409, "A room with active participants cannot be unregistered");
     this.rooms.delete(room.roomId);
   }
   /** Hide a community room without touching its persisted room or chat history. */
@@ -157,7 +157,7 @@ export class RoomStore {
   create(displayName: string, account?: AccountIdentity, beam?: AccountRoomInput): RoomSession {
     this.sweep();
     if (this.rooms.size >= 10_000) {
-      throw new RoomError(503, "University service capacity reached");
+      throw new RoomError(503, "Room service capacity reached");
     }
     let roomId: string;
     do {
@@ -196,7 +196,7 @@ export class RoomStore {
     }
     if (room.community ? !this.hasUniversitySeat(roomId, account?.accountId ?? "", account?.capExempt)
       : room.capacity > 0 && room.sessions.size >= room.capacity) {
-      throw new RoomError(409, "University participant capacity reached");
+      throw new RoomError(409, "Room participant capacity reached");
     }
     return this.addSession(room, displayName, account);
   }
@@ -386,7 +386,7 @@ export class RoomStore {
   subscribe(roomId: string, listener: Listener): () => void {
     const room = this.requireRoom(roomId);
     if (room.listeners.size >= (room.community ? 2000 : 100)) {
-      throw new RoomError(503, "University event subscriber capacity reached");
+      throw new RoomError(503, "Room event subscriber capacity reached");
     }
     room.listeners.add(listener);
     return () => room.listeners.delete(listener);
@@ -434,7 +434,7 @@ export class RoomStore {
     const room = this.rooms.get(id);
     if (room) this.expire(room);
     if (!room || !this.rooms.has(id)) {
-      throw new RoomError(404, "University not found or expired");
+      throw new RoomError(404, "Room not found or expired");
     }
     return room;
   }
@@ -512,7 +512,7 @@ export class RoomStore {
   requireAccountMember(roomId: string, sessionId: string, accountId: string): Participant {
     const session = this.requireRoom(roomId).sessions.get(sessionId);
     if (!session || session.accountId !== accountId) {
-      throw new RoomError(401, "This university session does not belong to your account");
+      throw new RoomError(401, "This room session does not belong to your account");
     }
     return copyParticipant(session.participant);
   }

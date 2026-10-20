@@ -48,14 +48,14 @@ async function targetProfile(rawUsername: string): Promise<TestActorProfile> {
 
 async function targetRoom(rawRoom: string) {
   const value = rawRoom.trim().slice(0, 80);
-  if (!value || /[%_]/.test(value)) throw new RoomError(400, "Invalid university name");
+  if (!value || /[%_]/.test(value)) throw new RoomError(400, "Invalid room name");
   const mainRoomAlias = /^(.+)\s+1$/i.exec(value)?.[1];
   const [saved] = await db.select().from(chatRooms).where(or(
     eq(chatRooms.roomId, value.toUpperCase()),
     ilike(chatRooms.label, value),
     mainRoomAlias ? ilike(chatRooms.label, mainRoomAlias) : undefined,
   )).limit(1);
-  if (!saved || !roomStore.isCommunity(saved.roomId)) throw new RoomError(404, "University not found");
+  if (!saved || !roomStore.isCommunity(saved.roomId)) throw new RoomError(404, "Room not found");
   return saved;
 }
 
@@ -70,7 +70,7 @@ function sessionsFor(accountId: string) {
 
 function requireDrivenSession(accountId: string, roomId: string) {
   const sessionId = activeSessions.get(accountId)?.get(roomId);
-  if (!sessionId) throw new RoomError(409, "Join this university with the test actor before using it");
+  if (!sessionId) throw new RoomError(409, "Join this room with the test actor before using it");
   roomStore.requireAccountMember(roomId, sessionId, accountId);
   return sessionId;
 }
@@ -105,7 +105,7 @@ async function execute(command: TestActorCommand): Promise<unknown> {
       return { joined: true, room: room.label, alreadyJoined: true };
     }
     if (roomStore.accountSession(room.roomId, actor.accountId))
-      throw new RoomError(409, "This test account already has a separately managed session in that university");
+      throw new RoomError(409, "This test account already has a separately managed session in that room");
     const membership = await communityMembership(room.roomId, actor.accountId);
     const session = roomStore.join(room.roomId, profile.displayName ?? profile.username, {
       accountId: actor.accountId, identity: profile.identity, capExempt: false,
@@ -118,7 +118,7 @@ async function execute(command: TestActorCommand): Promise<unknown> {
   if (command.action === "leave") {
     const [actor, room] = await Promise.all([testAccount(command.as), targetRoom(command.room)]);
     const sessionId = activeSessions.get(actor.accountId)?.get(room.roomId);
-    if (!sessionId) throw new RoomError(409, "This test actor does not currently control a session in that university");
+    if (!sessionId) throw new RoomError(409, "This test actor does not currently control a session in that room");
     roomStore.requireAccountMember(room.roomId, sessionId, actor.accountId);
     roomStore.leave(room.roomId, sessionId);
     activeSessions.get(actor.accountId)?.delete(room.roomId);

@@ -83,7 +83,7 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
     const historyId = roomContext
       ? validateGiftRoom(roomContext.roomId.toUpperCase(), roomContext.sessionId, id, target.accountId)
       : null;
-    if (roomContext && historyId !== boundHistory) throw new RoomError(409, 'This university changed. Re-enter before sending.');
+    if (roomContext && historyId !== boundHistory) throw new RoomError(409, 'This room changed. Re-enter before sending.');
     const current = await wallet(id, tx, sender.username);
     const unlimited = hasDevelopmentUnlimitedCredits(sender.username);
     const spend = planCreditSpend(current.balance, totalCost, unlimited);

@@ -65,7 +65,7 @@ router.put("/me", async (req, res) => {
   res.json(SaveMyProfileResponse.parse(await saveProfile(id, body.data)));
 });
 router.post("/account/rooms", async (req, res) => {
-  throw new RoomError(410, "Broadcasting is disabled. Choose a university from the Directory.");
+  throw new RoomError(410, "Broadcasting is disabled. Choose a room from the Directory.");
   /* Retained legacy creation logic for rollback, not exposed in active UX.
   sameOrigin(req);
   const id = accountId(req);
@@ -81,8 +81,8 @@ router.post("/account/rooms/:roomId/join", async (req, res) => {
   sameOrigin(req);
   const id = accountId(req);
   const params = JoinAccountRoomParams.safeParse(req.params);
-  if (!params.success) throw new RoomError(400, "Invalid university ID");
-  if (!roomStore.isCommunity(params.data.roomId)) throw new RoomError(410, "This legacy Beam is archived. Choose a university from the Directory.");
+  if (!params.success) throw new RoomError(400, "Invalid room ID");
+  if (!roomStore.isCommunity(params.data.roomId)) throw new RoomError(410, "This legacy Beam is archived. Choose a room from the Directory.");
   universityAudioBeamStore.assertCanJoin(params.data.roomId, id);
   const profile = await requireCompletedProfile(id);
   const access = await accessFor(id);

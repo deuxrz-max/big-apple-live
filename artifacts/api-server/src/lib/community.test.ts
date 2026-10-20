@@ -73,7 +73,7 @@ test("real PostgreSQL university persistence, isolation, emojis leave photos unc
   assert.equal(older.length, 11, "pagination includes the committed bot warning, never the hidden flood");
   assert.equal(new Set([...latest, ...older].map(m => m.id)).size, 71);
   assert.equal([...latest, ...older].filter(m => !m.botId).length, 70);
-  await assert.rejects(getMessages(codes[1]!, fresh, undefined, latest[0]!.id), /not found in this university/);
+  await assert.rejects(getMessages(codes[1]!, fresh, undefined, latest[0]!.id), /not found in this room/);
   // Text presence has no inherited 12-seat ceiling.
   for (let i = 0; i < 20; i++) fresh.join(codes[1]!, `Synthetic${i}`, { accountId: `capacity-fixture-${i}`, identity: profiles[0]!.identity });
   assert.equal(fresh.get(codes[1]!).participants.length, 20);

@@ -117,7 +117,7 @@ export class UniversityAudioBeamStore {
 
   private ensure(roomId: string): Beam {
     const id = roomId.toUpperCase();
-    if (!this.rooms.isCommunity(id)) throw new RoomError(404, "University not found.");
+    if (!this.rooms.isCommunity(id)) throw new RoomError(404, "Room not found.");
     const historyId = this.rooms.getHistoryId(id);
     const key = `${id}:${historyId}`;
     let beam = this.beams.get(key);

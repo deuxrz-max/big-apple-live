@@ -272,7 +272,7 @@ export function FavoritesPage() {
     try {
       const fresh = await getFavoriteRoom(entry.person.username);
       if (!fresh.room || fresh.room.roomId !== entry.room.roomId) {
-        setNotice(!fresh.room ? "They're not in a university anymore." : "They're no longer in that university.");
+        setNotice(!fresh.room ? "They're not in a room anymore." : "They're no longer in that room.");
         await q.refetch();
         return;
       }
@@ -293,7 +293,7 @@ export function FavoritesPage() {
       {q.isLoading && <Loading />}
       {q.isError && <ErrorBox error={q.error} retry={() => q.refetch()} />}
       {present && (present.length === 0
-        ? <p className="fg-empty">No one you follow is in a university right now. Check back soon.</p>
+        ? <p className="fg-empty">No one you follow is in a room right now. Check back soon.</p>
         : <FavoritesGallery entries={present} busyUsername={busyUsername} onSelect={entry => { void select(entry); }} />)}
     </section>
   );

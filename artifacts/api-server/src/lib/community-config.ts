@@ -391,7 +391,7 @@ export function communityDefaultVideoSearch(roomId: string, store?: CommunityPar
   if (currentRoomName) return currentRoomName;
   const parentRoomName = parentRoomId ? store?.communityLabel?.(parentRoomId)?.trim() : null;
   if (parentRoomName) return parentRoomName;
-  return configuredRoom?.label ?? "University";
+  return configuredRoom?.label ?? "Room";
 }
 
 export function communityVideoSearchPolicy(

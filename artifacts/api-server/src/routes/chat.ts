@@ -24,7 +24,7 @@ router.get("/account/rooms/:roomId/history/:beforeId", async (req, res) => {
 });
 router.get("/account/rooms/:roomId/messages", async (req, res): Promise<void> => {
   const params = GetRoomMessagesParams.safeParse(req.params);
-  if (!params.success) throw new RoomError(400, "Invalid university code");
+  if (!params.success) throw new RoomError(400, "Invalid room code");
   roomStore.requireAccountMember(params.data.roomId, req.get("X-Room-Session") ?? "", accountId(req));
   res.set("Cache-Control", "no-store");
   res.json(GetRoomMessagesResponse.parse(await getMessages(params.data.roomId, roomStore, accountId(req))));
@@ -43,7 +43,7 @@ router.post("/account/rooms/:roomId/messages", async (req, res): Promise<void> =
 });
 router.get("/account/rooms/:roomId/events", async (req, res): Promise<void> => {
   const params = StreamAccountRoomEventsParams.safeParse(req.params);
-  if (!params.success) throw new RoomError(400, "Invalid university code");
+  if (!params.success) throw new RoomError(400, "Invalid room code");
   const roomId = params.data.roomId;
   const sessionId = req.get("X-Room-Session") ?? "";
   const id = accountId(req);
