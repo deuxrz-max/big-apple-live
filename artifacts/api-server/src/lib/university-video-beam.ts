@@ -988,7 +988,10 @@ export class UniversityVideoBeamStore {
     if (this.isOwnerlessTopicRoom(beam.roomId)) {
       throw new RoomError(403, "Public topic rooms do not have host controls.");
     }
-    if (!beam.hostParticipantId || beam.hostParticipantId !== participantId) {
+    const roomOwnerId = this.rooms.isSocialRoom(beam.roomId) ? this.rooms.hostAccountId(beam.roomId) : null;
+    const actorAccountId = roomOwnerId ? this.rooms.sessionAccountId(beam.roomId, participantId) : null;
+    const isSocialRoomOwner = !!roomOwnerId && actorAccountId === roomOwnerId;
+    if ((!beam.hostParticipantId || beam.hostParticipantId !== participantId) && !isSocialRoomOwner) {
       throw new RoomError(403, "Only the beam host can control another speaker.");
     }
   }

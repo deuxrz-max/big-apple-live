@@ -90,6 +90,16 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 .ur-rules-act{display:flex;justify-content:flex-end;gap:8px}
 .ur-menu button{padding:10px 12px;border-radius:10px;text-align:left;font-weight:600;background:#25252d;color:#F4F1F8}
 .ur-menu button:hover,.ur-menu button:focus-visible{background:#33333d;outline:2px solid #FF268F}
+.ur-social-profile-popup{box-sizing:border-box;width:min(360px,calc(100vw - 24px));max-height:min(90dvh,720px);overflow-y:auto;border-color:rgba(214,180,93,.72);background:#050505;color:#fff8e8;box-shadow:0 0 24px rgba(214,180,93,.14),0 18px 48px rgba(0,0,0,.7)}
+.ur-social-profile-scrim{z-index:130}
+.ur-social-profile-popup>button{background:#111;color:#fff8e8}
+.ur-profile-popup-head{display:flex;align-items:center;gap:12px;min-width:0;padding:2px 2px 11px;border-bottom:1px solid rgba(214,180,93,.28)}
+.ur-profile-popup-head>div{display:grid;gap:4px;min-width:0}
+.ur-profile-popup-head strong{font-size:16px;overflow-wrap:anywhere}
+.ur-profile-popup-head span{color:rgba(255,248,232,.64);font-size:12px;overflow-wrap:anywhere}
+.ur-profile-popup-cards{display:grid;gap:5px;padding:9px 8px 5px;border:1px solid rgba(214,180,93,.2);border-radius:11px;background:#090909}
+.ur-profile-popup-cards>strong{color:#f1d996;font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.ur-profile-popup-cards>p{margin:0;padding:12px 0;color:rgba(255,248,232,.66);font-size:13px;text-align:center}
 .ur-backdrop{display:none}
 .ch.ur{background:#111216;color:#f4f1f8}
 .ch.ur .ur-in{background:#111216}
@@ -262,6 +272,16 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 }
 @keyframes ur-drawer-in{from{transform:translateX(-100%)}to{transform:translateX(0)}}
 @media(prefers-reduced-motion:reduce){.ur-side.is-open{animation:none}.ur-slot.is-speaking .ur-slot-avatar{animation:none}.ur-slot::before{animation:none;background:linear-gradient(135deg,#d63391,#8f49d9 55%,#6f58c4);background-size:100% 100%}.ur-slot:not(.is-occupied)::before{opacity:.46}.ur-tv-frame::before{animation:none;background:linear-gradient(135deg,#d63391,#8f49d9 55%,#6f58c4)}.ur-entry-effect-webp,.ur-entry-effect-video{transition:none}}
+
+.ch.ur .ch-room.ur-social-room{gap:8px}
+.ch.ur .ur-social-room .ur-beam.is-social-room{flex:0 0 66%;gap:6px}
+.ch.ur .ur-social-room .ur-slots{gap:7px}
+.ch.ur .ur-social-room .ur-slot{padding:9px;gap:6px}
+@media(max-width:760px){
+  .ch.ur .ur-social-room .ur-beam.is-social-room{flex-basis:66%;gap:4px}
+  .ch.ur .ur-social-room .ur-slots{gap:5px}
+  .ch.ur .ur-social-room .ur-slot{padding:6px;gap:4px}
+}
 
 /* Occupied seats use the profile image as the full tile surface. */
 .ur-slot.has-person{padding:0;gap:0;background:#17151e}

@@ -1,10 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   CARD_GAME_EPOCH_MS, CARD_GAME_PERIOD_MS, CARD_DEAL_INTERVAL_MS, CARD_GAME_PRIZE,
   cardGameClock, cardGamePrizeEligible, compareHandScores, createDeck, dealCardsForSeats, scoreFiveCardHand,
   securelyShuffledDeck, splitRoomPrize, applyDailyWinningsCap, nextRoomCardGameCarryover,
 } from "./room-card-game-policy";
+
+const serviceSource = readFileSync("src/lib/room-card-game-service.ts", "utf8");
+const routeSource = readFileSync("src/routes/room-card-games.ts", "utf8");
 
 test("one fixed 75-minute app clock drives every room and boundary deal", () => {
   assert.equal(cardGameClock(CARD_GAME_EPOCH_MS).gameNumber, 1);
@@ -16,6 +20,14 @@ test("one fixed 75-minute app clock drives every room and boundary deal", () => 
   assert.equal(atBoundary.gameNumber, 2);
   assert.equal(atBoundary.cardsDealt, 0);
   assert.equal(atBoundary.gameStartMs, CARD_GAME_EPOCH_MS + CARD_GAME_PERIOD_MS);
+});
+
+test("the card engine scheduler and room service are restricted to user-created social rooms", () => {
+  assert.match(serviceSource, /if \(!roomStore\.isSocialRoom\(roomId\)\)/);
+  assert.match(serviceSource, /roomStore\.socialRoomIds\(\)/);
+  assert.doesNotMatch(serviceSource, /for \(const roomId of roomStore\.communityRoomIds\(\)\) await advanceRoomCardGame/);
+  assert.match(routeSource, /router\.get\("\/account\/rooms\/:roomId\/card-game"[\s\S]*?if \(!roomStore\.isSocialRoom\(roomId\)\) throw new RoomError\(404/);
+  assert.match(routeSource, /router\.get\("\/account\/rooms\/:roomId\/card-game\/participants\/:participantId"[\s\S]*?if \(!roomStore\.isSocialRoom\(roomId\)\) throw new RoomError\(404/);
 });
 
 test("one securely shuffled 52-card deck deals forty-five distinct cards for nine seats", () => {

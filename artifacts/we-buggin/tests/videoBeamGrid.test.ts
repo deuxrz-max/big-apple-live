@@ -48,6 +48,16 @@ test('ownerless rooms keep the first seat centered when no beam host exists', ()
   assert.equal(layout.find(item => item.area === 'host')?.slot.slotNumber, 1);
 });
 
+test('user-created social rooms hide TV and enlarge the same nine-seat grid around the room host', () => {
+  assert.match(roomComponent, /const isSocialRoom = r\.room\?\.roomType === 'social'/);
+  assert.match(roomComponent, /!isSocialRoom && <BeamTv/);
+  assert.match(roomComponent, /roomHostParticipantId = isSocialRoom[\s\S]*r\.room\?\.hostParticipantId/);
+  assert.match(roomComponent, /data-tv={!isSocialRoom && videoBeam\.beam\.tv\.enabled \? 'on' : 'off'}/);
+  assert.match(roomCss, /\.ch\.ur \.ur-social-room \.ur-beam\.is-social-room\{flex:0 0 66%/);
+  assert.match(roomCss, /\.ch\.ur \.ur-social-room \.ur-slots\{gap:7px\}/);
+  assert.match(roomComponent, /beamSeatLayout\.map/);
+});
+
 test('the square beam sizes to its grid and self controls stay outside speaker tiles', () => {
   assert.match(themeCss, /#root \.ur-beam,[\s\S]*?flex:\s*0 0 auto/);
   assert.match(roomComponent, /className="ur-beam-self-controls"/);
@@ -95,12 +105,20 @@ test('the own seat mic toggles only local video sound and gates seat-conversatio
 });
 
 test('empty slots remain full tiles that viewers can join by tapping or keyboard', () => {
-  assert.match(roomComponent, /className="ur-slot-media"[\s\S]*?role={\(mine \|\| joinAvailable \|\| moveAvailable\) && !videoBeam\.busy \? 'button' : undefined}/);
+  assert.match(roomComponent, /const seatInteractive = profileTap \|\| mine \|\| joinAvailable \|\| moveAvailable/);
+  assert.match(roomComponent, /className="ur-slot-media"[\s\S]*?role={seatInteractive && !videoBeam\.busy \? 'button' : undefined}/);
   assert.match(roomComponent, /\$\{moveAvailable \? 'Move to' : 'Join'\} speaker spot \$\{slot\.slotNumber\}/);
   assert.match(roomComponent, /moveAvailable \? 'Move here' : joinAvailable \? 'Tap to join' : 'Open spot'/);
   assert.match(roomComponent, /className="ur-slot-empty-copy">[\s\S]*?className="ur-empty-number"[\s\S]*?className="ur-slot-name ur-empty-name"/);
   assert.match(themeCss, /#root \.ur-slot \.ur-slot-empty-copy\s*\{[^}]*align-content:\s*center/);
   assert.doesNotMatch(roomComponent, /Camera and mic start only after you join/);
+});
+
+test('created-room seat taps open profile cards while themed-room self taps still toggle the mic', () => {
+  assert.match(roomComponent, /const profileTap = isSocialRoom && !!person/);
+  assert.match(roomComponent, /if \(profileTap && person\)[\s\S]*?openMenu\(person\.username/);
+  assert.match(roomComponent, /else if \(mine\) handleOwnSeatTap\(\)/);
+  assert.match(roomComponent, /const handleOwnSeatTap = \(\) => toggleOwnMic\(!ownMicEnabled\)/);
 });
 
 test('beam seats ask for microphone only and show an avatar instead of camera video', () => {

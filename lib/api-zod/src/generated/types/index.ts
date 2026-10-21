@@ -224,6 +224,8 @@ export * from './roomSession4b96100';
 export * from './roomSessionHeaderParameter';
 export * from './roomState';
 export * from './roomState4b96100';
+export * from './roomState4b96100RoomType';
+export * from './roomStateRoomType';
 export * from './sessionUnauthorizedResponse';
 export * from './setHangoutRewardIntervalInput';
 export * from './socialAction';

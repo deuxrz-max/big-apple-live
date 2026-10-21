@@ -107,6 +107,27 @@ test("test-only university rooms never appear in public occupied or follower pre
   assert.deepEqual(store.occupiedUniversities(), []);
 });
 
+test("user-created social rooms are nine-seat social rooms, not public topics, and keep the creator as host", () => {
+  const store = new RoomStore();
+  const account = {
+    accountId: "social-room-owner",
+    identity: { emojiId: "1F600", gender: "Female" as const, color: "#FFFFFF", hairColor: "#000000" },
+  };
+  const created = store.createSocialRoom("ABCDEF123456", "social-history", "Owner's Room", "Owner", account);
+  store.registerCommunity({
+    roomId: "THEMED1", historyId: "themed-history", label: "Themed room", createdAt: new Date(0),
+  });
+  assert.equal(created.room.roomType, "social");
+  assert.equal(created.room.capacity, 0, "social room audience stays unlimited; speaker seats are tracked separately");
+  assert.equal(store.isCommunity("ABCDEF123456"), true, "social features use the existing community-room path");
+  assert.equal(store.isSocialRoom("ABCDEF123456"), true);
+  assert.deepEqual(store.socialRoomIds(), ["ABCDEF123456"]);
+  assert.equal(store.hostAccountId("ABCDEF123456"), account.accountId);
+  assert.equal(store.publicCommunityRoomIds().includes("ABCDEF123456"), false);
+  store.restoreParticipantId("ABCDEF123456", account.accountId, "stable-host-participant");
+  assert.equal(store.get("ABCDEF123456").hostParticipantId, "stable-host-participant");
+});
+
 test("community headcount tie timestamp advances only when membership count changes", () => {
   let now = 1_000;
   const store = new RoomStore(() => now);

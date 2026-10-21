@@ -27,6 +27,8 @@ import { RoomEntranceEffectOverlay } from './RoomEntranceEffectOverlay';
 import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
 import type { RoomCoinDropEvent, RoomEntranceEffectEvent } from './useTextRoom';
 import { RoomCoinDropOverlay } from './RoomCoinDropOverlay';
+import { CardHandFan } from './CardHandFan';
+import { OwnerCardGameTestMode, type OwnerCardTestState } from './OwnerCardGameTestMode';
 import './university-room.css';
 import { RoomPerimeter } from './RoomPerimeter';
 import './bot-moderation.css';
@@ -43,6 +45,10 @@ type Target = {
   photoUrl?: string | null;
   isHost?: boolean;
 };
+type CardGamePersonView = {
+  cards: Array<{ card: { rank: number; suit: 'C' | 'D' | 'H' | 'S' } }>;
+};
+type CardHandLookup = { participantId: string; status: 'loading' | 'ready' | 'error'; cards: string[] };
 type ReportTarget = {
   targetType: 'user' | 'message';
   targetUsername: string;
@@ -104,6 +110,8 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const [reporting, setReporting] = useState<ReportTarget | null>(null);
   const [whisperTo, setWhisperTo] = useState<Target | null>(null);
   const [menu, setMenu] = useState<Target | null>(null);
+  const [cardHandLookup, setCardHandLookup] = useState<CardHandLookup | null>(null);
+  const [ownerCardTestState, setOwnerCardTestState] = useState<OwnerCardTestState | null>(null);
   const [giftBag, setGiftBag] = useState<{ recipient: Target | null } | null>(null);
   const [drawer, setDrawer] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
@@ -126,10 +134,51 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const handledEntranceEffects = useRef(new Set<string>());
   const handledCoinDrops = useRef(new Set<string>());
   const isComedyRoom = roomId.toUpperCase() === 'COMEDY';
+  const isSocialRoom = r.room?.roomType === 'social';
+
+  useEffect(() => {
+    if (!isSocialRoom || !menu?.participantId || !sessionId) {
+      setCardHandLookup(null);
+      return;
+    }
+    const targetParticipantId = menu.participantId;
+    let active = true;
+    let loading = false;
+    setCardHandLookup({ participantId: targetParticipantId, status: 'loading', cards: [] });
+    const loadHand = async () => {
+      if (loading) return;
+      loading = true;
+      try {
+        const response = await fetch(
+          `${import.meta.env.BASE_URL}api/account/rooms/${encodeURIComponent(roomId)}/card-game/participants/${encodeURIComponent(targetParticipantId)}`,
+          { credentials: 'include', cache: 'no-store', headers: { 'X-Room-Session': sessionId } },
+        );
+        if (!response.ok) throw new Error('Could not load this hand.');
+        const view = await response.json() as CardGamePersonView;
+        const rankCode: Record<number, string> = {
+          2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9',
+          10: '10', 11: 'J', 12: 'Q', 13: 'K', 14: 'A',
+        };
+        if (active) setCardHandLookup({
+          participantId: targetParticipantId,
+          status: 'ready',
+          cards: view.cards.map(item => `${rankCode[item.card.rank]}${item.card.suit}`),
+        });
+      } catch {
+        if (active) setCardHandLookup({ participantId: targetParticipantId, status: 'error', cards: [] });
+      } finally {
+        loading = false;
+      }
+    };
+    void loadHand();
+    const timer = window.setInterval(() => void loadHand(), 2500);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [isSocialRoom, menu?.participantId, roomId, sessionId]);
 
   useEffect(() => {
     setText(''); setWhisperTo(null); setMenu(null); setDrawer(false); setRulesOpen(false);
     setGiftBag(null);
+    setCardHandLookup(null); setOwnerCardTestState(null);
     setActiveEntranceEffect(null);
     setCoinDropQueue([]);
     handledEntranceEffects.current.clear();
@@ -232,7 +281,27 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const people = session?.people ?? [];
   const me = people.find((p) => p.self);
   const beamSlots = [...videoBeam.beam.slots].sort((a, b) => a.slotNumber - b.slotNumber);
-  const beamSeatLayout = arrangeVideoBeamSeats(beamSlots, videoBeam.beam.hostParticipantId);
+  const roomHostParticipantId = isSocialRoom
+    ? r.room?.hostParticipantId ?? videoBeam.beam.hostParticipantId
+    : videoBeam.beam.hostParticipantId;
+  const canModerateRoom = !!me?.moderator
+    || (isSocialRoom && !!participantId && roomHostParticipantId === participantId);
+  const isOwnerCardTestUser = isSocialRoom && me?.username.trim().toLowerCase() === 'vampsquad'
+    && !!participantId && participantId === roomHostParticipantId;
+  const handleOwnSeatTap = () => toggleOwnMic(!ownMicEnabled);
+  const menuIsSelf = !!me && menu?.username.toLowerCase() === me.username.toLowerCase();
+  const isPrivateTestHand = !!menu && !!participantId && menu.participantId === participantId
+    && !!ownerCardTestState?.enabled && ownerCardTestState.eligible;
+  const profileHandCards = isPrivateTestHand
+    ? ownerCardTestState.cards.map(card => card.code)
+    : cardHandLookup && cardHandLookup.participantId === menu?.participantId && cardHandLookup.status === 'ready'
+      ? cardHandLookup.cards
+      : [];
+  const profileHandLoading = !!menu?.participantId && !isPrivateTestHand
+    && cardHandLookup?.participantId === menu.participantId && cardHandLookup.status === 'loading';
+  const profileHandError = !!menu?.participantId && !isPrivateTestHand
+    && cardHandLookup?.participantId === menu.participantId && cardHandLookup.status === 'error';
+  const beamSeatLayout = arrangeVideoBeamSeats(beamSlots, roomHostParticipantId);
   const peopleByParticipantId = new Map(people.map(person => [person.participantId, person]));
   const giftRecipients = beamSlots.flatMap(slot => {
     if (!slot.participantId) return [];
@@ -281,10 +350,14 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
     });
   };
   const openMenu = (username: string, displayName: string, authorId?: string, displayNameColor?: string, displayNameTierIndex?: number) => {
-    if (!isSelf(username, authorId)) setMenu({
+    const person = people.find(candidate => candidate.username.toLowerCase() === username.toLowerCase());
+    if (!isSelf(username, authorId) || isSocialRoom) setMenu({
       username, displayName,
+      participantId: person?.participantId,
+      botId: person?.botId,
+      photoUrl: person?.photoUrl ?? null,
       displayNameColor: displayNameColor ?? nameColorOf(username),
-      displayNameTierIndex: displayNameTierIndex ?? people.find(person => person.username === username)?.displayNameTierIndex ?? 0,
+      displayNameTierIndex: displayNameTierIndex ?? person?.displayNameTierIndex ?? 0,
     });
   };
 
@@ -336,15 +409,22 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           return (
             <li key={p.participantId}>
               <div className="ur-prow">
-                {p.self ? <UserPhoto username={p.username} displayName={p.displayName} photoUrl={p.photoUrl} size={36} reviewStatus={p.photoStatus ?? undefined} /> :
-                  <button type="button" className="ur-person-avatar" aria-label={`Actions for ${p.displayName}`} aria-haspopup="menu"
-                    onClick={() => setMenu({ username: p.username, displayName: p.displayName, participantId: p.participantId, botId: p.botId, displayNameColor: p.displayNameColor ?? '#FFFFFF', displayNameTierIndex: p.displayNameTierIndex ?? 0 })}
-                    data-testid={`button-person-avatar-${p.username}`}><UserPhoto username={p.username} displayName={p.displayName} photoUrl={p.photoUrl} size={36} /></button>}
+                {p.self && !isSocialRoom ? <UserPhoto username={p.username} displayName={p.displayName} photoUrl={p.photoUrl} size={36} reviewStatus={p.photoStatus ?? undefined} /> :
+                  <button type="button" className="ur-person-avatar" aria-label={`${isSocialRoom ? 'Profile and cards for' : 'Actions for'} ${p.displayName}`}
+                    aria-haspopup={isSocialRoom ? 'dialog' : 'menu'}
+                    onClick={() => openMenu(p.username, p.displayName, p.participantId, p.displayNameColor, p.displayNameTierIndex)}
+                    data-testid={`button-person-avatar-${p.username}`}><UserPhoto username={p.username} displayName={p.displayName} photoUrl={p.photoUrl} size={36} reviewStatus={p.photoStatus ?? undefined} /></button>}
                 <span className="ur-pname">
                   {p.self
-                    ? <span className="ur-pname-text"><ShinyName displayNameColor={p.displayNameColor} displayNameTierIndex={p.displayNameTierIndex}><BadgeMark id={p.badgeId ?? null} label={p.badgeName} imageUrl={p.badgeImage} size={16} compact />{p.displayName}</ShinyName><em> (you)</em></span>
-                    : <button type="button" className="ur-pname-text ur-person-name-action" aria-haspopup="menu"
-                        onClick={() => setMenu({ username: p.username, displayName: p.displayName, participantId: p.participantId, botId: p.botId, displayNameColor: p.displayNameColor ?? '#FFFFFF', displayNameTierIndex: p.displayNameTierIndex ?? 0 })}
+                    ? isSocialRoom
+                      ? <button type="button" className="ur-pname-text ur-person-name-action" aria-haspopup="dialog"
+                          onClick={() => openMenu(p.username, p.displayName, p.participantId, p.displayNameColor, p.displayNameTierIndex)}>
+                          <ShinyName displayNameColor={p.displayNameColor} displayNameTierIndex={p.displayNameTierIndex}><BadgeMark id={p.badgeId ?? null} label={p.badgeName} imageUrl={p.badgeImage} size={16} compact />{p.displayName}</ShinyName><em> (you)</em>
+                        </button>
+                      : <span className="ur-pname-text"><ShinyName displayNameColor={p.displayNameColor} displayNameTierIndex={p.displayNameTierIndex}><BadgeMark id={p.badgeId ?? null} label={p.badgeName} imageUrl={p.badgeImage} size={16} compact />{p.displayName}</ShinyName><em> (you)</em></span>
+                    : <button type="button" className="ur-pname-text ur-person-name-action"
+                        aria-haspopup={isSocialRoom ? 'dialog' : 'menu'}
+                        onClick={() => openMenu(p.username, p.displayName, p.participantId, p.displayNameColor, p.displayNameTierIndex)}
                         data-testid={`button-person-${p.username}`}><ShinyName displayNameColor={p.displayNameColor} displayNameTierIndex={p.displayNameTierIndex}><BadgeMark id={p.badgeId ?? null} label={p.badgeName} imageUrl={p.badgeImage} size={16} compact />{p.displayName}</ShinyName></button>}
                   <PassportSummaryBadge passport={p.passport} username={p.username} context="people" />
                   {p.moderator && <span className="ur-badge">Moderator</span>}
@@ -401,8 +481,9 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
             {peopleList}
           </aside>
           {drawer && <div className="ur-backdrop" onClick={closeDrawer} aria-hidden="true" />}
-          <div className="ch-room">
-            <section className={`ur-beam${videoBeam.beam.tv.enabled ? ' is-tv-on' : ''}`} aria-label="Nine-seat LiveKit video beam">
+          <div className={`ch-room${isSocialRoom ? ' ur-social-room' : ''}`}>
+            <section className={`ur-beam${!isSocialRoom && videoBeam.beam.tv.enabled ? ' is-tv-on' : ''}${isSocialRoom ? ' is-social-room' : ''}`}
+              aria-label="Nine-seat LiveKit video beam">
               <div className="ur-audio-status-row">
                   <span className={`ur-audio-status ur-audio-${videoBeam.connection}`} role="status">
                   <span className="ur-status-dot" aria-hidden="true" />
@@ -415,11 +496,11 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                   <span className="ur-room-sound-hint" role="status">Tap anywhere for sound</span>
                 )}
               </div>
-              <BeamTv ref={beamTvRef} roomName={r.room?.name ?? 'Room'}
+              {!isSocialRoom && <BeamTv ref={beamTvRef} roomName={r.room?.name ?? 'Room'}
                 microphoneEnabled={ownMicEnabled}
                 tv={videoBeam.beam.tv} search={videoBeam.searchTv}
-                reportPlaybackFailure={videoBeam.reportTvPlaybackFailure} />
-              {isComedyRoom && (
+                reportPlaybackFailure={videoBeam.reportTvPlaybackFailure} />}
+              {!isSocialRoom && isComedyRoom && (
                 <div className="ur-comedy-toolbar" aria-label="Comedy room video controls">
                   <span className="ur-comedy-now" title={videoBeam.beam.tv.videoMetadata.find(item => item.videoId === videoBeam.beam.tv.currentVideoId)?.title ?? ''}>
                     <Clapperboard size={13} aria-hidden="true" />
@@ -430,18 +511,21 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
               {videoBeam.error && <p className="ur-beam-error" role="alert">{videoBeam.error}</p>}
               {videoBeam.beam.beamActive && !videoBeam.ownSlot && beamSlots.every(slot => slot.participantId)
                 && <p className="ur-beam-full" role="status">Beam is full. You can still watch and chat; an open spot can be joined as soon as someone leaves.</p>}
-                  <div className="ur-slots" data-count={speakerCount} data-tv={videoBeam.beam.tv.enabled ? 'on' : 'off'}>
+                  <div className="ur-slots" data-count={speakerCount}
+                    data-tv={!isSocialRoom && videoBeam.beam.tv.enabled ? 'on' : 'off'}>
                 {beamSeatLayout.map(({ slot, area, gridColumn, gridRow }) => {
                   const person = slot.participantId
                     ? people.find((p) => p.participantId === slot.participantId)
                     : undefined;
                   const mine = slot.participantId === participantId;
-                  const isBeamHost = !!slot.participantId && slot.participantId === videoBeam.beam.hostParticipantId;
+                  const isBeamHost = !!slot.participantId && slot.participantId === roomHostParticipantId;
                   const canSelectOpenSlot = !slot.participantId && !!sessionId && !!participantId
                     && (!videoBeam.ownSlot || videoBeam.ownSlot.slotNumber !== slot.slotNumber);
                   const moveAvailable = canSelectOpenSlot && !!videoBeam.ownSlot;
                   const joinAvailable = canSelectOpenSlot && !videoBeam.ownSlot;
                   const isSpeaking = !!slot.participantId && videoBeam.speaking.has(slot.participantId);
+                  const profileTap = isSocialRoom && !!person;
+                  const seatInteractive = profileTap || mine || joinAvailable || moveAvailable;
                   const media = slot.participantId ? videoBeam.media[slot.participantId] : undefined;
                   const fallbackName = person ? (person.displayName?.trim() || person.username) : '';
                   const initials = Array.from(fallbackName).slice(0, 2).join('').toUpperCase() || '?';
@@ -467,24 +551,30 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                       style={{ gridColumn, gridRow: area === 'host' ? '1 / span 2' : gridRow }}
                       aria-label={`Speaker slot ${slot.slotNumber}${slot.participantId ? `, ${person?.displayName ?? 'occupied'}` : ', empty'}`}>
                       <div className="ur-slot-media"
-                        role={(mine || joinAvailable || moveAvailable) && !videoBeam.busy ? 'button' : undefined}
-                        tabIndex={(mine || joinAvailable || moveAvailable) && !videoBeam.busy ? 0 : undefined}
-                        aria-pressed={mine ? ownMicEnabled : undefined}
-                        aria-disabled={mine ? videoBeam.busy : undefined}
-                        aria-label={mine
-                          ? `Your speaker spot ${slot.slotNumber}, microphone ${ownMicEnabled ? 'on' : 'off'}. Tap to toggle.`
+                        role={seatInteractive && !videoBeam.busy ? 'button' : undefined}
+                        tabIndex={seatInteractive && !videoBeam.busy ? 0 : undefined}
+                        aria-pressed={mine && !isSocialRoom ? ownMicEnabled : undefined}
+                        aria-disabled={seatInteractive ? videoBeam.busy : undefined}
+                        aria-label={profileTap
+                          ? `View ${person?.displayName ?? 'speaker'}'s profile and cards`
+                          : mine
+                            ? `Your speaker spot ${slot.slotNumber}, microphone ${ownMicEnabled ? 'on' : 'off'}. Tap to toggle.`
                           : (joinAvailable || moveAvailable) && !videoBeam.busy
                             ? `${moveAvailable ? 'Move to' : 'Join'} speaker spot ${slot.slotNumber}` : undefined}
                         data-testid={mine ? `beam-seat-${slot.slotNumber}` : undefined}
-                        onClick={(mine || joinAvailable || moveAvailable) && !videoBeam.busy
-                          ? () => mine
-                            ? toggleOwnMic(!ownMicEnabled)
-                            : void (moveAvailable ? videoBeam.moveToSlot(slot.slotNumber) : videoBeam.joinSpeaker())
+                        onClick={seatInteractive && !videoBeam.busy
+                          ? () => profileTap && person
+                            ? openMenu(person.username, person.displayName, person.participantId, person.displayNameColor, person.displayNameTierIndex)
+                            : mine
+                              ? handleOwnSeatTap()
+                              : void (moveAvailable ? videoBeam.moveToSlot(slot.slotNumber) : videoBeam.joinSpeaker())
                           : undefined}
-                        onKeyDown={(mine || joinAvailable || moveAvailable) && !videoBeam.busy ? (event) => {
+                        onKeyDown={seatInteractive && !videoBeam.busy ? (event) => {
                           if (event.key === 'Enter' || event.key === ' ') {
                             event.preventDefault();
-                            if (mine) toggleOwnMic(!ownMicEnabled);
+                            if (profileTap && person)
+                              openMenu(person.username, person.displayName, person.participantId, person.displayNameColor, person.displayNameTierIndex);
+                            else if (mine) handleOwnSeatTap();
                             else void (moveAvailable ? videoBeam.moveToSlot(slot.slotNumber) : videoBeam.joinSpeaker());
                           }
                         } : undefined}>
@@ -496,11 +586,11 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                             <MicOff size={13} aria-hidden="true" />
                           </span>
                         )}
-                        {person && (person.self ? (
+                        {person && (isSocialRoom || person.self ? (
                           <div className="ur-slot-portrait-layer">{portrait}</div>
                         ) : (
                           <button type="button" className="ur-slot-avatar-button ur-slot-photo-action"
-                            aria-label={`Actions for ${person.displayName}`}
+                            aria-label={`Actions for ${person.displayName}`} aria-haspopup="menu"
                             onClick={event => { event.stopPropagation(); openMenu(person.username, person.displayName, person.participantId, person.displayNameColor, person.displayNameTierIndex); }}>
                             {portrait}
                           </button>
@@ -509,9 +599,10 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                           <div className="ur-slot-copy">
                             <span className="ur-slot-name-line">
                               <BadgeMark id={person.badgeId ?? null} label={person.badgeName} imageUrl={person.badgeImage} size={13} compact />
-                              {person.self ? <ShinyName className="ur-slot-name" displayNameColor={person.displayNameColor} displayNameTierIndex={person.displayNameTierIndex}>{person.displayName}</ShinyName>
+                              {person.self || isSocialRoom ? <ShinyName className="ur-slot-name" displayNameColor={person.displayNameColor} displayNameTierIndex={person.displayNameTierIndex}>{person.displayName}</ShinyName>
                                 : <button type="button" className="ur-name ur-slot-name"
-                                  aria-label={`Actions for ${person.displayName}`}
+                                  aria-label={`${isSocialRoom ? 'Profile and cards for' : 'Actions for'} ${person.displayName}`}
+                                  aria-haspopup={isSocialRoom ? 'dialog' : 'menu'}
                                   onClick={event => { event.stopPropagation(); openMenu(person.username, person.displayName, person.participantId, person.displayNameColor, person.displayNameTierIndex); }}>
                                   <ShinyName className="ur-seat-name-text" displayNameColor={person.displayNameColor} displayNameTierIndex={person.displayNameTierIndex}>{person.displayName}</ShinyName>
                                 </button>}
@@ -529,7 +620,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                           </div>
                         )}
                       </div>
-                      {person && !mine && me?.moderator ? (
+                      {person && !mine && canModerateRoom ? (
                         <div className="ur-slot-actions">
                           <button type="button" className="ur-slot-action"
                             disabled={videoBeam.busy || slot.micMuted}
@@ -566,6 +657,8 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                 </div>
               )}
             </section>
+            {isOwnerCardTestUser && <OwnerCardGameTestMode
+              roomId={roomId} variant="room" onStateChange={setOwnerCardTestState} />}
             <div className="ch-msgs" ref={box} role="log" aria-live="polite" aria-label="Room messages" tabIndex={0} onScroll={(e) => { const el = e.currentTarget; near.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }} data-testid="list-messages">
               {r.hasOlder && <button type="button" className="bm-btn bm-btn-sm" disabled={r.loadingOlder}
                 onClick={async () => {
@@ -690,39 +783,65 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
       </div>
 
       {menu && (
-        <div className="ur-modal" onClick={() => setMenu(null)}>
-          <div ref={menuBox} className="ur-menu" role="menu" aria-label={`Actions for ${menu.displayName}`} onClick={(e) => e.stopPropagation()}>
-            <strong><ShinyName displayNameColor={menu.displayNameColor} displayNameTierIndex={menu.displayNameTierIndex}>{menu.displayName}</ShinyName></strong>
-            <button type="button" role="menuitem" onClick={() => { setGiftBag({ recipient: menu }); setMenu(null); setDrawer(false); }}>Gift</button>
-            <button type="button" role="menuitem" onClick={() => { const u = menu.username; setMenu(null); nav(`/community/messages/${encodeURIComponent(u)}`); }}>Message</button>
-             <button type="button" role="menuitem" onClick={() => {
-               setReporting({ targetType: 'user', targetUsername: menu.username, roomId });
-               setMenu(null); setDrawer(false);
-             }}>Report user</button>
-            <button type="button" role="menuitem" disabled={block.isPending} onClick={() => {
-              const target = menu;
-              setMenu(null);
-              block.mutate({ username: target.username, data: { kind: 'block', active: true } }, {
-                onSuccess: () => {
-                  setNote(`Blocked ${target.displayName}.`);
-                  qc.invalidateQueries({ predicate: q => String(q.queryKey[0]).startsWith('/api/social') });
-                  qc.invalidateQueries({ queryKey: getGetUniversitySessionQueryKey(roomId) });
-                  r.refresh();
-                },
-                onError: e => setNote(errMessage(e)),
-              });
-            }}>Block</button>
-            {me?.moderator && menu.participantId && !menu.botId && menu.participantId !== me.participantId && (
-              <button type="button" role="menuitem" disabled={videoBeam.busy} onClick={() => {
-                const targetParticipantId = menu.participantId!;
-                setMenu(null);
-                void videoBeam.kick(targetParticipantId);
-              }}>Remove from this room</button>
+        <div className={`ur-modal${isSocialRoom ? ' ur-social-profile-scrim' : ''}`} onClick={() => setMenu(null)}>
+          <div ref={menuBox} className={`ur-menu${isSocialRoom ? ' ur-social-profile-popup' : ''}`}
+            role={isSocialRoom ? 'dialog' : 'menu'} aria-modal={isSocialRoom || undefined}
+            aria-label={isSocialRoom ? `Profile and cards for ${menu.username}` : `Actions for ${menu.displayName}`}
+            onClick={(e) => e.stopPropagation()}>
+            {isSocialRoom && (
+              <>
+                <header className="ur-profile-popup-head">
+                  <UserPhoto username={menu.username} displayName={menu.displayName} photoUrl={menu.photoUrl} size={68} />
+                  <div>
+                    <strong><ShinyName displayNameColor={menu.displayNameColor} displayNameTierIndex={menu.displayNameTierIndex}>{menu.displayName}</ShinyName></strong>
+                    <span>@{menu.username}</span>
+                  </div>
+                </header>
+                <section className="ur-profile-popup-cards" aria-live="polite">
+                  <strong>Cards this round</strong>
+                  {profileHandLoading ? <p role="status">Checking this round…</p>
+                    : profileHandError ? <p role="status">Cards aren’t available right now.</p>
+                      : profileHandCards.length
+                        ? <CardHandFan cards={profileHandCards} />
+                        : <p>No cards in this round.</p>}
+                </section>
+              </>
             )}
-            <button type="button" role="menuitem" autoFocus onClick={() => { setWhisperTo(menu); setMenu(null); setDrawer(false); setText(''); setSendErr(null); }}>Whisper</button>
-            <button type="button" role="menuitem" onClick={() => { const u = menu.username; setMenu(null); nav(`/community/people/${encodeURIComponent(u)}`); }}>View profile</button>
-            <button type="button" role="menuitem" disabled={ignoreMut.isPending} onClick={() => toggleIgnore(menu)}>{ignored.has(menu.username) ? 'Unignore' : 'Ignore'}</button>
-            <button type="button" role="menuitem" onClick={() => setMenu(null)}>Cancel</button>
+            {!isSocialRoom && <strong><ShinyName displayNameColor={menu.displayNameColor} displayNameTierIndex={menu.displayNameTierIndex}>{menu.displayName}</ShinyName></strong>}
+            {!menuIsSelf && (
+              <>
+                <button type="button" role={isSocialRoom ? undefined : 'menuitem'} onClick={() => { setGiftBag({ recipient: menu }); setMenu(null); setDrawer(false); }}>Gift</button>
+                <button type="button" role={isSocialRoom ? undefined : 'menuitem'} onClick={() => { const u = menu.username; setMenu(null); nav(`/community/messages/${encodeURIComponent(u)}`); }}>Message</button>
+                <button type="button" role={isSocialRoom ? undefined : 'menuitem'} onClick={() => {
+                  setReporting({ targetType: 'user', targetUsername: menu.username, roomId });
+                  setMenu(null); setDrawer(false);
+                }}>Report user</button>
+                <button type="button" role={isSocialRoom ? undefined : 'menuitem'} disabled={block.isPending} onClick={() => {
+                  const target = menu;
+                  setMenu(null);
+                  block.mutate({ username: target.username, data: { kind: 'block', active: true } }, {
+                    onSuccess: () => {
+                      setNote(`Blocked ${target.displayName}.`);
+                      qc.invalidateQueries({ predicate: q => String(q.queryKey[0]).startsWith('/api/social') });
+                      qc.invalidateQueries({ queryKey: getGetUniversitySessionQueryKey(roomId) });
+                      r.refresh();
+                    },
+                    onError: e => setNote(errMessage(e)),
+                  });
+                }}>Block</button>
+                {canModerateRoom && menu.participantId && !menu.botId && menu.participantId !== me?.participantId && (
+                  <button type="button" role={isSocialRoom ? undefined : 'menuitem'} disabled={videoBeam.busy} onClick={() => {
+                    const targetParticipantId = menu.participantId!;
+                    setMenu(null);
+                    void videoBeam.kick(targetParticipantId);
+                  }}>Remove from this room</button>
+                )}
+                <button type="button" role={isSocialRoom ? undefined : 'menuitem'} autoFocus onClick={() => { setWhisperTo(menu); setMenu(null); setDrawer(false); setText(''); setSendErr(null); }}>Whisper</button>
+                <button type="button" role={isSocialRoom ? undefined : 'menuitem'} onClick={() => { const u = menu.username; setMenu(null); nav(`/community/people/${encodeURIComponent(u)}`); }}>View profile</button>
+                <button type="button" role={isSocialRoom ? undefined : 'menuitem'} disabled={ignoreMut.isPending} onClick={() => toggleIgnore(menu)}>{ignored.has(menu.username) ? 'Unignore' : 'Ignore'}</button>
+              </>
+            )}
+            <button type="button" role={isSocialRoom ? undefined : 'menuitem'} onClick={() => setMenu(null)}>{menuIsSelf ? 'Close' : 'Cancel'}</button>
           </div>
         </div>
       )}

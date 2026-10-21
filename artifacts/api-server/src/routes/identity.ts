@@ -1,5 +1,7 @@
 import { Router, type IRouter, type Request } from "express";
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
+import { eq } from "drizzle-orm";
+import { chatRooms, db } from "@workspace/db";
 import { getAuth } from "@clerk/express";
 import {
   SaveMyProfileBody, SaveMyProfileResponse, GetMyProfileResponse,
@@ -66,17 +68,55 @@ router.put("/me", async (req, res) => {
   res.json(SaveMyProfileResponse.parse(await saveProfile(id, body.data)));
 });
 router.post("/account/rooms", async (req, res) => {
-  throw new RoomError(410, "Broadcasting is disabled. Choose a room from the Directory.");
-  /* Retained legacy creation logic for rollback, not exposed in active UX.
   sameOrigin(req);
   const id = accountId(req);
   const profile = await requireCompletedProfile(id);
-  const beam = req.body === undefined ? undefined : CreateAccountRoomBody.safeParse(req.body);
-  if (beam && !beam.success) throw new RoomError(400, "Choose a name and 2, 4, 9, or 12 spots");
-  res.status(201).json(CreateAccountRoomResponse.parse(
-    roomStore.create(profile.username, { accountId: id, identity: profile.identity }, beam?.success ? beam.data : undefined),
-  ));
-  */
+  let name = `${(profile.displayName ?? profile.username).trim().slice(0, 25)}'s Room`;
+  if (req.body && Object.keys(req.body).length > 0) {
+    const body = CreateAccountRoomBody.safeParse(req.body);
+    if (!body.success || body.data.capacity !== 9) {
+      throw new RoomError(400, "Choose a room name and the nine-seat layout.");
+    }
+    name = body.data.name.trim();
+  }
+  if (name.length < 2 || name.length > 32) throw new RoomError(400, "Room names must be 2 to 32 characters.");
+  const access = await accessFor(id);
+  const nameColors = await nameColorProfilesForAccounts([id]);
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const roomId = randomBytes(6).toString("hex").toUpperCase();
+    if (roomStore.hasRoomId(roomId)) continue;
+    const historyId = randomUUID();
+    const [created] = await db.insert(chatRooms).values({ roomId, historyId, label: name })
+      .onConflictDoNothing().returning({ roomId: chatRooms.roomId });
+    if (!created) continue;
+
+    let roomCreated = false;
+    try {
+      const session = roomStore.createSocialRoom(roomId, historyId, name,
+        profile.displayName ?? profile.username, {
+          accountId: id,
+          identity: profile.identity,
+          capExempt: access.moderator,
+          displayNameColor: nameColors.get(id)?.color ?? "#FFFFFF",
+          displayNameTierIndex: nameColors.get(id)?.tierIndex ?? 0,
+        });
+      roomCreated = true;
+      const member = await communityMembership(roomId, id);
+      roomStore.restoreParticipantId(roomId, id, member.participantId);
+      res.status(201).json(CreateAccountRoomResponse.parse({
+        ...session,
+        participantId: member.participantId,
+        room: roomStore.get(roomId),
+      }));
+      return;
+    } catch (error) {
+      if (roomCreated) roomStore.discardSocialRoom(roomId);
+      await db.delete(chatRooms).where(eq(chatRooms.roomId, roomId));
+      throw error;
+    }
+  }
+  throw new RoomError(503, "Could not reserve a new room code. Try again.");
 });
 router.post("/account/rooms/:roomId/join", async (req, res) => {
   sameOrigin(req);

@@ -55,6 +55,8 @@ type Room = {
   historyId: string;
   name: string;
   capacity: number;
+  roomType: "legacy" | "topic" | "social";
+  userCreated?: boolean;
   createdAt: Date;
   hostParticipantId: string;
   hostAccountId?: string;
@@ -93,7 +95,7 @@ export class RoomStore {
     this.rooms.set(input.roomId, { roomId: input.roomId, historyId: input.historyId,
       // Public topic rooms have no audience cap. Capacity 0 is the API's
       // explicit unlimited value; the eight camera seats are tracked separately.
-      name: input.label, capacity: 0, createdAt: input.createdAt, hostParticipantId: randomUUID(),
+      name: input.label, capacity: 0, roomType: "topic", createdAt: input.createdAt, hostParticipantId: randomUUID(),
       sessions: new Map(), headcountSince: this.now(), listeners: new Set(), emptySince: null, community: true, testOnly: input.testOnly,
       parentRoomId: input.parentRoomId, entranceEffects: [], coinDrops: [] });
   }
@@ -123,14 +125,22 @@ export class RoomStore {
     this.rooms.delete(id);
   }
   isCommunity(roomId: string) { return !!this.rooms.get(roomId.toUpperCase())?.community; }
+  isSocialRoom(roomId: string) { return this.rooms.get(roomId.toUpperCase())?.roomType === "social"; }
+  socialRoomIds(): string[] {
+    return [...this.rooms.values()].filter(room => room.roomType === "social").map(room => room.roomId);
+  }
+  hasRoomId(roomId: string) { return this.rooms.has(roomId.toUpperCase()); }
+  hostAccountId(roomId: string): string | null {
+    return this.rooms.get(roomId.toUpperCase())?.hostAccountId ?? null;
+  }
   isTestOnly(roomId: string) { return !!this.rooms.get(roomId.toUpperCase())?.testOnly; }
   publicCommunityRoomIds(): string[] {
-    return [...this.rooms.values()].filter(room => room.community && !room.testOnly).map(room => room.roomId);
+    return [...this.rooms.values()].filter(room => room.community && !room.testOnly && !room.userCreated).map(room => room.roomId);
   }
   /** Bots use this read-only list, never a participant session or a real seat. */
   occupiedUniversities() {
     const now = this.now();
-    return [...this.rooms.values()].filter(room => room.community && !room.testOnly
+    return [...this.rooms.values()].filter(room => room.community && !room.testOnly && !room.userCreated
       && [...room.sessions.values()].some(s => now - s.lastSeenAt < SESSION_TIMEOUT_MS)).map(room => room.roomId);
   }
   refreshRoomChat(roomId: string) {
@@ -175,6 +185,7 @@ export class RoomStore {
       historyId: randomUUID(),
       name: beam?.name ?? "Room",
       capacity: beam?.capacity ?? 100,
+      roomType: "legacy",
       createdAt: new Date(this.now()),
       hostParticipantId: "",
       hostAccountId: account?.accountId,
@@ -187,6 +198,48 @@ export class RoomStore {
     };
     this.rooms.set(roomId, room);
     return this.addSession(room, displayName, account);
+  }
+
+  createSocialRoom(
+    roomId: string,
+    historyId: string,
+    name: string,
+    displayName: string,
+    account: AccountIdentity,
+  ): RoomSession {
+    this.sweep();
+    if (this.rooms.size >= 10_000) throw new RoomError(503, "Room service capacity reached");
+    const id = roomId.toUpperCase();
+    if (this.rooms.has(id)) throw new RoomError(409, "That room code is already active");
+    const room: Room = {
+      roomId: id,
+      historyId,
+      name,
+      capacity: 0,
+      roomType: "social",
+      userCreated: true,
+      createdAt: new Date(this.now()),
+      hostParticipantId: "",
+      hostAccountId: account.accountId,
+      sessions: new Map(),
+      headcountSince: this.now(),
+      listeners: new Set(),
+      emptySince: null,
+      community: true,
+      entranceEffects: [],
+      coinDrops: [],
+    };
+    this.rooms.set(id, room);
+    return this.addSession(room, displayName, account);
+  }
+
+  discardSocialRoom(roomId: string): void {
+    const room = this.rooms.get(roomId.toUpperCase());
+    if (!room?.userCreated) return;
+    this.emit(room, { type: "room.expired", data: { roomId: room.roomId } });
+    room.listeners.clear();
+    this.communityEndListener?.(room.roomId);
+    this.rooms.delete(room.roomId);
   }
 
   join(roomId: string, displayName: string, account?: AccountIdentity): RoomSession {
@@ -211,7 +264,9 @@ export class RoomStore {
   restoreParticipantId(roomId: string, accountId: string, participantId: string) {
     const room = this.requireRoom(roomId);
     for (const session of room.sessions.values()) {
-      if (session.accountId === accountId) session.participant.participantId = participantId;
+      if (session.accountId !== accountId) continue;
+      session.participant.participantId = participantId;
+      if (accountId === room.hostAccountId) room.hostParticipantId = participantId;
     }
     this.broadcast(room);
   }
@@ -503,7 +558,8 @@ export class RoomStore {
       if (room.sessions.size === 0) room.emptySince = now;
       this.broadcast(room);
     }
-    if (!room.community && room.emptySince !== null && now - room.emptySince >= EMPTY_ROOM_TIMEOUT_MS) {
+    if ((!room.community || room.userCreated) && room.emptySince !== null && now - room.emptySince >= EMPTY_ROOM_TIMEOUT_MS) {
+      if (room.userCreated) this.communityEndListener?.(room.roomId);
       this.rooms.delete(room.roomId);
       this.emit(room, { type: "room.expired", data: { roomId: room.roomId } });
       room.listeners.clear();
@@ -515,6 +571,7 @@ export class RoomStore {
       roomId: room.roomId,
       name: room.name,
       capacity: room.capacity,
+      roomType: room.roomType,
       createdAt: new Date(room.createdAt),
       hostParticipantId: room.hostParticipantId,
       participants: Array.from(room.sessions.values(), ({ participant }) => copyParticipant(participant)),

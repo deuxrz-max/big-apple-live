@@ -14,7 +14,8 @@ export const ROOM_KICK_MESSAGE = "You've been removed from the room";
 
 export function communityRoomScope(roomId: string): RoomScope {
   if (!roomStore.isCommunity(roomId)) throw new RoomError(404, "Room not found.");
-  return { type: "community", key: roomStore.getHistoryId(roomId) };
+  const hostAccountId = roomStore.isSocialRoom(roomId) ? roomStore.hostAccountId(roomId) ?? undefined : undefined;
+  return { type: "community", key: roomStore.getHistoryId(roomId), ...(hostAccountId ? { hostAccountId } : {}) };
 }
 
 export function liveStreamScope(streamId: string, startedAt: Date, hostAccountId?: string): RoomScope {

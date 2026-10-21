@@ -1,20 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
+import { useUser } from "@clerk/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Ban, Eye, Flag, FlipHorizontal, Mic, MicOff, Radio, Share2, Users, Video, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { type RemoteTrack } from "livekit-client";
 import {
-  getGetSocialBlocksQueryKey, getGetSocialMeQueryKey, getGetSocialPersonQueryKey,
+  getGetRoomQueryKey, getGetSocialBlocksQueryKey, getGetSocialMeQueryKey, getGetSocialPersonQueryKey,
   getLiveStreams, sendLiveStreamChatMessage, useGetSocialBlocks, useGetSocialMe,
-  useGetSocialPerson, useSetSocialRelationship,
+  useCreateAccountRoom, useGetSocialPerson, useSetSocialRelationship,
 } from "@workspace/api-client-react";
-import type { LiveStreamEntry, LiveStreamChatMessage } from "@workspace/api-client-react";
+import type { LiveStreamEntry, LiveStreamChatMessage, RoomSession } from "@workspace/api-client-react";
 import { GiftBag } from "@/gifts/GiftBag";
 import { GiftControl } from "@/gifts/GiftControl";
 import { GiftComboPlayer, type GiftComboNotice } from "@/gifts/GiftComboPlayer";
 import { appendUniqueGiftEvents, finishGiftQueueItem } from "@/gifts/gift-combo-policy";
 import { SafetyReportDialog } from "@/safety/SafetyReportDialog";
 import { ShinyName } from "@/components/ShinyName";
+import { saveCreds } from "@/lib/room-creds";
 import { isLiveStreamEventVisible } from "./liveChatBlockPolicy";
 import {
   hostLiveSession, leaveViewerLiveSession, viewerLiveSession,
@@ -735,9 +737,83 @@ export function LiveStreamsDirectory() {
 
 export function GoLiveButton({ className, children }: { className: string; children: ReactNode }) {
   const [, navigate] = useLocation();
+  const { user } = useUser();
+  const qc = useQueryClient();
   const me = useGetSocialMe();
-  return <button type="button" className={className} onClick={() => {
-    void hostLiveSession.start(me.data?.profile?.username ?? "");
+  const createRoom = useCreateAccountRoom();
+  const [choiceOpen, setChoiceOpen] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const dialog = useRef<HTMLDivElement>(null);
+  const username = me.data?.profile?.username ?? "";
+  const displayName = me.data?.profile?.displayName?.trim() || username || "Deux Wild";
+  const roomName = `${Array.from(displayName).slice(0, 25).join("").trimEnd()}'s Room`;
+
+  useEffect(() => {
+    if (!choiceOpen) return;
+    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !createRoom.isPending) setChoiceOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    dialog.current?.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus();
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [choiceOpen, createRoom.isPending]);
+
+  const startBroadcast = () => {
+    if (!username) return;
+    setChoiceOpen(false);
+    void hostLiveSession.start(username);
     navigate("/live/start");
-  }}>{children}</button>;
+  };
+  const createSocialRoom = () => {
+    if (!username || !user?.id || createRoom.isPending) return;
+    createRoom.mutate({ data: { name: roomName, capacity: 9 } }, {
+      onSuccess: (session: RoomSession) => {
+        saveCreds(user.id, session.room.roomId, {
+          participantSessionId: session.participantSessionId,
+          participantId: session.participantId,
+        });
+        qc.setQueryData(getGetRoomQueryKey(session.room.roomId), session.room);
+        setChoiceOpen(false);
+        navigate(`/rooms/${encodeURIComponent(session.room.roomId)}`);
+      },
+    });
+  };
+
+  return <>
+    <button ref={trigger} type="button" className={className} aria-haspopup="dialog"
+      aria-expanded={choiceOpen} onClick={() => { createRoom.reset(); setChoiceOpen(true); }}>
+      {children}
+    </button>
+    {choiceOpen && <div className="st-room-choice-scrim" onMouseDown={(event) => {
+      if (event.target === event.currentTarget && !createRoom.isPending) setChoiceOpen(false);
+    }}>
+      <section ref={dialog} className="st-room-choice-card" role="dialog" aria-modal="true"
+        aria-labelledby="st-room-choice-title" data-testid="dialog-go-live-choice">
+        <button type="button" className="st-room-choice-close" aria-label="Close choices"
+          onClick={() => setChoiceOpen(false)} disabled={createRoom.isPending}><X size={18} /></button>
+        <h2 id="st-room-choice-title">What would you like to start?</h2>
+        <button type="button" className="st-room-choice-option" onClick={startBroadcast}
+          disabled={!username} data-testid="button-start-live-broadcast">
+          <span className="st-room-choice-icon"><Video size={22} /></span>
+          <span><strong>Go Live</strong><small>Start your full-screen video broadcast.</small></span>
+        </button>
+        <button type="button" className="st-room-choice-option" onClick={createSocialRoom}
+          disabled={!username || !user?.id || createRoom.isPending} data-testid="button-create-social-room">
+          <span className="st-room-choice-icon"><Users size={22} /></span>
+          <span><strong>{createRoom.isPending ? "Creating room…" : "Create Room"}</strong>
+            <small>Open a nine-seat social room with chat and gifts.</small></span>
+        </button>
+        {!username && (me.isLoading
+          ? <p className="st-room-choice-error" role="status">Loading your account…</p>
+          : <p className="st-room-choice-error" role="status">Set up your profile to continue. <Link href="/user-portal">Open profile</Link></p>)}
+        {createRoom.isError && <p className="st-room-choice-error" role="alert">
+          {createRoom.error instanceof Error ? createRoom.error.message : "Could not create your room. Try again."}
+        </p>}
+      </section>
+    </div>}
+  </>;
 }

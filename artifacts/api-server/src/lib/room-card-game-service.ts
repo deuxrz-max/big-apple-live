@@ -374,7 +374,7 @@ export async function settleRoomCardGameForDevelopmentTest(
 }
 
 export async function advanceRoomCardGame(roomId: string, nowMs = Date.now()) {
-  if (!roomStore.isCommunity(roomId)) throw new RoomError(404, "Room not found.");
+  if (!roomStore.isSocialRoom(roomId)) throw new RoomError(404, "Room not found.");
   const settings = await getSettings();
   const clock = cardGameClock(nowMs);
   if (settings.dealsEnabled) await ensureGame(roomId, clock.gameNumber, clock.gameStartMs);
@@ -477,7 +477,7 @@ const cardGameTick = setInterval(() => {
   void (async () => {
     const settings = await getSettings();
     if (!settings.dealsEnabled && !settings.payoutsEnabled) return;
-    for (const roomId of roomStore.communityRoomIds()) await advanceRoomCardGame(roomId);
+    for (const roomId of roomStore.socialRoomIds()) await advanceRoomCardGame(roomId);
   })().catch(error => logger.warn({ error }, "Card-game scheduler tick failed"));
 }, CARD_GAME_TICK_MS);
 cardGameTick.unref();

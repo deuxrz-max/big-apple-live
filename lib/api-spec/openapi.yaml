@@ -2134,6 +2134,7 @@ components:
       type: object
       properties:
         hostParticipantId: { type: string, format: uuid }
+        roomType: { type: string, enum: [legacy, topic, social] }
         name: { type: string }
         capacity: { type: integer }
         roomId:

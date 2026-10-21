@@ -6,9 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Participant } from './participant';
+import type { RoomStateRoomType } from './roomStateRoomType';
 
 export interface RoomState {
   hostParticipantId: string;
+  roomType?: RoomStateRoomType;
   name: string;
   capacity: number;
   roomId: string;

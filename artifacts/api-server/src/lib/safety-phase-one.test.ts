@@ -7,10 +7,10 @@ import { eq, inArray, and } from "drizzle-orm";
 import { db, accountProfiles, chatRooms, chatAdmissions, chatModerators, profilePhotos, chatMemberships, roomMessages, chatReports, socialRelations } from "@workspace/db";
 import router from "../routes";
 import { initializeCommunities } from "./community";
-import { RoomStore, SESSION_TIMEOUT_MS } from "./room-store";
+import { RoomStore, SESSION_TIMEOUT_MS, roomStore } from "./room-store";
 import { deleteFixturePhoto } from "./profile-photo-storage";
 import { person } from "./social/core";
-import { GetMyProfileResponse, GetPhotoReviewQueueResponse, JoinAccountRoomResponse, GetChatDirectoryResponse, GetRoomMessagesResponse } from "@workspace/api-zod";
+import { CreateAccountRoomResponse, GetMyProfileResponse, GetPhotoReviewQueueResponse, JoinAccountRoomResponse, GetChatDirectoryResponse, GetRoomMessagesResponse } from "@workspace/api-zod";
 
 test("public community rooms allow more than 24 audience members and reconnects", () => {
   let now = 0;
@@ -34,6 +34,7 @@ test("real HTTP/DB/storage photo moderation and unlimited public rooms; syntheti
   const suffix = randomUUID().replaceAll("-", "").slice(0, 8);
   const ids = Array.from({ length: 32 }, (_, i) => `safety-fixture-${suffix}-${i}`);
   const photos: string[] = [];
+  const createdRoomIds: string[] = [];
   const app = express();
   app.use((req, _res, next) => {
     const actor = req.get("X-Fixture-User") ?? null;
@@ -59,6 +60,10 @@ test("real HTTP/DB/storage photo moderation and unlimited public rooms; syntheti
     await db.delete(chatReports).where(inArray(chatReports.reporterId, ids));
     await db.delete(roomMessages).where(inArray(roomMessages.authorAccountId, ids));
     await db.delete(chatMemberships).where(inArray(chatMemberships.accountId, ids));
+    for (const roomId of createdRoomIds) {
+      roomStore.discardSocialRoom(roomId);
+      await db.delete(chatRooms).where(eq(chatRooms.roomId, roomId));
+    }
     await db.delete(chatModerators).where(inArray(chatModerators.accountId, ids));
     await db.delete(chatAdmissions).where(inArray(chatAdmissions.accountId, ids));
     await db.delete(accountProfiles).where(inArray(accountProfiles.accountId, ids));
@@ -145,6 +150,42 @@ test("real HTTP/DB/storage photo moderation and unlimited public rooms; syntheti
     assert.equal(directory.some(room => room.roomId === "GAMING"), false);
     assert.equal((await db.select().from(chatRooms).where(eq(chatRooms.roomId, "GAMING"))).length, 1,
       "hidden room rows remain stored");
+
+    const created = await request(owner, "/account/rooms", {
+      method: "POST", ...json({ name: `Safety Room ${suffix}`, capacity: 9 }),
+    });
+    const createdPayload = await created.json();
+    assert.equal(created.status, 201, JSON.stringify(createdPayload));
+    const ownerSession = CreateAccountRoomResponse.parse(createdPayload);
+    const roomId = ownerSession.room.roomId;
+    createdRoomIds.push(roomId);
+    assert.equal(ownerSession.room.roomType, "social");
+    assert.equal(ownerSession.room.hostParticipantId, ownerSession.participantId);
+    assert.equal(roomStore.isCommunity(roomId), true);
+    assert.equal(roomStore.publicCommunityRoomIds().includes(roomId), false);
+    const guestResponse = await request(viewer, `/account/rooms/${roomId}/join`, { method: "POST" });
+    const guestPayload = await guestResponse.json();
+    assert.equal(guestResponse.status, 201, JSON.stringify(guestPayload));
+    const guestSession = JoinAccountRoomResponse.parse(guestPayload);
+    assert.equal(guestSession.room.roomType, "social");
+    const roomMessage = `Social room message ${suffix}`;
+    const sentMessage = await request(owner, `/account/rooms/${roomId}/messages`, {
+      method: "POST",
+      ...json({ text: roomMessage, kind: "text" }),
+      headers: { "Content-Type": "application/json", "X-Room-Session": ownerSession.participantSessionId },
+    });
+    assert.equal(sentMessage.status, 201, JSON.stringify(await sentMessage.clone().json()));
+    const guestHistory = GetRoomMessagesResponse.parse(await (await request(viewer, `/account/rooms/${roomId}/messages`, {
+      headers: { "X-Room-Session": guestSession.participantSessionId },
+    })).json());
+    assert.ok(guestHistory.some((message: { text: string }) => message.text === roomMessage));
+    const defaultRoom = await request(viewer, "/account/rooms", { method: "POST" });
+    const defaultPayload = await defaultRoom.json();
+    assert.equal(defaultRoom.status, 201, JSON.stringify(defaultPayload));
+    const defaultSession = CreateAccountRoomResponse.parse(defaultPayload);
+    createdRoomIds.push(defaultSession.room.roomId);
+    assert.equal(defaultSession.room.roomType, "social");
+    assert.equal(defaultSession.room.capacity, 0);
   });
   const sessions: { participantSessionId: string }[] = [];
   await t.test("audience beyond 24 stays in the same room with chat and moderation intact", async () => {

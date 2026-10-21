@@ -1315,8 +1315,18 @@ export interface Participant {
   isRegistered: boolean;
 }
 
+export type RoomStateRoomType = typeof RoomStateRoomType[keyof typeof RoomStateRoomType];
+
+
+export const RoomStateRoomType = {
+  legacy: 'legacy',
+  topic: 'topic',
+  social: 'social',
+} as const;
+
 export interface RoomState {
   hostParticipantId: string;
+  roomType?: RoomStateRoomType;
   name: string;
   capacity: number;
   roomId: string;
@@ -2413,8 +2423,18 @@ export interface Participant4b96100 {
   isRegistered: boolean;
 }
 
+export type RoomState4b96100RoomType = typeof RoomState4b96100RoomType[keyof typeof RoomState4b96100RoomType];
+
+
+export const RoomState4b96100RoomType = {
+  legacy: 'legacy',
+  topic: 'topic',
+  social: 'social',
+} as const;
+
 export interface RoomState4b96100 {
   hostParticipantId: string;
+  roomType?: RoomState4b96100RoomType;
   name: string;
   capacity: number;
   roomId: string;

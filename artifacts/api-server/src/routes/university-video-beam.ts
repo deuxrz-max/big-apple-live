@@ -70,6 +70,10 @@ import {
 
 const router = Router();
 const webSeriesMidnightTimers = new Map<string, { dueAt: number; timer: ReturnType<typeof setTimeout> }>();
+async function mayControlRoomSpeakers(roomId: string, accountId: string): Promise<boolean> {
+  if (roomStore.isSocialRoom(roomId) && roomStore.hostAccountId(roomId) === accountId) return true;
+  return mayModerateAppRunRoom(await isExistingModerator(accountId));
+}
 universityVideoBeamStore.setAutomaticVideoStartListener((roomId, videoId, metadata) => {
   scheduleBeamTvVideoStart(roomId, videoId, metadata);
 });
@@ -1410,8 +1414,8 @@ router.post("/account/rooms/:roomId/video-beam/actions", async (req, res) => {
       }
       case "host-mute-mic": {
         if (!input.data.targetParticipantId) throw new RoomError(400, "Choose a speaker first.");
-        if (!mayModerateAppRunRoom(await isExistingModerator(id))) {
-          throw new RoomError(403, "Only an existing moderator can control speakers in this app-run room.");
+        if (!(await mayControlRoomSpeakers(roomId, id))) {
+          throw new RoomError(403, "Only this room's host or an existing moderator can control speakers.");
         }
         const target = input.data.targetParticipantId;
         const media = "mic";
@@ -1428,8 +1432,8 @@ router.post("/account/rooms/:roomId/video-beam/actions", async (req, res) => {
         if (!input.data.targetParticipantId) throw new RoomError(400, "Choose a speaker first.");
         const target = input.data.targetParticipantId;
         if (target === participant.participantId) throw new RoomError(400, "You cannot remove yourself from the room.");
-        if (!mayModerateAppRunRoom(await isExistingModerator(id))) {
-          throw new RoomError(403, "Only an existing moderator can remove someone from this app-run room.");
+        if (!(await mayControlRoomSpeakers(roomId, id))) {
+          throw new RoomError(403, "Only this room's host or an existing moderator can remove someone.");
         }
         const targetAccountId = roomStore.sessionAccountId(roomId, target);
         if (!targetAccountId) throw new RoomError(404, "That person is no longer in this room.");

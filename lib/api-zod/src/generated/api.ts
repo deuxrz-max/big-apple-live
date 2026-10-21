@@ -3736,6 +3736,7 @@ export const CreateAccountRoomResponse = zod.object({
   "participantId": zod.string().uuid(),
   "room": zod.object({
   "hostParticipantId": zod.string().uuid(),
+  "roomType": zod.enum(['legacy', 'topic', 'social']).optional(),
   "name": zod.string(),
   "capacity": zod.number().int(),
   "roomId": zod.string(),
@@ -3786,6 +3787,7 @@ export const JoinAccountRoomResponse = zod.object({
   "participantId": zod.string().uuid(),
   "room": zod.object({
   "hostParticipantId": zod.string().uuid(),
+  "roomType": zod.enum(['legacy', 'topic', 'social']).optional(),
   "name": zod.string(),
   "capacity": zod.number().int(),
   "roomId": zod.string(),
@@ -4017,6 +4019,7 @@ export const CreateRoomResponse = zod.object({
   "participantId": zod.string().uuid(),
   "room": zod.object({
   "hostParticipantId": zod.string().uuid(),
+  "roomType": zod.enum(['legacy', 'topic', 'social']).optional(),
   "name": zod.string(),
   "capacity": zod.number().int(),
   "roomId": zod.string(),
@@ -4067,6 +4070,7 @@ export const getRoomResponseParticipantsItemIdentityOneHairColorRegExp = new Reg
 
 export const GetRoomResponse = zod.object({
   "hostParticipantId": zod.string().uuid(),
+  "roomType": zod.enum(['legacy', 'topic', 'social']).optional(),
   "name": zod.string(),
   "capacity": zod.number().int(),
   "roomId": zod.string(),
@@ -4127,6 +4131,7 @@ export const JoinRoomResponse = zod.object({
   "participantId": zod.string().uuid(),
   "room": zod.object({
   "hostParticipantId": zod.string().uuid(),
+  "roomType": zod.enum(['legacy', 'topic', 'social']).optional(),
   "name": zod.string(),
   "capacity": zod.number().int(),
   "roomId": zod.string(),
@@ -4310,6 +4315,7 @@ export const controlRoomMicrophoneResponseParticipantsItemIdentityOneHairColorRe
 
 export const ControlRoomMicrophoneResponse = zod.object({
   "hostParticipantId": zod.string().uuid(),
+  "roomType": zod.enum(['legacy', 'topic', 'social']).optional(),
   "name": zod.string(),
   "capacity": zod.number().int(),
   "roomId": zod.string(),

@@ -6,9 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Participant4b96100 } from './participant4b96100';
+import type { RoomState4b96100RoomType } from './roomState4b96100RoomType';
 
 export interface RoomState4b96100 {
   hostParticipantId: string;
+  roomType?: RoomState4b96100RoomType;
   name: string;
   capacity: number;
   roomId: string;
