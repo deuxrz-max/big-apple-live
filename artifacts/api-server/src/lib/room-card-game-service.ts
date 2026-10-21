@@ -1,15 +1,18 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import {
-  accountProfiles, db, roomCardGameDeals, roomCardGameResults, roomCardGameRuns,
-  roomCardGameSeats, roomCardGameSettings, socialLedger, socialWallets,
+  accountProfiles, db, socialLedger, socialWallets,
 } from "@workspace/db";
+import {
+  roomCardGameDeals, roomCardGameResults, roomCardGameRuns,
+  roomCardGameSeats, roomCardGameSettings,
+} from "@workspace/db/schema";
 import { logger } from "./logger";
 import { RoomError, roomStore } from "./room-store";
 import { lockAccounts } from "./social/core";
 import { universityVideoBeamStore } from "./university-video-beam";
 import {
   CARD_DEAL_INTERVAL_MS, CARD_GAME_PERIOD_MS, CARD_GAME_PRIZE, CARD_RECONNECT_GRACE_MS,
-  cardGameClock, compareHandScores, dealCardsForSeats, parseCardCode, scoreFiveCardHand,
+  cardGameClock, cardGamePrizeEligible, compareHandScores, dealCardsForSeats, parseCardCode, scoreFiveCardHand,
   securelyShuffledDeck, splitRoomPrize, type PrizeWinner,
 } from "./room-card-game-policy";
 
@@ -21,6 +24,7 @@ type GameSettings = {
   dealsEnabled: boolean;
   payoutsEnabled: boolean;
   cardDisplayEnabled: boolean;
+  dealsEnabledAt: Date | null;
   dailyWinningsCap: number | null;
 };
 
@@ -151,7 +155,11 @@ async function settleGame(
     });
   }
 
-  if (eligible.length < 3) {
+  if (!cardGamePrizeEligible(eligible.length)) {
+    await tx.update(roomCardGameSeats).set({ status: "out", graceUntil: null }).where(and(
+      eq(roomCardGameSeats.roomId, roomId), eq(roomCardGameSeats.gameNumber, gameNumber),
+      eq(roomCardGameSeats.status, "active"),
+    ));
     await tx.insert(roomCardGameResults).values({
       roomId, gameNumber, status: "no_prize",
       announcement: "No prize was paid because fewer than three eligible accounts played.",
@@ -162,6 +170,10 @@ async function settleGame(
   }
 
   if (!payoutsEnabled) {
+    await tx.update(roomCardGameSeats).set({ status: "out", graceUntil: null }).where(and(
+      eq(roomCardGameSeats.roomId, roomId), eq(roomCardGameSeats.gameNumber, gameNumber),
+      eq(roomCardGameSeats.status, "active"),
+    ));
     await tx.insert(roomCardGameResults).values({
       roomId, gameNumber, status: "no_prize",
       announcement: "No prize was paid because card-game payouts are switched off.",
@@ -193,6 +205,10 @@ async function settleGame(
       eq(roomCardGameSeats.accountId, share.accountId),
     ));
   }
+  await tx.update(roomCardGameSeats).set({ status: "out", graceUntil: null }).where(and(
+    eq(roomCardGameSeats.roomId, roomId), eq(roomCardGameSeats.gameNumber, gameNumber),
+    eq(roomCardGameSeats.status, "active"),
+  ));
   const announcement = shares.length === 1
     ? `${shares[0]!.username} is the winner`
     : `We have a tie: ${shares.map(share => `${share.username} (${share.coins} coins)`).join(", ")}`;
@@ -206,7 +222,7 @@ async function settleGame(
     .where(and(eq(roomCardGameRuns.roomId, roomId), eq(roomCardGameRuns.gameNumber, gameNumber)));
 }
 
-async function advanceGame(roomId: string, gameNumber: number, nowMs: number, settings: GameSettings) {
+async function advanceGame(roomId: string, gameNumber: number, nowMs: number) {
   const [run] = await db.select().from(roomCardGameRuns).where(and(
     eq(roomCardGameRuns.roomId, roomId), eq(roomCardGameRuns.gameNumber, gameNumber),
   )).limit(1);
@@ -214,12 +230,17 @@ async function advanceGame(roomId: string, gameNumber: number, nowMs: number, se
 
   await db.transaction(async tx => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${"card-game:" + roomId + ":" + gameNumber}, 0))`);
+    const [currentSettings] = await tx.select().from(roomCardGameSettings)
+      .where(eq(roomCardGameSettings.id, SETTINGS_ID)).for("update").limit(1);
+    if (!currentSettings) throw new Error("Card-game settings are unavailable");
     const [current] = await tx.select().from(roomCardGameRuns).where(and(
       eq(roomCardGameRuns.roomId, roomId), eq(roomCardGameRuns.gameNumber, gameNumber),
     )).for("update").limit(1);
     if (!current || current.status === "paid" || current.status === "void") return;
     const gameStartMs = current.gameStartAt.getTime();
     const gameEndMs = gameStartMs + CARD_GAME_PERIOD_MS;
+    if (current.cardsDealt === 0 && currentSettings.dealsEnabledAt
+      && currentSettings.dealsEnabledAt.getTime() > gameStartMs) return;
 
     if (nowMs >= gameEndMs && current.cardsDealt < 5
       && !(current.cardsDealt === 4 && nowMs - gameEndMs <= CARD_DEAL_SCHEDULER_GRACE_MS)) {
@@ -227,9 +248,10 @@ async function advanceGame(roomId: string, gameNumber: number, nowMs: number, se
       return;
     }
 
+    await updateSeatPresence(tx, roomId, gameNumber, new Date(nowMs));
     const dueDeals = Math.max(0, Math.min(5, Math.floor((nowMs - gameStartMs) / CARD_DEAL_INTERVAL_MS)));
     let dealtCount = current.cardsDealt;
-    while (settings.dealsEnabled && dealtCount < dueDeals) {
+    while (currentSettings.dealsEnabled && dealtCount < dueDeals) {
       const dealNumber = dealtCount + 1;
       if (dealNumber === 1) await lockInFirstDealSeats(tx, roomId, gameNumber);
       await updateSeatPresence(tx, roomId, gameNumber, new Date(nowMs));
@@ -253,7 +275,7 @@ async function advanceGame(roomId: string, gameNumber: number, nowMs: number, se
     if (dealtCount >= 5) {
       await tx.update(roomCardGameRuns).set({ status: "showdown", updatedAt: new Date(nowMs) })
         .where(and(eq(roomCardGameRuns.roomId, roomId), eq(roomCardGameRuns.gameNumber, gameNumber)));
-      await settleGame(tx, roomId, gameNumber, settings.payoutsEnabled);
+      await settleGame(tx, roomId, gameNumber, currentSettings.payoutsEnabled);
     }
   });
 }
@@ -269,7 +291,7 @@ export async function advanceRoomCardGame(roomId: string, nowMs = Date.now()) {
       eq(roomCardGameRuns.roomId, roomId),
       inArray(roomCardGameRuns.status, ["running", "showdown"]),
     ));
-  for (const game of outstanding) await advanceGame(roomId, game.gameNumber, nowMs, settings);
+  for (const game of outstanding) await advanceGame(roomId, game.gameNumber, nowMs);
   return { settings, clock };
 }
 
@@ -298,10 +320,13 @@ export async function getRoomCardGameView(roomId: string, accountId: string, now
       eq(roomCardGameResults.gameNumber, clock.gameNumber - 1),
     )).limit(1)
     : [];
+  const [run] = await db.select({ cardsDealt: roomCardGameRuns.cardsDealt }).from(roomCardGameRuns)
+    .where(and(eq(roomCardGameRuns.roomId, roomId), eq(roomCardGameRuns.gameNumber, clock.gameNumber)))
+    .limit(1);
   return {
     serverNow: new Date(clock.serverNowMs).toISOString(),
     gameNumber: clock.gameNumber,
-    cardsDealt: clock.cardsDealt,
+    cardsDealt: run?.cardsDealt ?? 0,
     nextDealTime: clock.nextDealAtMs === null ? null : new Date(clock.nextDealAtMs).toISOString(),
     nextGameStart: new Date(clock.nextGameStartMs).toISOString(),
     inThisGame: seat?.status === "active",
@@ -320,9 +345,20 @@ export async function getRoomCardGameSettings() {
 export async function updateRoomCardGameSettings(update: Partial<Pick<GameSettings,
   "dealsEnabled" | "payoutsEnabled" | "cardDisplayEnabled">>) {
   await getSettings();
-  const [settings] = await db.update(roomCardGameSettings).set({
-    ...update, updatedAt: new Date(),
-  }).where(eq(roomCardGameSettings.id, SETTINGS_ID)).returning();
+  const settings = await db.transaction(async tx => {
+    const [current] = await tx.select().from(roomCardGameSettings)
+      .where(eq(roomCardGameSettings.id, SETTINGS_ID)).for("update").limit(1);
+    if (!current) throw new Error("Card-game settings are unavailable");
+    const now = new Date();
+    const [changed] = await tx.update(roomCardGameSettings).set({
+      ...update,
+      ...(update.dealsEnabled === undefined ? {} : {
+        dealsEnabledAt: update.dealsEnabled ? now : null,
+      }),
+      updatedAt: now,
+    }).where(eq(roomCardGameSettings.id, SETTINGS_ID)).returning();
+    return changed;
+  });
   return settings!;
 }
 
@@ -333,7 +369,12 @@ export async function cancelRoomCardGame(roomId: string, reason: string) {
   if (!run) return;
   await db.transaction(async tx => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${"card-game:" + roomId + ":" + run.gameNumber}, 0))`);
-    await recordVoid(tx, roomId, run.gameNumber, reason);
+    const [current] = await tx.select().from(roomCardGameRuns).where(and(
+      eq(roomCardGameRuns.roomId, roomId), eq(roomCardGameRuns.gameNumber, run.gameNumber),
+    )).for("update").limit(1);
+    if (current && ["running", "showdown"].includes(current.status)) {
+      await recordVoid(tx, roomId, run.gameNumber, reason);
+    }
   });
 }
 
@@ -345,3 +386,7 @@ const cardGameTick = setInterval(() => {
   })().catch(error => logger.warn({ error }, "Card-game scheduler tick failed"));
 }, CARD_GAME_TICK_MS);
 cardGameTick.unref();
+roomStore.setCommunityEndListener(roomId => {
+  void cancelRoomCardGame(roomId, "The room session ended.")
+    .catch(error => logger.warn({ roomId, error }, "Could not void a card game when its room ended"));
+});

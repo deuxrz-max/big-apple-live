@@ -24,6 +24,9 @@ function safeBeamError(error: unknown, fallback: string): string {
   if ((errStatus(error) ?? 0) >= 500 || /internal server error/i.test(message)) return fallback;
   return message;
 }
+function isRoomAccessFailure(error: unknown): boolean {
+  return [403, 409].includes(errStatus(error) ?? 0);
+}
 import type { RefObject } from "react";
 
 type BeamConnection = "idle" | "connecting" | "connected" | "error";
@@ -197,6 +200,21 @@ export function useUniversityVideoBeam(
       const room = new Room({ adaptiveStream: true, dynacast: true });
       roomRef.current = room;
       roleRef.current = "audience";
+      let accessRejected = false;
+      let accessProbe: Promise<void> | null = null;
+      const checkReconnectAccess = () => {
+        if (accessProbe || accessRejected) return;
+        const current = latest.current;
+        accessProbe = getUniversityVideoBeamState(current.roomId, {
+          headers: headers(current.roomSessionId), credentials: "include",
+        }).then(() => undefined).catch(async failure => {
+          if (!isRoomAccessFailure(failure) || roomRef.current !== room || !activeRef.current) return;
+          accessRejected = true;
+          setConnection("error");
+          setError(safeBeamError(failure, "You've been removed from the room"));
+          await room.disconnect().catch(() => undefined);
+        }).finally(() => { accessProbe = null; });
+      };
       const refreshMedia = () => {
         const snapshot: MediaMap = {};
         for (const participant of room.remoteParticipants.values()) {
@@ -228,7 +246,10 @@ export function useUniversityVideoBeam(
       room.on(RoomEvent.ConnectionStateChanged, state => {
         if (roomRef.current !== room) return;
         if (state === "connected") setConnection("connected");
-        if (state === "reconnecting") setConnection("connecting");
+        if (state === "reconnecting") {
+          setConnection("connecting");
+          checkReconnectAccess();
+        }
         if (state === "disconnected" && activeRef.current) {
           setConnection("error");
           setError("The live connection ended. Rejoin an open speaker spot or wait for the room to reconnect.");
@@ -240,7 +261,17 @@ export function useUniversityVideoBeam(
         roleRef.current = null;
         setMedia({});
         setConnection("error");
-        setError("The live connection ended. Rejoin an open speaker spot or wait for the room to reconnect.");
+        if (!accessRejected) {
+          setError("The live connection ended. Rejoin an open speaker spot or wait for the room to reconnect.");
+          const current = latest.current;
+          void getUniversityVideoBeamState(current.roomId, {
+            headers: headers(current.roomSessionId), credentials: "include",
+          }).catch(failure => {
+            if (activeRef.current && isRoomAccessFailure(failure)) {
+              setError(safeBeamError(failure, "You've been removed from the room"));
+            }
+          });
+        }
       });
       await room.connect(token.url, token.token, { autoSubscribe: false });
       if (!activeRef.current) {
@@ -385,9 +416,25 @@ export function useUniversityVideoBeam(
         credentials: "include",
       });
       room = new Room({ adaptiveStream: true, dynacast: true });
-      roomRef.current = room;
+      const connectedRoom = room;
+      roomRef.current = connectedRoom;
       roleRef.current = "speaker";
       speakerReadyRef.current = false;
+      let accessRejected = false;
+      let accessProbe: Promise<void> | null = null;
+      const checkReconnectAccess = () => {
+        if (accessProbe || accessRejected) return;
+        const current = latest.current;
+        accessProbe = getUniversityVideoBeamState(current.roomId, {
+          headers: headers(current.roomSessionId), credentials: "include",
+        }).then(() => undefined).catch(async failure => {
+          if (!isRoomAccessFailure(failure) || roomRef.current !== connectedRoom || !activeRef.current) return;
+          accessRejected = true;
+          setConnection("error");
+          setError(safeBeamError(failure, "You've been removed from the room"));
+          await connectedRoom.disconnect().catch(() => undefined);
+        }).finally(() => { accessProbe = null; });
+      };
       const refreshMedia = () => {
         const snapshot: MediaMap = {};
         for (const participant of room!.remoteParticipants.values()) {
@@ -420,7 +467,10 @@ export function useUniversityVideoBeam(
       room.on(RoomEvent.ConnectionStateChanged, state => {
         if (roomRef.current !== room) return;
         if (state === "connected") setConnection("connected");
-        if (state === "reconnecting") setConnection("connecting");
+        if (state === "reconnecting") {
+          setConnection("connecting");
+          checkReconnectAccess();
+        }
       });
       room.on(RoomEvent.Disconnected, () => {
         if (!activeRef.current || roomRef.current !== room) return;
@@ -431,7 +481,19 @@ export function useUniversityVideoBeam(
         stopTracks(tracksRef.current);
         tracksRef.current = [];
         setConnection("error");
-        setError("Your live connection ended. Your speaker spot was released; tap to rejoin.");
+        if (accessRejected) {
+          setError("You've been removed from the room");
+        } else {
+          setError("Your live connection ended. Your speaker spot was released; tap to rejoin.");
+          const current = latest.current;
+          void getUniversityVideoBeamState(current.roomId, {
+            headers: headers(current.roomSessionId), credentials: "include",
+          }).catch(failure => {
+            if (activeRef.current && isRoomAccessFailure(failure)) {
+              setError(safeBeamError(failure, "You've been removed from the room"));
+            }
+          });
+        }
         void doAction(args, { action: "leave-slot" }).catch(() => undefined);
       });
       await room.connect(token.url, token.token, { autoSubscribe: false });

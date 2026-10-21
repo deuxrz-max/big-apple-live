@@ -15,6 +15,7 @@ import { GiftComboPlayer, type GiftComboNotice } from "@/gifts/GiftComboPlayer";
 import { appendUniqueGiftEvents, finishGiftQueueItem } from "@/gifts/gift-combo-policy";
 import { SafetyReportDialog } from "@/safety/SafetyReportDialog";
 import { ShinyName } from "@/components/ShinyName";
+import { isLiveStreamEventVisible } from "./liveChatBlockPolicy";
 import {
   hostLiveSession, leaveViewerLiveSession, viewerLiveSession,
   type HostLiveSnapshot, type ViewerLiveSnapshot,
@@ -78,7 +79,7 @@ function useLiveChat(streamId: string, enabled: boolean, blocked: string[], onGi
         const item = JSON.parse(event.data) as LiveStreamChatMessage;
         if (!item.id || !item.username || !item.text) return;
         setConnectionMessage("");
-        if (blockedNames.has(item.username.toLowerCase())) return;
+        if (!isLiveStreamEventVisible("message", item.username, blockedNames)) return;
         setMessages(current => current.some(existing => existing.id === item.id)
           ? current : [...current, item].slice(-120));
       } catch { /* Ignore malformed events. */ }
@@ -87,7 +88,7 @@ function useLiveChat(streamId: string, enabled: boolean, blocked: string[], onGi
       try {
         const gift = JSON.parse(event.data) as GiftNotice;
         if (!gift.id || !gift.senderUsername || !gift.giftId || seenGiftIds.current.has(gift.id)
-          || blockedNames.has(gift.senderUsername.toLowerCase())) return;
+          || !isLiveStreamEventVisible("gift", gift.senderUsername, blockedNames)) return;
         seenGiftIds.current.add(gift.id);
         const age = gift.createdAt ? Date.now() - new Date(gift.createdAt).getTime() : Number.POSITIVE_INFINITY;
         const recentHistoryEvent = !animate && age >= -5000 && age <= 10_000;
@@ -124,7 +125,9 @@ function useLiveChat(streamId: string, enabled: boolean, blocked: string[], onGi
 
   useEffect(() => {
     const excluded = new Set(blocked.map(name => name.toLowerCase()));
-    setMessages(current => current.filter(message => !excluded.has(message.username.toLowerCase())));
+    setMessages(current => current.filter(message =>
+      isLiveStreamEventVisible("message", message.username, excluded),
+    ));
   }, [blockedKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -222,9 +225,8 @@ function liveGiftRecipients(
   room: HostLiveSnapshot["room"],
   hostUsername: string,
   hostDisplayName: string,
-  blocked: ReadonlySet<string>,
 ) {
-  if (!room || !hostUsername || blocked.has(hostUsername.toLowerCase())) return [];
+  if (!room || !hostUsername) return [];
   return [{ username: hostUsername, displayName: hostDisplayName || hostUsername, isHost: true }];
 }
 
@@ -240,7 +242,6 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
   const queryClient = useQueryClient();
   const blocks = useGetSocialBlocks({ query: { queryKey: getGetSocialBlocksQueryKey(), refetchInterval: 10_000 } });
   const blocked = useMemo(() => blocks.data?.people.map(person => person.username) ?? [], [blocks.data?.people]);
-  const blockedLower = useMemo(() => new Set(blocked.map(name => name.toLowerCase())), [blocked]);
   const setRelationship = useSetSocialRelationship();
   const session = hostMode ? hostState?.session : viewerState?.session;
   const hostUsername = session?.username ?? "";
@@ -266,6 +267,11 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
   const [profileAction, setProfileAction] = useState<ActionTarget | null>(null);
   const [reportTarget, setReportTarget] = useState<ReportTarget | null>(null);
   const [cameraBlocked, setCameraBlocked] = useState(false);
+  const [canManageStream, setCanManageStream] = useState(false);
+  const [roomBlocks, setRoomBlocks] = useState<Array<{ accountId: string; username: string }>>([]);
+  const [roomBlockPanelOpen, setRoomBlockPanelOpen] = useState(false);
+  const [roomBlockUsername, setRoomBlockUsername] = useState("");
+  const [moderationBusy, setModerationBusy] = useState(false);
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const shareTimer = useRef<number | undefined>(undefined);
   const status = hostMode
@@ -294,15 +300,30 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
   }, []));
   const gifterTotals = useMemo(() => {
     return [...liveGifters.values()]
-      .filter(item => !blockedLower.has(item.username.toLowerCase()))
       .sort((a, b) => b.coins - a.coins)
       .slice(0, 3);
-  }, [blockedLower, liveGifters]);
+  }, [liveGifters]);
   const following = hostPerson.data?.favorite ?? false;
   const myName = ownProfile.data?.profile.username ?? ownUsername;
   const myDisplayName = ownProfile.data?.profile.displayName || myName;
   const giftRoom = hostMode ? hostState?.room ?? null : viewerState?.room ?? null;
-  const giftRecipients = liveGiftRecipients(giftRoom, hostUsername, displayName, blockedLower);
+  const giftRecipients = liveGiftRecipients(giftRoom, hostUsername, displayName);
+  const refreshRoomBlocks = useCallback(async () => {
+    const response = await fetch(liveEndpoint(streamId, "host-blocks"), {
+      credentials: "include", cache: "no-store",
+    });
+    if (!response.ok) {
+      setCanManageStream(false);
+      return;
+    }
+    const data = await response.json() as { people?: Array<{ accountId: string; username: string }> };
+    setCanManageStream(true);
+    setRoomBlocks(data.people ?? []);
+  }, [streamId]);
+  useEffect(() => {
+    if (!chatReady) return;
+    void refreshRoomBlocks().catch(() => setCanManageStream(false));
+  }, [chatReady, refreshRoomBlocks]);
 
   const markCameraBlocked = useCallback(() => setCameraBlocked(true), []);
   const retryCameraPlayback = useCallback(async () => {
@@ -330,7 +351,9 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
   }, [streamId]);
 
   const profileFor = (username: string, name: string, color?: string, tier?: number) => {
-    if (username && !blockedLower.has(username.toLowerCase())) setProfileAction({ username, displayName: name, displayNameColor: color, displayNameTierIndex: tier });
+    if (username && username.toLowerCase() !== ownUsername.toLowerCase()) {
+      setProfileAction({ username, displayName: name, displayNameColor: color, displayNameTierIndex: tier });
+    }
   };
   const closeProfile = () => setProfileAction(null);
   const openStreamReport = () => hostUsername && setReportTarget({ targetType: "stream", targetUsername: hostUsername, streamId });
@@ -341,10 +364,51 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
       onSuccess: () => {
         void queryClient.invalidateQueries({ queryKey: getGetSocialBlocksQueryKey() });
         setProfileAction(null);
-        if (!hostMode && target.username.toLowerCase() === hostUsername.toLowerCase()) onLeave?.();
       },
       onError: () => setError("That account could not be blocked right now. Try again."),
     });
+  };
+  const setHostRoomBlock = async (username: string, active: boolean) => {
+    if (moderationBusy) return;
+    setModerationBusy(true);
+    try {
+      const path = hostMode
+        ? `${base}api/account/host-room-blocks/${encodeURIComponent(username)}`
+        : liveEndpoint(streamId, `host-blocks/${encodeURIComponent(username)}`);
+      const response = await fetch(path, {
+        method: "PUT", credentials: "include", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active }),
+      });
+      if (!response.ok) throw new Error("Host room block update failed");
+      await refreshRoomBlocks();
+      setProfileAction(null);
+    } catch {
+      setError("Could not update this host-room block right now.");
+    } finally {
+      setModerationBusy(false);
+    }
+  };
+  const kickSelected = async () => {
+    if (!profileAction || moderationBusy) return;
+    setModerationBusy(true);
+    try {
+      const response = await fetch(liveEndpoint(streamId, `kick/${encodeURIComponent(profileAction.username)}`), {
+        method: "POST", credentials: "include",
+      });
+      if (!response.ok) throw new Error("Room removal failed");
+      setProfileAction(null);
+    } catch {
+      setError("Could not remove this person from the room right now.");
+    } finally {
+      setModerationBusy(false);
+    }
+  };
+  const blockEnteredUsername = async (event: FormEvent) => {
+    event.preventDefault();
+    const username = roomBlockUsername.trim();
+    if (!username) return;
+    await setHostRoomBlock(username, true);
+    setRoomBlockUsername("");
   };
   const follow = () => {
     if (!hostUsername || setRelationship.isPending) return;
@@ -486,8 +550,26 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
               aria-label={muted ? "Unmute microphone" : "Mute microphone"} aria-pressed={!muted}>{muted ? <MicOff size={18} /> : <Mic size={18} />}<span>{muted ? "Mic off" : "Mic on"}</span></button>
             <button type="button" onClick={() => void share()} aria-label="Share stream link"><Share2 size={18} /><span>Share</span></button>
           </div>}
+          {canManageStream && <div className="st-live-host-controls">
+            <button type="button" aria-expanded={roomBlockPanelOpen} onClick={() => setRoomBlockPanelOpen(value => !value)}>
+              <Ban size={18} /><span>Blocks</span>
+            </button>
+          </div>}
       </div>
     </div>
+    {roomBlockPanelOpen && canManageStream && <section className="st-live-block-panel" aria-label="People blocked from this host's rooms">
+      <strong>Blocked from this host’s rooms</strong>
+      <form onSubmit={event => void blockEnteredUsername(event)}>
+        <label className="st-live-sr" htmlFor="st-live-block-username">Username to block</label>
+        <input id="st-live-block-username" value={roomBlockUsername} onChange={event => setRoomBlockUsername(event.target.value)}
+          maxLength={40} placeholder="Username" autoComplete="off" />
+        <button type="submit" disabled={moderationBusy || !roomBlockUsername.trim()}>Block</button>
+      </form>
+      {roomBlocks.length ? <ul>{roomBlocks.map(person => <li key={person.accountId}>
+        <span>{person.username}</span>
+        <button type="button" disabled={moderationBusy} onClick={() => void setHostRoomBlock(person.username, false)}>Unblock</button>
+      </li>)}</ul> : <p>No one is blocked from this host’s rooms.</p>}
+    </section>}
     {audioTrack && <RemoteAudio track={audioTrack} />}
     {giftOpen && <GiftBag recipients={giftRecipients} streamId={streamId} onClose={() => setGiftOpen(false)} />}
     {activeGift && <GiftComboPlayer
@@ -506,6 +588,12 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
           <Flag size={16} /> Report user
         </button>
         {!hostMode && <button type="button" onClick={() => { openStreamReport(); setProfileAction(null); }}><Flag size={16} /> Report stream</button>}
+        {canManageStream && profileAction.username.toLowerCase() !== ownUsername.toLowerCase() && <>
+          <button type="button" disabled={moderationBusy} onClick={() => void kickSelected()}><X size={16} /> Remove from this room</button>
+          <button type="button" disabled={moderationBusy} onClick={() => void setHostRoomBlock(profileAction.username, true)}>
+            <Ban size={16} /> Block from this host’s rooms
+          </button>
+        </>}
         <button type="button" disabled={setRelationship.isPending} onClick={blockSelectedUser}><Ban size={16} /> Block</button>
       </section>
     </div>}

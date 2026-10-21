@@ -11,6 +11,7 @@ export const roomCardGameSettings = pgTable("room_card_game_settings", {
   dealsEnabled: boolean("deals_enabled").notNull().default(false),
   payoutsEnabled: boolean("payouts_enabled").notNull().default(false),
   cardDisplayEnabled: boolean("card_display_enabled").notNull().default(false),
+  dealsEnabledAt: timestamp("deals_enabled_at", { withTimezone: true }),
   dailyWinningsCap: integer("daily_winnings_cap"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, t => [check("room_card_game_daily_cap_nonnegative", sql`${t.dailyWinningsCap} IS NULL OR ${t.dailyWinningsCap} >= 0`)]);

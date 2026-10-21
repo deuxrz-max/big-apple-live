@@ -46,8 +46,7 @@ import {
 import { serveMonthlyCreditTierEntranceEffectMedia, serveRoomEntranceEffectMedia } from "../lib/room-entry-effect-media";
 import { clearThread, inbox, sendMessage, thread } from "../lib/social/messages";
 import { favoritesGallery, favoriteRoom } from "../lib/social/favorites";
-import { liveStreamIdForAccount, liveStreamRoomName, requireLiveStreamGiftAccess } from "../lib/live-stream-policy";
-import { liveKitBeamService } from "../lib/livekit";
+import { requireLiveStreamGiftAccess } from "../lib/live-stream-policy";
 import { getDeveloperContentSyncStatus, runDeveloperContentSync } from "../lib/developer-content-sync";
 import { getHangoutRewardSettings, setHangoutRewardInterval } from "../lib/community-hangout-rewards";
 import { liveStreamChatHub } from "../lib/live-stream-chat";
@@ -747,28 +746,6 @@ router.put("/social/people/:username/relationship", async (req, res): Promise<vo
   const actorId = accountId(req);
   const targetUsername = name(req.params.username);
   const result = await relationship(actorId, targetUsername, input.data.kind, input.data.active);
-  if (input.data.kind === "block" && input.data.active) {
-    const [target] = await db.select({ accountId: accountProfiles.accountId }).from(accountProfiles)
-      .where(sql`lower(${accountProfiles.username}) = lower(${targetUsername})`).limit(1);
-    if (target) {
-      const livePairs = [
-        { ownerId: actorId, viewerId: target.accountId },
-        { ownerId: target.accountId, viewerId: actorId },
-      ];
-      for (const pair of livePairs) {
-        const roomName = liveStreamRoomName(liveStreamIdForAccount(pair.ownerId));
-        const viewerIdentity = `viewer-${liveStreamIdForAccount(pair.viewerId)}`;
-        try {
-          const participants = await liveKitBeamService.listParticipants(roomName);
-          if (participants.some(participant => participant.identity === viewerIdentity)) {
-            await liveKitBeamService.removeParticipant(roomName, viewerIdentity);
-          }
-        } catch (error) {
-          req.log.warn({ error }, "Blocked livestream viewer could not be disconnected immediately");
-        }
-      }
-    }
-  }
   res.json(result);
 });
 router.get("/social/blocks", async (req, res): Promise<void> => { res.json(GetSocialPeopleResponse.parse(await blocks(accountId(req)))); });

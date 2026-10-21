@@ -85,7 +85,7 @@ export function ProfileMenu({ name, username, blocked, pending, onBlock }: { nam
         <div className="pf-dialog" role="dialog" aria-modal="true" aria-labelledby="pf-dlg-t">
           <>
             <h2 id="pf-dlg-t">Block {name}?</h2>
-            <p>Blocking hides this person's messages, gifts, room audio and live streams from you. They are not notified.</p>
+            <p>Blocking stops direct messages and whispers both ways and hides each other’s public room chat. It does not remove or mute either person in a room.</p>
             <div className="pf-dlg-acts">
               <button type="button" className="pf-btn pf-btn-fill" autoFocus disabled={pending} onClick={() => { onBlock(true); setDlg(null); }} data-testid="button-confirm-block">Yes, block</button>
               <button type="button" className="pf-btn" onClick={() => setDlg(null)}>Cancel</button>

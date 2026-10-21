@@ -32,3 +32,9 @@ When probing alpha in a browser canvas, crop a source pixel rather than scaling 
 **Why:** Scaling the whole frame averages opaque subject pixels into a sample that was intended to check a transparent corner, producing a false opaque result.
 
 **How to apply:** Use the 9-argument `drawImage` overload to copy a known transparent source corner into the 1×1 test canvas.
+
+Some bundled API profile/social tests can stop before assertions when the Linux Sharp runtime is unavailable; externalizing Sharp from a `/tmp` bundle may instead fail module resolution.
+
+**Why:** These are runner dependency failures, not evidence that the test assertions or application behavior failed.
+
+**How to apply:** Report the suite as blocked unless the existing runtime can load Sharp; do not change application dependencies only to force that test command to run.

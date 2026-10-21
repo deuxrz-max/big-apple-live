@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   CARD_GAME_EPOCH_MS, CARD_GAME_PERIOD_MS, CARD_DEAL_INTERVAL_MS,
-  cardGameClock, compareHandScores, createDeck, dealCardsForSeats, scoreFiveCardHand,
+  cardGameClock, cardGamePrizeEligible, compareHandScores, createDeck, dealCardsForSeats, scoreFiveCardHand,
   securelyShuffledDeck, splitRoomPrize,
 } from "./room-card-game-policy";
 
@@ -33,7 +33,7 @@ test("scores every hand category from best to worst, including all wild-twos", (
   const hands = [
     ["AS", "AH", "AD", "AC", "2S"],
     ["9S", "10S", "JS", "QS", "2H"],
-    ["AS", "AH", "AD", "2C", "KS"],
+    ["AS", "AH", "AD", "AC", "KS"],
     ["AS", "AH", "KC", "KH", "2D"],
     ["AS", "JS", "8S", "4S", "2H"],
     ["AS", "3H", "4D", "5C", "2D"],
@@ -70,4 +70,13 @@ test("ties split exactly one hundred coins in host-relative seat order", () => {
   })), 7);
   assert.equal(shares.reduce((total, share) => total + share.coins, 0), 100);
   assert.deepEqual(shares.slice(0, 10).map(share => share.seatNumber), [7, 8, 9, 10, 1, 2, 3, 4, 5, 6]);
+});
+
+test("prizes require three eligible accounts and are not available to smaller games", () => {
+  assert.equal(cardGamePrizeEligible(0), false);
+  assert.equal(cardGamePrizeEligible(1), false);
+  assert.equal(cardGamePrizeEligible(2), false);
+  assert.equal(cardGamePrizeEligible(3), true);
+  assert.equal(cardGamePrizeEligible(10), true);
+  assert.equal(cardGamePrizeEligible(3.5), false);
 });

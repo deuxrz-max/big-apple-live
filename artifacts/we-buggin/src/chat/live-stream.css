@@ -835,6 +835,48 @@ body.streamtalk-live-screen .site-header {
   border-color: rgba(255, 130, 150, .72);
   background: rgba(78, 25, 39, .78);
 }
+.st-live-block-panel {
+  position: absolute;
+  z-index: 8;
+  right: 14px;
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  width: min(320px, calc(100vw - 28px));
+  max-height: min(45vh, 360px);
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid rgba(224, 184, 91, .65);
+  border-radius: 12px;
+  background: rgba(5, 5, 7, .96);
+  color: #fff;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .48);
+  pointer-events: auto;
+}
+.st-live-block-panel form,
+.st-live-block-panel li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.st-live-block-panel input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid rgba(255, 255, 255, .24);
+  border-radius: 8px;
+  background: #080808;
+  color: #fff;
+}
+.st-live-block-panel button {
+  padding: 8px 10px;
+  border: 1px solid rgba(224, 184, 91, .56);
+  border-radius: 8px;
+  background: #111;
+  color: #fff;
+}
+.st-live-block-panel ul { margin: 8px 0 0; padding: 0; list-style: none; }
+.st-live-block-panel li span { flex: 1; overflow-wrap: anywhere; }
+.st-live-block-panel p { margin: 9px 0 0; color: rgba(255, 255, 255, .75); font-size: 13px; }
 .st-live-share-status {
   position: absolute;
   z-index: 6;

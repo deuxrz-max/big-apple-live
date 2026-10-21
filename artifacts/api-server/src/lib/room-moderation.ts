@@ -1,6 +1,8 @@
 import { and, eq } from "drizzle-orm";
-import { accountProfiles, chatModerators, db, hostRoomBlocks, roomSessionKicks } from "@workspace/db";
+import { accountProfiles, chatModerators, db } from "@workspace/db";
+import { hostRoomBlocks, roomSessionKicks } from "@workspace/db/schema";
 import { RoomError, roomStore } from "./room-store";
+import { mayModerateAnotherAccount, mayModerateRoom } from "./room-moderation-policy";
 
 export type RoomScope = {
   type: "community" | "livestream";
@@ -39,7 +41,7 @@ export async function assertRoomAccessAllowed(scope: RoomScope, accountId: strin
 }
 
 export async function saveRoomKick(scope: RoomScope, actorAccountId: string, targetAccountId: string): Promise<void> {
-  if (actorAccountId === targetAccountId) throw new RoomError(400, "You cannot remove yourself from the room.");
+  if (!mayModerateAnotherAccount(actorAccountId, targetAccountId)) throw new RoomError(400, "You cannot remove yourself from the room.");
   await db.insert(roomSessionKicks).values({
     scopeType: scope.type, scopeKey: scope.key, actorAccountId, targetAccountId,
   }).onConflictDoNothing();
@@ -52,7 +54,7 @@ export async function isExistingModerator(accountId: string): Promise<boolean> {
 }
 
 export async function assertHostOrModerator(hostAccountId: string, actorAccountId: string): Promise<void> {
-  if (hostAccountId !== actorAccountId && !(await isExistingModerator(actorAccountId))) {
+  if (!mayModerateRoom(hostAccountId, actorAccountId, await isExistingModerator(actorAccountId))) {
     throw new RoomError(403, "Only this room's host or an existing moderator can do that.");
   }
 }

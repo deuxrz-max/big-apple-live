@@ -68,8 +68,8 @@ const liveStreamLeaseSweep = setInterval(() => {
 liveStreamLeaseSweep.unref();
 
 async function requireLiveParticipant(accountId: string, streamId: string) {
-  const lease = await getLiveStreamSession(accountId);
-  if (!lease || lease.streamId !== streamId || lease.state !== "live" || !(await liveStreamSessionIsFresh(lease))) {
+  const lease = await getLiveStreamSessionByStreamId(streamId);
+  if (!lease || lease.state !== "live" || !(await liveStreamSessionIsFresh(lease))) {
     throw new RoomError(404, "This livestream is no longer available.");
   }
   await assertRoomAccessAllowed(liveStreamScope(streamId, lease.startedAt, lease.accountId), accountId);

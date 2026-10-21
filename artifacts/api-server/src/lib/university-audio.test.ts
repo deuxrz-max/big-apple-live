@@ -51,7 +51,7 @@ test("university beams have four atomic speaker slots and isolate rooms", async 
   assert.equal(beams.getState("BIGOLV").slots.filter(slot => slot.participantId).length, 0);
 });
 
-test("host mute blocks transmission until the speaker's own consent; kick frees a slot with a cooldown", () => {
+test("host mute blocks transmission until the speaker's own consent; durable kick exclusion is route-level", () => {
   let now = 100;
   const rooms = new RoomStore(() => now);
   createRoom(rooms, "LIVEME", "history-live");
@@ -80,10 +80,8 @@ test("host mute blocks transmission until the speaker's own consent; kick frees 
   assert.equal(kicked.accountId, "speaker-account");
   assert.equal(rooms.leaveParticipant("LIVEME", speaker.participantId), "speaker-account");
   assert.equal(kicked.state.slots.filter(item => item.participantId).length, 1);
-  assert.throws(() => beams.assertCanJoin("LIVEME", "speaker-account"),
-    (error: unknown) => error instanceof RoomError && error.status === 409);
-  now += 60_001;
-  assert.doesNotThrow(() => beams.assertCanJoin("LIVEME", "speaker-account"));
+  assert.doesNotThrow(() => beams.assertCanJoin("LIVEME", "speaker-account"),
+    "the beam store no longer imposes a temporary cooldown; the API checks the persisted room-session kick");
 });
 
 test("a disconnected speaker releases its spot and listeners never negotiate a sending SDP", () => {

@@ -23,6 +23,7 @@ import { liveKitBeamService, publicLiveKitFailure } from "../lib/livekit";
 import {
   assertRoomAccessAllowed, communityRoomScope, isExistingModerator, publishRoomKick, saveRoomKick,
 } from "../lib/room-moderation";
+import { mayModerateAppRunRoom } from "../lib/room-moderation-policy";
 import { isLiveStreamActiveOrStarting, isLiveStreamStarting } from "../lib/live-stream-policy";
 import {
   COMMUNITY_VIDEO_POOL_ROOMS,
@@ -1409,13 +1410,16 @@ router.post("/account/rooms/:roomId/video-beam/actions", async (req, res) => {
       }
       case "host-mute-mic": {
         if (!input.data.targetParticipantId) throw new RoomError(400, "Choose a speaker first.");
+        if (!mayModerateAppRunRoom(await isExistingModerator(id))) {
+          throw new RoomError(403, "Only an existing moderator can control speakers in this app-run room.");
+        }
         const target = input.data.targetParticipantId;
         const media = "mic";
         const slot = universityVideoBeamStore.assertHostControl(roomId, participant.participantId, target);
         const current = universityVideoBeamStore.getState(roomId);
         const policy = sourcesForSlot(slot, false);
         await liveKitBeamService.disableTrack(roomName, target, media, policy.sources);
-        state = universityVideoBeamStore.hostDisableMedia(
+        state = universityVideoBeamStore.moderatorDisableMedia(
           roomId, participant.participantId, target, media,
         );
         break;
@@ -1424,7 +1428,7 @@ router.post("/account/rooms/:roomId/video-beam/actions", async (req, res) => {
         if (!input.data.targetParticipantId) throw new RoomError(400, "Choose a speaker first.");
         const target = input.data.targetParticipantId;
         if (target === participant.participantId) throw new RoomError(400, "You cannot remove yourself from the room.");
-        if (!(await isExistingModerator(id))) {
+        if (!mayModerateAppRunRoom(await isExistingModerator(id))) {
           throw new RoomError(403, "Only an existing moderator can remove someone from this app-run room.");
         }
         const targetAccountId = roomStore.sessionAccountId(roomId, target);

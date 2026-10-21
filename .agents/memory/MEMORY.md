@@ -42,3 +42,4 @@
 - [App positioning](app-positioning.md) — owner-approved live-streaming and social media description for app metadata, sharing previews and welcome/about copy.
 - [Gifting levels](gifting-levels.md) — successful gift spending powers seven cumulative tiers; recharges and the separate username-color palette do not count.
 - [Room playback rendering budget](room-playback-performance.md) — decorative motion must avoid full-screen paints; profile under CPU slowdown and separate rendering from media/network issues.
+- [Personal block boundaries](personal-block-semantics.md) — personal blocks filter text and bilateral DMs/whispers, but never remove room presence, voice, seats or gift effects.

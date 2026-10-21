@@ -800,6 +800,18 @@ export class UniversityVideoBeamStore {
     return this.toState(beam);
   }
 
+  moderatorDisableMedia(roomId: string, actorId: string, targetId: string, media: "mic" | "camera"): UniversityVideoBeamState {
+    if (media === "camera") {
+      throw new RoomError(410, "Room beam seats are audio-only. Camera access is available through Go Live.");
+    }
+    if (actorId === targetId) throw new RoomError(400, "Use your own controls for your media.");
+    const beam = this.ensure(roomId);
+    const slot = this.requireSlot(beam, targetId);
+    slot.micMuted = true;
+    slot.mutedByHost = true;
+    return this.toState(beam);
+  }
+
   kick(roomId: string, actorId: string, targetId: string): { state: UniversityVideoBeamState; accountId: string } {
     const beam = this.ensure(roomId);
     const target = this.assertHostControl(roomId, actorId, targetId);

@@ -74,10 +74,14 @@ type Room = {
 export class RoomStore {
   private readonly rooms = new Map<string, Room>();
   private readonly entranceEffectOwners = new Map<string, { roomId: string; accountId: string }>();
+  private communityEndListener: ((roomId: string) => void) | null = null;
   constructor(
     private readonly now: () => number = Date.now,
     private readonly allocateCode: (short: boolean) => string = short => randomBytes(short ? 3 : 6).toString("hex").toUpperCase(),
   ) {}
+  setCommunityEndListener(listener: (roomId: string) => void): void {
+    this.communityEndListener = listener;
+  }
 
   registerCommunity(input: { roomId: string; historyId: string; label: string; createdAt: Date; testOnly?: boolean; parentRoomId?: string | null }) {
     const existing = this.rooms.get(input.roomId);
@@ -105,6 +109,7 @@ export class RoomStore {
     const room = this.requireRoom(roomId);
     if (!room.community) throw new RoomError(409, "Only a topic room can be unregistered");
     if (room.sessions.size) throw new RoomError(409, "A room with active participants cannot be unregistered");
+    this.communityEndListener?.(room.roomId);
     this.rooms.delete(room.roomId);
   }
   /** Hide a community room without touching its persisted room or chat history. */
@@ -114,6 +119,7 @@ export class RoomStore {
     if (!room?.community) return;
     this.emit(room, { type: "room.expired", data: { roomId: id } });
     room.listeners.clear();
+    this.communityEndListener?.(room.roomId);
     this.rooms.delete(id);
   }
   isCommunity(roomId: string) { return !!this.rooms.get(roomId.toUpperCase())?.community; }

@@ -35,6 +35,8 @@ const RULES = "Stick to the room's topic. Be kind — no harassment or hate. Not
 type Target = {
   username: string;
   displayName: string;
+  participantId?: string;
+  botId?: string | null;
   displayNameColor?: string;
   displayNameTierIndex?: number;
   photoUrl?: string | null;
@@ -233,7 +235,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const giftRecipients = beamSlots.flatMap(slot => {
     if (!slot.participantId) return [];
     const person = peopleByParticipantId.get(slot.participantId);
-    if (!person || person.botId || person.blocked) return [];
+    if (!person || person.botId) return [];
     return [{
       username: person.username,
       displayName: person.displayName,
@@ -334,13 +336,13 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
               <div className="ur-prow">
                 {p.self ? <UserPhoto username={p.username} displayName={p.displayName} photoUrl={p.photoUrl} size={36} reviewStatus={p.photoStatus ?? undefined} /> :
                   <button type="button" className="ur-person-avatar" aria-label={`Actions for ${p.displayName}`} aria-haspopup="menu"
-                    onClick={() => setMenu({ username: p.username, displayName: p.displayName, displayNameColor: p.displayNameColor ?? '#FFFFFF', displayNameTierIndex: p.displayNameTierIndex ?? 0 })}
+                    onClick={() => setMenu({ username: p.username, displayName: p.displayName, participantId: p.participantId, botId: p.botId, displayNameColor: p.displayNameColor ?? '#FFFFFF', displayNameTierIndex: p.displayNameTierIndex ?? 0 })}
                     data-testid={`button-person-avatar-${p.username}`}><UserPhoto username={p.username} displayName={p.displayName} photoUrl={p.photoUrl} size={36} /></button>}
                 <span className="ur-pname">
                   {p.self
                     ? <span className="ur-pname-text"><ShinyName displayNameColor={p.displayNameColor} displayNameTierIndex={p.displayNameTierIndex}><BadgeMark id={p.badgeId ?? null} label={p.badgeName} imageUrl={p.badgeImage} size={16} compact />{p.displayName}</ShinyName><em> (you)</em></span>
                     : <button type="button" className="ur-pname-text ur-person-name-action" aria-haspopup="menu"
-                        onClick={() => setMenu({ username: p.username, displayName: p.displayName, displayNameColor: p.displayNameColor ?? '#FFFFFF', displayNameTierIndex: p.displayNameTierIndex ?? 0 })}
+                        onClick={() => setMenu({ username: p.username, displayName: p.displayName, participantId: p.participantId, botId: p.botId, displayNameColor: p.displayNameColor ?? '#FFFFFF', displayNameTierIndex: p.displayNameTierIndex ?? 0 })}
                         data-testid={`button-person-${p.username}`}><ShinyName displayNameColor={p.displayNameColor} displayNameTierIndex={p.displayNameTierIndex}><BadgeMark id={p.badgeId ?? null} label={p.badgeName} imageUrl={p.badgeImage} size={16} compact />{p.displayName}</ShinyName></button>}
                   <PassportSummaryBadge passport={p.passport} username={p.username} context="people" />
                   {p.moderator && <span className="ur-badge">Moderator</span>}
@@ -522,7 +524,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                           </div>
                         )}
                       </div>
-                      {person && !mine && videoBeam.isHost ? (
+                      {person && !mine && me?.moderator ? (
                         <div className="ur-slot-actions">
                           <button type="button" className="ur-slot-action"
                             disabled={videoBeam.busy || slot.micMuted}
@@ -705,6 +707,13 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                 onError: e => setNote(errMessage(e)),
               });
             }}>Block</button>
+            {me?.moderator && menu.participantId && !menu.botId && menu.participantId !== me.participantId && (
+              <button type="button" role="menuitem" disabled={videoBeam.busy} onClick={() => {
+                const targetParticipantId = menu.participantId!;
+                setMenu(null);
+                void videoBeam.kick(targetParticipantId);
+              }}>Remove from this room</button>
+            )}
             <button type="button" role="menuitem" autoFocus onClick={() => { setWhisperTo(menu); setMenu(null); setDrawer(false); setText(''); setSendErr(null); }}>Whisper</button>
             <button type="button" role="menuitem" onClick={() => { const u = menu.username; setMenu(null); nav(`/community/people/${encodeURIComponent(u)}`); }}>View profile</button>
             <button type="button" role="menuitem" disabled={ignoreMut.isPending} onClick={() => toggleIgnore(menu)}>{ignored.has(menu.username) ? 'Unignore' : 'Ignore'}</button>

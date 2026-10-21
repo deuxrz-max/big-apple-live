@@ -7,6 +7,10 @@ export const CARD_GAME_SEAT_LIMIT = 10;
 export const CARD_GAME_PRIZE = 100;
 export const CARD_RECONNECT_GRACE_MS = 90_000;
 
+export function cardGamePrizeEligible(playerCount: number): boolean {
+  return Number.isInteger(playerCount) && playerCount >= 3;
+}
+
 export type CardGameClock = {
   serverNowMs: number;
   gameNumber: number;
@@ -38,7 +42,9 @@ export function cardGameClock(nowMs = Date.now(), epochMs = CARD_GAME_EPOCH_MS):
 export type PlayingCard = { rank: number; suit: "C" | "D" | "H" | "S" };
 
 const RANK_CODES = ["", "", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
-const CARD_CODE_RANK = new Map(RANK_CODES.map((code, rank) => [code, rank]).filter(([code]) => !!code));
+const CARD_CODE_RANK = new Map<string, number>(
+  RANK_CODES.flatMap((code, rank) => code ? [[code, rank] as const] : []),
+);
 const SUITS = ["C", "D", "H", "S"] as const;
 
 export function createDeck(): string[] {

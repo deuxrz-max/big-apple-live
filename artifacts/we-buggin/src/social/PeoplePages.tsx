@@ -316,7 +316,7 @@ export function BlocksPage() {
   return (
     <section>
       <h1 className="bm-h1 sc-h1">Blocked</h1>
-      <p className="bm-lede">Blocked people cannot be gifted, messaged or favorited, and they cannot do it to you.</p>
+      <p className="bm-lede">Blocking stops direct messages and whispers both ways and hides each other’s public room chat. It does not remove or mute either person in a room.</p>
       {msg && <Msg ok={msg.ok}>{msg.t}</Msg>}
       {q.isLoading && <Loading />}
       {q.isError && <ErrorBox error={q.error} retry={() => q.refetch()} />}

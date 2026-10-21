@@ -26,7 +26,7 @@ router.use(communityRouter);
 router.use(moderatorBotRouter);
 router.use(profilePhotosRouter);
 router.use(photoReviewRouter);
-router.use(["/account/rooms", "/account/live-streams", "/social", "/owner/card-games"], async (req, _res, next) => {
+router.use(["/account/rooms", "/account/live-streams", "/account/host-room-blocks", "/social", "/owner/card-games"], async (req, _res, next) => {
   await requireAdult(accountId(req));
   await requireCompletedProfile(accountId(req));
   next();

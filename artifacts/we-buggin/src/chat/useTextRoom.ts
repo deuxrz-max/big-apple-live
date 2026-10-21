@@ -174,6 +174,16 @@ export function useTextRoom(roomId: string, userId: string) {
               setConnection("Not connected");
               return;
             }
+            if (type === "room.kicked") {
+              const kick = JSON.parse(data) as { message?: unknown };
+              active = false;
+              controller.abort();
+              setLoading(false);
+              setConnection("Not connected");
+              setError(kick.message === "You've been removed from the room"
+                ? kick.message : "You've been removed from the room");
+              return;
+            }
             if (type === "room.snapshot") {
               const snapshot = JSON.parse(data) as RoomState;
               const nextIds = new Set(snapshot.participants.map(participant => participant.participantId));

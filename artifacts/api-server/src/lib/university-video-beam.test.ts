@@ -296,7 +296,7 @@ test("no first joiner gets speaker moderation powers in a public topic room", ()
   ), (error: unknown) => error instanceof RoomError && error.status === 403);
 });
 
-test("speaker controls are consent-based; host can only disable another speaker and kick applies cooldown", () => {
+test("speaker controls are consent-based; kick releases the seat for durable route-level exclusion", () => {
   let now = 50;
   const rooms = new RoomStore(() => now);
   createRoom(rooms, "CHANNEL1", "history-channel");
@@ -335,10 +335,8 @@ test("speaker controls are consent-based; host can only disable another speaker 
   const kicked = beam.kick("CHANNEL1", host.participantId, speaker.participantId);
   assert.equal(kicked.accountId, "speaker");
   assert.equal(kicked.state.slots.filter(slot => slot.participantId).length, 1);
-  assert.throws(() => beam.assertCanJoin("CHANNEL1", "speaker"),
-    (error: unknown) => error instanceof RoomError && error.status === 409);
-  now += 60_001;
-  assert.doesNotThrow(() => beam.assertCanJoin("CHANNEL1", "speaker"));
+  assert.doesNotThrow(() => beam.assertCanJoin("CHANNEL1", "speaker"),
+    "the old in-memory cooldown is gone; persistent session kicks are checked by the API before this store is reached");
 });
 
 test("Beam TV is host-only, shares one queue position, loops, and can be stopped and resumed", () => {

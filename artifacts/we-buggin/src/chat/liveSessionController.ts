@@ -5,6 +5,7 @@ import {
 import {
   endLiveStream, getLiveStreams, joinLiveStream, rejoinLiveStream, startLiveStream,
 } from "@workspace/api-client-react";
+import { errMessage } from "@/lib/errors";
 
 type HostSession = Awaited<ReturnType<typeof startLiveStream>>;
 type ViewerSession = Awaited<ReturnType<typeof joinLiveStream>>;
@@ -558,7 +559,22 @@ class ViewerLiveSessionController {
       if (generation !== this.generation) return;
       room = new Room({ adaptiveStream: true, dynacast: true });
       this.room = room;
-      this.update({ session, room, phase: "connecting" });
+      const connectedRoom = room;
+      this.update({ session, room: connectedRoom, phase: "connecting" });
+      let accessRejected = false;
+      let accessProbe: Promise<void> | null = null;
+      const checkReconnectAccess = () => {
+        if (accessProbe || accessRejected) return;
+        accessProbe = joinLiveStream(this.streamId, { credentials: "include" })
+          .then(() => undefined)
+          .catch(async error => {
+            if (![403, 409].includes(httpStatus(error)) || generation !== this.generation || this.room !== connectedRoom) return;
+            accessRejected = true;
+            this.update({ phase: "error", error: errMessage(error, "You've been removed from the room") });
+            await connectedRoom.disconnect().catch(() => undefined);
+          })
+          .finally(() => { accessProbe = null; });
+      };
       const refresh = () => {
         if (generation !== this.generation || !room) return;
         let videoTrack: RemoteTrack | null = null;
@@ -586,11 +602,19 @@ class ViewerLiveSessionController {
       room.on(RoomEvent.ConnectionStateChanged, state => {
         if (generation === this.generation && state === "reconnecting") {
           this.update({ phase: "error", error: "The stream connection is reconnecting…" });
+          checkReconnectAccess();
         }
       });
       room.on(RoomEvent.Disconnected, () => {
         if (generation === this.generation) {
           this.update({ room: null, phase: "error", error: "The stream connection was interrupted. Try again." });
+          if (!accessRejected) {
+            void joinLiveStream(this.streamId, { credentials: "include" }).catch(error => {
+              if (generation === this.generation && [403, 409].includes(httpStatus(error))) {
+                this.update({ phase: "error", error: errMessage(error, "You've been removed from the room") });
+              }
+            });
+          }
         }
       });
       await room.connect(session.url, session.token);

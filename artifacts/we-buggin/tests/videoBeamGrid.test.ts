@@ -99,7 +99,7 @@ test('speaker names stay in a compact footer and mic status is isolated in a cor
 
 test('room title stays on one line and ellipsizes visually without changing its accessible name', () => {
   assert.match(themeCss, /#root \.ch\.ur \.ur-title\s*\{[^}]*white-space:\s*nowrap[^}]*text-overflow:\s*ellipsis/);
-  assert.match(roomComponent, /aria-label={r\.room\?\.name \?\? 'University'}/);
+  assert.match(roomComponent, /aria-label={r\.room\?\.name \?\? 'Room'}/);
 });
 
 test('all slot frames share the continuous neon cycle and reduce-motion fallback', () => {
