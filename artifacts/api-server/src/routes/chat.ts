@@ -54,11 +54,13 @@ router.get("/account/rooms/:roomId/events", async (req, res): Promise<void> => {
     // Removed/expired sessions cannot continue receiving private chat.
     try { roomStore.requireAccountMember(roomId, sessionId, id); }
     catch { res.end(); return; }
-    try { await requireAdult(id); } catch { res.end(); return; }
-    if (event.type === "room.entrance-effect") {
-      const ownerId = roomStore.entranceEffectOwnerAccountId(event.data.eventId);
-      if (ownerId && await pairBlocked(id, ownerId)) return;
+    if (event.type === "room.kicked") {
+      if (event.data.accountId === id && !res.destroyed && !res.writableEnded) {
+        res.write(`event: room.kicked\ndata: ${JSON.stringify({ message: event.data.message })}\n\n`);
+      }
+      return;
     }
+    try { await requireAdult(id); } catch { res.end(); return; }
     if (event.type === "room.hangout-streak-reward" && event.data.accountId !== id) return;
     if (event.type === "chat.accepted" && event.senderAccountId
       && (await pairBlocked(id, event.senderAccountId) || await isIgnored(id, event.senderAccountId))) return;
@@ -92,8 +94,6 @@ router.get("/account/rooms/:roomId/events", async (req, res): Promise<void> => {
     res.write(`event: room.coin-drop\ndata: ${JSON.stringify({ ...event, qualified })}\n\n`);
   }
   for (const effect of roomStore.recentRoomEntranceEffects(roomId)) {
-    const ownerId = roomStore.entranceEffectOwnerAccountId(effect.eventId);
-    if (ownerId && await pairBlocked(id, ownerId)) continue;
     res.write(`event: room.entrance-effect\ndata: ${JSON.stringify(effect)}\n\n`);
   }
   const keepalive = setInterval(() => {

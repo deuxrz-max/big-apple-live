@@ -18,6 +18,7 @@ type RoomEvent =
   | { type: "room.coin-drop"; data: RoomCoinDropEvent }
   | { type: "room.hangout-streak-reward"; data: { roomId: string; accountId: string; day: string; coins: number } }
   | { type: "room.snapshot"; data: RoomState }
+  | { type: "room.kicked"; data: { roomId: string; accountId: string; message: string } }
   | { type: "room.expired"; data: { roomId: string } };
 type Listener = (event: RoomEvent) => void;
 export type RoomEntranceEffectEvent = {
@@ -316,6 +317,19 @@ export class RoomStore {
   /** Private incarnation identifier, never a reusable room-code history key. */
   getHistoryId(roomId: string): string {
     return this.requireRoom(roomId).historyId;
+  }
+  communityRoomIds(): string[] {
+    return [...this.rooms.values()].filter(room => room.community).map(room => room.roomId);
+  }
+  hasAccountMember(roomId: string, accountId: string): boolean {
+    const room = this.rooms.get(roomId.toUpperCase());
+    if (!room) return false;
+    return [...room.sessions.values()].some(session => session.accountId === accountId);
+  }
+  publishKick(roomId: string, accountId: string, message: string): void {
+    const room = this.rooms.get(roomId.toUpperCase());
+    if (!room) return;
+    this.emit(room, { type: "room.kicked", data: { roomId: room.roomId, accountId, message } });
   }
 
   heartbeat(roomId: string, sessionId: string): Participant {

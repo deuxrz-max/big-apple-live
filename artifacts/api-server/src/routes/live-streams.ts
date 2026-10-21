@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from "express";
-import { and, eq, or } from "drizzle-orm";
-import { accountProfiles, chatAdmissions, db, socialRelations } from "@workspace/db";
+import { eq } from "drizzle-orm";
+import { accountProfiles, chatAdmissions, db } from "@workspace/db";
+import { z } from "zod";
 import {
   EndLiveStreamParams,
   EndLiveStreamResponse,
@@ -35,6 +36,11 @@ import {
   sweepStaleLiveStreamSessions,
 } from "../lib/live-stream-policy";
 import { pairBlocked } from "../lib/social/core";
+import { targetAccount } from "../lib/social/core";
+import {
+  assertHostOrModerator, assertRoomAccessAllowed, listHostRoomBlocks, liveStreamScope,
+  saveRoomKick, setHostRoomBlock,
+} from "../lib/room-moderation";
 import { visibleMonthlyPurchaseBadgeSummary } from "../lib/social/monthly-credit-badges";
 import { nameColorProfileForAccount, nameColorProfilesForAccounts } from "../lib/social/gift-name-color-data";
 import { accountId, sameOrigin } from "./identity";
@@ -42,6 +48,17 @@ import { logger } from "../lib/logger";
 
 const router = Router();
 const LIVE_ROOM_RE = /^st-live-([a-f0-9]{32})$/;
+const hostBlockInput = z.object({ active: z.boolean() }).strict();
+
+async function disconnectBlockedViewer(streamId: string, hostAccountId: string, targetAccountId: string) {
+  if (hostAccountId === targetAccountId) throw new RoomError(400, "You cannot block the host from their own room.");
+  const roomName = liveStreamRoomName(streamId);
+  const identity = `viewer-${liveStreamIdForAccount(targetAccountId)}`;
+  const participants = await liveKitBeamService.listParticipants(roomName);
+  if (participants.some(participant => participant.identity === identity)) {
+    await liveKitBeamService.removeParticipant(roomName, identity);
+  }
+}
 
 const liveStreamLeaseSweep = setInterval(() => {
   void sweepStaleLiveStreamSessions().catch(error => {
@@ -55,6 +72,7 @@ async function requireLiveParticipant(accountId: string, streamId: string) {
   if (!lease || lease.streamId !== streamId || lease.state !== "live" || !(await liveStreamSessionIsFresh(lease))) {
     throw new RoomError(404, "This livestream is no longer available.");
   }
+  await assertRoomAccessAllowed(liveStreamScope(streamId, lease.startedAt, lease.accountId), accountId);
   const roomName = liveStreamRoomName(streamId);
   const participants = await liveKitBeamService.listParticipants(roomName);
   if (!participants.some(participant => participant.identity === "host")) {
@@ -74,15 +92,6 @@ function usernameFromMetadata(metadata?: string): string | null {
     const value = JSON.parse(metadata) as { username?: unknown };
     return typeof value.username === "string" && value.username.length <= 40 ? value.username : null;
   } catch { return null; }
-}
-
-async function hiddenStreamsFor(accountId: string): Promise<Set<string>> {
-  const relations = await db.select().from(socialRelations).where(and(
-    eq(socialRelations.kind, "block"),
-    or(eq(socialRelations.ownerId, accountId), eq(socialRelations.targetId, accountId)),
-  ));
-  return new Set(relations.map(relation =>
-    liveStreamIdForAccount(relation.ownerId === accountId ? relation.targetId : relation.ownerId)));
 }
 
 async function streamUsername(streamId: string, metadata?: string): Promise<string> {
@@ -106,7 +115,6 @@ router.get("/account/live-streams", async (req, res) => {
   await requireCompletedProfile(id);
   await requireAdult(id);
   try {
-    const hiddenStreamIds = await hiddenStreamsFor(id);
     const rooms = await liveKitBeamService.listRooms();
     const liveRooms = rooms.filter(room => LIVE_ROOM_RE.test(room.name));
     const owners = await streamOwnerProfiles();
@@ -115,7 +123,6 @@ router.get("/account/live-streams", async (req, res) => {
       const match = LIVE_ROOM_RE.exec(room.name);
       if (!match) return null;
       const streamId = match[1]!;
-      if (hiddenStreamIds.has(streamId)) return null;
       const participants = await liveKitBeamService.listParticipants(room.name);
       const host = participants.find(participant => participant.identity === "host");
       if (!host) return null;
@@ -259,6 +266,7 @@ router.post("/account/live-streams/:streamId/rejoin", async (req, res) => {
       if (session) await cleanupStaleLiveStreamSession(session);
       throw new RoomError(404, "That stream has already ended.");
     }
+    await assertRoomAccessAllowed(liveStreamScope(session.streamId, session.startedAt, session.accountId), id);
     const roomName = liveStreamRoomName(params.data.streamId);
     const participants = await liveKitBeamService.listParticipants(roomName);
     if (!participants.some(participant => participant.identity === "host")) {
@@ -286,9 +294,6 @@ router.post("/account/live-streams/:streamId/token", async (req, res) => {
   if (!params.success) throw new RoomError(404, "This livestream is no longer available.");
   const profile = await requireCompletedProfile(id);
   await requireAdult(id);
-  if ((await hiddenStreamsFor(id)).has(params.data.streamId)) {
-    throw new RoomError(404, "This livestream is no longer available.");
-  }
   const roomName = liveStreamRoomName(params.data.streamId);
   try {
     const lease = await getLiveStreamSessionByStreamId(params.data.streamId);
@@ -296,6 +301,7 @@ router.post("/account/live-streams/:streamId/token", async (req, res) => {
       if (lease) await cleanupStaleLiveStreamSession(lease);
       throw new RoomError(404, "This livestream is no longer available.");
     }
+    await assertRoomAccessAllowed(liveStreamScope(lease.streamId, lease.startedAt, lease.accountId), id);
     const participants = await liveKitBeamService.listParticipants(roomName);
     const host = participants.find(participant => participant.identity === "host");
     if (!host) throw new RoomError(404, "This livestream is no longer available.");
@@ -315,6 +321,81 @@ router.post("/account/live-streams/:streamId/token", async (req, res) => {
   } catch (failure) {
     throw publicLiveKitFailure(failure);
   }
+});
+
+router.get("/account/host-room-blocks", async (req, res) => {
+  res.set("Cache-Control", "no-store").json({ people: await listHostRoomBlocks(accountId(req)) });
+});
+
+router.put("/account/host-room-blocks/:username", async (req, res) => {
+  sameOrigin(req);
+  const parsed = hostBlockInput.safeParse(req.body);
+  if (!parsed.success) throw new RoomError(400, "Choose whether this person is blocked from your rooms.");
+  const hostAccountId = accountId(req);
+  const target = await targetAccount(String(req.params.username));
+  await setHostRoomBlock(hostAccountId, target.accountId, parsed.data.active);
+  if (parsed.data.active) {
+    const lease = await getLiveStreamSession(hostAccountId);
+    if (lease?.state === "live") {
+      try { await disconnectBlockedViewer(lease.streamId, hostAccountId, target.accountId); }
+      catch (error) {
+        req.log.error({ error }, "A host-blocked live viewer could not be disconnected");
+        throw new RoomError(503, "The block is saved, but the active connection could not be removed yet.");
+      }
+    }
+  }
+  res.set("Cache-Control", "no-store").json({ active: parsed.data.active, username: target.username });
+});
+
+router.get("/account/live-streams/:streamId/host-blocks", async (req, res) => {
+  const { streamId } = req.params;
+  const lease = await getLiveStreamSessionByStreamId(streamId);
+  if (!lease || lease.state !== "live") throw new RoomError(404, "This livestream is no longer available.");
+  await assertHostOrModerator(lease.accountId, accountId(req));
+  res.set("Cache-Control", "no-store").json({ people: await listHostRoomBlocks(lease.accountId) });
+});
+
+router.put("/account/live-streams/:streamId/host-blocks/:username", async (req, res) => {
+  sameOrigin(req);
+  const parsed = hostBlockInput.safeParse(req.body);
+  if (!parsed.success) throw new RoomError(400, "Choose whether this person is blocked from the host's rooms.");
+  const lease = await getLiveStreamSessionByStreamId(String(req.params.streamId));
+  if (!lease || lease.state !== "live") throw new RoomError(404, "This livestream is no longer available.");
+  await assertHostOrModerator(lease.accountId, accountId(req));
+  const target = await targetAccount(String(req.params.username));
+  await setHostRoomBlock(lease.accountId, target.accountId, parsed.data.active);
+  if (parsed.data.active) {
+    try { await disconnectBlockedViewer(lease.streamId, lease.accountId, target.accountId); }
+    catch (error) {
+      req.log.error({ error }, "A host-blocked live viewer could not be disconnected");
+      throw new RoomError(503, "The block is saved, but the active connection could not be removed yet.");
+    }
+  }
+  res.set("Cache-Control", "no-store").json({ active: parsed.data.active, username: target.username });
+});
+
+router.post("/account/live-streams/:streamId/kick/:username", async (req, res) => {
+  sameOrigin(req);
+  const lease = await getLiveStreamSessionByStreamId(String(req.params.streamId));
+  if (!lease || lease.state !== "live") throw new RoomError(404, "This livestream is no longer available.");
+  const actorAccountId = accountId(req);
+  await assertHostOrModerator(lease.accountId, actorAccountId);
+  const target = await targetAccount(String(req.params.username));
+  if (target.accountId === lease.accountId) throw new RoomError(400, "You cannot remove the host from their own room.");
+  const scope = liveStreamScope(lease.streamId, lease.startedAt, lease.accountId);
+  await saveRoomKick(scope, actorAccountId, target.accountId);
+  try {
+    const roomName = liveStreamRoomName(lease.streamId);
+    const identity = `viewer-${liveStreamIdForAccount(target.accountId)}`;
+    const participants = await liveKitBeamService.listParticipants(roomName);
+    if (participants.some(participant => participant.identity === identity)) {
+      await liveKitBeamService.removeParticipant(roomName, identity);
+    }
+  } catch (error) {
+    req.log.error({ error }, "A kicked live viewer could not be disconnected");
+    throw new RoomError(503, "The removal is saved, but the active connection could not be ended yet.");
+  }
+  res.status(204).end();
 });
 
 router.get("/account/live-streams/:streamId/chat/events", async (req, res) => {
@@ -337,7 +418,6 @@ router.get("/account/live-streams/:streamId/chat/events", async (req, res) => {
     if (!res.destroyed && !res.writableEnded) res.write(`event: message\ndata: ${JSON.stringify(publicMessage)}\n\n`);
   };
   const writeGift = async (gift: ReturnType<typeof liveStreamChatHub.recentGifts>[number], eventName = "gift") => {
-    if (await pairBlocked(id, gift.senderAccountId)) return;
     const { senderAccountId: _privateAccountId, ...publicGift } = gift;
     if (!res.destroyed && !res.writableEnded) res.write(`event: ${eventName}\ndata: ${JSON.stringify(publicGift)}\n\n`);
   };

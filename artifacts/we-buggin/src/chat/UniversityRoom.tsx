@@ -68,9 +68,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
     query: { enabled: !!sessionId, refetchInterval: 3000, queryKey: sessionKey },
   });
   const session = uni.data;
-  const blockedParticipantIds = useMemo(() => session?.people
-    .filter(person => person.blocked).map(person => person.participantId) ?? [], [session?.people]);
-  const videoBeam = useUniversityVideoBeam(roomId, sessionId, participantId, blockedParticipantIds);
+  const videoBeam = useUniversityVideoBeam(roomId, sessionId, participantId);
   const activateRoomAudio = useCallback(() => {
     beamTvRef.current?.activateSoundFromUserGesture();
     if (videoBeam.playbackBlocked) void videoBeam.resumePlayback();

@@ -3,7 +3,7 @@ import { accountId, sameOrigin } from "./identity";
 import { requireAdult } from "../lib/community";
 import { PHOTO_LIMIT, stageProfilePhoto, readablePhoto } from "../lib/profile-photo-storage";
 import { UploadProfilePhotoResponse, GetProfilePhotoParams } from "@workspace/api-zod";
-import { RoomError } from "../lib/room-store";
+import { RoomError, roomStore } from "../lib/room-store";
 import { pairBlocked } from "../lib/social/core";
 import { isTestAccountId } from "../lib/account-profiles";
 
@@ -27,7 +27,11 @@ router.get("/photos/:photoId", async (req, res) => {
   if (!params.success) throw new RoomError(404, "Photo not available");
   const { file, ownerId } = await readablePhoto(params.data.photoId, id);
   if (await isTestAccountId(ownerId)) throw new RoomError(404, "Photo not available");
-  if (id !== ownerId && await pairBlocked(id, ownerId)) throw new RoomError(404, "Photo not available");
+  if (id !== ownerId && await pairBlocked(id, ownerId)) {
+    const sharesRoom = roomStore.communityRoomIds().some(roomId =>
+      roomStore.hasAccountMember(roomId, id) && roomStore.hasAccountMember(roomId, ownerId));
+    if (!sharesRoom) throw new RoomError(404, "Photo not available");
+  }
   res.set({ "Content-Type": "image/webp", "Cache-Control": "private, no-store",
     "X-Content-Type-Options": "nosniff", "Content-Security-Policy": "default-src 'none'" });
   file.createReadStream().on("error", () => {

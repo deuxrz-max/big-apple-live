@@ -7,6 +7,7 @@ import {
   CreateAccountRoomBody, GetEmojiCatalogResponse,
 } from "@workspace/api-zod";
 import { getProfile, saveProfile, requireCompletedProfile } from "../lib/account-profiles";
+import { assertRoomAccessAllowed, communityRoomScope } from "../lib/room-moderation";
 import { recordDailyLogin } from '../lib/social/marathon';
 import { roomStore, RoomError } from "../lib/room-store";
 import { getClerkProxyHost } from "../middlewares/clerkProxyMiddleware";
@@ -83,6 +84,7 @@ router.post("/account/rooms/:roomId/join", async (req, res) => {
   const params = JoinAccountRoomParams.safeParse(req.params);
   if (!params.success) throw new RoomError(400, "Invalid room ID");
   if (!roomStore.isCommunity(params.data.roomId)) throw new RoomError(410, "This legacy Beam is archived. Choose a room from the Directory.");
+  await assertRoomAccessAllowed(communityRoomScope(params.data.roomId), id);
   universityAudioBeamStore.assertCanJoin(params.data.roomId, id);
   const profile = await requireCompletedProfile(id);
   const access = await accessFor(id);

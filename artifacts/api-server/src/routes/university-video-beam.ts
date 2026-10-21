@@ -20,6 +20,9 @@ import { RoomError, roomStore } from "../lib/room-store";
 import { requireCompletedProfile } from "../lib/account-profiles";
 import { universityVideoBeamStore } from "../lib/university-video-beam";
 import { liveKitBeamService, publicLiveKitFailure } from "../lib/livekit";
+import {
+  assertRoomAccessAllowed, communityRoomScope, isExistingModerator, publishRoomKick, saveRoomKick,
+} from "../lib/room-moderation";
 import { isLiveStreamActiveOrStarting, isLiveStreamStarting } from "../lib/live-stream-policy";
 import {
   COMMUNITY_VIDEO_POOL_ROOMS,
@@ -1272,6 +1275,7 @@ async function synchronizeSpeakerMediaPermissions(
 
 router.get("/account/rooms/:roomId/video-beam", async (req, res) => {
   const id = accountId(req);
+  await assertRoomAccessAllowed(communityRoomScope(req.params.roomId), id);
   requireMember(req, req.params.roomId, id);
   const state = await reconcileState(req.params.roomId, id);
   res.set("Cache-Control", "no-store");
@@ -1281,6 +1285,8 @@ router.get("/account/rooms/:roomId/video-beam", async (req, res) => {
 router.post("/account/rooms/:roomId/video-beam/token", async (req, res) => {
   sameOrigin(req);
   const id = accountId(req);
+  const scope = communityRoomScope(req.params.roomId);
+  await assertRoomAccessAllowed(scope, id);
   const { participant } = requireMember(req, req.params.roomId, id);
   const input = GetUniversityVideoBeamTokenBody.safeParse(req.body);
   if (!input.success || Object.keys(req.body ?? {}).some(key => key !== "role")) {
@@ -1334,6 +1340,8 @@ router.post("/account/rooms/:roomId/video-beam/token", async (req, res) => {
 router.post("/account/rooms/:roomId/video-beam/actions", async (req, res) => {
   sameOrigin(req);
   const id = accountId(req);
+  const scope = communityRoomScope(req.params.roomId);
+  await assertRoomAccessAllowed(scope, id);
   const { participant } = requireMember(req, req.params.roomId, id);
   const input = PerformUniversityVideoBeamActionBody.safeParse(req.body);
   if (!input.success || Object.keys(req.body ?? {}).some(key =>
@@ -1415,12 +1423,22 @@ router.post("/account/rooms/:roomId/video-beam/actions", async (req, res) => {
       case "kick": {
         if (!input.data.targetParticipantId) throw new RoomError(400, "Choose a speaker first.");
         const target = input.data.targetParticipantId;
-        universityVideoBeamStore.assertHostControl(roomId, participant.participantId, target);
-        await liveKitBeamService.removeParticipant(roomName, target);
+        if (target === participant.participantId) throw new RoomError(400, "You cannot remove yourself from the room.");
+        if (!(await isExistingModerator(id))) {
+          throw new RoomError(403, "Only an existing moderator can remove someone from this app-run room.");
+        }
+        const targetAccountId = roomStore.sessionAccountId(roomId, target);
+        if (!targetAccountId) throw new RoomError(404, "That person is no longer in this room.");
+        await saveRoomKick(scope, id, targetAccountId);
+        publishRoomKick(roomId, targetAccountId);
+        const liveParticipants = await liveKitBeamService.listParticipants(roomName);
+        if (liveParticipants.some(item => item.identity === target)) {
+          await liveKitBeamService.removeParticipant(roomName, target);
+        }
         await refreshParticipantSnapshot(roomName);
-        const result = universityVideoBeamStore.kick(roomId, participant.participantId, target);
+        try { universityVideoBeamStore.leaveSlot(roomId, target); } catch { /* target may not have a seat */ }
         roomStore.leaveParticipant(roomId, target);
-        state = result.state;
+        state = universityVideoBeamStore.getState(roomId, id);
         break;
       }
     }

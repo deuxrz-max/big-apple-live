@@ -80,7 +80,7 @@ export async function universitySession(id: string, roomId: string, sessionId: s
   ));
   const blockedIds = new Set(blockedRelations.map(relation =>
     relation.ownerId === id ? relation.targetId : relation.ownerId));
-  const passports = await passportBadgeSummaries(presentAccountIds.filter(accountId => accountId === id || !blockedIds.has(accountId)));
+  const passports = await passportBadgeSummaries(presentAccountIds);
   const badgeSummaries = await visibleMonthlyPurchaseBadgeSummaries(presentAccountIds);
   const people: UniversityPerson[] = [];
   const seen = new Set<string>();
@@ -90,8 +90,7 @@ export async function universitySession(id: string, roomId: string, sessionId: s
     seen.add(ownerId);
     const [profile] = await db.select().from(accountProfiles).where(eq(accountProfiles.accountId, ownerId));
     if (!profile || (process.env.NODE_ENV === "production" && profile.isTestAccount)) continue;
-    const photos = ownerId !== id && await pairBlocked(id, ownerId)
-      ? { photoUrl: null, photoReviews: undefined } : await visibleProfilePhotos(ownerId, id, profile);
+    const photos = await visibleProfilePhotos(ownerId, id, profile);
     people.push({ participantId: participant.participantId, username: profile.username,
       displayName: profile.displayName ?? profile.username, photoUrl: photos.photoUrl,
       identity: {

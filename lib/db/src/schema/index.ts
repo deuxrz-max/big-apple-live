@@ -41,3 +41,5 @@ export * from "./developer-scene-models";
 export * from "./developer-gift-motions";
 export * from "./developer-content-sync-state";
 export * from "./community-hangout-rewards";
+export * from "./room-card-games";
+export * from "./room-moderation";

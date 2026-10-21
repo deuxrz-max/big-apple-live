@@ -14,7 +14,6 @@ import {
 } from "./community-config";
 
 export const VIDEO_BEAM_SLOT_COUNT = 8;
-export const VIDEO_BEAM_KICK_COOLDOWN_MS = 60_000;
 export const VIDEO_BEAM_CONNECT_GRACE_MS = 90_000;
 export const PUBLIC_BEAM_TV_BREAK_MS = 3 * 60_000;
 
@@ -56,7 +55,6 @@ export type BeamSeatLifecycleEvent = {
 
 export class UniversityVideoBeamStore {
   private readonly beams = new Map<string, Beam>();
-  private readonly kickedUntil = new Map<string, number>();
   private automaticVideoStartListener:
     ((roomId: string, videoId: string, metadata: UniversityVideoBeamTvVideoMetadata | undefined) => void) | null = null;
   private seatLifecycleListener: ((event: BeamSeatLifecycleEvent) => void) | null = null;
@@ -656,15 +654,7 @@ export class UniversityVideoBeamStore {
   }
 
   assertCanJoin(roomId: string, accountId: string): void {
-    const beam = this.ensure(roomId);
-    const key = this.kickKey(beam, accountId);
-    const until = this.kickedUntil.get(key);
-    if (!until) return;
-    if (until <= this.now()) {
-      this.kickedUntil.delete(key);
-      return;
-    }
-    throw new RoomError(409, "You were removed from this beam. Please wait a moment before rejoining.");
+    // Persistent room-incarnation kick checks are enforced by the route layer.
   }
 
   joinSlot(roomId: string, participantId: string, accountId: string): UniversityVideoBeamState {
@@ -815,7 +805,6 @@ export class UniversityVideoBeamStore {
     const target = this.assertHostControl(roomId, actorId, targetId);
     const accountId = target.accountId;
     if (!accountId) throw new RoomError(404, "Speaker is no longer in this room.");
-    this.kickedUntil.set(this.kickKey(beam, accountId), this.now() + VIDEO_BEAM_KICK_COOLDOWN_MS);
     this.release(beam, target);
     this.transferHostIfNeeded(beam);
     return { state: this.toState(beam), accountId };
@@ -836,6 +825,11 @@ export class UniversityVideoBeamStore {
 
   accountIdForParticipant(roomId: string, participantId: string): string | null {
     return this.requireSlot(this.ensure(roomId), participantId).accountId;
+  }
+
+  hostSeatNumber(roomId: string): number | null {
+    const beam = this.ensure(roomId);
+    return beam.slots.find(slot => slot.participantId === beam.hostParticipantId)?.slotNumber ?? null;
   }
 
   muteAccountMicrophones(accountId: string): Array<{ roomId: string; participantId: string }> {
@@ -1105,9 +1099,6 @@ export class UniversityVideoBeamStore {
     return startedAtMs;
   }
 
-  private kickKey(beam: Beam, accountId: string): string {
-    return `${beam.roomId}:${beam.historyId}:${accountId}`;
-  }
 }
 
 export const universityVideoBeamStore = new UniversityVideoBeamStore();

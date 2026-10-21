@@ -2,7 +2,6 @@ import type { UniversityAudioState } from "@workspace/api-zod";
 import { RoomError, RoomStore, roomStore } from "./room-store";
 
 export const UNIVERSITY_BEAM_SLOT_COUNT = 4;
-export const UNIVERSITY_BEAM_KICK_COOLDOWN_MS = 60_000;
 
 type Slot = {
   slotNumber: number;
@@ -24,7 +23,6 @@ type Beam = {
 /** In-memory university beam state; media is never sent through this server. */
 export class UniversityAudioBeamStore {
   private readonly beams = new Map<string, Beam>();
-  private readonly kickedUntil = new Map<string, number>();
 
   constructor(private readonly rooms: RoomStore = roomStore, private readonly now: () => number = Date.now) {}
 
@@ -42,15 +40,7 @@ export class UniversityAudioBeamStore {
   }
 
   assertCanJoin(roomId: string, accountId: string): void {
-    const historyId = this.rooms.getHistoryId(roomId);
-    const key = this.kickKey(roomId, historyId, accountId);
-    const until = this.kickedUntil.get(key);
-    if (!until) return;
-    if (until <= this.now()) {
-      this.kickedUntil.delete(key);
-      return;
-    }
-    throw new RoomError(409, "You were removed from this room. Please wait a moment before rejoining.");
+    // Persistent room-incarnation kick checks are enforced by the route layer.
   }
 
   joinSlot(roomId: string, participantId: string, accountId: string): UniversityAudioState {
@@ -108,8 +98,6 @@ export class UniversityAudioBeamStore {
     const target = this.requireSlot(beam, targetId);
     const accountId = target.accountId;
     if (!accountId) throw new RoomError(404, "Speaker is no longer in this room.");
-    this.kickedUntil.set(this.kickKey(beam.roomId, beam.historyId, accountId),
-      this.now() + UNIVERSITY_BEAM_KICK_COOLDOWN_MS);
     this.releaseSlot(beam, target);
     this.publish(beam);
     return { state: this.toState(beam), accountId };
@@ -189,9 +177,6 @@ export class UniversityAudioBeamStore {
     for (const listener of beam.listeners) listener(state);
   }
 
-  private kickKey(roomId: string, historyId: string, accountId: string): string {
-    return `${roomId.toUpperCase()}:${historyId}:${accountId}`;
-  }
 }
 
 export const universityAudioBeamStore = new UniversityAudioBeamStore();

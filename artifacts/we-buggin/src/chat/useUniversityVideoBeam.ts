@@ -76,19 +76,17 @@ function syncAudioSubscriptions(
   room: Room,
   state: UniversityVideoBeamState,
   listenerId: string,
-  blockedIds: ReadonlySet<string>,
   speakerConversationEnabled = false,
 ) {
   const listenerMicEnabled = speakerConversationEnabled
     && isBeamMicEnabled(state.slots.find(slot => slot.participantId === listenerId));
   for (const participant of room.remoteParticipants.values()) {
-    const shouldSubscribe = !blockedIds.has(participant.identity)
-      && shouldSubscribeToBeamAudio({
-        listenerId,
-        listenerMicEnabled,
-        publisherId: participant.identity,
-        slots: state.slots,
-      });
+    const shouldSubscribe = shouldSubscribeToBeamAudio({
+      listenerId,
+      listenerMicEnabled,
+      publisherId: participant.identity,
+      slots: state.slots,
+    });
     for (const publication of participant.trackPublications.values()) {
       if (publication.kind !== Track.Kind.Audio || publication.source !== Track.Source.Microphone) continue;
       if (publication.isSubscribed !== shouldSubscribe) publication.setSubscribed(shouldSubscribe);
@@ -100,7 +98,6 @@ export function useUniversityVideoBeam(
   roomId: string,
   roomSessionId: string,
   participantId: string,
-  blockedParticipantIds: string[] = [],
 ) {
   const [beam, setBeam] = useState(() => emptyState(roomId));
   const [connection, setConnection] = useState<BeamConnection>("idle");
@@ -118,10 +115,8 @@ export function useUniversityVideoBeam(
   const startingRef = useRef(false);
   const actionRef = useRef(false);
   const latest = useRef({ roomId, roomSessionId, participantId });
-  const blockedParticipantIdsRef = useRef(new Set(blockedParticipantIds));
   const beamRef = useRef(beam);
   latest.current = { roomId, roomSessionId, participantId };
-  blockedParticipantIdsRef.current = new Set(blockedParticipantIds);
   beamRef.current = beam;
 
   const headers = useCallback((session: string) => ({ "X-Room-Session": session }), []);
@@ -131,7 +126,7 @@ export function useUniversityVideoBeam(
     const room = roomRef.current;
     if (room) {
       syncAudioSubscriptions(
-        room, next, latest.current.participantId, blockedParticipantIdsRef.current,
+        room, next, latest.current.participantId,
         roleRef.current === "speaker" && speakerReadyRef.current,
       );
     }
@@ -219,7 +214,7 @@ export function useUniversityVideoBeam(
         setMediaVersion(version => version + 1);
       };
       const refreshSubscriptions = () => syncAudioSubscriptions(
-        room, beamRef.current, args.participantId, blockedParticipantIdsRef.current,
+        room, beamRef.current, args.participantId,
       );
       room.on(RoomEvent.ParticipantConnected, refreshSubscriptions);
       room.on(RoomEvent.TrackPublished, refreshSubscriptions);
@@ -277,10 +272,10 @@ export function useUniversityVideoBeam(
     const room = roomRef.current;
     if (!room) return;
     syncAudioSubscriptions(
-      room, beamRef.current, participantId, blockedParticipantIdsRef.current,
+      room, beamRef.current, participantId,
       roleRef.current === "speaker" && speakerReadyRef.current,
     );
-  }, [blockedParticipantIds.join("|"), participantId]);
+  }, [participantId]);
 
   useEffect(() => {
     activeRef.current = true;
@@ -410,7 +405,7 @@ export function useUniversityVideoBeam(
         setMediaVersion(version => version + 1);
       };
       const refreshSubscriptions = () => syncAudioSubscriptions(
-        room!, beamRef.current, args.participantId, blockedParticipantIdsRef.current,
+        room!, beamRef.current, args.participantId,
         roleRef.current === "speaker" && speakerReadyRef.current,
       );
       room.on(RoomEvent.ParticipantConnected, refreshSubscriptions);
