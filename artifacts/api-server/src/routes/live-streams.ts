@@ -21,6 +21,8 @@ import { RoomError } from "../lib/room-store";
 import { universityVideoBeamStore } from "../lib/university-video-beam";
 import { requireAdult } from "../lib/community";
 import { liveStreamChatHub } from "../lib/live-stream-chat";
+import { botSettings } from "../lib/moderator-bots";
+import { censorChatText } from "../lib/chat-filter";
 import {
   adoptLegacyLiveStreamSession,
   cleanupStaleLiveStreamSession,
@@ -405,6 +407,7 @@ router.get("/account/live-streams/:streamId/chat/events", async (req, res) => {
   await requireCompletedProfile(id);
   await requireAdult(id);
   const { roomName } = await requireLiveParticipant(id, params.data.streamId);
+  const filterSettings = await botSettings();
   res.set({
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache, no-transform",
@@ -414,7 +417,9 @@ router.get("/account/live-streams/:streamId/chat/events", async (req, res) => {
   res.flushHeaders();
   const writeMessage = async (message: ReturnType<typeof liveStreamChatHub.recent>[number]) => {
     if (await pairBlocked(id, message.accountId)) return;
-    const { accountId: _privateAccountId, ...publicMessage } = message;
+    const { accountId: _privateAccountId, ...publicMessage } = {
+      ...message, text: censorChatText(message.text, filterSettings.bannedWords),
+    };
     if (!res.destroyed && !res.writableEnded) res.write(`event: message\ndata: ${JSON.stringify(publicMessage)}\n\n`);
   };
   const writeGift = async (gift: ReturnType<typeof liveStreamChatHub.recentGifts>[number], eventName = "gift") => {
@@ -472,7 +477,8 @@ router.post("/account/live-streams/:streamId/chat", async (req, res) => {
   if (admission?.chatMuted || admission?.reportsMuted) {
     throw new RoomError(403, "Chat is temporarily muted while a moderator reviews reports");
   }
-  const body = input.data.text.trim();
+  const filterSettings = await botSettings();
+  const body = censorChatText(input.data.text.trim(), filterSettings.bannedWords);
   if (!body || body.length > 280) throw new RoomError(400, "Write 1–280 characters");
   const [nameColors, equippedBadge] = await Promise.all([
     nameColorProfilesForAccounts([id]),

@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  CARD_GAME_EPOCH_MS, CARD_GAME_PERIOD_MS, CARD_DEAL_INTERVAL_MS,
+  CARD_GAME_EPOCH_MS, CARD_GAME_PERIOD_MS, CARD_DEAL_INTERVAL_MS, CARD_GAME_PRIZE,
   cardGameClock, cardGamePrizeEligible, compareHandScores, createDeck, dealCardsForSeats, scoreFiveCardHand,
-  securelyShuffledDeck, splitRoomPrize,
+  securelyShuffledDeck, splitRoomPrize, applyDailyWinningsCap, nextRoomCardGameCarryover,
 } from "./room-card-game-policy";
 
 test("one fixed 75-minute app clock drives every room and boundary deal", () => {
@@ -18,15 +18,17 @@ test("one fixed 75-minute app clock drives every room and boundary deal", () => 
   assert.equal(atBoundary.gameStartMs, CARD_GAME_EPOCH_MS + CARD_GAME_PERIOD_MS);
 });
 
-test("one securely shuffled 52-card deck deals fifty distinct cards for ten seats", () => {
+test("one securely shuffled 52-card deck deals forty-five distinct cards for nine seats", () => {
   const deck = securelyShuffledDeck(max => max - 1);
   assert.equal(deck.length, 52);
   assert.equal(new Set(deck).size, 52);
   assert.deepEqual([...deck].sort(), [...createDeck()].sort());
-  const seats = Array.from({ length: 10 }, (_, i) => ({ seatNumber: i + 1, accountId: `player-${i}` }));
-  const all = Array.from({ length: 5 }, (_, index) => dealCardsForSeats(deck, index * 10, seats)).flat();
-  assert.equal(all.length, 50);
-  assert.equal(new Set(all.map(card => card.cardCode)).size, 50);
+  const seats = Array.from({ length: 9 }, (_, i) => ({ seatNumber: i + 1, accountId: `player-${i}` }));
+  const all = Array.from({ length: 5 }, (_, index) => dealCardsForSeats(deck, index * 9, seats)).flat();
+  assert.equal(all.length, 45);
+  assert.equal(new Set(all.map(card => card.cardCode)).size, 45);
+  assert.throws(() => dealCardsForSeats(deck, 0, [...seats, { seatNumber: 10, accountId: "player-9" }]),
+    /at most nine card seats/);
 });
 
 test("scores every hand category from best to worst, including all wild-twos", () => {
@@ -65,11 +67,11 @@ test("ties split exactly one hundred coins in host-relative seat order", () => {
     { accountId: "b", username: "B", seatNumber: 8 },
   ], 1);
   assert.deepEqual(two.map(winner => winner.coins), [50, 50]);
-  const shares = splitRoomPrize(Array.from({ length: 10 }, (_, i) => ({
+  const shares = splitRoomPrize(Array.from({ length: 9 }, (_, i) => ({
     accountId: String(i), username: `P${i}`, seatNumber: i + 1,
   })), 7);
   assert.equal(shares.reduce((total, share) => total + share.coins, 0), 100);
-  assert.deepEqual(shares.slice(0, 10).map(share => share.seatNumber), [7, 8, 9, 10, 1, 2, 3, 4, 5, 6]);
+  assert.deepEqual(shares.map(share => share.seatNumber), [7, 8, 9, 1, 2, 3, 4, 5, 6]);
 });
 
 test("prizes require three eligible accounts and are not available to smaller games", () => {
@@ -77,6 +79,36 @@ test("prizes require three eligible accounts and are not available to smaller ga
   assert.equal(cardGamePrizeEligible(1), false);
   assert.equal(cardGamePrizeEligible(2), false);
   assert.equal(cardGamePrizeEligible(3), true);
-  assert.equal(cardGamePrizeEligible(10), true);
+  assert.equal(cardGamePrizeEligible(9), true);
   assert.equal(cardGamePrizeEligible(3.5), false);
+});
+
+test("daily cap applies to card-game winnings across rooms and rolls back unpaid shares", () => {
+  const shares = [
+    { accountId: "a", username: "A", seatNumber: 1, coins: 100 },
+    { accountId: "b", username: "B", seatNumber: 2, coins: 50 },
+  ];
+  const capped = applyDailyWinningsCap(shares, new Map([["a", 475], ["b", 500]]));
+  assert.deepEqual(capped.map(share => [share.accountId, share.coins, share.unpaidGold]), [
+    ["a", 25, 75], ["b", 0, 50],
+  ]);
+  assert.equal(capped.reduce((sum, share) => sum + share.coins, 0), 25);
+  assert.equal(capped.reduce((sum, share) => sum + share.unpaidGold, 0), 125);
+});
+
+test("room carryover keeps next prize at or below 500 gold", () => {
+  assert.equal(nextRoomCardGameCarryover(0), 0);
+  assert.equal(nextRoomCardGameCarryover(49), 49);
+  assert.equal(CARD_GAME_PRIZE + nextRoomCardGameCarryover(500), 500);
+  assert.equal(CARD_GAME_PRIZE + nextRoomCardGameCarryover(900), 500);
+});
+
+test("split can allocate a rolled-over pot without exceeding its exact value", () => {
+  const shares = splitRoomPrize([
+    { accountId: "a", username: "A", seatNumber: 1 },
+    { accountId: "b", username: "B", seatNumber: 2 },
+    { accountId: "c", username: "C", seatNumber: 3 },
+  ], 1, 250);
+  assert.deepEqual(shares.map(share => share.coins), [84, 83, 83]);
+  assert.equal(shares.reduce((sum, share) => sum + share.coins, 0), 250);
 });

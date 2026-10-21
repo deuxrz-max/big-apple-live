@@ -51,6 +51,9 @@
     "test:test-actor-integration": "esbuild src/lib/test-actor-integration.test.ts --bundle --platform=node --format=esm --external:sharp --external:pino --banner:js=\"import { createRequire as cr } from 'node:module'; const require = cr(import.meta.url);\" --outfile=.tests/test-actor-integration.test.mjs && node --test .tests/test-actor-integration.test.mjs",
     "test:dev-audio-harness": "esbuild src/lib/dev-audio-harness-policy.test.ts --bundle --platform=node --format=esm --outfile=.tests/dev-audio-harness-policy.test.mjs && node --test .tests/dev-audio-harness-policy.test.mjs",
     "test:room-card-game-policy": "esbuild src/lib/room-card-game-policy.test.ts --bundle --platform=node --format=esm --outfile=.tests/room-card-game-policy.test.mjs && node --test .tests/room-card-game-policy.test.mjs",
+    "test:room-card-game-settlement": "esbuild src/lib/room-card-game-settlement.integration.test.ts --bundle --platform=node --format=esm --external:sharp --external:pino --banner:js=\"import { createRequire as cr } from 'node:module'; const require=cr(import.meta.url);\" --outfile=.tests/room-card-game-settlement.integration.test.mjs && CARD_GAME_TEST_SETTLEMENT=true NODE_ENV=development node --test .tests/room-card-game-settlement.integration.test.mjs",
+    "test:cash-out-policy": "esbuild src/lib/cash-out-policy.test.ts --bundle --platform=node --format=esm --outfile=.tests/cash-out-policy.test.mjs && node --test .tests/cash-out-policy.test.mjs",
+    "test:chat-filter": "esbuild src/lib/chat-filter.test.ts --bundle --platform=node --format=esm --outfile=.tests/chat-filter.test.mjs && node --test .tests/chat-filter.test.mjs",
     "test:room-moderation-policy": "esbuild src/lib/room-moderation-policy.test.ts --bundle --platform=node --format=esm --outfile=.tests/room-moderation-policy.test.mjs && node --test .tests/room-moderation-policy.test.mjs",
     "test-actor": "node scripts/test-actor.mjs"
   },

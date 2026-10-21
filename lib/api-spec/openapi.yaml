@@ -142,7 +142,7 @@ paths:
     get:
       operationId: getUniversityVideoBeamState
       tags: [video]
-      summary: Read the eight-slot LiveKit video beam for an authenticated university member
+      summary: Read the nine-seat LiveKit video beam for an authenticated room member
       security:
         - AccountSession: []
           AccountRoomSession: []
@@ -524,7 +524,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ErrorResponse" }
         "409":
-          description: All eight speaker slots are occupied, or the account was recently removed from this beam
+          description: All nine speaker slots are occupied, or the account was recently removed from this beam
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ErrorResponse" }
@@ -1943,7 +1943,7 @@ components:
         role:
           type: string
           enum: [audience, speaker]
-        slotNumber: { type: ["integer", "null"], minimum: 1, maximum: 8 }
+        slotNumber: { type: ["integer", "null"], minimum: 1, maximum: 9 }
       required: [url, token, role, slotNumber]
     UniversityVideoBeamActionInput:
       type: object
@@ -1953,12 +1953,12 @@ components:
           enum: [reserve-slot, speaker-connected, leave-slot, move-slot, set-self-mic, host-mute-mic, kick]
         enabled: { type: boolean }
         targetParticipantId: { type: string, format: uuid }
-        targetSlotNumber: { type: integer, minimum: 1, maximum: 8 }
+        targetSlotNumber: { type: integer, minimum: 1, maximum: 9 }
       required: [action]
     UniversityVideoBeamSlot:
       type: object
       properties:
-        slotNumber: { type: integer, minimum: 1, maximum: 8 }
+        slotNumber: { type: integer, minimum: 1, maximum: 9 }
         participantId: { type: [string, "null"], format: uuid }
         micMuted: { type: boolean }
         cameraOff: { type: boolean }
@@ -1974,8 +1974,8 @@ components:
         tv: { $ref: "#/components/schemas/UniversityVideoBeamTvState" }
         slots:
           type: array
-          minItems: 8
-          maxItems: 8
+          minItems: 9
+          maxItems: 9
           items: { $ref: "#/components/schemas/UniversityVideoBeamSlot" }
       required: [roomId, beamActive, hostParticipantId, tv, slots]
     UniversityVideoBeamTvState:

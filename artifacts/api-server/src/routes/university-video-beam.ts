@@ -1383,7 +1383,7 @@ router.post("/account/rooms/:roomId/video-beam/actions", async (req, res) => {
       }
       case "move-slot": {
         if (!Number.isInteger(input.data.targetSlotNumber)) {
-          throw new RoomError(400, "Choose one of the eight speaker spots.");
+          throw new RoomError(400, "Choose one of the nine speaker spots.");
         }
         state = universityVideoBeamStore.moveSlot(
           roomId, participant.participantId, id, input.data.targetSlotNumber!,

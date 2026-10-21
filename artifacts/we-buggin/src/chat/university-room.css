@@ -102,7 +102,7 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 .ur-status-dot{width:7px;height:7px;border-radius:50%;background:#777985}
 .ur-audio-connected .ur-status-dot,.ur-audio-ready .ur-status-dot{background:#73d8b0}
 .ur-audio-connecting .ur-status-dot,.ur-audio-reconnecting .ur-status-dot{background:#e8c879}
-.ur-slots{flex:1;min-width:0;min-height:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:5px}
+.ur-slots{flex:1;min-width:0;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr)) minmax(0,1.55fr) repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:5px}
 .ur-slot{position:relative;isolation:isolate;min-width:0;min-height:0;padding:9px;border:1px solid rgba(228,222,255,.1);border-radius:13px;background:#202127;box-shadow:0 0 11px rgba(168,72,255,.14),inset 0 0 0 1px rgba(238,230,255,.025);display:flex;flex-direction:column;align-items:stretch;justify-content:space-between;gap:7px}
 .ur-slot::before{content:"";position:absolute;inset:0;z-index:0;padding:1.6px;border-radius:inherit;background:repeating-linear-gradient(135deg,#ff3c9d 0%,#aa45ff 31%,#397bff 66%,#40e8ee 100%,#ff3c9d 125%);background-size:240% 240%;animation:ur-frame-flow 32s linear infinite;pointer-events:none;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
 .ur-slot::after{content:"";position:absolute;inset:4px;z-index:0;border:1px solid rgba(237,231,255,.2);border-radius:9px;pointer-events:none}
@@ -196,7 +196,7 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 .ur-tv-stop{justify-self:start;border-color:#ef879c;color:#ffd5dc;background:rgba(88,30,48,.45)}
 .ur-tv-close{position:absolute;top:8px;right:11px;border:0;background:transparent;color:#eee;font-size:25px;line-height:1;cursor:pointer}
 .ur-beam.is-tv-on{flex-basis:51%}
-.ur-slots[data-tv=on]{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:3px}
+.ur-slots[data-tv=on]{grid-template-columns:repeat(2,minmax(0,1fr)) minmax(0,1.55fr) repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:3px}
 .ur-slots[data-tv=on] .ur-slot{padding:3px;gap:2px;border-radius:9px}
 .ur-slots[data-tv=on] .ur-slot-media{border-radius:6px}
 .ur-slots[data-tv=on] .ur-slot-avatar{width:28px;height:28px;flex-basis:28px;font-size:18px}

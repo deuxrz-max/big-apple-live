@@ -16,6 +16,7 @@ import { BadgeMark } from '@/social/common';
 import { useTextRoom } from './useTextRoom';
 import { BeamAudioTrack, useUniversityVideoBeam } from './useUniversityVideoBeam';
 import { isBeamMicEnabled } from './beam-audio-policy';
+import { arrangeVideoBeamSeats } from './video-beam-seat-layout';
 import { BeamTv, type BeamTvHandle } from './BeamTv';
 import { BotShield } from './BotShield';
 import { GiftBag, OPEN_ROOM_GIFTS_EVENT } from '@/gifts';
@@ -231,6 +232,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const people = session?.people ?? [];
   const me = people.find((p) => p.self);
   const beamSlots = [...videoBeam.beam.slots].sort((a, b) => a.slotNumber - b.slotNumber);
+  const beamSeatLayout = arrangeVideoBeamSeats(beamSlots, videoBeam.beam.hostParticipantId);
   const peopleByParticipantId = new Map(people.map(person => [person.participantId, person]));
   const giftRecipients = beamSlots.flatMap(slot => {
     if (!slot.participantId) return [];
@@ -400,7 +402,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           </aside>
           {drawer && <div className="ur-backdrop" onClick={closeDrawer} aria-hidden="true" />}
           <div className="ch-room">
-            <section className={`ur-beam${videoBeam.beam.tv.enabled ? ' is-tv-on' : ''}`} aria-label="Eight-slot LiveKit video beam">
+            <section className={`ur-beam${videoBeam.beam.tv.enabled ? ' is-tv-on' : ''}`} aria-label="Nine-seat LiveKit video beam">
               <div className="ur-audio-status-row">
                   <span className={`ur-audio-status ur-audio-${videoBeam.connection}`} role="status">
                   <span className="ur-status-dot" aria-hidden="true" />
@@ -429,11 +431,12 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
               {videoBeam.beam.beamActive && !videoBeam.ownSlot && beamSlots.every(slot => slot.participantId)
                 && <p className="ur-beam-full" role="status">Beam is full. You can still watch and chat; an open spot can be joined as soon as someone leaves.</p>}
                   <div className="ur-slots" data-count={speakerCount} data-tv={videoBeam.beam.tv.enabled ? 'on' : 'off'}>
-                {beamSlots.map((slot) => {
+                {beamSeatLayout.map(({ slot, area, gridColumn, gridRow }) => {
                   const person = slot.participantId
                     ? people.find((p) => p.participantId === slot.participantId)
                     : undefined;
                   const mine = slot.participantId === participantId;
+                  const isBeamHost = !!slot.participantId && slot.participantId === videoBeam.beam.hostParticipantId;
                   const canSelectOpenSlot = !slot.participantId && !!sessionId && !!participantId
                     && (!videoBeam.ownSlot || videoBeam.ownSlot.slotNumber !== slot.slotNumber);
                   const moveAvailable = canSelectOpenSlot && !!videoBeam.ownSlot;
@@ -458,8 +461,10 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                     </div>
                   ) : null;
                   return (
-                    <article className={`ur-slot${isSpeaking ? ' is-speaking' : ''}${slot.participantId ? ' is-occupied' : ''}${person ? ' has-person' : ''}`}
+                    <article className={`ur-slot${isSpeaking ? ' is-speaking' : ''}${slot.participantId ? ' is-occupied' : ''}${person ? ' has-person' : ''}${isBeamHost ? ' is-beam-host' : ''}`}
                       key={slot.slotNumber}
+                      data-seat-position={area}
+                      style={{ gridColumn, gridRow: area === 'host' ? '1 / span 2' : gridRow }}
                       aria-label={`Speaker slot ${slot.slotNumber}${slot.participantId ? `, ${person?.displayName ?? 'occupied'}` : ', empty'}`}>
                       <div className="ur-slot-media"
                         role={(mine || joinAvailable || moveAvailable) && !videoBeam.busy ? 'button' : undefined}

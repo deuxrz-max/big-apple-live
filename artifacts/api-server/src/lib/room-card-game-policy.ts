@@ -3,8 +3,10 @@ import { randomInt } from "node:crypto";
 export const CARD_GAME_EPOCH_MS = Date.UTC(2026, 0, 1, 0, 0, 0);
 export const CARD_GAME_PERIOD_MS = 75 * 60_000;
 export const CARD_DEAL_INTERVAL_MS = 15 * 60_000;
-export const CARD_GAME_SEAT_LIMIT = 10;
+export const CARD_GAME_SEAT_LIMIT = 9;
 export const CARD_GAME_PRIZE = 100;
+export const CARD_GAME_DAILY_WIN_CAP = 500;
+export const CARD_GAME_MAX_POT = 500;
 export const CARD_RECONNECT_GRACE_MS = 90_000;
 
 export function cardGamePrizeEligible(playerCount: number): boolean {
@@ -167,21 +169,51 @@ export type PrizeWinner = { accountId: string; username: string; seatNumber: num
 export type PrizeShare = PrizeWinner & { coins: number };
 
 /** Exact 100-coin room prize; remainder follows seat order from the host or seat 1. */
-export function splitRoomPrize(winners: PrizeWinner[], hostSeatNumber: number | null = null): PrizeShare[] {
+export function splitRoomPrize(
+  winners: PrizeWinner[],
+  hostSeatNumber: number | null = null,
+  prizeGold = CARD_GAME_PRIZE,
+): PrizeShare[] {
+  if (!Number.isSafeInteger(prizeGold) || prizeGold < 0 || prizeGold > CARD_GAME_MAX_POT) {
+    throw new Error("A card-game prize must be between 0 and 500 gold");
+  }
   if (!winners.length) return [];
   const startSeat = hostSeatNumber ?? 1;
   const ordered = [...winners].sort((a, b) => {
-    const aOffset = (a.seatNumber - startSeat + 10) % 10;
-    const bOffset = (b.seatNumber - startSeat + 10) % 10;
+    const aOffset = (a.seatNumber - startSeat + CARD_GAME_SEAT_LIMIT) % CARD_GAME_SEAT_LIMIT;
+    const bOffset = (b.seatNumber - startSeat + CARD_GAME_SEAT_LIMIT) % CARD_GAME_SEAT_LIMIT;
     return aOffset - bOffset || a.accountId.localeCompare(b.accountId);
   });
-  const base = Math.floor(100 / ordered.length);
-  let remainder = 100 - base * ordered.length;
+  const base = Math.floor(prizeGold / ordered.length);
+  let remainder = prizeGold - base * ordered.length;
   return ordered.map(winner => ({ ...winner, coins: base + (remainder-- > 0 ? 1 : 0) }));
 }
 
+export type CappedPrizeShare = PrizeShare & { unpaidGold: number };
+
+/** Apply one account's already-paid daily card winnings to each share. */
+export function applyDailyWinningsCap(
+  shares: PrizeShare[],
+  winningsByAccount: ReadonlyMap<string, number>,
+  capGold = CARD_GAME_DAILY_WIN_CAP,
+): CappedPrizeShare[] {
+  if (!Number.isSafeInteger(capGold) || capGold < 0) throw new Error("Daily winnings cap must be nonnegative");
+  return shares.map(share => {
+    const alreadyWon = winningsByAccount.get(share.accountId) ?? 0;
+    if (!Number.isSafeInteger(alreadyWon) || alreadyWon < 0) throw new Error("Daily winnings must be nonnegative");
+    const paidGold = Math.min(share.coins, Math.max(0, capGold - alreadyWon));
+    return { ...share, coins: paidGold, unpaidGold: share.coins - paidGold };
+  });
+}
+
+/** Keep the next room pot at its 100-gold base plus no more than 400 carryover. */
+export function nextRoomCardGameCarryover(unpaidGold: number): number {
+  if (!Number.isSafeInteger(unpaidGold) || unpaidGold < 0) throw new Error("Unpaid prize must be nonnegative");
+  return Math.min(CARD_GAME_MAX_POT - CARD_GAME_PRIZE, unpaidGold);
+}
+
 export function dealCardsForSeats(deck: string[], startIndex: number, seats: Array<{ seatNumber: number; accountId: string }>) {
-  if (seats.length > 10) throw new Error("A room can have at most ten card seats");
+  if (seats.length > CARD_GAME_SEAT_LIMIT) throw new Error("A room can have at most nine card seats");
   const ordered = [...seats].sort((a, b) => a.seatNumber - b.seatNumber);
   if (new Set(ordered.map(seat => seat.seatNumber)).size !== ordered.length) throw new Error("Card seat numbers must be unique");
   if (startIndex < 0 || startIndex + ordered.length > deck.length) throw new Error("The deck does not contain enough cards");

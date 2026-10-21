@@ -59,7 +59,7 @@ const emptyState = (roomId: string): UniversityVideoBeamState => ({
     seriesDate: null,
     seriesEpisodeNumber: null,
   },
-  slots: [1, 2, 3, 4, 5, 6, 7, 8].map(slotNumber => ({
+  slots: [1, 2, 3, 4, 5, 6, 7, 8, 9].map(slotNumber => ({
     slotNumber,
     participantId: null,
     micMuted: true,
@@ -395,7 +395,7 @@ export function useUniversityVideoBeam(
       applyBeam(latestBeam);
       const alreadyOwnsSpot = latestBeam.slots.some(slot => slot.participantId === args.participantId);
       const available = alreadyOwnsSpot || latestBeam.slots.some(slot => !slot.participantId);
-      if (!available) throw new Error("All eight speaker spots are full. You can still watch and chat.");
+      if (!available) throw new Error("All nine speaker spots are full. You can still watch and chat.");
       if (!navigator.mediaDevices?.getUserMedia) {
         throw new Error("This browser cannot access a microphone for live audio.");
       }

@@ -201,21 +201,21 @@ test("default Beam TV queue clips long YouTube descriptions before exposing stat
   assert.equal(state.tv.videoMetadata[0]?.description?.length, 500);
 });
 
-test("video beam reserves exactly eight slots under simultaneous joins and keeps room scopes isolated", async () => {
+test("video beam reserves exactly nine slots under simultaneous joins and keeps room scopes isolated", async () => {
   const rooms = new RoomStore();
   createRoom(rooms);
   createRoom(rooms, "GAMING", "history-gaming");
   const beam = new UniversityVideoBeamStore(rooms);
-  const members = Array.from({ length: 10 }, (_, i) => addMember(rooms, "MUSIC1", `account-${i}`));
+  const members = Array.from({ length: 11 }, (_, i) => addMember(rooms, "MUSIC1", `account-${i}`));
   const attempts = await Promise.allSettled(members.map((member, i) =>
     Promise.resolve().then(() => beam.joinSlot("MUSIC1", member.participantId, `account-${i}`))));
-  assert.equal(attempts.filter(result => result.status === "fulfilled").length, 8);
+  assert.equal(attempts.filter(result => result.status === "fulfilled").length, 9);
   assert.equal(attempts.filter(result => result.status === "rejected").length, 2);
-  assert.equal(beam.getState("MUSIC1").slots.filter(slot => slot.participantId).length, 8);
-  assert.equal(new Set(beam.getState("MUSIC1").slots.map(slot => slot.slotNumber)).size, 8);
+  assert.equal(beam.getState("MUSIC1").slots.filter(slot => slot.participantId).length, 9);
+  assert.equal(new Set(beam.getState("MUSIC1").slots.map(slot => slot.slotNumber)).size, 9);
   assert.equal(beam.getState("MUSIC1").hostParticipantId, null, "public topic rooms have no beam host");
   assert.equal(beam.getState("GAMING").slots.filter(slot => slot.participantId).length, 0);
-  assert.throws(() => beam.joinSlot("MUSIC1", members[8]!.participantId, "account-8"),
+  assert.throws(() => beam.joinSlot("MUSIC1", members[9]!.participantId, "account-9"),
     (error: unknown) => error instanceof RoomError && error.status === 409);
 });
 

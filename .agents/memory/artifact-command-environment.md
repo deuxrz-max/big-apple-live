@@ -23,3 +23,16 @@ missing-variable failure.
 For one-off package scripts, run in the owning package context and keep the
 output format compatible with the imported dependencies; do not assume ESM
 bundling resolves package-local CommonJS modules.
+
+Commands run through `pnpm --filter <package> exec` resolve relative paths from
+that package directory. If a shell chain then invokes a tool from the workspace
+root, qualify generated-file paths from the root rather than reusing package-
+relative paths.
+
+**Why:** A filtered bundle command succeeded, but its following Node test command
+could not locate the output because the two commands resolved paths from
+different working directories.
+
+**How to apply:** Check each chained command's working directory when running
+filtered test or build commands, especially when output is relative to the
+package but the next command is launched by the outer shell.

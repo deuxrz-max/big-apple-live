@@ -1,6 +1,6 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import {
-  accountProfiles, db, socialLedger, socialWallets,
+  accountProfiles, db, roomCardGameDailyWinnings, roomCardGamePots, socialLedger, socialWallets,
 } from "@workspace/db";
 import {
   roomCardGameDeals, roomCardGameResults, roomCardGameRuns,
@@ -10,10 +10,12 @@ import { logger } from "./logger";
 import { RoomError, roomStore } from "./room-store";
 import { lockAccounts } from "./social/core";
 import { universityVideoBeamStore } from "./university-video-beam";
+import { easternHangoutDayKey } from "./community-hangout-policy";
 import {
-  CARD_DEAL_INTERVAL_MS, CARD_GAME_PERIOD_MS, CARD_GAME_PRIZE, CARD_RECONNECT_GRACE_MS,
-  cardGameClock, cardGamePrizeEligible, compareHandScores, dealCardsForSeats, parseCardCode, scoreFiveCardHand,
-  securelyShuffledDeck, splitRoomPrize, type PrizeWinner,
+  CARD_DEAL_INTERVAL_MS, CARD_GAME_DAILY_WIN_CAP, CARD_GAME_MAX_POT, CARD_GAME_PERIOD_MS, CARD_GAME_SEAT_LIMIT,
+  CARD_GAME_PRIZE, CARD_RECONNECT_GRACE_MS, applyDailyWinningsCap,
+  cardGameClock, cardGamePrizeEligible, compareHandScores, dealCardsForSeats, nextRoomCardGameCarryover,
+  parseCardCode, scoreFiveCardHand, securelyShuffledDeck, splitRoomPrize, type PrizeWinner,
 } from "./room-card-game-policy";
 
 const SETTINGS_ID = "global";
@@ -25,7 +27,7 @@ type GameSettings = {
   payoutsEnabled: boolean;
   cardDisplayEnabled: boolean;
   dealsEnabledAt: Date | null;
-  dailyWinningsCap: number | null;
+  dailyWinningsCap: number;
 };
 
 async function getSettings(): Promise<GameSettings> {
@@ -33,13 +35,24 @@ async function getSettings(): Promise<GameSettings> {
   const [settings] = await db.select().from(roomCardGameSettings)
     .where(eq(roomCardGameSettings.id, SETTINGS_ID)).limit(1);
   if (!settings) throw new Error("Card-game settings are unavailable");
-  return settings;
+  return { ...settings, dailyWinningsCap: CARD_GAME_DAILY_WIN_CAP };
+}
+
+async function lockRoomCardGame(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  roomId: string,
+) {
+  await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${"card-game-room:" + roomId}, 0))`);
 }
 
 async function ensureGame(roomId: string, gameNumber: number, gameStartMs: number) {
-  await db.insert(roomCardGameRuns).values({
-    roomId, gameNumber, gameStartAt: new Date(gameStartMs), deck: securelyShuffledDeck(),
-  }).onConflictDoNothing();
+  await db.transaction(async tx => {
+    await lockRoomCardGame(tx, roomId);
+    await tx.insert(roomCardGamePots).values({ roomId }).onConflictDoNothing();
+    await tx.insert(roomCardGameRuns).values({
+      roomId, gameNumber, gameStartAt: new Date(gameStartMs), deck: securelyShuffledDeck(),
+    }).onConflictDoNothing();
+  });
 }
 
 async function lockInFirstDealSeats(
@@ -50,7 +63,7 @@ async function lockInFirstDealSeats(
   const slots = universityVideoBeamStore.getState(roomId).slots
     .filter(slot => slot.participantId !== null)
     .sort((a, b) => a.slotNumber - b.slotNumber)
-    .slice(0, 10);
+    .slice(0, CARD_GAME_SEAT_LIMIT);
   if (!slots.length) return;
   const candidates = slots.flatMap(slot => {
     if (!slot.participantId) return [];
@@ -109,6 +122,8 @@ async function recordVoid(
   gameNumber: number,
   reason: string,
 ) {
+  const [pot] = await tx.select({ carryoverGold: roomCardGamePots.carryoverGold }).from(roomCardGamePots)
+    .where(eq(roomCardGamePots.roomId, roomId)).limit(1);
   await tx.update(roomCardGameRuns).set({
     status: "void", voidReason: reason, updatedAt: new Date(),
   }).where(and(eq(roomCardGameRuns.roomId, roomId), eq(roomCardGameRuns.gameNumber, gameNumber)));
@@ -117,7 +132,8 @@ async function recordVoid(
     eq(roomCardGameSeats.status, "active"),
   ));
   await tx.insert(roomCardGameResults).values({
-    roomId, gameNumber, status: "void", announcement: "The card game was voided. No prize was paid.",
+    roomId, gameNumber, status: "void", carryoverGold: pot?.carryoverGold ?? 0,
+    announcement: "The card game was voided. No prize was paid.",
   }).onConflictDoNothing();
 }
 
@@ -126,6 +142,8 @@ async function settleGame(
   roomId: string,
   gameNumber: number,
   payoutsEnabled: boolean,
+  settledAt: Date,
+  hostSeatNumber = universityVideoBeamStore.hostSeatNumber(roomId),
 ) {
   const [existing] = await tx.select().from(roomCardGameResults).where(and(
     eq(roomCardGameResults.roomId, roomId), eq(roomCardGameResults.gameNumber, gameNumber),
@@ -156,6 +174,9 @@ async function settleGame(
   }
 
   if (!cardGamePrizeEligible(eligible.length)) {
+    await tx.insert(roomCardGamePots).values({ roomId }).onConflictDoNothing();
+    await tx.update(roomCardGamePots).set({ carryoverGold: 0, updatedAt: settledAt })
+      .where(eq(roomCardGamePots.roomId, roomId));
     await tx.update(roomCardGameSeats).set({ status: "out", graceUntil: null }).where(and(
       eq(roomCardGameSeats.roomId, roomId), eq(roomCardGameSeats.gameNumber, gameNumber),
       eq(roomCardGameSeats.status, "active"),
@@ -170,12 +191,16 @@ async function settleGame(
   }
 
   if (!payoutsEnabled) {
+    await tx.insert(roomCardGamePots).values({ roomId }).onConflictDoNothing();
+    const [pot] = await tx.select({ carryoverGold: roomCardGamePots.carryoverGold }).from(roomCardGamePots)
+      .where(eq(roomCardGamePots.roomId, roomId)).for("update").limit(1);
     await tx.update(roomCardGameSeats).set({ status: "out", graceUntil: null }).where(and(
       eq(roomCardGameSeats.roomId, roomId), eq(roomCardGameSeats.gameNumber, gameNumber),
       eq(roomCardGameSeats.status, "active"),
     ));
     await tx.insert(roomCardGameResults).values({
       roomId, gameNumber, status: "no_prize",
+      carryoverGold: pot?.carryoverGold ?? 0,
       announcement: "No prize was paid because card-game payouts are switched off.",
     }).onConflictDoNothing();
     await tx.update(roomCardGameRuns).set({ status: "paid", updatedAt: new Date() })
@@ -188,18 +213,60 @@ async function settleGame(
     if (compareHandScores(player.score, best.score) > 0) best = player;
   }
   const winners = eligible.filter(player => compareHandScores(player.score, best.score) === 0);
-  const shares = splitRoomPrize(winners, universityVideoBeamStore.hostSeatNumber(roomId));
-  await lockAccounts(tx, shares.map(share => share.accountId));
-  for (const share of shares) {
-    await tx.update(socialWallets).set({
-      balance: sql`${socialWallets.balance} + ${share.coins}`,
-      earned: sql`${socialWallets.earned} + ${share.coins}`,
-    }).where(eq(socialWallets.accountId, share.accountId));
-    await tx.insert(socialLedger).values({
-      accountId: share.accountId, delta: share.coins, kind: "reward",
-      description: `Room card-game prize · game ${gameNumber}`,
-      refKey: `card-game:${roomId}:${gameNumber}`,
-    });
+  await tx.insert(roomCardGamePots).values({ roomId }).onConflictDoNothing();
+  const [pot] = await tx.select().from(roomCardGamePots)
+    .where(eq(roomCardGamePots.roomId, roomId)).for("update").limit(1);
+  const prizeGold = Math.min(CARD_GAME_MAX_POT, CARD_GAME_PRIZE + (pot?.carryoverGold ?? 0));
+  const rawShares = splitRoomPrize(winners, hostSeatNumber, prizeGold);
+  const dayKey = easternHangoutDayKey(settledAt);
+  await lockAccounts(tx, rawShares.map(share => share.accountId));
+  const paidShares: typeof rawShares = [];
+  let unpaidGold = 0;
+  for (const share of rawShares) {
+    await tx.insert(roomCardGameDailyWinnings).values({
+      accountId: share.accountId, dayKey, winningsGold: 0,
+    }).onConflictDoNothing();
+    const [daily] = await tx.select().from(roomCardGameDailyWinnings).where(and(
+      eq(roomCardGameDailyWinnings.accountId, share.accountId),
+      eq(roomCardGameDailyWinnings.dayKey, dayKey),
+    )).for("update").limit(1);
+    const [capped] = applyDailyWinningsCap([share], new Map([
+      [share.accountId, daily?.winningsGold ?? 0],
+    ]), CARD_GAME_DAILY_WIN_CAP);
+    if (!capped) throw new Error("Card-game payout cap could not be calculated");
+    const paidGold = capped.coins;
+    unpaidGold += capped.unpaidGold;
+    paidShares.push({ ...share, coins: paidGold });
+    if (paidGold > 0) {
+      await tx.update(roomCardGameDailyWinnings).set({
+        winningsGold: (daily?.winningsGold ?? 0) + paidGold, updatedAt: settledAt,
+      }).where(and(
+        eq(roomCardGameDailyWinnings.accountId, share.accountId),
+        eq(roomCardGameDailyWinnings.dayKey, dayKey),
+      ));
+      await tx.update(socialWallets).set({
+        balance: sql`${socialWallets.balance} + ${paidGold}`,
+        earned: sql`${socialWallets.earned} + ${paidGold}`,
+      }).where(eq(socialWallets.accountId, share.accountId));
+      await tx.insert(socialLedger).values({
+        accountId: share.accountId, delta: paidGold, kind: "reward",
+        description: `Room card-game prize · game ${gameNumber}`,
+        refKey: `card-game:${roomId}:${gameNumber}`,
+      });
+    }
+    if (paidGold > 0) {
+      await tx.update(roomCardGameSeats).set({ status: "winner" }).where(and(
+        eq(roomCardGameSeats.roomId, roomId), eq(roomCardGameSeats.gameNumber, gameNumber),
+        eq(roomCardGameSeats.accountId, share.accountId),
+      ));
+    }
+  }
+  const carryoverGold = nextRoomCardGameCarryover(unpaidGold);
+  await tx.update(roomCardGamePots).set({ carryoverGold, updatedAt: settledAt })
+    .where(eq(roomCardGamePots.roomId, roomId));
+  for (const share of paidShares) {
+    if (share.coins > 0) continue;
+    // Capped winners still won the hand, even when no coins fit under today's cap.
     await tx.update(roomCardGameSeats).set({ status: "winner" }).where(and(
       eq(roomCardGameSeats.roomId, roomId), eq(roomCardGameSeats.gameNumber, gameNumber),
       eq(roomCardGameSeats.accountId, share.accountId),
@@ -209,13 +276,15 @@ async function settleGame(
     eq(roomCardGameSeats.roomId, roomId), eq(roomCardGameSeats.gameNumber, gameNumber),
     eq(roomCardGameSeats.status, "active"),
   ));
-  const announcement = shares.length === 1
-    ? `${shares[0]!.username} is the winner`
-    : `We have a tie: ${shares.map(share => `${share.username} (${share.coins} coins)`).join(", ")}`;
+  const announcement = paidShares.length === 1
+    ? `${paidShares[0]!.username} is the winner`
+    : `We have a tie: ${paidShares.map(share => `${share.username} (${share.coins} gold)`).join(", ")}`;
+  const payoutStatus = paidShares.some(share => share.coins > 0) ? "paid" : "no_prize";
   await tx.insert(roomCardGameResults).values({
-    roomId, gameNumber, status: "paid",
-    winnerAccountIds: shares.map(share => share.accountId),
-    shares: shares.map(({ accountId, username, seatNumber, coins }) => ({ accountId, username, seatNumber, coins })),
+    roomId, gameNumber, status: payoutStatus,
+    winnerAccountIds: paidShares.map(share => share.accountId),
+    shares: paidShares.map(({ accountId, username, seatNumber, coins }) => ({ accountId, username, seatNumber, coins })),
+    prizeGold, carryoverGold,
     announcement,
   }).onConflictDoNothing();
   await tx.update(roomCardGameRuns).set({ status: "paid", updatedAt: new Date() })
@@ -229,7 +298,7 @@ async function advanceGame(roomId: string, gameNumber: number, nowMs: number) {
   if (!run || run.status === "paid" || run.status === "void") return;
 
   await db.transaction(async tx => {
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${"card-game:" + roomId + ":" + gameNumber}, 0))`);
+    await lockRoomCardGame(tx, roomId);
     const [currentSettings] = await tx.select().from(roomCardGameSettings)
       .where(eq(roomCardGameSettings.id, SETTINGS_ID)).for("update").limit(1);
     if (!currentSettings) throw new Error("Card-game settings are unavailable");
@@ -275,8 +344,32 @@ async function advanceGame(roomId: string, gameNumber: number, nowMs: number) {
     if (dealtCount >= 5) {
       await tx.update(roomCardGameRuns).set({ status: "showdown", updatedAt: new Date(nowMs) })
         .where(and(eq(roomCardGameRuns.roomId, roomId), eq(roomCardGameRuns.gameNumber, gameNumber)));
-      await settleGame(tx, roomId, gameNumber, currentSettings.payoutsEnabled);
+      await settleGame(tx, roomId, gameNumber, currentSettings.payoutsEnabled, new Date(nowMs));
     }
+  });
+}
+
+/**
+ * Database-backed settlement entrypoint for the isolated development integration
+ * suite. It cannot be called unless the test process explicitly opts in.
+ */
+export async function settleRoomCardGameForDevelopmentTest(
+  roomId: string,
+  gameNumber: number,
+  settledAt: Date,
+) {
+  if (process.env.NODE_ENV === "production" || process.env.CARD_GAME_TEST_SETTLEMENT !== "true") {
+    throw new Error("Development-only card-game settlement test entrypoint");
+  }
+  return db.transaction(async tx => {
+    await lockRoomCardGame(tx, roomId);
+    const [run] = await tx.select().from(roomCardGameRuns).where(and(
+      eq(roomCardGameRuns.roomId, roomId), eq(roomCardGameRuns.gameNumber, gameNumber),
+    )).for("update").limit(1);
+    if (!run || run.cardsDealt < 5 || run.status === "void") {
+      throw new Error("The development test hand is not ready for settlement");
+    }
+    await settleGame(tx, roomId, gameNumber, true, settledAt, null);
   });
 }
 
@@ -291,7 +384,9 @@ export async function advanceRoomCardGame(roomId: string, nowMs = Date.now()) {
       eq(roomCardGameRuns.roomId, roomId),
       inArray(roomCardGameRuns.status, ["running", "showdown"]),
     ));
-  for (const game of outstanding) await advanceGame(roomId, game.gameNumber, nowMs);
+  for (const game of outstanding.sort((a, b) => a.gameNumber - b.gameNumber)) {
+    await advanceGame(roomId, game.gameNumber, nowMs);
+  }
   return { settings, clock };
 }
 
@@ -359,7 +454,7 @@ export async function updateRoomCardGameSettings(update: Partial<Pick<GameSettin
     }).where(eq(roomCardGameSettings.id, SETTINGS_ID)).returning();
     return changed;
   });
-  return settings!;
+  return { ...settings!, dailyWinningsCap: CARD_GAME_DAILY_WIN_CAP };
 }
 
 export async function cancelRoomCardGame(roomId: string, reason: string) {
@@ -368,7 +463,7 @@ export async function cancelRoomCardGame(roomId: string, reason: string) {
   )).orderBy(sql`${roomCardGameRuns.gameNumber} DESC`).limit(1);
   if (!run) return;
   await db.transaction(async tx => {
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${"card-game:" + roomId + ":" + run.gameNumber}, 0))`);
+    await lockRoomCardGame(tx, roomId);
     const [current] = await tx.select().from(roomCardGameRuns).where(and(
       eq(roomCardGameRuns.roomId, roomId), eq(roomCardGameRuns.gameNumber, run.gameNumber),
     )).for("update").limit(1);

@@ -98,6 +98,12 @@ test("accepted chat leaves photos and obsolete avatar fields unchanged; rejects 
     assert.deepEqual((await getProfile(bId))!.identity, bProfile.identity);
     assert.equal((await getMessages(roomId))[0]!.id, result.message.id);
     assert.equal(acceptedEvents, 1);
+    const censored = await acceptMessage(roomId, a.participantSessionId, aId,
+      { kind: "text", text: "Go fuck yourself" });
+    assert.equal(censored.message.text, "Go $%<& yourself");
+    assert.equal((await getMessages(roomId)).find(message => message.id === censored.message.id)?.text,
+      "Go $%<& yourself");
+    assert.equal(acceptedEvents, 2);
     await acceptMessage(roomId, a.participantSessionId, aId, { kind: "text", text: "🥹🔥" });
     assert.deepEqual((await getProfile(aId))!.identity, aProfile.identity);
     const saved = (await getProfile(aId))!;
@@ -135,7 +141,7 @@ test("accepted chat leaves photos and obsolete avatar fields unchanged; rejects 
     roomStore.leave(roomId, a.participantSessionId);
     await assert.rejects(acceptMessage(roomId, a.participantSessionId, aId, { kind: "reaction", text: "😭" }));
     assert.equal((await getMessages(roomId)).length, count);
-    assert.equal(acceptedEvents, 2);
+    assert.equal(acceptedEvents, 3);
     assert.ok(publicFrames.some(frame => frame.startsWith("event: room.snapshot")));
     assert.equal(publicFrames.some(frame => frame.includes("chat.accepted") || frame.includes("hello 😂")), false);
     assert.equal(publicFrames.some(frame => frame.includes("emoji_particle") || frame.includes("room_mood_update")), false);

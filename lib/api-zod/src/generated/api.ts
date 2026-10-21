@@ -389,7 +389,7 @@ export const GetUniversityAudioStateResponse = zod.object({
 
 
 /**
- * @summary Read the eight-slot LiveKit video beam for an authenticated university member
+ * @summary Read the nine-seat LiveKit video beam for an authenticated room member
  */
 export const getUniversityVideoBeamStatePathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9]{12})$');
 
@@ -432,10 +432,10 @@ export const getUniversityVideoBeamStateResponseTvSkipSequenceMin = 0;
 export const getUniversityVideoBeamStateResponseTvSeriesTitleMax = 160;
 
 
-export const getUniversityVideoBeamStateResponseSlotsItemSlotNumberMax = 8;
+export const getUniversityVideoBeamStateResponseSlotsItemSlotNumberMax = 9;
 
-export const getUniversityVideoBeamStateResponseSlotsMin = 8;
-export const getUniversityVideoBeamStateResponseSlotsMax = 8;
+export const getUniversityVideoBeamStateResponseSlotsMin = 9;
+export const getUniversityVideoBeamStateResponseSlotsMax = 9;
 
 
 
@@ -500,7 +500,7 @@ export const GetUniversityVideoBeamTokenBody = zod.object({
   "role": zod.enum(['audience', 'speaker'])
 })
 
-export const getUniversityVideoBeamTokenResponseSlotNumberMax = 8;
+export const getUniversityVideoBeamTokenResponseSlotNumberMax = 9;
 
 
 
@@ -526,7 +526,7 @@ export const PerformUniversityVideoBeamActionHeader = zod.object({
   "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
 })
 
-export const performUniversityVideoBeamActionBodyTargetSlotNumberMax = 8;
+export const performUniversityVideoBeamActionBodyTargetSlotNumberMax = 9;
 
 
 
@@ -567,10 +567,10 @@ export const performUniversityVideoBeamActionResponseTvSkipSequenceMin = 0;
 export const performUniversityVideoBeamActionResponseTvSeriesTitleMax = 160;
 
 
-export const performUniversityVideoBeamActionResponseSlotsItemSlotNumberMax = 8;
+export const performUniversityVideoBeamActionResponseSlotsItemSlotNumberMax = 9;
 
-export const performUniversityVideoBeamActionResponseSlotsMin = 8;
-export const performUniversityVideoBeamActionResponseSlotsMax = 8;
+export const performUniversityVideoBeamActionResponseSlotsMin = 9;
+export const performUniversityVideoBeamActionResponseSlotsMax = 9;
 
 
 

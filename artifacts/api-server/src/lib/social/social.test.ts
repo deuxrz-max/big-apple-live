@@ -49,8 +49,8 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
   });
   await t.test("private messages are idempotent, isolated and survive reload-style reads", async () => {
     const key = randomUUID();
-    await sendMessage(a, names[1]!, "Hello privately", key);
-    await sendMessage(a, names[1]!, "Hello privately", key);
+    await sendMessage(a, names[1]!, "Go fuck yourself", key);
+    await sendMessage(a, names[1]!, "Go fuck yourself", key);
     await assert.rejects(sendMessage(a, names[1]!, "different message", key), /retry key/);
     const pendingPhoto = randomUUID();
     const displayName = "ᥬ😱᭄ Fixture Q̶";
@@ -58,6 +58,7 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     await db.update(accountProfiles).set({ displayName, photoUrl: `/api/photos/${pendingPhoto}`, photoUrls: [`/api/photos/${pendingPhoto}`] }).where(eq(accountProfiles.accountId, a));
     const incoming = GetSocialInboxResponse.parse(await inbox(b)).conversations[0]!;
     assert.equal(incoming.unreadCount, 1);
+    assert.equal(incoming.lastMessage, "Go $%<& yourself");
     assert.equal(incoming.displayName, displayName);
     assert.equal(incoming.photoUrl, null, "Pending photos are not disclosed in the inbox");
     assert.equal(incoming.lastMessageFromMe, false);
@@ -71,7 +72,7 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     assert.equal(outgoing.lastUnreadAt, null);
     const received = GetSocialConversationResponse.parse(await thread(b, names[0]!));
     assert.equal(received.messages.length, 1);
-    assert.equal(received.messages[0]!.body, "Hello privately");
+    assert.equal(received.messages[0]!.body, "Go $%<& yourself");
     assert.equal((await inbox(b)).conversations[0]!.unreadCount, 0);
     assert.equal((await inbox(b)).conversations[0]!.lastUnreadAt, null);
     assert.equal((await thread(c, names[1]!)).messages.length, 0);

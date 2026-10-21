@@ -1012,7 +1012,7 @@ export interface UniversityVideoBeamToken {
   role: UniversityVideoBeamTokenRole;
   /**
      * @minimum 1
-     * @maximum 8
+     * @maximum 9
      * @nullable
      */
   slotNumber: number | null;
@@ -1037,7 +1037,7 @@ export interface UniversityVideoBeamActionInput {
   targetParticipantId?: string;
   /**
      * @minimum 1
-     * @maximum 8
+     * @maximum 9
      */
   targetSlotNumber?: number;
 }
@@ -1045,7 +1045,7 @@ export interface UniversityVideoBeamActionInput {
 export interface UniversityVideoBeamSlot {
   /**
      * @minimum 1
-     * @maximum 8
+     * @maximum 9
      */
   slotNumber: number;
   /** @nullable */
@@ -1150,8 +1150,8 @@ export interface UniversityVideoBeamState {
   hostParticipantId: string | null;
   tv: UniversityVideoBeamTvState;
   /**
-     * @minItems 8
-     * @maxItems 8
+     * @minItems 9
+     * @maxItems 9
      */
   slots: UniversityVideoBeamSlot[];
 }
@@ -2110,7 +2110,7 @@ export interface UniversityVideoBeamToken4b96100 {
   role: UniversityVideoBeamToken4b96100Role;
   /**
      * @minimum 1
-     * @maximum 8
+     * @maximum 9
      * @nullable
      */
   slotNumber: number | null;
@@ -2135,7 +2135,7 @@ export interface UniversityVideoBeamActionInput4b96100 {
   targetParticipantId?: string;
   /**
      * @minimum 1
-     * @maximum 8
+     * @maximum 9
      */
   targetSlotNumber?: number;
 }
@@ -2143,7 +2143,7 @@ export interface UniversityVideoBeamActionInput4b96100 {
 export interface UniversityVideoBeamSlot4b96100 {
   /**
      * @minimum 1
-     * @maximum 8
+     * @maximum 9
      */
   slotNumber: number;
   /** @nullable */
@@ -2248,8 +2248,8 @@ export interface UniversityVideoBeamState4b96100 {
   hostParticipantId: string | null;
   tv: UniversityVideoBeamTvState4b96100;
   /**
-     * @minItems 8
-     * @maxItems 8
+     * @minItems 9
+     * @maxItems 9
      */
   slots: UniversityVideoBeamSlot4b96100[];
 }

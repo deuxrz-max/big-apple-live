@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
+import { arrangeVideoBeamSeats } from '../src/chat/video-beam-seat-layout';
 
 const roomCss = readFileSync('src/chat/university-room.css', 'utf8');
 const roomComponent = readFileSync('src/chat/UniversityRoom.tsx', 'utf8');
@@ -8,15 +9,43 @@ const beamTv = readFileSync('src/chat/BeamTv.tsx', 'utf8');
 const themeCss = readFileSync('src/theme.css', 'utf8');
 const beamHook = readFileSync('src/chat/useUniversityVideoBeam.ts', 'utf8');
 
-test('Video Beam always keeps eight equal grid cells in two rows of four', () => {
+test('Video Beam centers the host with four guest seats on each side', () => {
   const slotsRule = roomCss.match(/\.ur-slots\s*\{([^}]*)\}/)?.[1] ?? '';
-  assert.match(slotsRule, /grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(slotsRule, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)\s+minmax\(0,\s*1\.55fr\)\s+repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(slotsRule, /grid-template-rows:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
   assert.match(themeCss, /#root \.ur-slots,[\s\S]*?aspect-ratio:\s*2\s*\/\s*1/);
-  assert.match(themeCss, /#root \.ur-slot\s*\{[^}]*aspect-ratio:\s*1\s*\/\s*1/);
+  assert.match(themeCss, /#root \.ur-slot\s*\{[^}]*aspect-ratio:\s*auto/);
   assert.doesNotMatch(roomCss, /\.ur-slots\[data-count=/);
-  assert.match(roomComponent, /beamSlots\.map/);
-  assert.match(beamHook, /slots:\s*\[1,\s*2,\s*3,\s*4,\s*5,\s*6,\s*7,\s*8\]/);
+  assert.match(roomComponent, /beamSeatLayout\.map/);
+  assert.match(roomComponent, /data-seat-position={area}/);
+  assert.match(beamHook, /slots:\s*\[1,\s*2,\s*3,\s*4,\s*5,\s*6,\s*7,\s*8,\s*9\]/);
+});
+
+test('seat layout gives the host the center tile and exactly four spaces per side', () => {
+  const slots = Array.from({ length: 9 }, (_, index) => ({
+    slotNumber: index + 1,
+    participantId: index === 4 ? 'host' : null,
+  }));
+  const layout = arrangeVideoBeamSeats(slots, 'host');
+  assert.equal(layout.length, 9);
+  assert.deepEqual(layout.filter(item => item.area === 'left').map(item => item.slot.slotNumber), [1, 2, 3, 4]);
+  assert.deepEqual(layout.filter(item => item.area === 'host').map(item => item.slot.slotNumber), [5]);
+  assert.deepEqual(layout.filter(item => item.area === 'right').map(item => item.slot.slotNumber), [6, 7, 8, 9]);
+  assert.deepEqual(layout.find(item => item.area === 'host'), {
+    slot: { slotNumber: 5, participantId: 'host' },
+    area: 'host',
+    gridColumn: 3,
+    gridRow: 1,
+  });
+});
+
+test('ownerless rooms keep the first seat centered when no beam host exists', () => {
+  const slots = Array.from({ length: 9 }, (_, index) => ({
+    slotNumber: index + 1,
+    participantId: index < 2 ? `speaker-${index + 1}` : null,
+  }));
+  const layout = arrangeVideoBeamSeats(slots, null);
+  assert.equal(layout.find(item => item.area === 'host')?.slot.slotNumber, 1);
 });
 
 test('the square beam sizes to its grid and self controls stay outside speaker tiles', () => {

@@ -6,6 +6,7 @@ import { roomStore, RoomError, type RoomStore } from "./room-store";
 import { ignoredAccounts } from "./university-chat";
 import { botSettings, botRotation, botMessageValues } from "./moderator-bots";
 import { BOT_WARNING_COOLDOWN_MS, publicViolation } from "./bot-policy";
+import { censorChatText } from "./chat-filter";
 import { nameColorProfileForAccount, nameColorProfilesForAccounts } from "./social/gift-name-color-data";
 import { passportBadgeSummaries } from "./social/passport";
 import { visibleMonthlyPurchaseBadgeSummaries, visibleMonthlyPurchaseBadgeSummary } from "./social/monthly-credit-badges";
@@ -14,6 +15,7 @@ function publicMessage(row: RoomMessageRow) {
   return GetRoomMessagesResponse.element.parse(row);
 }
 export async function getMessages(roomId: string, store: RoomStore = roomStore, viewerId?: string, beforeId?: string) {
+  const filterSettings = await botSettings();
   const conditions = [eq(roomMessages.historyId, store.getHistoryId(roomId)), eq(roomMessages.hidden, "false")];
   if (process.env.NODE_ENV === "production") {
     const tests = await db.select({ id: accountProfiles.accountId }).from(accountProfiles)
@@ -45,7 +47,7 @@ export async function getMessages(roomId: string, store: RoomStore = roomStore, 
   const passports = await passportBadgeSummaries(authorIds);
   const badgeSummaries = await visibleMonthlyPurchaseBadgeSummaries(authorIds);
   return rows.reverse().map(row => ({
-    ...publicMessage(row.message), photoUrl: null,
+    ...publicMessage({ ...row.message, text: censorChatText(row.message.text, filterSettings.bannedWords) }), photoUrl: null,
     displayNameColor: row.message.authorAccountId ? nameColors.get(row.message.authorAccountId)?.color ?? "#FFFFFF" : "#FFFFFF",
     displayNameTierIndex: row.message.authorAccountId ? nameColors.get(row.message.authorAccountId)?.tierIndex ?? 0 : 0,
     badgeId: row.message.authorAccountId ? badgeSummaries.get(row.message.authorAccountId)?.tier.id ?? null : null,
@@ -63,7 +65,9 @@ export async function acceptMessage(
   const sender = store.requireAccountMember(roomId, sessionId, accountId);
   const senderNameColor = await nameColorProfileForAccount(accountId);
   const historyId = store.getHistoryId(roomId);
-  const filter = store.isCommunity(roomId) ? await botSettings() : null;
+  const filterSettings = await botSettings();
+  const filter = store.isCommunity(roomId) ? filterSettings : null;
+  const visibleText = censorChatText(text, filterSettings.bannedWords);
   const senderBadge = await visibleMonthlyPurchaseBadgeSummary(accountId);
   let rateLimited = false;
   const accepted = await db.transaction(async (tx) => {
@@ -87,7 +91,7 @@ export async function acceptMessage(
         .where(and(eq(roomMessages.authorAccountId, accountId),
           gte(roomMessages.createdAt, new Date(Date.now() - 30_000)))).limit(1000);
       rateLimited = recent.filter(m => Date.now() - m.createdAt.getTime() < 10_000).length >= 5;
-      violation = publicViolation(text, filter.bannedWords, recent, Date.now());
+      violation = publicViolation(visibleText, filter.bannedWords, recent, Date.now());
     }
     // Emoji text never mutates a saved photo or obsolete avatar fields.
     let profile = { ...publicProfile(row), photoUrl: null, photoUrls: [] };
@@ -100,7 +104,8 @@ export async function acceptMessage(
     profile = { ...profile, bio: settings?.bio ?? "" };
     const [original] = await tx.insert(roomMessages).values({
       roomId: roomId.toUpperCase(), historyId, authorId: sender.participantId, authorAccountId: accountId,
-      username: profile.username, identity: profile.identity, kind: input.kind, text, hidden: violation ? "true" : "false",
+      username: profile.username, identity: profile.identity, kind: input.kind,
+      text: violation ? text : visibleText, hidden: violation ? "true" : "false",
     }).returning();
     let message = original!;
     if (violation) {
@@ -134,7 +139,8 @@ export async function acceptMessage(
     }
     // A leave/expiry while the database was busy rolls back message, flag and warning.
     store.requireAccountMember(roomId, sessionId, accountId);
-    return { message: { ...publicMessage(message), photoUrl: null,
+    return { message: { ...publicMessage(message.authorAccountId === accountId && !violation
+      ? { ...message, text: visibleText } : message), photoUrl: null,
       displayNameColor: message.authorAccountId === accountId ? senderNameColor.color : "#FFFFFF",
       displayNameTierIndex: message.authorAccountId === accountId ? senderNameColor.tierIndex : 0,
       badgeId: message.authorAccountId === accountId ? badgeId : null,

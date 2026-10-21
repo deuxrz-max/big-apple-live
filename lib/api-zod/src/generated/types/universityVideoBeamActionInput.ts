@@ -13,7 +13,7 @@ export interface UniversityVideoBeamActionInput {
   targetParticipantId?: string;
   /**
      * @minimum 1
-     * @maximum 8
+     * @maximum 9
      */
   targetSlotNumber?: number;
 }

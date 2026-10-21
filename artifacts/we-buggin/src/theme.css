@@ -669,7 +669,7 @@ body {
   }
 }
 
-/* Compact public room TV layout: eight speaker cells in two phone-friendly rows. */
+/* Compact public room TV layout: eight guest seats flank the centered host. */
 #root .ur-slots[data-tv="on"] .ur-slot.is-occupied {
   padding: 2px;
   gap: 1px;
@@ -742,7 +742,7 @@ body {
   font-size: 12px;
 }
 
-/* Keep the room header on one line and make each of the eight beam cells square. */
+/* Keep the room header on one line and center the larger host seat among eight guests. */
 #root .ch.ur .ur-head { gap: clamp(4px, 1.4vw, 10px); }
 #root .ch.ur .ur-head > .ur-people-btn,
 #root .ch.ur .ur-head > .ur-rules-btn {
@@ -776,7 +776,7 @@ body {
   height: auto;
   min-height: 0;
   aspect-ratio: 2 / 1;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(0, 1.55fr) repeat(2, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
   align-items: stretch;
 }
@@ -785,7 +785,7 @@ body {
   width: 100%;
   height: auto;
   min-height: 0;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: auto;
   align-self: stretch;
 }
 

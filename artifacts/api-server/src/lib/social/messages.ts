@@ -3,13 +3,16 @@ import { and, eq, or, desc, sql, inArray, isNull } from "drizzle-orm";
 import { RoomError } from "../room-store";
 import { assertContact, lockPair, pairBlocked, person, requireAccount, targetAccount } from "./core";
 import { visibleMonthlyPurchaseBadgeSummaries } from "./monthly-credit-badges";
+import { botSettings } from "../moderator-bots";
+import { censorChatText } from "../chat-filter";
 
 const pair = (a: string, b: string) => or(and(eq(socialMessages.senderId, a), eq(socialMessages.recipientId, b)), and(eq(socialMessages.senderId, b), eq(socialMessages.recipientId, a)));
 const visible = (id: string) => or(and(eq(socialMessages.senderId, id), eq(socialMessages.senderHidden, false)), and(eq(socialMessages.recipientId, id), eq(socialMessages.recipientHidden, false)));
 export async function sendMessage(id: string, username: string, text: string, key: string, whisperHistoryId?: string, checkSession?: () => void) {
   const sender = await requireAccount(id);
   const target = await targetAccount(username);
-  const body = text.trim();
+  const filterSettings = await botSettings();
+  const body = censorChatText(text.trim(), filterSettings.bannedWords);
   if (!body || body.length > 1000) throw new RoomError(400, "Write a message between 1 and 1000 characters");
   const row = await db.transaction(async tx => {
     await lockPair(tx, id, target.accountId);
@@ -32,6 +35,7 @@ export async function sendMessage(id: string, username: string, text: string, ke
   return { id: row.id, sender: sender.username, recipient: target.username, body: row.body, createdAt: row.createdAt, readAt: row.readAt };
 }
 export async function thread(id: string, username: string, cursor?: string) {
+  const filterSettings = await botSettings();
   const me = await requireAccount(id);
   const target = await targetAccount(username);
   if (id === target.accountId) throw new RoomError(400, "Choose another person");
@@ -51,11 +55,13 @@ export async function thread(id: string, username: string, cursor?: string) {
   return { person: await person(id, target), blocked: await pairBlocked(id, target.accountId),
     nextCursor: rows.length > 100 ? page[page.length - 1]!.id : null,
     messages: page.reverse().map(m => ({ id: m.id, sender: m.senderId === id ? me.username : target.username,
-      recipient: m.recipientId === id ? me.username : target.username, body: m.body, createdAt: m.createdAt,
+       recipient: m.recipientId === id ? me.username : target.username,
+       body: censorChatText(m.body, filterSettings.bannedWords), createdAt: m.createdAt,
       readAt: m.readAt ?? (readIds.includes(m.id) ? readAt : null) })),
   };
 }
 export async function inbox(id: string) {
+  const filterSettings = await botSettings();
   const rows = await db.select().from(socialMessages).where(visible(id)).orderBy(desc(socialMessages.createdAt), desc(socialMessages.id)).limit(5000);
   const grouped = new Map<string, { message: typeof rows[number]; unread: number; lastUnreadAt: Date | null }>();
   for (const row of rows) {
@@ -84,7 +90,7 @@ export async function inbox(id: string) {
       badgeName: p.badgeName,
       badgeImage: p.badgeImage,
       lastMessageFromMe: entry.message.senderId === id, lastUnreadAt: entry.lastUnreadAt,
-      identity: p.identity, lastMessage: entry.message.body,
+       identity: p.identity, lastMessage: censorChatText(entry.message.body, filterSettings.bannedWords),
       updatedAt: entry.message.createdAt, unreadCount: entry.unread, blocked: p.blocked });
   }
   return { conversations };

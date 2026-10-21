@@ -1,5 +1,5 @@
 import {
-  pgTable, text, integer, boolean, jsonb, timestamp, primaryKey, uniqueIndex, index, check,
+  pgTable, text, integer, boolean, jsonb, timestamp, date, primaryKey, uniqueIndex, index, check,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { chatRooms } from "./chat-community";
@@ -34,6 +34,24 @@ export const roomCardGameRuns = pgTable("room_card_game_runs", {
   index("room_card_game_runs_status").on(t.status, t.gameStartAt),
 ]);
 
+/** Per-room unpaid card-prize remainder; the next hand's total pot is capped at 500 gold. */
+export const roomCardGamePots = pgTable("room_card_game_pots", {
+  roomId: text("room_id").primaryKey().references(() => chatRooms.roomId, { onDelete: "cascade" }),
+  carryoverGold: integer("carryover_gold").notNull().default(0),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, t => [check("room_card_game_carryover_gold_range", sql`${t.carryoverGold} BETWEEN 0 AND 400`)]);
+
+/** Card-game winnings only. Purchases, gifts, and other rewards never enter this daily cap. */
+export const roomCardGameDailyWinnings = pgTable("room_card_game_daily_winnings", {
+  accountId: text("account_id").notNull().references(() => accountProfiles.accountId, { onDelete: "cascade" }),
+  dayKey: date("day_key", { mode: "string" }).notNull(),
+  winningsGold: integer("winnings_gold").notNull().default(0),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, t => [
+  primaryKey({ columns: [t.accountId, t.dayKey] }),
+  check("room_card_game_daily_winnings_range", sql`${t.winningsGold} BETWEEN 0 AND 500`),
+]);
+
 export const roomCardGameSeats = pgTable("room_card_game_seats", {
   roomId: text("room_id").notNull(),
   gameNumber: integer("game_number").notNull(),
@@ -46,7 +64,7 @@ export const roomCardGameSeats = pgTable("room_card_game_seats", {
   primaryKey({ columns: [t.roomId, t.gameNumber, t.accountId] }),
   uniqueIndex("room_card_game_seat_number").on(t.roomId, t.gameNumber, t.seatNumber),
   uniqueIndex("room_card_game_one_active_seat_per_account").on(t.accountId).where(sql`${t.status} = 'active'`),
-  check("room_card_game_seat_number_range", sql`${t.seatNumber} BETWEEN 1 AND 10`),
+  check("room_card_game_seat_number_range", sql`${t.seatNumber} BETWEEN 1 AND 9`),
 ]);
 
 export const roomCardGameDeals = pgTable("room_card_game_deals", {
@@ -61,7 +79,7 @@ export const roomCardGameDeals = pgTable("room_card_game_deals", {
   primaryKey({ columns: [t.roomId, t.gameNumber, t.dealNumber, t.seatNumber] }),
   uniqueIndex("room_card_game_no_duplicate_card").on(t.roomId, t.gameNumber, t.cardCode),
   check("room_card_game_deal_number_range", sql`${t.dealNumber} BETWEEN 1 AND 5`),
-  check("room_card_game_deal_seat_range", sql`${t.seatNumber} BETWEEN 1 AND 10`),
+  check("room_card_game_deal_seat_range", sql`${t.seatNumber} BETWEEN 1 AND 9`),
 ]);
 
 /** One immutable result row is the idempotency key for the entire room/game payout. */
@@ -71,6 +89,12 @@ export const roomCardGameResults = pgTable("room_card_game_results", {
   status: text("status", { enum: ["paid", "no_prize", "void"] }).notNull(),
   winnerAccountIds: jsonb("winner_account_ids").$type<string[]>().notNull().default([]),
   shares: jsonb("shares").$type<Array<{ accountId: string; username: string; seatNumber: number; coins: number }>>().notNull().default([]),
+  prizeGold: integer("prize_gold").notNull().default(0),
+  carryoverGold: integer("carryover_gold").notNull().default(0),
   announcement: text("announcement").notNull(),
   completedAt: timestamp("completed_at", { withTimezone: true }).notNull().defaultNow(),
-}, t => [primaryKey({ columns: [t.roomId, t.gameNumber] })]);
+}, t => [
+  primaryKey({ columns: [t.roomId, t.gameNumber] }),
+  check("room_card_game_result_prize_gold_range", sql`${t.prizeGold} BETWEEN 0 AND 500`),
+  check("room_card_game_result_carryover_gold_range", sql`${t.carryoverGold} BETWEEN 0 AND 400`),
+]);

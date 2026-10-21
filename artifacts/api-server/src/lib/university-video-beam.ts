@@ -13,7 +13,7 @@ import {
   isPublicTopicRoom,
 } from "./community-config";
 
-export const VIDEO_BEAM_SLOT_COUNT = 8;
+export const VIDEO_BEAM_SLOT_COUNT = 9;
 export const VIDEO_BEAM_CONNECT_GRACE_MS = 90_000;
 export const PUBLIC_BEAM_TV_BREAK_MS = 3 * 60_000;
 
@@ -669,7 +669,7 @@ export class UniversityVideoBeamStore {
       throw new RoomError(409, "You already have a speaker spot in this beam.");
     }
     const slot = beam.slots.find(candidate => candidate.participantId === null);
-    if (!slot) throw new RoomError(409, "All eight speaker spots are full. You can still watch and chat.");
+    if (!slot) throw new RoomError(409, "All nine speaker spots are full. You can still watch and chat.");
     slot.participantId = participantId;
     slot.accountId = accountId;
     slot.joinedAt = this.now();
@@ -698,7 +698,7 @@ export class UniversityVideoBeamStore {
     const current = beam.slots.find(slot => slot.participantId === participantId && slot.accountId === accountId);
     if (!current) throw new RoomError(404, "You are not in a speaker spot.");
     const target = beam.slots.find(slot => slot.slotNumber === targetSlotNumber);
-    if (!target) throw new RoomError(400, "Choose one of the eight speaker spots.");
+    if (!target) throw new RoomError(400, "Choose one of the nine speaker spots.");
     if (target === current) return this.toState(beam);
     if (target.participantId !== null) throw new RoomError(409, "That speaker spot is already occupied.");
 
