@@ -13,7 +13,7 @@ for (const width of [320, 390]) {
     await page.route('**/api/social/me', route => route.fulfill({ json: {
       profile: {
         username: 'PassportFixture', displayName: 'Passport Fixture',
-        displayNameColor: '#C0C0C0', displayNameTierIndex: 18,
+        displayNameColor: '#C0C0C0', displayNameTierIndex: 6,
         photoUrl: photo, photoUrls: pictures === 1 ? [photo] : [photo, '/fixture-passport-photo-2.svg'],
         photoReviews: [photo, '/fixture-passport-photo-2.svg'].map(photoUrl => ({ photoUrl, status: 'approved' })),
         photoStatus: 'approved', identity: { emojiId: '1F600' },
@@ -24,8 +24,8 @@ for (const width of [320, 390]) {
       products: [], gifts: [], inventory: [],
       wallet: { balance: 1234, earned: 0, received: 0, sent: 0, dailyReward: 0, canClaimDaily: false, unlimited: false },
       nameColorTest: { enabled: false, overrideCoins: null },
-      nameColorProgress: { tierIndex: 18, tierName: 'Bright Blue', color: '#09B0EC',
-        lifetimeCoinsPurchased: 180000, coinsToNextTier: 0, nextTierName: null, nextTierThreshold: null },
+      nameColorProgress: { tierIndex: 6, tierName: 'Magenta', color: '#FF00FF',
+        lifetimeCoinsPurchased: 800000, coinsToNextTier: 0, nextTierName: null, nextTierThreshold: null },
     } }));
     await page.route('**/api/account/chat/access', route => route.fulfill({ json: {
       adultConfirmed: true, moderator: false, owner: true, suspended: false,
@@ -51,7 +51,7 @@ for (const width of [320, 390]) {
     expect(flagRect.width * flagRect.height / (rect.width * rect.height)).toBeLessThan(.11);
     await expect(badge).toHaveCSS('border-radius', '999px');
     await expect(hero.locator('.pf-slide img')).toHaveAttribute('src', photo);
-    await expect(page.getByTestId('text-display-name').getByRole('img', { name: 'Bright Blue gifting level' })).toBeVisible();
+    await expect(page.getByTestId('text-display-name').getByRole('img', { name: 'Magenta gifting level' })).toBeVisible();
     const title = await page.getByTestId('text-display-name').boundingBox();
     await page.screenshot({ path: info.outputPath('me-country-badge-mobile.png'), fullPage: false });
 

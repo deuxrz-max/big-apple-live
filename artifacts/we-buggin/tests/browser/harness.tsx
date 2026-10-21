@@ -42,14 +42,23 @@ function PlayerFixture() {
 }
 
 function GiftingLevelsFixture() {
+  const levels = [
+    ['Default', '#FFFFFF'],
+    ['Green', '#00FF00'],
+    ['Pink', '#FF0099'],
+    ['Purple', '#B39CD0'],
+    ['Yellow', '#FFFF00'],
+    ['Platinum', '#C0C0C0'],
+    ['Magenta', '#FF00FF'],
+  ] as const;
   return <section style={{ background: '#000', color: '#fff', padding: 20 }}>
-    {Array.from({ length: 19 }, (_, level) => level).map(level => (
+    {levels.map(([,], level) => (
       <p key={level} data-testid={`gifting-level-${level}`}>
         <ShinyName displayNameColor="#FFFFFF" displayNameTierIndex={level}>VAMPSQUAD</ShinyName>
       </p>
     ))}
     <p data-testid="gifting-preserves-username">
-      <ShinyName displayNameColor="#C0C0C0" displayNameTierIndex={18}>SilverUsername</ShinyName>
+      <ShinyName displayNameColor="#C0C0C0" displayNameTierIndex={6}>SilverUsername</ShinyName>
     </p>
   </section>;
 }

@@ -19,22 +19,20 @@ export function ShinyName({
   className = '',
 }: ShinyNameProps) {
   const giftingLevel = Number.isFinite(displayNameTierIndex)
-    ? Math.max(0, Math.min(18, Math.floor(displayNameTierIndex ?? 0)))
+    ? Math.max(0, Math.min(6, Math.floor(displayNameTierIndex ?? 0)))
     : 0;
-  const legacyColors = ['#FFFFFF', '#E4E4E4', '#C0C0C0', '#FFD700', '#EDEBAD', '#FFFF00',
+  const giftingColors = ['#FFFFFF', '#00FF00', '#FF0099', '#B39CD0', '#FFFF00', '#C0C0C0', '#FF00FF'];
+  const tier = Math.max(0, ['#FFFFFF', '#E4E4E4', '#C0C0C0', '#FFD700', '#EDEBAD', '#FFFF00',
     '#00FFFF', '#A8DADC', '#00FF00', '#98FF98', '#FF0099', '#FFC1CC',
-    '#B39CD0', '#FF00FF', '#FFDAB9', '#87CEEB', '#F39C12', '#F5F5DC', '#09B0EC'];
-  const tier = Math.max(0, legacyColors.indexOf(displayNameColor?.toUpperCase() ?? '#FFFFFF'));
+    '#B39CD0', '#FF00FF', '#FFDAB9', '#87CEEB', '#F39C12', '#F5F5DC', '#09B0EC']
+    .indexOf(displayNameColor?.toUpperCase() ?? '#FFFFFF'));
   const levelNames = [
-    'Pure White', 'Light Gray', 'Silver', 'Gold', 'Pale Khaki', 'Yellow', 'Cyan',
-    'Powder Blue', 'Bright Lime Green', 'Mint Green', 'Hot Pink',
-    'Light Bubblegum Pink', 'Lavender', 'Magenta', 'Peach', 'Sky Blue',
-    'Orange', 'Beige', 'Bright Blue',
+    'Default', 'Green', 'Pink', 'Purple', 'Yellow', 'Platinum', 'Magenta',
   ];
   // Keep the existing unearned/default presentation; earned logos use the exact
   // original palette, without changing the independent username color mapping.
   const level = giftingLevel > 0
-    ? { name: levelNames[giftingLevel], color: legacyColors[giftingLevel] }
+    ? { name: levelNames[giftingLevel], color: giftingColors[giftingLevel] }
     : null;
   const style = tier > 0 && displayNameColor
     ? { '--shiny-name-color': displayNameColor } as CSSProperties

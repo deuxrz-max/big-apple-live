@@ -1,42 +1,72 @@
 import { useEffect, useRef } from 'react';
-import { roomPerimeterMotionFrames, ROOM_PERIMETER_DURATION_MS } from './room-perimeter-motion';
+import {
+  roomPerimeterMotionFrames,
+  ROOM_PERIMETER_DURATION_MS,
+  ROOM_PERIMETER_LIGHT_SIZE,
+  type RoomPerimeterEdge,
+} from './room-perimeter-motion';
 
-/** One transform-only layer; no SVG repaint, motion-path repaint or JS frame loop. */
+const EDGES: RoomPerimeterEdge[] = ['top', 'right', 'bottom', 'left'];
+
+/** Four small edge-local highlights; no viewport-sized mask or JavaScript frame loop. */
 export function RoomPerimeter() {
   const frame = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     const rim = frame.current;
-    const light = rim?.firstElementChild;
-    if (!rim || !light) return;
+    if (!rim) return;
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-    let animation: Animation | null = null;
+    let animations: Animation[] = [];
     let previousSize = '';
     const update = () => {
-      const size = `${rim.clientWidth}:${rim.clientHeight}:${reducedMotion.matches}`;
+      const width = Math.round(window.visualViewport?.width ?? window.innerWidth);
+      const height = Math.round(window.visualViewport?.height ?? window.innerHeight);
+      const size = `${width}:${height}:${reducedMotion.matches}`;
       if (size === previousSize) return;
       previousSize = size;
-      const phase = Number(animation?.currentTime ?? 0) % ROOM_PERIMETER_DURATION_MS;
-      animation?.cancel();
-      animation = null;
-      if (reducedMotion.matches || !rim.clientWidth || !rim.clientHeight) return;
-      animation = light.animate(roomPerimeterMotionFrames(rim.clientWidth, rim.clientHeight), {
-        duration: ROOM_PERIMETER_DURATION_MS, iterations: Infinity, easing: 'linear',
+      const phase = Number(animations[0]?.currentTime ?? 0) % ROOM_PERIMETER_DURATION_MS;
+      animations.forEach(animation => animation.cancel());
+      animations = [];
+      if (reducedMotion.matches || !width || !height) return;
+      animations = EDGES.flatMap(edge => {
+        const light = rim.querySelector<HTMLElement>(`[data-room-edge="${edge}"]`);
+        if (!light) return [];
+        const horizontal = edge === 'top' || edge === 'bottom';
+        const length = Math.min(ROOM_PERIMETER_LIGHT_SIZE, horizontal ? width : height);
+        light.style.width = `${horizontal ? length : 2}px`;
+        light.style.height = `${horizontal ? 2 : length}px`;
+        light.style.left = edge === 'right' ? `${width - 2}px` : '0px';
+        light.style.top = edge === 'bottom' ? `${height - 2}px` : '0px';
+        const animation = light.animate(roomPerimeterMotionFrames(width, height, edge), {
+          duration: ROOM_PERIMETER_DURATION_MS, iterations: Infinity, easing: 'linear',
+        });
+        animation.currentTime = phase;
+        return [animation];
       });
-      animation.currentTime = phase;
     };
     const observer = new ResizeObserver(update);
-    observer.observe(rim);
+    observer.observe(document.documentElement);
+    const viewport = window.visualViewport;
+    window.addEventListener('resize', update);
+    viewport?.addEventListener('resize', update);
     reducedMotion.addEventListener('change', update);
     update();
     return () => {
       observer.disconnect();
+      window.removeEventListener('resize', update);
+      viewport?.removeEventListener('resize', update);
       reducedMotion.removeEventListener('change', update);
-      animation?.cancel();
+      animations.forEach(animation => animation.cancel());
     };
   }, []);
   return (
     <span ref={frame} className="ur-perimeter-shine" aria-hidden="true">
-      <span className="ur-perimeter-glint" />
+      {EDGES.map(edge => (
+        <span
+          key={edge}
+          className={`ur-perimeter-glint ur-perimeter-glint--${edge}`}
+          data-room-edge={edge}
+        />
+      ))}
     </span>
   );
 }

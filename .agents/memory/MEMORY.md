@@ -40,5 +40,5 @@
 - [Gift send ordering](gift-send-ordering.md) — room/stream FIFO is serialized in one API process; multi-instance delivery needs a database-backed ordering primitive.
 - [Room visual theme](room-visual-theme.md) — solid black room surfaces with a restrained glowing gold perimeter; no redesign, media recoloring or other-page changes.
 - [App positioning](app-positioning.md) — owner-approved live-streaming and social media description for app metadata, sharing previews and welcome/about copy.
-- [Gifting levels](gifting-levels.md) — successful gift coin value powers the original 19 colors in 10,000-coin steps; no recharge/count progress or username recoloring.
+- [Gifting levels](gifting-levels.md) — successful gift spending powers seven cumulative tiers; recharges and the separate username-color palette do not count.
 - [Room playback rendering budget](room-playback-performance.md) — decorative motion must avoid full-screen paints; profile under CPU slowdown and separate rendering from media/network issues.

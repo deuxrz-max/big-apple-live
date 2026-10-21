@@ -34,7 +34,7 @@ async function paintSample(page: Page) {
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
   await cdp.detach();
   const events = JSON.parse(json).traceEvents as Array<{
-    name: string; dur?: number; args?: { data?: { clip?: number[] } };
+    name: string; dur?: number; args?: { data?: { clip?: number[]; layerId?: number; nodeId?: number; paintId?: string } };
   }>;
   const paints = events.filter(event => event.name === 'Paint');
   const largePaints = paints.filter(event => {
@@ -49,6 +49,9 @@ async function paintSample(page: Page) {
     paintMs: paints.reduce((sum, event) => sum + (event.dur ?? 0), 0) / 1000,
     frames: frames.length, maxFrameMs: Math.max(...frames),
     meanFrameMs: frames.reduce((sum, value) => sum + value, 0) / frames.length,
+    largePaintSamples: largePaints.slice(0, 3).map(event => ({
+      durationMs: (event.dur ?? 0) / 1000, ...event.args?.data,
+    })),
   };
 }
 
@@ -57,23 +60,34 @@ test('room perimeter paint diagnostic on a CPU-throttled mobile viewport', async
   await page.goto('/tests/browser/harness.html');
   await expect(page.locator('.ur-perimeter-shine')).toBeVisible();
   await expect(page.locator('.ur-slot')).toHaveCount(8);
+  const fills = await page.evaluate(() => ['.ch.ur', '.ur-slot', '.ur-tv-frame'].map(selector =>
+    getComputedStyle(document.querySelector(selector)!).backgroundColor));
+  expect(fills).toEqual(['rgb(0, 0, 0)', 'rgb(0, 0, 0)', 'rgb(0, 0, 0)']);
+  // Let the one-shot title entrance finish; measure the persistent title drift and edge light.
+  await page.waitForTimeout(1_500);
   await page.evaluate(() => new Promise<void>(resolve =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
-  const animated = await paintSample(page);
+  const roomMotion = await paintSample(page);
+  await page.locator('.ur-title .ch-word').evaluateAll(words =>
+    words.forEach(word => word.getAnimations().forEach(animation => animation.pause())));
+  const perimeterOnly = await paintSample(page);
   await page.locator('.ur-perimeter-shine').evaluate(element =>
-    element.getAnimations({ subtree: true }).forEach(animation => animation.pause()));
+    element.querySelectorAll('.ur-perimeter-glint').forEach(light =>
+      light.getAnimations().forEach(animation => animation.pause())));
   const paused = await paintSample(page);
-  console.log('ROOM_PAINT_DIAGNOSTIC', JSON.stringify({ animated, paused }));
+  console.log('ROOM_PAINT_DIAGNOSTIC', JSON.stringify({ roomMotion, perimeterOnly, paused }));
   await info.attach('room-paint-diagnostic', {
-    body: JSON.stringify({ animated, paused }, null, 2), contentType: 'application/json',
+    body: JSON.stringify({ roomMotion, perimeterOnly, paused }, null, 2), contentType: 'application/json',
   });
-  // Old animated SVG: 61 full-screen paints / ~916ms in this window at 4x CPU.
-  // Allow incidental room/fixture paints, but reject a return to per-frame raster.
-  expect(animated.fullScreenPaints).toBeLessThan(25);
-  expect(animated.paintMs).toBeLessThan(350);
+  // Bound the combined room/title motion and the isolated edge-light workload at 4x CPU.
+  expect(roomMotion.fullScreenPaints).toBeLessThan(25);
+  expect(roomMotion.paintMs).toBeLessThan(350);
+  expect(perimeterOnly.fullScreenPaints).toBeLessThan(25);
+  expect(perimeterOnly.paintMs).toBeLessThan(350);
 });
 
 test('video session survives chat, gifts, mic changes, visibility reconnect and room re-entry', async ({ page }) => {
+  test.setTimeout(660_000);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
     const probe = { calls: [] as Array<{ action: string; value?: number | string }>, instances: [] as any[] };
@@ -131,6 +145,30 @@ test('video session survives chat, gifts, mic changes, visibility reconnect and 
   await page.getByRole('button', { name: 'Queue fixture gift x1', exact: true }).click();
   await expect(page.locator('.gift-combo-hud')).toBeVisible();
   await page.getByRole('button', { name: /skip/i }).click();
+  const requestedRunDurationMs = Number(process.env.ROOM_PLAYBACK_STABILITY_DURATION_MS ?? 600_000);
+  const initialPlaybackTime = Number((await calls()).find(call => call.action === 'load')!.value);
+  const longRunStartedAt = Date.now();
+  let cycle = 0;
+  while (Date.now() - longRunStartedAt < requestedRunDurationMs) {
+    await page.getByRole('button', { name: 'Add fixture chat', exact: true }).click();
+    if (cycle % 6 === 0) {
+      await page.getByRole('button', { name: 'Queue fixture gift x1', exact: true }).click();
+      await expect(page.locator('.gift-combo-hud')).toBeVisible();
+      await page.getByRole('button', { name: /skip/i }).click();
+    }
+    cycle += 1;
+    await page.waitForTimeout(5_000);
+  }
+  const longRunDuration = Date.now() - longRunStartedAt;
+  const longRunTime = await page.evaluate(() => (window as any).__roomVideoProbe.instances[0].getCurrentTime());
+  const longRunCalls = await calls();
+  expect(longRunDuration).toBeGreaterThanOrEqual(requestedRunDurationMs);
+  expect(cycle).toBeGreaterThanOrEqual(Math.max(1, Math.floor(requestedRunDurationMs / 6_000)));
+  expect(longRunTime).toBeGreaterThan(initialPlaybackTime + requestedRunDurationMs / 1_000 * .8);
+  expect(longRunCalls.filter(call => call.action === 'create')).toHaveLength(1);
+  expect(longRunCalls.filter(call => call.action === 'load')).toHaveLength(1);
+  expect(longRunCalls.filter(call => call.action === 'seek')).toHaveLength(0);
+  expect(longRunCalls.filter(call => call.action === 'destroy')).toHaveLength(0);
   await page.context().setOffline(true);
   await page.evaluate(() => {
     const player = (window as any).__roomVideoProbe.instances[0];
@@ -149,10 +187,11 @@ test('video session survives chat, gifts, mic changes, visibility reconnect and 
   expect(active.filter(call => call.action === 'load')).toHaveLength(1);
   expect(active.filter(call => ['seek', 'stop', 'destroy'].includes(call.action))).toHaveLength(0);
   expect(await page.evaluate(() => (window as any).__roomVideoProbe.instances[0].getCurrentTime())).toBeGreaterThan(before);
+  const roomPositionBeforeExit = await page.evaluate(() => (window as any).__roomVideoProbe.instances[0].getCurrentTime());
   await page.getByRole('button', { name: 'Leave fixture room', exact: true }).click();
   expect((await calls()).filter(call => call.action === 'destroy')).toHaveLength(1);
   await page.getByRole('button', { name: 'Join fixture room', exact: true }).click();
   await expect.poll(async () => (await calls()).filter(call => call.action === 'load').length).toBe(2);
   const loads = (await calls()).filter(call => call.action === 'load');
-  expect(Number(loads[1]!.value)).toBeGreaterThan(Number(loads[0]!.value));
+  expect(Math.abs(Number(loads[1]!.value) - roomPositionBeforeExit)).toBeLessThan(15);
 });

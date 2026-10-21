@@ -43,7 +43,7 @@ test("gifting uses only successful outgoing coin value, never recharges, counts 
       await tx.insert(socialLedger).values({
         accountId: id, kind: "gift_sent", delta: -19_999, description: "Successful gift", requestKey: key,
       });
-      assert.equal((await progress()).tierIndex, 1, "19,999 is Light Gray, not Silver");
+      assert.equal((await progress()).tierIndex, 0, "19,999 remains the unearned white default");
       await assert.rejects(tx.transaction(async duplicate => {
         await duplicate.insert(socialLedger).values({
           accountId: id, kind: "gift_sent", delta: -19_999, description: "Duplicate retry", requestKey: key,
@@ -53,12 +53,12 @@ test("gifting uses only successful outgoing coin value, never recharges, counts 
       await tx.insert(socialLedger).values({
         accountId: id, kind: "gift_sent", delta: -1, description: "Threshold gift",
       });
-      assert.equal((await progress()).tierName, "Silver");
+      assert.equal((await progress()).tierName, "Green");
       await tx.insert(socialLedger).values({
         accountId: id, kind: "gift_sent", delta: -80_000, description: "Gift ×10 at 8,000 each",
       });
       assert.equal((await progress()).lifetimeCoinsPurchased, 100_000, "receipt total is counted once, not gift count or multiplied again");
-      assert.equal((await progress()).tierName, "Hot Pink");
+      assert.equal((await progress()).tierName, "Pink");
       throw rollback;
     });
   } catch (error) {

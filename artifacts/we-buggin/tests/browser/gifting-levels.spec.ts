@@ -6,12 +6,8 @@ test('gifting logos precede unchanged readable usernames at mobile size', async 
   await page.goto('/tests/browser/harness.html?view=gifting-levels');
   expect((await logoLoaded).status()).toBe(200);
   await expect(page.getByTestId('gifting-level-0').locator('.gifting-level-logo')).toHaveCount(0);
-  const levels = ['Light Gray', 'Silver', 'Gold', 'Pale Khaki', 'Yellow', 'Cyan',
-    'Powder Blue', 'Bright Lime Green', 'Mint Green', 'Hot Pink', 'Light Bubblegum Pink',
-    'Lavender', 'Magenta', 'Peach', 'Sky Blue', 'Orange', 'Beige', 'Bright Blue'];
-  const expectedColors = ['#E4E4E4', '#C0C0C0', '#FFD700', '#EDEBAD', '#FFFF00',
-    '#00FFFF', '#A8DADC', '#00FF00', '#98FF98', '#FF0099', '#FFC1CC', '#B39CD0',
-    '#FF00FF', '#FFDAB9', '#87CEEB', '#F39C12', '#F5F5DC', '#09B0EC'];
+  const levels = ['Green', 'Pink', 'Purple', 'Yellow', 'Platinum', 'Magenta'];
+  const expectedColors = ['#00FF00', '#FF0099', '#B39CD0', '#FFFF00', '#C0C0C0', '#FF00FF'];
   for (const [index, name] of levels.entries()) {
     const row = page.getByTestId(`gifting-level-${index + 1}`);
     const logo = row.getByRole('img', { name: `${name} gifting level` });
@@ -38,7 +34,7 @@ test('gifting logos precede unchanged readable usernames at mobile size', async 
   await expect(page.getByTestId('gifting-preserves-username').locator('.shiny-name')).toHaveAttribute('data-tier', '2');
   const colors = await page.locator('.gifting-level-logo').evaluateAll(elements => elements.map(element =>
     getComputedStyle(element).getPropertyValue('--gifting-level-color').trim()));
-  expect(colors[9]).not.toBe(colors[12]);
+  expect(colors[1]).not.toBe(colors[5]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: info.outputPath('gifting-levels-mobile.png') });
 });

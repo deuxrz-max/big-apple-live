@@ -1,24 +1,12 @@
 /** Inclusive, cumulative successful gift-spending thresholds, never recharge totals. */
 export const NAME_COLOR_TIERS = [
-  { name: "Pure White", color: "#FFFFFF", threshold: 0 },
-  { name: "Light Gray", color: "#E4E4E4", threshold: 10_000 },
-  { name: "Silver", color: "#C0C0C0", threshold: 20_000 },
-  { name: "Gold", color: "#FFD700", threshold: 30_000 },
-  { name: "Pale Khaki", color: "#EDEBAD", threshold: 40_000 },
-  { name: "Yellow", color: "#FFFF00", threshold: 50_000 },
-  { name: "Cyan", color: "#00FFFF", threshold: 60_000 },
-  { name: "Powder Blue", color: "#A8DADC", threshold: 70_000 },
-  { name: "Bright Lime Green", color: "#00FF00", threshold: 80_000 },
-  { name: "Mint Green", color: "#98FF98", threshold: 90_000 },
-  { name: "Hot Pink", color: "#FF0099", threshold: 100_000 },
-  { name: "Light Bubblegum Pink", color: "#FFC1CC", threshold: 110_000 },
-  { name: "Lavender", color: "#B39CD0", threshold: 120_000 },
-  { name: "Magenta", color: "#FF00FF", threshold: 130_000 },
-  { name: "Peach", color: "#FFDAB9", threshold: 140_000 },
-  { name: "Sky Blue", color: "#87CEEB", threshold: 150_000 },
-  { name: "Orange", color: "#F39C12", threshold: 160_000 },
-  { name: "Beige", color: "#F5F5DC", threshold: 170_000 },
-  { name: "Bright Blue", color: "#09B0EC", threshold: 180_000 },
+  { name: "Default", color: "#FFFFFF", threshold: 0 },
+  { name: "Green", color: "#00FF00", threshold: 20_000 },
+  { name: "Pink", color: "#FF0099", threshold: 100_000 },
+  { name: "Purple", color: "#B39CD0", threshold: 250_000 },
+  { name: "Yellow", color: "#FFFF00", threshold: 400_000 },
+  { name: "Platinum", color: "#C0C0C0", threshold: 550_000 },
+  { name: "Magenta", color: "#FF00FF", threshold: 800_000 },
 ] as const;
 
 export type NameColorTierSummary = {
@@ -49,7 +37,7 @@ export function nameColorTierForLifetimeCoins(giftCoinsSpent: number): NameColor
   };
 }
 
-/** Existing username colors are independent of the new gifting-logo colors. */
+/** Existing username colors are independent of gifting-level logo colors. */
 const LEGACY_USERNAME_COLORS = [
   "#FFFFFF", "#E4E4E4", "#C0C0C0", "#FFD700", "#EDEBAD", "#FFFF00",
   "#00FFFF", "#A8DADC", "#00FF00", "#98FF98", "#FF0099", "#FFC1CC",

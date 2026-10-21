@@ -1,37 +1,47 @@
 export const ROOM_PERIMETER_DURATION_MS = 12_000;
 export const ROOM_PERIMETER_LIGHT_SIZE = 220;
 
-/** Constant-distance keyframes for a rounded screen rim. Calculated on resize,
- * not per frame; the browser animates only a small layer's transform. */
-export function roomPerimeterMotionFrames(width: number, height: number): Keyframe[] {
-  const inset = 1;
-  const radius = Math.min(11, Math.max(0, (Math.min(width, height) - 2) / 2));
-  const horizontal = Math.max(0, width - 2 * inset - 2 * radius);
-  const vertical = Math.max(0, height - 2 * inset - 2 * radius);
-  const arc = Math.PI * radius / 2;
-  const total = 2 * horizontal + 2 * vertical + 4 * arc;
-  const frames: Keyframe[] = [];
-  let distance = 0;
-  const add = (x: number, y: number) => frames.push({
-    transform: `translate3d(${x - ROOM_PERIMETER_LIGHT_SIZE / 2}px, ${y - ROOM_PERIMETER_LIGHT_SIZE / 2}px, 0)`,
-    offset: total ? distance / total : 0,
+export type RoomPerimeterEdge = "top" | "right" | "bottom" | "left";
+
+/** Animate one short highlight along a single edge; never animate a viewport-sized mask. */
+export function roomPerimeterMotionFrames(
+  width: number,
+  height: number,
+  edge: RoomPerimeterEdge,
+): Keyframe[] {
+  const horizontal = edge === "top" || edge === "bottom";
+  const size = Math.min(ROOM_PERIMETER_LIGHT_SIZE, horizontal ? width : height);
+  const x = (value: number) => `translate3d(${value}px, 0, 0)`;
+  const y = (value: number) => `translate3d(0, ${value}px, 0)`;
+  const hidden = (transform: string, offset: number): Keyframe => ({
+    transform, opacity: 0, offset,
   });
-  const corner = (cx: number, cy: number, start: number) => {
-    for (let step = 1; step <= 8; step++) {
-      distance += arc / 8;
-      const angle = start + step * Math.PI / 16;
-      add(cx + radius * Math.cos(angle), cy + radius * Math.sin(angle));
-    }
-  };
-  add(inset + radius, inset);
-  distance += horizontal; add(width - inset - radius, inset);
-  corner(width - inset - radius, inset + radius, -Math.PI / 2);
-  distance += vertical; add(width - inset, height - inset - radius);
-  corner(width - inset - radius, height - inset - radius, 0);
-  distance += horizontal; add(inset + radius, height - inset);
-  corner(inset + radius, height - inset - radius, Math.PI / 2);
-  distance += vertical; add(inset, inset + radius);
-  corner(inset + radius, inset + radius, Math.PI);
-  frames[frames.length - 1]!.offset = 1;
-  return frames;
+  const visible = (transform: string, offset: number): Keyframe => ({
+    transform, opacity: 1, offset,
+  });
+
+  switch (edge) {
+    case "top":
+      return [
+        hidden(x(-size), 0), hidden(x(-size), .04), visible(x(0), .06),
+        visible(x(Math.max(0, width - size)), .20), hidden(x(width), .24),
+        hidden(x(width), 1),
+      ];
+    case "right":
+      return [
+        hidden(y(-size), 0), hidden(y(-size), .29), visible(y(0), .31),
+        visible(y(Math.max(0, height - size)), .45), hidden(y(height), .49),
+        hidden(y(height), 1),
+      ];
+    case "bottom":
+      return [
+        hidden(x(width), 0), hidden(x(width), .54), visible(x(Math.max(0, width - size)), .56),
+        visible(x(0), .70), hidden(x(-size), .74), hidden(x(-size), 1),
+      ];
+    case "left":
+      return [
+        hidden(y(height), 0), hidden(y(height), .79), visible(y(Math.max(0, height - size)), .81),
+        visible(y(0), .95), hidden(y(-size), .99), hidden(y(-size), 1),
+      ];
+  }
 }
