@@ -22,7 +22,9 @@ const ownerTestContext = z.discriminatedUnion("type", [
   z.object({ type: z.literal("room"), roomId: z.string().trim().min(1).max(20) }).strict(),
 ]);
 const ownerTestModePatch = z.object({ enabled: z.boolean() }).strict();
-const ownerTestModeAck = ownerTestContext.and(z.object({ winnerId: z.string().min(1).max(120) }).strict());
+const ownerTestModeAck = ownerTestContext.options[0].extend({
+  winnerId: z.string().min(1).max(120),
+});
 
 async function requireDevelopmentOwner(id: string) {
   if (process.env.NODE_ENV !== "development") {

@@ -12,6 +12,7 @@ const context = { key: "room:owner-room:1", eligible: true, seatNumber: 1 };
 const shuffled = () => [...createDeck()].reverse();
 const routeSource = readFileSync("src/routes/room-card-games.ts", "utf8");
 const ownerTestSource = readFileSync("src/lib/owner-card-game-test-mode.ts", "utf8");
+const appSource = readFileSync("src/app.ts", "utf8");
 
 test("a fresh server process starts the private card test switched off", () => {
   const mode = new OwnerCardGameTestMode(shuffled);
@@ -101,4 +102,14 @@ test("the HTTP control is development-only and calls the existing owner authoriz
 
 test("private test dealing is independent of the normal game switches and has no payout path", () => {
   assert.doesNotMatch(ownerTestSource, /getRoomCardGameSettings|dealsEnabled|payoutsEnabled|cardDisplayEnabled|wallet|ledger|payout/i);
+});
+
+test("owner card-game requests initialize Clerk before the account guards run", () => {
+  assert.match(appSource, /app\.use\(\s*\[[^\]]*"\/api\/owner\/card-games"[^\]]*\],\s*clerkMiddleware/);
+  assert.ok(appSource.indexOf("clerkMiddleware((req)") < appSource.indexOf('app.use("/api", router)'));
+});
+
+test("winner acknowledgement extends the strict room schema rather than intersecting mutually exclusive strict objects", () => {
+  assert.match(routeSource, /const ownerTestModeAck = ownerTestContext\.options\[0\]\.extend\(/);
+  assert.doesNotMatch(routeSource, /ownerTestContext\.and\(/);
 });
