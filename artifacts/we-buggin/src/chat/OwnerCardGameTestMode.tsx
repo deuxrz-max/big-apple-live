@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { BRAND_LOGO_PATH } from "@/components/brand";
 import { getCardTestFace } from "./owner-card-game-test-card-policy";
+import { CardFaceImage } from "./CardFaceImage";
+import { CardHandFan } from "./CardHandFan";
 import "./owner-card-game-test.css";
 
 type TestCard = { dealNumber: number; code: string };
@@ -241,21 +243,14 @@ export function OwnerCardGameTestMode({ roomId, variant, onStateChange }: Props)
 
       {dealFlight && flightFace && (
         <article key={dealFlight.id} className={`dw-test-card dw-card-flight${flightFace.isWild ? " is-wild" : ""}`}
-          aria-label={`${flightFace.rank} of ${flightFace.suitName}${flightFace.isWild ? ", wild" : ""}`}
+          aria-label={flightFace.label}
           style={{
             left: `${dealFlight.left}px`,
             top: `${dealFlight.top}px`,
             "--flight-x": `${dealFlight.deltaX}px`,
             "--flight-y": `${dealFlight.deltaY}px`,
           } as CSSProperties}>
-          <span className="dw-test-card-corner dw-test-card-top"><b>{flightFace.rank}</b><i>{flightFace.symbol}</i></span>
-          {flightFace.isWild
-            ? <span className="dw-test-card-wild-mark" aria-hidden="true">{flightFace.wildMark}</span>
-            : <span className="dw-test-card-center" aria-hidden="true">{flightFace.symbol}</span>}
-          {flightFace.isWild && <span className="dw-test-card-wild-label">WILD</span>}
-          <span className="dw-test-card-corner dw-test-card-bottom" aria-hidden="true">
-            <b>{flightFace.rank}</b><i>{flightFace.symbol}</i>
-          </span>
+          <CardFaceImage code={dealFlight.code} />
         </article>
       )}
 
@@ -275,17 +270,9 @@ export function OwnerCardGameTestMode({ roomId, variant, onStateChange }: Props)
               const wild = parts.isWild;
               return (
                 <article key={code} className={`dw-test-card${wild ? " is-wild" : ""}`}
-                  aria-label={`${parts.rank} of ${parts.suitName}${wild ? ", wild" : ""}`}
+                  aria-label={parts.label}
                   data-testid={`owner-test-card-${dealNumber}`}>
-                  <span className="dw-test-card-corner dw-test-card-top">
-                    <b>{parts.rank}</b><i>{parts.symbol}</i>
-                  </span>
-                  {wild ? <span className="dw-test-card-wild-mark" aria-hidden="true">{parts.wildMark}</span>
-                    : <span className="dw-test-card-center" aria-hidden="true">{parts.symbol}</span>}
-                  {wild && <span className="dw-test-card-wild-label">WILD</span>}
-                  <span className="dw-test-card-corner dw-test-card-bottom" aria-hidden="true">
-                    <b>{parts.rank}</b><i>{parts.symbol}</i>
-                  </span>
+                  <CardFaceImage code={code} />
                 </article>
               );
             })}
@@ -323,7 +310,13 @@ export function OwnerCardGameTestMode({ roomId, variant, onStateChange }: Props)
             aria-labelledby="dw-card-test-rules-title" onClick={event => event.stopPropagation()}>
             <h2 id="dw-card-test-rules-title">Private card test</h2>
             <p>You receive one card every minute while seated alone in your own created room.</p>
-            <p>Five cards complete the hand. Twos are wild. This is a test display only: it awards no gold and does not use the live game switches.</p>
+            <p>Five cards complete the hand. Jokers are wild. The deck has 48 regular cards and four distinct Jokers; there are no 2s. This is a test display only: it awards no gold and does not use the live game switches.</p>
+            <details>
+              <summary>Hand guide · Jokers are wild</summary>
+              <p>Best to worst: five of a kind, straight flush, four of a kind, full house, flush, straight, three of a kind, two pair, pair, high card. Aces can be high or low in a straight. A Joker can stand for any rank and suit; equal hands tie.</p>
+              <CardHandFan cards={["AS", "AH", "AD", "AC", "joker-wild-1"]} />
+              <p>Four Aces and a Joker make five of a kind.</p>
+            </details>
             <button type="button" onClick={() => setRulesOpen(false)}>Close rules</button>
           </section>
         </div>

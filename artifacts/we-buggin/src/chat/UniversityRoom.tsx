@@ -46,7 +46,7 @@ type Target = {
   isHost?: boolean;
 };
 type CardGamePersonView = {
-  cards: Array<{ card: { rank: number; suit: 'C' | 'D' | 'H' | 'S' } }>;
+  cards: Array<{ card: { rank: number; suit: 'C' | 'D' | 'H' | 'S' | null; jokerId?: number } }>;
 };
 type CardHandLookup = { participantId: string; status: 'loading' | 'ready' | 'error'; cards: string[] };
 type ReportTarget = {
@@ -156,13 +156,15 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
         if (!response.ok) throw new Error('Could not load this hand.');
         const view = await response.json() as CardGamePersonView;
         const rankCode: Record<number, string> = {
-          2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9',
+          3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9',
           10: '10', 11: 'J', 12: 'Q', 13: 'K', 14: 'A',
         };
         if (active) setCardHandLookup({
           participantId: targetParticipantId,
           status: 'ready',
-          cards: view.cards.map(item => `${rankCode[item.card.rank]}${item.card.suit}`),
+          cards: view.cards.map(item => item.card.jokerId !== undefined
+            ? `joker-wild-${item.card.jokerId}`
+            : `${rankCode[item.card.rank]}${item.card.suit}`),
         });
       } catch {
         if (active) setCardHandLookup({ participantId: targetParticipantId, status: 'error', cards: [] });

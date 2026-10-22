@@ -41,9 +41,9 @@ export function cardGameClock(nowMs = Date.now(), epochMs = CARD_GAME_EPOCH_MS):
   };
 }
 
-export type PlayingCard = { rank: number; suit: "C" | "D" | "H" | "S" };
+export type PlayingCard = { rank: number; suit: "C" | "D" | "H" | "S" | null; jokerId?: number };
 
-const RANK_CODES = ["", "", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+const RANK_CODES = ["", "", "", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
 const CARD_CODE_RANK = new Map<string, number>(
   RANK_CODES.flatMap((code, rank) => code ? [[code, rank] as const] : []),
 );
@@ -51,10 +51,10 @@ const SUITS = ["C", "D", "H", "S"] as const;
 
 export function createDeck(): string[] {
   const cards: string[] = [];
-  for (let rank = 2; rank <= 14; rank++) {
+  for (let rank = 3; rank <= 14; rank++) {
     for (const suit of SUITS) cards.push(`${RANK_CODES[rank]}${suit}`);
   }
-  return cards;
+  return [...cards, ...[1, 2, 3, 4].map(id => `joker-wild-${id}`)];
 }
 
 export function securelyShuffledDeck(randomIndex: (maxExclusive: number) => number = max => randomInt(max)): string[] {
@@ -68,7 +68,9 @@ export function securelyShuffledDeck(randomIndex: (maxExclusive: number) => numb
 }
 
 export function parseCardCode(code: string): PlayingCard {
-  const match = /^(10|[2-9JQKA])([CDHS])$/.exec(code);
+  const joker = /^joker-wild-([1-4])$/.exec(code);
+  if (joker) return { rank: 0, suit: null, jokerId: Number(joker[1]) };
+  const match = /^(10|[3-9JQKA])([CDHS])$/.exec(code);
   if (!match) throw new Error("Invalid playing card");
   const rank = CARD_CODE_RANK.get(match[1]!);
   if (rank === undefined) throw new Error("Invalid playing card");
@@ -142,13 +144,13 @@ export function compareHandScores(left: HandScore, right: HandScore): number {
   return 0;
 }
 
-/** Try every rank assignment for the wild twos; suits are independently chosen for flushes. */
+/** Try every rank assignment for Jokers, including two for ace-low straights. */
 export function scoreFiveCardHand(codes: string[]): HandScore {
   if (codes.length !== 5) throw new Error("A hand must contain exactly five cards");
   const cards = codes.map(parseCardCode);
   if (new Set(codes).size !== 5) throw new Error("A hand cannot contain a repeated physical card");
-  const wildCount = cards.filter(card => card.rank === 2).length;
-  const naturals = cards.filter(card => card.rank !== 2);
+  const wildCount = cards.filter(card => card.jokerId !== undefined).length;
+  const naturals = cards.filter(card => card.jokerId === undefined);
   const naturalRanks = naturals.map(card => card.rank);
   const flushAllowed = naturals.length < 2 || naturals.every(card => card.suit === naturals[0]!.suit);
   let best: HandScore | null = null;

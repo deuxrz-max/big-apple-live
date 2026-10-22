@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import {
   CARD_GAME_EPOCH_MS, CARD_GAME_PERIOD_MS, CARD_DEAL_INTERVAL_MS, CARD_GAME_PRIZE,
   cardGameClock, cardGamePrizeEligible, compareHandScores, createDeck, dealCardsForSeats, scoreFiveCardHand,
-  securelyShuffledDeck, splitRoomPrize, applyDailyWinningsCap, nextRoomCardGameCarryover,
+  securelyShuffledDeck, splitRoomPrize, applyDailyWinningsCap, nextRoomCardGameCarryover, parseCardCode,
 } from "./room-card-game-policy";
 
 const serviceSource = readFileSync("src/lib/room-card-game-service.ts", "utf8");
@@ -43,14 +43,14 @@ test("one securely shuffled 52-card deck deals forty-five distinct cards for nin
     /at most nine card seats/);
 });
 
-test("scores every hand category from best to worst, including all wild-twos", () => {
+test("scores every hand category from best to worst, including all four Jokers", () => {
   const hands = [
-    ["AS", "AH", "AD", "AC", "2S"],
-    ["9S", "10S", "JS", "QS", "2H"],
+    ["AS", "AH", "AD", "AC", "joker-wild-4"],
+    ["9S", "10S", "JS", "QS", "joker-wild-3"],
     ["AS", "AH", "AD", "AC", "KS"],
-    ["AS", "AH", "KC", "KH", "2D"],
-    ["AS", "JS", "8S", "4S", "2H"],
-    ["AS", "3H", "4D", "5C", "2D"],
+    ["AS", "AH", "KC", "KH", "joker-wild-2"],
+    ["AS", "JS", "8S", "4S", "joker-wild-3"],
+    ["AS", "3H", "4D", "5C", "joker-wild-2"],
     ["AS", "AH", "AD", "KC", "QD"],
     ["AS", "AH", "KC", "KH", "QD"],
     ["AS", "AH", "KC", "QD", "JD"],
@@ -59,12 +59,23 @@ test("scores every hand category from best to worst, including all wild-twos", (
   assert.deepEqual(hands.map(hand => hand.category), [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]);
   assert.equal(hands[5]!.tieBreak[0], 5, "Ace-low straight is five-high");
   assert.equal(scoreFiveCardHand(["10S", "JH", "QD", "KC", "AS"]).category, 4);
-  assert.equal(scoreFiveCardHand(["AS", "KH", "QD", "JC", "2C"]).category, 4);
+  assert.equal(scoreFiveCardHand(["AS", "KH", "QD", "JC", "joker-wild-1"]).category, 4);
   assert.equal(compareHandScores(
     scoreFiveCardHand(["10S", "JH", "QD", "KC", "AS"]),
-    scoreFiveCardHand(["AS", "KH", "QD", "JC", "2C"]),
+    scoreFiveCardHand(["AS", "KH", "QD", "JC", "joker-wild-1"]),
   ), 0, "a wild hand matching a natural hand ties it");
-  assert.equal(scoreFiveCardHand(["2C", "2D", "2H", "2S", "3C"]).category, 9);
+  assert.equal(scoreFiveCardHand(["joker-wild-1", "joker-wild-2", "joker-wild-3", "joker-wild-4", "3C"]).category, 9);
+});
+
+test("deck contains 48 naturals and four distinct Jokers, with no twos accepted", () => {
+  const deck = createDeck();
+  assert.equal(deck.filter(code => code.startsWith("joker-wild-")).length, 4);
+  assert.equal(deck.filter(code => !code.startsWith("joker-wild-")).length, 48);
+  for (const suit of ["C", "D", "H", "S"]) assert.throws(() => parseCardCode(`2${suit}`));
+  for (const code of deck) assert.doesNotThrow(() => parseCardCode(code));
+  assert.throws(() => parseCardCode("joker-wild-5"));
+  assert.throws(() => scoreFiveCardHand(["AS", "AH", "AD", "joker-wild-1", "joker-wild-1"]),
+    /repeated physical card/);
 });
 
 test("ties split exactly one hundred coins in host-relative seat order", () => {

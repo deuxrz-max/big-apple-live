@@ -8,3 +8,9 @@ The Deux Wild card game, its visible profile-card popup, and the owner-only one-
 **Why:** The user changed the product scope because seat-microphone use can mute room-video audio; cards should not interfere with those rooms.
 
 **How to apply:** Keep schedulers, card endpoints, profile-hand display, and private test-mode entry points scoped to user-created social rooms. Preserve existing seating, microphone/audio, video, chat, and gifts in every other room type.
+
+The owner replaced the four twos with four distinct Jokers in the uploaded deck: 48 regular cards plus four wild Jokers, 52 total. Preserve the existing logo card backs.
+
+**Why:** The user explicitly chose Jokers instead of twos and supplied replacement artwork.
+
+**How to apply:** Use Jokers for wildcard logic, rules, hand guides and shimmer. Do not reintroduce physical two cards. A Joker can still represent rank two when evaluating an ace-low straight.

@@ -8,11 +8,13 @@ import { requireOwner } from "../lib/community";
 import { assertRoomAccessAllowed, communityRoomScope } from "../lib/room-moderation";
 import { universityVideoBeamStore } from "../lib/university-video-beam";
 import { ownerCardGameTestMode, type OwnerCardTestContext } from "../lib/owner-card-game-test-mode";
+import { serveCardDeckFace } from "../lib/card-deck-media";
 import {
   getRoomCardGameSettings, getRoomCardGameView, updateRoomCardGameSettings,
 } from "../lib/room-card-game-service";
 
 const router = Router();
+router.get("/card-deck/:filename", serveCardDeckFace);
 const settingsPatch = z.object({
   dealsEnabled: z.boolean().optional(),
   payoutsEnabled: z.boolean().optional(),
