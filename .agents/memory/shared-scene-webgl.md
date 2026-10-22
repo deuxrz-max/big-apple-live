@@ -8,3 +8,15 @@ On October 18, 2026, the app screenshot browser could not create a WebGL context
 **Why:** A preview runner's GPU/WebGL limitation should not make the whole app appear broken or be mistaken for a device-camera or app-route failure.
 
 **How to apply:** Keep the 3D layer optional behind a capability check and a local error boundary. When the screenshot runner lacks WebGL, verify the regular app remains visible and report that scene rendering needs a WebGL-capable browser or real device.
+
+Software WebGL2 in the workspace Chromium can verify geometry, input, lifecycle and fallback behavior even when the managed screenshot/test browser has no WebGL.
+
+**Why:** The two browser environments expose different graphics capabilities. Software rendering is not evidence of Android GPU speed, heat or battery use.
+
+**How to apply:** For a capability-limited runner, use the installed Chromium with ANGLE/SwiftShader and explicitly label results software-rendered. Keep real-device performance unverified.
+
+For card materials, preserve printed artwork as an unlit base and put subtle physically lit varnish above it; use metallic shading for the dimensional edge.
+
+**Why:** Applying environment reflections directly to the printed face washed deep-black artwork grey and made satin brushing overpower the illustration.
+
+**How to apply:** Inspect both resting and tilted cards against the original image, keep the coating faint and ensure that full artwork and borders remain readable.

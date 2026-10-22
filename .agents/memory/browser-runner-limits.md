@@ -3,6 +3,12 @@ name: Browser runner limits
 description: Managed browser snapshots, media codecs, clipboard resets, and Clerk auth-fixture limits.
 ---
 
+When mounting Vite components in a browser-local test fixture, import providers from the exact transformed dependency URL, including its version query string.
+
+**Why:** A second React Query module instance creates a different context; a seemingly valid provider then throws “No QueryClient set.” This is a fixture failure, not proof of an application auth or provider bug.
+
+**How to apply:** Read the served component/dependency import URLs and reuse their exact module identity for React, ReactDOM and QueryClientProvider. Simulated access in a fixture never verifies a real owner sign-in.
+
 Protected-handler tests need Clerk's complete session-token auth shape, not just
 a user ID, as well as the trusted middleware brand.
 
