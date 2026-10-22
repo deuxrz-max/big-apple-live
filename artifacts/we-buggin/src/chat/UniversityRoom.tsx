@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Clapperboard, LogOut, Mic, MicOff, X } from 'lucide-react';
+import { Clapperboard, LogOut, Mic, MicOff, Send, X } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -28,6 +28,7 @@ import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
 import type { RoomCoinDropEvent, RoomEntranceEffectEvent } from './useTextRoom';
 import { RoomCoinDropOverlay } from './RoomCoinDropOverlay';
 import { CardHandFan } from './CardHandFan';
+import { canUsePremiumCardFinish } from './card-surface-finish';
 import { OwnerCardGameTestMode, type OwnerCardTestState } from './OwnerCardGameTestMode';
 import './university-room.css';
 import { RoomPerimeter } from './RoomPerimeter';
@@ -774,10 +775,10 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                 <button type="button" className="bm-btn bm-btn-sm" onClick={() => { setWhisperTo(null); setText(''); setSendErr(null); }} data-testid="button-whisper-close">Back to room</button>
               </div>
             )}
-            <form className={`ch-comp${whispering ? ' ur-wmode' : ''}`} onSubmit={(e) => { e.preventDefault(); if (whispering) doWhisper(); else doSend(text); }}>
+            <form className={`ch-comp dw-room-composer${whispering ? ' ur-wmode' : ''}`} onSubmit={(e) => { e.preventDefault(); if (whispering) doWhisper(); else doSend(text); }}>
               <input type="text" value={text} maxLength={limit} onChange={(e) => setText(e.target.value)} placeholder={whispering ? 'Whisper (1-1000)' : 'Say something (1-280)'} aria-label={whispering ? 'Whisper' : 'Message'} data-testid="input-message" />
               <button type="submit" className="bm-btn bm-btn-primary" disabled={(whispering ? whisperMut.isPending : pending) || !text.trim()} data-testid="button-send">
-                {whispering ? (whisperMut.isPending ? 'Sending...' : 'Whisper') : pending ? 'Sending...' : 'Send'}
+                <Send size={16} aria-hidden="true" /><span>{whispering ? (whisperMut.isPending ? 'Sending...' : 'Whisper') : pending ? 'Sending...' : 'Send'}</span>
               </button>
             </form>
           </div>
@@ -806,7 +807,8 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                   {profileHandLoading ? <p role="status">Checking this round…</p>
                     : profileHandError ? <p role="status">Cards aren’t available right now.</p>
                       : profileHandCards.length
-                        ? <CardHandFan cards={profileHandCards} expanded />
+                        ? <CardHandFan cards={profileHandCards} expanded
+                          premium={isSocialRoom && canUsePremiumCardFinish(import.meta.env.DEV, chatAccess.data)} />
                         : <p>No cards in this round.</p>}
                 </section>
               </>

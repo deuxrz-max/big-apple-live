@@ -27,9 +27,14 @@ import '@/white-theme.css';
 import '@/dark-app-theme.css';
 import '@/depth-ui.css';
 import '@/chat/room-black-gold.css';
+import '@/mobile-shell.css';
 
 const DevAudioHarnessPage = import.meta.env.DEV
   ? lazy(() => import('@/dev/AudioHarnessPage'))
+  : null;
+
+const DevCardFinishPreview = import.meta.env.DEV
+  ? lazy(() => import('@/profile/CardFinishPreview'))
   : null;
 
 const queryClient = new QueryClient();
@@ -255,6 +260,18 @@ function ProfilePhotoReviewsRoute() {
   );
 }
 
+function CardFinishPreviewRoute() {
+  const { user } = useUser();
+  return (
+    <>
+      <Show when="signed-in">{user && DevCardFinishPreview && <ProfileGate>
+        <Suspense fallback={<div className="dw-cfp-skel" aria-busy="true" />}><DevCardFinishPreview key={user.id} /></Suspense>
+      </ProfileGate>}</Show>
+      <Show when="signed-out"><Redirect to="/" /></Show>
+    </>
+  );
+}
+
 function StoreRoute() {
   const { user } = useUser();
   return (
@@ -373,6 +390,11 @@ function ClerkProviderWithRoutes() {
   const isModerationScreen = currentPath === '/community/moderation';
   const isDirectoryScreen = currentPath === '/home';
   const isGiftStudioScreen = currentPath === '/community/gift-studio';
+  useLayoutEffect(() => {
+    // New screens start at their header, not at the previous screen's scroll.
+    // This never touches the independently scrolling chat or media elements.
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [currentPath]);
   // Retained as a route-layout flag only; all app routes now share the dark theme.
   const isLightScreen = false;
   useLayoutEffect(() => {
@@ -433,6 +455,7 @@ function ClerkProviderWithRoutes() {
             <Route path="/user-portal/transactions" component={TransactionHistoryRoute} />
             <Route path="/user-portal/photo-reviews" component={ProfilePhotoReviewsRoute} />
             <Route path="/user-portal/store" component={StoreRoute} />
+            {DevCardFinishPreview && <Route path="/user-portal/card-finish" component={CardFinishPreviewRoute} />}
             <Route path="/user-portal" component={OwnProfileRoute} />
             <Route path="/user-portal/edit" component={Portal} />
             <Route path="/rooms/:roomId" component={RoomRoute} />

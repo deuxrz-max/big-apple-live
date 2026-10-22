@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { getCardTestFace } from "./owner-card-game-test-card-policy";
 import { CardFaceImage } from "./CardFaceImage";
+import { CardSurfaceFinish } from "./CardSurfaceFinish";
 import { fitCard, getHandGridLayout, isRedSuit, isSimpleNumberRank } from "./card-fan-layout";
 
-export function CardHandFan({ cards, expanded = false }: { cards: string[]; expanded?: boolean }) {
+export function CardHandFan({ cards, expanded = false, premium = false }: { cards: string[]; expanded?: boolean; premium?: boolean }) {
   if (cards.length === 0) return null;
-  if (expanded) return <ExpandedFan cards={cards.slice(0, 5)} />;
+  if (expanded) return <ExpandedFan cards={cards.slice(0, 5)} premium={premium} />;
   const shownCards = cards.slice(0, 5);
   return (
     <div className="dw-card-hand-fan" role="group" aria-label={`${shownCards.length} cards in hand`}>
@@ -40,7 +41,7 @@ function PopupCardFace({ code }: { code: string }) {
   return <CardFaceImage code={code} />;
 }
 
-function ExpandedFan({ cards }: { cards: string[] }) {
+function ExpandedFan({ cards, premium }: { cards: string[]; premium: boolean }) {
   const box = useRef<HTMLDivElement>(null);
   const returnTo = useRef<number | null>(null);
   const tileRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -66,7 +67,7 @@ function ExpandedFan({ cards }: { cards: string[] }) {
   const zf = zoomed !== null ? getCardTestFace(cards[zoomed]) : null;
   const back = () => { returnTo.current = zoomed; setZoomed(null); };
   return (
-    <div ref={box} className="dw-card-fan-xl" data-testid="profile-card-fan">
+    <div ref={box} className={`dw-card-fan-xl${premium ? " is-premium-finish" : ""}`} data-testid="profile-card-fan">
       {zoomed !== null && zf ? (
         <div className="dw-card-fan-zoom">
           <button type="button" className="dw-card-tile dw-card-zoom-tile"
@@ -74,7 +75,7 @@ function ExpandedFan({ cards }: { cards: string[] }) {
             data-testid="button-card-zoomed" autoFocus onClick={back}
             onKeyDown={e => { if (e.key === "Escape") { e.stopPropagation(); back(); } }}
             style={{ width: zoom.width, height: zoom.height }}>
-            <span className={`dw-card-tile-face${zf.isWild ? " is-wild" : ""}`}><PopupCardFace code={cards[zoomed]} /></span>
+            <CardSurfaceFinish premium={premium}><span className={`dw-card-tile-face${zf.isWild ? " is-wild" : ""}`}><PopupCardFace code={cards[zoomed]} /></span></CardSurfaceFinish>
           </button>
           <button type="button" className="dw-card-fan-back" data-testid="button-card-back" onClick={back}
             onKeyDown={e => { if (e.key === "Escape") { e.stopPropagation(); back(); } }}>Back to hand</button>
@@ -91,7 +92,7 @@ function ExpandedFan({ cards }: { cards: string[] }) {
                 aria-label={`${f.label}. Enlarge`} data-testid={`button-card-${i}`}
                 className="dw-card-tile" onClick={() => setZoomed(i)}
                 style={{ width: L.cardW, height: L.cardH, left: p.left, top: p.top }}>
-                <span className={`dw-card-tile-face${f.isWild ? " is-wild" : ""}`}><PopupCardFace code={code} /></span>
+                <CardSurfaceFinish premium={premium}><span className={`dw-card-tile-face${f.isWild ? " is-wild" : ""}`}><PopupCardFace code={code} /></span></CardSurfaceFinish>
               </button>
             );
           })}

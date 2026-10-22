@@ -38,7 +38,8 @@
 - [Room terminology](room-terminology.md) — use room/rooms in all visible copy, accessibility labels and errors; preserve internal identifiers and routes.
 - [Shared 3D preview limits](shared-scene-webgl.md) — the screenshot browser lacked WebGL; keep the decorative scene isolated and fall back to the app UI.
 - [Gift send ordering](gift-send-ordering.md) — room/stream FIFO is serialized in one API process; multi-instance delivery needs a database-backed ordering primitive.
-- [Room visual theme](room-visual-theme.md) — solid black room surfaces with a restrained glowing gold perimeter; no redesign, media recoloring or other-page changes.
+- [Room visual theme](room-visual-theme.md) — pure black room surfaces and restrained gold perimeter; app-wide redesign scope now follows mobile interface direction.
+- [Mobile interface direction](app-visual-direction.md) — app-wide mobile redesign approved; preserve black/gold identity, behavior and owner-only card prototype.
 - [App positioning](app-positioning.md) — owner-approved live-streaming and social media description for app metadata, sharing previews and welcome/about copy.
 - [Gifting levels](gifting-levels.md) — successful gift spending powers seven cumulative tiers; recharges and the separate username-color palette do not count.
 - [Room playback rendering budget](room-playback-performance.md) — decorative motion must avoid full-screen paints; profile under CPU slowdown and separate rendering from media/network issues.

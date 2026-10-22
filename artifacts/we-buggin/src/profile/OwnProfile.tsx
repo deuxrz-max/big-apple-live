@@ -45,7 +45,7 @@ export function OwnProfile() {
   return (
     <ProfileView person={p} own countryName={countryName} passportCountry={passportCountry} products={me.data.products} backHref="/home"
       links={
-        <nav className="pf-links" aria-label="Profile shortcuts">
+        <nav className="pf-links dw-shortcuts" data-testid="nav-profile-shortcuts" aria-label="Profile shortcuts">
           <Link href="/user-portal/store" className="pf-btn pf-btn-store" data-testid="link-profile-store"><ShoppingBag size={17} aria-hidden="true" /> Store</Link>
           <Link href="/user-portal/transactions" className="pf-btn" data-testid="link-transaction-history">Transaction History</Link>
           <Link href="/community" className="pf-btn" data-testid="link-community">Community</Link>
@@ -53,6 +53,7 @@ export function OwnProfile() {
           <Link href="#streamer-passport" className="pf-btn" data-testid="link-streamer-passport">Streamer passport</Link>
           {access.data?.owner && access.data.adultConfirmed && <Link href="/user-portal/photo-reviews" className="pf-btn" data-testid="link-profile-photo-review">Review pending photos</Link>}
           {access.data?.moderator && <Link href="/community/moderation" className="pf-btn" data-testid="link-moderation">Moderation</Link>}
+          {import.meta.env.DEV && access.data?.owner === true && <Link href="/user-portal/card-finish" className="pf-btn" data-testid="link-card-finish-preview">Card finish preview</Link>}
           {access.data?.owner && <Link href="/community/gift-studio" className="pf-btn" data-testid="link-gift-studio">Gift Studio</Link>}
         </nav>
       }>
@@ -93,8 +94,10 @@ export function OwnProfile() {
           </div>
         )}
       </section>
-      <Link href="/community/coins" className="pf-btn" data-testid="link-buy-credits"><Coins size={16} aria-hidden="true" style={{ color: '#f5cb8d' }} /> Buy coins</Link>
-      <GiftControl onClick={() => setBagOpen(true)} label="Open your gift bag" />
+      <div className="dw-me-actions" data-testid="group-me-actions">
+        <Link href="/community/coins" className="pf-btn" data-testid="link-buy-credits"><Coins size={16} aria-hidden="true" style={{ color: '#f5cb8d' }} /> Buy coins</Link>
+        <GiftControl onClick={() => setBagOpen(true)} label="Open your gift bag" />
+      </div>
       {bagOpen && <GiftBag onClose={() => setBagOpen(false)} />}
       <EntranceEffectsShop />
       <div id="streamer-passport"><MyStreamerPassport /></div>

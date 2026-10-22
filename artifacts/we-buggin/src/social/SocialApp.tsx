@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link, Route, Switch, useLocation, useParams } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
-import { Users, Heart, Ban, Flag, MessageCircle, Coins, Trophy, UserRound, Stamp, EllipsisVertical } from 'lucide-react';
+import { Users, Heart, Ban, Flag, MessageCircle, Coins, Trophy, UserRound, Stamp } from 'lucide-react';
 import { useGetChatAccess, useGetSocialMe } from '@workspace/api-client-react';
 import '@/beam/beam.css';
 import './social.css';
@@ -16,6 +16,7 @@ import { LeaderboardPage, RewardsPage, ThreadPage } from './MoneyPages';
 import { StreamerPassportReview } from '@/passport/StreamerPassport';
 import { SafetyReportsPage } from '@/safety/SafetyReportsPage';
 import { GiftStudioPage } from '@/gift-studio/GiftStudioPage';
+import { ActionMenu } from '@/components/app-chrome';
 
 const NAV = [
   { to: '/community', label: 'People', icon: Users, exact: true },
@@ -55,9 +56,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
       {!bare && <nav className="bm-nav">
         <Wordmark href="/home" className="bm-logo" />
         <div className="sc-header-actions">
-          <details className="sc-more-menu">
-            <summary aria-label="More pages" title="More pages"><EllipsisVertical size={21} aria-hidden="true" /></summary>
-            <nav aria-label="More pages">
+          <ActionMenu label="More pages" testId="menu-community-pages">
               {NAV.map(({ to, label, icon: I }) => (
                 <Link key={to} href={to} onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}>
                   <I size={17} aria-hidden="true" /><span>{label}</span>
@@ -66,8 +65,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
               {access.data?.moderator && <Link href="/community/moderation" onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}><Ban size={17} aria-hidden="true" /><span>Moderation</span></Link>}
               {access.data?.owner && <Link href="/community/reports" onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}><Flag size={17} aria-hidden="true" /><span>Safety reports</span></Link>}
               {access.data?.owner && <Link href="/community/passport-review" onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}><Stamp size={17} aria-hidden="true" /><span>Passport review</span></Link>}
-            </nav>
-          </details>
+          </ActionMenu>
         </div>
       </nav>}
       <div className={`sc-shell${isMessagesPath || path === '/community/favorites' ? ' is-inbox' : ''}`}>

@@ -1,0 +1,37 @@
+/* Owner-only premium card finish prototype. Contained, static tiny textures, no filters/WebGL.
+   Joker shimmer rules are untouched; these layers sit beside it. */
+.dw-cf { position: absolute; inset: 0; display: block; contain: layout paint; perspective: 600px;
+  --cf-rx: 0deg; --cf-ry: 0deg; --cf-lx: 50%; --cf-ly: 30%; --cf-scale: .955; }
+.dw-cf-body { position: absolute; inset: 0; display: block; border-radius: 7px;
+  transform: rotateX(var(--cf-rx)) rotateY(var(--cf-ry)) scale(var(--cf-scale));
+  transform-style: flat; will-change: transform; backface-visibility: hidden; overflow: hidden;
+  box-shadow: 0 1px 0 rgba(255, 233, 170, .10), 0 2px 3px rgba(0, 0, 0, .55), 0 5px 9px -4px rgba(0, 0, 0, .7); }
+.dw-cf .dw-card-tile-face { box-shadow: inset 0 0 0 1px rgba(5,5,5,.35), inset 0 1px 0 rgba(255, 236, 180, .16), inset 0 -1px 0 rgba(0,0,0,.45); }
+/* Satin: two tiny static repeating gradients, faint. */
+.dw-cf-satin, .dw-cf-light, .dw-cf-edge { position: absolute; inset: 0; border-radius: 7px; pointer-events: none; z-index: 3; }
+.dw-cf-satin { clip-path: inset(0 round 7px); opacity: .5;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 240, 200, .028) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, .05) 0 1px, transparent 1px 2px),
+    linear-gradient(165deg, rgba(255, 238, 190, .05), transparent 45%, rgba(0, 0, 0, .14)); }
+/* Light catch: soft broad sheen, low ceiling to avoid glare. */
+.dw-cf-light { inset: -20%; opacity: .9; will-change: transform;
+  transform: translate(var(--cf-light-x, 0%), var(--cf-light-y, -3.6%));
+  background: radial-gradient(120% 80% at 50% 50%, rgba(255, 233, 175, .11), rgba(255, 233, 175, .03) 40%, transparent 70%); }
+/* Layered gold edge: outer gilt hairline + inner bevel. */
+.dw-cf-edge { box-shadow: inset 0 0 0 1.5px rgba(214, 180, 93, .0), inset 0 0 0 1px rgba(246, 219, 140, .38), inset 0 0 0 2.5px rgba(70, 50, 14, .45); }
+@media (prefers-reduced-motion: reduce) {
+  .dw-cf-body { transform: scale(.955) !important; will-change: auto; }
+}
+
+/* Preview page */
+.dw-cfp { min-height: 100dvh; width: 100%; min-width: 0; padding: 18px 14px 110px; box-sizing: border-box; color: #f6ead0; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 14px; max-width: 520px; margin: 0 auto; }
+.dw-cfp h1 { margin: 0; font-size: 20px; color: #f1d58a; letter-spacing: .02em; }
+.dw-cfp p { margin: 0; font-size: 12px; line-height: 1.45; color: rgba(246, 234, 208, .72); }
+.dw-cfp-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.dw-cfp-controls button { min-height: 34px; padding: 0 12px; border: 1px solid rgba(214,180,93,.5); border-radius: 999px; background: #0d0b07; color: #f1d996; font: inherit; font-size: 12px; font-weight: 800; }
+.dw-cfp-controls button[aria-pressed="true"] { background: linear-gradient(130deg, #6d5016, #18130a 70%); border-color: #e7c265; }
+.dw-cfp-stage { width: 100%; min-width: 0; box-sizing: border-box; height: min(62dvh, 440px); display: flex; border: 1px solid rgba(214,180,93,.35); border-radius: 16px; background: #050403; padding: 6px; }
+.dw-cfp-stage .dw-card-fan-xl { min-width: 0; }
+.dw-cfp-tag { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #cfae5c; font-weight: 900; }
+.dw-cfp-skel { height: 300px; border-radius: 16px; background: linear-gradient(90deg, #0b0906, #15110a, #0b0906); opacity: .8; }

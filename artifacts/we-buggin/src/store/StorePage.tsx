@@ -215,7 +215,7 @@ export function StorePage() {
       <div className="st-store-shell">
         <header className="st-header">
           <Link href="/user-portal" className="st-header-back" aria-label="Back to profile" data-testid="link-store-profile"><ArrowLeft size={20} /></Link>
-          <h1>Store</h1>
+          <h1>Store<small className="dw-store-balance-inline" data-testid="text-store-header-balance">{wallet ? (wallet.unlimited ? 'Unlimited coins' : `${formatCredits(wallet.balance)} coins`) : ''}</small></h1>
           <button type="button" className={`st-header-items${inventory ? ' is-active' : ''}`} onClick={() => { setInventory(!inventory); setListing(null); setSelected(null); }} data-testid="button-my-items">
             <ShoppingBag size={16} /><span>My items</span>
           </button>

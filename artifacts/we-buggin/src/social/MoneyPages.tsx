@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Coins, Send, RefreshCw, Trash2, Trophy } from 'lucide-react';
+import { Coins, Send, RefreshCw, Trash2, Trophy } from 'lucide-react';
 import {
   useGetSocialMe, useGetSocialConversation, useSendSocialMessage, useDeleteSocialConversation,
   useClaimSocialDailyReward, useGetSocialLedger, useGetSocialLeaderboard,
@@ -10,6 +10,7 @@ import {
 import { BadgeMark, CoinAmount, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, fmt, refreshSocial, useIdemKey } from './common';
 import { BadgeArt } from './BadgeArt';
 import { ShinyName } from '@/components/ShinyName';
+import { ActionMenu, ScreenHeader } from '@/components/app-chrome';
 
 export function ThreadPage({ username }: { username: string }) {
   const qc = useQueryClient();
@@ -48,18 +49,22 @@ export function ThreadPage({ username }: { username: string }) {
   const mine = me.data?.profile.username;
   return (
     <section className="sc-thread">
-      <h1 className="sc-thread-title">
-        <Link href="/community/messages" aria-label="Back to My Messages" data-testid="link-my-messages">My Messages</Link>
-      </h1>
+      <ScreenHeader className="sc-thread-bar" backHref="/community/messages" backLabel="Back to My Messages" testId="header-thread"
+        title={<Link href={`/community/people/${username}`} className="sc-thread-person" data-testid="link-thread-person"><ShinyName className="sc-name" displayNameColor={d.person.displayNameColor} displayNameTierIndex={d.person.displayNameTierIndex}><BadgeMark id={d.person.badgeId} label={d.person.badgeName} imageUrl={d.person.badgeImage} size={18} compact />{d.person.username}</ShinyName></Link>}
+        subtitle={q.isFetching ? 'Updating' : d.blocked ? 'Read only' : 'Direct message'}
+        actions={<ActionMenu label="Conversation actions" testId="menu-thread-actions">
+          <button type="button" role="menuitem" onClick={() => q.refetch()} disabled={q.isFetching} data-testid="button-refresh"><RefreshCw size={16} /> Refresh</button>
+          <Link href={`/community/people/${username}`} role="menuitem" data-testid="link-thread-profile">View profile</Link>
+          <Link href="/community/messages" role="menuitem" data-testid="link-my-messages">My Messages</Link>
+          <button type="button" role="menuitem" className="is-danger" onClick={() => setConfirmDel(true)} data-testid="button-clear-history"><Trash2 size={16} /> Clear history</button>
+        </ActionMenu>} />
       <header className="sc-thread-head">
-        <Link href={`/community/people/${username}`} className="sc-row"><ShinyName className="sc-name" displayNameColor={d.person.displayNameColor} displayNameTierIndex={d.person.displayNameTierIndex}><BadgeMark id={d.person.badgeId} label={d.person.badgeName} imageUrl={d.person.badgeImage} size={18} compact />{d.person.username}</ShinyName></Link>
         <div className="sc-actions">
-          <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()} disabled={q.isFetching} data-testid="button-refresh"><RefreshCw size={14} /> Refresh</button>
-          {confirmDel ? (
+          {confirmDel && (
             <span className="sc-confirm">Clear your history with {username}? The other person keeps theirs.
               <button type="button" className="bm-btn bm-btn-sm bm-btn-primary" disabled={del.isPending} onClick={clear} data-testid="button-confirm-clear">Clear for me</button>
-              <button type="button" className="bm-btn bm-btn-sm" onClick={() => setConfirmDel(false)}>Cancel</button></span>
-          ) : <button type="button" className="bm-btn bm-btn-sm" onClick={() => setConfirmDel(true)} data-testid="button-clear-history"><Trash2 size={14} /> Clear history</button>}
+              <button type="button" className="bm-btn bm-btn-sm" onClick={() => setConfirmDel(false)} data-testid="button-cancel-clear">Cancel</button></span>
+          )}
         </div>
       </header>
       <div className="sc-msgs" aria-live="polite">
@@ -75,8 +80,8 @@ export function ThreadPage({ username }: { username: string }) {
       {d.blocked ? <p className="sc-note is-err">Messaging is off because of a block. History above is read only.</p> : (
         <form className="sc-compose" onSubmit={submit}>
           <label className="sc-sr" htmlFor="sc-body">Message</label>
-          <textarea id="sc-body" className="sc-text" rows={2} value={body} maxLength={1000} onChange={(e) => setBody(e.target.value)} placeholder="Write a message" data-testid="input-message" />
-          <button type="submit" className="bm-btn bm-btn-primary" disabled={!t || send.isPending} data-testid="button-send-message"><Send size={16} /> {send.isPending ? 'Sending' : 'Send'}</button>
+          <textarea id="sc-body" className="sc-text" rows={1} value={body} maxLength={1000} onChange={(e) => setBody(e.target.value)} placeholder="Write a message" data-testid="input-message" />
+          <button type="submit" className="bm-btn bm-btn-primary" disabled={!t || send.isPending} data-testid="button-send-message"><Send size={18} aria-hidden="true" /><span className="sc-send-label">{send.isPending ? 'Sending' : 'Send'}</span></button>
           <small className="sc-sub">{body.length}/1000</small>
         </form>)}
       {msg && <Msg ok={msg.ok}>{msg.t}</Msg>}
@@ -162,11 +167,7 @@ export function TransactionHistoryPage() {
 
   return (
     <section className="sc-transaction-page" data-testid="page-transaction-history">
-      <Link href="/user-portal" className="bm-back" data-testid="link-transaction-history-back">
-        <ArrowLeft size={17} aria-hidden="true" /> Back to Me
-      </Link>
-      <h1 className="bm-h1 sc-h1">Transaction History</h1>
-      <p className="sc-sub">Your 100 most recent recorded coin transactions.</p>
+      <ScreenHeader backHref="/user-portal" backLabel="Back to Me" title="Transactions" subtitle="Your 100 most recent coin transactions" testId="header-transactions" />
       {transactions.isLoading && <Loading />}
       {transactions.isError && <ErrorBox error={transactions.error} retry={() => transactions.refetch()} />}
       {transactions.data && (transactions.data.transactions.length === 0

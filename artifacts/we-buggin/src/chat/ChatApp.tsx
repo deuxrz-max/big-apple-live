@@ -21,6 +21,7 @@ import { BotModerationPanel } from './BotModerationPanel';
 import { BadgeArt } from '@/social/BadgeArt';
 import { GoLiveButton } from './LiveStreamPages';
 import { selectFeaturedRoom } from './directory-utils';
+import { ActionMenu, ScreenHeader } from '@/components/app-chrome';
 import './chat.css';
 
 const DISCLAIMER = 'Deux Wild is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
@@ -101,13 +102,31 @@ function TopBar({ signedIn, query, setQuery }: { signedIn: boolean; query: strin
 export function PublicChatLanding() {
   const [query, setQuery] = useState('');
   return (
-    <Shell>
+    <Shell className="dw-landing">
       <TopBar signedIn={false} query={query} setQuery={setQuery} />
-      <h1>Deux Wild</h1>
-      <p>Deux Wild is a live-streaming and social media platform where users can broadcast video in real time, watch others, watch categorized videos, chat, and send virtual gifts.</p>
-      <List preview query={query} />
-      <p className="ch-note">{DISCLAIMER}</p>
-      <p><Link href="/sign-in" className="bm-btn bm-btn-primary">Sign in</Link> <Link href="/sign-up" className="bm-btn">Create account</Link></p>
+      <section className="dw-landing-hero" aria-labelledby="dw-landing-title" data-testid="section-landing-hero">
+        <span className="dw-landing-kicker"><i aria-hidden="true" /> Live rooms, streams and gifts</span>
+        <h1 id="dw-landing-title">Find your people.</h1>
+        <p>Drop into a room. Catch a live. Join the conversation.</p>
+        <div className="dw-landing-cta">
+          <Link href="/sign-up" className="bm-btn bm-btn-primary" data-testid="link-landing-sign-up">Create account</Link>
+          <Link href="/sign-in" className="bm-btn" data-testid="link-landing-sign-in">Sign in</Link>
+        </div>
+        <ul className="dw-landing-points" aria-label="What you can do">
+          <li><Radio size={16} aria-hidden="true" /> Go live full screen</li>
+          <li><Users size={16} aria-hidden="true" /> Join audio rooms</li>
+          <li><Coins size={16} aria-hidden="true" /> Send gifts</li>
+        </ul>
+        <details className="dw-landing-about">
+          <summary>About Deux Wild</summary>
+          <p>Deux Wild is a live-streaming and social media platform where users can broadcast video in real time, watch others, watch categorized videos, chat, and send virtual gifts.</p>
+        </details>
+      </section>
+      <section className="dw-landing-rooms" aria-labelledby="dw-landing-rooms-title">
+        <div className="dw-section-head"><span className="dw-overline">Happening now</span><h2 id="dw-landing-rooms-title">Rooms</h2></div>
+        <List preview query={query} />
+      </section>
+      <footer className="dw-landing-foot"><p className="ch-note">{DISCLAIMER}</p></footer>
     </Shell>
   );
 }
@@ -170,6 +189,7 @@ export function ChatDirectory() {
         <div className="st-dir-topline">
           <div className="st-dir-lockup">
             <Link href="/home" className="st-home-app-logo" aria-label="Deux Wild home" data-testid="link-home-logo"><AppLogo size={36} /></Link>
+            <span className="dw-home-title"><strong>Deux Wild</strong><small>{liveCreators.length ? `${liveCreators.length} creator${liveCreators.length === 1 ? '' : 's'} live` : 'Live rooms'}</small></span>
           </div>
           <div className="st-dir-account">
             <Link href="/community/leaderboard" className="st-dir-rewards" aria-label="Open leaderboard" data-testid="link-leaderboard">
@@ -196,6 +216,12 @@ export function ChatDirectory() {
         </div>
       </header>
 
+      <nav className="dw-home-tabs" aria-label="Home sections" data-testid="nav-home-sections">
+        <a href="#live-channels" className="is-on" aria-current="true">Rooms</a>
+        <a href="#st-dir-creators-title">Creators</a>
+        <Link href="/live" data-testid="link-home-tab-live">All live</Link>
+        <Link href="/community/leaderboard" data-testid="link-home-tab-leaderboard">Leaderboard</Link>
+      </nav>
       <section className="st-dir-explore st-home-rooms" id="live-channels" aria-label="Rooms">
         {directory.isError && <div className="st-dir-state st-dir-error" role="alert"><div className="st-dir-state-mark">!</div><h3>Rooms aren’t loading</h3><p>We couldn’t reach the directory. Give it another try.</p><button type="button" onClick={() => directory.refetch()}>Retry directory</button></div>}
         {directory.data && rooms.length === 0 && <div className="st-dir-state"><div className="st-dir-state-mark">—</div><h3>Quiet for a moment</h3><p>There are no rooms in the directory right now. Check back soon.</p></div>}
@@ -492,8 +518,13 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
   };
   const body = (
     <>
-      {!setup && <div className="ch-top"><Link href="/user-portal" className="bm-btn bm-btn-sm">Back to profile</Link><Link href="/home" className="bm-btn bm-btn-sm">Directory</Link><Link href="/community/profile" className="bm-btn bm-btn-sm">Platform and bio</Link><Link href="/community" className="bm-btn bm-btn-sm">Community</Link></div>}
-      <h1>{profile ? 'Edit profile' : 'Set up your profile'}</h1>
+      <ScreenHeader backHref={setup ? undefined : '/user-portal'} backLabel="Back to profile" testId="header-edit-profile"
+        title={profile ? 'Edit profile' : 'Set up your profile'}
+        actions={!setup && <ActionMenu label="More profile settings" testId="menu-edit-profile">
+          <Link href="/community/profile" role="menuitem" data-testid="link-edit-platform-bio">Platform and bio</Link>
+          <Link href="/community" role="menuitem" data-testid="link-edit-community">Community</Link>
+          <Link href="/home" role="menuitem" data-testid="link-edit-directory">Home</Link>
+        </ActionMenu>} />
       {profile && <p className="ch-note">Username @{profile.username} is permanent.</p>}
       {q.isLoading && <p role="status">Loading...</p>}
       {q.isError && <div className="ch-err" role="alert">Could not load your account. <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button></div>}
@@ -615,8 +646,7 @@ export function ProfilePhotoReviewPage() {
   if (!access.data?.moderator && !access.data?.owner)
     return <Shell><div className="sc-empty" role="status"><h1>Restricted</h1><p>Photo review is limited to the Deux Wild owner and authorized moderators.</p></div></Shell>;
   return <Shell>
-    <div className="ch-top"><Link href="/user-portal" className="bm-btn bm-btn-sm">Back to Me</Link></div>
-    <h1 className="bm-h1">Profile photo review</h1>
+    <ScreenHeader backHref="/user-portal" backLabel="Back to Me" title="Photo review" testId="header-photo-review" />
     <PhotoReviewQueue />
   </Shell>;
 }

@@ -1107,7 +1107,7 @@ body.streamtalk-directory-screen #root .app-bottom-nav {
   color: #f7f4fa !important;
   border-top: 1px solid rgba(255,255,255,.15) !important;
   box-shadow: 0 -8px 28px rgba(0,0,0,.48) !important;
-  backdrop-filter: blur(18px);
+  backdrop-filter: none;
 }
 body #root .app-bottom-nav .app-bottom-link,
 body #root .app-bottom-nav .app-bottom-link.is-active,

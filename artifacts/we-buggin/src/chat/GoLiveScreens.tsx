@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { useUser } from "@clerk/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Ban, Eye, Flag, FlipHorizontal, Mic, MicOff, Radio, Share2, Users, Video, X } from "lucide-react";
+import { ArrowLeft, Ban, Eye, Flag, FlipHorizontal, Mic, MicOff, Radio, Send, Share2, Users, Video, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { ScreenHeader } from '@/components/app-chrome';
 import { type RemoteTrack } from "livekit-client";
 import {
   getGetRoomQueryKey, getGetSocialBlocksQueryKey, getGetSocialMeQueryKey, getGetSocialPersonQueryKey,
@@ -540,11 +541,11 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
             <label className="st-live-sr" htmlFor="st-live-chat-input">Write a chat message</label>
             <input id="st-live-chat-input" value={chat.text} onChange={event => chat.setText(event.target.value)}
               maxLength={280} placeholder="Say something…" disabled={!chatReady} />
-            <button type="submit" className="bm-btn bm-btn-primary" disabled={!chatReady || !chat.text.trim()} aria-label="Send message">Send</button>
+            <button type="submit" className="bm-btn bm-btn-primary" disabled={!chatReady || !chat.text.trim()} aria-label="Send message"><Send size={17} aria-hidden="true" /></button>
           </form>
         </section>
       </div>
-      <div className="st-live-bottom-controls">
+      <div className={`st-live-bottom-controls dw-live-dock${hostMode ? ' is-host' : ''}`} data-testid="dock-live-controls">
         <GiftControl label="Open live gifts" onClick={() => setGiftOpen(true)} />
         {hostMode && <div className="st-live-host-controls">
             <button type="button" onClick={() => void hostLiveSession.flipCamera()} aria-label="Flip camera"><FlipHorizontal size={18} /><span>Flip</span></button>
@@ -723,8 +724,8 @@ export function LiveStreamsDirectory() {
     return () => window.clearInterval(timer);
   }, [refresh]);
   return <main className="st-live-page">
-    <header className="st-live-page-head"><Link href="/home" className="st-live-back"><ArrowLeft size={18} /> Directory</Link>
-      <h1>Live creators</h1><p>Watch and chat with creators who are live now.</p></header>
+    <ScreenHeader className="st-live-page-head" backHref="/home" backLabel="Back to home" title="Live creators"
+      subtitle={streams.length ? `${streams.length} live now` : 'Watch and chat with creators who are live now.'} testId="header-live-directory" />
     {loading && <p className="st-live-muted">Checking for live streams…</p>}
     {error && <p className="st-live-error" role="alert">{error}</p>}
     {!loading && !error && streams.length === 0 && <section className="st-live-empty"><Radio size={28} /><strong>No creator streams right now</strong><span>When someone goes live, they’ll appear here.</span></section>}

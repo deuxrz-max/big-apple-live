@@ -1,3 +1,4 @@
+import { ScreenHeader } from '@/components/app-chrome';
 import { useMemo } from 'react';
 import { Link } from 'wouter';
 import {
@@ -31,7 +32,8 @@ export function InboxPage() {
 
   return (
     <section className="ib">
-      <h1 className="ib-title">My Messages</h1>
+      <ScreenHeader className="ib-bar" backHref="/home" backLabel="Back to home" title="Messages" testId="header-inbox"
+        subtitle={q.data ? `${q.data.conversations.length} conversation${q.data.conversations.length === 1 ? '' : 's'}` : undefined} />
       {q.isLoading && <div className="sc-skel" role="status" aria-label="Loading"><i /><i /><i /></div>}
       {q.isError && <ErrorBox error={q.error} retry={() => q.refetch()} />}
       {q.data && !q.isError && !fav.isError && live.length > 0 && (
