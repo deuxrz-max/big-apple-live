@@ -789,22 +789,24 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           <div ref={menuBox} className={`ur-menu${isSocialRoom ? ' ur-social-profile-popup' : ''}`}
             role={isSocialRoom ? 'dialog' : 'menu'} aria-modal={isSocialRoom || undefined}
             aria-label={isSocialRoom ? `Profile and cards for ${menu.username}` : `Actions for ${menu.displayName}`}
+            aria-labelledby={isSocialRoom ? 'ur-profile-popup-title' : undefined}
             onClick={(e) => e.stopPropagation()}>
             {isSocialRoom && (
               <>
                 <header className="ur-profile-popup-head">
-                  <UserPhoto username={menu.username} displayName={menu.displayName} photoUrl={menu.photoUrl} size={68} />
+                  <UserPhoto username={menu.username} displayName={menu.displayName} photoUrl={menu.photoUrl} size={40} />
                   <div>
-                    <strong><ShinyName displayNameColor={menu.displayNameColor} displayNameTierIndex={menu.displayNameTierIndex}>{menu.displayName}</ShinyName></strong>
+                    <strong id="ur-profile-popup-title"><ShinyName displayNameColor={menu.displayNameColor} displayNameTierIndex={menu.displayNameTierIndex}>{menu.displayName}</ShinyName></strong>
                     <span>@{menu.username}</span>
                   </div>
+                  <button type="button" className="ur-profile-popup-x" aria-label="Close profile" data-testid="button-close-profile" onClick={() => setMenu(null)}>×</button>
                 </header>
                 <section className="ur-profile-popup-cards" aria-live="polite">
                   <strong>Cards this round</strong>
                   {profileHandLoading ? <p role="status">Checking this round…</p>
                     : profileHandError ? <p role="status">Cards aren’t available right now.</p>
                       : profileHandCards.length
-                        ? <CardHandFan cards={profileHandCards} />
+                        ? <CardHandFan cards={profileHandCards} expanded />
                         : <p>No cards in this round.</p>}
                 </section>
               </>

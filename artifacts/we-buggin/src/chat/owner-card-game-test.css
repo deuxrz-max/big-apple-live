@@ -560,3 +560,23 @@
   }
 }
 
+
+/* Expanded profile-popup fan (CardHandFan expanded). Selectors carry .dw-card-fan-xl + button so they beat .ur-menu button. */
+.dw-card-fan-xl { position: relative; flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 4px; box-sizing: border-box; }
+.dw-card-fan-xl-row { position: relative; flex: none; }
+.dw-card-fan-xl button.dw-card-fan-xl-card { position: absolute; padding: 0; margin: 0; max-width: none; min-width: 0; border: 0; border-radius: 8px; background: #050505; cursor: pointer; transform: rotate(var(--fan-angle, 0deg)); transform-origin: 50% 100%; transition: transform 180ms ease; }
+.dw-card-fan-xl button.dw-card-fan-xl-card.is-wild { background: radial-gradient(circle at 50% 45%, rgba(229, 185, 74, .19), transparent 49%), #050505; }
+.dw-card-fan-xl button.dw-card-fan-xl-card:hover, .dw-card-fan-xl button.dw-card-fan-xl-card:focus-visible { background-color: #050505; transform: rotate(var(--fan-angle, 0deg)) translateY(-8px); outline: 2px solid #d6b45d; outline-offset: 2px; z-index: 10 !important; }
+.dw-card-fan-zoom { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; height: 100%; width: 100%; }
+.dw-card-fan-xl button.dw-card-fan-zoom-card { flex: none; max-width: none; padding: 0; border: 0; border-radius: 10px; background: #050505; cursor: zoom-out; animation: dw-card-zoom-in 200ms ease-out both; }
+.dw-card-fan-xl button.dw-card-fan-zoom-card.is-wild { background: radial-gradient(circle at 50% 45%, rgba(229, 185, 74, .19), transparent 49%), #050505; }
+.dw-card-fan-xl button.dw-card-fan-zoom-card:hover, .dw-card-fan-xl button.dw-card-fan-zoom-card:focus-visible { background-color: #050505; outline: 2px solid #d6b45d; outline-offset: 3px; }
+.dw-card-fan-xl button.dw-card-fan-back { min-height: 36px; padding: 0 16px; border: 1px solid rgba(214,180,93,.5); border-radius: 999px; background: #111; color: #f1d996; font-weight: 700; font-size: 13px; text-align: center; }
+.dw-card-fan-xl button.dw-card-fan-back:hover, .dw-card-fan-xl button.dw-card-fan-back:focus-visible { background: #1a1a1a; outline: 2px solid #d6b45d; }
+.dw-card-fan-stage { display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 10px; width: 100%; height: 100%; }
+.dw-card-fan-xl button.dw-card-fan-preview { flex: none; max-width: none; padding: 0; margin: 0; border: 0; border-radius: 10px; background: #050505; cursor: zoom-in; animation: dw-card-zoom-in 180ms ease-out both; }
+.dw-card-fan-xl button.dw-card-fan-preview.is-wild { background: radial-gradient(circle at 50% 45%, rgba(229, 185, 74, .19), transparent 49%), #050505; }
+.dw-card-fan-xl button.dw-card-fan-preview:hover, .dw-card-fan-xl button.dw-card-fan-preview:focus-visible { background-color: #050505; outline: 2px solid #d6b45d; outline-offset: 3px; }
+.dw-card-fan-xl button.dw-card-fan-xl-card.is-selected { transform: rotate(var(--fan-angle, 0deg)) translateY(-12px); outline: 2px solid #d6b45d; outline-offset: 1px; }
+@keyframes dw-card-zoom-in { from { opacity: 0; transform: scale(.86) translateY(14px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .dw-card-fan-xl button.dw-card-fan-xl-card, .dw-card-fan-xl button.dw-card-fan-zoom-card, .dw-card-fan-xl button.dw-card-fan-preview { transition: none; animation: none; } }

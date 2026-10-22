@@ -90,7 +90,7 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 .ur-rules-act{display:flex;justify-content:flex-end;gap:8px}
 .ur-menu button{padding:10px 12px;border-radius:10px;text-align:left;font-weight:600;background:#25252d;color:#F4F1F8}
 .ur-menu button:hover,.ur-menu button:focus-visible{background:#33333d;outline:2px solid #FF268F}
-.ur-social-profile-popup{box-sizing:border-box;width:min(360px,calc(100vw - 24px));max-height:min(90dvh,720px);overflow-y:auto;border-color:rgba(214,180,93,.72);background:#050505;color:#fff8e8;box-shadow:0 0 24px rgba(214,180,93,.14),0 18px 48px rgba(0,0,0,.7)}
+.ur-social-profile-popup{box-sizing:border-box;width:min(760px,calc(100vw - 24px));height:calc(100dvh - var(--app-top-bar-height, 56px) - var(--app-bottom-nav-height, 68px) - 16px);max-height:none;overflow:hidden;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:auto minmax(0,1fr);grid-auto-rows:min-content;gap:5px;padding:6px;border-color:rgba(214,180,93,.72);background:#050505;color:#fff8e8;box-shadow:0 0 24px rgba(214,180,93,.14),0 18px 48px rgba(0,0,0,.7)}
 .ur-social-profile-scrim{z-index:130}
 .ur-social-profile-popup>button{background:#111;color:#fff8e8}
 .ur-profile-popup-head{display:flex;align-items:center;gap:12px;min-width:0;padding:2px 2px 11px;border-bottom:1px solid rgba(214,180,93,.28)}
@@ -317,3 +317,12 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 .ur-comedy-toolbar{display:flex;align-items:center;width:100%;min-width:0;min-height:30px}
 .ur-comedy-now{display:flex;align-items:center;gap:5px;min-width:0;flex:1;color:#ffe2a0;font-size:10px;font-weight:700}
 .ur-comedy-now>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ur-social-profile-scrim{align-items:flex-start;padding:calc(var(--app-top-bar-height, 56px) + 8px) 12px calc(var(--app-bottom-nav-height, 68px) + 8px)}
+.ur-social-profile-popup .ur-profile-popup-head{flex:none;padding:0 0 6px;gap:10px}
+.ur-social-profile-popup .ur-profile-popup-head>div{flex:1 1 auto;gap:1px}
+.ur-social-profile-popup .ur-profile-popup-head strong{font-size:15px}
+.ur-social-profile-popup>.ur-profile-popup-head .ur-profile-popup-x{flex:none;width:32px;height:32px;padding:0;border-radius:50%;text-align:center;font-size:20px;line-height:1;background:#111;color:#f1d996;border:1px solid rgba(214,180,93,.4)}
+.ur-social-profile-popup .ur-profile-popup-cards{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;padding:6px 4px 4px}
+.ur-social-profile-popup>.ur-profile-popup-head,.ur-social-profile-popup>.ur-profile-popup-cards{grid-column:1/-1}
+.ur-social-profile-popup>button{min-width:0;min-height:34px;padding:4px 6px;text-align:center;font-size:12px;line-height:1.15;overflow-wrap:anywhere}
+@media (max-width:420px){.ur-social-profile-popup{grid-template-columns:repeat(3,minmax(0,1fr))}}
