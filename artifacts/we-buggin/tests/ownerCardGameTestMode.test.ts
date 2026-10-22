@@ -26,9 +26,21 @@ test("the owner test panel is marked test-only and uses the logo-backed deck", (
 
 test("the private one-minute test only mounts in the owner's created room, never on a livestream", () => {
   assert.doesNotMatch(liveScreen, /OwnerCardGameTestMode|owner-card-game-test/);
-  assert.match(roomScreen, /isOwnerCardTestUser && <OwnerCardGameTestMode/);
+  assert.match(roomScreen, /import\.meta\.env\.DEV && isOwnerCardTestUser && <OwnerCardGameTestMode/);
   assert.match(apiRoutes, /if \(!roomStore\.isSocialRoom\(roomId\)/);
   assert.match(apiRoutes, /type: z\.literal\("room"\)/);
+});
+
+test("owner toggle and logo deck sit at the room gift box, open rules, and animate cards to the seat", () => {
+  assert.match(component, /Start 1-minute card test/);
+  assert.match(component, /data-testid="owner-test-deck"/);
+  assert.match(component, /aria-label="Open private card-test rules"/);
+  assert.match(component, /onClick=\{\(\) => setRulesOpen\(true\)\}/);
+  assert.match(component, /button-open-gift-bag/);
+  assert.match(component, /dw-card-flight/);
+  assert.match(component, /beam-seat-\$\{data\.seatNumber\}/);
+  assert.match(styles, /bottom: calc\(var\(--app-bottom-nav-height, 68px\) \+ 5px\)/);
+  assert.match(styles, /@keyframes dw-card-flight/);
 });
 
 test("created-room profile popups include the selected person's current cards or an empty-hand message", () => {

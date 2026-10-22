@@ -1,20 +1,29 @@
 .dw-card-test-root {
-  z-index: 120;
+  position: fixed;
+  z-index: 125;
+  bottom: calc(var(--app-bottom-nav-height, 68px) + 5px);
+  left: var(--dw-card-test-dock-x, calc(100vw - 38px));
+  width: 0;
+  height: 0;
+  pointer-events: none;
   font-family: inherit;
 }
 
 .dw-card-test-room {
-  position: fixed;
-  top: max(80px, calc(env(safe-area-inset-top) + 68px));
-  right: 8px;
-  max-width: min(74vw, 280px);
+  display: block;
 }
 
 .dw-card-test-controls {
+  position: absolute;
+  right: 38px;
+  bottom: 10px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 6px;
+  max-width: min(230px, calc(100vw - 92px));
+  pointer-events: auto;
 }
 
 .dw-card-test-controls button {
@@ -47,8 +56,13 @@
 }
 
 .dw-card-test-message {
+  position: absolute;
+  right: 38px;
+  bottom: 51px;
+  width: max-content;
+  max-width: min(220px, calc(100vw - 90px));
   display: block;
-  margin-top: 5px;
+  margin: 0;
   padding: 5px 8px;
   border: 1px solid rgba(228, 190, 98, .3);
   border-radius: 8px;
@@ -57,6 +71,61 @@
   font-size: 10px;
   line-height: 1.25;
   text-align: right;
+}
+
+.dw-card-test-deck-trigger {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 2px;
+  width: 58px;
+  height: 72px;
+  padding: 2px;
+  border: 1px solid rgba(225, 190, 94, .62);
+  border-radius: 11px;
+  background: linear-gradient(145deg, rgba(23, 19, 9, .98), rgba(3, 3, 3, .98));
+  box-shadow: 0 0 15px rgba(223, 179, 60, .26), 0 4px 14px rgba(0, 0, 0, .68);
+  color: #f3d681;
+  transform: translateX(-50%);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.dw-card-test-deck-trigger:focus-visible {
+  outline: 2px solid #ffe9a2;
+  outline-offset: 3px;
+}
+
+.dw-card-deck-stack {
+  position: relative;
+  display: block;
+  width: 43px;
+  height: 54px;
+}
+
+.dw-card-deck-stack .dw-card-back {
+  width: 38px;
+  height: 52px;
+  border-radius: 6px;
+}
+
+.dw-card-deck-stack .dw-card-back-shadow {
+  top: 2px;
+  left: 3px;
+}
+
+.dw-card-deck-stack .dw-card-back img {
+  width: 25px;
+  height: 25px;
+}
+
+.dw-card-test-deck-trigger small {
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .08em;
 }
 
 .dw-card-test-hand {
@@ -76,6 +145,7 @@
     rgba(2, 2, 2, .97);
   box-shadow: 0 0 24px rgba(214, 172, 64, .2), 0 16px 48px rgba(0, 0, 0, .65);
   color: #fff9e9;
+  pointer-events: auto;
 }
 
 .dw-card-test-header {
@@ -336,6 +406,101 @@
   text-align: center;
 }
 
+.dw-card-test-dock-error {
+  position: absolute;
+  right: 38px;
+  bottom: 48px;
+  width: max-content;
+  max-width: min(220px, calc(100vw - 90px));
+  margin: 0;
+  padding: 5px 8px;
+  border-radius: 7px;
+  background: rgba(8, 3, 3, .95);
+  text-align: right;
+}
+
+.dw-card-test-unavailable {
+  position: fixed;
+  left: auto;
+  right: 12px;
+  bottom: calc(var(--app-bottom-nav-height, 68px) + 8px);
+  width: max-content;
+  max-width: min(280px, calc(100vw - 24px));
+  height: auto;
+  padding: 8px 10px;
+  border: 1px solid rgba(228, 190, 98, .45);
+  border-radius: 9px;
+  background: rgba(0, 0, 0, .95);
+  color: #ffe9c5;
+  font-size: 11px;
+  pointer-events: auto;
+}
+
+.dw-card-flight {
+  position: fixed;
+  z-index: 129;
+  width: 42px;
+  height: 61px;
+  overflow: hidden;
+  pointer-events: none;
+  animation: dw-card-flight 740ms cubic-bezier(.2, .72, .22, 1) both;
+}
+
+.dw-card-test-rules-scrim {
+  position: fixed;
+  z-index: 155;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, .72);
+  pointer-events: auto;
+}
+
+.dw-card-test-rules {
+  display: grid;
+  gap: 10px;
+  width: min(420px, 100%);
+  padding: 18px;
+  border: 1px solid rgba(226, 193, 123, .68);
+  border-radius: 16px;
+  background: #050505;
+  box-shadow: 0 0 28px rgba(224, 180, 63, .2), 0 18px 48px rgba(0, 0, 0, .7);
+  color: #fff5d8;
+}
+
+.dw-card-test-rules h2,
+.dw-card-test-rules p {
+  margin: 0;
+}
+
+.dw-card-test-rules h2 {
+  color: #f4d984;
+  font-size: 18px;
+}
+
+.dw-card-test-rules p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.dw-card-test-rules button {
+  justify-self: end;
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid rgba(231, 194, 101, .7);
+  border-radius: 9px;
+  background: #111;
+  color: #fff0c5;
+  font: inherit;
+  font-weight: 800;
+}
+
+.dw-card-test-rules button:focus-visible {
+  outline: 2px solid #ffe9a2;
+  outline-offset: 3px;
+}
+
 .dw-card-test-winner {
   position: relative;
   display: grid;
@@ -400,6 +565,12 @@
   to { opacity: 1; transform: translate(0, 0) rotate(0) scale(1); }
 }
 
+@keyframes dw-card-flight {
+  0% { opacity: 1; transform: translate(0, 0) rotate(-8deg) scale(.68); }
+  72% { opacity: 1; }
+  100% { opacity: .15; transform: translate(var(--flight-x), var(--flight-y)) rotate(5deg) scale(.82); }
+}
+
 @keyframes dw-test-wild-shimmer {
   0%, 24% { transform: translateX(-55%) rotate(-8deg); }
   70%, 100% { transform: translateX(55%) rotate(-8deg); }
@@ -418,10 +589,6 @@
 }
 
 @media (max-width: 380px) {
-  .dw-card-test-room {
-    right: 5px;
-    max-width: 76vw;
-  }
   .dw-card-test-hand {
     width: calc(100vw - 16px);
     padding: 8px;
@@ -430,13 +597,16 @@
   .dw-card-test-deck { flex-basis: 37px; }
   .dw-card-back,
   .dw-test-card { width: 36px; height: 54px; }
+  .dw-card-test-controls { max-width: calc(100vw - 86px); }
+  .dw-card-test-controls button { padding: 0 8px; font-size: 10px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .dw-test-card,
   .dw-test-card.is-wild::before,
   .dw-card-test-winner,
-  .dw-test-coin-burst i {
+  .dw-test-coin-burst i,
+  .dw-card-flight {
     animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
   }

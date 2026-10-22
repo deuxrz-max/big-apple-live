@@ -11,6 +11,7 @@ import {
 const context = { key: "room:owner-room:1", eligible: true, seatNumber: 1 };
 const shuffled = () => [...createDeck()].reverse();
 const routeSource = readFileSync("src/routes/room-card-games.ts", "utf8");
+const ownerTestSource = readFileSync("src/lib/owner-card-game-test-mode.ts", "utf8");
 
 test("a fresh server process starts the private card test switched off", () => {
   const mode = new OwnerCardGameTestMode(shuffled);
@@ -96,4 +97,8 @@ test("the HTTP control is development-only and calls the existing owner authoriz
   assert.match(routeSource, /await requireOwner\(id\)/);
   assert.match(routeSource, /router\.patch\(\"\/owner\/card-games\/test-mode\"/);
   assert.doesNotMatch(routeSource, /broadcast/);
+});
+
+test("private test dealing is independent of the normal game switches and has no payout path", () => {
+  assert.doesNotMatch(ownerTestSource, /getRoomCardGameSettings|dealsEnabled|payoutsEnabled|cardDisplayEnabled|wallet|ledger|payout/i);
 });

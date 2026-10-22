@@ -657,7 +657,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                 </div>
               )}
             </section>
-            {isOwnerCardTestUser && <OwnerCardGameTestMode
+            {import.meta.env.DEV && isOwnerCardTestUser && <OwnerCardGameTestMode
               roomId={roomId} variant="room" onStateChange={setOwnerCardTestState} />}
             <div className="ch-msgs" ref={box} role="log" aria-live="polite" aria-label="Room messages" tabIndex={0} onScroll={(e) => { const el = e.currentTarget; near.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }} data-testid="list-messages">
               {r.hasOlder && <button type="button" className="bm-btn bm-btn-sm" disabled={r.loadingOlder}
