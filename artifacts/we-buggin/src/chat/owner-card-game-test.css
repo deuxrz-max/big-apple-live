@@ -561,22 +561,42 @@
 }
 
 
-/* Expanded profile-popup fan (CardHandFan expanded). Selectors carry .dw-card-fan-xl + button so they beat .ur-menu button. */
+/* Expanded profile-popup hand: non-overlapping 3-over-2 grid.
+   Isolate card shape from room button styles; contain Joker shimmer within the face. */
 .dw-card-fan-xl { position: relative; flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 4px; box-sizing: border-box; }
-.dw-card-fan-xl-row { position: relative; flex: none; }
-.dw-card-fan-xl button.dw-card-fan-xl-card { position: absolute; padding: 0; margin: 0; max-width: none; min-width: 0; border: 0; border-radius: 8px; background: #050505; cursor: pointer; transform: rotate(var(--fan-angle, 0deg)); transform-origin: 50% 100%; transition: transform 180ms ease; }
-.dw-card-fan-xl button.dw-card-fan-xl-card.is-wild { background: radial-gradient(circle at 50% 45%, rgba(229, 185, 74, .19), transparent 49%), #050505; }
-.dw-card-fan-xl button.dw-card-fan-xl-card:hover, .dw-card-fan-xl button.dw-card-fan-xl-card:focus-visible { background-color: #050505; transform: rotate(var(--fan-angle, 0deg)) translateY(-8px); outline: 2px solid #d6b45d; outline-offset: 2px; z-index: 10 !important; }
+.dw-card-grid { position: relative; flex: none; }
+#root .dw-card-fan-xl button.dw-card-tile,
+.dw-card-fan-xl button.dw-card-tile {
+  all: unset; position: absolute; box-sizing: border-box; display: block; padding: 0 !important; margin: 0;
+  border: 0 !important; border-radius: 7px !important; background: transparent !important; background-image: none !important;
+  box-shadow: none !important; cursor: zoom-in; transform: none; -webkit-tap-highlight-color: transparent;
+}
+#root .dw-card-fan-xl button.dw-card-zoom-tile,
+.dw-card-fan-xl button.dw-card-zoom-tile { position: relative; flex: none; cursor: zoom-out; animation: dw-card-zoom-in 200ms ease-out both; }
+.dw-card-fan-xl button.dw-card-tile:focus-visible { outline: 2px solid #ffe9a2 !important; outline-offset: 2px; }
+.dw-card-tile-face {
+  position: absolute; inset: 0; display: block; box-sizing: border-box; overflow: hidden; isolation: isolate;
+  clip-path: inset(0 round 7px); border: 1.5px solid #d6b45d; border-radius: 7px; background: #000;
+  box-shadow: inset 0 0 0 1px rgba(5, 5, 5, .35);
+}
+.dw-card-tile-face:has(img) { background: #050505; }
+.dw-card-tile-face.is-wild { background: radial-gradient(circle at 50% 45%, rgba(229, 185, 74, .19), transparent 49%), #050505; }
+.dw-card-tile-face.is-wild::before {
+  position: absolute; z-index: 2; inset: 0; content: ""; pointer-events: none;
+  background: linear-gradient(110deg, transparent 37%, rgba(255, 226, 145, .3) 50%, transparent 63%);
+  background-size: 260% 100%; animation: dw-card-tile-shimmer 3.4s ease-in-out infinite;
+}
+.dw-card-fan-xl .dw-card-tile-face img.dw-card-face-image {
+  position: absolute; inset: 0; width: 100% !important; height: 100% !important; max-width: none; margin: 0;
+  border: 0 !important; border-radius: 0 !important; clip-path: none; object-fit: contain; background: transparent !important;
+}
+.dw-card-simple { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2%; color: #f4e8c4; container-type: size; font-family: inherit; line-height: 1; }
+.dw-card-simple.is-red { color: #ff4358; }
+.dw-card-simple b { font-size: 46cqh; font-size: min(46cqh, 62cqw); font-weight: 900; letter-spacing: -.04em; font-style: normal; }
+.dw-card-simple i { font-size: 30cqh; font-style: normal; }
 .dw-card-fan-zoom { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; height: 100%; width: 100%; }
-.dw-card-fan-xl button.dw-card-fan-zoom-card { flex: none; max-width: none; padding: 0; border: 0; border-radius: 10px; background: #050505; cursor: zoom-out; animation: dw-card-zoom-in 200ms ease-out both; }
-.dw-card-fan-xl button.dw-card-fan-zoom-card.is-wild { background: radial-gradient(circle at 50% 45%, rgba(229, 185, 74, .19), transparent 49%), #050505; }
-.dw-card-fan-xl button.dw-card-fan-zoom-card:hover, .dw-card-fan-xl button.dw-card-fan-zoom-card:focus-visible { background-color: #050505; outline: 2px solid #d6b45d; outline-offset: 3px; }
 .dw-card-fan-xl button.dw-card-fan-back { min-height: 36px; padding: 0 16px; border: 1px solid rgba(214,180,93,.5); border-radius: 999px; background: #111; color: #f1d996; font-weight: 700; font-size: 13px; text-align: center; }
 .dw-card-fan-xl button.dw-card-fan-back:hover, .dw-card-fan-xl button.dw-card-fan-back:focus-visible { background: #1a1a1a; outline: 2px solid #d6b45d; }
-.dw-card-fan-stage { display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 10px; width: 100%; height: 100%; }
-.dw-card-fan-xl button.dw-card-fan-preview { flex: none; max-width: none; padding: 0; margin: 0; border: 0; border-radius: 10px; background: #050505; cursor: zoom-in; animation: dw-card-zoom-in 180ms ease-out both; }
-.dw-card-fan-xl button.dw-card-fan-preview.is-wild { background: radial-gradient(circle at 50% 45%, rgba(229, 185, 74, .19), transparent 49%), #050505; }
-.dw-card-fan-xl button.dw-card-fan-preview:hover, .dw-card-fan-xl button.dw-card-fan-preview:focus-visible { background-color: #050505; outline: 2px solid #d6b45d; outline-offset: 3px; }
-.dw-card-fan-xl button.dw-card-fan-xl-card.is-selected { transform: rotate(var(--fan-angle, 0deg)) translateY(-12px); outline: 2px solid #d6b45d; outline-offset: 1px; }
-@keyframes dw-card-zoom-in { from { opacity: 0; transform: scale(.86) translateY(14px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .dw-card-fan-xl button.dw-card-fan-xl-card, .dw-card-fan-xl button.dw-card-fan-zoom-card, .dw-card-fan-xl button.dw-card-fan-preview { transition: none; animation: none; } }
+@keyframes dw-card-tile-shimmer { 0%, 24% { background-position: 100% 0; } 70%, 100% { background-position: 0 0; } }
+@keyframes dw-card-zoom-in { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .dw-card-fan-xl button.dw-card-zoom-tile, .dw-card-tile-face.is-wild::before { animation: none; } }

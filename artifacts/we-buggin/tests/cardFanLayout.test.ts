@@ -1,46 +1,35 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getExpandedFanLayout, fitCard, CARD_ASPECT, EXPOSE_RATIO } from "../src/chat/card-fan-layout";
+import { readFileSync } from "node:fs";
+import { getHandGridLayout, fitCard, CARD_ASPECT, MAX_CARD_W, isSimpleNumberRank, isRedSuit } from "../src/chat/card-fan-layout";
 
-const rad = (d: number) => (d * Math.PI) / 180;
-/** Independently recompute rotated corners from CSS-equivalent left/top/angle (origin 50% 100%). */
-function rotatedBounds(L: ReturnType<typeof getExpandedFanLayout>) {
-  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  for (const c of L.cards) {
-    const ox = c.left + L.cardW / 2, oy = c.top + L.cardH;
-    const cs = Math.cos(rad(c.angle)), sn = Math.sin(rad(c.angle));
-    for (const [x, y] of [[-L.cardW / 2, 0], [L.cardW / 2, 0], [-L.cardW / 2, -L.cardH], [L.cardW / 2, -L.cardH]]) {
-      const rx = ox + x * cs - y * sn, ry = oy + x * sn + y * cs;
-      minX = Math.min(minX, rx); maxX = Math.max(maxX, rx); minY = Math.min(minY, ry); maxY = Math.max(maxY, ry);
-    }
-  }
-  return { minX, maxX, minY, maxY };
-}
+const overlap = (a: { left: number; top: number }, b: { left: number; top: number }, w: number, h: number) =>
+  a.left < b.left + w && b.left < a.left + w && a.top < b.top + h && b.top < a.top + h;
 
-for (const [w, h] of [[256, 300], [310, 480], [326, 495], [348, 566]]) {
-  test(`expanded fan rotated bounds fit ${w}x${h} for 1-5 cards`, () => {
-    let prev = Infinity;
+// Approximate inner card box of the popup at 390x844 and 360x640.
+const PHONES = { "390x844": [338, 499], "360x640": [308, 300] } as const;
+for (const [name, [w, h]] of Object.entries(PHONES)) {
+  test(`grid fits ${name} for 1-5 cards without overlap`, () => {
     for (let n = 1; n <= 5; n++) {
-      const L = getExpandedFanLayout(n, w, h);
-      const b = rotatedBounds(L);
-      assert.ok(b.minX >= -0.5 && b.maxX <= w + 0.5, `n=${n} x ${b.minX}..${b.maxX} vs ${w}`);
-      assert.ok(b.minY >= -0.5 && b.maxY <= h + 0.5, `n=${n} y ${b.minY}..${b.maxY} vs ${h}`);
-      assert.ok(L.width <= w && L.height <= h);
-      assert.ok(L.cardW <= prev);
-      assert.ok(L.cardW > 53);
-      if (n > 1) assert.ok((L.cardW < 100 || L.step > 32) && Math.abs(L.step - L.cardW * EXPOSE_RATIO) < 1);
-      prev = L.cardW;
+      const L = getHandGridLayout(n, w, h);
+      assert.ok(L.width <= w && L.height <= h, `n=${n} ${L.width}x${L.height}`);
+      assert.ok(L.cardW <= MAX_CARD_W && L.cardW >= 60, `n=${n} w=${L.cardW}`);
+      assert.ok(Math.abs(L.cardW / L.cardH - CARD_ASPECT) < 0.02);
+      for (const c of L.cards) assert.ok(c.left >= 0 && c.top >= 0 && c.left + L.cardW <= L.width + .5 && c.top + L.cardH <= L.height + .5);
+      for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) assert.ok(!overlap(L.cards[i], L.cards[j], L.cardW, L.cardH));
     }
   });
 }
-test("5 cards at a 390px phone are ~125px wide", () => {
-  assert.ok(getExpandedFanLayout(5, 338, 499).cardW >= 122);
-  assert.ok(getExpandedFanLayout(3, 338, 499).cardW >= 175);
-});
-test("fan is symmetric", () => {
-  const L = getExpandedFanLayout(5, 380, 450);
-  assert.equal(L.cards[0].angle, -L.cards[4].angle);
-  assert.ok(Math.abs(L.cards[0].top - L.cards[4].top) < 0.01);
+test("4-5 cards: top row of 3, bottom row centred", () => {
+  for (const n of [4, 5]) {
+    const L = getHandGridLayout(n, 338, 499);
+    assert.equal(L.rows, 2);
+    assert.deepEqual(L.cards.map(c => c.row), [0, 0, 0, ...Array(n - 3).fill(1)]);
+    const bottom = L.cards.filter(c => c.row === 1);
+    const mid = (bottom[0].left + bottom[bottom.length - 1].left + L.cardW) / 2;
+    assert.ok(Math.abs(mid - L.width / 2) < 0.5);
+  }
+  assert.equal(getHandGridLayout(3, 338, 499).rows, 1);
 });
 test("zoom keeps aspect ratio whichever side limits", () => {
   for (const [w, h] of [[300, 300], [300, 900], [200, 1000]]) {
@@ -49,22 +38,19 @@ test("zoom keeps aspect ratio whichever side limits", () => {
     assert.ok(Math.abs(z.width / z.height - CARD_ASPECT) < 0.01);
   }
 });
-
-import { readFileSync } from "node:fs";
-const fanSrc = readFileSync("src/chat/CardHandFan.tsx", "utf8");
-test("expanded fan shows a default full preview of the latest card above a chooser fan", () => {
-  assert.match(fanSrc, /useState\(cards\.length - 1\)/);
-  assert.match(fanSrc, /data-testid="button-card-preview"/);
-  assert.match(fanSrc, /aria-label=\{`Showing \$\{face\.label\}\. Enlarge`\}/);
-  assert.match(fanSrc, /aria-pressed=\{on\}/);
-  assert.match(fanSrc, /aria-label=\{`Show \$\{f\.label\}`\}/);
-  assert.match(fanSrc, /onClick=\{\(\) => setActive\(i\)\}/);
-  assert.match(fanSrc, /\{!solo && \(/);
-  assert.match(fanSrc, /Back to hand/);
+test("simple number ranks are 3-10 only; no twos; red suits", () => {
+  for (const r of ["3", "7", "10"]) assert.ok(isSimpleNumberRank(r));
+  for (const r of ["2", "A", "J", "Q", "K", "Joker"]) assert.ok(!isSimpleNumberRank(r));
+  assert.ok(isRedSuit("H") && isRedSuit("D") && !isRedSuit("S") && !isRedSuit("C"));
 });
-test("preview fills height left after the fan at a 390 phone", () => {
-  const w = 338, h = 499, L = getExpandedFanLayout(5, w, Math.floor(h * 0.42));
-  const p = fitCard(w, h - L.height - 10);
-  assert.ok(p.height >= 270, `preview ${p.width}x${p.height}`);
-  assert.ok(L.cardW >= 100);
+const src = readFileSync("src/chat/CardHandFan.tsx", "utf8");
+const css = readFileSync("src/chat/owner-card-game-test.css", "utf8");
+test("popup tiles reset inherited button CSS and contain the joker shimmer", () => {
+  assert.match(src, /dw-card-tile-face/);
+  assert.match(src, /Back to hand/);
+  assert.doesNotMatch(src, /getExpandedFanLayout/);
+  assert.match(css, /button\.dw-card-tile \{\s*all: unset/);
+  assert.match(css, /\.dw-card-tile-face \{[^}]*overflow: hidden[^}]*clip-path: inset\(0 round 7px\)/);
+  assert.match(css, /\.dw-card-tile-face\.is-wild::before \{[^}]*inset: 0;/);
+  assert.match(css, /img\.dw-card-face-image \{[^}]*border-radius: 0 !important/);
 });

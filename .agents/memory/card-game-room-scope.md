@@ -15,8 +15,8 @@ The owner replaced the four twos with four distinct Jokers in the uploaded deck:
 
 **How to apply:** Use Jokers for wildcard logic, rules, hand guides and shimmer. Do not reintroduce physical two cards. A Joker can still represent rank two when evaluating an ace-low straight.
 
-Prioritize card readability over a large profile header in created-room profile popups. Use the available phone screen for full-face inspection, not just a small centered fan.
+Prioritize full-hand readability over a large profile header in created-room profile popups. Use a non-overlapping three-on-top, two-centered-below grid with tap-to-enlarge.
 
-**Why:** The owner could not read the heavily overlapped cards and explicitly said the old popup looked half empty. Enlarging the container alone leaves too much unused space around a width-constrained fan.
+**Why:** The owner could not read the overlapping fan, then rejected the oversized single-card preview and requested seeing the whole hand at once.
 
-**How to apply:** Keep the identity header compact and a large readable full-card view alongside hand selection. Preserve the fan and Joker shimmer, without changing other room menus.
+**How to apply:** Keep the identity header compact, show full rectangular faces with small gaps, and contain Joker shimmer inside each card. Number cards in this popup use a large rank and suit on black; preserve uploaded A/J/Q/K/Joker art and other room menus.
