@@ -17,6 +17,6 @@ The owner replaced the four twos with four distinct Jokers in the uploaded deck:
 
 Prioritize full-hand readability over a large profile header in created-room profile popups. Use a non-overlapping three-on-top, two-centered-below grid with tap-to-enlarge.
 
-**Why:** The owner could not read the overlapping fan, then rejected the oversized single-card preview and requested seeing the whole hand at once.
+**Why:** The owner could not read the overlapping fan, then rejected the oversized single-card preview and requested seeing the whole hand at once. They subsequently confirmed the revised cards looked good on their phone.
 
 **How to apply:** Keep the identity header compact, show full rectangular faces with small gaps, and contain Joker shimmer inside each card. Number cards in this popup use a large rank and suit on black; preserve uploaded A/J/Q/K/Joker art and other room menus.
