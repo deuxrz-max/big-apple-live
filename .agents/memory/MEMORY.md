@@ -17,7 +17,7 @@
 - [Room and livestream gift receipts](room-gift-display-receipts.md) — all active gifts animate regardless of roomGift classification; payout and inventory remain separate.
 - [Additive schema guards](additive-schema-guards.md) — stop unrelated truncation prompts; apply only approved development additions without deleting histories.
 - [Beam screen layout](beam-screen-layout.md) — participant boxes stay anchored; chat is borderless below them and older messages require chat-only scrolling.
-- [Eight-seat audio split](audio-beam-constraints.md) — mic-on seats hear one another and locally mute video; mic-off seats and audience hear video only.
+- [Room audio split](audio-beam-constraints.md) — all room seats are audio-only; mic-on seats hear one another and locally mute TV; full-screen Go Live keeps camera video.
 - [Living Beam rooms](living-beam-goal.md) — archived Beam goal; superseded for active routes by the text-chat pivot.
 - [Text-chat follow-ons](text-chat-pivot.md) — optional ownership checks require a unique bio code and reviewer, never an official platform verification claim.
 - [Passport country](passport-country.md) — reuse the saved self-reported country for the Me photo flag; no second country field or verification claim.

@@ -947,6 +947,31 @@ test("only active seat microphones can subscribe to the room audio conversation"
   assert.deepEqual(policyUpdates.slice(2).map(update => update.canSubscribe), [false, true]);
 });
 
+test("room policy mutes previously published camera and screen video without muting an enabled mic", async () => {
+  const updates: unknown[] = [];
+  const muted: Array<[string, boolean]> = [];
+  const service = new LiveKitBeamService(
+    () => ({ url: "wss://live.example.test", apiKey: "test-key", apiSecret: "test-secret" }),
+    () => ({
+      getParticipant: async () => ({ tracks: [
+        { source: TrackSource.MICROPHONE, sid: "mic" },
+        { source: TrackSource.CAMERA, sid: "camera" },
+        { source: TrackSource.SCREEN_SHARE, sid: "screen" },
+      ] }),
+      updateParticipant: async (_room: string, _id: string, update: unknown) => { updates.push(update); },
+      mutePublishedTrack: async (_room: string, _id: string, sid: string, mute: boolean) => { muted.push([sid, mute]); },
+    }) as unknown as import("livekit-server-sdk").RoomServiceClient,
+  );
+  await service.applySpeakerMediaPolicy("room-only", "speaker", [TrackSource.MICROPHONE], true);
+  assert.deepEqual(updates, [{ permission: {
+    canPublish: true, canPublishSources: [TrackSource.MICROPHONE], canSubscribe: true,
+  } }]);
+  assert.deepEqual(muted, [["mic", false], ["camera", true], ["screen", true]]);
+  muted.length = 0;
+  await service.applySpeakerMediaPolicy("room-only", "speaker", [], false);
+  assert.deepEqual(muted, [["mic", true], ["camera", true], ["screen", true]]);
+});
+
 test("standalone Go Live tokens publish camera and mic only for the host", async () => {
   const fakeSettings: LiveKitSettings = {
     url: "wss://live.example.test", apiKey: "test-public-key", apiSecret: "test-only-secret",

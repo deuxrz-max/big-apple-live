@@ -91,6 +91,12 @@ function syncAudioSubscriptions(
       slots: state.slots,
     });
     for (const publication of participant.trackPublications.values()) {
+      // Never receive seat video, even from an older room client. This hook is
+      // separate from full-screen Go Live and does not affect its camera feed.
+      if (publication.kind === Track.Kind.Video) {
+        if (publication.isSubscribed) publication.setSubscribed(false);
+        continue;
+      }
       if (publication.kind !== Track.Kind.Audio || publication.source !== Track.Source.Microphone) continue;
       if (publication.isSubscribed !== shouldSubscribe) publication.setSubscribed(shouldSubscribe);
     }

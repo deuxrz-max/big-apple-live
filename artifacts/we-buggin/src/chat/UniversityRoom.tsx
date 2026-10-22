@@ -485,7 +485,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           {drawer && <div className="ur-backdrop" onClick={closeDrawer} aria-hidden="true" />}
           <div className={`ch-room${isSocialRoom ? ' ur-social-room' : ''}`}>
             <section className={`ur-beam${!isSocialRoom && videoBeam.beam.tv.enabled ? ' is-tv-on' : ''}${isSocialRoom ? ' is-social-room' : ''}`}
-              aria-label="Nine-seat LiveKit video beam">
+              aria-label="Nine audio-only seats">
               <div className="ur-audio-status-row">
                   <span className={`ur-audio-status ur-audio-${videoBeam.connection}`} role="status">
                   <span className="ur-status-dot" aria-hidden="true" />

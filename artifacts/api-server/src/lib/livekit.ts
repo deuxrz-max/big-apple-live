@@ -138,6 +138,13 @@ export class LiveKitBeamService {
     if (microphone) {
       await client.mutePublishedTrack(roomName, participantId, microphone.sid, !microphoneEnabled);
     }
+    // Room seats are audio-only, including connections established by an older
+    // client. Revoke publishing above and explicitly stop any existing video.
+    for (const track of participant.tracks) {
+      if (track.source === TrackSource.CAMERA || track.source === TrackSource.SCREEN_SHARE) {
+        await client.mutePublishedTrack(roomName, participantId, track.sid, true);
+      }
+    }
   }
 
   async removeParticipant(roomName: string, participantId: string): Promise<void> {

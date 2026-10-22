@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
 import {
   isBeamMicEnabled,
   setBeamTvSoundMuted,
@@ -12,6 +13,18 @@ const slots = [
   { participantId: "speaker-b", micMuted: true, mutedByHost: false },
   { participantId: "speaker-c", micMuted: false, mutedByHost: true },
 ];
+
+test("room seats never capture or display camera video and refuse legacy video subscriptions", () => {
+  const hook = readFileSync("src/chat/useUniversityVideoBeam.ts", "utf8");
+  const view = readFileSync("src/chat/UniversityRoom.tsx", "utf8");
+  assert.match(hook, /createLocalTracks\(\{[\s\S]*?video: false/);
+  assert.doesNotMatch(hook, /setCameraEnabled|createLocalVideoTrack/);
+  assert.match(hook, /publication\.kind === Track\.Kind\.Video[\s\S]*?publication\.setSubscribed\(false\)/);
+  assert.match(view, /Nine audio-only seats/);
+  assert.match(view, /ur-slot-photo-fill/);
+  assert.match(view, /is-speaking/);
+  assert.doesNotMatch(view, /BeamVideoTrack|<video[\s>]/);
+});
 
 test("only mic-on seated listeners receive another mic-on seat's audio", () => {
   assert.equal(isBeamMicEnabled(slots[0]), true);
