@@ -3624,6 +3624,168 @@ export const GetEmojiImageParams = zod.object({
 export const GetEmojiImageResponse = zod.unknown()
 
 
+export const CreateChessRoomResponse = zod.object({
+  "roomId": zod.string(),
+  "fen": zod.string(),
+  "players": zod.object({
+  "white": zod.object({
+  "accountId": zod.string(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "photoUrl": zod.string().nullish()
+}),
+  "black": zod.object({
+  "accountId": zod.string(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "photoUrl": zod.string().nullish()
+}).nullable()
+}),
+  "turn": zod.enum(['w', 'b']),
+  "status": zod.enum(['waiting', 'playing', 'checkmate', 'stalemate', 'draw', 'resigned', 'closed']),
+  "revision": zod.number().int(),
+  "yourColor": zod.enum(['w', 'b']),
+  "rematchRequestedBy": zod.string().nullable(),
+  "result": zod.string().nullable(),
+  "inCheck": zod.boolean().optional(),
+  "legalMoves": zod.array(zod.object({
+  "from": zod.string(),
+  "to": zod.string(),
+  "promotion": zod.string().optional()
+}))
+})
+
+
+export const GetChessRoomParams = zod.object({
+  "chessRoomId": zod.coerce.string()
+})
+
+export const GetChessRoomResponse = zod.object({
+  "roomId": zod.string(),
+  "fen": zod.string(),
+  "players": zod.object({
+  "white": zod.object({
+  "accountId": zod.string(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "photoUrl": zod.string().nullish()
+}),
+  "black": zod.object({
+  "accountId": zod.string(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "photoUrl": zod.string().nullish()
+}).nullable()
+}),
+  "turn": zod.enum(['w', 'b']),
+  "status": zod.enum(['waiting', 'playing', 'checkmate', 'stalemate', 'draw', 'resigned', 'closed']),
+  "revision": zod.number().int(),
+  "yourColor": zod.enum(['w', 'b']),
+  "rematchRequestedBy": zod.string().nullable(),
+  "result": zod.string().nullable(),
+  "inCheck": zod.boolean().optional(),
+  "legalMoves": zod.array(zod.object({
+  "from": zod.string(),
+  "to": zod.string(),
+  "promotion": zod.string().optional()
+}))
+})
+
+
+export const JoinChessRoomParams = zod.object({
+  "chessRoomId": zod.coerce.string()
+})
+
+export const JoinChessRoomResponse = zod.object({
+  "roomId": zod.string(),
+  "fen": zod.string(),
+  "players": zod.object({
+  "white": zod.object({
+  "accountId": zod.string(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "photoUrl": zod.string().nullish()
+}),
+  "black": zod.object({
+  "accountId": zod.string(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "photoUrl": zod.string().nullish()
+}).nullable()
+}),
+  "turn": zod.enum(['w', 'b']),
+  "status": zod.enum(['waiting', 'playing', 'checkmate', 'stalemate', 'draw', 'resigned', 'closed']),
+  "revision": zod.number().int(),
+  "yourColor": zod.enum(['w', 'b']),
+  "rematchRequestedBy": zod.string().nullable(),
+  "result": zod.string().nullable(),
+  "inCheck": zod.boolean().optional(),
+  "legalMoves": zod.array(zod.object({
+  "from": zod.string(),
+  "to": zod.string(),
+  "promotion": zod.string().optional()
+}))
+})
+
+
+export const ActChessRoomParams = zod.object({
+  "chessRoomId": zod.coerce.string()
+})
+
+export const actChessRoomBodyRevisionMin = 0;
+
+
+
+export const ActChessRoomBody = zod.object({
+  "action": zod.enum(['move', 'rematch', 'resign', 'leave']),
+  "revision": zod.number().int().min(actChessRoomBodyRevisionMin),
+  "from": zod.string().optional(),
+  "to": zod.string().optional(),
+  "promotion": zod.enum(['q', 'r', 'b', 'n']).optional()
+})
+
+export const ActChessRoomResponse = zod.object({
+  "roomId": zod.string(),
+  "fen": zod.string(),
+  "players": zod.object({
+  "white": zod.object({
+  "accountId": zod.string(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "photoUrl": zod.string().nullish()
+}),
+  "black": zod.object({
+  "accountId": zod.string(),
+  "username": zod.string(),
+  "displayName": zod.string(),
+  "photoUrl": zod.string().nullish()
+}).nullable()
+}),
+  "turn": zod.enum(['w', 'b']),
+  "status": zod.enum(['waiting', 'playing', 'checkmate', 'stalemate', 'draw', 'resigned', 'closed']),
+  "revision": zod.number().int(),
+  "yourColor": zod.enum(['w', 'b']),
+  "rematchRequestedBy": zod.string().nullable(),
+  "result": zod.string().nullable(),
+  "inCheck": zod.boolean().optional(),
+  "legalMoves": zod.array(zod.object({
+  "from": zod.string(),
+  "to": zod.string(),
+  "promotion": zod.string().optional()
+}))
+})
+
+
+export const ConnectChessAudioParams = zod.object({
+  "chessRoomId": zod.coerce.string()
+})
+
+export const ConnectChessAudioResponse = zod.object({
+  "url": zod.string(),
+  "token": zod.string()
+})
+
+
 export const createAccountRoomBodyNameMin = 2;
 export const createAccountRoomBodyNameMax = 32;
 

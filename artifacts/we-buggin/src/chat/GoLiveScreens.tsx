@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { useUser } from "@clerk/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Ban, Eye, Flag, FlipHorizontal, Mic, MicOff, Radio, Send, Share2, Users, Video, X } from "lucide-react";
+import { ArrowLeft, Ban, Crown, Eye, Flag, FlipHorizontal, Mic, MicOff, Radio, Send, Share2, Users, Video, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { ScreenHeader } from '@/components/app-chrome';
 import { type RemoteTrack } from "livekit-client";
 import {
   getGetRoomQueryKey, getGetSocialBlocksQueryKey, getGetSocialMeQueryKey, getGetSocialPersonQueryKey,
   getLiveStreams, sendLiveStreamChatMessage, useGetSocialBlocks, useGetSocialMe,
-  useCreateAccountRoom, useGetSocialPerson, useSetSocialRelationship,
+  useCreateAccountRoom, useCreateChessRoom, useGetSocialPerson, useSetSocialRelationship,
 } from "@workspace/api-client-react";
 import type { LiveStreamEntry, LiveStreamChatMessage, RoomSession } from "@workspace/api-client-react";
 import { GiftBag } from "@/gifts/GiftBag";
@@ -742,6 +742,7 @@ export function GoLiveButton({ className, children }: { className: string; child
   const qc = useQueryClient();
   const me = useGetSocialMe();
   const createRoom = useCreateAccountRoom();
+  const createChess = useCreateChessRoom();
   const [choiceOpen, setChoiceOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
   const dialog = useRef<HTMLDivElement>(null);
@@ -784,9 +785,19 @@ export function GoLiveButton({ className, children }: { className: string; child
     });
   };
 
+  const createChessGame = () => {
+    if (!username || createChess.isPending) return;
+    createChess.mutate(undefined, {
+      onSuccess: (state) => {
+        setChoiceOpen(false);
+        navigate(`/community/chess/${encodeURIComponent(state.roomId)}`);
+      },
+    });
+  };
+
   return <>
     <button ref={trigger} type="button" className={className} aria-haspopup="dialog"
-      aria-expanded={choiceOpen} onClick={() => { createRoom.reset(); setChoiceOpen(true); }}>
+      aria-expanded={choiceOpen} onClick={() => { createRoom.reset(); createChess.reset(); setChoiceOpen(true); }}>
       {children}
     </button>
     {choiceOpen && <div className="st-room-choice-scrim" onMouseDown={(event) => {
@@ -808,12 +819,19 @@ export function GoLiveButton({ className, children }: { className: string; child
           <span><strong>{createRoom.isPending ? "Creating room…" : "Create Room"}</strong>
             <small>Open a nine-seat social room with chat and gifts.</small></span>
         </button>
+        <button type="button" className="st-room-choice-option" onClick={createChessGame}
+          disabled={!username || createChess.isPending} data-testid="button-create-chess-room">
+          <span className="st-room-choice-icon"><Crown size={22} /></span>
+          <span><strong>{createChess.isPending ? "Setting the board…" : "Chess"}</strong>
+            <small>Invite one player to a head-to-head game with voice.</small></span>
+        </button>
         {!username && (me.isLoading
           ? <p className="st-room-choice-error" role="status">Loading your account…</p>
           : <p className="st-room-choice-error" role="status">Set up your profile to continue. <Link href="/user-portal">Open profile</Link></p>)}
         {createRoom.isError && <p className="st-room-choice-error" role="alert">
           {createRoom.error instanceof Error ? createRoom.error.message : "Could not create your room. Try again."}
         </p>}
+        {createChess.isError && <p className="st-room-choice-error" role="alert">Could not set up the chess room. Try again.</p>}
       </section>
     </div>}
   </>;

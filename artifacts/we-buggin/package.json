@@ -11,6 +11,7 @@
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "brand:icons": "bash scripts/generate-brand-icons.sh",
+    "test:chess": "esbuild tests/chessRoom.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-chess-tests.mjs && node --test /tmp/we-buggin-chess-tests.mjs",
     "test:beams": "esbuild tests/beamService.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-beam-tests.mjs && node --test /tmp/we-buggin-beam-tests.mjs",
     "test:video-beam-grid": "esbuild tests/videoBeamGrid.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-video-beam-grid-tests.mjs && node --test /tmp/we-buggin-video-beam-grid-tests.mjs",
     "test:go-live-choice": "esbuild tests/goLiveChoice.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-go-live-choice-tests.mjs && node --test /tmp/we-buggin-go-live-choice-tests.mjs",
@@ -110,6 +111,7 @@
     "@clerk/themes": "^2.4.57",
     "@workspace/beam-identity": "workspace:*",
     "@workspace/room-audio": "workspace:*",
+    "chess.js": "^1.4.0",
     "livekit-client": "^2.22.4",
     "lottie-web": "^5.13.0",
     "socket.io-client": "^4.8.4"

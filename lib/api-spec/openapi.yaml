@@ -945,6 +945,74 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ErrorResponse" }
+  /social/chess/rooms:
+    post:
+      operationId: createChessRoom
+      tags: [chess]
+      responses:
+        "201":
+          description: A private two-player audio-only chess room
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChessRoomState" }
+  /social/chess/rooms/{chessRoomId}:
+    get:
+      operationId: getChessRoom
+      tags: [chess]
+      parameters:
+        - { name: chessRoomId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Authoritative board and legal moves for this player
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChessRoomState" }
+  /social/chess/rooms/{chessRoomId}/join:
+    post:
+      operationId: joinChessRoom
+      tags: [chess]
+      parameters:
+        - { name: chessRoomId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Join or reconnect to one of exactly two player places
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChessRoomState" }
+  /social/chess/rooms/{chessRoomId}/actions:
+    post:
+      operationId: actChessRoom
+      tags: [chess]
+      parameters:
+        - { name: chessRoomId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChessActionInput" }
+      responses:
+        "200":
+          description: Validated move or game action
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChessRoomState" }
+  /social/chess/rooms/{chessRoomId}/audio:
+    post:
+      operationId: connectChessAudio
+      tags: [chess]
+      parameters:
+        - { name: chessRoomId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Participant-only microphone token, never camera permission
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url, token]
+                properties:
+                  url: { type: string }
+                  token: { type: string }
   /account/rooms:
     post:
       operationId: createAccountRoom
@@ -1605,6 +1673,53 @@ components:
       required: [action]
       properties:
         action: { type: string, enum: [mute, unmute, request-unmute] }
+    ChessActionInput:
+      type: object
+      required: [action, revision]
+      properties:
+        action: { type: string, enum: [move, rematch, resign, leave] }
+        revision: { type: integer, minimum: 0 }
+        from: { type: string }
+        to: { type: string }
+        promotion: { type: string, enum: [q, r, b, n] }
+    ChessPlayer:
+      type: object
+      required: [accountId, username, displayName]
+      properties:
+        accountId: { type: string }
+        username: { type: string }
+        displayName: { type: string }
+        photoUrl: { type: string, nullable: true }
+    ChessRoomState:
+      type: object
+      required: [roomId, fen, players, turn, status, revision, legalMoves, yourColor, rematchRequestedBy, result]
+      properties:
+        roomId: { type: string }
+        fen: { type: string }
+        players:
+          type: object
+          required: [white, black]
+          properties:
+            white: { $ref: "#/components/schemas/ChessPlayer" }
+            black:
+              allOf: [{ $ref: "#/components/schemas/ChessPlayer" }]
+              nullable: true
+        turn: { type: string, enum: [w, b] }
+        status: { type: string, enum: [waiting, playing, checkmate, stalemate, draw, resigned, closed] }
+        revision: { type: integer }
+        yourColor: { type: string, enum: [w, b] }
+        rematchRequestedBy: { type: string, nullable: true }
+        result: { type: string, nullable: true }
+        inCheck: { type: boolean }
+        legalMoves:
+          type: array
+          items:
+            type: object
+            required: [from, to]
+            properties:
+              from: { type: string }
+              to: { type: string }
+              promotion: { type: string }
     AccountRoomInput:
       type: object
       properties:

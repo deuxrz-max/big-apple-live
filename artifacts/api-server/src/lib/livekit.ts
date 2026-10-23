@@ -19,6 +19,15 @@ function settingsFromEnvironment(env: NodeJS.ProcessEnv = process.env): LiveKitS
 }
 
 export class LiveKitBeamService {
+  async createChessToken(input: { roomName: string; participantId: string; displayName: string }) {
+    const settings = this.getSettings();
+    const token = new AccessToken(settings.apiKey, settings.apiSecret, {
+      identity: input.participantId, name: input.displayName, ttl: "5m",
+    });
+    token.addGrant({ roomJoin: true, room: input.roomName, canSubscribe: true,
+      canPublish: true, canPublishSources: [TrackSource.MICROPHONE], canPublishData: false });
+    return { url: settings.url, token: await token.toJwt() };
+  }
   constructor(
     private readonly getSettings: () => LiveKitSettings = settingsFromEnvironment,
     private readonly clientFactory = (settings: LiveKitSettings) =>

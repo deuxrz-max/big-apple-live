@@ -13,6 +13,7 @@ export function BottomNavigation() {
   const isHome = path === '/home';
   const inbox = useGetSocialInbox({ query: { enabled: isHome && !!isSignedIn, queryKey: getGetSocialInboxQueryKey(), refetchInterval: 4_000, refetchOnWindowFocus: true } });
   const unreadCount = (inbox.data?.conversations ?? []).reduce((total, conversation) => total + Math.max(0, conversation.unreadCount || 0), 0);
+  const hidden = path.startsWith('/community/chess/');
   const protectedHref = (href: string) => isSignedIn ? href : '/sign-in';
   const items = [
     { label: 'Home', icon: House, href: isSignedIn ? '/home' : '/', active: path === '/' || path === '/home' || path.startsWith('/rooms/') || path === '/community' },
@@ -20,6 +21,7 @@ export function BottomNavigation() {
     { label: 'Message', icon: MessageCircle, href: protectedHref('/community/messages'), active: path === '/community/messages' || path.startsWith('/community/messages/') },
     { label: 'Me', icon: UserRound, href: protectedHref('/user-portal'), active: path === '/user-portal' || path.startsWith('/user-portal/') || path === '/community/profile' },
   ];
+  if (hidden) return null;
   return (
     <nav className="app-bottom-nav" aria-label="Main navigation">
       <div className={`app-bottom-nav-inner${isUniversityRoom ? ' has-room-gift' : ''}${isHome && isSignedIn ? ' has-home-live' : ''}`}>

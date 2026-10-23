@@ -1,4 +1,5 @@
 import chatRouter from "./chat";
+import chessRouter from "./chess";
 import universityChatRouter from "./university-chat";
 import moderatorBotRouter from "./moderator-bots";
 import { Router, type IRouter } from "express";
@@ -33,6 +34,7 @@ router.use(["/account/rooms", "/account/live-streams", "/account/host-room-block
 });
 router.use(identityRouter);
 router.use(socialRouter);
+router.use(chessRouter);
 router.use(chatRouter);
 router.use(universityChatRouter);
 router.use(universityAudioRouter);

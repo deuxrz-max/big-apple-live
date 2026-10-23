@@ -34,8 +34,11 @@ import type {
   ChatReportReceipt,
   ChatReportRecord,
   ChatReportReviewInput,
+  ChessActionInput,
+  ChessRoomState,
   ComedyVideoActionInput,
   ComedyVideoCatalogResponse,
+  ConnectChessAudio200,
   DeveloperContentSyncStatus,
   DeveloperGiftMotion,
   DeveloperGiftMotionList,
@@ -7333,6 +7336,364 @@ export function useGetEmojiImage<TData = Awaited<ReturnType<typeof getEmojiImage
 
 
 
+
+export const getCreateChessRoomUrl = () => {
+
+
+
+
+  return `/api/social/chess/rooms`
+}
+
+export const createChessRoom = async ( options?: Parameters<typeof customFetch>[1]): Promise<ChessRoomState> => {
+
+  return customFetch<ChessRoomState>(getCreateChessRoomUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCreateChessRoomMutationKey = () => ['createChessRoom'] as const;
+
+export const getCreateChessRoomMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChessRoom>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createChessRoom>>, TError,void, TContext> => {
+
+const mutationKey = getCreateChessRoomMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createChessRoom>>, void> = () => {
+
+
+          return  createChessRoom(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateChessRoomMutationResult = NonNullable<Awaited<ReturnType<typeof createChessRoom>>>
+
+    export type CreateChessRoomMutationError = ErrorType<unknown>
+
+
+    export const useCreateChessRoom = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChessRoom>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createChessRoom>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCreateChessRoomMutationOptions(options));
+    }
+
+export const getGetChessRoomUrl = (chessRoomId: string,) => {
+
+
+
+
+  return `/api/social/chess/rooms/${chessRoomId}`
+}
+
+export const getChessRoom = async (chessRoomId: string, options?: Parameters<typeof customFetch>[1]): Promise<ChessRoomState> => {
+
+  return customFetch<ChessRoomState>(getGetChessRoomUrl(chessRoomId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetChessRoomQueryKey = (chessRoomId: string,) => {
+    return [
+    `/api/social/chess/rooms/${chessRoomId}`
+    ] as const;
+    }
+
+
+export const getGetChessRoomQueryOptions = <TData = Awaited<ReturnType<typeof getChessRoom>>, TError = ErrorType<unknown>>(chessRoomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getChessRoom>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetChessRoomQueryKey(chessRoomId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getChessRoom>>> = ({ signal }) => getChessRoom(chessRoomId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: chessRoomId !== null && chessRoomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getChessRoom>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetChessRoomQueryResult = NonNullable<Awaited<ReturnType<typeof getChessRoom>>>
+export type GetChessRoomQueryError = ErrorType<unknown>
+
+
+
+export function useGetChessRoom<TData = Awaited<ReturnType<typeof getChessRoom>>, TError = ErrorType<unknown>>(
+ chessRoomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getChessRoom>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetChessRoomQueryOptions(chessRoomId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getJoinChessRoomUrl = (chessRoomId: string,) => {
+
+
+
+
+  return `/api/social/chess/rooms/${chessRoomId}/join`
+}
+
+export const joinChessRoom = async (chessRoomId: string, options?: Parameters<typeof customFetch>[1]): Promise<ChessRoomState> => {
+
+  return customFetch<ChessRoomState>(getJoinChessRoomUrl(chessRoomId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getJoinChessRoomMutationKey = () => ['joinChessRoom'] as const;
+
+export const getJoinChessRoomMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinChessRoom>>, TError,JoinChessRoomMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof joinChessRoom>>, TError,JoinChessRoomMutationVariables, TContext> => {
+
+const mutationKey = getJoinChessRoomMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof joinChessRoom>>, JoinChessRoomMutationVariables> = (props) => {
+          const {chessRoomId} = props ?? {};
+
+          return  joinChessRoom(chessRoomId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type JoinChessRoomMutationResult = NonNullable<Awaited<ReturnType<typeof joinChessRoom>>>
+
+    export type JoinChessRoomMutationError = ErrorType<unknown>
+    export type JoinChessRoomMutationVariables = {chessRoomId: string}
+
+    export const useJoinChessRoom = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinChessRoom>>, TError,JoinChessRoomMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof joinChessRoom>>,
+        TError,
+        JoinChessRoomMutationVariables,
+        TContext
+      > => {
+      return useMutation(getJoinChessRoomMutationOptions(options));
+    }
+
+export const getActChessRoomUrl = (chessRoomId: string,) => {
+
+
+
+
+  return `/api/social/chess/rooms/${chessRoomId}/actions`
+}
+
+export const actChessRoom = async (chessRoomId: string,
+    chessActionInput: ChessActionInput, options?: Parameters<typeof customFetch>[1]): Promise<ChessRoomState> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ChessRoomState>(getActChessRoomUrl(chessRoomId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(chessActionInput)
+  }
+);}
+
+
+
+
+
+export const getActChessRoomMutationKey = () => ['actChessRoom'] as const;
+
+export const getActChessRoomMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actChessRoom>>, TError,ActChessRoomMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof actChessRoom>>, TError,ActChessRoomMutationVariables, TContext> => {
+
+const mutationKey = getActChessRoomMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof actChessRoom>>, ActChessRoomMutationVariables> = (props) => {
+          const {chessRoomId,data} = props ?? {};
+
+          return  actChessRoom(chessRoomId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ActChessRoomMutationResult = NonNullable<Awaited<ReturnType<typeof actChessRoom>>>
+    export type ActChessRoomMutationBody = BodyType<ChessActionInput>
+    export type ActChessRoomMutationError = ErrorType<unknown>
+    export type ActChessRoomMutationVariables = {chessRoomId: string;data: BodyType<ChessActionInput>}
+
+    export const useActChessRoom = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actChessRoom>>, TError,ActChessRoomMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof actChessRoom>>,
+        TError,
+        ActChessRoomMutationVariables,
+        TContext
+      > => {
+      return useMutation(getActChessRoomMutationOptions(options));
+    }
+
+export const getConnectChessAudioUrl = (chessRoomId: string,) => {
+
+
+
+
+  return `/api/social/chess/rooms/${chessRoomId}/audio`
+}
+
+export const connectChessAudio = async (chessRoomId: string, options?: Parameters<typeof customFetch>[1]): Promise<ConnectChessAudio200> => {
+
+  return customFetch<ConnectChessAudio200>(getConnectChessAudioUrl(chessRoomId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getConnectChessAudioMutationKey = () => ['connectChessAudio'] as const;
+
+export const getConnectChessAudioMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectChessAudio>>, TError,ConnectChessAudioMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof connectChessAudio>>, TError,ConnectChessAudioMutationVariables, TContext> => {
+
+const mutationKey = getConnectChessAudioMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof connectChessAudio>>, ConnectChessAudioMutationVariables> = (props) => {
+          const {chessRoomId} = props ?? {};
+
+          return  connectChessAudio(chessRoomId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConnectChessAudioMutationResult = NonNullable<Awaited<ReturnType<typeof connectChessAudio>>>
+
+    export type ConnectChessAudioMutationError = ErrorType<unknown>
+    export type ConnectChessAudioMutationVariables = {chessRoomId: string}
+
+    export const useConnectChessAudio = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectChessAudio>>, TError,ConnectChessAudioMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof connectChessAudio>>,
+        TError,
+        ConnectChessAudioMutationVariables,
+        TContext
+      > => {
+      return useMutation(getConnectChessAudioMutationOptions(options));
+    }
 
 export const getCreateAccountRoomUrl = () => {
 

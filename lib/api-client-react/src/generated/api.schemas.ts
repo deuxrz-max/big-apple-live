@@ -537,6 +537,96 @@ export interface MicrophoneAction {
   action: MicrophoneActionAction;
 }
 
+export type ChessActionInputAction = typeof ChessActionInputAction[keyof typeof ChessActionInputAction];
+
+
+export const ChessActionInputAction = {
+  move: 'move',
+  rematch: 'rematch',
+  resign: 'resign',
+  leave: 'leave',
+} as const;
+
+export type ChessActionInputPromotion = typeof ChessActionInputPromotion[keyof typeof ChessActionInputPromotion];
+
+
+export const ChessActionInputPromotion = {
+  q: 'q',
+  r: 'r',
+  b: 'b',
+  n: 'n',
+} as const;
+
+export interface ChessActionInput {
+  action: ChessActionInputAction;
+  /** @minimum 0 */
+  revision: number;
+  from?: string;
+  to?: string;
+  promotion?: ChessActionInputPromotion;
+}
+
+export interface ChessPlayer {
+  accountId: string;
+  username: string;
+  displayName: string;
+  photoUrl?: string | null;
+}
+
+export type ChessRoomStatePlayers = {
+  white: ChessPlayer;
+  black: ChessPlayer | null;
+};
+
+export type ChessRoomStateTurn = typeof ChessRoomStateTurn[keyof typeof ChessRoomStateTurn];
+
+
+export const ChessRoomStateTurn = {
+  w: 'w',
+  b: 'b',
+} as const;
+
+export type ChessRoomStateStatus = typeof ChessRoomStateStatus[keyof typeof ChessRoomStateStatus];
+
+
+export const ChessRoomStateStatus = {
+  waiting: 'waiting',
+  playing: 'playing',
+  checkmate: 'checkmate',
+  stalemate: 'stalemate',
+  draw: 'draw',
+  resigned: 'resigned',
+  closed: 'closed',
+} as const;
+
+export type ChessRoomStateYourColor = typeof ChessRoomStateYourColor[keyof typeof ChessRoomStateYourColor];
+
+
+export const ChessRoomStateYourColor = {
+  w: 'w',
+  b: 'b',
+} as const;
+
+export type ChessRoomStateLegalMovesItem = {
+  from: string;
+  to: string;
+  promotion?: string;
+};
+
+export interface ChessRoomState {
+  roomId: string;
+  fen: string;
+  players: ChessRoomStatePlayers;
+  turn: ChessRoomStateTurn;
+  status: ChessRoomStateStatus;
+  revision: number;
+  yourColor: ChessRoomStateYourColor;
+  rematchRequestedBy: string | null;
+  result: string | null;
+  inCheck?: boolean;
+  legalMoves: ChessRoomStateLegalMovesItem[];
+}
+
 export type AccountRoomInputCapacity = typeof AccountRoomInputCapacity[keyof typeof AccountRoomInputCapacity];
 
 
@@ -1643,6 +1733,96 @@ export const MicrophoneAction4b96100Action = {
 
 export interface MicrophoneAction4b96100 {
   action: MicrophoneAction4b96100Action;
+}
+
+export type ChessActionInput4b96100Action = typeof ChessActionInput4b96100Action[keyof typeof ChessActionInput4b96100Action];
+
+
+export const ChessActionInput4b96100Action = {
+  move: 'move',
+  rematch: 'rematch',
+  resign: 'resign',
+  leave: 'leave',
+} as const;
+
+export type ChessActionInput4b96100Promotion = typeof ChessActionInput4b96100Promotion[keyof typeof ChessActionInput4b96100Promotion];
+
+
+export const ChessActionInput4b96100Promotion = {
+  q: 'q',
+  r: 'r',
+  b: 'b',
+  n: 'n',
+} as const;
+
+export interface ChessActionInput4b96100 {
+  action: ChessActionInput4b96100Action;
+  /** @minimum 0 */
+  revision: number;
+  from?: string;
+  to?: string;
+  promotion?: ChessActionInput4b96100Promotion;
+}
+
+export interface ChessPlayer4b96100 {
+  accountId: string;
+  username: string;
+  displayName: string;
+  photoUrl?: string | null;
+}
+
+export type ChessRoomState4b96100Players = {
+  white: ChessPlayer4b96100;
+  black: ChessPlayer4b96100 | null;
+};
+
+export type ChessRoomState4b96100Turn = typeof ChessRoomState4b96100Turn[keyof typeof ChessRoomState4b96100Turn];
+
+
+export const ChessRoomState4b96100Turn = {
+  w: 'w',
+  b: 'b',
+} as const;
+
+export type ChessRoomState4b96100Status = typeof ChessRoomState4b96100Status[keyof typeof ChessRoomState4b96100Status];
+
+
+export const ChessRoomState4b96100Status = {
+  waiting: 'waiting',
+  playing: 'playing',
+  checkmate: 'checkmate',
+  stalemate: 'stalemate',
+  draw: 'draw',
+  resigned: 'resigned',
+  closed: 'closed',
+} as const;
+
+export type ChessRoomState4b96100YourColor = typeof ChessRoomState4b96100YourColor[keyof typeof ChessRoomState4b96100YourColor];
+
+
+export const ChessRoomState4b96100YourColor = {
+  w: 'w',
+  b: 'b',
+} as const;
+
+export type ChessRoomState4b96100LegalMovesItem = {
+  from: string;
+  to: string;
+  promotion?: string;
+};
+
+export interface ChessRoomState4b96100 {
+  roomId: string;
+  fen: string;
+  players: ChessRoomState4b96100Players;
+  turn: ChessRoomState4b96100Turn;
+  status: ChessRoomState4b96100Status;
+  revision: number;
+  yourColor: ChessRoomState4b96100YourColor;
+  rematchRequestedBy: string | null;
+  result: string | null;
+  inCheck?: boolean;
+  legalMoves: ChessRoomState4b96100LegalMovesItem[];
 }
 
 export type AccountRoomInput4b96100Capacity = typeof AccountRoomInput4b96100Capacity[keyof typeof AccountRoomInput4b96100Capacity];
@@ -3562,5 +3742,10 @@ export type GetRoomGiftEvents200 = {
 
 export type GetSocialConversationParams = {
 cursor?: string;
+};
+
+export type ConnectChessAudio200 = {
+  url: string;
+  token: string;
 };
 
