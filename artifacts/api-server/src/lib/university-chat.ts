@@ -6,7 +6,6 @@ import { sendMessage } from "./social/messages";
 import { visibleProfilePhotos } from "./photo-visibility";
 import { botRotation } from "./moderator-bots";
 import { nameColorProfilesForAccounts } from "./social/gift-name-color-data";
-import { passportBadgeSummaries } from "./social/passport";
 import { visibleMonthlyPurchaseBadgeSummaries } from "./social/monthly-credit-badges";
 import type { UniversityPerson } from "@workspace/api-zod";
 
@@ -54,7 +53,6 @@ export async function roomWhispers(id: string, roomId: string) {
       outgoing: row.senderId === id, body: row.body, createdAt: row.createdAt });
   }
   const colors = await nameColorProfilesForAccounts(result.map(row => row.accountId));
-  const passports = await passportBadgeSummaries(result.map(row => row.accountId));
   const badges = await visibleMonthlyPurchaseBadgeSummaries(result.map(row => row.accountId));
   return result.map(({ accountId, ...whisper }) => ({
     ...whisper, displayNameColor: colors.get(accountId)?.color ?? "#FFFFFF",
@@ -62,7 +60,6 @@ export async function roomWhispers(id: string, roomId: string) {
     badgeId: badges.get(accountId)?.tier.id ?? null,
     badgeName: badges.get(accountId)?.tier.name ?? null,
     badgeImage: badges.get(accountId)?.tier.badgeImage ?? null,
-    passport: passports.get(accountId),
   }));
 }
 export async function universitySession(id: string, roomId: string, sessionId: string) {
@@ -80,7 +77,6 @@ export async function universitySession(id: string, roomId: string, sessionId: s
   ));
   const blockedIds = new Set(blockedRelations.map(relation =>
     relation.ownerId === id ? relation.targetId : relation.ownerId));
-  const passports = await passportBadgeSummaries(presentAccountIds);
   const badgeSummaries = await visibleMonthlyPurchaseBadgeSummaries(presentAccountIds);
   const people: UniversityPerson[] = [];
   const seen = new Set<string>();
@@ -105,7 +101,7 @@ export async function universitySession(id: string, roomId: string, sessionId: s
        badgeId: badgeSummaries.get(ownerId)?.tier.id ?? null,
        badgeName: badgeSummaries.get(ownerId)?.tier.name ?? null,
        badgeImage: badgeSummaries.get(ownerId)?.tier.badgeImage ?? null,
-       passport: passports.get(ownerId) });
+    });
   }
   for (const bot of botRotation.people(roomId.toUpperCase())) people.push({
     participantId: bot.participantId, username: bot.name, displayName: bot.name, photoUrl: bot.avatarUrl,

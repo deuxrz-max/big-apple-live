@@ -2,8 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { getGetEmojiCatalogQueryKey, useGetEmojiCatalog, type EmojiOption } from '@workspace/api-client-react';
 import { IdentityAvatar, emojiImageUrl, type Identity } from '@/lib/identity';
-import { beamIdentity } from '@/beam/services/beamService';
-import { getPortrait, selectAvatarType } from '@/beam/portraits';
 
 const PAGE = 90;
 
@@ -85,46 +83,11 @@ export function EmojiPicker({ value, color, onSelect, facesOnly = false, disable
   );
 }
 
-export function IdentityEditor({ value, onChange }: { value: Identity; onChange: (v: Identity) => void }) {
-  const avatarType = (gender: Identity['gender']): Identity => {
-    if (value.gender === gender) return value;
-    const selected = selectAvatarType(beamIdentity(value), gender === 'Male' ? 'spiked' : 'ponytails');
-    const portrait = getPortrait(selected);
-    return {
-      ...value, gender, portraitId: portrait.id, currentMood: selected.currentMood,
-      emojiId: [...portrait.emoji].map(c => c.codePointAt(0)!.toString(16).toUpperCase()).join('-'),
-    };
-  };
+export function IdentityEditor({ value }: { value: Identity; onChange?: (v: Identity) => void }) {
   return (
-    <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
-      <div className="lg:sticky lg:top-6 lg:self-start">
-        <div className="sticker grid place-items-center bg-secondary/40 p-4">
-          <IdentityAvatar identity={value} size={220} />
-          <p className="label-mono mt-1">Static. It never reacts to your voice.</p>
-        </div>
-      </div>
-      <div className="space-y-5">
-        <fieldset>
-          <legend className="label-mono">Choose your avatar type</legend>
-          <div role="radiogroup" aria-label="Avatar type" className="mt-1 grid grid-cols-2 gap-2">
-            {(['Male', 'Female'] as const).map((g) => (
-              <button
-                key={g}
-                type="button"
-                role="radio"
-                aria-checked={value.gender === g}
-                aria-label={g === 'Male' ? 'Male / Spiky hair' : 'Female / Ponytail'}
-                onClick={() => onChange(avatarType(g))}
-                className={`btn flex-col py-4 ${value.gender === g ? 'btn-pink' : ''}`}
-                data-testid={`button-gender-${g.toLowerCase()}`}
-              >
-                <IdentityAvatar identity={avatarType(g)} size={80} />
-                <span>{g === 'Male' ? 'Male / Spiky hair' : 'Female / Ponytail'}</span>
-              </button>
-            ))}
-          </div>
-        </fieldset>
-      </div>
+    <div className="sticker grid place-items-center bg-secondary/40 p-4" data-testid="panel-default-picture">
+      <IdentityAvatar identity={value} size={160} />
+      <p className="label-mono mt-2 text-center">Default picture. Upload a photo on your profile to replace it.</p>
     </div>
   );
 }

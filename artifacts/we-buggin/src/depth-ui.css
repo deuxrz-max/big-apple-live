@@ -17,8 +17,7 @@
   .ch-list li, .sc-card, .sc-panel, .sc-empty, .sc-wallet, .ib-row, .fg-tile,
   .bc-card, .bc-review, .dh-banner, .dh-card, .ur-side, .ur-slot, .ur-menu,
   .ur-rules, .ur-tv-dialog, .ur-chip, .pf-panel, .pf-dialog, .pf-menu-list,
-  .pf-stats > div, .pf-name-tier, .sp-card, .sp-review, .sp-modal-panel,
-  .sp-review-item, .sc-msgs, .sc-skel, .ch-photo-card, .ch-auth .ch-card,
+  .pf-stats > div, .pf-name-tier, .sc-msgs, .sc-skel, .ch-photo-card, .ch-auth .ch-card,
   .gs-panel, .gs-preview, .gs-library-card, .gs-empty-library, .gs-after-actions,
   .gs-production-step, .gs-error-panel, .depth-auth-card,
   .bm-tile, .bm-modal, .bm-mic-panel, .bm-tray, .gift-framework.gift-sheet,
@@ -36,8 +35,7 @@
   .ch-list li, .sc-card, .sc-panel, .sc-empty, .sc-wallet, .ib-row, .fg-tile,
   .bc-card, .bc-review, .dh-banner, .dh-card, .ur-side, .ur-slot, .ur-menu,
   .ur-rules, .ur-tv-dialog, .pf-panel, .pf-dialog, .pf-menu-list,
-  .pf-stats > div, .pf-name-tier, .sp-card, .sp-review, .sp-modal-panel,
-  .sp-review-item, .sc-msgs, .sc-skel, .ch-photo-card, .ch-auth .ch-card,
+  .pf-stats > div, .pf-name-tier, .sc-msgs, .sc-skel, .ch-photo-card, .ch-auth .ch-card,
   .gs-panel, .gs-preview, .gs-library-card, .gs-empty-library, .gs-after-actions,
   .gs-production-step, .gs-error-panel, .depth-auth-card,
   .bm-tile, .bm-modal, .bm-mic-panel, .bm-tray, .gift-framework.gift-sheet,
@@ -55,8 +53,7 @@
 /* A crisp inset lip and upper-left reflection; these never sit above content. */
 #root :is(
   .sc-panel, .sc-card, .sc-wallet, .ib-row, .fg-tile, .bc-card, .bc-review,
-  .dh-banner, .dh-card, .pf-panel, .pf-dialog, .pf-menu-list, .pf-name-tier,
-  .sp-card, .sp-review, .sp-modal-panel, .sc-msgs, .ch-auth .ch-card,
+  .dh-banner, .dh-card, .pf-panel, .pf-dialog, .pf-menu-list, .pf-name-tier, .sc-msgs, .ch-auth .ch-card,
   .gs-production-step, .gs-error-panel, .depth-auth-card,
   .gs-panel, .gs-preview, .gs-library-card, .st-dir-card, .st-store .st-item-card,
   .st-store .st-launch-tile
@@ -94,10 +91,6 @@
 #root .pf-menu-list,
 #root .pf-stats > div,
 #root .pf-name-tier,
-#root .sp-card,
-#root .sp-review,
-#root .sp-modal-panel,
-#root .sp-review-item,
 #root .sc-msgs,
 #root .sc-skel,
 #root .ch-photo-card,
@@ -292,7 +285,7 @@
 /* Buttons and existing tap targets press into the surface rather than lifting out. */
 #root :is(
   button, [role="button"], .bm-btn, .btn, .pf-btn, .pf-edit, .sc-nav-item,
-  .ur-slot-action, .ur-slot-join, .ur-resume-audio, .sp-button, .sp-modal-close,
+  .ur-slot-action, .ur-slot-join, .ur-resume-audio,
   .gs-button, .gs-chip-button, .gs-icon-button, .gift-control, .gift-item,
   .app-bottom-link, .st-dir-card, .st-dir-filter, .st-dir-enter, .st-dir-go-live,
   .st-store .st-header-back, .st-store .st-header-items, .st-store .st-launch-tile,
@@ -308,8 +301,7 @@
 #root :is(
   button:not(:disabled), [role="button"], .bm-btn:not(:disabled), .btn:not(:disabled),
   .pf-btn:not(:disabled), .pf-edit, .sc-nav-item, .ur-slot-action:not(:disabled),
-  .ur-slot-join:not(:disabled), .ur-resume-audio, .sp-button:not(:disabled),
-  .sp-modal-close, .gs-button:not(:disabled), .gs-chip-button, .gs-icon-button,
+  .ur-slot-join:not(:disabled), .ur-resume-audio, .gs-button:not(:disabled), .gs-chip-button, .gs-icon-button,
   .gift-control, .gift-item, .app-bottom-link, .st-dir-card, .st-dir-filter,
   .st-dir-enter, .st-dir-go-live, .st-store .st-header-back, .st-store .st-header-items,
   .st-store .st-launch-tile, .st-store .st-item-card, .st-store .st-detail-action:not(:disabled),

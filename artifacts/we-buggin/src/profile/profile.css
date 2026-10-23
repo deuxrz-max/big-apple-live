@@ -12,14 +12,12 @@
 .pf-round{width:44px;height:44px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:rgba(21,21,24,.62);color:#fff;border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(6px);cursor:pointer;text-decoration:none}
 .pf-round:focus-visible,.pf-btn:focus-visible,.pf-edit:focus-visible,.pf-dots button:focus-visible{outline:2px solid var(--pf-lime);outline-offset:2px}
 .pf-dots{position:absolute;left:0;right:0;bottom:38px;display:flex;justify-content:center;gap:4px}
-.pf-hero-with-country .pf-dots{right:174px}
 .pf-dots button{width:24px;height:24px;background:none;border:0;padding:0;cursor:pointer;position:relative}
 .pf-dots button::after{content:'';position:absolute;left:8px;top:8px;width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.45)}
 .pf-dots button.is-on::after{background:#fff;width:16px;left:4px;border-radius:4px}
 .pf-panel{position:relative;margin-top:-28px;background:var(--pf-panel);border-radius:28px 28px 0 0;padding:26px 20px 24px;width:calc(100% - 24px);max-width:720px;min-width:0;margin-inline:auto}
 .pf-panel-solo{margin-top:0}
 .pf-name{display:flex;align-items:center;gap:10px;min-width:0;max-width:100%;font-family:'Montserrat',system-ui,sans-serif;font-size:clamp(26px,7vw,40px);font-weight:800;line-height:1.1;margin:0 0 12px;color:#fff;overflow:hidden}
-.pf-name-emoji{flex:0 0 auto;font-size:.78em;line-height:1}
 .pf-display-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pf-chips{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:0 0 12px}
 .pf-chip{min-width:0;max-width:100%;overflow-wrap:anywhere;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.28);color:#fff}

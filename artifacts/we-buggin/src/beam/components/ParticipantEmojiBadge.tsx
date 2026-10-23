@@ -17,7 +17,7 @@ interface Props {
 export function ParticipantEmojiBadge({ handle, displayNameColor, displayNameTierIndex, identity, size = 'md', simulated, showHandle = false }: Props) {
   return (
     <div className={`bm-badge bm-badge-${size}`} data-testid={`badge-${handle}`} title={simulated ? `${handle} (simulated)` : handle}>
-      <IdentityGlyph identity={identity} size={SIZES[size]} />
+      <IdentityGlyph identity={identity} name={handle} size={SIZES[size]} />
       {showHandle && (
         <span className="bm-badge-handle">
           <ShinyName displayNameColor={displayNameColor} displayNameTierIndex={displayNameTierIndex}>{handle}</ShinyName>

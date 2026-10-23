@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 
 import type { Identity } from '../types';
 import { validateHandle } from '../services/beamService';
 import { IdentityGlyph } from './IdentityGlyph';
-import { AVATAR_CHOICES, getPortrait, portraitIdentity, selectAvatarType } from '../portraits';
+import { portraitIdentity } from '../portraits';
 
 interface Props {
   title?: string;
@@ -85,7 +85,7 @@ export function EmojiPicker({ title = 'Pick your profile picture', initialHandle
 
           <div className="bm-picker-top">
             <div className="bm-preview">
-              <IdentityGlyph identity={identity} size={112} />
+              <IdentityGlyph identity={identity} name={handle} size={112} />
             </div>
             <div className="bm-picker-fields">
               <label className="bm-label" htmlFor="bm-handle">
@@ -109,29 +109,9 @@ export function EmojiPicker({ title = 'Pick your profile picture', initialHandle
                 data-testid="input-handle"
               />
               <p className="bm-you-are" aria-live="polite">
-                You are now {handle.trim() || '…'} · {getPortrait(identity).label}
+                You are now {handle.trim() || '…'}
               </p>
             </div>
-          </div>
-
-          <div className="bm-label">Choose your avatar type</div>
-          <p className="bm-you-are">Your expressions change through Mood Sync in chat.</p>
-          <div className="bm-portrait-grid bm-avatar-types" role="radiogroup" aria-label="Avatar type">
-            {AVATAR_CHOICES.map((choice) => (
-              <button
-                key={choice.style}
-                type="button"
-                role="radio"
-                aria-checked={getPortrait(identity).style === choice.style}
-                aria-label={choice.label}
-                className={getPortrait(identity).style === choice.style ? 'is-on' : ''}
-                onClick={() => setIdentity(selectAvatarType(identity, choice.style))}
-                data-testid={`button-avatar-${choice.style}`}
-              >
-                <IdentityGlyph identity={portraitIdentity(choice.portraitId)} size={96} />
-                <span>{choice.label}</span>
-              </button>
-            ))}
           </div>
 
           {error && (

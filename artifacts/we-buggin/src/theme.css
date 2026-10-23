@@ -190,8 +190,7 @@ body {
 /* Glass surfaces use layered backgrounds so the violet-blue edge stays crisp. */
 #root :is(.ch-list li,.sc-card,.sc-panel,.sc-empty,.sc-wallet,.ib-row,.fg-tile,
   .bc-card,.bc-review,.dh-banner,.dh-card,.ur-side,.ur-slot,.ur-menu,.ur-rules,
-  .ur-chip,.ur-modal > section,.pf-dialog,.pf-menu-list,.pf-stats>div,
-  .sp-card,.sp-review,.sp-modal-panel,.sp-review-item,.sc-msgs,.gift-framework.gift-sheet) {
+  .ur-chip,.ur-modal > section,.pf-dialog,.pf-menu-list,.pf-stats>div,.sc-msgs,.gift-framework.gift-sheet) {
   border: 1px solid transparent;
   background:
     linear-gradient(145deg, rgba(28, 22, 54, .86), rgba(16, 14, 37, .78)) padding-box,
@@ -208,11 +207,11 @@ body {
   border-color: rgba(216, 185, 255, .8);
   box-shadow: 0 12px 36px rgba(6, 3, 22, .52), 0 0 22px rgba(163, 103, 255, .19);
 }
-#root :is(.bm-btn,.btn,.pf-btn,.pf-edit,.sc-nav-item,.ur-slot-action,.ur-slot-join,.ur-resume-audio,.sp-button,.sp-modal-close,.bm-modal .bm-btn) {
+#root :is(.bm-btn,.btn,.pf-btn,.pf-edit,.sc-nav-item,.ur-slot-action,.ur-slot-join,.ur-resume-audio,.bm-modal .bm-btn) {
   border-radius: 999px;
   transition: transform .16s ease, filter .16s ease, box-shadow .16s ease;
 }
-#root :is(.bm-btn,.sc-nav-item,.ur-slot-action,.ur-slot-join,.ur-resume-audio,.sp-button,.sp-modal-close) {
+#root :is(.bm-btn,.sc-nav-item,.ur-slot-action,.ur-slot-join,.ur-resume-audio) {
   border: 1px solid rgba(196, 164, 255, .63);
   color: var(--space-ink);
   background: rgba(38, 29, 71, .66);
@@ -224,13 +223,13 @@ body {
   box-shadow: 0 5px 20px rgba(121, 72, 231, .24);
 }
 #root :is(.bm-btn-primary,.btn-pink):hover:not(:disabled) { filter: brightness(1.13); }
-#root :is(.bm-btn,.pf-btn,.pf-edit,.sc-nav-item,.ur-slot-action,.ur-slot-join,.ur-resume-audio,.sp-button):focus-visible,
+#root :is(.bm-btn,.pf-btn,.pf-edit,.sc-nav-item,.ur-slot-action,.ur-slot-join,.ur-resume-audio):focus-visible,
 #root :is(input,textarea,select):focus-visible {
   outline: 2px solid #d9c2ff;
   outline-offset: 3px;
   box-shadow: 0 0 0 4px rgba(169, 118, 255, .22);
 }
-#root :is(input,textarea,select,.sc-select,.sc-text,.bm-input-box,.ch input[type=text],.ch input[type=email],.ch input[type=password],.ch textarea,.sp-field input,.sp-field select) {
+#root :is(input,textarea,select,.sc-select,.sc-text,.bm-input-box,.ch input[type=text],.ch input[type=email],.ch input[type=password],.ch textarea) {
   color: var(--space-ink);
   border: 1px solid rgba(184, 157, 242, .44);
   border-radius: 999px;
@@ -395,14 +394,6 @@ body {
 #root .gift-framework .gift-item { border: 1px solid rgba(193,160,255,.28); border-radius: 16px; }
 #root .gift-framework .gift-item[aria-pressed=true] { background: rgba(149,97,230,.24); border-color: #c19bff; }
 #root .gift-framework .gift-send { background: linear-gradient(120deg,#8050de,#ad73ff); }
-#root .sp-card,#root .sp-review { border-radius: 22px; }
-#root .sp-intro h2 { color: #fff; }
-#root .sp-platform-stamp { border-radius: 16px; background: rgba(24,20,42,.72); border-color: rgba(203,176,255,.28); }
-#root .sp-stamp-ring { background: radial-gradient(circle at center,rgba(58,46,84,.92) 0 57%,rgba(17,14,34,.95) 58%); }
-#root .sp-founding-stamp { box-shadow: 0 0 0 3px var(--sp-red),0 0 0 5px #f5d1ca,0 0 24px rgba(255,98,106,.22); }
-#root .sp-field input,#root .sp-field select { border-radius: 999px; }
-#root .sp-button-gold { background: linear-gradient(120deg,#e6c76c,#f5df9c); border-color: #f5df9c; color: #251d10; }
-#root .sp-modal { background: rgba(5,4,18,.76); backdrop-filter: blur(6px); }
 
 /* Floating navigation: distinct, memorable colorway per destination. */
 #root .app-bottom-nav {
@@ -433,7 +424,6 @@ body {
   #root .ur-slot { padding: 7px; }
   #root .ur-slot-caption,#root .ur-empty-name { text-shadow: 0 1px 8px rgba(8,5,20,.8); }
   #root .app-bottom-link { font-size: 10px; }
-  #root .sp-card { padding: 18px 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
   #root *, #root *::before, #root *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
@@ -608,7 +598,6 @@ body {
   overflow: hidden;
 }
 #root .ur-slot.is-occupied .ur-slot-marks > * { flex: 0 0 auto; }
-#root .ur-slot.is-occupied .ur-slot-marks .sp-summary-badge { margin-left: 0; }
 #root .ur-slot.is-occupied .ur-slot-actions {
   position: absolute;
   z-index: 4;

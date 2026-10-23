@@ -13,7 +13,6 @@ import { ErrorBox, Loading } from '@/social/common';
 import { RewardsPage } from '@/social/MoneyPages';
 import { ProfileView } from './ProfileView';
 import { GiftBag, GiftControl } from '@/gifts';
-import { MyStreamerPassport } from '@/passport/StreamerPassport';
 import { EntranceEffectsShop } from './EntranceEffectsShop';
 
 export function OwnProfile() {
@@ -31,8 +30,8 @@ export function OwnProfile() {
   if (me.isLoading) return <div className="pf pf-panel pf-panel-solo"><Loading /></div>;
   if (me.isError || !me.data) return <div className="pf pf-panel pf-panel-solo"><ErrorBox error={me.error} retry={() => me.refetch()} /></div>;
   const p = me.data.profile;
-  const passportCountry = me.data.countries.find((c) => c.code === p.country);
-  const countryName = p.country ? (passportCountry?.name ?? p.country) : undefined;
+  const savedCountry = me.data.countries.find((c) => c.code === p.country);
+  const countryName = p.country ? (savedCountry?.name ?? p.country) : undefined;
   const nameProgress = me.data.nameColorProgress;
   const gifting = profileGiftingProgress(nameProgress.tierIndex, nameProgress.lifetimeCoinsPurchased);
   const saveNameColorTestTotal = (totalCoins: number | null) => {
@@ -47,14 +46,13 @@ export function OwnProfile() {
     });
   };
   return (
-    <ProfileView person={p} own countryName={countryName} passportCountry={passportCountry} products={me.data.products} backHref="/home"
+    <ProfileView person={p} own countryName={countryName} products={me.data.products} backHref="/home"
       links={
         <nav className="pf-links dw-shortcuts" data-testid="nav-profile-shortcuts" aria-label="Profile shortcuts">
           <Link href="/user-portal/store" className="pf-btn pf-btn-store" data-testid="link-profile-store"><ShoppingBag size={17} aria-hidden="true" /> Store</Link>
           <Link href="/user-portal/transactions" className="pf-btn" data-testid="link-transaction-history">Transaction History</Link>
           <Link href="/community" className="pf-btn" data-testid="link-community">Community</Link>
           <Link href="/community/profile" className="pf-btn" data-testid="link-platform-bio">Platform and bio</Link>
-          <Link href="#streamer-passport" className="pf-btn" data-testid="link-streamer-passport">Streamer passport</Link>
           {access.data?.owner && access.data.adultConfirmed && <Link href="/user-portal/photo-reviews" className="pf-btn" data-testid="link-profile-photo-review">Review pending photos</Link>}
           {access.data?.moderator && <Link href="/community/moderation" className="pf-btn" data-testid="link-moderation">Moderation</Link>}
           {import.meta.env.DEV && access.data?.owner === true && <Link href="/user-portal/card-finish" className="pf-btn" data-testid="link-card-finish-preview">Card finish preview</Link>}
@@ -135,7 +133,6 @@ export function OwnProfile() {
       </div>
       {bagOpen && <GiftBag onClose={() => setBagOpen(false)} />}
       <EntranceEffectsShop />
-      <div id="streamer-passport"><MyStreamerPassport /></div>
       <div className="sc pf-rewards"><RewardsPage embedded /></div>
     </ProfileView>
   );

@@ -10,7 +10,6 @@ import { BadgeArt } from '@/social/BadgeArt';
 import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
 import './profile.css';
 import { approvedPhotos } from './profile-model';
-import { PassportCountryBadge, type PassportCountry } from '@/passport/PassportCountryBadge';
 
 type EarnedBadge = { id: string; earnedAt?: string | null };
 type Product = { id: string; name: string };
@@ -22,16 +21,6 @@ function Slide({ url, name, username }: { url: string | null; name: string; user
   const [failed, setFailed] = useState(false);
   if (url && !failed) return <div className="pf-slide"><img src={photoSrc(url)} alt={`${name} profile photo`} onError={() => setFailed(true)} /></div>;
   return <div className="pf-slide pf-slide-empty"><UserPhoto username={username} displayName={name} photoUrl={null} size={132} /></div>;
-}
-
-function emojiFromId(emojiId: string) {
-  const parts = emojiId.split('-');
-  if (!parts.length || parts.some((part) => !/^[\da-f]{4,6}$/i.test(part))) return '🙂';
-  try {
-    return String.fromCodePoint(...parts.map((part) => Number.parseInt(part, 16)));
-  } catch {
-    return '🙂';
-  }
 }
 
 export function Hero({ urls, name, username, left, right, countryBadge }: { urls: string[]; name: string; username: string; left: ReactNode; right?: ReactNode; countryBadge?: ReactNode }) {
@@ -113,8 +102,8 @@ function Shield({ id, name, imageUrl, date, equipped }: { id: string; name: stri
   );
 }
 
-export function ProfileView({ person, own = false, countryName, passportCountry, products, backHref, menu, actions, links, children }: {
-  person: SocialPerson; own?: boolean; countryName?: string; passportCountry?: PassportCountry; products?: Product[]; backHref: string;
+export function ProfileView({ person, own = false, countryName, products, backHref, menu, actions, links, children }: {
+  person: SocialPerson; own?: boolean; countryName?: string; products?: Product[]; backHref: string;
   menu?: ReactNode; actions?: ReactNode; links?: ReactNode; children?: ReactNode;
 }) {
   const p = person;
@@ -127,12 +116,10 @@ export function ProfileView({ person, own = false, countryName, passportCountry,
   return (
     <div className="beam-app pf" data-testid="profile-view">
       <Hero urls={approvedPhotos(p, own)} name={name} username={p.username}
-        countryBadge={own && <PassportCountryBadge country={passportCountry} />}
         left={<BackButton href={backHref} label="Back" />}
         right={own ? <Link href="/user-portal/edit" className="pf-round" aria-label="Edit your profile" data-testid="link-edit-hero"><Pencil size={18} aria-hidden /></Link> : menu} />
       <section className="pf-panel">
         <h1 className="pf-name" data-testid="text-display-name">
-          <span className="pf-name-emoji" aria-hidden="true">{emojiFromId(p.identity.emojiId)}</span>
           <BadgeMark id={p.badgeId ?? null} label={p.badgeName} imageUrl={p.badgeImage} size={26} />
           <ShinyName className="pf-display-name" displayNameColor={p.displayNameColor} displayNameTierIndex={p.displayNameTierIndex}>{name}</ShinyName>
         </h1>
@@ -141,7 +128,6 @@ export function ProfileView({ person, own = false, countryName, passportCountry,
         <div className="pf-chips">
           <span className="pf-chip" data-testid="text-public-id">ID @{p.username}</span>
           {p.country && <span className="pf-chip">{countryName ?? p.country}</span>}
-          {p.externalPlatform && p.externalHandle && <span className="pf-chip" title="Self-listed, not verified">{p.externalPlatform}: {p.externalHandle}</span>}
         </div>
         {p.interests.length > 0 && <ul className="pf-chips pf-interests" aria-label="Interests">{p.interests.map((i) => <li key={i} className="pf-chip pf-chip-soft">{i}</li>)}</ul>}
         {earned.length > 0 && <>
@@ -149,14 +135,17 @@ export function ProfileView({ person, own = false, countryName, passportCountry,
           <ul className="pf-badges">{earned.map((b) => <Shield key={b.id} id={b.id} name={nameOf(b.id)} imageUrl={p.badgeImage} date={dateOf(b.earnedAt)} equipped={b.id === p.badgeId} />)}</ul>
         </>}
         {bio && <p className="pf-bio" data-testid="text-bio">{bio}</p>}
-        <dl className="pf-stats">
+        {/* Own Me page: tools and XP sit above the stats so the panel ends on coin stats. */}
+        {own && children}
+        {own && links}
+        <dl className="pf-stats" data-testid="list-profile-stats">
           <div><dd data-testid="text-followers">{num(p.followerCount)}</dd><dt>Followers</dt></div>
           <div><dd data-testid="text-following">{num(p.followingCount)}</dd><dt>Following</dt></div>
           <div><dd data-testid="text-received"><CoinAmount>{num(p.receivedCredits)}</CoinAmount></dd><dt>Coins received in gifts</dt></div>
           <div><dd data-testid="text-sent"><CoinAmount>{num(p.sentCredits)}</CoinAmount></dd><dt>Coins sent in gifts</dt></div>
         </dl>
-        {children}
-        {links}
+        {!own && children}
+        {!own && links}
       </section>
     </div>
   );

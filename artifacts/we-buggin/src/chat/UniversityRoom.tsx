@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   getGetMyProfileQueryKey, getGetUniversitySessionQueryKey, useAcknowledgeUniversityRules, useGetUniversitySession,
   useGetChatAccess, useSendUniversityWhisper, useSetSocialRelationship, useSetUniversityIgnore,
-  type ChatMessage, type StreamerPassportBadgeSummary,
+  type ChatMessage,
   type RoomGiftEvent,
 } from '@workspace/api-client-react';
 import { photoSrc, UserPhoto } from '@/components/user-photo';
@@ -22,7 +22,6 @@ import { BotShield } from './BotShield';
 import { GiftBag, OPEN_ROOM_GIFTS_EVENT } from '@/gifts';
 import { useRoomGifts } from '@/gifts/useRoomGifts';
 import { GiftComboPlayer } from '@/gifts/GiftComboPlayer';
-import { PassportSummaryBadge } from '@/passport/StreamerPassport';
 import { RoomEntranceEffectOverlay } from './RoomEntranceEffectOverlay';
 import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
 import type { RoomCoinDropEvent, RoomEntranceEffectEvent } from './useTextRoom';
@@ -65,7 +64,7 @@ type Item = { kind: 'room'; at: number; id: string; m: ChatMessage }
   | { kind: 'gift'; at: number; id: string; gift: RoomGiftEvent }
   | { kind: 'whisper'; at: number; id: string; w: { id: string; username: string; displayName: string;
       displayNameColor?: string; displayNameTierIndex?: number; badgeId?: string | null; badgeName?: string | null; badgeImage?: string | null;
-      outgoing: boolean; body: string; passport?: StreamerPassportBadgeSummary } };
+      outgoing: boolean; body: string } };
 
 export function TextChatRoom({ roomId, userId }: { roomId: string; userId: string }) {
   const qc = useQueryClient();
@@ -454,7 +453,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                         aria-haspopup={isSocialRoom ? 'dialog' : 'menu'}
                         onClick={() => openMenu(p.username, p.displayName, p.participantId, p.displayNameColor, p.displayNameTierIndex)}
                         data-testid={`button-person-${p.username}`}><ShinyName displayNameColor={p.displayNameColor} displayNameTierIndex={p.displayNameTierIndex}><BadgeMark id={p.badgeId ?? null} label={p.badgeName} imageUrl={p.badgeImage} size={16} compact />{p.displayName}</ShinyName></button>}
-                  <PassportSummaryBadge passport={p.passport} username={p.username} context="people" />
                   {p.moderator && <span className="ur-badge">Moderator</span>}
                   {ign && <span className="ur-ign">Ignored</span>}
                 </span>
@@ -561,7 +559,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                     <div className="ur-slot-portrait" aria-hidden="true">
                       {person.identity ? (
                         <span className="ur-slot-identity-fallback">
-                          <IdentityAvatar identity={person.identity} size="100%" />
+                          <IdentityAvatar identity={person.identity} name={fallbackName} size="100%" fill />
                         </span>
                       ) : (
                         <span className="ur-slot-initial-fallback">{initials}</span>
@@ -702,7 +700,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
               {items.map((it) => {
                 if (it.kind === 'gift') {
                   return <div className="ch-msg" key={it.id} data-testid={`gift-notice-${it.gift.id}`}>
-                     <div><p><span className="ur-gift-person"><BadgeMark id={it.gift.senderBadgeId ?? null} label={it.gift.senderBadgeName} imageUrl={it.gift.senderBadgeImage} size={16} compact /><button type="button" className="ur-name" onClick={() => openMenu(it.gift.senderUsername, it.gift.senderName, undefined, it.gift.senderNameColor, it.gift.senderNameTierIndex)}><ShinyName displayNameColor={it.gift.senderNameColor} displayNameTierIndex={it.gift.senderNameTierIndex}>{it.gift.senderName}</ShinyName></button><PassportSummaryBadge passport={it.gift.senderPassport} username={it.gift.senderUsername} context={`gift-sender-${it.gift.id}`} /></span> sent <span className="ur-gift-person"><BadgeMark id={it.gift.recipientBadgeId ?? null} label={it.gift.recipientBadgeName} imageUrl={it.gift.recipientBadgeImage} size={16} compact /><button type="button" className="ur-name" onClick={() => openMenu(it.gift.recipientUsername, it.gift.recipientName, undefined, it.gift.recipientNameColor, it.gift.recipientNameTierIndex)}><ShinyName displayNameColor={it.gift.recipientNameColor} displayNameTierIndex={it.gift.recipientNameTierIndex}>{it.gift.recipientName}</ShinyName></button><PassportSummaryBadge passport={it.gift.recipientPassport} username={it.gift.recipientUsername} context={`gift-recipient-${it.gift.id}`} /></span> a {it.gift.giftName}.</p></div>
+                     <div><p><span className="ur-gift-person"><BadgeMark id={it.gift.senderBadgeId ?? null} label={it.gift.senderBadgeName} imageUrl={it.gift.senderBadgeImage} size={16} compact /><button type="button" className="ur-name" onClick={() => openMenu(it.gift.senderUsername, it.gift.senderName, undefined, it.gift.senderNameColor, it.gift.senderNameTierIndex)}><ShinyName displayNameColor={it.gift.senderNameColor} displayNameTierIndex={it.gift.senderNameTierIndex}>{it.gift.senderName}</ShinyName></button></span> sent <span className="ur-gift-person"><BadgeMark id={it.gift.recipientBadgeId ?? null} label={it.gift.recipientBadgeName} imageUrl={it.gift.recipientBadgeImage} size={16} compact /><button type="button" className="ur-name" onClick={() => openMenu(it.gift.recipientUsername, it.gift.recipientName, undefined, it.gift.recipientNameColor, it.gift.recipientNameTierIndex)}><ShinyName displayNameColor={it.gift.recipientNameColor} displayNameTierIndex={it.gift.recipientNameTierIndex}>{it.gift.recipientName}</ShinyName></button></span> a {it.gift.giftName}.</p></div>
                   </div>;
                 }
                 if (it.kind === 'arrival') {
@@ -720,7 +718,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                       <div><span className="ur-wlabel">{w.outgoing && 'You whisper to '}
                         <BadgeMark id={w.badgeId ?? null} label={w.badgeName} imageUrl={w.badgeImage} size={16} compact />
                         <button type="button" className="ur-name" aria-haspopup="menu" aria-label={`Actions for ${nm}`} onClick={() => openMenu(w.username, nm, undefined, w.displayNameColor, w.displayNameTierIndex)}><ShinyName displayNameColor={w.displayNameColor ?? nameColorOf(w.username)} displayNameTierIndex={w.displayNameTierIndex ?? people.find(person => person.username === w.username)?.displayNameTierIndex}>{nm}</ShinyName></button>
-                        <PassportSummaryBadge passport={w.passport} username={w.username} context={`whisper-${w.id}`} />
                         {!w.outgoing && ' whispers to you'}</span><p>{w.body}</p></div>
                     </div>
                   );
@@ -751,7 +748,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                 const displayNameTierIndex = currentPerson?.displayNameTierIndex ?? m.displayNameTierIndex ?? 0;
                 const badgeId = m.badgeId ?? null;
                 const badge = <BadgeMark id={badgeId ?? null} label={m.badgeName} imageUrl={m.badgeImage} size={16} compact />;
-                const passportBadge = <PassportSummaryBadge passport={currentPerson?.passport ?? m.passport} username={m.username} context={`message-${m.id}`} />;
                 return (
                   <div className="ch-msg" key={m.id}
                     onContextMenu={event => {
@@ -780,8 +776,8 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                       messageLongPress.current = null;
                     }}>
                     <div>
-                       {self ? <span className="ch-sender"><ShinyName displayNameColor={displayNameColor} displayNameTierIndex={displayNameTierIndex}>{badge}{nm}</ShinyName>{passportBadge}</span>
-                          : <span className="ch-sender"><button type="button" className="ur-name" aria-haspopup="menu" aria-label={`Actions for ${nm}`} onClick={() => openMenu(m.username, nm, m.authorId, displayNameColor, displayNameTierIndex)}><ShinyName displayNameColor={displayNameColor} displayNameTierIndex={displayNameTierIndex}>{badge}{nm}</ShinyName></button>{passportBadge}</span>}
+                       {self ? <span className="ch-sender"><ShinyName displayNameColor={displayNameColor} displayNameTierIndex={displayNameTierIndex}>{badge}{nm}</ShinyName></span>
+                          : <span className="ch-sender"><button type="button" className="ur-name" aria-haspopup="menu" aria-label={`Actions for ${nm}`} onClick={() => openMenu(m.username, nm, m.authorId, displayNameColor, displayNameTierIndex)}><ShinyName displayNameColor={displayNameColor} displayNameTierIndex={displayNameTierIndex}>{badge}{nm}</ShinyName></button></span>}
                       <p>{m.text}</p>
                        {!self && <div className="ch-acts"><button type="button" onClick={() => { setReporting({
                          targetType: 'message', targetUsername: m.username, roomId, messageId: m.id, messageText: m.text,

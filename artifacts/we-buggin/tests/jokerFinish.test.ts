@@ -74,7 +74,7 @@ test('covers every requested component family with real selectors', () => {
     livestart: ['.st-live-start-button', '.st-live-end', '.st-room-choice-card'],
     jokerPreviewControls: ['.dw-cfp-controls', '.dw-cfp-tabs', '.dw-jk-bar'],
     giftbag: ['.gift-room-panel', '.gift-panel-icon-button', '.gift-panel-send', '.gift-panel-all', '.gift-panel-featured', '.gs-panel'],
-    buttons: ['.pf-btn', '.bm-btn', '.sp-button', '.gs-button', '.st-safety-button', '.dw-icon-btn'],
+    buttons: ['.pf-btn', '.bm-btn', '.ees-button', '.gs-button', '.st-safety-button', '.dw-icon-btn'],
     tabs: ['.dw-home-tabs', '.dw-cfp-tabs', '.dh-tabs', '.dh-tabs .is-on', '.gift-panel-category'],
     states: [':disabled', 'aria-disabled', 'destructive', '.ur-slot-leave', ':active'],
     nav: ['.app-bottom-nav-inner', '.app-bottom-link.is-active', '.app-bottom-pip'],

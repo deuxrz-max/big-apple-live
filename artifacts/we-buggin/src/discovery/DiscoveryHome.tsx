@@ -49,7 +49,7 @@ function RoomCard({ room, own, followed, onToggle }: { room: BeamRoom; own: bool
   const body = (
     <>
       <span className="dh-demo">Demo</span>
-      {host && <span className="dh-art"><IdentityGlyph identity={host.identity} size="100%" /></span>}
+      {host && <span className="dh-art"><IdentityGlyph identity={host.identity} size="100%" fill /></span>}
       <span className="dh-meta">
         <span className="dh-name">{room.name}</span>
         <span className="dh-sub">{room.code} · {room.participants.length}/{room.capacity} participants {full && <b className="dh-full">Full</b>}</span>

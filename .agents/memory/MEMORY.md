@@ -3,7 +3,6 @@
 - [Preview fixture boundaries](preview-fixture-boundaries.md) — owner-requested inspection accounts persist; keep regression cleanup separate and never auto-seed production.
 - [Browser runner limits](browser-runner-limits.md) — clipboard and auth-fixture limits; distinguish blocked signup checks from signed-in app verification.
 - [Live stream chat startup](live-stream-startup-race.md) — chat SSE can hit a terminal 404 before the host lease becomes live; establish heartbeat first and reconnect closed streams.
-- [Mood Sync rules](mood-sync-rules.md) — archived branded-avatar rules; active universities use uploaded photos and no profile-image emoji sync.
 - [Portrait cutout checks](portrait-cutouts.md) — inspect detached decorations after background removal; callbacks require workspace-relative image paths.
 - [Image review tooling](image-tooling.md) — montage fonts, Sharp composite order and VP9 alpha checks; crop a source pixel for browser transparency probes.
 - [Microphone permissions](microphone-permissions.md) — archived voice consent rules; active text communities require no camera or microphone.
@@ -19,8 +18,7 @@
 - [Beam screen layout](beam-screen-layout.md) — participant boxes stay anchored; chat is borderless below them and older messages require chat-only scrolling.
 - [Room audio split](audio-beam-constraints.md) — all room seats are audio-only; mic-on seats hear one another and locally mute TV; full-screen Go Live keeps camera video.
 - [Living Beam rooms](living-beam-goal.md) — archived Beam goal; superseded for active routes by the text-chat pivot.
-- [Text-chat follow-ons](text-chat-pivot.md) — optional ownership checks require a unique bio code and reviewer, never an official platform verification claim.
-- [Passport country](passport-country.md) — reuse the saved self-reported country for the Me photo flag; no second country field or verification claim.
+- [Retired passport and avatars](passport-country.md) — owner removed Streamer passport and all We Buggin character art; use uploaded photos or neutral defaults.
 - [Artifact command environment](artifact-command-environment.md) — one-off shell checks do not necessarily inherit managed service routing variables.
 - [Photo retention approval](profile-photo-retention.md) — user approved 30 days unused; protect current images and saves, and never expand to other data.
 - [Photo visibility cache precedence](photo-visibility-cache-precedence.md) — never replace a fresh hidden-photo response with an older cached image.

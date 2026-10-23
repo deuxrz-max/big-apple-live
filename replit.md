@@ -364,12 +364,11 @@ Participants can also exchange peer-to-peer microphone audio through the
 headless SDK, with reconnection and permission/error handling.
 Users chose persistent accounts so people can keep dedicated names.
 Account names are reserved case-insensitively and kept after first claim.
-Emoji identities use the OpenMoji library, Male/spiky hair or Female/ponytails,
-and arbitrary six-digit body/hair colors. They are static presence anchors:
-no lip-sync, mouth animation, or audio-driven avatar effects.
-The supplied male spiked-hair and female ponytail portraits are visual references
-for the identity styles. Each user can manually change their own facial expression
-whenever they choose, including while in a room; expressions are not tied to gender.
+The owner retired Streamer passport and all We Buggin character artwork.
+Use approved uploaded profile photos or neutral default avatars; do not restore
+spiky-haired/ponytail cartoon presets, expression pickers or passport badges.
+Keep ordinary chat emojis, earned badges, numbered gifter shields and saved
+country information separate from those retired features.
 
 ## User preferences
 

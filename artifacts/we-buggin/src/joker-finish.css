@@ -63,7 +63,7 @@
   .st-live-room, .ur-social-room, .ch-room, .dw-card-test-room { background-color: var(--jk-black) !important; }
 
   /* ---------- Panels, sheets, popups, menus, settings, store, gift bag ---------- */
-  .dw-landing-hero, .st-sheet, .st-live-action-sheet, .st-live-block-panel, .sp-modal-panel, .sp-card, .pf-panel, .pf-modal,
+  .dw-landing-hero, .st-sheet, .st-live-action-sheet, .st-live-block-panel, .pf-panel, .pf-modal,
   .pf-dialog, .pf-menu-list, .dw-action-menu-list, .st-dir-menu, .st-home-profile-menu, .ur-menu,
   .ur-social-profile-popup, .ur-rules, .dw-card-test-rules, .gift-room-panel, .gs-panel, .ees-panel, .sc-entrance-settings, .sc-wallet, .gs-settings, .gs-hangout-settings-form,
   .bm-mic-panel, .ch-card, .st-room-choice-card, .st-balance-bar, .st-error-card,
@@ -77,8 +77,7 @@
     color: #f4ead6 !important;
   }
   /* ---------- Room / list / store cards ---------- */
-  .st-card, .st-dir-card, .st-live-directory-card, .st-home-card-tall, .st-item-card, .st-launch-tile,
-  .sp-review-item, .sp-manage-row, .ur-prow, .ib-row, .sc-entrance-option {
+  .st-card, .st-dir-card, .st-live-directory-card, .st-home-card-tall, .st-item-card, .st-launch-tile, .ur-prow, .ib-row, .sc-entrance-option {
     background: var(--jk-satin-fill) !important;
     background-size: 96px 96px, cover !important;
     border-color: transparent !important;
@@ -105,7 +104,7 @@
 
   /* ---------- Buttons, tabs, pill toggles (satin black, gold ink) ---------- */
   .pf-btn, .pf-round, .pf-edit, .bm-btn, .bm-icon-btn, .bm-size-opt, .bm-chatter-toggle, .gs-button,
-  .gs-chip-button, .gs-icon-button, .gms-button, .sp-button, .ees-button, .st-safety-button,
+  .gs-chip-button, .gs-icon-button, .gms-button, .ees-button, .st-safety-button,
   .st-live-start-button, .st-live-end, .ur-rules-btn,
   .ur-rules-act, .ur-people-btn, .ur-slot-action, .dw-icon-btn, .st-room-choice-option,
   .st-room-choice-close, .st-sheet-close, .st-live-close-button, .st-home-go-live-button,
@@ -190,7 +189,7 @@
   }
 
   /* Primary / selected: still satin black, stronger bevel + foil lip + brighter gold ink. */
-  .pf-btn-fill, .pf-btn-store, .bm-btn-primary, .sp-button-gold, .st-safety-button-primary,
+  .pf-btn-fill, .pf-btn-store, .bm-btn-primary, .st-safety-button-primary,
   .st-live-start-button, .st-home-go-live-button, .gift-panel-send,
   .pf-chip.is-active, .gift-panel-category.is-active, .gift-panel-all.is-selected,
   .st-header-items.is-active, .sc-nav-item.is-on, .sc-gift.is-on,
@@ -204,7 +203,7 @@
   }
 
   /* Press: one-shot sink. */
-  :is(.pf-btn, .bm-btn, .gs-button, .sp-button, .st-safety-button, .st-live-start-button, .ur-rules-btn,
+  :is(.pf-btn, .bm-btn, .gs-button, .st-safety-button, .st-live-start-button, .ur-rules-btn,
   .ur-people-btn, .ur-slot-action, .dw-icon-btn, .st-room-choice-option, .st-home-go-live-button, .pf-chip, .gift-panel-category, .gift-panel-send, .sc-nav-item, .st-live-bottom-controls button,
   .dw-cfp-controls button):active:not(:disabled) {
     transform: translateY(1px) scale(0.985) !important;
@@ -228,7 +227,7 @@
      pf-btn uses ::after for its shortcut arrow and bm-btn uses ::before, so pf-btn glints on ::before. */
   .pf-btn::before,
   :is(.dw-home-tabs button, .dh-tabs button, .pf-chip, .gift-panel-category, .gift-panel-all, .dw-cfp-tabs button)::before,
-  :is(.sp-button, .st-safety-button, .st-live-start-button, .st-home-go-live-button, .st-room-choice-option,
+  :is(.st-safety-button, .st-live-start-button, .st-home-go-live-button, .st-room-choice-option,
   .gift-panel-send, .gs-button, .dw-cfp-controls button)::after {
     content: "" !important;
     position: absolute !important;
@@ -239,7 +238,7 @@
     transform: translateX(-120%);
     opacity: 0;
   }
-  .pf-btn, .sp-button, .st-safety-button, .st-live-start-button, .st-home-go-live-button,
+  .pf-btn, .st-safety-button, .st-live-start-button, .st-home-go-live-button,
   .st-room-choice-option, .gift-panel-send, .gs-button, .dw-cfp-controls button,
   .gift-panel-card, .gift-panel-featured { position: relative; overflow: hidden; }
   :is(.dw-home-tabs button, .dh-tabs button, .pf-chip, .gift-panel-category, .gift-panel-all, .dw-cfp-tabs button) {
@@ -248,7 +247,7 @@
   }
   .pf-btn:active:not(:disabled)::before,
   :is(.dw-home-tabs button, .dh-tabs button, .pf-chip, .gift-panel-category, .gift-panel-all, .dw-cfp-tabs button):active:not(:disabled)::before,
-  :is(.sp-button, .st-safety-button, .st-live-start-button, .st-home-go-live-button, .st-room-choice-option,
+  :is(.st-safety-button, .st-live-start-button, .st-home-go-live-button, .st-room-choice-option,
   .gift-panel-send, .gs-button, .dw-cfp-controls button):active:not(:disabled)::after {
     animation: jk-glint var(--jk-glint-ms) ease-out 1 !important;
   }
@@ -363,7 +362,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    :is(.pf-btn, .bm-btn, .gs-button, .sp-button, .st-safety-button, .st-live-start-button, .ur-rules-btn,
+    :is(.pf-btn, .bm-btn, .gs-button, .st-safety-button, .st-live-start-button, .ur-rules-btn,
     .ur-people-btn, .ur-slot-action, .dw-icon-btn, .st-room-choice-option, .st-home-go-live-button, .pf-chip,
     .gift-panel-category, .gift-panel-send, .sc-nav-item, .st-live-bottom-controls button,
     .dw-cfp-controls button) { transition: none !important; }
@@ -372,15 +371,15 @@
     :is(.gift-panel-card, .gift-panel-featured):is(:active, .is-selected)::after,
     .pf-btn:active:not(:disabled)::before,
     :is(.dw-home-tabs button, .dh-tabs button, .pf-chip, .gift-panel-category, .gift-panel-all, .dw-cfp-tabs button):active:not(:disabled)::before,
-    :is(.sp-button, .st-safety-button, .st-live-start-button, .st-home-go-live-button, .st-room-choice-option,
+    :is(.st-safety-button, .st-live-start-button, .st-home-go-live-button, .st-room-choice-option,
     .gift-panel-send, .gs-button, .dw-cfp-controls button):active:not(:disabled)::after,
     :is(.dw-home-tabs button, .dh-tabs button, .pf-chip, .gift-panel-category, .gift-panel-all, .dw-cfp-tabs button)::before,
-    :is(.sp-button, .st-safety-button, .st-live-start-button, .st-home-go-live-button, .st-room-choice-option,
+    :is(.st-safety-button, .st-live-start-button, .st-home-go-live-button, .st-room-choice-option,
     .gift-panel-send, .gs-button, .dw-cfp-controls button)::after {
       animation: none !important;
       opacity: 0 !important;
     }
-    :is(.pf-btn, .bm-btn, .gs-button, .sp-button, .st-safety-button, .st-live-start-button, .ur-rules-btn,
+    :is(.pf-btn, .bm-btn, .gs-button, .st-safety-button, .st-live-start-button, .ur-rules-btn,
     .ur-people-btn, .ur-slot-action, .dw-icon-btn, .st-room-choice-option, .st-home-go-live-button, .pf-chip,
     .gift-panel-category, .gift-panel-send, .sc-nav-item, .st-live-bottom-controls button,
     .dw-cfp-controls button):active:not(:disabled) { transform: none !important; }

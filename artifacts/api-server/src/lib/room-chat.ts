@@ -8,7 +8,6 @@ import { botSettings, botRotation, botMessageValues } from "./moderator-bots";
 import { BOT_WARNING_COOLDOWN_MS, publicViolation } from "./bot-policy";
 import { censorChatText } from "./chat-filter";
 import { nameColorProfileForAccount, nameColorProfilesForAccounts } from "./social/gift-name-color-data";
-import { passportBadgeSummaries } from "./social/passport";
 import { visibleMonthlyPurchaseBadgeSummaries, visibleMonthlyPurchaseBadgeSummary } from "./social/monthly-credit-badges";
 
 function publicMessage(row: RoomMessageRow) {
@@ -44,7 +43,6 @@ export async function getMessages(roomId: string, store: RoomStore = roomStore, 
     .orderBy(desc(roomMessages.createdAt), desc(roomMessages.id)).limit(60);
   const authorIds = [...new Set(rows.map(row => row.message.authorAccountId).filter((id): id is string => !!id))];
   const nameColors = await nameColorProfilesForAccounts(authorIds);
-  const passports = await passportBadgeSummaries(authorIds);
   const badgeSummaries = await visibleMonthlyPurchaseBadgeSummaries(authorIds);
   return rows.reverse().map(row => ({
     ...publicMessage({ ...row.message, text: censorChatText(row.message.text, filterSettings.bannedWords) }), photoUrl: null,
@@ -53,7 +51,6 @@ export async function getMessages(roomId: string, store: RoomStore = roomStore, 
     badgeId: row.message.authorAccountId ? badgeSummaries.get(row.message.authorAccountId)?.tier.id ?? null : null,
     badgeName: row.message.authorAccountId ? badgeSummaries.get(row.message.authorAccountId)?.tier.name ?? null : null,
     badgeImage: row.message.authorAccountId ? badgeSummaries.get(row.message.authorAccountId)?.tier.badgeImage ?? null : null,
-    passport: row.message.authorAccountId ? passports.get(row.message.authorAccountId) : undefined,
   }));
 }
 export async function acceptMessage(
@@ -100,7 +97,6 @@ export async function acceptMessage(
     const [wallet] = await tx.select({ sent: socialWallets.sent }).from(socialWallets)
       .where(eq(socialWallets.accountId, accountId));
     const badgeId = senderBadge?.tier.id ?? null;
-    const passport = (await passportBadgeSummaries([accountId])).get(accountId);
     profile = { ...profile, bio: settings?.bio ?? "" };
     const [original] = await tx.insert(roomMessages).values({
       roomId: roomId.toUpperCase(), historyId, authorId: sender.participantId, authorAccountId: accountId,
@@ -146,7 +142,7 @@ export async function acceptMessage(
       badgeId: message.authorAccountId === accountId ? badgeId : null,
       badgeName: message.authorAccountId === accountId ? senderBadge?.tier.name ?? null : null,
       badgeImage: message.authorAccountId === accountId ? senderBadge?.tier.badgeImage ?? null : null,
-      passport: message.authorAccountId === accountId ? passport : undefined }, profile };
+    }, profile };
   });
   // No events or in-memory avatar changes occur before the transaction commits.
   store.updateAccountIdentity(accountId, accepted.profile.displayName ?? accepted.profile.username, accepted.profile.identity, null);

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link, Route, Switch, useLocation, useParams } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
-import { Users, Heart, Ban, Flag, MessageCircle, Coins, Trophy, UserRound, Stamp } from 'lucide-react';
+import { Users, Heart, Ban, Flag, MessageCircle, Coins, Trophy, UserRound } from 'lucide-react';
 import { useGetChatAccess, useGetSocialMe } from '@workspace/api-client-react';
 import '@/beam/beam.css';
 import './social.css';
@@ -13,7 +13,6 @@ import { BotProfile } from '@/profile/ProfileView';
 import { BuyCreditsPage } from './BuyCreditsPage';
 import { InboxPage } from './InboxPage';
 import { LeaderboardPage, RewardsPage, ThreadPage } from './MoneyPages';
-import { StreamerPassportReview } from '@/passport/StreamerPassport';
 import { SafetyReportsPage } from '@/safety/SafetyReportsPage';
 import { GiftStudioPage } from '@/gift-studio/GiftStudioPage';
 import { ActionMenu } from '@/components/app-chrome';
@@ -64,7 +63,6 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
               ))}
               {access.data?.moderator && <Link href="/community/moderation" onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}><Ban size={17} aria-hidden="true" /><span>Moderation</span></Link>}
               {access.data?.owner && <Link href="/community/reports" onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}><Flag size={17} aria-hidden="true" /><span>Safety reports</span></Link>}
-              {access.data?.owner && <Link href="/community/passport-review" onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}><Stamp size={17} aria-hidden="true" /><span>Passport review</span></Link>}
           </ActionMenu>
         </div>
       </nav>}
@@ -76,7 +74,6 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
           })}
           {access.data?.moderator && <Link href="/community/moderation" className={`sc-nav-item${path === '/community/moderation' ? ' is-on' : ''}`} data-testid="nav-moderation"><Ban size={18} /><span>Moderation</span></Link>}
           {access.data?.owner && <Link href="/community/reports" className={`sc-nav-item${path === '/community/reports' ? ' is-on' : ''}`} data-testid="nav-safety-reports"><Flag size={18} /><span>Reports</span></Link>}
-          {access.data?.owner && <Link href="/community/passport-review" className={`sc-nav-item${path === '/community/passport-review' ? ' is-on' : ''}`} data-testid="nav-passport-review"><Stamp size={18} /><span>Passport review</span></Link>}
         </nav>}
         <main className="sc-main">
           {access.data?.warning && <p className="sc-moderation-notice" role="alert">{access.data.warning}</p>}
@@ -99,9 +96,6 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
               <Route path="/community/reports">{() => access.data?.owner
                 ? <SafetyReportsPage />
                 : <div className="sc-empty" role="status" data-testid="status-reports-access"><h2>Owner access required</h2><p>Safety reports are private to the Deux Wild owner.</p><Link href="/community" className="bm-btn">Back to People</Link></div>}</Route>
-              <Route path="/community/passport-review">{() => access.data?.owner
-                ? <StreamerPassportReview />
-                : <div className="sc-empty" role="status" data-testid="status-passport-review-access"><h2>Moderator access required</h2><p>This review desk is limited to authorized moderators.</p><Link href="/community" className="bm-btn">Back to People</Link></div>}</Route>
               <Route path="/community/gift-studio">{() => access.data?.owner
                 ? <GiftStudioPage />
                 : access.isLoading

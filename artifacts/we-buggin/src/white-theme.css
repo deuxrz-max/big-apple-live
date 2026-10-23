@@ -91,22 +91,20 @@ body.streamtalk-light-screen .dark {
 }
 
 #root .app-page.is-light-screen :is(.pf-name,.ib-name,.ib-live-name,.sc-name,
-  .st-card-body strong,.dh-name,.sp-person-heading strong) {
+  .st-card-body strong,.dh-name) {
   color: #211e27;
 }
 
 #root .app-page.is-light-screen :is(.ch-note,.sc-sub,.sc-count,.dh-note,.dh-sub,
   .st-card-body span,.ib-prev,.ib-time,.fg-empty,.pf-h2,.pf-badge small,
-  .pf-stats dt,.sp-person-heading span,.sp-platform-stamp small,
-  .sp-review-heading span,.sp-review-heading time) {
+  .pf-stats dt) {
   color: #6e6976;
 }
 
 /* Shared light cards with a fine violet-to-blue edge and restrained shadow. */
 #root .app-page.is-light-screen :is(.ch-list li,.sc-card,.sc-panel,.sc-empty,
   .sc-wallet,.ib-row,.fg-tile,.bc-card,.bc-review,.dh-banner,.dh-card,
-  .pf-dialog,.pf-menu-list,.pf-stats>div,.sp-card,.sp-review,.sp-modal-panel,
-  .sp-review-item,.sc-msgs,.sc-skel,.ch-photo-card,.ch-auth .ch-card) {
+  .pf-dialog,.pf-menu-list,.pf-stats>div,.sc-msgs,.sc-skel,.ch-photo-card,.ch-auth .ch-card) {
   border: 1px solid transparent;
   background:
     linear-gradient(145deg,#ffffff,#fbfaff) padding-box,
@@ -125,16 +123,16 @@ body.streamtalk-light-screen .dark {
 
 /* Inputs and secondary actions. */
 #root .app-page.is-light-screen :is(input,textarea,select,.sc-select,.sc-text,
-  .bm-input-box,.sp-field input,.sp-field select,.gift-recipient select) {
+  .bm-input-box,.gift-recipient select) {
   color: #211e27;
   border: 1px solid #ded9e5;
   background: #ffffff;
 }
 
 #root .app-page.is-light-screen :is(input,textarea,select,.sc-select,.sc-text,
-  .bm-input-box,.sp-field input,.sp-field select):focus,
+  .bm-input-box,input[class]):focus,
 #root .app-page.is-light-screen :is(input,textarea,select,.sc-select,.sc-text,
-  .bm-input-box,.sp-field input,.sp-field select):focus-visible {
+  .bm-input-box,input[class]):focus-visible {
   border-color: #9d1dff;
   box-shadow: 0 0 0 3px rgba(157,29,255,.12);
 }
@@ -145,7 +143,7 @@ body.streamtalk-light-screen .dark {
 }
 
 #root .app-page.is-light-screen :is(.bm-btn:not(.bm-btn-primary),.pf-btn:not(.pf-btn-fill),
-  .pf-edit,.sp-button:not(.sp-button-gold),.sc-nav-item:not(.is-on),
+  .pf-edit,.sc-nav-item:not(.is-on),
   .gift-framework .gift-btn:not(.gift-send),.dh-nav-item) {
   border-color: #8b4fd1;
   background: #ffffff;
@@ -169,7 +167,7 @@ body.streamtalk-light-screen #root [data-localization-key*="formButtonPrimary"] 
   color: #ffffff !important;
 }
 
-#root .app-page.is-light-screen :is(.pf-btn-fill,.sp-button-gold) {
+#root .app-page.is-light-screen :is(.pf-btn-fill) {
   color: #ffffff;
 }
 
@@ -178,7 +176,7 @@ body.streamtalk-light-screen #root [data-localization-key*="formButtonPrimary"] 
   background: #f5effb;
 }
 
-#root .app-page.is-light-screen :is(.bm-error,.ch-fe,.sc-note.is-err,.sp-error) {
+#root .app-page.is-light-screen :is(.bm-error,.ch-fe,.sc-note.is-err) {
   color: #a8213c;
   background: #fff3f5;
   border-color: #e5a3b0;
@@ -274,50 +272,6 @@ body.streamtalk-light-screen #root [data-localization-key*="formButtonPrimary"] 
 #root .app-page.is-light-screen .sc-plus { color: #287b32; }
 #root .app-page.is-light-screen .sc-minus { color: #b42344; }
 
-/* Passport keeps its gold/red stamp details on a clean light card. */
-#root .app-page.is-light-screen .sp-card,
-#root .app-page.is-light-screen .sp-review,
-body.streamtalk-light-screen #root .sp-modal-panel {
-  --sp-ink: #211e27;
-  --sp-paper: #ffffff;
-  --sp-black: #ffffff;
-  --sp-muted: #6e6976;
-  color: #211e27;
-  border-color: #e3dce9;
-  background: #ffffff;
-  box-shadow: 0 6px 24px rgba(39,26,62,.1);
-}
-#root .app-page.is-light-screen .sp-card::after,
-#root .app-page.is-light-screen .sp-review::after { display: none; }
-#root .app-page.is-light-screen .sp-intro { border-color: #e6e2eb; }
-#root .app-page.is-light-screen .sp-kicker,
-#root .app-page.is-light-screen .sp-review-callout,
-#root .app-page.is-light-screen .sp-review-callout svg { color: #80611d; }
-#root .app-page.is-light-screen .sp-intro h2,
-#root .app-page.is-light-screen .sp-person-heading strong,
-#root .app-page.is-light-screen .sp-platform-stamp,
-#root .app-page.is-light-screen .sp-platform-stamp * { color: #211e27; }
-#root .app-page.is-light-screen .sp-platform-stamp { background: #fbfaff; border-color: #d9d1e1; }
-#root .app-page.is-light-screen .sp-stamp-ring { background: radial-gradient(circle at center,#ffffff 0 57%,#ebe6f0 58%); }
-#root .app-page.is-light-screen :is(.sp-person-heading span,.sp-review-heading span,.sp-review-heading time) { color: #6e6976; }
-#root .app-page.is-light-screen .sp-review-callout { background: #fff9e9; border-color: #e8d9a9; }
-#root .app-page.is-light-screen .sp-review-item { background: #fbfaff; border-color: #e2dce9; }
-#root .app-page.is-light-screen .sp-review-code { background: #f3f1f6; }
-#root .app-page.is-light-screen .sp-review-code span { color: #514b59; }
-#root .app-page.is-light-screen .sp-review-code code,
-#root .app-page.is-light-screen .sp-review-url { color: #72521a; }
-#root .app-page.is-light-screen .sp-review-actions .sp-button { color: #52217f; }
-#root .app-page.is-light-screen .sp-review-actions .sp-button-gold { color: #211e27; }
-#root .app-page.is-light-screen .sp-league-control { border-color: #e6e2eb; }
-#root .app-page.is-light-screen .sp-league-control span { color: #6e6976; }
-#root .app-page.is-light-screen .sp-league-control button,
-#root .app-page.is-light-screen .sp-league-lookup button { color: #624b16; background: #fff9e9; border-color: #d6c68e; }
-#root .app-page.is-light-screen .sp-league-lookup { background: #fbfaff; border-color: #e2dce9; }
-#root .app-page.is-light-screen .sp-league-lookup>label { color: #624b16; }
-#root .app-page.is-light-screen .sp-league-lookup input { color: #211e27; background: #ffffff; border-color: #ded9e5; }
-#root .app-page.is-light-screen .sp-league-lookup button[type=submit] { color: #211e27; background: #f0dfa0; }
-#root .app-page.is-light-screen .sp-error { color: #a8213c; background: #fff3f5; border-color: #e5a3b0; }
-
 /* Gift catalog and sheets become light; the animated gift-box control is untouched. */
 #root .app-page.is-light-screen .gift-framework.gift-sheet,
 body.streamtalk-light-screen #root .gift-framework.gift-sheet {
@@ -341,7 +295,7 @@ body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-send { color
 body.streamtalk-light-screen #root .gift-framework-backdrop { background: rgba(35,30,45,.2); }
 
 /* Light dialogs and menus. */
-body.streamtalk-light-screen #root :is([role="dialog"],[role="alertdialog"],.pf-dialog,.pf-menu-list,.sp-modal-panel,.gift-framework.gift-sheet) {
+body.streamtalk-light-screen #root :is([role="dialog"],[role="alertdialog"],.pf-dialog,.pf-menu-list,.gift-framework.gift-sheet) {
   color: #211e27;
   background-color: #ffffff;
   border-color: #ded7e7;
@@ -349,15 +303,13 @@ body.streamtalk-light-screen #root :is([role="dialog"],[role="alertdialog"],.pf-
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
-body.streamtalk-light-screen #root :is([role="dialog"],[role="alertdialog"],.pf-dialog,.pf-menu-list,.sp-modal-panel,.gift-framework.gift-sheet) * {
+body.streamtalk-light-screen #root :is([role="dialog"],[role="alertdialog"],.pf-dialog,.pf-menu-list,.gift-framework.gift-sheet) * {
   color: #211e27;
   text-shadow: none;
 }
-body.streamtalk-light-screen #root :is(.pf-modal,.sp-modal) { background: rgba(32,27,40,.2); backdrop-filter: none; }
+body.streamtalk-light-screen #root :is(.pf-modal) { background: rgba(32,27,40,.2); backdrop-filter: none; }
 body.streamtalk-light-screen #root .gift-framework.gift-sheet :is(.gift-send,.gift-item[aria-pressed=true]) { color: #ffffff; }
 body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-item[aria-pressed=true] :is(span,svg) { color: #52217f; }
-body.streamtalk-light-screen #root .sp-modal-panel .sp-card { box-shadow: none; }
-body.streamtalk-light-screen #root .sp-modal-close { color: #211e27; background: #ffffff; border-color: #ded9e5; }
 
 /* The moderator desk opts out of the white community theme. */
 #root .app-page.is-moderation-screen {
@@ -741,7 +693,7 @@ body.streamtalk-light-screen #root :is(.ch-note,.sc-sub,.sc-count,.dh-note,.dh-s
   color: #77727e;
 }
 body.streamtalk-light-screen #root :is(.ch-list li,.sc-card,.sc-panel,.sc-empty,.sc-wallet,.ib-row,.fg-tile,.bc-card,.bc-review,
-  .dh-banner,.dh-card,.pf-dialog,.pf-menu-list,.pf-stats>div,.sp-card,.sp-review,.sp-modal-panel,.sp-review-item,
+  .dh-banner,.dh-card,.pf-dialog,.pf-menu-list,.pf-stats>div,
   .sc-msgs,.sc-skel,.ch-photo-card,.ch-auth .ch-card,.ur-side,.ur-slot,.ur-menu,.ur-rules,.ur-tv-dialog,
   .bm-modal,.bm-mic-panel,.bm-tray,.gs-panel,.gs-preview,.gs-library-card) {
   border: 1px solid #e7e2ec;
@@ -752,7 +704,7 @@ body.streamtalk-light-screen #root :is(.ch-list li,.sc-card,.sc-panel,.sc-empty,
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
-body.streamtalk-light-screen #root :is(input,textarea,select,.sc-select,.sc-text,.bm-input-box,.sp-field input,.sp-field select,.ur-tv-dialog input) {
+body.streamtalk-light-screen #root :is(input,textarea,select,.sc-select,.sc-text,.bm-input-box,.ur-tv-dialog input) {
   border: 1px solid #ddd7e4;
   border-radius: 12px;
   background: #ffffff;
@@ -760,7 +712,7 @@ body.streamtalk-light-screen #root :is(input,textarea,select,.sc-select,.sc-text
   box-shadow: none;
 }
 body.streamtalk-light-screen #root :is(input,textarea,select)::placeholder { color: #8a8491; }
-body.streamtalk-light-screen #root :is(.bm-btn,.btn,.pf-btn,.pf-edit,.sc-nav-item,.ur-slot-action,.ur-slot-join,.ur-resume-audio,.sp-button,.sp-modal-close) {
+body.streamtalk-light-screen #root :is(.bm-btn,.btn,.pf-btn,.pf-edit,.sc-nav-item,.ur-slot-action,.ur-slot-join,.ur-resume-audio) {
   border: 1px solid #e0d9e7;
   border-radius: 999px;
   background: #fff;
@@ -777,13 +729,13 @@ body.streamtalk-light-screen #root :is(.bm-btn-primary,.btn-pink,.pf-btn-fill,.f
   color: #fff !important;
   box-shadow: none;
 }
-body.streamtalk-light-screen #root :is(.bm-btn,.pf-btn,.pf-edit,.sc-nav-item,.ur-slot-action,.ur-slot-join,.sp-button):focus-visible,
+body.streamtalk-light-screen #root :is(.bm-btn,.pf-btn,.pf-edit,.sc-nav-item,.ur-slot-action,.ur-slot-join):focus-visible,
 body.streamtalk-light-screen #root :is(input,textarea,select):focus-visible {
   outline: 2px solid #a522ed;
   outline-offset: 2px;
   box-shadow: 0 0 0 3px rgba(165,34,237,.12);
 }
-body.streamtalk-light-screen #root :is([role="dialog"],[role="alertdialog"],.ur-modal,.bm-modal-back,.sp-modal,.pf-modal,.gift-framework-backdrop) {
+body.streamtalk-light-screen #root :is([role="dialog"],[role="alertdialog"],.ur-modal,.bm-modal-back,.pf-modal,.gift-framework-backdrop) {
   color: #292630;
   background: rgba(45,39,53,.28);
   backdrop-filter: blur(3px);

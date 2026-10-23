@@ -64,7 +64,7 @@ body {
 }
 
 #root :is(.ch h1, .ch h2, .beam-app h1, .beam-app h2, .sc-h1, .sc-h2,
-  .pf h1, .pf h2, .pf h3, .ib-title, .fg-title, .sp-title, .gs-heading h1) {
+  .pf h1, .pf h2, .pf h3, .ib-title, .fg-title, .gs-heading h1) {
   color: #f7f4ff;
 }
 
@@ -81,7 +81,7 @@ body {
 /* Shared panels across profile, social, moderation, settings and owner tools. */
 #root :is(.ch-list li, .sc-card, .sc-panel, .sc-empty, .sc-wallet, .ib-row, .fg-tile,
   .bc-card, .bc-review, .dh-banner, .dh-card, .pf-panel, .pf-dialog, .pf-menu-list,
-  .pf-stats > div, .sp-card, .sp-review, .sp-modal-panel, .sp-review-item,
+  .pf-stats > div,
   .sc-msgs, .sc-skel, .ch-photo-card, .ch-auth .ch-card, .gs-panel, .gs-preview,
   .gs-library-card, .gs-empty-library) {
   color: #f7f4ff;
@@ -102,8 +102,7 @@ body {
   background: rgba(34, 26, 63, .82);
 }
 
-#root :is(input, textarea, select, .sc-select, .sc-text, .bm-input-box, .sp-field input,
-  .sp-field select, .gs-name-field input, .gs-target-field select, .gs-assign-row select) {
+#root :is(input, textarea, select, .sc-select, .sc-text, .bm-input-box, .gs-name-field input, .gs-target-field select, .gs-assign-row select) {
   color: #f7f4ff;
   border-color: rgba(193, 160, 255, .42);
   background-color: #100d21;
@@ -115,8 +114,7 @@ body {
 }
 
 #root :is(.bm-btn:not(.bm-btn-primary), .pf-btn:not(.pf-btn-fill), .pf-edit,
-  .sc-nav-item:not(.is-on), .ur-slot-action, .ur-resume-audio, .sp-button,
-  .sp-modal-close, .gs-button:not(.primary), .gs-chip-button, .gs-icon-button) {
+  .sc-nav-item:not(.is-on), .ur-slot-action, .ur-resume-audio, .gs-button:not(.primary), .gs-chip-button, .gs-icon-button) {
   color: #f7f4ff;
   border-color: rgba(193, 160, 255, .48);
   background: rgba(38, 29, 71, .78);
@@ -235,8 +233,7 @@ body {
 
 /* Dark glass treatment for dialogs, sheets, menus and popovers. */
 #root :is([role="dialog"], [role="alertdialog"], .ur-menu, .ur-rules, .ur-tv-dialog,
-  .bm-modal, .bm-mic-panel, .bm-tray, .pf-dialog, .pf-menu-list, .sp-modal-panel,
-  .sp-review-item, .gift-framework.gift-sheet, .gs-modal, .gs-save-destination,
+  .bm-modal, .bm-mic-panel, .bm-tray, .pf-dialog, .pf-menu-list, .gift-framework.gift-sheet, .gs-modal, .gs-save-destination,
   .st-live-action-sheet) {
   color: #f7f4ff;
   border-color: rgba(193, 160, 255, .42);
@@ -244,7 +241,7 @@ body {
   box-shadow: 0 18px 54px rgba(0, 0, 0, .56);
 }
 
-#root :is(.ur-modal, .bm-modal-back, .sp-modal, .pf-modal, .gift-framework-backdrop, .gs-modal-wrap) {
+#root :is(.ur-modal, .bm-modal-back, .pf-modal, .gift-framework-backdrop, .gs-modal-wrap) {
   background: rgba(4, 3, 12, .76);
   backdrop-filter: blur(7px);
 }

@@ -3,7 +3,6 @@ import { and, asc, desc, eq, gt, gte, or } from 'drizzle-orm';
 import { requireAdult } from '../community';
 import { roomStore, RoomError } from '../room-store';
 import { nameColorProfilesForAccounts } from './gift-name-color-data';
-import { passportBadgeSummaries } from './passport';
 import { visibleMonthlyPurchaseBadgeSummaries } from './monthly-credit-badges';
 import { activeGiftNames } from '../gift-studio-catalog';
 
@@ -76,8 +75,6 @@ export async function roomGiftEvents(
       [row.senderId, row.recipientId].filter((accountId): accountId is string => !!accountId))),
     activeGiftNames(rows.map((row) => row.giftId)),
   ]);
-  const passports = await passportBadgeSummaries(rows.flatMap(row =>
-    [row.senderId, row.recipientId].filter((accountId): accountId is string => !!accountId)));
   const badges = await visibleMonthlyPurchaseBadgeSummaries(rows.flatMap(row =>
     [row.senderId, row.recipientId].filter((accountId): accountId is string => !!accountId)));
   const testIds = process.env.NODE_ENV === "production"
@@ -101,8 +98,6 @@ export async function roomGiftEvents(
     recipientBadgeName: r.recipientId ? badges.get(r.recipientId)?.tier.name ?? null : null,
     senderBadgeImage: r.senderId ? badges.get(r.senderId)?.tier.badgeImage ?? null : null,
     recipientBadgeImage: r.recipientId ? badges.get(r.recipientId)?.tier.badgeImage ?? null : null,
-    senderPassport: r.senderId ? passports.get(r.senderId) : undefined,
-    recipientPassport: r.recipientId ? passports.get(r.recipientId) : undefined,
     createdAt: r.createdAt.toISOString(),
     })),
     nextCursor,

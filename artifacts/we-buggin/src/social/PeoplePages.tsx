@@ -12,7 +12,6 @@ import {
 import { Avatar, BadgeMark, CoinAmount, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, refreshSocial, useIdemKey } from './common';
 import { ProfileView, ProfileMenu } from '@/profile/ProfileView';
 import { FavoritesGallery, type FavoriteEntry } from './FavoritesGallery';
-import { PublicStreamerPassport } from '@/passport/StreamerPassport';
 import { isGiftLocked, PLATINUM_UNLOCK_LEVEL } from '@/gifting/gifting';
 import '@/gifting/gifting-shield.css';
 import { ShinyName } from '@/components/ShinyName';
@@ -123,7 +122,6 @@ export function PersonPage({ username }: { username: string }) {
             <Gift size={16} /> {gift.isPending ? 'Sending...' : 'Send gift'}</button>
         </div>
       ))}
-      <PublicStreamerPassport username={username} />
     </ProfileView>
   );
 }

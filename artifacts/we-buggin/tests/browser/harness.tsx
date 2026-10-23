@@ -147,7 +147,7 @@ createRoot(document.getElementById('root')!).render(
           : new URLSearchParams(location.search).get('view') === 'gift-catalog' ? <GiftCatalogFixture />
           : new URLSearchParams(location.search).get('view') === 'gift-artwork' ? <GiftArtworkFixture />
           : new URLSearchParams(location.search).get('view') === 'gifting-levels' ? <GiftingLevelsFixture />
-          : new URLSearchParams(location.search).get('view') === 'passport-country' ? <OwnProfile />
+          : new URLSearchParams(location.search).get('view') === 'profile-cleanup' ? <OwnProfile />
           : new URLSearchParams(location.search).get('view') === 'photo-review' ? <ProfilePhotoReviewPage />
           : new URLSearchParams(location.search).get('view') === 'room-playback' ? <RoomPlaybackFixture />
           : new URLSearchParams(location.search).get('view') === 'gifts' ? <GiftFixture />

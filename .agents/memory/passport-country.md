@@ -1,10 +1,10 @@
 ---
-name: Passport country source
-description: Country flags reuse the existing self-reported country selection, not a separate passport field or verification.
+name: Retired passport and We Buggin avatars
+description: Owner's removal of the passport feature and old branded character identity artwork.
 ---
 
-Use the account's existing saved country selection for the Me photo's country flag. Do not introduce an independent creator-link/passport country or infer location. Hide the badge when the saved country is missing or not in the available country list; keep its country name accessible.
+Do not reintroduce Streamer passport, self-listed external-platform badges, ownership-review links or passport-style country stamps. Do not restore We Buggin character portraits, their emoji badges or their expression picker. Profile pictures use the user's approved uploaded photo, or a neutral default avatar.
 
-**Why:** The owner asked for the existing country to be displayed, not a second country-setting system. Creator passport entries represent platform links and ownership checks, not a separate country identity.
+**Why:** The owner explicitly requested “Remove the streamer passport from the app and any picture associated with We buggin.” This supersedes the earlier passport/country-stamp and branded-character requests.
 
-**How to apply:** Preserve the current country-editing flow and passport verification rules. A country flag is self-reported identity, not an ownership or platform-verification award.
+**How to apply:** Preserve ordinary saved country information, genuine uploaded photos, earned badges and numbered gifter shields. Removing the old feature or artwork is not permission to erase unrelated account data or financial histories.

@@ -808,22 +808,6 @@ paths:
     $ref: './social.openapi.json#/paths/~1social~1entrance-effects~1equipped'
   /social/me/equipped-badge:
     $ref: './social.openapi.json#/paths/~1social~1me~1equipped-badge'
-  /social/me/passport:
-    $ref: './social.openapi.json#/paths/~1social~1me~1passport'
-  /social/me/passport/platforms:
-    $ref: './social.openapi.json#/paths/~1social~1me~1passport~1platforms'
-  /social/me/passport/platforms/{entryId}:
-    $ref: './social.openapi.json#/paths/~1social~1me~1passport~1platforms~1{entryId}'
-  /social/me/passport/platforms/{entryId}/request:
-    $ref: './social.openapi.json#/paths/~1social~1me~1passport~1platforms~1{entryId}~1request'
-  /social/people/{username}/passport:
-    $ref: './social.openapi.json#/paths/~1social~1people~1{username}~1passport'
-  /social/admin/passport/requests:
-    $ref: './social.openapi.json#/paths/~1social~1admin~1passport~1requests'
-  /social/admin/passport/requests/{entryId}/review:
-    $ref: './social.openapi.json#/paths/~1social~1admin~1passport~1requests~1{entryId}~1review'
-  /social/admin/passport/founding-league:
-    $ref: './social.openapi.json#/paths/~1social~1admin~1passport~1founding-league'
   /social/admin/gift-studio/library:
     $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1library'
   /social/admin/content-sync:
