@@ -19,6 +19,12 @@ import type { SocialProduct } from './socialProduct';
 import type { SocialWallet } from './socialWallet';
 
 export interface SocialMe {
+  /**
+     * Real ledger-earned level; excludes development appearance overrides.
+     * @minimum 0
+     * @maximum 100
+     */
+  gifterAccessLevel?: number;
   nameColorProgress: NameColorProgress;
   nameColorTest: NameColorTestState;
   entranceEffects: EntranceEffectSettings;

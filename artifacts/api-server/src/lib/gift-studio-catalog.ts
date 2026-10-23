@@ -58,6 +58,7 @@ function catalogRecord(
     cost: config?.cost ?? gift.cost,
     productType: (config?.productType ?? "gift") as GiftStudioProductType,
     status,
+    platinumExclusive: config?.platinumExclusive ?? false,
     roomGift: (config?.productType ?? "gift") === "gift" && isRoomGift(gift.id),
     animationAvailable: true,
     iconUrl: activeAsset && status !== "deleted"
@@ -86,6 +87,7 @@ export async function listGiftCatalogForOwner() {
       cost: config.cost ?? 1,
       productType: (config.productType ?? "gift") as GiftStudioProductType,
       status: config.status as GiftCatalogStatus,
+      platinumExclusive: config.platinumExclusive ?? false,
       roomGift: (config.productType ?? "gift") === "gift",
       animationAvailable: data.activeNames.has(config.giftId),
       iconUrl: config.status !== "deleted" && data.activeAssets.has(config.giftId)
@@ -120,6 +122,7 @@ export async function getGiftCatalogItem(giftId: string) {
       cost: config?.cost ?? motionGift.cost,
       productType: (config?.productType ?? "gift") as GiftStudioProductType,
       status: (config?.status ?? (motionGift.active ? "active" : "deleted")) as GiftCatalogStatus,
+      platinumExclusive: config?.platinumExclusive ?? false,
       roomGift: true,
       animationAvailable: true,
       iconUrl: null,
@@ -140,6 +143,7 @@ export async function getGiftCatalogItem(giftId: string) {
     cost: config.cost ?? 1,
     productType: (config.productType ?? "gift") as GiftStudioProductType,
     status,
+    platinumExclusive: config.platinumExclusive ?? false,
     roomGift: (config.productType ?? "gift") === "gift",
     animationAvailable: data.activeNames.has(giftId),
     iconUrl: status !== "deleted" && data.activeAssets.has(giftId)
@@ -159,7 +163,7 @@ export async function giftCatalogWithActiveNames() {
   const catalog = await listGiftCatalogForOwner();
   return filterSendableGifts(catalog)
     .filter(gift => !/^motion-[0-9a-f-]{36}$/.test(gift.id))
-    .map(({ id, name, cost, iconUrl, iconStatus }) => ({ id, name, cost, iconUrl, iconStatus }));
+    .map(({ id, name, cost, iconUrl, iconStatus, platinumExclusive }) => ({ id, name, cost, iconUrl, iconStatus, platinumExclusive }));
 }
 
 export function mergeActiveGiftNames(activeNames: Map<string, string>) {
@@ -188,6 +192,7 @@ export async function updateGiftCatalogItem(input: {
   cost?: number;
   status?: GiftCatalogStatus;
   productType?: GiftStudioProductType;
+  platinumExclusive?: boolean;
 }) {
   const gift = await getGiftCatalogItem(input.giftId);
   if (!gift) throw new RoomError(404, "Gift catalog item not found.");
@@ -205,6 +210,7 @@ export async function updateGiftCatalogItem(input: {
       ...(input.cost !== undefined ? { cost: input.cost } : {}),
       ...(input.productType !== undefined ? { productType: input.productType } : {}),
       ...(input.status !== undefined ? { status: input.status } : {}),
+      ...(input.platinumExclusive !== undefined ? { platinumExclusive: input.platinumExclusive } : {}),
       updatedAt: new Date(),
     };
     const set = {
@@ -212,6 +218,7 @@ export async function updateGiftCatalogItem(input: {
       ...(input.cost !== undefined ? { cost: input.cost } : {}),
       ...(input.productType !== undefined ? { productType: input.productType } : {}),
       ...(input.status !== undefined ? { status: input.status } : {}),
+      ...(input.platinumExclusive !== undefined ? { platinumExclusive: input.platinumExclusive } : {}),
       updatedAt: new Date(),
     };
     await tx.insert(socialGiftCatalogSettings).values(values)

@@ -18,7 +18,7 @@ export interface LiveStreamChatMessage {
   displayNameColor: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex: number;
   /**

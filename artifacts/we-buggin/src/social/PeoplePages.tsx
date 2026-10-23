@@ -13,6 +13,8 @@ import { Avatar, BadgeMark, CoinAmount, Empty, ErrorBox, GiftIcon, Loading, Msg,
 import { ProfileView, ProfileMenu } from '@/profile/ProfileView';
 import { FavoritesGallery, type FavoriteEntry } from './FavoritesGallery';
 import { PublicStreamerPassport } from '@/passport/StreamerPassport';
+import { isGiftLocked, PLATINUM_UNLOCK_LEVEL } from '@/gifting/gifting';
+import '@/gifting/gifting-shield.css';
 import { ShinyName } from '@/components/ShinyName';
 
 export function CommunityPage() {
@@ -112,8 +114,9 @@ export function PersonPage({ username }: { username: string }) {
           <div className="sc-gifts" role="radiogroup" aria-label="Gift">
             {me.data?.gifts.map((g) => (
               <button key={g.id} type="button" role="radio" aria-checked={giftId === g.id} className={`sc-gift${giftId === g.id ? ' is-on' : ''}`}
-                disabled={gift.isPending || (!me.data?.wallet.unlimited && (me.data?.wallet.balance ?? 0) < g.cost)} onClick={() => setGiftId(g.id)} data-testid={`button-gift-${g.id}`}>
-                <GiftIcon id={g.id} size={26} /><b>{g.name}</b><CoinAmount>{g.cost.toLocaleString()} coins</CoinAmount></button>
+                disabled={gift.isPending || isGiftLocked(g, me.data?.gifterAccessLevel ?? 0) || (!me.data?.wallet.unlimited && (me.data?.wallet.balance ?? 0) < g.cost)} onClick={() => setGiftId(g.id)} data-testid={`button-gift-${g.id}`}>
+                <GiftIcon id={g.id} size={26} /><b>{g.name}</b><CoinAmount>{g.cost.toLocaleString()} coins</CoinAmount>
+                {isGiftLocked(g, me.data?.gifterAccessLevel ?? 0) && <span className="gifting-lock-tag" data-testid={`lock-gift-${g.id}`}>Platinum · Lv {PLATINUM_UNLOCK_LEVEL}</span>}</button>
             ))}
           </div>
           <button type="button" className="bm-btn bm-btn-primary" disabled={!giftId || gift.isPending} onClick={send} data-testid="button-send-gift">

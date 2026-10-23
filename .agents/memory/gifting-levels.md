@@ -1,12 +1,12 @@
 ---
 name: Gifting level rules
-description: Successful outgoing gift coin value powers colored logo levels, independently of unchanged usernames and purchase badges.
+description: Owner-approved numbered gifter shields replace the older color-logo tiers; XP and exclusive access follow successful outgoing spending.
 ---
 
-The active gifting-level ladder is seven tiers, using cumulative coin value of successfully sent gifts, not gift counts: Default/white at 0, Green at 20,000, Pink at 100,000, Purple at 250,000, Yellow at 400,000, Platinum at 550,000, and Magenta at 800,000 and above. The previous 19-tier gifting ladder is superseded.
+The owner approved replacing the previous seven gifting tiers and colored logo with numbered shield levels 1–100, not showing both systems alongside each other. The first successful gift unlocks Level 1. Progress is successful outgoing gift coin value, one coin = one XP, including quantity sends once at their full value.
 
-Use the existing Deux Wild logo immediately before the username, not a pill. Tint/glow the logo only. Preserve username colors and the existing default presentation below the first earned threshold; do not redesign the gifting cards.
+The tier perks are cumulative: Bronze, Silver, Gold, Platinum and Deux Wild. Neon green is reserved for the Deux Wild gifting tier. Keep legacy purchase-based username-color accounting and monthly purchase badges separate; the new Silver+ name-color perk must not erase a purchased color.
 
-**Why:** The owner most recently specified the seven named tiers and cumulative thresholds. Existing recharge-based username colors are separate legacy behavior and must remain unchanged; recharge totals must never advance the gifting logo.
+**Why:** The owner explicitly chose replacement with shields and approved choosing Platinum-exclusive gifts individually in Gift Studio, rather than restricting existing gifts automatically.
 
-**How to apply:** Count the committed outgoing coin value once, including quantity sends at their full charged value. Exclude recharges, received gifts, rewards, inventory purchases, rejected or rolled-back sends, duplicate retries and other accounts. Keep purchase-based username colors and monthly badges separate. Preview-only overrides must not change real wallet or history records.
+**How to apply:** Exclude recharges, received gifts, rewards, inventory purchases, rejected or rolled-back sends, duplicate retries and other accounts. Existing gifts remain unrestricted until the owner marks them exclusive. Appearance-only development overrides must never grant exclusive-gift access or change wallets/history.

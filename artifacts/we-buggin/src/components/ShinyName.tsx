@@ -1,4 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
+import { giftingTier } from '@workspace/beam-identity';
+import { GiftingShield } from '@/gifting/GiftingShield';
+import { giftingPerks, normalizeGiftingLevel } from '@/gifting/gifting';
 import './shiny-name.css';
 
 export interface ShinyNameProps {
@@ -6,51 +9,39 @@ export interface ShinyNameProps {
   displayNameColor?: string | null;
   displayNameTierIndex?: number | null;
   className?: string;
+  /** Set false where the numbered shield is rendered separately. */
+  showShield?: boolean;
 }
 
+const LEGACY_NAME_COLORS = ['#FFFFFF', '#E4E4E4', '#C0C0C0', '#FFD700', '#EDEBAD', '#FFFF00',
+  '#00FFFF', '#A8DADC', '#00FF00', '#98FF98', '#FF0099', '#FFC1CC',
+  '#B39CD0', '#FF00FF', '#FFDAB9', '#87CEEB', '#F39C12', '#F5F5DC', '#09B0EC'];
+
 /**
- * The server's tier index is the gifting level; its color still preserves the
- * existing username treatment. Only the prefixed logo takes the gifting color.
+ * `displayNameTierIndex` is the gifting level (0..100). The prefixed mark is
+ * the numbered gifting shield. A legacy purchased username color always wins;
+ * otherwise Silver+ gifters get their tier color as a chat-name perk.
  */
 export function ShinyName({
   children,
   displayNameColor,
   displayNameTierIndex = 0,
   className = '',
+  showShield = true,
 }: ShinyNameProps) {
-  const giftingLevel = Number.isFinite(displayNameTierIndex)
-    ? Math.max(0, Math.min(6, Math.floor(displayNameTierIndex ?? 0)))
-    : 0;
-  const giftingColors = ['#FFFFFF', '#00FF00', '#FF0099', '#B39CD0', '#FFFF00', '#C0C0C0', '#FF00FF'];
-  const tier = Math.max(0, ['#FFFFFF', '#E4E4E4', '#C0C0C0', '#FFD700', '#EDEBAD', '#FFFF00',
-    '#00FFFF', '#A8DADC', '#00FF00', '#98FF98', '#FF0099', '#FFC1CC',
-    '#B39CD0', '#FF00FF', '#FFDAB9', '#87CEEB', '#F39C12', '#F5F5DC', '#09B0EC']
-    .indexOf(displayNameColor?.toUpperCase() ?? '#FFFFFF'));
-  const levelNames = [
-    'Default', 'Green', 'Pink', 'Purple', 'Yellow', 'Platinum', 'Magenta',
-  ];
-  // Keep the existing unearned/default presentation; earned logos use the exact
-  // original palette, without changing the independent username color mapping.
-  const level = giftingLevel > 0
-    ? { name: levelNames[giftingLevel], color: giftingColors[giftingLevel] }
-    : null;
-  const style = tier > 0 && displayNameColor
+  const level = normalizeGiftingLevel(displayNameTierIndex);
+  const tier = Math.max(0, LEGACY_NAME_COLORS.indexOf(displayNameColor?.toUpperCase() ?? '#FFFFFF'));
+  const hasLegacyColor = tier > 0 && !!displayNameColor;
+  const perkColor = !hasLegacyColor && giftingPerks(level).tierNameColor ? giftingTier(level).color : null;
+  const style = hasLegacyColor
     ? { '--shiny-name-color': displayNameColor } as CSSProperties
-    : undefined;
+    : perkColor ? { '--gifting-name-color': perkColor } as CSSProperties : undefined;
 
   return (
     <span className={`shiny-name-label${className ? ` ${className}` : ''}`}>
-      {level && (
-        <span className="gifting-level-logo" role="img" aria-label={`${level.name} gifting level`}
-          title={`${level.name} gifting level`} data-gifting-level={giftingLevel}
-          style={{
-            '--gifting-level-color': level.color,
-            '--gifting-logo-url': `url("${import.meta.env.BASE_URL}brand/deux-wild-logo.png")`,
-          } as CSSProperties}>
-          <span className="gifting-level-logo-art" />
-        </span>
-      )}
-      <span className="shiny-name" data-tier={tier} style={style}>{children}</span>
+      {showShield && level > 0 && <GiftingShield level={level} size={17} />}
+      <span className={`shiny-name${perkColor ? ' shiny-name--gifting-perk' : ''}`} data-tier={tier}
+        data-gifting-tier={perkColor ? giftingTier(level).key : undefined} style={style}>{children}</span>
     </span>
   );
 }

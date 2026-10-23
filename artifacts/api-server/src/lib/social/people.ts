@@ -11,6 +11,7 @@ import { giftCatalogWithActiveNames } from "../gift-studio-catalog";
 import { nameColorProfileForAccount, nameColorPurchaseTotalOverride } from "./gift-name-color-data";
 import { hasOwnerTierTestAccess } from "./owner-entrance-effects-policy";
 import { getHangoutStreakSummary } from "../community-hangout-rewards";
+import { realGiftingLevel } from "./gifting-access";
 
 export async function getMe(id: string) {
   const profile = await requireAccount(id);
@@ -26,8 +27,9 @@ export async function getMe(id: string) {
     getMyEntranceEffectSettings(id),
     getHangoutStreakSummary(id),
   ]);
-  const nameColor = await nameColorProfileForAccount(id);
+  const [nameColor, gifterAccessLevel] = await Promise.all([nameColorProfileForAccount(id), realGiftingLevel(id)]);
   return { profile: await person(id, profile, undefined, true, undefined, nameColor),
+    gifterAccessLevel,
     nameColorProgress: {
       tierName: nameColor.tierName,
       tierIndex: nameColor.tierIndex,

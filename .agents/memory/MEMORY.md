@@ -41,7 +41,7 @@
 - [Room visual theme](room-visual-theme.md) — pure black room surfaces and restrained gold perimeter; app-wide redesign scope now follows mobile interface direction.
 - [Mobile interface direction](app-visual-direction.md) — app-wide mobile redesign approved; preserve black/gold identity, behavior and owner-only card prototype.
 - [App positioning](app-positioning.md) — owner-approved live-streaming and social media description for app metadata, sharing previews and welcome/about copy.
-- [Gifting levels](gifting-levels.md) — successful gift spending powers seven cumulative tiers; recharges and the separate username-color palette do not count.
+- [Gifting levels](gifting-levels.md) — 100 numbered shields replace color-logo tiers; successful outgoing XP only; owner marks Platinum-exclusive gifts.
 - [Room playback rendering budget](room-playback-performance.md) — decorative motion must avoid full-screen paints; profile under CPU slowdown and separate rendering from media/network issues.
 - [Personal block boundaries](personal-block-semantics.md) — personal blocks filter text and bilateral DMs/whispers, but never remove room presence, voice, seats or gift effects.
 - [Card-game room scope](card-game-room-scope.md) — the card engine and test mode belong only in user-created no-TV social rooms, never themed/video or livestream rooms.

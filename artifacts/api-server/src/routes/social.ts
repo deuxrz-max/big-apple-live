@@ -7,6 +7,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { accountProfiles, db } from "@workspace/db";
 import type { DeveloperGiftMotionPreset } from "@workspace/api-zod";
+import { GetGifterLeaderboardResponse } from "@workspace/api-zod";
+import { gifterLeaderboard } from "../lib/social/gifter-leaderboard";
 import {
   SaveSocialProfileBody, SaveSocialProfileResponse, GetSocialMeResponse, GetSocialPeopleResponse,
   UpdateMyEntranceEffectSettingsBody, UpdateMyEntranceEffectSettingsResponse,
@@ -666,6 +668,10 @@ router.get("/social/favorites/gallery", async (req, res): Promise<void> => {
 });
 router.get("/social/favorites/:username/room", async (req, res): Promise<void> => {
   res.json(GetFavoriteRoomResponse.parse(await favoriteRoom(accountId(req), name(req.params.username))));
+});
+router.get("/social/gifters/leaderboard", async (req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
+  res.json(GetGifterLeaderboardResponse.parse(await gifterLeaderboard(accountId(req))));
 });
 router.get("/social/me", async (req, res): Promise<void> => {
   res.set("Cache-Control", "no-store");

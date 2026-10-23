@@ -1,4 +1,4 @@
-import { check, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, check, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 /**
@@ -12,6 +12,7 @@ export const socialGiftCatalogSettings = pgTable("social_gift_catalog_settings",
   cost: integer("cost"),
   productType: text("product_type").notNull().default("gift"),
   status: text("status").notNull().default("active"),
+  platinumExclusive: boolean("platinum_exclusive").notNull().default(false),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
   check("social_gift_catalog_cost_positive", sql`${table.cost} is null or ${table.cost} > 0`),

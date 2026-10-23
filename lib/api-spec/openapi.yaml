@@ -794,6 +794,8 @@ paths:
               schema: { $ref: "#/components/schemas/ChatReportReceipt" }
   /social/me:
     $ref: './social.openapi.json#/paths/~1social~1me'
+  /social/gifters/leaderboard:
+    $ref: './social.openapi.json#/paths/~1social~1gifters~1leaderboard'
   /social/me/name-color-test-total:
     $ref: './social.openapi.json#/paths/~1social~1me~1name-color-test-total'
   /social/me/entrance-effects:
@@ -1482,7 +1484,7 @@ components:
         username: { type: string }
         displayName: { type: string }
         displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
-        displayNameTierIndex: { type: integer, minimum: 0, maximum: 18 }
+        displayNameTierIndex: { type: integer, minimum: 0, maximum: 100 }
         passport: { $ref: "./social.openapi.json#/components/schemas/StreamerPassportBadgeSummary" }
         identity: { $ref: "#/components/schemas/EmojiIdentity" }
         photoUrl: { type: [string, "null"] }
@@ -1499,7 +1501,7 @@ components:
         username: { type: string }
         displayName: { type: string }
         displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
-        displayNameTierIndex: { type: integer, minimum: 0, maximum: 18 }
+        displayNameTierIndex: { type: integer, minimum: 0, maximum: 100 }
         badgeId: { type: [string, "null"] }
         badgeName: { type: [string, "null"] }
         badgeImage: { type: [string, "null"] }
@@ -1526,7 +1528,7 @@ components:
         username: { type: [string, "null"] }
         displayName: { type: [string, "null"] }
         displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
-        displayNameTierIndex: { type: integer, minimum: 0, maximum: 18 }
+        displayNameTierIndex: { type: integer, minimum: 0, maximum: 100 }
         createdAt: { type: string, format: date-time }
     PhotoReviewStatus:
       type: object
@@ -1649,7 +1651,7 @@ components:
         kind: { type: string, enum: [text, reaction] }
         text: { type: string }
         displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
-        displayNameTierIndex: { type: integer, minimum: 0, maximum: 18 }
+        displayNameTierIndex: { type: integer, minimum: 0, maximum: 100 }
         passport: { $ref: "./social.openapi.json#/components/schemas/StreamerPassportBadgeSummary" }
         createdAt: { type: string, format: date-time }
       required: [id, roomId, authorId, username, identity, kind, text, createdAt]
@@ -1704,7 +1706,7 @@ components:
         username: { type: string }
         displayName: { type: string }
         displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
-        displayNameTierIndex: { type: integer, minimum: 0, maximum: 18 }
+        displayNameTierIndex: { type: integer, minimum: 0, maximum: 100 }
         text: { type: string }
         reason: { type: string }
         createdAt: { type: string, format: date-time }
@@ -1864,7 +1866,7 @@ components:
         displayName: { type: string, maxLength: 80 }
         username: { type: string, maxLength: 40 }
         displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
-        displayNameTierIndex: { type: integer, minimum: 0, maximum: 18 }
+        displayNameTierIndex: { type: integer, minimum: 0, maximum: 100 }
         viewerCount: { type: integer, minimum: 0 }
     LiveStreamList:
       type: object
@@ -1892,7 +1894,7 @@ components:
         displayName: { type: string, maxLength: 80 }
         username: { type: string, maxLength: 40 }
         displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
-        displayNameTierIndex: { type: integer, minimum: 0, maximum: 18 }
+        displayNameTierIndex: { type: integer, minimum: 0, maximum: 100 }
     LiveStreamViewerSession:
       type: object
       required: [url, token, displayName, username, viewerUsername, displayNameColor, displayNameTierIndex]
@@ -1902,7 +1904,7 @@ components:
         displayName: { type: string, maxLength: 80 }
         username: { type: string, maxLength: 40 }
         displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
-        displayNameTierIndex: { type: integer, minimum: 0, maximum: 18 }
+        displayNameTierIndex: { type: integer, minimum: 0, maximum: 100 }
         viewerUsername: { type: string, maxLength: 40 }
     LiveStreamChatInput:
       type: object
@@ -1918,7 +1920,7 @@ components:
         username: { type: string, maxLength: 40 }
         displayName: { type: string, maxLength: 80 }
         displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
-        displayNameTierIndex: { type: integer, minimum: 0, maximum: 18 }
+        displayNameTierIndex: { type: integer, minimum: 0, maximum: 100 }
         badgeName: { type: ["string", "null"], maxLength: 80 }
         badgeImage: { type: ["string", "null"] }
         text: { type: string, maxLength: 280 }
@@ -2114,7 +2116,7 @@ components:
         hostMuted: { type: boolean }
         unmuteRequested: { type: boolean }
         displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
-        displayNameTierIndex: { type: integer, minimum: 0, maximum: 18 }
+        displayNameTierIndex: { type: integer, minimum: 0, maximum: 100 }
         participantId:
           type: string
           format: uuid

@@ -120,6 +120,8 @@ export * from './getRoomGiftEventsParams';
 export * from './getSocialConversationParams';
 export * from './getSocialPeopleGender';
 export * from './getSocialPeopleParams';
+export * from './gifterLeaderboard';
+export * from './gifterLeaderboardPeopleItem';
 export * from './giftStudioActivationInput';
 export * from './giftStudioActiveMediaResponse';
 export * from './giftStudioAssignInput';

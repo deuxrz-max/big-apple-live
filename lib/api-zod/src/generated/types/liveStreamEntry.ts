@@ -17,7 +17,7 @@ export interface LiveStreamEntry {
   displayNameColor: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex: number;
   /** @minimum 0 */

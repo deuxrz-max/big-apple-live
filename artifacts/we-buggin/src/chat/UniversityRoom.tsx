@@ -27,6 +27,9 @@ import { RoomEntranceEffectOverlay } from './RoomEntranceEffectOverlay';
 import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
 import type { RoomCoinDropEvent, RoomEntranceEffectEvent } from './useTextRoom';
 import { RoomCoinDropOverlay } from './RoomCoinDropOverlay';
+import { giftingTier } from '@workspace/beam-identity';
+import { giftingPerks, normalizeGiftingLevel } from '@/gifting/gifting';
+import { GiftingEntranceOverlay, type GiftingArrival } from '@/gifting/GiftingCelebrations';
 import { CardHandFan } from './CardHandFan';
 import { canUsePremiumCardFinish } from './card-surface-finish';
 import { OwnerCardGameTestMode, type OwnerCardTestState } from './OwnerCardGameTestMode';
@@ -119,6 +122,8 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const [ignored, setIgnored] = useState<Set<string>>(new Set());
   const [activeEntranceEffect, setActiveEntranceEffect] = useState<RoomEntranceEffectEvent | null>(null);
   const [coinDropQueue, setCoinDropQueue] = useState<RoomCoinDropEvent[]>([]);
+  const [giftingArrivals, setGiftingArrivals] = useState<GiftingArrival[]>([]);
+  const handledGiftingArrivals = useRef(new Set<string>());
   const gifts = useRoomGifts(roomId, userId, sessionId, ignored);
   const ignoreBusy = useRef(0);
   const idem = useRef<{ username: string; body: string; key: string } | null>(null);
@@ -184,6 +189,8 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
     setCardHandLookup(null); setOwnerCardTestState(null);
     setActiveEntranceEffect(null);
     setCoinDropQueue([]);
+    setGiftingArrivals([]);
+    handledGiftingArrivals.current.clear();
     handledEntranceEffects.current.clear();
     handledCoinDrops.current.clear();
     setIgnored(new Set()); setSendErr(null); setNote(null);
@@ -222,6 +229,24 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
       }
     }
   }, [r.coinDrops, userId]);
+  // Tier entrance perks (Gold+) ride the existing arrival plumbing: each arrival id
+  // plays once, only while fresh, so polling/reconnects never replay it.
+  useEffect(() => {
+    const roster = session?.people ?? [];
+    for (const arrival of r.arrivals) {
+      if (handledGiftingArrivals.current.has(arrival.id)) continue;
+      const person = roster.find(p => p.participantId === arrival.participantId);
+      if (!person) continue;
+      handledGiftingArrivals.current.add(arrival.id);
+      const level = normalizeGiftingLevel(person.displayNameTierIndex);
+      if (!giftingPerks(level).entranceBanner || Date.now() - arrival.at > 15_000) continue;
+      setGiftingArrivals(previous => previous.length >= 3 ? previous
+        : [...previous, { id: arrival.id, at: arrival.at, displayName: arrival.displayName, level }]);
+    }
+  }, [r.arrivals, session?.people]);
+  const finishGiftingArrival = useCallback((id: string) => {
+    setGiftingArrivals(current => current.filter(item => item.id !== id));
+  }, []);
   const finishEntranceEffect = useCallback((eventId: string) => {
     setActiveEntranceEffect(current => current?.eventId === eventId ? null : current);
   }, []);
@@ -550,6 +575,9 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                   return (
                     <article className={`ur-slot${isSpeaking ? ' is-speaking' : ''}${slot.participantId ? ' is-occupied' : ''}${person ? ' has-person' : ''}${isBeamHost ? ' is-beam-host' : ''}`}
                       key={slot.slotNumber}
+                      data-gifting-frame={person && giftingPerks(person.displayNameTierIndex).goldSeatFrame
+                        ? giftingPerks(person.displayNameTierIndex).animatedFrame ? giftingTier(normalizeGiftingLevel(person.displayNameTierIndex)).key : 'gold'
+                        : undefined}
                       data-seat-position={area}
                       style={{ gridColumn, gridRow: area === 'host' ? '1 / span 2' : gridRow }}
                       aria-label={`Speaker slot ${slot.slotNumber}${slot.participantId ? `, ${person?.displayName ?? 'occupied'}` : ', empty'}`}>
@@ -876,6 +904,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
       )}
       <RoomEntranceEffectOverlay event={activeEntranceEffect} onFinish={finishEntranceEffect} />
       <RoomCoinDropOverlay event={coinDropQueue[0] ?? null} onFinish={finishCoinDrop} />
+      <GiftingEntranceOverlay arrival={giftingArrivals[0] ?? null} onFinish={finishGiftingArrival} />
       {r.streakReward && (
         <div className="ur-streak-reward-toast" role="status">
           Seven-day room streak! +{r.streakReward.coins} coins

@@ -1,5 +1,8 @@
 import { Link } from 'wouter';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
+import { GIFTING_LEVEL_THRESHOLDS, giftingTier } from '@workspace/beam-identity';
+import { GiftingShield } from '@/gifting/GiftingShield';
+import { profileGiftingProgress } from '@/gifting/gifting';
 import { Coins, ShoppingBag } from 'lucide-react';
 import {
   getGetSocialMeQueryKey, useGetChatAccess, useGetSocialMe, useSetMyNameColorTestTotal,
@@ -31,6 +34,7 @@ export function OwnProfile() {
   const passportCountry = me.data.countries.find((c) => c.code === p.country);
   const countryName = p.country ? (passportCountry?.name ?? p.country) : undefined;
   const nameProgress = me.data.nameColorProgress;
+  const gifting = profileGiftingProgress(nameProgress.tierIndex, nameProgress.lifetimeCoinsPurchased);
   const saveNameColorTestTotal = (totalCoins: number | null) => {
     setTestMessage(null);
     nameColorTest.mutate({ data: { totalCoins } }, {
@@ -57,26 +61,56 @@ export function OwnProfile() {
           {access.data?.owner && <Link href="/community/gift-studio" className="pf-btn" data-testid="link-gift-studio">Gift Studio</Link>}
         </nav>
       }>
-      <section className="pf-name-tier" aria-label="Gifting level">
-        <div className="pf-name-tier-copy">
-          <span className="pf-name-tier-kicker">Gifting level</span>
-          <strong>{nameProgress.tierName}</strong>
-          <span>
-            {nameProgress.nextTierName
-              ? `${nameProgress.coinsToNextTier.toLocaleString()} more coins to ${nameProgress.nextTierName}`
-              : 'You have reached the highest gifting level.'}
-          </span>
-          <small>Based on the cumulative coin value of gifts successfully sent. Recharges and failed sends do not count.</small>
+      <section className="pf-name-tier" aria-label="Gifting level" data-testid="section-gifting-level">
+        <div className="pf-name-tier-copy pf-gifting-level">
+          {gifting.level > 0
+            ? <GiftingShield level={gifting.level} size={52} />
+            : <span className="pf-name-tier-kicker" aria-hidden="true">--</span>}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <span className="pf-name-tier-kicker">Gifting level</span>
+            <strong data-testid="text-gifting-level">
+              {gifting.level > 0 ? `${gifting.tier.name} · Level ${gifting.level}` : 'No gifting level yet'}
+            </strong>
+            {gifting.isMax ? (
+              <span data-testid="text-gifting-max">Maximum level reached. {gifting.xp.toLocaleString()} total XP.</span>
+            ) : (
+              <>
+                <div className="pf-gifting-meter" role="progressbar" aria-label="Progress to next gifting level"
+                  aria-valuemin={0} aria-valuemax={gifting.xpForNextLevel} aria-valuenow={gifting.currentLevelXp}
+                  style={{ '--gifting-meter': gifting.tier.color } as CSSProperties}>
+                  <span style={{ transform: `scaleX(${gifting.xpForNextLevel > 0 ? Math.min(1, gifting.currentLevelXp / gifting.xpForNextLevel) : 0})` }} />
+                </div>
+                <span data-testid="text-gifting-progress">
+                  {gifting.currentLevelXp.toLocaleString()} / {gifting.xpForNextLevel.toLocaleString()} XP to Level {gifting.level + 1}
+                  {' · '}{gifting.xpRemaining.toLocaleString()} to go
+                </span>
+                <span data-testid="text-gifting-total">Total XP {gifting.xp.toLocaleString()}</span>
+              </>
+            )}
+          </div>
         </div>
+        <small>Every successfully sent gift adds its coin value as XP. Recharges and failed sends do not count. Silver unlocks a tier name color, Gold a seat frame and entrance banner, Platinum an animated frame, entrance effect and exclusive gifts, Deux Wild a neon full-screen entrance.</small>
         {me.data.nameColorTest.enabled && (
           <div className="pf-name-tier-test">
-            <label htmlFor="name-color-test-total">Development-only tier preview</label>
+            <label htmlFor="name-color-test-level">Development-only level preview</label>
             <p>This changes only your preview gifting level, not your wallet or gift history.</p>
             <div className="pf-name-tier-test-row">
-              <input id="name-color-test-total" type="number" min="0" step="1"
+              <select id="name-color-test-level" aria-label="Jump to gifting level" data-testid="select-gifting-preview-level"
+                value="" onChange={(event) => {
+                  const lvl = Number(event.target.value);
+                  if (Number.isInteger(lvl)) setTestTotal(String(GIFTING_LEVEL_THRESHOLDS[lvl] ?? 0));
+                }}>
+                <option value="" disabled>Jump to level</option>
+                {GIFTING_LEVEL_THRESHOLDS.map((xp, lvl) => (
+                  <option key={lvl} value={lvl}>{lvl === 0 ? 'No level (0 XP)' : `Level ${lvl} · ${giftingTier(lvl).name} (${xp.toLocaleString()} XP)`}</option>
+                ))}
+              </select>
+            </div>
+            <div className="pf-name-tier-test-row">
+              <input id="name-color-test-total" type="number" min="0" step="1" data-testid="input-gifting-preview-xp"
                 value={testTotal ?? ''} onChange={(event) => setTestTotal(event.target.value)}
-                aria-label="Successful gift coin value for gifting-level preview" />
-              <button type="button" className="pf-btn" disabled={nameColorTest.isPending}
+                aria-label="Successful gift XP for gifting-level preview" />
+              <button type="button" className="pf-btn" disabled={nameColorTest.isPending} data-testid="button-gifting-preview"
                 onClick={() => {
                   const value = testTotal?.trim() ?? '';
                   if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value))) {
@@ -85,11 +119,12 @@ export function OwnProfile() {
                   }
                   saveNameColorTestTotal(Number(value));
                 }}>
-                {nameColorTest.isPending ? 'Saving…' : 'Preview tier'}
+                {nameColorTest.isPending ? 'Saving…' : 'Preview level'}
               </button>
             </div>
             <button type="button" className="pf-name-tier-reset" disabled={nameColorTest.isPending}
-              onClick={() => saveNameColorTestTotal(null)}>Clear test override</button>
+              onClick={() => saveNameColorTestTotal(null)} data-testid="button-clear-gifting-preview">Clear test override</button>
+            <p>Preview levels never unlock Platinum-exclusive gifts; the server checks your real gift XP.</p>
             {testMessage && <span className="pf-name-tier-status" role="status">{testMessage}</span>}
           </div>
         )}

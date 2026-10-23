@@ -18,4 +18,6 @@ export interface GiftStudioCatalogUpdate {
   cost?: number;
   productType?: GiftStudioProductType;
   status?: GiftStudioCatalogUpdateStatus;
+  /** Owner-selected gift restricted to gifter level 61 or higher. Defaults false. */
+  platinumExclusive?: boolean;
 }

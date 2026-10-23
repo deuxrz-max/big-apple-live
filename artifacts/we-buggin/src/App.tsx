@@ -18,6 +18,8 @@ import '@/chat/chat.css';
 import { OwnProfile } from '@/profile/OwnProfile';
 import '@/profile/profile.css';
 import { StorePage } from '@/store/StorePage';
+import { giftingTier } from '@workspace/beam-identity';
+import { GiftingShield } from '@/gifting/GiftingShield';
 import { ShinyName } from '@/components/ShinyName';
 import SocialApp from '@/social/SocialApp';
 import { TransactionHistoryPage } from '@/social/MoneyPages';
@@ -203,11 +205,16 @@ function NameColorLevelUpToast() {
 
   if (!toast) return null;
   return (
-    <div className="st-name-tier-toast" role="status" aria-live="polite">
-      <span>Your gifting level just reached {toast.tierName}!</span>
-      <ShinyName displayNameColor={toast.color} displayNameTierIndex={toast.tierIndex}>
-        {toast.displayName}
-      </ShinyName>
+    <div className={`st-name-tier-toast gifting-levelup-toast gifting-levelup-toast--${giftingTier(toast.tierIndex).key}`} role="status" aria-live="polite"
+      data-testid="toast-gifting-level-up" onClick={() => setToast(null)}>
+      <GiftingShield level={toast.tierIndex} size={44} decorative />
+      <span>
+        <small>Gifting level up</small>
+        <strong>{giftingTier(toast.tierIndex).name} · Level {toast.tierIndex}</strong>
+        <ShinyName displayNameColor={toast.color} displayNameTierIndex={toast.tierIndex} showShield={false}>
+          {toast.displayName}
+        </ShinyName>
+      </span>
     </div>
   );
 }

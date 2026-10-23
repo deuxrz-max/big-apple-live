@@ -117,7 +117,6 @@ export async function recordConfirmedCreditPurchase(
   return { credited: !saved.duplicate, balance: (await db.select({ balance: socialWallets.balance })
     .from(socialWallets).where(eq(socialWallets.accountId, accountId)))[0]?.balance ?? 0,
     badgeId: after?.tier.id ?? null,
-    nameColorTierUp: currentNameColor.tierIndex > previousNameColor.tierIndex
-      ? { tierName: currentNameColor.tierName, tierIndex: currentNameColor.tierIndex }
-      : null };
+    // A recharge never earns gifting XP or a gifting-level celebration.
+    nameColorTierUp: null };
 }

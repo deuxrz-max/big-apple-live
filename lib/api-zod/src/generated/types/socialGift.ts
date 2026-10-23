@@ -8,6 +8,7 @@
 import type { GiftStudioIconStatus } from './giftStudioIconStatus';
 
 export interface SocialGift {
+  platinumExclusive?: boolean;
   id: string;
   name: string;
   cost: number;

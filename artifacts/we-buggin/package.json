@@ -27,7 +27,8 @@
     "test:card-surface-finish": "esbuild tests/cardSurfaceFinish.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-card-finish-tests.mjs && node --test /tmp/we-buggin-card-finish-tests.mjs",
     "test:mobile-shell": "esbuild tests/mobileShell.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-mobile-shell-tests.mjs && node --test /tmp/we-buggin-mobile-shell-tests.mjs",
     "test:joker-webgl": "esbuild tests/jokerWebgl.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-joker-webgl-tests.mjs && node --test /tmp/we-buggin-joker-webgl-tests.mjs",
-    "test:joker-finish": "esbuild tests/jokerFinish.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-joker-finish-tests.mjs && node --test /tmp/we-buggin-joker-finish-tests.mjs"
+    "test:joker-finish": "esbuild tests/jokerFinish.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-joker-finish-tests.mjs && node --test /tmp/we-buggin-joker-finish-tests.mjs",
+    "test:gifting-levels": "esbuild tests/giftingLevels.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-gifting-levels-tests.mjs && node --test /tmp/we-buggin-gifting-levels-tests.mjs"
   },
   "devDependencies": {
     "@ffmpeg/core": "^0.12.10",

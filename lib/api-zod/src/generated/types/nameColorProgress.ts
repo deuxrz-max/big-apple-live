@@ -10,7 +10,7 @@ export interface NameColorProgress {
   tierName: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   tierIndex: number;
   /** @minimum 0 */

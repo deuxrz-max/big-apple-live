@@ -1,13 +1,11 @@
-/** Inclusive, cumulative successful gift-spending thresholds, never recharge totals. */
-export const NAME_COLOR_TIERS = [
-  { name: "Default", color: "#FFFFFF", threshold: 0 },
-  { name: "Green", color: "#00FF00", threshold: 20_000 },
-  { name: "Pink", color: "#FF0099", threshold: 100_000 },
-  { name: "Purple", color: "#B39CD0", threshold: 250_000 },
-  { name: "Yellow", color: "#FFFF00", threshold: 400_000 },
-  { name: "Platinum", color: "#C0C0C0", threshold: 550_000 },
-  { name: "Magenta", color: "#FF00FF", threshold: 800_000 },
-] as const;
+import { giftingProgress, giftingTier, GIFTING_LEVEL_THRESHOLDS } from "@workspace/beam-identity";
+
+/** Compatibility name; indices are now actual gifter levels 0–100. */
+export const NAME_COLOR_TIERS = GIFTING_LEVEL_THRESHOLDS.map((threshold, level) => ({
+  name: level ? `${giftingTier(level).name} · Level ${level}` : "Unranked",
+  color: giftingTier(level).color,
+  threshold,
+}));
 
 export type NameColorTierSummary = {
   tierIndex: number;
@@ -21,17 +19,13 @@ export type NameColorTierSummary = {
 };
 
 export function nameColorTierForLifetimeCoins(giftCoinsSpent: number): NameColorTierSummary {
-  const safeCoins = Number.isFinite(giftCoinsSpent) ? Math.max(0, Math.floor(giftCoinsSpent)) : 0;
-  let index = 0;
-  for (let i = 1; i < NAME_COLOR_TIERS.length; i++) {
-    if (safeCoins >= NAME_COLOR_TIERS[i]!.threshold) index = i;
-  }
-  const tier = NAME_COLOR_TIERS[index]!;
-  const next = NAME_COLOR_TIERS[index + 1];
+  const progress = giftingProgress(giftCoinsSpent);
+  const tier = NAME_COLOR_TIERS[progress.level]!;
+  const next = NAME_COLOR_TIERS[progress.level + 1];
   return {
-    tierIndex: index, tierName: tier.name, color: tier.color,
-    lifetimeCoinsPurchased: safeCoins,
-    coinsToNextTier: next ? next.threshold - safeCoins : 0,
+    tierIndex: progress.level, tierName: tier.name, color: tier.color,
+    lifetimeCoinsPurchased: progress.xp,
+    coinsToNextTier: progress.xpRemaining,
     nextTierName: next?.name ?? null,
     nextTierThreshold: next?.threshold ?? null,
   };

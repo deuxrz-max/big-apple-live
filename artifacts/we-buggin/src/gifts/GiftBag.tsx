@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, Crown, Flame, Gift, House, Sparkles, Star, UserRound, X, type LucideIcon } from 'lucide-react';
+import { ChevronDown, Crown, Flame, Gift, House, LockKeyhole, Sparkles, Star, UserRound, X, type LucideIcon } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGetSocialMe, getGetSocialMeQueryKey, sendSocialGift, getGetRoomGiftEventsQueryKey } from '@workspace/api-client-react';
@@ -10,6 +10,8 @@ import { cosmicEncoreMedia } from './SpiritPup';
 import { GiftArtwork } from './GiftArtwork';
 import { bigTierGiftMedia } from './BigTierGift';
 import { ownedGiftItems } from './gift-items';
+import { isGiftLocked, PLATINUM_UNLOCK_LEVEL } from '@/gifting/gifting';
+import '@/gifting/gifting-shield.css';
 import './gifts.css';
 
 type Recipient = {
@@ -122,7 +124,9 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
     ?? recipients.find(person => person.isHost)
     ?? recipients[0]
     ?? null;
-  const canSend = selectedRecipients.length > 0 && (!!streamId || (!!roomId && !!sessionId)) && !!sel && catalog.some(gift => gift.id === sel);
+  const giftingLevel = me.data?.gifterAccessLevel ?? 0;
+  const selectedLocked = !!sel && isGiftLocked(catalog.find(gift => gift.id === sel), giftingLevel);
+  const canSend = !selectedLocked && selectedRecipients.length > 0 && (!!streamId || (!!roomId && !!sessionId)) && !!sel && catalog.some(gift => gift.id === sel);
   const unlimited = me.data?.wallet.unlimited === true;
   const totalCost = price * quantity * selectedRecipients.length;
   const enough = unlimited || (me.data?.wallet.balance ?? 0) >= totalCost;
@@ -328,8 +332,8 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
                 {giftPages.map((pageGifts, pageIndex) => {
                   const featured = pageIndex === 0 ? activeCategory.gifts[0] : undefined;
                   return <section className="gift-panel-page" key={`${activeCategory.id}-${pageIndex}`} aria-label={`${activeCategory.label}, page ${pageIndex + 1}`}>
-                    {featured && <button type="button" className={`gift-panel-featured${sel === featured.id ? ' is-selected' : ''}`}
-                      disabled={busy} onClick={() => chooseGift(featured.id)} aria-label={`Select featured gift ${featured.name}`}>
+                    {featured && <button type="button" className={`gift-panel-featured${sel === featured.id ? ' is-selected' : ''}${isGiftLocked(featured, giftingLevel) ? ' is-gifting-locked' : ''}`}
+                      disabled={busy || isGiftLocked(featured, giftingLevel)} onClick={() => chooseGift(featured.id)} aria-label={`${isGiftLocked(featured, giftingLevel) ? `Locked until gifting level ${PLATINUM_UNLOCK_LEVEL}: ` : 'Select featured gift '}${featured.name}`}>
                       <span className="gift-panel-featured-art"><GiftArtwork gift={featured} size={50} />
                         {sel === featured.id && <span className="gift-panel-card-quantity">×{quantity}</span>}
                       </span>
@@ -339,17 +343,20 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
                         <span>Send a little magic to the room</span>
                       </span>
                       <span className="gift-panel-featured-price"><CoinAmount>{featured.cost.toLocaleString()} coins</CoinAmount></span>
+                      {isGiftLocked(featured, giftingLevel) && <span className="gifting-lock-tag" data-testid={`lock-gift-${featured.id}`}><LockKeyhole size={11} aria-hidden /> Platinum · Lv {PLATINUM_UNLOCK_LEVEL}</span>}
                     </button>}
                     <div className="gift-panel-grid" role="list" aria-label={`${activeCategory.label} gifts`}>
                       {pageGifts.map(gift => <button key={gift.id} type="button" role="listitem"
-                        className={`gift-panel-card${sel === gift.id ? ' is-selected' : ''}`}
-                        aria-pressed={sel === gift.id} disabled={busy} data-testid={`gift-catalog-${gift.id}`}
+                        className={`gift-panel-card${sel === gift.id ? ' is-selected' : ''}${isGiftLocked(gift, giftingLevel) ? ' is-gifting-locked' : ''}`}
+                        aria-pressed={sel === gift.id} disabled={busy || isGiftLocked(gift, giftingLevel)} data-testid={`gift-catalog-${gift.id}`}
+                        aria-label={isGiftLocked(gift, giftingLevel) ? `${gift.name}, locked until Platinum gifting level ${PLATINUM_UNLOCK_LEVEL}` : undefined}
                         onClick={() => chooseGift(gift.id)}>
                         <span className="gift-panel-card-art"><GiftArtwork gift={gift} size={48} />
                           {sel === gift.id && <span className="gift-panel-card-quantity">×{quantity}</span>}
                         </span>
                         <span className="gift-panel-card-name">{gift.name}</span>
                         <CoinAmount>{gift.cost.toLocaleString()} coins</CoinAmount>
+                        {isGiftLocked(gift, giftingLevel) && <span className="gifting-lock-tag" data-testid={`lock-gift-${gift.id}`}><LockKeyhole size={11} aria-hidden /> Lv {PLATINUM_UNLOCK_LEVEL}</span>}
                       </button>)}
                     </div>
                   </section>;
@@ -368,6 +375,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
                 <span className="gift-panel-card-art"><GiftArtwork gift={gift} size={48} /></span>
                 <span className="gift-panel-card-name">{gift.name}</span>
                 {gift.quantity && <span className="gift-panel-owned-count">Owned · {gift.quantity}</span>}
+                {isGiftLocked(me.data?.gifts.find(g => g.id === gift.id), giftingLevel) && <span className="gifting-lock-tag" data-testid={`lock-bag-gift-${gift.id}`}><LockKeyhole size={11} aria-hidden /> Platinum · Lv {PLATINUM_UNLOCK_LEVEL}</span>}
               </div>)}
             </div>
           ) : null}
@@ -377,6 +385,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
           {selected && selectedRecipients.length > 0 && <p className="gift-panel-total">
             {selectedRecipients.length > 1 ? `${selectedRecipients.length} recipients · ` : ''}{quantity} × {selected.name} · <CoinAmount>{totalCost.toLocaleString()} coins</CoinAmount>
           </p>}
+          {selectedLocked && <p className="gift-panel-message is-error" data-testid="text-gift-locked">This gift unlocks at Platinum gifting level {PLATINUM_UNLOCK_LEVEL}.</p>}
           {error && <p role="alert" className="gift-panel-message is-error">{error}</p>}
           {notice && <p role="status" className="gift-panel-message is-success">{notice}</p>}
           {canSend && !enough && <p className="gift-panel-message is-error">Not enough coins. <Link href="/community/coins">Recharge &gt;</Link></p>}

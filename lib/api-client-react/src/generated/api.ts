@@ -71,6 +71,7 @@ import type {
   GiftStudioRenameInput,
   GiftStudioUploadInput,
   GiftStudioVersion,
+  GifterLeaderboard,
   HangoutRewardSettings,
   HealthStatus,
   InvalidInputResponse,
@@ -3845,6 +3846,77 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getSaveSocialProfileMutationOptions(options));
     }
+
+export const getGetGifterLeaderboardUrl = () => {
+
+
+
+
+  return `/api/social/gifters/leaderboard`
+}
+
+export const getGifterLeaderboard = async ( options?: Parameters<typeof customFetch>[1]): Promise<GifterLeaderboard> => {
+
+  return customFetch<GifterLeaderboard>(getGetGifterLeaderboardUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGifterLeaderboardQueryKey = () => {
+    return [
+    `/api/social/gifters/leaderboard`
+    ] as const;
+    }
+
+
+export const getGetGifterLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getGifterLeaderboard>>, TError = ErrorType<ErrorResponse4b96100>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGifterLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGifterLeaderboardQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGifterLeaderboard>>> = ({ signal }) => getGifterLeaderboard({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGifterLeaderboard>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGifterLeaderboardQueryResult = NonNullable<Awaited<ReturnType<typeof getGifterLeaderboard>>>
+export type GetGifterLeaderboardQueryError = ErrorType<ErrorResponse4b96100>
+
+
+
+export function useGetGifterLeaderboard<TData = Awaited<ReturnType<typeof getGifterLeaderboard>>, TError = ErrorType<ErrorResponse4b96100>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGifterLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGifterLeaderboardQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getSetMyNameColorTestTotalUrl = () => {
 

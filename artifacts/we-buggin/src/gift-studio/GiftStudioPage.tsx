@@ -1075,6 +1075,7 @@ export function GiftStudioPage() {
     cost: number | undefined,
     status?: GiftStudioCatalogGift['status'],
     nextType?: GiftStudioProductType,
+    platinumExclusive?: boolean,
   ) => {
     setCatalogActionId(targetId);
     setError('');
@@ -1086,13 +1087,15 @@ export function GiftStudioPage() {
           ...(cost !== undefined ? { cost } : {}),
           ...(status ? { status } : {}),
           ...(nextType ? { productType: nextType } : {}),
+          ...(platinumExclusive !== undefined ? { platinumExclusive } : {}),
         },
       });
       await Promise.all([
         client.invalidateQueries({ queryKey: getGetGiftStudioLibraryQueryKey() }),
         client.invalidateQueries({ queryKey: getGetSocialMeQueryKey() }),
       ]);
-      if (cost !== undefined) setStatus(<>{updated.name} now costs <CoinAmount>{updated.cost.toLocaleString()} coins</CoinAmount>.</>);
+      if (platinumExclusive !== undefined) setStatus(`${updated.name} is ${platinumExclusive ? 'now Platinum-exclusive (gifting level 61+)' : 'available to every gifting level'}.`);
+      else if (cost !== undefined) setStatus(<>{updated.name} now costs <CoinAmount>{updated.cost.toLocaleString()} coins</CoinAmount>.</>);
       else if (status) setStatus(`${updated.name} is ${status === 'active' ? 'active in' : 'hidden from'} the ${updated.productType === 'gift' ? 'gift picker' : 'entrance effects shop'}.`);
       else setStatus(`Saved ${updated.name}.`);
     } catch (cause) {
@@ -1594,6 +1597,7 @@ export function GiftStudioPage() {
                       activeVersion={libraryItems.find((version) => version.giftId === gift.id && version.status === 'active')}
                       pending={catalogActionId === gift.id}
                       onSave={(name, cost) => saveCatalogGift(gift.id, name, cost)}
+                      onExclusive={(value) => void saveCatalogGift(gift.id, undefined, undefined, undefined, undefined, value).catch(() => undefined)}
                       onStatus={(status) => void changeCatalogStatus(gift, status)}
                       onType={() => void changeCatalogType(gift)}
                       onReplace={() => beginReplacement(gift)}
@@ -1612,6 +1616,7 @@ export function GiftStudioPage() {
                       activeVersion={libraryItems.find((version) => version.giftId === gift.id && version.status === 'active')}
                       pending={catalogActionId === gift.id}
                       onSave={(name, cost) => saveCatalogGift(gift.id, name, cost)}
+                      onExclusive={(value) => void saveCatalogGift(gift.id, undefined, undefined, undefined, undefined, value).catch(() => undefined)}
                       onStatus={(status) => void changeCatalogStatus(gift, status)}
                       onType={() => void changeCatalogType(gift)}
                       onReplace={() => beginReplacement(gift)}
@@ -1686,12 +1691,13 @@ export function GiftStudioPage() {
 export default GiftStudioPage;
 
 function CatalogGiftCard({
-  gift, activeVersion, pending, onSave, onStatus, onType, onReplace, onPlay, onRegenerateIcon, onOverrideIcon,
+  gift, activeVersion, pending, onSave, onExclusive, onStatus, onType, onReplace, onPlay, onRegenerateIcon, onOverrideIcon,
 }: {
   gift: GiftStudioCatalogGift;
   activeVersion?: GiftStudioVersion;
   pending: boolean;
   onSave: (name: string, cost: number) => Promise<unknown>;
+  onExclusive: (value: boolean) => void;
   onStatus: (status: GiftStudioCatalogGift['status']) => void;
   onType: () => void;
   onReplace: () => void;
@@ -1761,6 +1767,13 @@ function CatalogGiftCard({
       </label>
       <button className="gs-chip-button" type="submit" disabled={pending || !changed || !validPrice || !name.trim()} data-testid={`button-save-catalog-${gift.id}`}><Save size={14} /> Save name & price</button>
     </form>
+    {gift.productType === 'gift' && <label className="gs-catalog-exclusive" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 0' }}>
+      <input type="checkbox" checked={gift.platinumExclusive === true} disabled={pending}
+        onChange={(event) => onExclusive(event.target.checked)}
+        aria-label={`Platinum-exclusive: only gifting level 61 and above can send ${gift.name}`}
+        data-testid={`checkbox-platinum-exclusive-${gift.id}`} />
+      <span><LockKeyhole size={13} aria-hidden="true" /> Platinum-exclusive (gifting level 61+)</span>
+    </label>}
     <div className="gs-catalog-actions">
       <button className="gs-chip-button" type="button" onClick={onPlay} disabled={!canPlay} data-testid={`button-play-catalog-${gift.id}`}><Play size={14} /> {canPlay ? 'Play animation' : 'No active animation'}</button>
       <button className="gs-chip-button" type="button" onClick={onReplace} data-testid={`button-replace-catalog-${gift.id}`}><Scissors size={14} /> Replace clip</button>

@@ -15,7 +15,7 @@ export interface UniversityWhisper {
   displayNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex?: number;
   /** @nullable */

@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Coins, Send, RefreshCw, Trash2, Trophy } from 'lucide-react';
 import {
   useGetSocialMe, useGetSocialConversation, useSendSocialMessage, useDeleteSocialConversation,
-  useClaimSocialDailyReward, useGetSocialLedger, useGetSocialLeaderboard,
+  useClaimSocialDailyReward, useGetSocialLedger, useGetSocialLeaderboard, useGetGifterLeaderboard, getGetGifterLeaderboardQueryKey,
   getGetSocialMeQueryKey, getGetSocialConversationQueryKey, getGetSocialLedgerQueryKey,
 } from '@workspace/api-client-react';
 import { BadgeMark, CoinAmount, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, fmt, refreshSocial, useIdemKey } from './common';
@@ -197,23 +197,53 @@ export function TransactionHistoryPage() {
 }
 
 export function LeaderboardPage() {
-  const q = useGetSocialLeaderboard({ query: { queryKey: ['/api/social/leaderboard'], refetchInterval: 15000 } });
+  const [view, setView] = useState<'givers' | 'receivers'>('receivers');
   return (
     <section>
       <h1 className="bm-h1 sc-h1"><Trophy size={36} /> Leaderboard</h1>
-      <p className="bm-lede">Ranked by coins received in gifts.</p>
-      {q.isLoading && <Loading />}
-      {q.isError && <ErrorBox error={q.error} retry={() => q.refetch()} />}
-      {q.data && (q.data.people.length === 0 ? <Empty title="No ranking yet"><p>Gifts sent to opted-in people will show up here.</p></Empty> : (
-        <ol className="sc-rank">{q.data.people.map((p, i) => (
-          <li key={p.username}>
-            <span className="sc-pos" aria-label={`Rank ${i + 1}`}>{i + 1}</span>
-            <PersonCard p={p} className="sc-card-leaderboard" showBadgeInName={false}
-              extra={<span className="sc-rank-score">
-                <BadgeMark id={p.badgeId} label={p.badgeName} imageUrl={p.badgeImage} size={17} compact />
-                <b className="sc-score"><CoinAmount>{p.receivedCredits.toLocaleString()}</CoinAmount></b>
-              </span>} />
-          </li>))}</ol>))}
+      <div className="sc-tabs" role="tablist" aria-label="Leaderboard view" style={{ display: 'flex', gap: 8, margin: '4px 0 14px' }}>
+        {(['receivers', 'givers'] as const).map(id => (
+          <button key={id} type="button" role="tab" aria-selected={view === id}
+            className={`bm-btn bm-btn-sm${view === id ? ' bm-btn-primary' : ''}`} style={{ borderRadius: 0 }}
+            onClick={() => setView(id)} data-testid={`tab-leaderboard-${id}`}>{id === 'givers' ? 'Givers' : 'Receivers'}</button>
+        ))}
+      </div>
+      {view === 'receivers' ? <ReceiverLeaderboard /> : <GiverLeaderboard />}
     </section>
   );
+}
+
+function ReceiverLeaderboard() {
+  const q = useGetSocialLeaderboard({ query: { queryKey: ['/api/social/leaderboard'], refetchInterval: 15000 } });
+  return <>
+    <p className="bm-lede">Ranked by coins received in gifts.</p>
+    {q.isLoading && <Loading />}
+    {q.isError && <ErrorBox error={q.error} retry={() => q.refetch()} />}
+    {q.data && (q.data.people.length === 0 ? <Empty title="No ranking yet"><p>Gifts sent to opted-in people will show up here.</p></Empty> : (
+      <ol className="sc-rank">{q.data.people.map((p, i) => (
+        <li key={p.username}>
+          <span className="sc-pos" aria-label={`Rank ${i + 1}`}>{i + 1}</span>
+          <PersonCard p={p} className="sc-card-leaderboard" showBadgeInName={false}
+            extra={<span className="sc-rank-score">
+              <BadgeMark id={p.badgeId} label={p.badgeName} imageUrl={p.badgeImage} size={17} compact />
+              <b className="sc-score"><CoinAmount>{p.receivedCredits.toLocaleString()}</CoinAmount></b>
+            </span>} />
+        </li>))}</ol>))}
+  </>;
+}
+
+function GiverLeaderboard() {
+  const q = useGetGifterLeaderboard({ query: { queryKey: getGetGifterLeaderboardQueryKey(), refetchInterval: 15000 } });
+  return <>
+    <p className="bm-lede">Opted-in public gifters, ranked by gift XP from successfully sent gifts. Every Deux Wild gifter (level 91+) is listed, plus the top ten others.</p>
+    {q.isLoading && <Loading />}
+    {q.isError && <ErrorBox error={q.error} retry={() => q.refetch()} />}
+    {q.data && (q.data.people.length === 0 ? <Empty title="No givers yet"><p>Members who send gifts will appear here.</p></Empty> : (
+      <ol className="sc-rank" data-testid="list-gifter-leaderboard">{q.data.people.map((p, i) => (
+        <li key={p.username} data-testid={`row-gifter-${p.username}`}>
+          <span className="sc-pos" aria-label={`Rank ${i + 1}`}>{i + 1}</span>
+          <PersonCard p={p} className="sc-card-leaderboard" showBadgeInName={false}
+            extra={<span className="sc-rank-score"><b className="sc-score">{p.giftXp.toLocaleString()} XP</b></span>} />
+        </li>))}</ol>))}
+  </>;
 }

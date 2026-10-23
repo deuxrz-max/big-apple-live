@@ -11,6 +11,8 @@ import { liveStreamIdForAccount, isLiveStreamActiveOrStarting } from "../live-st
 import { getSendableGiftCatalogItem } from "../gift-studio-catalog";
 import { requireSendableGift } from "../gift-availability";
 import { giftChargeTotal } from "./gift-quantity";
+import { assertGiftingAccess } from "./gifting-access";
+import { nameColorProfileForAccount } from "./gift-name-color-data";
 
 const giftSendTails = new Map<string, Promise<void>>();
 
@@ -80,6 +82,7 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
     const boundHistory = roomContext ? roomStore.getHistoryId(roomContext.roomId.toUpperCase()) : null;
     const ref = `gift:${giftId}:${target.accountId}${boundHistory ? ':' + boundHistory : streamContext ? ':live:' + streamContext.streamId : ''}`;
     if (await replay(tx, id, key, ref)) return { wallet: await wallet(id, tx, sender.username), liveGiftEvent: null };
+    await assertGiftingAccess(id, item, tx);
     const historyId = roomContext
       ? validateGiftRoom(roomContext.roomId.toUpperCase(), roomContext.sessionId, id, target.accountId)
       : null;
@@ -128,6 +131,8 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
     }
     return { wallet: await wallet(id, tx, sender.username), liveGiftEvent };
   });
+  const progress = await nameColorProfileForAccount(id);
+  roomStore.updateAccountNameColor(id, progress.color, progress.tierIndex);
   return streamContext ? { ...result.wallet, liveGiftEvent: result.liveGiftEvent } : result.wallet;
 }
 export async function purchase(id: string, itemId: string, key: string) {
@@ -141,6 +146,7 @@ export async function purchase(id: string, itemId: string, key: string) {
   return db.transaction(async tx => {
     await lockAccounts(tx, [id]);
     if (await replay(tx, id, key, ref)) return wallet(id, tx, buyer.username);
+    await assertGiftingAccess(id, item, tx);
     const [current] = await tx.select().from(socialWallets).where(eq(socialWallets.accountId, id));
     if (!current) throw new RoomError(409, "Open Rewards to initialize your wallet");
     const unlimited = hasDevelopmentUnlimitedCredits(buyer.username);

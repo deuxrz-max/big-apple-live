@@ -24,14 +24,14 @@ export interface RoomGiftEvent {
   senderNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   senderNameTierIndex?: number;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   recipientNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   recipientNameTierIndex?: number;
   /** @nullable */

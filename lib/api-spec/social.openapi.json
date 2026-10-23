@@ -5,6 +5,17 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/social/gifters/leaderboard": {
+      "get": {
+        "operationId": "getGifterLeaderboard",
+        "tags": ["social"],
+        "security": [{"AccountSession": []}],
+        "responses": {
+          "200": {"description": "Successful outgoing gift XP ranking; opted-in Deux Wild gifters and the top ten other gifters", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GifterLeaderboard"}}}},
+          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"}
+        }
+      }
+    },
     "/social/me/passport": {
       "get": {
         "operationId": "getMyStreamerPassport",
@@ -1326,6 +1337,21 @@
   },
   "components": {
     "schemas": {
+      "GifterLeaderboard": {
+        "type": "object",
+        "required": ["people"],
+        "properties": {
+          "people": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {"$ref": "#/components/schemas/SocialPerson"},
+                {"type": "object", "required": ["giftXp"], "properties": {"giftXp": {"type": "integer", "minimum": 1}}}
+              ]
+            }
+          }
+        }
+      },
       "DeveloperGiftMotionPreset": {
         "type": "object",
         "additionalProperties": false,
@@ -1398,7 +1424,8 @@
           "name": {"type": "string", "minLength": 1, "maxLength": 60},
           "cost": {"type": "integer", "minimum": 1},
           "productType": {"$ref": "#/components/schemas/GiftStudioProductType"},
-          "status": {"type": "string", "enum": ["active", "inactive", "deleted"]}
+          "status": {"type": "string", "enum": ["active", "inactive", "deleted"]},
+          "platinumExclusive": {"type": "boolean", "description": "Owner-selected gift restricted to gifter level 61 or higher. Defaults false."}
         }
       },
       "GiftStudioCatalogGift": {
@@ -1411,6 +1438,7 @@
           "productType": {"$ref": "#/components/schemas/GiftStudioProductType"},
           "status": {"type": "string", "enum": ["active", "inactive", "deleted"]},
           "roomGift": {"type": "boolean"},
+          "platinumExclusive": {"type": "boolean"},
           "animationAvailable": {"type": "boolean"},
           "iconUrl": {"type": ["string", "null"]},
           "iconStatus": {"$ref": "#/components/schemas/GiftStudioIconStatus"}
@@ -1770,7 +1798,7 @@
           },
           "displayName": { "type": "string" },
           "displayNameColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
-          "displayNameTierIndex": { "type": "integer", "minimum": 0, "maximum": 18 },
+          "displayNameTierIndex": { "type": "integer", "minimum": 0, "maximum": 100 },
           "followerCount": { "type": "integer", "minimum": 0 },
           "followingCount": { "type": "integer", "minimum": 0 },
           "sentCredits": { "type": "integer", "minimum": 0 },
@@ -1956,6 +1984,7 @@
       "SocialGift": {
         "type": "object",
         "properties": {
+          "platinumExclusive": {"type": "boolean"},
           "id": {
             "type": "string"
           },
@@ -2021,6 +2050,7 @@
       "SocialMe": {
         "type": "object",
         "properties": {
+          "gifterAccessLevel": {"type": "integer", "minimum": 0, "maximum": 100, "description": "Real ledger-earned level; excludes development appearance overrides."},
           "nameColorProgress": {"$ref": "#/components/schemas/NameColorProgress"},
           "nameColorTest": {"$ref": "#/components/schemas/NameColorTestState"},
           "entranceEffects": {"$ref": "#/components/schemas/EntranceEffectSettings"},
@@ -2125,7 +2155,7 @@
         "type": "object",
         "properties": {
           "tierName": {"type": "string"},
-          "tierIndex": {"type": "integer", "minimum": 0, "maximum": 18},
+          "tierIndex": {"type": "integer", "minimum": 0, "maximum": 100},
           "lifetimeCoinsPurchased": {"type": "integer", "minimum": 0},
           "nextTierName": {"type": ["string", "null"]},
           "nextTierThreshold": {"type": ["integer", "null"], "minimum": 0},
@@ -2245,9 +2275,9 @@
           "senderName": {"type": "string"},
           "recipientName": {"type": "string"},
           "senderNameColor": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
-          "senderNameTierIndex": {"type": "integer", "minimum": 0, "maximum": 18},
+          "senderNameTierIndex": {"type": "integer", "minimum": 0, "maximum": 100},
           "recipientNameColor": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
-          "recipientNameTierIndex": {"type": "integer", "minimum": 0, "maximum": 18},
+          "recipientNameTierIndex": {"type": "integer", "minimum": 0, "maximum": 100},
           "senderBadgeId": {"type": ["string", "null"]},
           "recipientBadgeId": {"type": ["string", "null"]},
           "senderBadgeName": {"type": ["string", "null"]},
@@ -2465,7 +2495,7 @@
                   "type": "string",
                   "pattern": "^#[0-9A-Fa-f]{6}$"
                 },
-                "displayNameTierIndex": {"type": "integer", "minimum": 0, "maximum": 18},
+                "displayNameTierIndex": {"type": "integer", "minimum": 0, "maximum": 100},
                 "badgeId": {"type": ["string", "null"]},
                 "badgeName": {"type": ["string", "null"]},
                 "badgeImage": {"type": ["string", "null"]},

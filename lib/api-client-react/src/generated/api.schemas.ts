@@ -144,7 +144,7 @@ export interface SocialPerson {
   displayNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex?: number;
   /** @minimum 0 */
@@ -282,7 +282,7 @@ export interface UniversityPerson {
   displayNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex?: number;
   passport?: StreamerPassportBadgeSummary;
@@ -306,7 +306,7 @@ export interface UniversityWhisper {
   displayNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex?: number;
   /** @nullable */
@@ -351,7 +351,7 @@ export interface PhotoReviewEntry {
   displayNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex?: number;
   createdAt: string;
@@ -630,7 +630,7 @@ export interface ChatMessage {
   displayNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex?: number;
   passport?: StreamerPassportBadgeSummary;
@@ -730,7 +730,7 @@ export interface ModeratorBotFlag {
   displayNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex?: number;
   text: string;
@@ -892,7 +892,7 @@ export interface LiveStreamEntry {
   displayNameColor: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex: number;
   /** @minimum 0 */
@@ -924,7 +924,7 @@ export interface LiveStreamHostSession {
   displayNameColor: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex: number;
 }
@@ -940,7 +940,7 @@ export interface LiveStreamViewerSession {
   displayNameColor: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex: number;
   /** @maxLength 40 */
@@ -967,7 +967,7 @@ export interface LiveStreamChatMessage {
   displayNameColor: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex: number;
   /**
@@ -1303,7 +1303,7 @@ export interface Participant {
   displayNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex?: number;
   participantId: string;
@@ -1405,7 +1405,7 @@ export interface UniversityPerson4b96100 {
   displayNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex?: number;
   passport?: StreamerPassportBadgeSummary;
@@ -1429,7 +1429,7 @@ export interface UniversityWhisper4b96100 {
   displayNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex?: number;
   /** @nullable */
@@ -1474,7 +1474,7 @@ export interface PhotoReviewEntry4b96100 {
   displayNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex?: number;
   createdAt: string;
@@ -1738,7 +1738,7 @@ export interface ChatMessage4b96100 {
   displayNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex?: number;
   passport?: StreamerPassportBadgeSummary;
@@ -1838,7 +1838,7 @@ export interface ModeratorBotFlag4b96100 {
   displayNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex?: number;
   text: string;
@@ -2000,7 +2000,7 @@ export interface LiveStreamEntry4b96100 {
   displayNameColor: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex: number;
   /** @minimum 0 */
@@ -2032,7 +2032,7 @@ export interface LiveStreamHostSession4b96100 {
   displayNameColor: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex: number;
 }
@@ -2048,7 +2048,7 @@ export interface LiveStreamViewerSession4b96100 {
   displayNameColor: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex: number;
   /** @maxLength 40 */
@@ -2075,7 +2075,7 @@ export interface LiveStreamChatMessage4b96100 {
   displayNameColor: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex: number;
   /**
@@ -2411,7 +2411,7 @@ export interface Participant4b96100 {
   displayNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex?: number;
   participantId: string;
@@ -2450,6 +2450,15 @@ export interface RoomSession4b96100 {
 
 export interface ErrorResponse4b96100 {
   error: string;
+}
+
+export type GifterLeaderboardPeopleItem = SocialPerson & {
+  /** @minimum 1 */
+  giftXp: number;
+};
+
+export interface GifterLeaderboard {
+  people: GifterLeaderboardPeopleItem[];
 }
 
 export type DeveloperGiftMotionPresetCategory = typeof DeveloperGiftMotionPresetCategory[keyof typeof DeveloperGiftMotionPresetCategory];
@@ -2632,6 +2641,8 @@ export interface GiftStudioCatalogUpdate {
   cost?: number;
   productType?: GiftStudioProductType;
   status?: GiftStudioCatalogUpdateStatus;
+  /** Owner-selected gift restricted to gifter level 61 or higher. Defaults false. */
+  platinumExclusive?: boolean;
 }
 
 export type GiftStudioCatalogGiftStatus = typeof GiftStudioCatalogGiftStatus[keyof typeof GiftStudioCatalogGiftStatus];
@@ -2662,6 +2673,7 @@ export interface GiftStudioCatalogGift {
   productType: GiftStudioProductType;
   status: GiftStudioCatalogGiftStatus;
   roomGift: boolean;
+  platinumExclusive?: boolean;
   animationAvailable: boolean;
   /** @nullable */
   iconUrl: string | null;
@@ -3097,6 +3109,7 @@ export interface SocialProduct {
 }
 
 export interface SocialGift {
+  platinumExclusive?: boolean;
   id: string;
   name: string;
   cost: number;
@@ -3188,7 +3201,7 @@ export interface NameColorProgress {
   tierName: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   tierIndex: number;
   /** @minimum 0 */
@@ -3240,6 +3253,12 @@ export interface HangoutStreakSummary {
 }
 
 export interface SocialMe {
+  /**
+     * Real ledger-earned level; excludes development appearance overrides.
+     * @minimum 0
+     * @maximum 100
+     */
+  gifterAccessLevel?: number;
   nameColorProgress: NameColorProgress;
   nameColorTest: NameColorTestState;
   entranceEffects: EntranceEffectSettings;
@@ -3344,14 +3363,14 @@ export interface RoomGiftEvent {
   senderNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   senderNameTierIndex?: number;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
   recipientNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   recipientNameTierIndex?: number;
   /** @nullable */
@@ -3434,7 +3453,7 @@ export type SocialInboxConversationsItem = {
   displayNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 18
+     * @maximum 100
      */
   displayNameTierIndex?: number;
   /** @nullable */

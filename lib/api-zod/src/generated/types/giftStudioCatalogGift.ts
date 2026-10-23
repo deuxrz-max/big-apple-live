@@ -18,6 +18,7 @@ export interface GiftStudioCatalogGift {
   productType: GiftStudioProductType;
   status: GiftStudioCatalogGiftStatus;
   roomGift: boolean;
+  platinumExclusive?: boolean;
   animationAvailable: boolean;
   /** @nullable */
   iconUrl: string | null;
