@@ -4,8 +4,9 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { getCardTestFace } from "@/chat/owner-card-game-test-card-policy";
 import {
   JOKER_CARD_H, JOKER_CARD_W, JOKER_CODE, JOKER_REST, JOKER_UNAVAILABLE_TEXT, capDpr, dragToTilt,
-  fitCameraDistance, shouldRender, stepTilt, type JokerSceneStatus, type JokerTilt, type JokerUnavailableReason,
+  fitCameraDistance, foilState, shouldDrawFrame, stepTilt, wantsLoop, type JokerSceneStatus, type JokerTilt, type JokerUnavailableReason,
 } from "./joker-webgl";
+import { FOIL_FRAGMENT, FOIL_VERTEX, composeJokerFace, composeJokerFoilMask } from "./joker-foil";
 import "./joker-webgl.css";
 
 const face = getCardTestFace(JOKER_CODE)!;
@@ -18,20 +19,6 @@ function roundedRect(w: number, h: number, r: number) {
   s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r);
   s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y);
   return s;
-}
-
-/** Procedural satin normal map: fine static horizontal brushing, tiny amplitude. */
-function satinNormalMap() {
-  const n = 128, data = new Uint8Array(n * n * 4);
-  let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  const rows = Array.from({ length: n }, () => rnd() - 0.5);
-  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
-    const i = (y * n + x) * 4, ny = rows[y] * 0.35 + (rnd() - 0.5) * 0.08, nx = (rnd() - 0.5) * 0.06;
-    data[i] = 128 + nx * 127; data[i + 1] = 128 + ny * 127; data[i + 2] = 255; data[i + 3] = 255;
-  }
-  const t = new THREE.DataTexture(data, n, n);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 4); t.needsUpdate = true;
-  return t;
 }
 
 /** three r0.163+ requires WebGL2. Probe, then release the probe context immediately. */
@@ -49,8 +36,8 @@ export function hasWebGL2(): boolean {
 export type JokerSceneHandle = { reset: () => void };
 
 /**
- * Isolated single-Joker 3D card. Render-on-demand: RAF runs only while easing, pauses offscreen
- * or in background tabs, and disposes everything on unmount. Any failure shows the static Joker.
+ * Isolated single-Joker 3D card with a gold foil band. Idle sweep throttled to ~30fps; pauses
+ * offscreen, in background tabs and under reduced motion (renders only on change), disposes everything on unmount. Any failure shows the static Joker.
  */
 export function JokerCardScene({ resetSignal = 0 }: { resetSignal?: number }) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -92,7 +79,7 @@ export function JokerCardScene({ resetSignal = 0 }: { resetSignal?: number }) {
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.NoToneMapping;
       canvas.setAttribute("role", "img");
-      canvas.setAttribute("aria-label", `${face.label}, 3D card. Drag to tilt.`);
+      canvas.setAttribute("aria-label", `${face.label}, 3D card. Drag to tilt and move the gold foil.`);
       canvas.tabIndex = 0;
       canvas.dataset.testid = "canvas-joker-webgl";
       host.prepend(canvas);
@@ -122,27 +109,26 @@ export function JokerCardScene({ resetSignal = 0 }: { resetSignal?: number }) {
       const pos = faceGeo.attributes.position, uv = faceGeo.attributes.uv;
       for (let i = 0; i < pos.count; i++) uv.setXY(i, pos.getX(i) / (W - inset * 2) + 0.5, pos.getY(i) / (H - inset * 2) + 0.5);
       uv.needsUpdate = true;
-      const normalMap = satinNormalMap(); own(() => normalMap.dispose());
-      // Preserve the uploaded ink exactly. Lighting belongs to a separate,
-      // very faint varnish layer, not to the artwork's black pixels.
-      const faceMat = new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }); own(() => faceMat.dispose());
+      // Exact ink: unlit composite (no colour management, no tone mapping) + additive foil band.
+      const foilUniforms = {
+        uMap: { value: null as unknown }, uMask: { value: null as unknown },
+        uPos: { value: -1 }, uStrength: { value: 0 }, uDir: { value: new THREE.Vector2(0.62, -0.78) },
+      };
+      const faceMat = new THREE.ShaderMaterial({ uniforms: foilUniforms, vertexShader: FOIL_VERTEX, fragmentShader: FOIL_FRAGMENT, toneMapped: false });
+      own(() => faceMat.dispose());
       const faceMesh = new THREE.Mesh(faceGeo, faceMat);
       faceMesh.position.z = D / 2 + B + 0.0015;
-      const finishMat = new THREE.MeshPhysicalMaterial({
-        color: 0x070604, transparent: true, opacity: 0.035, depthWrite: false,
-        roughness: 0.65, metalness: 0.1, envMapIntensity: 0.25,
-        normalMap, normalScale: new THREE.Vector2(0.025, 0.025),
-        clearcoat: 0.15, clearcoatRoughness: 0.55,
-      }); own(() => finishMat.dispose());
-      const finishMesh = new THREE.Mesh(faceGeo, finishMat);
-      finishMesh.position.z = faceMesh.position.z + 0.0004;
+      rimMat.emissive = new THREE.Color(0x8a5f14);
       const backMat = new THREE.MeshStandardMaterial({ color: 0x14100a, roughness: 0.6, metalness: 0.2 }); own(() => backMat.dispose());
       const back = new THREE.Mesh(faceGeo, backMat); back.rotation.y = Math.PI; back.position.z = -faceMesh.position.z;
-      const card = new THREE.Group(); card.add(body, faceMesh, finishMesh, back); scene.add(card);
+      const card = new THREE.Group(); card.add(body, faceMesh, back); scene.add(card);
 
       let artTex: { dispose(): void } | null = null;
       own(() => { artTex?.dispose(); artTex = null; });
-      let onScreen = true, dirty = true, last = 0;
+      let maskTex: { dispose(): void } | null = null;
+      own(() => { maskTex?.dispose(); maskTex = null; });
+      let onScreen = true, dirty = true, last = 0, lastDraw = 0;
+      let pointerUV: { u: number; v: number } | null = null;
       let cur: JokerTilt = { ...JOKER_REST };
       const stop = () => { if (raf) cancelAnimationFrame(raf); raf = 0; last = 0; };
 
@@ -150,19 +136,25 @@ export function JokerCardScene({ resetSignal = 0 }: { resetSignal?: number }) {
         raf = 0;
         if (dead) return;
         const dt = last ? t - last : 16; last = t;
-        const target = reduced?.matches ? JOKER_REST : targetRef.current;
-        const r = stepTilt(cur, target, reduced?.matches ? 1000 : dt);
+        const red = !!reduced?.matches;
+        const r = stepTilt(cur, red ? JOKER_REST : targetRef.current, red ? 1000 : dt);
         cur = r.tilt;
-        card.rotation.set(THREE.MathUtils.degToRad(cur.rx), THREE.MathUtils.degToRad(cur.ry), 0);
-        try { renderer.render(scene, camera); } catch { fail("render"); return; }
-        dirty = !r.settled;
-        if (!dead && shouldRender({ onScreen, docHidden: document.hidden, dirty })) raf = requestAnimationFrame(frame);
+        if (shouldDrawFrame(t, lastDraw, dirty || !r.settled || !!pointerUV)) {
+          lastDraw = t; dirty = false;
+          card.rotation.set(THREE.MathUtils.degToRad(cur.rx), THREE.MathUtils.degToRad(cur.ry), 0);
+          const f = foilState({ pointer: pointerUV, tilt: cur, tMs: t, reduced: red });
+          foilUniforms.uPos.value = f.pos; foilUniforms.uStrength.value = f.strength;
+          // Gold edge answers the same band: brightest as the sweep crosses the card.
+          rimMat.emissiveIntensity = 0.06 + 0.42 * f.strength * Math.exp(-(((f.pos - 0.5) / 0.4) ** 2));
+          try { renderer.render(scene, camera); } catch { fail("render"); return; }
+        }
+        if (!dead && wantsLoop({ onScreen, docHidden: document.hidden, reduced: red, settled: r.settled, dirty })) raf = requestAnimationFrame(frame);
         else last = 0;
       };
       const kick = () => {
         if (dead) return;
         dirty = true;
-        if (!raf && artTex && shouldRender({ onScreen, docHidden: document.hidden, dirty })) raf = requestAnimationFrame(frame);
+        if (!raf && artTex && onScreen && !document.hidden) raf = requestAnimationFrame(frame);
       };
       kickRef.current = kick;
       const resize = () => {
@@ -175,25 +167,36 @@ export function JokerCardScene({ resetSignal = 0 }: { resetSignal?: number }) {
         kick();
       };
 
-      new THREE.TextureLoader().load(JOKER_IMAGE_URL, (tex: { dispose(): void; colorSpace: unknown; anisotropy: number }) => {
-        // Late arrival after unmount/failure: free it and do nothing else.
-        if (dead) { tex.dispose(); return; }
+      new THREE.ImageLoader().load(JOKER_IMAGE_URL, (img: HTMLImageElement) => {
+        // Late arrival after unmount/failure: nothing allocated yet, do nothing.
+        if (dead) return;
         try {
-          tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
-          artTex = tex; faceMat.map = tex; faceMat.needsUpdate = true;
-        } catch { tex.dispose(); fail("texture"); return; }
+          const tex = new THREE.CanvasTexture(composeJokerFace(img));
+          const mask = new THREE.CanvasTexture(composeJokerFoilMask());
+          artTex = tex; maskTex = mask;
+          tex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+          foilUniforms.uMap.value = tex; foilUniforms.uMask.value = mask;
+        } catch { fail("texture"); return; }
         setStatus("ready"); kick();
       }, undefined, () => fail("texture"));
 
+      const raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2();
+      const pickUV = (e: PointerEvent) => {
+        const b = canvas.getBoundingClientRect();
+        ndc.set(((e.clientX - b.left) / (b.width || 1)) * 2 - 1, -((e.clientY - b.top) / (b.height || 1)) * 2 + 1);
+        raycaster.setFromCamera(ndc, camera);
+        const hit = raycaster.intersectObject(faceMesh, false)[0];
+        pointerUV = hit?.uv ? { u: hit.uv.x, v: hit.uv.y } : { u: (ndc.x + 1) / 2, v: (ndc.y + 1) / 2 };
+      };
       // Pointer: captured on the canvas only; page scroll outside the canvas is untouched.
       let drag: { id: number; x: number; y: number; base: JokerTilt } | null = null;
-      const down = (e: PointerEvent) => { drag = { id: e.pointerId, x: e.clientX, y: e.clientY, base: { ...targetRef.current } }; canvas.setPointerCapture?.(e.pointerId); };
+      const down = (e: PointerEvent) => { drag = { id: e.pointerId, x: e.clientX, y: e.clientY, base: { ...targetRef.current } }; canvas.setPointerCapture?.(e.pointerId); pickUV(e); kick(); };
       const move = (e: PointerEvent) => {
         if (!drag || e.pointerId !== drag.id) return;
         targetRef.current = dragToTilt(drag.base, e.clientX - drag.x, e.clientY - drag.y, canvas.clientWidth, canvas.clientHeight, !!reduced?.matches);
-        kick();
+        pickUV(e); kick();
       };
-      const up = (e: PointerEvent) => { if (drag && e.pointerId === drag.id) { canvas.releasePointerCapture?.(e.pointerId); drag = null; } };
+      const up = (e: PointerEvent) => { if (drag && e.pointerId === drag.id) { canvas.releasePointerCapture?.(e.pointerId); drag = null; pointerUV = null; kick(); } };
       const keydown = (e: KeyboardEvent) => {
         const step = ({ ArrowLeft: [0, -40], ArrowRight: [0, 40], ArrowUp: [-40, 0], ArrowDown: [40, 0] } as Record<string, number[]>)[e.key];
         if (step) { e.preventDefault(); targetRef.current = dragToTilt(targetRef.current, step[1], step[0], 400, 400, !!reduced?.matches); kick(); }
@@ -205,6 +208,8 @@ export function JokerCardScene({ resetSignal = 0 }: { resetSignal?: number }) {
       };
       listen("pointerdown", down); listen("pointermove", move); listen("pointerup", up); listen("pointercancel", up); listen("keydown", keydown);
       document.addEventListener("visibilitychange", vis); own(() => document.removeEventListener("visibilitychange", vis));
+      const motionChange = () => kick();
+      reduced?.addEventListener?.("change", motionChange); own(() => reduced?.removeEventListener?.("change", motionChange));
       if (typeof IntersectionObserver !== "undefined") {
         const io = new IntersectionObserver(([en]) => { onScreen = !!en?.isIntersecting; if (onScreen) kick(); else stop(); });
         io.observe(host); own(() => io.disconnect());

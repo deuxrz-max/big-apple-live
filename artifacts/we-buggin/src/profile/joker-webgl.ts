@@ -55,3 +55,67 @@ export const JOKER_UNAVAILABLE_TEXT: Record<JokerUnavailableReason, string> = {
   texture: "3D unavailable: the card art couldn’t load into 3D.",
   render: "3D unavailable: the 3D view hit an error.",
 };
+
+/* ---------------- Gold foil finish (pure; shared by scene + tests) ---------------- */
+export const JOKER_FACE_PX_W = 1000;
+export const JOKER_FACE_PX_H = Math.round((JOKER_FACE_PX_W * JOKER_ART_H) / JOKER_ART_W); // 1422
+export const JOKER_IDLE_PERIOD_MS = 7600;
+export const JOKER_IDLE_FPS = 30;
+export const JOKER_MARK_TEXT = "JOKER";
+
+export type Rect = { x: number; y: number; w: number; h: number };
+export type JokerFaceLayout = { frame: Rect; art: Rect; markTL: { x: number; y: number }; markBR: { x: number; y: number }; markSize: number };
+
+/**
+ * Face composite layout: the FULL source art is contained (aspect kept, never cropped) inside padding;
+ * the new gold frame and corner marks sit entirely outside the art bounds.
+ */
+export function jokerFaceLayout(cw = JOKER_FACE_PX_W, ch = JOKER_FACE_PX_H): JokerFaceLayout {
+  const padX = cw * 0.075, padY = ch * 0.078;
+  const s = Math.min((cw - padX * 2) / JOKER_ART_W, (ch - padY * 2) / JOKER_ART_H);
+  const w = JOKER_ART_W * s, h = JOKER_ART_H * s;
+  const art = { x: (cw - w) / 2, y: (ch - h) / 2, w, h };
+  const inset = cw * 0.03;
+  const markSize = Math.round(cw * 0.034);
+  return {
+    frame: { x: inset, y: inset, w: cw - inset * 2, h: ch - inset * 2 },
+    art,
+    markTL: { x: inset + cw * 0.03, y: inset + markSize * 0.4 },
+    markBR: { x: cw - inset - cw * 0.03, y: ch - inset - markSize * 0.4 },
+    markSize,
+  };
+}
+
+/** Idle band position 0..1 sweep (with off-card rest), gentle smoothstep, period ~7.6s. */
+export function idleSweep(tMs: number, period = JOKER_IDLE_PERIOD_MS): number {
+  const p = (((fin(tMs) % period) + period) % period) / period;
+  const e = p * p * (3 - 2 * p);
+  return -0.35 + e * 1.7;
+}
+
+export type FoilState = { pos: number; strength: number };
+/** Band position along the card diagonal, tied to pointer UV, else tilt, else idle sweep. */
+export function foilState(o: { pointer: { u: number; v: number } | null; tilt: JokerTilt; tMs: number; reduced: boolean }): FoilState {
+  if (o.pointer) {
+    const u = clamp(o.pointer.u, 0, 1), v = clamp(o.pointer.v, 0, 1);
+    return { pos: (u + (1 - v)) / 2, strength: 1 };
+  }
+  const m = JOKER_MAX_TILT_DEG;
+  const tiltPos = 0.5 + (fin(o.tilt.ry) / m) * 0.45 - (fin(o.tilt.rx) / m) * 0.3;
+  const w = Math.min(1, Math.hypot(fin(o.tilt.rx), fin(o.tilt.ry)) / 3);
+  if (o.reduced) return { pos: 0.32 + w * (tiltPos - 0.32), strength: 0.7 };
+  const idle = idleSweep(o.tMs);
+  // A released card can remain tilted. Keep the idle sweep alive in that
+  // pose too, rather than locking the band wherever the last drag left it.
+  return { pos: idle + (tiltPos - 0.5) * 0.2, strength: 0.78 + 0.22 * w };
+}
+
+/** Idle frames are throttled to ~30fps; interaction/easing draws every RAF. */
+export function shouldDrawFrame(now: number, lastDraw: number, urgent: boolean, fps = JOKER_IDLE_FPS): boolean {
+  return urgent || !lastDraw || now - lastDraw >= 1000 / fps - 2;
+}
+
+/** Loop continues while on-screen + visible and either animating idle (motion allowed) or easing. */
+export function wantsLoop(s: { onScreen: boolean; docHidden: boolean; reduced: boolean; settled: boolean; dirty: boolean }): boolean {
+  return s.onScreen && !s.docHidden && (!s.reduced || !s.settled || s.dirty);
+}

@@ -1,0 +1,309 @@
+/*
+ * Shared Joker finish: satin black, fine grain, thick bevelled gold edge, top-left light.
+ * Visual reference: src/profile/joker-foil.ts (gold #c99a3e, hi #f3d58a, lo #7a5a1c).
+ *
+ * Cascade strategy: every paint declaration lives in @layer joker-finish and is !important.
+ * The layer is declared FIRST in index.css, and for !important declarations the earliest layer
+ * wins over later layers AND over all unlayered legacy CSS regardless of specificity
+ * (e.g. body #root nav ... !important). Portals are covered because selectors are class based.
+ * Semantic states (destructive, muted, disabled) use revert-layer so legacy red/disabled
+ * colours come back untouched. Only paint properties change: no layout, size or media rules.
+ */
+:root {
+  --jk-gold: #c99a3e;
+  --jk-gold-hi: #f3d58a;
+  --jk-gold-lo: #7a5a1c;
+  --jk-black: #000;
+  --jk-satin: #0b0907;
+  --jk-radius: 14px;
+  --jk-radius-sm: 10px;
+  --jk-radius-pill: 999px;
+  --jk-edge: 2px;
+  --jk-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 0.88  0 0 0 0 0.62  0 0 0 0.055 0'/></filter><rect width='96' height='96' filter='url(%23n)'/></svg>");
+  --jk-satin-fill: var(--jk-grain), linear-gradient(145deg, #1a150d 0%, var(--jk-satin) 42%, #050403 100%);
+  --jk-satin-selected: var(--jk-grain), linear-gradient(145deg, #2b2112 0%, #0e0b07 46%, #050403 100%);
+  --jk-bevel:
+    inset 1px 1px 0 rgba(243, 213, 138, 0.55),
+    inset -1px -1px 0 rgba(58, 40, 10, 0.9),
+    inset 0 0 0 var(--jk-edge) rgba(201, 154, 62, 0.82),
+    inset 3px 3px 6px rgba(243, 213, 138, 0.07),
+    0 1px 0 rgba(122, 90, 28, 0.6),
+    4px 6px 14px rgba(0, 0, 0, 0.6);
+  --jk-bevel-selected:
+    inset 2px 2px 0 rgba(243, 213, 138, 0.85),
+    inset -2px -2px 0 rgba(58, 40, 10, 0.95),
+    inset 0 0 0 3px var(--jk-gold),
+    inset 0 0 0 4px rgba(243, 213, 138, 0.35),
+    inset 6px 6px 12px rgba(243, 213, 138, 0.16),
+    4px 6px 14px rgba(0, 0, 0, 0.65);
+  --jk-bevel-press:
+    inset 1px 1px 0 rgba(58, 40, 10, 0.9),
+    inset -1px -1px 0 rgba(243, 213, 138, 0.4),
+    inset 0 0 0 var(--jk-edge) rgba(201, 154, 62, 0.9),
+    1px 2px 5px rgba(0, 0, 0, 0.6);
+  --jk-ring:
+    0 0 0 1px rgba(243, 213, 138, 0.6),
+    0 0 0 3px var(--jk-gold),
+    0 0 0 4px var(--jk-gold-lo),
+    3px 5px 10px rgba(0, 0, 0, 0.6);
+  --jk-glint: linear-gradient(105deg, transparent 35%, rgba(243, 213, 138, 0.4) 50%, transparent 65%);
+  --jk-glint-ms: 620ms;
+}
+
+@layer joker-finish {
+  /* ---------- Rooms and outside-frame screens stay pure black ---------- */
+  .st-live-room, .ur-social-room, .ch-room, .dw-card-test-room { background-color: var(--jk-black) !important; }
+
+  /* ---------- Panels, sheets, popups, menus, settings, store, gift bag ---------- */
+  .dw-landing-hero, .st-sheet, .st-live-action-sheet, .st-live-block-panel, .sp-modal-panel, .sp-card, .pf-panel, .pf-modal,
+  .pf-dialog, .pf-menu-list, .dw-action-menu-list, .st-dir-menu, .st-home-profile-menu, .ur-menu,
+  .ur-social-profile-popup, .ur-rules, .dw-card-test-rules, .gift-room-panel, .gs-panel, .ees-panel, .sc-entrance-settings, .sc-wallet, .gs-settings, .gs-hangout-settings-form,
+  .bm-mic-panel, .ch-card, .st-room-choice-card, .st-balance-bar, .st-error-card,
+  .sc-thread-bar, .sc-form, .dw-cfp-controls, .dw-jk-bar,
+  [data-radix-popper-content-wrapper] > [role="menu"] {
+    background: var(--jk-satin-fill) !important;
+    background-size: 96px 96px, cover !important;
+    border-color: transparent !important;
+    border-radius: var(--jk-radius) !important;
+    box-shadow: var(--jk-bevel) !important;
+    color: #f4ead6 !important;
+  }
+  .st-sheet, .st-live-action-sheet, .gift-room-panel{
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+  }
+
+  /* ---------- Room / list / store cards ---------- */
+  .st-card, .st-dir-card, .st-live-directory-card, .st-home-card-tall, .st-item-card, .st-launch-tile,
+  .sp-review-item, .sp-manage-row, .ur-prow, .ib-row, .sc-entrance-option {
+    background: var(--jk-satin-fill) !important;
+    background-size: 96px 96px, cover !important;
+    border-color: transparent !important;
+    border-radius: var(--jk-radius) !important;
+    box-shadow: var(--jk-bevel) !important;
+  }
+  /* The public discovery grid and header use these older component families. */
+  .st-card {
+    border-color: var(--jk-gold) !important;
+  }
+  .st-card-body {
+    background: var(--jk-satin-fill) !important;
+    background-size: 96px 96px, cover !important;
+  }
+  .st-card-body strong { color: var(--jk-gold-hi) !important; }
+  .st-search {
+    background: var(--jk-satin-fill) !important;
+    background-size: 96px 96px, cover !important;
+    color: var(--jk-gold-hi) !important;
+    border-color: var(--jk-gold) !important;
+    border-radius: var(--jk-radius-pill) !important;
+    box-shadow: var(--jk-bevel) !important;
+  }
+
+  /* ---------- Buttons, tabs, pill toggles (satin black, gold ink) ---------- */
+  .pf-btn, .pf-round, .pf-edit, .bm-btn, .bm-icon-btn, .bm-size-opt, .bm-chatter-toggle, .gs-button,
+  .gs-chip-button, .gs-icon-button, .gms-button, .sp-button, .ees-button, .st-safety-button,
+  .st-live-start-button, .st-live-end, .ur-rules-btn,
+  .ur-rules-act, .ur-people-btn, .ur-slot-action, .dw-icon-btn, .st-room-choice-option,
+  .st-room-choice-close, .st-sheet-close, .st-live-close-button, .st-home-go-live-button,
+  .st-detail-action, .st-header-items, .pf-chip, .sc-nav-item,
+  .sc-gift, .ur-chip, .gift-panel-category, .gift-panel-all, .gift-panel-send, .gift-panel-recharge, .gift-panel-icon-button, .gift-panel-profile-button,
+  .gift-panel-secondary, .st-header-back, .st-category-more,
+  .dw-card-test-open, .dw-card-test-deck-trigger, .st-category-title-pill,
+  .st-live-bottom-controls button, .st-live-host-controls button, .ur-beam-self-controls button,
+  .dw-home-tabs button, .dw-home-tabs a, .dh-tabs button, .dw-cfp-tabs button, .dw-cfp-controls button,
+  .dw-card-test-controls button{
+    background: var(--jk-satin-fill) !important;
+    background-size: 96px 96px, cover !important;
+    border-color: transparent !important;
+    border-radius: var(--jk-radius-pill) !important;
+    box-shadow: var(--jk-bevel) !important;
+    color: var(--jk-gold-hi) !important;
+    transition: transform 120ms ease, box-shadow 120ms ease !important;
+  }
+  .pf-round, .pf-edit, .dw-icon-btn, .bm-icon-btn, .gs-icon-button, .st-sheet-close, .st-room-choice-close,
+  .st-live-close-button, .gift-panel-icon-button {  border-radius: 50% !important; }
+  .st-room-choice-option, .st-detail-action { border-radius: var(--jk-radius) !important; }
+
+  /* Primary / selected: still satin black, stronger bevel + foil lip + brighter gold ink. */
+  .pf-btn-fill, .pf-btn-store, .bm-btn-primary, .sp-button-gold, .st-safety-button-primary,
+  .st-live-start-button, .st-home-go-live-button, .gift-panel-send,
+  .pf-chip.is-active, .gift-panel-category.is-active, .gift-panel-all.is-selected,
+  .st-header-items.is-active, .sc-nav-item.is-on, .sc-gift.is-on,
+  .bm-size-opt.is-on, .bm-icon-btn.is-on, .sc-tier-active,
+  .dw-home-tabs .is-on, .dh-tabs .is-on, .dw-cfp-tabs [aria-selected="true"], [aria-pressed="true"]:is(.bm-chatter-toggle, .dw-cfp-controls button) {
+    background: var(--jk-satin-selected) !important;
+    background-size: 96px 96px, cover !important;
+    box-shadow: var(--jk-bevel-selected) !important;
+    color: #ffe7a6 !important;
+    font-weight: 800 !important;
+  }
+
+  /* Press: one-shot sink. */
+  :is(.pf-btn, .bm-btn, .gs-button, .sp-button, .st-safety-button, .st-live-start-button, .ur-rules-btn,
+  .ur-people-btn, .ur-slot-action, .dw-icon-btn, .st-room-choice-option, .st-home-go-live-button, .pf-chip, .gift-panel-category, .gift-panel-send, .sc-nav-item, .st-live-bottom-controls button,
+  .dw-cfp-controls button):active:not(:disabled) {
+    transform: translateY(1px) scale(0.985) !important;
+    box-shadow: var(--jk-bevel-press) !important;
+  }
+
+  /* Semantic states keep their legacy colours exactly (red, muted, disabled, unavailable). */
+  .ur-slot-leave, .st-live-muted, .is-mic-off,
+  [class*="danger"], [class*="destructive"], [data-variant="destructive"],
+  [data-testid*="kick"], [data-testid*="delete"], [data-testid*="block"], [data-testid*="report"],
+  .is-disabled, :disabled, [aria-disabled="true"] {
+    background: revert-layer !important;
+    background-size: revert-layer !important;
+    color: revert-layer !important;
+    border-color: revert-layer !important;
+    box-shadow: revert-layer !important;
+    transform: revert-layer !important;
+  }
+
+  /* Press glints: local pseudo only, never on a pseudo already used by an icon/arrow.
+     pf-btn uses ::after for its shortcut arrow and bm-btn uses ::before, so pf-btn glints on ::before. */
+  .pf-btn::before,
+  :is(.dw-home-tabs button, .dh-tabs button, .pf-chip, .gift-panel-category, .gift-panel-all, .dw-cfp-tabs button)::before,
+  :is(.sp-button, .st-safety-button, .st-live-start-button, .st-home-go-live-button, .st-room-choice-option,
+  .gift-panel-send, .gs-button, .dw-cfp-controls button)::after {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    pointer-events: none !important;
+    border-radius: inherit !important;
+    background: var(--jk-glint) !important;
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+  .pf-btn, .sp-button, .st-safety-button, .st-live-start-button, .st-home-go-live-button,
+  .st-room-choice-option, .gift-panel-send, .gs-button, .dw-cfp-controls button,
+  .gift-panel-card, .gift-panel-featured { position: relative; overflow: hidden; }
+  :is(.dw-home-tabs button, .dh-tabs button, .pf-chip, .gift-panel-category, .gift-panel-all, .dw-cfp-tabs button) {
+    position: relative;
+    overflow: hidden;
+  }
+  .pf-btn:active:not(:disabled)::before,
+  :is(.dw-home-tabs button, .dh-tabs button, .pf-chip, .gift-panel-category, .gift-panel-all, .dw-cfp-tabs button):active:not(:disabled)::before,
+  :is(.sp-button, .st-safety-button, .st-live-start-button, .st-home-go-live-button, .st-room-choice-option,
+  .gift-panel-send, .gs-button, .dw-cfp-controls button):active:not(:disabled)::after {
+    animation: jk-glint var(--jk-glint-ms) ease-out 1 !important;
+  }
+
+  /* ---------- Bottom navigation ---------- */
+  .app-bottom-nav-inner {
+    background: var(--jk-satin-fill) !important;
+    background-size: 96px 96px, cover !important;
+    border-color: transparent !important;
+    border-radius: var(--jk-radius) var(--jk-radius) 0 0 !important;
+    box-shadow: var(--jk-bevel) !important;
+  }
+  .app-bottom-link { border-radius: var(--jk-radius-sm) !important; }
+  .app-bottom-link.is-active {
+    color: #ffe7a6 !important;
+    background: var(--jk-satin-selected) !important;
+    background-size: 96px 96px, cover !important;
+    box-shadow: var(--jk-bevel-selected) !important;
+  }
+  /* Overrides mobile-shell's unlayered `... .is-active::after { display: none }`. */
+  .app-bottom-link.is-active::after {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    inset: 0 !important;
+    pointer-events: none !important;
+    border-radius: inherit !important;
+    /* Static foil highlight inside the tab; one opacity-only flash (no travel, so the unread badge is never clipped). */
+    background: linear-gradient(145deg, rgba(243, 213, 138, 0.32), transparent 55%) !important;
+    opacity: 0.35;
+    animation: jk-flash var(--jk-glint-ms) ease-out 1 !important;
+  }
+  .app-bottom-link.is-active { position: relative; }
+  .app-bottom-pip { background: linear-gradient(145deg, var(--jk-gold-hi), var(--jk-gold) 50%, var(--jk-gold-lo)) !important; }
+  .app-home-live { box-shadow: var(--jk-ring) !important; }
+
+  /* ---------- Seat and avatar frames: exterior ring only, shape/photo untouched ---------- */
+  .ur-slot-avatar-button, .ur-person-avatar, .st-live-avatar, .st-live-creator-avatar, .st-live-gifter-avatar,
+  .st-live-action-avatar, .st-home-avatar, .st-dir-avatar, .gift-panel-avatar, .ib-avatar {
+    box-shadow: var(--jk-ring) !important;
+  }
+  .ur-slot, .bm-seat, .bm-tile, .bm-mic-tile {
+    box-shadow: inset 1px 1px 0 rgba(243, 213, 138, 0.3), inset -1px -1px 0 rgba(58, 40, 10, 0.8), 3px 5px 12px rgba(0, 0, 0, 0.55) !important;
+  }
+  .ur-slot.is-speaking { box-shadow: revert-layer !important; }
+  /* Frame the Me/profile hero without changing the photograph's crop or shape. */
+  .pf-hero {
+    outline: var(--jk-edge) solid var(--jk-gold) !important;
+    outline-offset: calc(-1 * var(--jk-edge)) !important;
+    box-shadow: var(--jk-bevel) !important;
+  }
+
+  /* ---------- Chat bubbles (rooms, DMs/whispers, live), timers, badges ---------- */
+  .ch-msg, .bm-msg, .sc-msg, .st-live-chat-line, .ur-arrival-line {
+    background: var(--jk-satin-fill) !important;
+    background-size: 96px 96px, cover !important;
+    border-radius: var(--jk-radius-sm) !important;
+    box-shadow: inset 1px 1px 0 rgba(243, 213, 138, 0.28), inset 0 0 0 1px rgba(122, 90, 28, 0.55), 2px 3px 8px rgba(0, 0, 0, 0.5) !important;
+  }
+  .dw-card-test-countdown, .ch-my-badge-time, .ch-field-count, .st-count, .st-dir-count, .sc-count,
+  .app-bottom-unread, .st-live-chat-badge, .st-home-featured-badge, .bm-seat-count{
+    border-radius: var(--jk-radius-pill) !important;
+    box-shadow: inset 1px 1px 0 rgba(243, 213, 138, 0.5), inset 0 0 0 1px var(--jk-gold-lo), 1px 2px 4px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  /* ---------- Gift tiles: shared edge (artwork untouched) + one-shot glint when selected ---------- */
+  .gift-panel-card, .gift-panel-owned-card, .gift-panel-featured {
+    border-radius: var(--jk-radius-sm) !important;
+    box-shadow: var(--jk-bevel) !important;
+  }
+  .gift-panel-card.is-selected, .gift-panel-featured.is-selected, .gift-panel-person.is-selected {
+    box-shadow: var(--jk-bevel-selected) !important;
+  }
+  .gift-panel-card::after, .gift-panel-featured::after {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    pointer-events: none !important;
+    background: var(--jk-glint) !important;
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+  :is(.gift-panel-card, .gift-panel-featured):is(:active, .is-selected)::after {
+    animation: jk-glint var(--jk-glint-ms) ease-out 1 !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :is(.pf-btn, .bm-btn, .gs-button, .sp-button, .st-safety-button, .st-live-start-button, .ur-rules-btn,
+    .ur-people-btn, .ur-slot-action, .dw-icon-btn, .st-room-choice-option, .st-home-go-live-button, .pf-chip,
+    .gift-panel-category, .gift-panel-send, .sc-nav-item, .st-live-bottom-controls button,
+    .dw-cfp-controls button) { transition: none !important; }
+    .app-bottom-link.is-active::after { animation: none !important; opacity: 0.35 !important; }
+    .gift-panel-card::after, .gift-panel-featured::after, .pf-btn::before,
+    :is(.gift-panel-card, .gift-panel-featured):is(:active, .is-selected)::after,
+    .pf-btn:active:not(:disabled)::before,
+    :is(.dw-home-tabs button, .dh-tabs button, .pf-chip, .gift-panel-category, .gift-panel-all, .dw-cfp-tabs button):active:not(:disabled)::before,
+    :is(.sp-button, .st-safety-button, .st-live-start-button, .st-home-go-live-button, .st-room-choice-option,
+    .gift-panel-send, .gs-button, .dw-cfp-controls button):active:not(:disabled)::after,
+    :is(.dw-home-tabs button, .dh-tabs button, .pf-chip, .gift-panel-category, .gift-panel-all, .dw-cfp-tabs button)::before,
+    :is(.sp-button, .st-safety-button, .st-live-start-button, .st-home-go-live-button, .st-room-choice-option,
+    .gift-panel-send, .gs-button, .dw-cfp-controls button)::after {
+      animation: none !important;
+      opacity: 0 !important;
+    }
+    :is(.pf-btn, .bm-btn, .gs-button, .sp-button, .st-safety-button, .st-live-start-button, .ur-rules-btn,
+    .ur-people-btn, .ur-slot-action, .dw-icon-btn, .st-room-choice-option, .st-home-go-live-button, .pf-chip,
+    .gift-panel-category, .gift-panel-send, .sc-nav-item, .st-live-bottom-controls button,
+    .dw-cfp-controls button):active:not(:disabled) { transform: none !important; }
+  }
+}
+
+@keyframes jk-flash {
+  0% { opacity: 0; }
+  35% { opacity: 1; }
+  100% { opacity: 0.35; }
+}
+
+@keyframes jk-glint {
+  0% { transform: translateX(-120%); opacity: 0; }
+  25% { opacity: 1; }
+  100% { transform: translateX(120%); opacity: 0; }
+}

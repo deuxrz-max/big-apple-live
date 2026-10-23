@@ -28,6 +28,7 @@ import '@/dark-app-theme.css';
 import '@/depth-ui.css';
 import '@/chat/room-black-gold.css';
 import '@/mobile-shell.css';
+import '@/joker-finish.css';
 
 const DevAudioHarnessPage = import.meta.env.DEV
   ? lazy(() => import('@/dev/AudioHarnessPage'))

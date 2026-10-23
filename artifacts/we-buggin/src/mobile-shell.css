@@ -569,3 +569,13 @@ body #root nav.app-bottom-nav .app-bottom-nav-inner.has-home-live .app-home-live
 @media (prefers-reduced-motion: reduce) {
   .dw-action-menu-list, .dw-icon-btn, .dw-landing .st-card { animation: none !important; transition: none !important; }
 }
+
+/* Legacy nav outline reset: theme.css/depth-ui.css/chat.css gave the outer nav a lavender
+   rgba(190,159,255) border with 22px top radius and a purple glow, which showed as a curved
+   purple outline behind the gold bar. Neutral black-gold edge only; nav layout unchanged. */
+body #root nav.app-bottom-nav {
+  border: 0 !important;
+  border-top: 1px solid rgba(227, 182, 90, .14) !important;
+  border-radius: 0 !important;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, .5) !important;
+}

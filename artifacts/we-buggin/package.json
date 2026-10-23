@@ -26,7 +26,8 @@
     "test:live": "node --test tests/liveBeam.test.mjs",
     "test:card-surface-finish": "esbuild tests/cardSurfaceFinish.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-card-finish-tests.mjs && node --test /tmp/we-buggin-card-finish-tests.mjs",
     "test:mobile-shell": "esbuild tests/mobileShell.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-mobile-shell-tests.mjs && node --test /tmp/we-buggin-mobile-shell-tests.mjs",
-    "test:joker-webgl": "esbuild tests/jokerWebgl.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-joker-webgl-tests.mjs && node --test /tmp/we-buggin-joker-webgl-tests.mjs"
+    "test:joker-webgl": "esbuild tests/jokerWebgl.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-joker-webgl-tests.mjs && node --test /tmp/we-buggin-joker-webgl-tests.mjs",
+    "test:joker-finish": "esbuild tests/jokerFinish.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-joker-finish-tests.mjs && node --test /tmp/we-buggin-joker-finish-tests.mjs"
   },
   "devDependencies": {
     "@ffmpeg/core": "^0.12.10",
