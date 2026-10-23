@@ -10,6 +10,9 @@ import { GiftComboPlayer } from '../../src/gifts/GiftComboPlayer';
 import { GiftArtwork } from '../../src/gifts/GiftArtwork';
 import { RewardsPage } from '../../src/social/MoneyPages';
 import { ShinyName } from '../../src/components/ShinyName';
+import { RoomFeedFixture } from './room-feed-fixture';
+import '../../src/chat/live-stream.css';
+import '../../src/joker-finish.css';
 import { BeamTv, type BeamTvHandle } from '../../src/chat/BeamTv';
 import { RoomPerimeter } from '../../src/chat/RoomPerimeter';
 import { OwnProfile } from '../../src/profile/OwnProfile';
@@ -30,6 +33,7 @@ if (typeof __PROMO_REGRESSION__ === 'undefined' || !__PROMO_REGRESSION__)
   throw new Error('This harness may only run on the isolated promo regression server');
 
 const roomThemeFixture = !new URLSearchParams(location.search).get('view')
+  || new URLSearchParams(location.search).get('view') === 'room-feed'
   || new URLSearchParams(location.search).get('view') === 'room-playback';
 document.body.classList.toggle('streamtalk-beam-screen', roomThemeFixture);
 
@@ -147,6 +151,7 @@ createRoot(document.getElementById('root')!).render(
           : new URLSearchParams(location.search).get('view') === 'gift-catalog' ? <GiftCatalogFixture />
           : new URLSearchParams(location.search).get('view') === 'gift-artwork' ? <GiftArtworkFixture />
           : new URLSearchParams(location.search).get('view') === 'gifting-levels' ? <GiftingLevelsFixture />
+          : new URLSearchParams(location.search).get('view') === 'room-feed' ? <RoomFeedFixture />
           : new URLSearchParams(location.search).get('view') === 'profile-cleanup' ? <OwnProfile />
           : new URLSearchParams(location.search).get('view') === 'photo-review' ? <ProfilePhotoReviewPage />
           : new URLSearchParams(location.search).get('view') === 'room-playback' ? <RoomPlaybackFixture />

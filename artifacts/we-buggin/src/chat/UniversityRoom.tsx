@@ -19,6 +19,7 @@ import { isBeamMicEnabled } from './beam-audio-policy';
 import { arrangeVideoBeamSeats } from './video-beam-seat-layout';
 import { BeamTv, type BeamTvHandle } from './BeamTv';
 import { BotShield } from './BotShield';
+import { BotActivityLine } from './BotActivityLine';
 import { GiftBag, OPEN_ROOM_GIFTS_EVENT } from '@/gifts';
 import { useRoomGifts } from '@/gifts/useRoomGifts';
 import { GiftComboPlayer } from '@/gifts/GiftComboPlayer';
@@ -728,16 +729,13 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                   for (const n of [nm, m.username]) if (n && body.toLowerCase().startsWith(n.toLowerCase())) { body = body.slice(n.length).replace(/^[\s:,\-–—]+/, ''); break; }
                   if (m.botMessageType === 'visit' && body.trim().replace(/[.!?]+$/, '').toLowerCase() === 'has arrived') {
                     return <div className="ch-msg ur-arrival-line" key={m.id} data-testid={`bot-arrival-${m.id}`}>
-                      <div><span>{nm}</span> <BotShield botId={m.botId} /> has <strong className="ur-arrived-word">arrived</strong></div>
+                      <div><BotActivityLine botId={m.botId} name={nm} body={body} arrived /></div>
                     </div>;
                   }
                   return (
                     <div className={`ch-msg${m.botMessageType === 'chatter' ? ' ur-bot-chatter' : ''}`} key={m.id} data-testid={`bot-message-${m.id}`}>
                       <div>
-                        <span className="ch-sender">{nm}<BotShield botId={m.botId} />
-                          {m.botMessageType === 'chatter' && <span className="ur-bot-tag" aria-label="Bot account">BOT</span>}
-                        </span>
-                        <p>{body}</p>
+                        <BotActivityLine botId={m.botId} name={nm} body={body} chatter={m.botMessageType === 'chatter'} />
                       </div>
                     </div>
                   );
