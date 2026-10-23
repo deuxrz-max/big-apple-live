@@ -15,8 +15,8 @@ The Joker card finish is the visual anchor for the entire app: shared satin blac
 
 **How to apply:** Reuse shared material tokens across controls, navigation, sheets, seats/avatar frames, lists, chat, timers, badges and broadcast controls. Preserve photos/artwork/video, semantic colors, username and gifting-level colors and all behavior. Moving foil is a selective highlight for pressed controls, the active tab, the card and premium gifts—not a continuous animation on every surface. Do not extend WebGL rendering from the private card prototype into ordinary app surfaces.
 
-Deux Wild must not use oval or egg shapes. Profile pictures, avatars, seats and small round icon buttons use true circles. Only small filter chips, badges, live tags and fire counts may be pills. Tiles, cards, playing cards, pop-ups, sheets, panels, content buttons and nav tabs use the shared rounded rectangle shape.
+Deux Wild must not use oval or egg shapes. Restore pre-redesign box shapes for room controls, messages, input bars, navigation, gift buttons and other redesign-added pill containers. Room seats are rounded rectangular boxes, including the larger center host box; do not make seats circular. Profile pictures and avatars can remain true circles.
 
-**Why:** The owner said the app keeps getting oval shapes and does not want them.
+**Why:** The owner repeated “put the boxes back to the way they were” and reported that circular seat masks clipped “Tap to join.” This supersedes the earlier request to make seats circles.
 
-**How to apply:** Never stretch circle or pill styling into a large content box. Keep circle frames equal in width and height; large Home launch tiles must retain a room-card footprint and readable, non-overlapping icon and text.
+**How to apply:** Shape corrections must preserve the black/gold finish, numbered gifter shields and all behavior. Keep complete seat labels inside their boxes on narrow phone screens. Do not stretch circle or pill styling into content boxes; Home launch tiles retain a room-card footprint and readable, non-overlapping icon and text.

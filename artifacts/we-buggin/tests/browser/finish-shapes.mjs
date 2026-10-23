@@ -19,7 +19,10 @@ try {
   });
   await page.goto('http://localhost:80/');
   await page.getByRole('heading', { name: /find your people/i }).waitFor();
-  const source = await (await page.request.get('http://localhost:80/src/chat/GoLiveScreens.tsx')).text();
+  // Resolve Vite's optimized deps (with their current ?v= hash) from the live module graph, never
+  // by string-guessing, so a re-optimized cache after restart cannot leave a stale URL.
+  const source = (await Promise.all(['/src/chat/GoLiveScreens.tsx', '/src/main.tsx']
+    .map(async (path) => (await page.request.get(`http://localhost:80${path}`)).text()))).join('\n');
   const dependency = (filename) => {
     const path = [...source.matchAll(/from\s*["']([^"']+)["']/g)]
       .map((match) => match[1]).find((path) => path.includes(`/${filename}?`));
@@ -40,7 +43,7 @@ try {
   await page.evaluate(async (urls) => {
     const R = await import(urls.react), Q = await import(urls.query), W = await import(urls.router), I = await import(urls.icons);
     const React = R.default ?? R;
-    const D = await import(urls.react.replace('/react.js', '/react-dom_client.js'));
+    const D = await import(urls.dom);
     const { GoLiveButton } = await import('/src/chat/GoLiveScreens.tsx?shape-fixture=1');
     const { hostLiveSession } = await import('/src/chat/liveSessionController.ts');
     window.__launches = [];
@@ -79,7 +82,7 @@ try {
     (D.createRoot ?? D.default.createRoot)(root).render(
       h(Q.QueryClientProvider, { client: new Q.QueryClient({ defaultOptions: { queries: { retry: false } } }) }, h(Fixture)));
   }, {
-    react: dependency('react.js'), query: dependency('@tanstack_react-query.js'),
+    react: dependency('react.js'), dom: dependency('react-dom_client.js'), query: dependency('@tanstack_react-query.js'),
     router: dependency('wouter.js'), icons: dependency('lucide-react.js'),
   });
   await page.locator('.st-home-go-live-button').waitFor();
@@ -121,15 +124,16 @@ try {
   // Representative real stylesheet classes, not claims of signed-in page journeys.
   const probes = await page.evaluate(() => {
     const rectangular = [
-      'pf-edit', 'pf-btn', 'sc-nav-item', 'app-bottom-link', 'st-search', 'st-room-choice-option',
+      'pf-edit', 'pf-btn', 'sc-nav-item', 'st-search', 'st-room-choice-option',
       'ur-social-profile-popup', 'ur-rules', 'dw-card-test-countdown', 'gift-room-panel',
       'gift-panel-card', 'gift-panel-owned-card', 'gift-panel-send', 'gift-panel-secondary',
-      'sc-thread-bar', 'sc-compose', 'ch-comp', 'pf-dialog', 'pf-modal', 'st-live-end',
+      'sc-thread-bar', 'pf-dialog', 'pf-modal', 'st-live-end',
       'dw-card-fan-back', 'dw-jk-bar', 'gs-panel', 'st-live-action-sheet',
     ];
-    const circles = ['ur-slot', 'ur-slot-avatar-button', 'ur-person-avatar', 'st-live-avatar',
-      'ib-avatar', 'gift-panel-avatar', 'pf-round', 'bm-mic-tile'];
-    return [...rectangular, ...circles].map((name) => {
+    const boxes13 = ['ur-slot', 'bm-mic-tile', 'bm-seat'];
+    const circles = ['ur-person-avatar', 'st-live-avatar',
+      'ib-avatar', 'gift-panel-avatar', 'pf-round'];
+    return [...rectangular, ...boxes13, ...circles].map((name) => {
       const element = document.createElement(['pf-edit', 'sc-nav-item', 'app-bottom-link'].includes(name) ? 'a' : 'button');
       element.className = name;
       element.style.cssText = 'position:fixed;left:0;top:0;width:160px;height:220px';
@@ -137,15 +141,76 @@ try {
       document.getElementById('root').append(element);
       const target = name === 'dw-jk-bar' ? element.firstElementChild : element;
       const computed = getComputedStyle(target), rect = element.getBoundingClientRect();
-      const result = { name, circle: circles.includes(name), radius: computed.borderRadius, width: rect.width, height: rect.height };
+      const result = { name, box13: boxes13.includes(name), circle: circles.includes(name), radius: computed.borderRadius, width: rect.width, height: rect.height };
       element.remove();
       return result;
     });
   });
-  const shapeFailures = probes.filter((p) => p.circle
+  const shapeFailures = probes.filter((p) => p.box13 ? p.radius !== '13px' : p.circle
     ? p.radius !== '50%' || Math.abs(p.width - p.height) >= 1
     : p.radius !== '14px');
   assert.deepEqual(shapeFailures, [], 'all component shape probes');
+  // Real nine-seat grid: actual .ur-slots five-column CSS, actual arrangeVideoBeamSeats placement
+  // (host spans both rows of the centre column), actual seat markup classes. Host occupied, guests 2-9 empty.
+  for (const [width, height] of [[360, 800], [390, 844]]) {
+    await page.setViewportSize({ width, height });
+    const seats = await page.evaluate(async () => {
+      const { arrangeVideoBeamSeats } = await import('/src/chat/video-beam-seat-layout.ts');
+      const slots = Array.from({ length: 9 }, (_, i) => ({ slotNumber: i + 1, participantId: i === 0 ? 'host' : null }));
+      const room = document.createElement('div');
+      room.className = 'ch ch-university ur';
+      room.innerHTML = '<div class="ch-room ur-social-room"><section class="ur-beam is-social-room"><div class="ur-slots" data-count="1" data-tv="off" style="height:300px"></div></section></div>';
+      const grid = room.querySelector('.ur-slots');
+      for (const { slot, area, gridColumn, gridRow } of arrangeVideoBeamSeats(slots, 'host')) {
+        const host = area === 'host';
+        const seat = document.createElement('article');
+        seat.className = `ur-slot${host ? ' is-occupied has-person is-beam-host' : ''}`;
+        seat.dataset.seatPosition = area;
+        seat.style.gridColumn = String(gridColumn);
+        seat.style.gridRow = host ? '1 / span 2' : String(gridRow);
+        seat.innerHTML = host
+          ? '<div class="ur-slot-media"><div class="ur-slot-portrait-layer"><div class="ur-slot-portrait"></div></div><button type="button" class="ur-slot-avatar-button ur-slot-photo-action"></button><div class="ur-slot-copy"><span class="ur-slot-name-line"><span class="ur-slot-name">Host</span></span></div></div>'
+          : `<div class="ur-slot-media" role="button" tabindex="0"><div class="ur-slot-empty-copy"><span class="ur-empty-number">${slot.slotNumber}</span><span class="ur-slot-name ur-empty-name">Tap to join</span></div></div>`;
+        grid.append(seat);
+      }
+      document.getElementById('root').append(room);
+      const out = [...grid.children].map((seat) => {
+        const a = seat.getBoundingClientRect(), label = seat.querySelector('.ur-empty-name');
+        const portrait = seat.querySelector('.ur-slot-portrait');
+        const r = { pos: seat.dataset.seatPosition, w: a.width, h: a.height, radius: getComputedStyle(seat).borderRadius,
+          portraitRadius: portrait ? getComputedStyle(portrait).borderRadius : null, fits: true };
+        if (label) {
+          const b = label.getBoundingClientRect();
+          r.fits = label.scrollWidth <= label.clientWidth + 1 && label.textContent === 'Tap to join'
+            && b.left >= a.left - 0.5 && b.right <= a.right + 0.5 && b.top >= a.top - 0.5 && b.bottom <= a.bottom + 0.5;
+        }
+        return r;
+      });
+      room.remove();
+      return out;
+    });
+    assert.equal(seats.length, 9);
+    const host = seats.find((s) => s.pos === 'host'), guests = seats.filter((s) => s.pos !== 'host');
+    assert.ok(guests.every((g) => host.w > g.w && host.h > g.h), 'centre host larger than guests');
+    assert.ok(seats.every((s) => s.radius === '13px'), `seat boxes 13px: ${seats.map((s) => s.radius)}`);
+    assert.notEqual(host.portraitRadius, '50%', 'full-seat portrait follows box, not circle');
+    assert.deepEqual(guests.filter((g) => !g.fits).map((g) => g.pos), [], `Tap to join contained at ${width}px`);
+    console.log(`PASS ${width}px real 5-column seat grid: host ${Math.round(host.w)}x${Math.round(host.h)}, 8 guests contain full Tap to join, 13px boxes`);
+  }
+  // Compact legacy 7px corners on small controls; 14px stays on panels/cards.
+  const compact = await page.evaluate(() => ['ur-people-btn', 'ur-rules-btn', 'ch-msg', 'ur-arrival-line', 'dw-room-composer',
+    'ch-comp', 'app-bottom-link', 'gift-control'].map((name) => {
+    const el = document.createElement('button'); el.className = name; el.style.cssText = 'height:28px;width:90px';
+    document.getElementById('root').append(el);
+    const r = getComputedStyle(el).borderRadius; el.remove(); return { name, r };
+  }));
+  assert.deepEqual(compact.filter((c) => c.r !== '7px'), [], 'compact controls use 7px boxes');
+  const form = await page.evaluate(() => {
+    const f = document.createElement('form'); f.className = 'ch-comp dw-room-composer';
+    f.innerHTML = '<input><button type="submit">Send</button>'; document.getElementById('root').append(f);
+    const r = [f, ...f.children].map((e) => getComputedStyle(e).borderRadius); f.remove(); return r;
+  });
+  assert.deepEqual(form, ['7px', '7px', '7px'], 'composer wrapper, input and Send are 7px boxes');
   assert.equal(writes.length, 0, 'no API mutations');
   assert.equal((await page.evaluate(() => window.__launches)).length, 2);
   console.log(`PASS ${probes.length} cross-screen shape/CSS probes; zero API mutations, no real broadcast/camera started.`);

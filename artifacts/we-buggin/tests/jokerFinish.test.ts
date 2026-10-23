@@ -157,6 +157,19 @@ test('large content controls use card corners; only explicit small chips are pil
   assert.match(rules, /\.app-bottom-link \{ border-radius: var\(--jk-radius\)/);
 });
 
+test('small room/nav controls use compact legacy 7px boxes; seats are boxes; no pills', () => {
+  assert.match(rules, /--jk-radius-xs: 7px/);
+  const blk = rules.slice(rules.indexOf('.ur-people-btn, .ur-rules-btn, .ch-msg'));
+  const sel = blk.slice(0, blk.indexOf('{'));
+  for (const s of ['.ur-people-btn', '.ur-rules-btn', '.ch-msg', '.ur-arrival-line', '.dw-room-composer', '.dw-room-composer :is(input, textarea, button)', '.app-bottom-link', '.gift-control', '.dw-home-tabs > a']) assert.ok(sel.includes(s), s);
+  assert.match(blk.slice(0, blk.indexOf('}')), /border-radius: var\(--jk-radius-xs\) !important/);
+  assert.ok(!/border-radius: var\(--jk-radius-pill\)/.test(body), 'no pill radius applied');
+  assert.match(rules, /\.ur-slot, \.bm-seat, \.bm-mic-tile \{ border-radius: 13px !important; \}/);
+  assert.match(rules, /\.ur-slot-portrait, \.ur-slot-portrait-layer \{ border-radius: inherit !important; \}/);
+  assert.ok(!/gifting-shield|ur-gifter|shield/.test(body), 'gifter shields (incl L96) untouched');
+  assert.ok(!/999px|border-radius: 2[14]px/.test(mobile.replace(/\/\*[\s\S]*?\*\//g, '')), 'mobile shell has no pill radii');
+});
+
 test('Home launch card has its own rectangular footprint and flow layout with light text', () => {
   const block = rules.match(/\.st-home-go-live-button\s*\{([^}]+)\}/)?.[1] ?? '';
   for (const text of ['aspect-ratio: .88 / 1', 'width: 100%', 'height: auto', 'border-radius: var(--jk-radius)', 'flex-direction: column', 'justify-content: center']) {

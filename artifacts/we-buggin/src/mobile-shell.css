@@ -349,7 +349,7 @@ body.streamtalk-beam-screen .app-page :is(button, [role=button]) { -webkit-tap-h
 .sc-thread .sc-compose {
   position: sticky; bottom: var(--app-bottom-nav-clearance); z-index: 5;
   grid-template-columns: 1fr 48px; align-items: end; gap: 8px; padding: 8px;
-  border-radius: 24px; border: 1px solid var(--dw-line-strong); background: var(--dw-surface);
+  border-radius: 7px; border: 1px solid var(--dw-line-strong); background: var(--dw-surface);
 }
 .sc-thread .sc-compose .sc-text {
   min-height: 40px; max-height: 120px; resize: none; padding: 9px 12px;
@@ -388,7 +388,7 @@ body.streamtalk-beam-screen .app-page :is(button, [role=button]) { -webkit-tap-h
 .dw-landing-cta .bm-btn { min-height: 50px; justify-content: center; font-weight: 800; }
 .dw-landing-cta .bm-btn-primary { background: linear-gradient(160deg, var(--dw-gold-hi), var(--dw-gold) 55%, var(--dw-gold-lo)); color: #1a1406; border: 0; }
 .dw-landing-points { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 0; padding: 0; list-style: none; }
-.dw-landing-points li { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--dw-line); background: rgba(11, 10, 8, .5); color: var(--dw-ink-2); font-size: 13px; font-weight: 700; }
+.dw-landing-points li { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 12px; border-radius: 7px; border: 1px solid var(--dw-line); background: rgba(11, 10, 8, .5); color: var(--dw-ink-2); font-size: 13px; font-weight: 700; }
 .dw-landing-points svg { color: var(--dw-gold); }
 .dw-section-head { display: grid; gap: 2px; margin-bottom: 12px; }
 .dw-overline { font: 800 11px var(--dw-font-body); letter-spacing: .16em; text-transform: uppercase; color: var(--dw-gold); }
@@ -416,7 +416,7 @@ body.streamtalk-beam-screen .app-page :is(button, [role=button]) { -webkit-tap-h
 .dw-home-tabs::-webkit-scrollbar { display: none; }
 .dw-home-tabs > a {
   flex: 0 0 auto; display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px;
-  border-radius: 999px; border: 1px solid var(--dw-line); background: var(--dw-surface);
+  border-radius: 7px; border: 1px solid var(--dw-line); background: var(--dw-surface);
   color: var(--dw-ink-2); font: 800 13px var(--dw-font-body); text-decoration: none;
 }
 .dw-home-tabs > a.is-on { background: var(--dw-gold); border-color: var(--dw-gold); color: #1a1406; }
@@ -432,10 +432,10 @@ body.streamtalk-beam-screen .app-page :is(button, [role=button]) { -webkit-tap-h
 @media (max-width: 767px) { .st-store .st-promo { border-radius: var(--dw-radius-lg); } }
 
 /* ================= Rooms: composer only ================= */
-.dw-room-composer { display: grid !important; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 6px; border-radius: 24px; border: 1px solid var(--dw-line-strong); background: var(--dw-surface); }
+.dw-room-composer { display: grid !important; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 6px; border-radius: 7px; border: 1px solid var(--dw-line-strong); background: var(--dw-surface); }
 .dw-room-composer input { min-height: 42px; border: 0 !important; background: transparent !important; color: var(--dw-ink); padding: 0 10px; }
 .dw-room-composer input:focus { outline: none; }
-.dw-room-composer button[type=submit] { min-height: 42px; border-radius: 21px; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; }
+.dw-room-composer button[type=submit] { min-height: 42px; border-radius: 7px; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; }
 @media (max-width: 380px) { .dw-room-composer button[type=submit] span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } }
 
 /* ================= Full-screen live: control dock (chrome only) ================= */

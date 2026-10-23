@@ -19,6 +19,7 @@
   --jk-radius: 14px;
   --jk-radius-sm: 10px;
   --jk-radius-pill: 999px;
+  --jk-radius-xs: 7px; /* legacy compact control corner (.ur-slot-action) */
   --jk-edge: 2px;
   --jk-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 0.88  0 0 0 0 0.62  0 0 0 0.055 0'/></filter><rect width='96' height='96' filter='url(%23n)'/></svg>");
   --jk-satin-fill: var(--jk-grain), linear-gradient(145deg, #1a150d 0%, var(--jk-satin) 42%, #050403 100%);
@@ -135,7 +136,7 @@
   }
   .pf-chip, .gift-panel-category, .gift-panel-all, .st-category-title-pill,
   .dw-home-tabs button, .dw-home-tabs a, .dh-tabs button {
-    border-radius: var(--jk-radius-pill) !important;
+    border-radius: var(--jk-radius-sm) !important;
   }
   .st-room-choice-option, .st-detail-action { border-radius: var(--jk-radius) !important; }
 
@@ -299,14 +300,11 @@
     box-shadow: inset 1px 1px 0 rgba(243, 213, 138, 0.3), inset -1px -1px 0 rgba(58, 40, 10, 0.8), 3px 5px 12px rgba(0, 0, 0, 0.55) !important;
   }
   .ur-slot.is-speaking { box-shadow: revert-layer !important; }
-  .ur-slot, .bm-seat, .bm-mic-tile {
-    aspect-ratio: 1 !important;
-    height: auto !important;
-    min-height: 0 !important;
-    border-radius: 50% !important;
-    align-self: center !important;
-  }
-  .ur-slot-portrait, .ur-slot-portrait-layer, .ur-slot-photo-action { border-radius: 50% !important; }
+  /* Seats are pre-redesign rounded rectangles (legacy .ur-slot radius 13px); only photos stay round. */
+  .ur-slot, .bm-seat, .bm-mic-tile { border-radius: 13px !important; }
+  .ur-slot-avatar-button.ur-slot-photo-action { border-radius: inherit !important; }
+  .ur-slot-portrait, .ur-slot-portrait-layer { border-radius: inherit !important; }
+  .ur-slot .ur-empty-name { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; text-align: center !important; overflow-wrap: normal !important; }
   /* Frame the Me/profile hero without changing the photograph's crop or shape. */
   .pf-hero {
     outline: var(--jk-edge) solid var(--jk-gold) !important;
@@ -323,7 +321,7 @@
   }
   .ch-my-badge-time, .ch-field-count, .st-count, .st-dir-count, .sc-count,
   .app-bottom-unread, .st-live-chat-badge, .st-home-featured-badge, .bm-seat-count{
-    border-radius: var(--jk-radius-pill) !important;
+    border-radius: var(--jk-radius-sm) !important;
     box-shadow: inset 1px 1px 0 rgba(243, 213, 138, 0.5), inset 0 0 0 1px var(--jk-gold-lo), 1px 2px 4px rgba(0, 0, 0, 0.5) !important;
   }
   .dw-card-test-countdown, .sc-compose, .ch-comp, .bm-input-box, .st-live-chat-form, .gift-combo-hud, .gift-combo-skip,
@@ -333,6 +331,14 @@
   .st-live-camera-recovery button, .st-detail-coin-note button,
   .dw-card-fan-back, .dw-jk-bar button, .st-enter, .ch-photo-main {
     border-radius: var(--jk-radius) !important;
+  }
+
+  /* ---------- Compact legacy box corners for small room/nav controls ---------- */
+  .ur-people-btn, .ur-rules-btn, .ch-msg, .bm-msg, .sc-msg, .st-live-chat-line, .ur-arrival-line,
+  .dw-room-composer, .dw-room-composer :is(input, textarea, button), .ch-comp, .ch-comp :is(input, textarea, button),
+  .sc-compose, .bm-input-box, .st-live-chat-form, .app-bottom-link, .gift-control,
+  .dw-home-tabs button, .dw-home-tabs a, .dw-home-tabs > a, .dh-tabs button {
+    border-radius: var(--jk-radius-xs) !important;
   }
 
   /* ---------- Gift tiles: shared edge (artwork untouched) + one-shot glint when selected ---------- */
