@@ -7,7 +7,8 @@
  * wins over later layers AND over all unlayered legacy CSS regardless of specificity
  * (e.g. body #root nav ... !important). Portals are covered because selectors are class based.
  * Semantic states (destructive, muted, disabled) use revert-layer so legacy red/disabled
- * colours come back untouched. Only paint properties change: no layout, size or media rules.
+ * colours come back untouched. Shape rules distinguish content rectangles, small pills and
+ * true circles; the Home launch tile has an explicit layout so legacy icon positioning cannot overlap its copy.
  */
 :root {
   --jk-gold: #c99a3e;
@@ -51,6 +52,12 @@
 }
 
 @layer joker-finish {
+  /* Content is rectangular by default, including controls in portals. Small pills and
+     square circle frames are explicit exceptions below, never a blanket button shape. */
+  :where(button:not([class*="dw-card-"]), [role="button"]:not([class*="dw-card-"]), [role="tab"], [role="dialog"],
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, select) {
+    border-radius: var(--jk-radius) !important;
+  }
   /* ---------- Rooms and outside-frame screens stay pure black ---------- */
   .st-live-room, .ur-social-room, .ch-room, .dw-card-test-room { background-color: var(--jk-black) !important; }
 
@@ -68,11 +75,6 @@
     box-shadow: var(--jk-bevel) !important;
     color: #f4ead6 !important;
   }
-  .st-sheet, .st-live-action-sheet, .gift-room-panel{
-    border-bottom-left-radius: 0 !important;
-    border-bottom-right-radius: 0 !important;
-  }
-
   /* ---------- Room / list / store cards ---------- */
   .st-card, .st-dir-card, .st-live-directory-card, .st-home-card-tall, .st-item-card, .st-launch-tile,
   .sp-review-item, .sp-manage-row, .ur-prow, .ib-row, .sc-entrance-option {
@@ -96,7 +98,7 @@
     background-size: 96px 96px, cover !important;
     color: var(--jk-gold-hi) !important;
     border-color: var(--jk-gold) !important;
-    border-radius: var(--jk-radius-pill) !important;
+    border-radius: var(--jk-radius) !important;
     box-shadow: var(--jk-bevel) !important;
   }
 
@@ -116,14 +118,75 @@
     background: var(--jk-satin-fill) !important;
     background-size: 96px 96px, cover !important;
     border-color: transparent !important;
-    border-radius: var(--jk-radius-pill) !important;
+    border-radius: var(--jk-radius) !important;
     box-shadow: var(--jk-bevel) !important;
     color: var(--jk-gold-hi) !important;
     transition: transform 120ms ease, box-shadow 120ms ease !important;
   }
-  .pf-round, .pf-edit, .dw-icon-btn, .bm-icon-btn, .gs-icon-button, .st-sheet-close, .st-room-choice-close,
-  .st-live-close-button, .gift-panel-icon-button {  border-radius: 50% !important; }
+  .pf-round, .dw-icon-btn, .bm-icon-btn, .gs-icon-button, .st-sheet-close, .st-room-choice-close,
+  .st-live-close-button, .st-live-action-close, .st-report-close, .ur-profile-popup-x,
+  .gift-panel-icon-button, .gift-panel-profile-button, .app-home-live {
+    border-radius: 50% !important;
+    aspect-ratio: 1 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+  }
+  .pf-chip, .gift-panel-category, .gift-panel-all, .st-category-title-pill,
+  .dw-home-tabs button, .dw-home-tabs a, .dh-tabs button {
+    border-radius: var(--jk-radius-pill) !important;
+  }
   .st-room-choice-option, .st-detail-action { border-radius: var(--jk-radius) !important; }
+
+  /* Match the normal room-card footprint, not the unrelated round nav camera. */
+  .st-home-go-live {
+    align-self: stretch !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  .st-home-go-live-button {
+    width: 100% !important;
+    height: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    aspect-ratio: .88 / 1 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 16px !important;
+    padding: 16px 10px !important;
+    text-align: center !important;
+    border-radius: var(--jk-radius) !important;
+  }
+  .st-home-go-live-icon {
+    position: static !important;
+    transform: none !important;
+    width: 48px !important;
+    height: 48px !important;
+    flex: 0 0 48px !important;
+    border-radius: var(--jk-radius) !important;
+    color: var(--jk-gold-hi) !important;
+    background: var(--jk-satin-fill) !important;
+    border-color: var(--jk-gold) !important;
+  }
+  .st-home-go-live-copy {
+    position: static !important;
+    display: grid !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  .st-home-go-live-button :is(strong, small, span, svg) { color: var(--jk-gold-hi) !important; }
+  .st-home-go-live-copy strong { font-size: 18px !important; line-height: 1.25 !important; }
+  .st-home-go-live-copy small {
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
 
   /* Primary / selected: still satin black, stronger bevel + foil lip + brighter gold ink. */
   .pf-btn-fill, .pf-btn-store, .bm-btn-primary, .sp-button-gold, .st-safety-button-primary,
@@ -197,7 +260,7 @@
     border-radius: var(--jk-radius) var(--jk-radius) 0 0 !important;
     box-shadow: var(--jk-bevel) !important;
   }
-  .app-bottom-link { border-radius: var(--jk-radius-sm) !important; }
+  .app-bottom-link { border-radius: var(--jk-radius) !important; }
   .app-bottom-link.is-active {
     color: #ffe7a6 !important;
     background: var(--jk-satin-selected) !important;
@@ -225,11 +288,25 @@
   .ur-slot-avatar-button, .ur-person-avatar, .st-live-avatar, .st-live-creator-avatar, .st-live-gifter-avatar,
   .st-live-action-avatar, .st-home-avatar, .st-dir-avatar, .gift-panel-avatar, .ib-avatar {
     box-shadow: var(--jk-ring) !important;
+    border-radius: 50% !important;
+    aspect-ratio: 1 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
   }
   .ur-slot, .bm-seat, .bm-tile, .bm-mic-tile {
     box-shadow: inset 1px 1px 0 rgba(243, 213, 138, 0.3), inset -1px -1px 0 rgba(58, 40, 10, 0.8), 3px 5px 12px rgba(0, 0, 0, 0.55) !important;
   }
   .ur-slot.is-speaking { box-shadow: revert-layer !important; }
+  .ur-slot, .bm-seat, .bm-mic-tile {
+    aspect-ratio: 1 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    border-radius: 50% !important;
+    align-self: center !important;
+  }
+  .ur-slot-portrait, .ur-slot-portrait-layer, .ur-slot-photo-action { border-radius: 50% !important; }
   /* Frame the Me/profile hero without changing the photograph's crop or shape. */
   .pf-hero {
     outline: var(--jk-edge) solid var(--jk-gold) !important;
@@ -241,18 +318,26 @@
   .ch-msg, .bm-msg, .sc-msg, .st-live-chat-line, .ur-arrival-line {
     background: var(--jk-satin-fill) !important;
     background-size: 96px 96px, cover !important;
-    border-radius: var(--jk-radius-sm) !important;
+    border-radius: var(--jk-radius) !important;
     box-shadow: inset 1px 1px 0 rgba(243, 213, 138, 0.28), inset 0 0 0 1px rgba(122, 90, 28, 0.55), 2px 3px 8px rgba(0, 0, 0, 0.5) !important;
   }
-  .dw-card-test-countdown, .ch-my-badge-time, .ch-field-count, .st-count, .st-dir-count, .sc-count,
+  .ch-my-badge-time, .ch-field-count, .st-count, .st-dir-count, .sc-count,
   .app-bottom-unread, .st-live-chat-badge, .st-home-featured-badge, .bm-seat-count{
     border-radius: var(--jk-radius-pill) !important;
     box-shadow: inset 1px 1px 0 rgba(243, 213, 138, 0.5), inset 0 0 0 1px var(--jk-gold-lo), 1px 2px 4px rgba(0, 0, 0, 0.5) !important;
   }
+  .dw-card-test-countdown, .sc-compose, .ch-comp, .bm-input-box, .st-live-chat-form, .gift-combo-hud, .gift-combo-skip,
+  .gift-motion-sender-banner, .big-tier-gift-banner, .big-tier-gift-error,
+  .ur-streak-reward-toast, .ur-tv-sound-hint, .ur-tv-autoplay-hint, .st-live-join-banner,
+  .st-live-audio-enable, .st-live-report-stream, .st-live-follow,
+  .st-live-camera-recovery button, .st-detail-coin-note button,
+  .dw-card-fan-back, .dw-jk-bar button, .st-enter, .ch-photo-main {
+    border-radius: var(--jk-radius) !important;
+  }
 
   /* ---------- Gift tiles: shared edge (artwork untouched) + one-shot glint when selected ---------- */
   .gift-panel-card, .gift-panel-owned-card, .gift-panel-featured {
-    border-radius: var(--jk-radius-sm) !important;
+    border-radius: var(--jk-radius) !important;
     box-shadow: var(--jk-bevel) !important;
   }
   .gift-panel-card.is-selected, .gift-panel-featured.is-selected, .gift-panel-person.is-selected {

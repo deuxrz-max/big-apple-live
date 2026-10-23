@@ -14,3 +14,9 @@ The Joker card finish is the visual anchor for the entire app: shared satin blac
 **Why:** The owner explicitly requested “make the finish of the card the anchor for the entire app” so everything looks uniform.
 
 **How to apply:** Reuse shared material tokens across controls, navigation, sheets, seats/avatar frames, lists, chat, timers, badges and broadcast controls. Preserve photos/artwork/video, semantic colors, username and gifting-level colors and all behavior. Moving foil is a selective highlight for pressed controls, the active tab, the card and premium gifts—not a continuous animation on every surface. Do not extend WebGL rendering from the private card prototype into ordinary app surfaces.
+
+Deux Wild must not use oval or egg shapes. Profile pictures, avatars, seats and small round icon buttons use true circles. Only small filter chips, badges, live tags and fire counts may be pills. Tiles, cards, playing cards, pop-ups, sheets, panels, content buttons and nav tabs use the shared rounded rectangle shape.
+
+**Why:** The owner said the app keeps getting oval shapes and does not want them.
+
+**How to apply:** Never stretch circle or pill styling into a large content box. Keep circle frames equal in width and height; large Home launch tiles must retain a room-card footprint and readable, non-overlapping icon and text.

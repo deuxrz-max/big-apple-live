@@ -138,9 +138,12 @@ source. CommonJS-prebundled React and ReactDOM may expose their APIs on `default
 
 **Why:** Bare dynamic dependency imports did not expose ReactDOM's createRoot;
 mixing hashed and unhashed imports can also create separate React module instances.
+Vite also rewrites CommonJS named imports into temporary default bindings with
+separate symbol assignments, so searching import blocks by a hook name can select
+the wrong dependency.
 
 **How to apply:** Inspect the served component's import URLs, match them in the
-harness, and use the appropriate default export. Keep synthetic API responses
+harness by exact dependency filename and version query, and use the appropriate default export. Keep synthetic API responses
 clearly separated from real authenticated end-to-end evidence.
 
 Use the tenant's actual password policy for persistent preview test accounts,

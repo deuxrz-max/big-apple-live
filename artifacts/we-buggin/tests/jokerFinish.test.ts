@@ -93,12 +93,14 @@ test('covers every requested component family with real selectors', () => {
   assert.deepEqual(missing, [], `unknown classes: ${missing.join(' ')}`);
 });
 
-test('no media, artwork, name tiers or reshaping', () => {
-  for (const b of ['video', 'iframe', 'img', 'canvas', 'card-art', 'badge-art', 'slot-photo', 'slot-portrait', 'shiny', 'tier-kicker', 'pf-passport', 'object-fit', 'clip-path', 'backdrop-filter', 'webgl', 'dw-card-face-image']) {
+test('shape fixes never change media, artwork or name tiers', () => {
+  for (const b of ['video', 'iframe', 'img', 'canvas', 'card-art', 'badge-art', 'slot-photo-fill', 'shiny', 'tier-kicker', 'pf-passport', 'object-fit', 'clip-path', 'backdrop-filter', 'webgl', 'dw-card-face-image']) {
     assert.ok(!rules.toLowerCase().includes(b), `must not touch ${b}`);
   }
   const avatarBlock = rules.slice(rules.indexOf('.ur-slot-avatar-button,'), rules.indexOf('}', rules.indexOf('.ur-slot-avatar-button,')));
-  assert.ok(!/border-radius|width|height|background/.test(avatarBlock), 'avatars only receive an exterior ring');
+  assert.match(avatarBlock, /aspect-ratio: 1 !important/);
+  assert.match(avatarBlock, /height: auto !important/);
+  assert.ok(!/background/.test(avatarBlock), 'avatars retain their photo/artwork');
 });
 
 test('motion is bounded, one-shot and reduced-motion aware', () => {
@@ -143,4 +145,29 @@ test('reduced motion overrides the full pressed and selected selector specificit
   assert.ok(reduced.includes(':is(.gift-panel-card, .gift-panel-featured):is(:active, .is-selected)::after'));
   assert.match(reduced, /:active:not\(:disabled\) \{ transform: none !important/);
   assert.match(reduced, /transition: none !important/);
+});
+
+test('large content controls use card corners; only explicit small chips are pills', () => {
+  const controls = rules.slice(rules.indexOf('.pf-btn, .pf-round,'), rules.indexOf('}', rules.indexOf('.pf-btn, .pf-round,')));
+  assert.match(controls, /border-radius: var\(--jk-radius\) !important/);
+  const round = rules.slice(rules.indexOf('.pf-round, .dw-icon-btn,'), rules.indexOf('}', rules.indexOf('.pf-round, .dw-icon-btn,')));
+  assert.ok(!round.includes('.pf-edit'), 'full-width Edit is not a circle');
+  assert.match(round, /aspect-ratio: 1 !important/);
+  assert.match(round, /height: auto !important/);
+  assert.match(rules, /\.app-bottom-link \{ border-radius: var\(--jk-radius\)/);
+});
+
+test('Home launch card has its own rectangular footprint and flow layout with light text', () => {
+  const block = rules.match(/\.st-home-go-live-button\s*\{([^}]+)\}/)?.[1] ?? '';
+  for (const text of ['aspect-ratio: .88 / 1', 'width: 100%', 'height: auto', 'border-radius: var(--jk-radius)', 'flex-direction: column', 'justify-content: center']) {
+    assert.ok(block.includes(text), text);
+  }
+  assert.match(rules, /\.st-home-go-live-icon\s*\{[^}]*position: static !important/);
+  assert.match(rules, /\.st-home-go-live\s*\{[^}]*align-self: stretch !important;[^}]*width: 100% !important/);
+  assert.match(rules, /\.st-home-go-live-button :is\(strong, small, span, svg\) \{ color: var\(--jk-gold-hi\) !important/);
+  const home = readFileSync('src/chat/ChatApp.tsx', 'utf8');
+  const nav = readFileSync('src/components/bottom-navigation.tsx', 'utf8');
+  assert.match(home, /<GoLiveButton className="st-home-go-live-button">/);
+  assert.match(home, /<strong>Go Live<\/strong><small>Start your own room<\/small>/);
+  assert.match(nav, /<GoLiveButton className="app-home-live">/);
 });
