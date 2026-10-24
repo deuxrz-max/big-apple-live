@@ -1690,6 +1690,11 @@ components:
         username: { type: string }
         displayName: { type: string }
         photoUrl: { type: string, nullable: true }
+        photoUrls:
+          type: array
+          items: { type: string }
+          description: Approved saved profile photos, main photo first.
+        giftingLevel: { type: integer, minimum: 0, maximum: 100 }
     ChessRoomState:
       type: object
       required: [roomId, fen, players, turn, status, revision, legalMoves, yourColor, rematchRequestedBy, result]

@@ -7,7 +7,9 @@ import {
   actChessRoom, getGetChessRoomQueryKey, joinChessRoom, useGetChessRoom,
 } from "@workspace/api-client-react";
 import type { ChessActionInput, ChessPlayer, ChessRoomState } from "@workspace/api-client-react";
-import { UserPhoto } from "@/components/user-photo";
+import { UserPhoto, photoSrc } from "@/components/user-photo";
+import { GiftingShield } from "@/gifting/GiftingShield";
+import "@/profile/profile.css";
 import { ChessPiece } from "./ChessPiece";
 import { FINISHED, boardCells, isLegal, movesFrom, needsPromotion, resultTitle, selectableSquares } from "./chess-logic";
 import { useChessAudio } from "./useChessAudio";
@@ -23,28 +25,53 @@ export function ChessRoute() {
   return <ChessRoom key={`${accountKey}:${chessRoomId}`} roomId={chessRoomId} accountKey={accountKey} />;
 }
 
-function PlayerRow({ player, color, active, isMe, room, audio, onLeave, onShare, shareNote, position }: {
+function PhotoCarousel({ urls, name, username }: { urls: string[]; name: string; username: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [idx, setIdx] = useState(0);
+  const [failed, setFailed] = useState<Record<string, boolean>>({});
+  const slides = urls.filter(u => !failed[u]);
+  if (!slides.length) return <div className="chess-photo-fallback"><UserPhoto username={username} displayName={name} photoUrl={null} size={96} fit="contain" /></div>;
+  return <>
+    <div className="chess-photo-track" ref={ref} tabIndex={slides.length > 1 ? 0 : -1}
+      role="region" aria-roledescription="carousel" aria-label={`${name} profile photos`}
+      onKeyDown={e => {
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+        e.preventDefault();
+        ref.current?.scrollTo({ left: Math.max(0, Math.min(slides.length - 1, idx + (e.key === "ArrowRight" ? 1 : -1))) * ref.current.clientWidth, behavior: "smooth" });
+      }}
+      onScroll={e => { const el = e.currentTarget; setIdx(Math.round(el.scrollLeft / Math.max(1, el.clientWidth))); }}>
+      {slides.map(u => <div className="chess-photo-slide" key={u}><img src={photoSrc(u)} alt={`${name} photo`} draggable={false} onError={() => setFailed(f => ({ ...f, [u]: true }))} /></div>)}
+    </div>
+    {slides.length > 1 && <div className="pf-dots chess-photo-dots" role="tablist" aria-label="Photo position">
+      {slides.map((u, i) => <button key={u} type="button" role="tab" aria-selected={i === idx} aria-label={`Photo ${i + 1} of ${slides.length}`} className={i === idx ? "is-on" : ""}
+        onClick={() => ref.current?.scrollTo({ left: i * ref.current.clientWidth, behavior: "smooth" })} />)}
+    </div>}
+  </>;
+}
+
+function PlayerPhoto({ player, color, active, isMe, room, audio, onLeave, onShare, shareNote, position, tools }: {
   player: ChessPlayer | null; color: "w" | "b"; active: boolean; isMe: boolean; room: ChessRoomState;
-  audio: ReturnType<typeof useChessAudio>; onLeave: () => void; onShare: () => void; shareNote: string; position: "top" | "bottom";
+  audio: ReturnType<typeof useChessAudio>; onLeave: () => void; onShare: () => void; shareNote: string; position: "top" | "bottom"; tools: boolean;
 }) {
-  return <section className={`chess-player is-${position}${active ? " is-active" : ""}`} data-testid={`chess-player-${color}`}>
-    <span className="chess-player-photo">
-      {player ? <UserPhoto username={player.username} displayName={player.displayName} photoUrl={player.photoUrl} size={72} fit="contain" />
-        : <span className="chess-player-empty" aria-hidden="true" />}
-    </span>
-    <span className="chess-player-copy">
-      <strong>{player ? player.displayName || player.username : "Waiting for opponent"}{isMe && <em>You</em>}</strong>
-      <small>{color === "w" ? "White" : "Black"}{active && room.status === "playing" ? (room.inCheck ? " · in check" : " · to move") : ""}{!player ? (shareNote ? ` · ${shareNote}` : " · share the link") : ""}</small>
-    </span>
-    <span className="chess-player-tools">
-      {!player && <button type="button" onClick={onShare} aria-label="Share invite link" data-testid="button-chess-invite"><Link2 size={16} /></button>}
-      {isMe && <button type="button" onClick={audio.toggle} aria-pressed={audio.state === "on"} data-testid="button-chess-mic"
+  const urls = player ? [...new Set(player.photoUrls?.length ? player.photoUrls : player.photoUrl ? [player.photoUrl] : [])] : [];
+  const name = player ? player.displayName || player.username : "";
+  return <section className={`chess-photo is-${position}${active ? " is-active" : ""}${player ? "" : " is-empty"}`} data-testid={`chess-player-${color}`}>
+    {player ? <PhotoCarousel key={`${player.accountId}:${urls.join("|")}`} urls={urls} name={name} username={player.username} />
+      : <div className="chess-photo-wait"><strong>Waiting for opponent · {shareNote || "Share the link"}</strong>
+        <button type="button" onClick={onShare} data-testid="button-chess-invite"><Link2 size={16} />Invite</button></div>}
+    {player && <div className="chess-photo-label">
+      <strong>{name}{isMe && <em>You</em>}</strong>
+      <small>{color === "w" ? "White" : "Black"}{active && room.status === "playing" ? (room.inCheck ? " · in check" : " · to move") : ""}</small>
+      <GiftingShield level={player.giftingLevel} size={22} />
+    </div>}
+    {tools && <span className="chess-player-tools">
+      <button type="button" onClick={audio.toggle} aria-pressed={audio.state === "on"} data-testid="button-chess-mic"
         aria-label={audio.state === "on" ? "Turn microphone off" : "Turn microphone on"} className={audio.state === "on" ? "is-on" : ""}>
         {audio.state === "connecting" ? <Loader2 size={16} className="chess-spin" /> : audio.state === "on" ? <Mic size={16} /> : <MicOff size={16} />}
-      </button>}
-      {isMe && room.status === "playing" && <button type="button" onClick={() => document.dispatchEvent(new CustomEvent("chess:resign"))} aria-label="Resign" data-testid="button-chess-resign"><Flag size={16} /></button>}
-      {isMe && <button type="button" onClick={onLeave} aria-label="Leave game" data-testid="button-chess-leave"><ArrowLeft size={16} /></button>}
-    </span>
+      </button>
+      {room.status === "playing" && <button type="button" onClick={() => document.dispatchEvent(new CustomEvent("chess:resign"))} aria-label="Resign" data-testid="button-chess-resign"><Flag size={16} /></button>}
+      <button type="button" onClick={onLeave} aria-label="Leave game" data-testid="button-chess-leave"><ArrowLeft size={16} /></button>
+    </span>}
   </section>;
 }
 
@@ -151,7 +178,7 @@ export function ChessRoom({ roomId, accountKey, onExit }: { roomId: string; acco
   const rowProps = { room, audio, onLeave: () => void leave(), onShare: () => void share(), shareNote };
 
   return <main className="chess-room" data-testid="chess-room">
-    <PlayerRow position="top" player={room.players.white} color="w" active={room.status === "playing" && room.turn === "w"}
+    <PlayerPhoto tools position="top" player={room.players.white} color="w" active={room.status === "playing" && room.turn === "w"}
       isMe={room.yourColor === "w"} {...rowProps} />
     <div className="chess-frame">
       <div className={`chess-board${room.inCheck ? " is-check" : ""}`} role="grid" aria-label="Chess board" data-testid="chess-board">
@@ -166,10 +193,9 @@ export function ChessRoom({ roomId, accountKey, onExit }: { roomId: string; acco
       </div>
       {stale && <p className="chess-error" role="status" data-testid="chess-connection">Connection lost. Reconnecting; moves are paused.</p>}
       {error && <p className="chess-error" role="alert" onClick={() => setError("")}>{error}</p>}
-      {room.status === "waiting" && <p className="chess-note" role="status">Waiting for a second player to join.</p>}
       {room.status === "closed" && <p className="chess-note" role="status">This room has closed.</p>}
     </div>
-    <PlayerRow position="bottom" player={room.players.black} color="b" active={room.status === "playing" && room.turn === "b"}
+    <PlayerPhoto tools={false} position="bottom" player={room.players.black} color="b" active={room.status === "playing" && room.turn === "b"}
       isMe={room.yourColor === "b"} {...rowProps} />
     <div ref={audio.sinkRef} hidden />
     {audio.error && <p className="chess-error is-floating" role="alert">{audio.error}</p>}

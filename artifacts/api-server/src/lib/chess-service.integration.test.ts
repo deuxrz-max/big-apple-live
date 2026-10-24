@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { pool } from "@workspace/db";
 import { newChessGame, joinChessGame, applyChessAction, chessBoard } from "./chess-engine";
-import { transactChess } from "./chess-service";
+import { transactChess, projectChess } from "./chess-service";
 
 test("database: concurrent moves, retries, reload and outsider isolation", async () => {
   const roomId = `chess-test-${randomUUID()}`;
@@ -21,6 +21,13 @@ test("database: concurrent moves, retries, reload and outsider isolation", async
     const reloaded = await transactChess(roomId, black.accountId);
     assert.equal(reloaded.moves.length, 1);
     assert.equal(chessBoard(reloaded).get("e4")?.type, "p");
+    const projected = await projectChess(reloaded, white.accountId);
+    assert.deepEqual(projected.players.white.photoUrls, []);
+    assert.deepEqual(projected.players.black?.photoUrls, []);
+    assert.equal(projected.players.white.giftingLevel, 0);
+    assert.equal(projected.players.black?.giftingLevel, 0);
+    // Projection authorizes before looking up any player's photo collection.
+    await assert.rejects(() => projectChess(reloaded, "test-outsider"), /Only the two/);
     await assert.rejects(() => transactChess(roomId, "test-outsider"), /Only the two/);
   } finally {
     await pool.query("DELETE FROM chess_rooms WHERE id=$1", [roomId]);

@@ -5,8 +5,11 @@ import { defineConfig, type Plugin } from 'vite';
 
 // Synthetic chess API: never proxies to a real server, account or database.
 const portrait = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="180"><rect width="120" height="180" fill="#716448"/><path fill="#ffd47a" d="M0 0h120v15H0zM0 165h120v15H0z"/><text x="60" y="90" text-anchor="middle" fill="white" font-size="16">Full photo</text></svg>');
-const white = { accountId: 'fx-white', username: 'ivory_rook', displayName: 'Mireille Ashdown', photoUrl: portrait };
-const black = { accountId: 'fx-black', username: 'ebon_knight', displayName: 'Tobias Venn', photoUrl: null };
+const landscape = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="180" height="120"><rect width="180" height="120" fill="#354d69"/><text x="90" y="65" text-anchor="middle" fill="white" font-size="16">Second photo</text></svg>');
+const white = { accountId: 'fx-white', username: 'ivory_rook', displayName: 'Mireille Ashdown', photoUrl: portrait,
+  photoUrls: [portrait, landscape], giftingLevel: 96 };
+const black = { accountId: 'fx-black', username: 'ebon_knight', displayName: 'Tobias Venn', photoUrl: landscape,
+  photoUrls: [landscape, portrait], giftingLevel: 31 };
 const START = 'k7/4P3/8/8/8/8/8/4K3 w - - 0 1';
 const startMoves = [
   ...['q', 'r', 'b', 'n'].map(p => ({ from: 'e7', to: 'e8', promotion: p })),
@@ -29,6 +32,7 @@ function chessFixture(): Plugin {
       const body = () => new Promise<any>(resolve => { let d = ''; req.on('data', c => { d += c; }); req.on('end', () => resolve(d ? JSON.parse(d) : {})); });
       if (url.pathname === '/__fixture/reset') {
         state = fresh(); joinFailures = Number(url.searchParams.get('joinFail') ?? 0); getFails = false; actions.length = 0;
+        if (url.searchParams.has('black')) state = { ...state, yourColor: 'b', legalMoves: [] };
         if (url.searchParams.has('waiting')) state = { ...state, players: { white, black: null }, status: 'waiting', legalMoves: [] };
         return json(200, { ok: true });
       }

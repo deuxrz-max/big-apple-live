@@ -1,6 +1,9 @@
 import { Chess } from "chess.js";
 
-export type ChessPlayer = { accountId: string; username: string; displayName: string; photoUrl: string | null };
+export type ChessPlayer = {
+  accountId: string; username: string; displayName: string; photoUrl: string | null;
+  photoUrls?: string[]; giftingLevel?: number;
+};
 export type ChessMove = { from: string; to: string; promotion?: string };
 export type ChessAction = {
   action: "move" | "rematch" | "resign" | "leave"; revision: number;

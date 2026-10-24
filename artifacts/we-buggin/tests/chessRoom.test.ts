@@ -32,7 +32,10 @@ test('room source: generated hooks, no extra panels, mic-only audio, route befor
   const social = readFileSync('src/social/SocialApp.tsx', 'utf8');
   const golive = readFileSync('src/chat/GoLiveScreens.tsx', 'utf8');
   assert.match(room, /useGetChessRoom/); assert.match(room, /joinChessRoom\(roomId\)/); assert.match(room, /refetchInterval: 1000/);
-  assert.doesNotMatch(room, /[^e]fetch\(/); assert.doesNotMatch(room, /Gift|Chat|Seat/);
+  assert.doesNotMatch(room, /[^e]fetch\(/);
+  // A player's gifter shield is profile metadata, not a gift-sending panel.
+  assert.match(room, /<GiftingShield/);
+  assert.doesNotMatch(room, /\b(?:GiftPanel|GiftBag|SendGift|ChatFeed|ChatInput|SeatGrid|CardGame)\b/);
   assert.match(audio, /setMicrophoneEnabled\(true\)/); assert.doesNotMatch(audio, /Camera|video:/i);
   assert.ok(social.indexOf('/community/chess/:chessRoomId') < social.indexOf('<Route><div className="sc-empty"><h2>Not found'));
   assert.match(golive, /useCreateChessRoom/); assert.match(golive, /\/community\/chess\//);

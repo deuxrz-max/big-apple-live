@@ -13,9 +13,17 @@ for (const width of [320, 390]) {
     await expect(board).toBeVisible();
     await expect(page.getByTestId('chess-player-w')).toContainText('Mireille Ashdown');
     await expect(page.getByTestId('chess-player-b')).toContainText('Tobias Venn');
-    const [top, mid, bottom] = await Promise.all(['chess-player-w', 'chess-board', 'chess-player-b'].map(id => page.getByTestId(id).boundingBox()));
+    const [top, mid, bottom] = await Promise.all([
+      page.getByTestId('chess-player-w').boundingBox(), page.locator('.chess-frame').boundingBox(), page.getByTestId('chess-player-b').boundingBox(),
+    ]);
     expect(top!.y + top!.height).toBeLessThanOrEqual(mid!.y);
     expect(mid!.y + mid!.height).toBeLessThanOrEqual(bottom!.y);
+    expect(Math.abs(top!.y + top!.height - mid!.y)).toBeLessThan(1);
+    expect(Math.abs(mid!.y + mid!.height - bottom!.y)).toBeLessThan(1);
+    expect(top!.y).toBe(0);
+    expect(top!.width).toBe(width);
+    expect(bottom!.width).toBe(width);
+    expect(top!.height).toBeGreaterThan(150);
     expect(mid!.width).toBeGreaterThan(width - 60);
     expect(Math.abs(mid!.width - mid!.height)).toBeLessThan(2);
     expect(bottom!.y + bottom!.height).toBeLessThanOrEqual(760);
@@ -26,14 +34,18 @@ for (const width of [320, 390]) {
     await expect(board.locator('[role=gridcell]').first()).toHaveAttribute('data-square', 'h1');
     await expect(page.getByTestId('button-chess-mic')).toBeVisible();
     await expect(page.getByTestId('button-chess-leave')).toBeVisible();
-    const photo = page.getByTestId('chess-player-w').getByRole('img');
+    const photo = page.getByTestId('chess-player-w').locator('.chess-photo-slide img').first();
     await expect(photo).toBeVisible();
     const picture = await photo.evaluate(el => {
       const image = el as HTMLImageElement;
       return { fit: getComputedStyle(image).objectFit, radius: getComputedStyle(image.parentElement!).borderRadius,
         width: image.width, height: image.height, loaded: image.naturalHeight > image.naturalWidth };
     });
-    expect(picture).toEqual({ fit: 'contain', radius: '0px', width: 70, height: 70, loaded: true });
+    expect(picture.fit).toBe('contain'); expect(picture.radius).toBe('0px'); expect(picture.loaded).toBe(true);
+    expect(picture.width).toBeGreaterThan(width - 6);
+    expect(picture.height).toBeGreaterThan(150);
+    await expect(page.getByTestId('badge-gifting-level-96')).toBeVisible();
+    await expect(page.getByTestId('badge-gifting-level-31')).toBeVisible();
     const tiles = await board.locator('[role=gridcell]').evaluateAll(els => els.map(el => {
       const box = el.getBoundingClientRect();
       return { radius: getComputedStyle(el).borderRadius, square: Math.abs(box.width - box.height) < 1 };
@@ -68,14 +80,15 @@ for (const width of [320, 390]) {
   });
 }
 
-test('empty opponent uses a solid square frame; shared frames are rectangular', async ({ page }) => {
+test('empty opponent fills bottom section; shared frames are rectangular', async ({ page }) => {
   await open(page, 320, '?waiting=1');
-  const empty = page.locator('.chess-player-empty');
+  const empty = page.getByTestId('chess-player-b');
   await expect(empty).toBeVisible();
-  expect(await empty.evaluate(el => {
-    const s = getComputedStyle(el);
-    return { width: s.width, height: s.height, radius: s.borderRadius, border: s.borderTopStyle };
-  })).toEqual({ width: '72px', height: '72px', radius: '0px', border: 'solid' });
+  await expect(empty).toContainText('Waiting for opponent · Share the link');
+  await expect(empty.getByTestId('button-chess-invite')).toBeVisible();
+  const box = (await empty.boundingBox())!;
+  expect(box.width).toBe(320); expect(box.y + box.height).toBe(760);
+  expect(await empty.evaluate(el => getComputedStyle(el).borderRadius)).toBe('0px');
   // Real shared classes and inline avatar radius: exercise the global cascade, not just Chess CSS.
   const frames = await page.evaluate(() => {
     const classes = ['ur-slot', 'ur-person-avatar', 'st-live-avatar', 'ib-avatar', 'pf-chip', 'gift-panel-avatar',
@@ -90,6 +103,53 @@ test('empty opponent uses a solid square frame; shared frames are rectangular', 
   });
   expect(frames.every(f => f.radius === (f.name === 'dw-icon-btn' ? '50%' : '0px'))).toBe(true);
   await page.screenshot({ path: 'test-results/chess-waiting-square.png' });
+});
+
+test('touch swipes either photo independently and never submit a chess move', async ({ page, context }) => {
+  await open(page, 390);
+  const session = await context.newCDPSession(page);
+  const white = page.getByTestId('chess-player-w');
+  const black = page.getByTestId('chess-player-b');
+  for (const section of [white, black]) {
+    const box = (await section.boundingBox())!;
+    const y = box.y + box.height / 2;
+    await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 335, y }] });
+    for (let x = 315; x >= 55; x -= 20) {
+      await session.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y }] });
+      await page.waitForTimeout(18);
+    }
+    await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await expect(section.getByRole('tab', { name: 'Photo 2 of 2' })).toHaveAttribute('aria-selected', 'true');
+  }
+  expect(await (await page.request.get('/__fixture/actions')).json()).toHaveLength(0);
+  // Normal once-a-second room polling must not reset either person's local photo choice.
+  await page.waitForTimeout(1200);
+  await expect(white.getByRole('tab', { name: 'Photo 2 of 2' })).toHaveAttribute('aria-selected', 'true');
+  await expect(black.getByRole('tab', { name: 'Photo 2 of 2' })).toHaveAttribute('aria-selected', 'true');
+  await white.getByRole('tab', { name: 'Photo 1 of 2' }).click();
+  await expect(white.getByRole('tab', { name: 'Photo 1 of 2' })).toHaveAttribute('aria-selected', 'true');
+  await expect(black.getByRole('tab', { name: 'Photo 2 of 2' })).toHaveAttribute('aria-selected', 'true');
+  const board = page.getByTestId('chess-board');
+  await board.locator('[data-square=e1]').click();
+  await board.locator('[data-square=e2]').click();
+  await expect(board.locator('[data-square=e2] svg')).toBeVisible();
+  expect(await (await page.request.get('/__fixture/actions')).json()).toHaveLength(1);
+  await page.screenshot({ path: 'test-results/chess-photo-carousels.png' });
+});
+
+test('short phone and Black player retain full-width board and controls on top photo', async ({ page }) => {
+  await open(page, 360, '?black=1');
+  await page.setViewportSize({ width: 360, height: 640 });
+  const top = page.getByTestId('chess-player-w');
+  const bottom = page.getByTestId('chess-player-b');
+  await expect(top.getByTestId('button-chess-mic')).toBeVisible();
+  await expect(top.getByTestId('button-chess-leave')).toBeVisible();
+  await expect(bottom).toContainText('You');
+  const frame = (await page.locator('.chess-frame').boundingBox())!;
+  expect(frame.width).toBe(360);
+  expect((await bottom.boundingBox())!.y + (await bottom.boundingBox())!.height).toBe(640);
+  expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(640);
+  expect(await top.evaluate(el => getComputedStyle(el, '::after').boxShadow)).not.toBe('none');
 });
 
 test('double tap on a target posts one move', async ({ page }) => {

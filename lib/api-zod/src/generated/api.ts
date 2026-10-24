@@ -3624,6 +3624,14 @@ export const GetEmojiImageParams = zod.object({
 export const GetEmojiImageResponse = zod.unknown()
 
 
+export const createChessRoomResponsePlayersWhiteGiftingLevelMin = 0;
+export const createChessRoomResponsePlayersWhiteGiftingLevelMax = 100;
+
+export const createChessRoomResponsePlayersBlackOneGiftingLevelMin = 0;
+export const createChessRoomResponsePlayersBlackOneGiftingLevelMax = 100;
+
+
+
 export const CreateChessRoomResponse = zod.object({
   "roomId": zod.string(),
   "fen": zod.string(),
@@ -3632,13 +3640,17 @@ export const CreateChessRoomResponse = zod.object({
   "accountId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
-  "photoUrl": zod.string().nullish()
+  "photoUrl": zod.string().nullish(),
+  "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
+  "giftingLevel": zod.number().int().min(createChessRoomResponsePlayersWhiteGiftingLevelMin).max(createChessRoomResponsePlayersWhiteGiftingLevelMax).optional()
 }),
   "black": zod.object({
   "accountId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
-  "photoUrl": zod.string().nullish()
+  "photoUrl": zod.string().nullish(),
+  "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
+  "giftingLevel": zod.number().int().min(createChessRoomResponsePlayersBlackOneGiftingLevelMin).max(createChessRoomResponsePlayersBlackOneGiftingLevelMax).optional()
 }).nullable()
 }),
   "turn": zod.enum(['w', 'b']),
@@ -3660,6 +3672,14 @@ export const GetChessRoomParams = zod.object({
   "chessRoomId": zod.coerce.string()
 })
 
+export const getChessRoomResponsePlayersWhiteGiftingLevelMin = 0;
+export const getChessRoomResponsePlayersWhiteGiftingLevelMax = 100;
+
+export const getChessRoomResponsePlayersBlackOneGiftingLevelMin = 0;
+export const getChessRoomResponsePlayersBlackOneGiftingLevelMax = 100;
+
+
+
 export const GetChessRoomResponse = zod.object({
   "roomId": zod.string(),
   "fen": zod.string(),
@@ -3668,13 +3688,17 @@ export const GetChessRoomResponse = zod.object({
   "accountId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
-  "photoUrl": zod.string().nullish()
+  "photoUrl": zod.string().nullish(),
+  "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
+  "giftingLevel": zod.number().int().min(getChessRoomResponsePlayersWhiteGiftingLevelMin).max(getChessRoomResponsePlayersWhiteGiftingLevelMax).optional()
 }),
   "black": zod.object({
   "accountId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
-  "photoUrl": zod.string().nullish()
+  "photoUrl": zod.string().nullish(),
+  "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
+  "giftingLevel": zod.number().int().min(getChessRoomResponsePlayersBlackOneGiftingLevelMin).max(getChessRoomResponsePlayersBlackOneGiftingLevelMax).optional()
 }).nullable()
 }),
   "turn": zod.enum(['w', 'b']),
@@ -3696,6 +3720,14 @@ export const JoinChessRoomParams = zod.object({
   "chessRoomId": zod.coerce.string()
 })
 
+export const joinChessRoomResponsePlayersWhiteGiftingLevelMin = 0;
+export const joinChessRoomResponsePlayersWhiteGiftingLevelMax = 100;
+
+export const joinChessRoomResponsePlayersBlackOneGiftingLevelMin = 0;
+export const joinChessRoomResponsePlayersBlackOneGiftingLevelMax = 100;
+
+
+
 export const JoinChessRoomResponse = zod.object({
   "roomId": zod.string(),
   "fen": zod.string(),
@@ -3704,13 +3736,17 @@ export const JoinChessRoomResponse = zod.object({
   "accountId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
-  "photoUrl": zod.string().nullish()
+  "photoUrl": zod.string().nullish(),
+  "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
+  "giftingLevel": zod.number().int().min(joinChessRoomResponsePlayersWhiteGiftingLevelMin).max(joinChessRoomResponsePlayersWhiteGiftingLevelMax).optional()
 }),
   "black": zod.object({
   "accountId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
-  "photoUrl": zod.string().nullish()
+  "photoUrl": zod.string().nullish(),
+  "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
+  "giftingLevel": zod.number().int().min(joinChessRoomResponsePlayersBlackOneGiftingLevelMin).max(joinChessRoomResponsePlayersBlackOneGiftingLevelMax).optional()
 }).nullable()
 }),
   "turn": zod.enum(['w', 'b']),
@@ -3744,6 +3780,14 @@ export const ActChessRoomBody = zod.object({
   "promotion": zod.enum(['q', 'r', 'b', 'n']).optional()
 })
 
+export const actChessRoomResponsePlayersWhiteGiftingLevelMin = 0;
+export const actChessRoomResponsePlayersWhiteGiftingLevelMax = 100;
+
+export const actChessRoomResponsePlayersBlackOneGiftingLevelMin = 0;
+export const actChessRoomResponsePlayersBlackOneGiftingLevelMax = 100;
+
+
+
 export const ActChessRoomResponse = zod.object({
   "roomId": zod.string(),
   "fen": zod.string(),
@@ -3752,13 +3796,17 @@ export const ActChessRoomResponse = zod.object({
   "accountId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
-  "photoUrl": zod.string().nullish()
+  "photoUrl": zod.string().nullish(),
+  "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
+  "giftingLevel": zod.number().int().min(actChessRoomResponsePlayersWhiteGiftingLevelMin).max(actChessRoomResponsePlayersWhiteGiftingLevelMax).optional()
 }),
   "black": zod.object({
   "accountId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
-  "photoUrl": zod.string().nullish()
+  "photoUrl": zod.string().nullish(),
+  "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
+  "giftingLevel": zod.number().int().min(actChessRoomResponsePlayersBlackOneGiftingLevelMin).max(actChessRoomResponsePlayersBlackOneGiftingLevelMax).optional()
 }).nullable()
 }),
   "turn": zod.enum(['w', 'b']),

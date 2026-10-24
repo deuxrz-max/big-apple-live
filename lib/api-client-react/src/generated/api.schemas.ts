@@ -571,6 +571,13 @@ export interface ChessPlayer {
   username: string;
   displayName: string;
   photoUrl?: string | null;
+  /** Approved saved profile photos, main photo first. */
+  photoUrls?: string[];
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  giftingLevel?: number;
 }
 
 export type ChessRoomStatePlayers = {
@@ -1769,6 +1776,13 @@ export interface ChessPlayer4b96100 {
   username: string;
   displayName: string;
   photoUrl?: string | null;
+  /** Approved saved profile photos, main photo first. */
+  photoUrls?: string[];
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  giftingLevel?: number;
 }
 
 export type ChessRoomState4b96100Players = {

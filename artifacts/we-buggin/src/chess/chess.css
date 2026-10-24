@@ -1,28 +1,40 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap');
 .chess-room,.chess-room *,.chess-room *::before,.chess-room *::after{box-sizing:border-box}
 .chess-room{--gold:44 72% 58%;--gold-d:36 64% 34%;--ink:28 30% 6%;--cream:40 45% 90%;
-  position:fixed;inset:0;z-index:40;min-height:100dvh;display:flex;flex-direction:column;justify-content:center;gap:10px;
-  padding:max(12px,env(safe-area-inset-top)) 10px max(12px,env(safe-area-inset-bottom));color:hsl(var(--cream));
+  position:fixed;inset:0;z-index:40;min-height:100dvh;display:flex;flex-direction:column;justify-content:stretch;gap:0;
+  padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);color:hsl(var(--cream));
   background:radial-gradient(60% 40% at 18% 8%,hsl(34 80% 40% / .28),transparent 70%),radial-gradient(50% 36% at 88% 96%,hsl(28 70% 34% / .22),transparent 70%),
   linear-gradient(180deg,hsl(24 28% 9%),hsl(var(--ink)) 60%,hsl(20 30% 4%));font-family:'Nunito Sans',system-ui,sans-serif;overflow:hidden}
 .chess-room::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.38;background:url('./study-background.svg') center/cover no-repeat}
-.chess-player{position:relative;display:flex;align-items:center;gap:10px;width:min(100%,560px);margin:0 auto;padding:8px 10px;border-radius:6px;
-  background:linear-gradient(180deg,hsl(26 22% 13%),hsl(24 24% 8%));border:1px solid hsl(var(--gold) / .35);box-shadow:inset 0 1px 0 hsl(var(--gold) / .18),0 6px 18px hsl(0 0% 0% / .35)}
-.chess-player-photo{display:inline-flex;flex-shrink:0;border-radius:0;padding:2px;transition:box-shadow .3s}
-.chess-player-photo img{background:#000}
-.chess-player.is-active .chess-player-photo{box-shadow:0 0 0 2px hsl(var(--gold)),0 0 14px hsl(var(--gold) / .65)}
-.chess-player-empty{width:72px;height:72px;border-radius:0;border:1px solid hsl(var(--gold) / .5);background:hsl(var(--ink))}
-.chess-player-copy{display:flex;flex-direction:column;min-width:0;flex:1}
-.chess-player-copy strong{font-family:'Cormorant Garamond',serif;font-size:19px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.chess-player-copy em{font-style:normal;font-size:10px;letter-spacing:.12em;text-transform:uppercase;margin-left:8px;padding:1px 6px;border-radius:3px;background:hsl(var(--gold) / .18);color:hsl(var(--gold));vertical-align:middle}
-.chess-player-copy small{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:hsl(var(--cream) / .6)}
-.chess-player-tools{display:grid;grid-template-columns:repeat(2,34px);gap:6px;flex-shrink:0}
-.chess-player-tools button,.chess-sheet-actions button,.chess-state button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:34px;height:34px;padding:0 8px;border-radius:5px;
+.chess-player-tools button{width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:1px solid hsl(var(--gold) / .6);background:hsl(24 20% 8% / .7);color:hsl(var(--cream));cursor:pointer}
+.chess-sheet-actions button,.chess-state button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:34px;height:34px;padding:0 8px;border-radius:5px;
   border:1px solid hsl(var(--gold) / .4);background:hsl(24 20% 14%);color:hsl(var(--cream));cursor:pointer}
 .chess-player-tools button.is-on{background:hsl(var(--gold));color:hsl(var(--ink))}
-.chess-frame{position:relative;width:min(100%,560px,calc(100dvh - 240px));margin:0 auto;padding:clamp(10px,3vw,18px);border-radius:0;
-  background:linear-gradient(135deg,hsl(24 46% 24%),hsl(20 50% 12%) 40%,hsl(26 48% 22%) 70%,hsl(18 50% 10%)),repeating-linear-gradient(100deg,hsl(20 40% 8% / .4) 0 2px,transparent 2px 9px);
-  background-blend-mode:multiply;box-shadow:inset 0 0 0 2px hsl(var(--gold) / .55),inset 0 0 0 6px hsl(20 40% 8% / .6),0 24px 60px hsl(0 0% 0% / .6),0 0 80px hsl(34 80% 40% / .12)}
+.chess-frame{position:relative;flex:none;width:min(100vw,560px,calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 140px));margin:0 auto;padding:clamp(4px,1.6vw,8px);border-radius:0;
+  background:linear-gradient(135deg,hsl(24 46% 24%),hsl(20 50% 12%) 40%,hsl(26 48% 22%) 70%,hsl(18 50% 10%));box-shadow:inset 0 0 0 1px hsl(var(--gold) / .8)}
+.chess-frame>.chess-error,.chess-frame>.chess-note{position:absolute;left:8px;right:8px;bottom:8px;z-index:3;margin:0}
+.chess-photo{position:relative;flex:1 1 0;min-height:70px;width:min(100vw,560px);margin:0 auto;overflow:hidden;background:hsl(20 30% 4%);box-shadow:inset 0 0 0 1px hsl(var(--gold) / .75);transition:box-shadow .3s}
+.chess-photo.is-active{box-shadow:inset 0 0 0 1px hsl(var(--gold)),inset 0 0 22px hsl(var(--gold) / .55);z-index:1}
+.chess-photo::after{content:"";position:absolute;inset:0;z-index:4;pointer-events:none;border:1px solid hsl(var(--gold) / .75)}
+.chess-photo.is-active::after{border-color:hsl(var(--gold));box-shadow:inset 0 0 18px hsl(var(--gold) / .4)}
+.chess-photo-track{display:flex;width:100%;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;touch-action:pan-x}
+.chess-photo-track::-webkit-scrollbar{display:none}
+.chess-photo-slide{flex:0 0 100%;height:100%;scroll-snap-align:center;padding:1px}
+.chess-photo-slide img{width:100%;height:100%;object-fit:contain;display:block}
+.chess-photo-fallback{height:100%;display:flex;align-items:center;justify-content:center}
+.chess-photo-dots{bottom:auto;top:6px;z-index:2}
+.chess-photo.is-top .chess-photo-dots{top:auto;bottom:36px}
+.chess-photo.is-bottom .chess-photo-dots{top:36px}
+.chess-photo-label{position:absolute;left:1px;right:1px;z-index:2;display:flex;align-items:center;gap:8px;padding:6px 10px;pointer-events:none;min-width:0}
+.chess-photo.is-top .chess-photo-label{bottom:1px;background:linear-gradient(0deg,hsl(20 30% 4% / .92),transparent)}
+.chess-photo.is-bottom .chess-photo-label{top:1px;background:linear-gradient(180deg,hsl(20 30% 4% / .92),transparent)}
+.chess-photo-label strong{font-family:'Cormorant Garamond',serif;font-size:18px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.chess-photo-label em{font-style:normal;font-size:10px;letter-spacing:.12em;text-transform:uppercase;margin-left:6px;padding:1px 5px;border-radius:2px;background:hsl(var(--gold) / .2);color:hsl(var(--gold))}
+.chess-photo-label small{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:hsl(var(--cream) / .7);white-space:nowrap}
+.chess-photo-wait{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:10px;text-align:center}
+.chess-photo-wait strong{font-family:'Cormorant Garamond',serif;font-size:19px}
+.chess-photo-wait button{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:3px;border:1px solid hsl(var(--gold));background:linear-gradient(180deg,hsl(var(--gold)),hsl(var(--gold-d)));color:hsl(var(--ink));font-weight:800;cursor:pointer}
+.chess-player-tools{position:absolute;top:6px;right:6px;z-index:3;display:flex;gap:6px}
 .chess-board{display:grid;grid-template-columns:repeat(8,1fr);aspect-ratio:1;border:2px solid hsl(var(--gold-d));box-shadow:0 0 0 1px hsl(var(--gold) / .6)}
 .chess-sq{position:relative;border:0;border-radius:0;padding:4%;background:hsl(36 42% 76%);cursor:default;aspect-ratio:1;display:flex;align-items:center;justify-content:center}
 .chess-sq.is-dark{background:hsl(22 38% 34%)}

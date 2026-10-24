@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { pool } from "@workspace/db";
 import { getProfile, requireCompletedProfile } from "./account-profiles";
 import { visibleProfilePhotos } from "./photo-visibility";
+import { nameColorProfilesForAccounts } from "./social/gift-name-color-data";
 import { assertRoomAccessAllowed } from "./room-moderation";
 import { ChessError, newChessGame, chessSnapshot, type ChessGame, type ChessPlayer } from "./chess-engine";
 
@@ -43,14 +44,26 @@ export async function transactChess(id: string, accountId: string, update?: (gam
 }
 export async function projectChess(game: ChessGame, viewerId: string) {
   const snapshot = chessSnapshot(game, viewerId);
+  const levels = await nameColorProfilesForAccounts(
+    Object.values(snapshot.players).filter((p): p is ChessPlayer => !!p).map(p => p.accountId),
+  );
   for (const side of ["white", "black"] as const) {
     const player = snapshot.players[side];
     if (!player) continue;
     const profile = await getProfile(player.accountId);
-    const photos = await visibleProfilePhotos(player.accountId, viewerId, {
+    // The carousel, like the Me-page hero, shows only approved saved photos.
+    // Never expose pending photos to another player (or through persisted game data).
+    const photos = await visibleProfilePhotos(player.accountId, undefined, {
       photoUrl: profile?.photoUrl ?? null, photoUrls: profile?.photoUrls,
     });
-    snapshot.players = { ...snapshot.players, [side]: { ...player, displayName: profile?.displayName || player.displayName, photoUrl: photos.photoUrl } };
+    const orderedPhotos = photos.photoUrl
+      ? [photos.photoUrl, ...photos.photoUrls.filter(url => url !== photos.photoUrl)]
+      : photos.photoUrls;
+    snapshot.players = { ...snapshot.players, [side]: {
+      ...player, displayName: profile?.displayName || player.displayName,
+      photoUrl: photos.photoUrl, photoUrls: orderedPhotos,
+      giftingLevel: levels.get(player.accountId)?.tierIndex ?? 0,
+    } };
   }
   return snapshot;
 }
