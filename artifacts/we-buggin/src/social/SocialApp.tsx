@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link, Route, Switch, useLocation, useParams } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
-import { Users, Heart, Ban, Flag, MessageCircle, Coins, Trophy, UserRound } from 'lucide-react';
+import { Users, Heart, Ban, Flag, MessageCircle, Coins, Trophy, UserRound, ArrowLeft } from 'lucide-react';
 import { useGetChatAccess, useGetSocialMe } from '@workspace/api-client-react';
 import '@/beam/beam.css';
 import './social.css';
@@ -62,6 +62,11 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
       {!bare && <nav className="bm-nav">
         <Wordmark href="/home" className="bm-logo" />
         <div className="sc-header-actions">
+          {!isMessagesPath && path !== '/community/favorites' && path !== '/community/coins' && path !== '/community/credits' && (
+            <Link href="/home" className="bm-btn bm-btn-sm" aria-label="Back to home" data-testid="link-community-back">
+              <ArrowLeft size={17} aria-hidden="true" /><span>Back</span>
+            </Link>
+          )}
           <ActionMenu label="More pages" testId="menu-community-pages">
               {NAV.map(({ to, label, icon: I }) => (
                 <Link key={to} href={to} onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}>

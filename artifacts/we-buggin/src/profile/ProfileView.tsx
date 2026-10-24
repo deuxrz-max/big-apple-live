@@ -10,6 +10,7 @@ import { BadgeArt } from '@/social/BadgeArt';
 import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
 import './profile.css';
 import { approvedPhotos } from './profile-model';
+import { useProfileBackHref, useProfileTapHandlers } from './QuickProfile';
 
 type EarnedBadge = { id: string; earnedAt?: string | null };
 type Product = { id: string; name: string };
@@ -23,13 +24,14 @@ function Slide({ url, name, username }: { url: string | null; name: string; user
   return <div className="pf-slide pf-slide-empty"><UserPhoto username={username} displayName={name} photoUrl={null} size={132} /></div>;
 }
 
-export function Hero({ urls, name, username, left, right, countryBadge }: { urls: string[]; name: string; username: string; left: ReactNode; right?: ReactNode; countryBadge?: ReactNode }) {
+export function Hero({ urls, name, username, left, right, countryBadge, tapUsername }: { urls: string[]; name: string; username: string; left: ReactNode; right?: ReactNode; countryBadge?: ReactNode; tapUsername?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [idx, setIdx] = useState(0);
+  const tap = useProfileTapHandlers(tapUsername);
   const slides: (string | null)[] = urls.length ? urls : [null];
   return (
     <div className={`pf-hero${countryBadge ? ' pf-hero-with-country' : ''}`}>
-      <div className="pf-track" ref={ref} tabIndex={slides.length > 1 ? 0 : -1} aria-label="Profile photos, swipe for more"
+      <div className="pf-track" ref={ref} {...tap} data-testid={tapUsername ? `tap-profile-hero-${tapUsername}` : undefined} tabIndex={tapUsername || slides.length > 1 ? 0 : -1} aria-label="Profile photos, swipe for more"
         onScroll={(e) => { const el = e.currentTarget; setIdx(Math.round(el.scrollLeft / Math.max(1, el.clientWidth))); }}>
         {slides.map((u, i) => <Slide key={u ?? 'none'} url={u} name={name} username={username} />)}
       </div>
@@ -113,10 +115,11 @@ export function ProfileView({ person, own = false, countryName, products, backHr
   if (p.badgeId && !earned.some((b) => b.id === p.badgeId)) earned.push({ id: p.badgeId, earnedAt: null });
   earned.sort((a, b) => (a.id === p.badgeId ? -1 : 0) - (b.id === p.badgeId ? -1 : 0) || (Date.parse(b.earnedAt ?? '') || 0) - (Date.parse(a.earnedAt ?? '') || 0));
   const bio = p.bio?.trim();
+  const back = useProfileBackHref(own ? undefined : p.username, backHref);
   return (
     <div className="beam-app pf" data-testid="profile-view">
-      <Hero urls={approvedPhotos(p, own)} name={name} username={p.username}
-        left={<BackButton href={backHref} label="Back" />}
+      <Hero urls={approvedPhotos(p, own)} name={name} username={p.username} tapUsername={p.username}
+        left={<BackButton href={back} label="Back" />}
         right={own ? <Link href="/user-portal/edit" className="pf-round" aria-label="Edit your profile" data-testid="link-edit-hero"><Pencil size={18} aria-hidden /></Link> : menu} />
       <section className="pf-panel">
         <h1 className="pf-name" data-testid="text-display-name">

@@ -10,6 +10,10 @@
 .fg-tile { display: flex; flex-direction: column; width: 100%; min-height: 44px; padding: 0; margin: 0; border: 1px solid rgba(255,255,255,.1); border-radius: 14px; background: #1D1D23; color: #F4F1F8; font: inherit; cursor: pointer; overflow: hidden; text-align: left; }
 .fg-tile:hover:not(:disabled) { border-color: #FF268F; }
 .fg-tile:focus-visible { outline: 3px solid #FF8AC2; outline-offset: 2px; }
+.fg-tile-split { position: relative; cursor: default; }
+.fg-photo-tap { display: block; width: 100%; }
+.fg-join { border: 0; border-radius: 0; text-align: left; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+.fg-join:disabled { cursor: progress; opacity: .6; }
 .fg-tile:disabled { cursor: progress; opacity: .6; }
 .fg-photo { display: block; position: relative; width: 100%; aspect-ratio: 1 / 1; overflow: hidden; background: #1D1D23; }
 .fg-photo > span:not(.fg-room), .fg-photo > span:not(.fg-room) > span { display: flex !important; align-items: center; justify-content: center; width: 100% !important; height: 100% !important; min-width: 0 !important; border: 0 !important; border-radius: 0 !important; }

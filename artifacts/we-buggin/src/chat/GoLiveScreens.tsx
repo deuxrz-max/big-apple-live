@@ -18,6 +18,7 @@ import { appendUniqueGiftEvents, finishGiftQueueItem } from "@/gifts/gift-combo-
 import { SafetyReportDialog } from "@/safety/SafetyReportDialog";
 import { ShinyName } from "@/components/ShinyName";
 import { saveCreds } from "@/lib/room-creds";
+import { ProfileTap } from "@/profile/QuickProfile";
 import { isLiveStreamEventVisible } from "./liveChatBlockPolicy";
 import {
   hostLiveSession, leaveViewerLiveSession, viewerLiveSession,
@@ -219,9 +220,9 @@ function GifterAvatar({ username, name, coins }: { username: string; name: strin
     query: { queryKey: getGetSocialPersonQueryKey(username), enabled: Boolean(username) },
   });
   const photo = person.data?.photoUrl;
-  return <span className="st-live-gifter-avatar" title={`${name} · ${coins} coins`}>
+  return <ProfileTap username={username} label={`Open profile for ${name}`}><span className="st-live-gifter-avatar" title={`${name} · ${coins} coins`}>
     {photo ? <img src={photo} alt="" /> : [...name][0]?.toUpperCase() ?? "?"}
-  </span>;
+  </span></ProfileTap>;
 }
 
 function liveGiftRecipients(
@@ -458,7 +459,7 @@ export function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd,
         : !hostMode && videoTrack
           ? <RemoteVideo track={videoTrack} />
           : !hostMode && <div className="st-live-player-empty">
-            <span className="st-live-avatar">{avatar ?? (hostPhoto ? <img src={hostPhoto} alt="" /> : displayName[0]?.toUpperCase() ?? "S")}</span>
+            <ProfileTap username={hostUsername}><span className="st-live-avatar">{avatar ?? (hostPhoto ? <img src={hostPhoto} alt="" /> : displayName[0]?.toUpperCase() ?? "S")}</span></ProfileTap>
             <strong><ShinyName displayNameColor={hostNameColor} displayNameTierIndex={hostNameTier}>{displayName}</ShinyName></strong><span>Waiting for the host’s camera…</span>
           </div>}
       {hostMode && (!localStream || cameraBlocked) && (
@@ -475,9 +476,11 @@ export function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd,
       )}
       <div className="st-live-topbar">
         <div className="st-live-creator">
+          <ProfileTap username={hostUsername} label={`Open profile for ${displayName}`}>
+            <span className="st-live-creator-avatar" data-testid="live-creator-avatar">{avatar ?? (hostPhoto ? <img src={hostPhoto} alt="" /> : displayName[0]?.toUpperCase() ?? "S")}</span>
+          </ProfileTap>
           <button type="button" className="st-live-creator-profile" disabled={hostMode || !hostUsername}
             onClick={() => profileFor(hostUsername, displayName, hostNameColor, hostNameTier)} data-testid="live-creator-profile">
-            <span className="st-live-creator-avatar">{avatar ?? (hostPhoto ? <img src={hostPhoto} alt="" /> : displayName[0]?.toUpperCase() ?? "S")}</span>
             <span className="st-live-creator-copy"><strong><ShinyName displayNameColor={hostNameColor} displayNameTierIndex={hostNameTier}>{displayName}</ShinyName></strong>
               <small><i className={status === "connected" ? "is-live" : ""} />{status === "connected" ? "LIVE NOW" : status === "reconnecting" ? "Reconnecting" : "Connecting"}</small>
             </span>

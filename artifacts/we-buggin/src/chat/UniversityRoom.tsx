@@ -9,6 +9,7 @@ import {
   type RoomGiftEvent,
 } from '@workspace/api-client-react';
 import { photoSrc, UserPhoto } from '@/components/user-photo';
+import { useQuickProfile } from '@/profile/QuickProfile';
 import { ShinyName } from '@/components/ShinyName';
 import { errMessage, errStatus } from '@/lib/errors';
 import { IdentityAvatar } from '@/lib/identity';
@@ -106,6 +107,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const ack = useAcknowledgeUniversityRules();
   const block = useSetSocialRelationship();
   const chatAccess = useGetChatAccess();
+  const quickProfile = useQuickProfile();
 
   const [text, setText] = useState('');
   const [pending, setPending] = useState(false);
@@ -437,10 +439,11 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           return (
             <li key={p.participantId}>
               <div className="ur-prow">
-                {p.self && !isSocialRoom ? <UserPhoto username={p.username} displayName={p.displayName} photoUrl={p.photoUrl} size={36} reviewStatus={p.photoStatus ?? undefined} /> :
-                  <button type="button" className="ur-person-avatar" aria-label={`${isSocialRoom ? 'Profile and cards for' : 'Actions for'} ${p.displayName}`}
-                    aria-haspopup={isSocialRoom ? 'dialog' : 'menu'}
-                    onClick={() => openMenu(p.username, p.displayName, p.participantId, p.displayNameColor, p.displayNameTierIndex)}
+                {<button type="button" className="ur-person-avatar" aria-label={`${isSocialRoom ? 'Profile and cards for' : 'Open profile for'} ${p.displayName}`}
+                    aria-haspopup="dialog"
+                    onClick={() => isSocialRoom
+                      ? openMenu(p.username, p.displayName, p.participantId, p.displayNameColor, p.displayNameTierIndex)
+                      : quickProfile?.open(p.username)}
                     data-testid={`button-person-avatar-${p.username}`}><UserPhoto username={p.username} displayName={p.displayName} photoUrl={p.photoUrl} size={36} reviewStatus={p.photoStatus ?? undefined} /></button>}
                 <span className="ur-pname">
                   {p.self
@@ -552,7 +555,11 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                   const joinAvailable = canSelectOpenSlot && !videoBeam.ownSlot;
                   const isSpeaking = !!slot.participantId && videoBeam.speaking.has(slot.participantId);
                   const profileTap = isSocialRoom && !!person;
-                  const seatInteractive = profileTap || mine || joinAvailable || moveAvailable;
+                  // Non-social occupied seats: the photo is the only control (opens the quick profile);
+                  // the seat area is not a button, so there are no nested interactive roles.
+                  // Own mic stays on the explicit "Your beam controls" mic button.
+                  const photoTrigger = !!person && !isSocialRoom && !person.botId;
+                  const seatInteractive = !photoTrigger && (profileTap || mine || joinAvailable || moveAvailable);
                   const media = slot.participantId ? videoBeam.media[slot.participantId] : undefined;
                   const fallbackName = person ? (person.displayName?.trim() || person.username) : '';
                   const initials = Array.from(fallbackName).slice(0, 2).join('').toUpperCase() || '?';
@@ -616,12 +623,13 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                             <MicOff size={13} aria-hidden="true" />
                           </span>
                         )}
-                        {person && (isSocialRoom || person.self ? (
+                        {person && (!photoTrigger ? (
                           <div className="ur-slot-portrait-layer">{portrait}</div>
                         ) : (
                           <button type="button" className="ur-slot-avatar-button ur-slot-photo-action"
-                            aria-label={`Actions for ${person.displayName}`} aria-haspopup="menu"
-                            onClick={event => { event.stopPropagation(); openMenu(person.username, person.displayName, person.participantId, person.displayNameColor, person.displayNameTierIndex); }}>
+                            aria-label={`Open profile for ${person.displayName}`} aria-haspopup="dialog"
+                            data-testid={`button-seat-photo-${person.username}`}
+                            onClick={() => quickProfile?.open(person.username)}>
                             {portrait}
                           </button>
                         ))}

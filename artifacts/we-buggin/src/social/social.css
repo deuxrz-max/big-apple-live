@@ -98,6 +98,9 @@
 .sc-rank .sc-card-leaderboard .sc-card-main > span:first-child,
 .sc-rank .sc-card-leaderboard .sc-card-main > span:first-child > span { width: 44px !important; height: 44px !important; min-width: 44px !important; }
 .sc-rank .sc-card-leaderboard .sc-card-text { min-width: 0; overflow: hidden; }
+.sc-rank .sc-card-leaderboard .sc-card-main > .qp-tap > span,
+.sc-rank .sc-card-leaderboard .sc-card-main > .qp-tap > span > span { width: 44px !important; height: 44px !important; min-width: 44px !important; }
+.sc-card-text { color: inherit; text-decoration: none; }
 .sc-rank .sc-card-leaderboard .sc-name { display: flex; min-width: 0; max-width: 100%; overflow: hidden; white-space: nowrap; overflow-wrap: normal; word-break: normal; font-size: clamp(14px, 3.7vw, 18px); line-height: 1.2; }
 .sc-rank .sc-card-leaderboard .sc-name-label { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sc-rank .sc-card-leaderboard .sc-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

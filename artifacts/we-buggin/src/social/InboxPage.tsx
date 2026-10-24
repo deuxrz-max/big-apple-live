@@ -40,14 +40,16 @@ export function InboxPage() {
         <ul className="ib-live" aria-label="Active now with unread messages">
           {live.map((c) => (
             <li key={c.username}>
-              <Link href={href(c.username)} className="ib-live-item" aria-label={`${c.displayName || c.username}, active now, ${c.unreadCount} unread`} data-testid={`link-active-${c.username}`}>
+              <div className="ib-live-item" data-testid={`item-active-${c.username}`}>
                 <span className="ib-ph">
                   <Avatar p={{ username: c.username, displayName: c.displayName, photoUrl: c.photoUrl }} size={64} />
                   <i className="ib-dot" aria-hidden="true" />
                   <b className="ib-count">{c.unreadCount}</b>
                 </span>
+                <Link href={href(c.username)} className="dw-link-contents" aria-label={`${c.displayName || c.username}, active now, ${c.unreadCount} unread`} data-testid={`link-active-${c.username}`}>
                  <ShinyName className="ib-live-name" displayNameColor={c.displayNameColor} displayNameTierIndex={c.displayNameTierIndex}><BadgeMark id={c.badgeId} label={c.badgeName} imageUrl={c.badgeImage} size={16} compact />{c.displayName || c.username}</ShinyName>
-              </Link>
+                </Link>
+              </div>
             </li>
           ))}
         </ul>
@@ -58,10 +60,11 @@ export function InboxPage() {
           const unread = c.unreadCount > 0;
           return (
             <li key={c.username}>
-              <Link href={href(c.username)} className={`ib-row${unread ? ' is-unread' : ''}`} data-testid={`row-conversation-${c.username}`}>
+              <div className={`ib-row${unread ? ' is-unread' : ''}`} data-testid={`row-conversation-${c.username}`}>
                 <span className="ib-avatar">
                   <Avatar p={{ username: c.username, displayName: c.displayName, photoUrl: c.photoUrl }} size={52} />
                 </span>
+                <Link href={href(c.username)} className="dw-link-contents" data-testid={`link-conversation-${c.username}`}>
                 <span className="ib-mid">
                   <span className="ib-heading">
                     <span className="ib-name">
@@ -76,7 +79,8 @@ export function InboxPage() {
                   <time className="ib-time" dateTime={c.updatedAt}>{stamp(c.updatedAt)}</time>
                   {unread && <b className="ib-count ib-count-row" aria-label={`${c.unreadCount} unread`}>{c.unreadCount}</b>}
                 </span>
-              </Link>
+                </Link>
+              </div>
             </li>
           );
         })}</ul>)}

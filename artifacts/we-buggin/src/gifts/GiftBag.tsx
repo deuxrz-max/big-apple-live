@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useGetSocialMe, getGetSocialMeQueryKey, sendSocialGift, getGetRoomGiftEventsQueryKey } from '@workspace/api-client-react';
 import { CoinAmount, refreshSocial, errMsg } from '@/social/common';
 import { UserPhoto } from '@/components/user-photo';
+import { ProfileTap } from '@/profile/QuickProfile';
 import { cosmicEncoreMedia } from './SpiritPup';
 import { GiftArtwork } from './GiftArtwork';
 import { bigTierGiftMedia } from './BigTierGift';
@@ -272,17 +273,22 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
             {recipients.map(person => {
               const isSelected = recipientSelection.mode === 'one'
                 && recipientSelection.username.toLowerCase() === person.username.toLowerCase();
-              return <button key={person.username} type="button" role="listitem"
+              return <div key={person.username} role="listitem"
                 className={`gift-panel-person${isSelected ? ' is-selected' : ''}${person.isHost ? ' is-host' : ''}`}
-                aria-pressed={isSelected} disabled={busy} aria-label={`Gift to ${person.displayName || person.username}${person.isHost ? ', host' : ''}`}
-                title={`${person.displayName || person.username}${person.isHost ? ' · Host' : ''}`}
-                onClick={() => { setRecipientSelection({ mode: 'one', username: person.username }); setError(null); setNotice(null); retry.current = null; }}>
+                title={`${person.displayName || person.username}${person.isHost ? ' · Host' : ''}`}>
                 <span className="gift-panel-avatar">
-                  <UserPhoto username={person.username} displayName={person.displayName} photoUrl={person.photoUrl} size={44} />
+                  <ProfileTap username={person.username} label={`Open profile for ${person.displayName || person.username}`}>
+                    <UserPhoto username={person.username} displayName={person.displayName} photoUrl={person.photoUrl} size={44} />
+                  </ProfileTap>
                   {person.isHost && <span className="gift-panel-host-mark" aria-label="Host"><House size={12} aria-hidden /></span>}
                 </span>
-                <span className="gift-panel-person-name">{person.displayName || person.username}</span>
-              </button>;
+                <button type="button" className="gift-panel-person-name gift-panel-person-select"
+                  aria-pressed={isSelected} disabled={busy} aria-label={`Gift to ${person.displayName || person.username}${person.isHost ? ', host' : ''}`}
+                  data-testid={`button-gift-recipient-${person.username}`}
+                  onClick={() => { setRecipientSelection({ mode: 'one', username: person.username }); setError(null); setNotice(null); retry.current = null; }}>
+                  {person.displayName || person.username}
+                </button>
+              </div>;
             })}
             {!recipients.length && <span className="gift-panel-no-people">No one is seated yet</span>}
           </div>

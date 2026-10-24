@@ -79,3 +79,40 @@
 .pf-name-tier-reset{justify-self:start;border:0;background:transparent;color:#e5c8ff;text-decoration:underline;font:700 12px 'Montserrat',system-ui,sans-serif;padding:4px 0;cursor:pointer}
 .pf-name-tier-status{font-size:12px;color:#b9ff73}
 @media(max-width:380px){.pf-name-tier{padding:12px}.pf-name-tier-test-row{flex-wrap:wrap}.pf-name-tier-test-row input,.pf-name-tier-test-row .pf-btn{width:100%;flex:auto}}
+
+/* Quick profile sheet (shared) */
+.pf-state-back{padding:12px}
+.dw-link-contents{display:contents;color:inherit;text-decoration:none}
+.gift-panel-person-select{border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer}
+.gift-panel-person-select:disabled{cursor:progress}
+.bc-ph-tap{width:100%;height:100%;align-items:center;justify-content:center}
+.bc-ph-tap img{width:100%;height:100%;object-fit:cover}
+.qp-tap{display:inline-flex;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.qp-tap:focus-visible{outline:2px solid #d4af37;outline-offset:2px}
+.qp-root{position:fixed;inset:0;z-index:10100;display:flex;align-items:flex-end;justify-content:center}
+.qp-scrim{position:absolute;inset:0;border:0;background:rgba(0,0,0,.62);cursor:default}
+.qp-sheet{position:relative;width:min(420px,100%);background:#0b0a08;color:#f6efd9;border:1px solid #d4af37;border-radius:0;padding:20px 18px calc(18px + env(safe-area-inset-bottom));animation:qp-up .18s ease-out}
+@media (min-width:768px){.qp-root{align-items:center}}
+.qp-sheet{max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain}
+@media (prefers-reduced-motion:reduce){.qp-sheet,.qp-skel{animation:none}}
+@keyframes qp-up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+.qp-x{position:absolute;top:10px;right:10px;width:40px;height:40px;display:grid;place-items:center;background:#000;color:#d4af37;border:1px solid #d4af37;border-radius:0;cursor:pointer}
+.qp-body{display:grid;justify-items:center;gap:8px;text-align:center;padding-top:6px}
+.qp-name{display:inline-flex;align-items:center;gap:6px;font-size:1.2rem}
+.qp-sub{color:#bfae7a;font-size:.9rem}
+.qp-bio{margin:4px 0 0;color:#e8dfc5;font-size:.92rem;max-width:34ch}
+.qp-stats{display:flex;gap:24px;margin:6px 0 0}
+.qp-stats div{display:grid}.qp-stats dd{margin:0;font-weight:800;color:#d4af37}.qp-stats dt{font-size:.75rem;color:#bfae7a}
+.qp-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.qp-btn{display:flex;align-items:center;justify-content:center;min-height:44px;border:1px solid #d4af37;border-radius:0;background:#000;color:#d4af37;font-weight:800;text-decoration:none;cursor:pointer}
+.qp-btn-fill{background:#d4af37;color:#000}
+.qp-skel{display:block;background:#1d1a12;animation:qp-pulse 1.2s ease-in-out infinite alternate}
+.qp-skel-photo{width:96px;height:96px}.qp-skel-line{width:160px;height:14px}.qp-skel-line.short{width:100px}
+@keyframes qp-pulse{from{opacity:.5}to{opacity:1}}
+/* The legacy dialog theme must not recolor this shared sheet purple. */
+#root .qp-root .qp-sheet {
+  background:#000 !important;
+  border:1px solid #d4af37 !important;
+  border-radius:0 !important;
+  box-shadow:0 -8px 28px rgba(0,0,0,.5) !important;
+}

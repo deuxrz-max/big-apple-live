@@ -6,6 +6,7 @@ import { CREDIT_BUNDLES, formatUsd, RECHARGE_PREVIEW_POLICY, type CreditBundle }
 import { profileGiftingProgress, giftingLabel } from '../gifting/gifting';
 import { GiftingShield } from '../gifting/GiftingShield';
 import './buy-credits.css';
+import { ProfileTap } from '@/profile/QuickProfile';
 
 export function BuyCreditsPage() {
   const me = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), staleTime: 0, refetchOnMount: 'always', refetchOnWindowFocus: 'always' } });
@@ -25,7 +26,7 @@ export function BuyCreditsPage() {
 
       <header className="bc-head">
         <div className="bc-ph" data-testid="img-buy-profile">
-          {profile.photoUrl ? <img src={profile.photoUrl} alt="" /> : <span>{initials}</span>}
+          <ProfileTap username={profile.username} className="bc-ph-tap">{profile.photoUrl ? <img src={profile.photoUrl} alt="" /> : <span>{initials}</span>}</ProfileTap>
         </div>
         <div className="bc-who">
           <div className="bc-name">

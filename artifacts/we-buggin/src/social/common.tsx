@@ -4,6 +4,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import { Award, Crown, Flame, Gem, Gift, Heart, Rocket, Sparkles, Star, Zap, Coins, type LucideIcon } from 'lucide-react';
 import type { SocialPerson } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
+import { ProfileTap } from '@/profile/QuickProfile';
 import { ShinyName } from '@/components/ShinyName';
 
 export function errMsg(e: unknown): string {
@@ -68,7 +69,9 @@ export function useIdemKey() {
 }
 
 type PhotoPerson = { username: string; photoUrl?: string | null; displayName?: string | null; photoReviews?: { photoUrl: string; status: string }[] };
-export const Avatar = ({ p, size = 56 }: { p: PhotoPerson; size?: number }) => (
+export const Avatar = ({ p, size = 56, tap = true }: { p: PhotoPerson; size?: number; tap?: boolean }) => (
+  tap ? <ProfileTap username={p.username}><UserPhoto username={p.username} displayName={p.displayName} photoUrl={p.photoUrl} size={size}
+    reviewStatus={p.photoReviews?.find(photo => photo.photoUrl === p.photoUrl)?.status} /></ProfileTap> :
   <UserPhoto username={p.username} displayName={p.displayName} photoUrl={p.photoUrl} size={size}
     reviewStatus={p.photoReviews?.find(photo => photo.photoUrl === p.photoUrl)?.status} />
 );
@@ -78,9 +81,9 @@ export function PersonCard({ p, extra, showBadgeInName = true, className = '' }:
 }) {
   return (
     <article className={`sc-card${className ? ` ${className}` : ''}`} data-testid={`card-person-${p.username}`}>
-      <Link href={`/community/people/${p.username}`} className="sc-card-main">
+      <div className="sc-card-main">
         <Avatar p={p} size={64} />
-        <span className="sc-card-text">
+        <Link href={`/community/people/${p.username}`} className="sc-card-text" data-testid={`link-person-${p.username}`}>
           <ShinyName className="sc-name" displayNameColor={p.displayNameColor} displayNameTierIndex={p.displayNameTierIndex}>
             {showBadgeInName && <BadgeMark id={p.badgeId} label={p.badgeName} imageUrl={p.badgeImage} size={18} compact />}
             <span className="sc-name-label">{(p as PhotoPerson).displayName || p.username}</span>
@@ -88,8 +91,8 @@ export function PersonCard({ p, extra, showBadgeInName = true, className = '' }:
           <span className="sc-sub">@{p.username}{p.country ? ` / ${p.country}` : ''}</span>
           {p.bio && <span className="sc-bio">{p.bio}</span>}
           {p.interests.length > 0 && <span className="sc-tags">{p.interests.slice(0, 4).map((i) => <i key={i}>{i}</i>)}</span>}
-        </span>
-      </Link>
+        </Link>
+      </div>
       {extra}
     </article>
   );

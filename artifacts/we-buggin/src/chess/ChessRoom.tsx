@@ -10,6 +10,7 @@ import type { ChessActionInput, ChessPlayer, ChessRoomState } from "@workspace/a
 import { UserPhoto, photoSrc } from "@/components/user-photo";
 import { GiftingShield } from "@/gifting/GiftingShield";
 import "@/profile/profile.css";
+import { useProfileTapHandlers } from "@/profile/QuickProfile";
 import { ChessPiece } from "./ChessPiece";
 import { FINISHED, boardCells, isLegal, movesFrom, needsPromotion, resultTitle, selectableSquares } from "./chess-logic";
 import { useChessAudio } from "./useChessAudio";
@@ -25,16 +26,18 @@ export function ChessRoute() {
   return <ChessRoom key={`${accountKey}:${chessRoomId}`} roomId={chessRoomId} accountKey={accountKey} />;
 }
 
-function PhotoCarousel({ urls, name, username }: { urls: string[]; name: string; username: string }) {
+export function PhotoCarousel({ urls, name, username }: { urls: string[]; name: string; username: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [idx, setIdx] = useState(0);
   const [failed, setFailed] = useState<Record<string, boolean>>({});
   const slides = urls.filter(u => !failed[u]);
-  if (!slides.length) return <div className="chess-photo-fallback"><UserPhoto username={username} displayName={name} photoUrl={null} size={96} fit="contain" /></div>;
+  const tap = useProfileTapHandlers(username);
+  if (!slides.length) return <div className="chess-photo-fallback" {...tap} role="button" tabIndex={0} aria-label={`Open profile for ${name}`} data-testid={`tap-chess-photo-${username}`}><UserPhoto username={username} displayName={name} photoUrl={null} size={96} fit="contain" /></div>;
   return <>
-    <div className="chess-photo-track" ref={ref} tabIndex={slides.length > 1 ? 0 : -1}
+    <div className="chess-photo-track" ref={ref} {...tap} data-testid={`tap-chess-photo-${username}`} tabIndex={0}
       role="region" aria-roledescription="carousel" aria-label={`${name} profile photos`}
       onKeyDown={e => {
+        if (e.key === "Enter" || e.key === " ") { tap.onKeyDown?.(e); return; }
         if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
         e.preventDefault();
         ref.current?.scrollTo({ left: Math.max(0, Math.min(slides.length - 1, idx + (e.key === "ArrowRight" ? 1 : -1))) * ref.current.clientWidth, behavior: "smooth" });

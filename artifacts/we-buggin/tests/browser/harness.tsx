@@ -12,6 +12,7 @@ import { RewardsPage } from '../../src/social/MoneyPages';
 import { ShinyName } from '../../src/components/ShinyName';
 import { RoomFeedFixture } from './room-feed-fixture';
 import { LiveLayoutFixture } from './live-layout-fixture';
+import { ProfileNavigationFixture } from './profile-navigation-fixture';
 import '../../src/chat/live-stream.css';
 import { BeamTv, type BeamTvHandle } from '../../src/chat/BeamTv';
 import { RoomPerimeter } from '../../src/chat/RoomPerimeter';
@@ -156,6 +157,7 @@ createRoot(document.getElementById('root')!).render(
           : new URLSearchParams(location.search).get('view') === 'gifting-levels' ? <GiftingLevelsFixture />
           : new URLSearchParams(location.search).get('view') === 'room-feed' ? <RoomFeedFixture />
           : new URLSearchParams(location.search).get('view') === 'live-layout' ? <LiveLayoutFixture />
+          : new URLSearchParams(location.search).get('view') === 'profile-navigation' ? <ProfileNavigationFixture />
           : new URLSearchParams(location.search).get('view') === 'profile-cleanup' ? <OwnProfile />
           : new URLSearchParams(location.search).get('view') === 'photo-review' ? <ProfilePhotoReviewPage />
           : new URLSearchParams(location.search).get('view') === 'room-playback' ? <RoomPlaybackFixture />

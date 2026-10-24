@@ -16,6 +16,7 @@ import { endHostLiveSessionForRouteChange, leaveViewerLiveSession } from '@/chat
 import { EmailSignUp } from '@/components/email-signup';
 import '@/chat/chat.css';
 import { OwnProfile } from '@/profile/OwnProfile';
+import { QuickProfileProvider } from '@/profile/QuickProfile';
 import '@/profile/profile.css';
 import { StorePage } from '@/store/StorePage';
 import { giftingTier } from '@workspace/beam-identity';
@@ -440,6 +441,7 @@ function ClerkProviderWithRoutes() {
     >
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
+        <QuickProfileProvider>
         <div className={`app-page ${isLightScreen ? 'is-light-screen' : ''} ${isLiveScreen ? 'is-live-screen' : ''} ${isBeamRoomScreen ? 'is-beam-screen' : ''} ${isModerationScreen ? 'is-moderation-screen' : ''} ${isDirectoryScreen ? 'is-directory-screen' : ''} ${isGiftStudioScreen ? 'is-gift-studio-screen' : ''}`}><RoutedErrorBoundary>
           <Switch>
             {DevAudioHarnessPage && (
@@ -473,6 +475,7 @@ function ClerkProviderWithRoutes() {
         </RoutedErrorBoundary></div>
         <BottomNavigation />
         <NameColorLevelUpToast />
+        </QuickProfileProvider>
       </QueryClientProvider>
     </ClerkProvider>
   );

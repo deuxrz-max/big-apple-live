@@ -1,5 +1,6 @@
 import type { SocialPerson } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
+import { ProfileTap } from '@/profile/QuickProfile';
 import './favorites-gallery.css';
 
 export type FavoriteEntry = {
@@ -20,19 +21,16 @@ export function FavoritesGallery({ entries, onSelect, busyUsername }: {
         const busy = busyUsername === person.username;
         return (
           <li key={person.username} className="fg-item">
-            <button
-              type="button"
-              className="fg-tile"
-              aria-label={room ? `${name}, ${room.label}. Join room` : name}
-              aria-busy={busy || undefined}
-              disabled={busy}
-              onClick={() => onSelect(entry)}
-            >
-              <span className="fg-photo">
-                <UserPhoto username={person.username} displayName={person.displayName} photoUrl={person.photoUrl} size={160} />
-                {room && <span className="fg-room">{room.label}</span>}
-              </span>
-            </button>
+            <div className="fg-tile fg-tile-split" aria-busy={busy || undefined} data-testid={`tile-following-${person.username}`}>
+              <ProfileTap username={person.username} className="fg-photo-tap" label={`Open profile for ${name}`}>
+                <span className="fg-photo">
+                  <UserPhoto username={person.username} displayName={person.displayName} photoUrl={person.photoUrl} size={160} />
+                </span>
+              </ProfileTap>
+              {room && <button type="button" className="fg-room fg-join" disabled={busy}
+                aria-label={`${name}, ${room.label}. Join room`} onClick={() => onSelect(entry)}
+                data-testid={`button-join-following-${person.username}`}>{room.label}</button>}
+            </div>
           </li>
         );
       })}

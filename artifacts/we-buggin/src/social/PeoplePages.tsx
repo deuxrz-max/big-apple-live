@@ -10,7 +10,8 @@ import {
   useGetFavoritesGallery, getGetFavoritesGalleryQueryKey, getFavoriteRoom,
 } from '@workspace/api-client-react';
 import { Avatar, BadgeMark, CoinAmount, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, refreshSocial, useIdemKey } from './common';
-import { ProfileView, ProfileMenu } from '@/profile/ProfileView';
+import { BackButton, ProfileView, ProfileMenu } from '@/profile/ProfileView';
+import { useProfileBackHref } from '@/profile/QuickProfile';
 import { FavoritesGallery, type FavoriteEntry } from './FavoritesGallery';
 import { isGiftLocked, PLATINUM_UNLOCK_LEVEL } from '@/gifting/gifting';
 import '@/gifting/gifting-shield.css';
@@ -91,11 +92,12 @@ export function PersonPage({ username }: { username: string }) {
       onError: (e) => setMsg({ ok: false, t: errMsg(e) }),
     });
   };
-  if (q.isLoading) return <Loading />;
-  if (q.isError || !p) return <ErrorBox error={q.error ?? 'Not found'} retry={() => q.refetch()} />;
+  const backHref = useProfileBackHref(username, '/community');
+  if (q.isLoading) return <><div className="pf-state-back"><BackButton href={backHref} label="Back" /></div><Loading /></>;
+  if (q.isError || !p) return <><div className="pf-state-back"><BackButton href={backHref} label="Back" /></div><ErrorBox error={q.error ?? 'Not found'} retry={() => q.refetch()} /></>;
   const countryName = p.country ? (me.data?.countries.find((c) => c.code === p.country)?.name ?? p.country) : undefined;
   return (
-    <ProfileView person={p} own={own} countryName={countryName} products={me.data?.products} backHref="/community"
+    <ProfileView person={p} own={own} countryName={countryName} products={me.data?.products} backHref={backHref}
       menu={own ? null : <ProfileMenu name={p.displayName || p.username} username={p.username} blocked={p.blocked} pending={rel.isPending} onBlock={(a) => setRel('block', a)} />}
       actions={own ? null : (
         <div className="pf-actions">

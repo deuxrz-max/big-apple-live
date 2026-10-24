@@ -46,3 +46,4 @@
 - [Chess room scope](chess-room-scope.md) — separate two-player audio-only rooms: White above, Black below, no chat, audience, TV or card game.
 - [Recharge economics safeguards](recharge-economics.md) — earned-only $100/30,000 rate; bonus liability includes every coin; unknown fees block real checkout approval.
 - [Room composer regression checks](room-composer-regressions.md) — run room tests with mobile-shell styles; legacy zero-width flex inputs collapse when their parent becomes grid.
+- [Profile navigation](profile-navigation.md) — pictures open profiles directly; preserve underlying state, Chess swipes and created-room hands.

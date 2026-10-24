@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { LiveSurface } from '../../src/chat/GoLiveScreens';
+import { QuickProfileProvider } from '../../src/profile/QuickProfile';
+import '../../src/profile/profile.css';
 import type { HostLiveSnapshot } from '../../src/chat/liveSessionController';
 
 // Synthetic media only. No camera permission, LiveKit connection or real stream.
@@ -27,5 +29,5 @@ export function LiveLayoutFixture() {
       url: '', token: '', displayNameColor: '#fff', displayNameTierIndex: 96,
     },
   };
-  return <LiveSurface streamId="layout-fixture" hostMode hostState={state} ownUsername="fixture" />;
+  return <QuickProfileProvider><LiveSurface streamId="layout-fixture" hostMode hostState={state} ownUsername="fixture" /></QuickProfileProvider>;
 }
