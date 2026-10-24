@@ -1,5 +1,42 @@
 import { test, expect } from '@playwright/test';
 
+for (const width of [320, 390, 430]) {
+  test(`room comment input has usable width at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('/tests/browser/harness.html');
+    const input = page.getByTestId('input-message');
+    await expect(input).toHaveAttribute('placeholder', 'Say something (1-280)');
+    expect((await input.boundingBox())!.width).toBeGreaterThan(150);
+    await input.fill('Hello from my phone');
+    await expect(input).toHaveValue('Hello from my phone');
+    await expect(page.getByTestId('button-send')).toBeEnabled();
+  });
+}
+
+test('typed comments reach sender and second viewer once, and survive reload', async ({ page, context }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const viewer = await context.newPage();
+  await viewer.setViewportSize({ width: 390, height: 844 });
+  await Promise.all([page.goto('/tests/browser/harness.html'), viewer.goto('/tests/browser/harness.html')]);
+  await expect(page.getByTestId('input-message')).toBeVisible();
+  await expect(viewer.getByTestId('input-message')).toBeVisible();
+  const comment = `Phone comment ${Date.now()}`;
+  const input = page.getByTestId('input-message');
+  await input.fill(comment);
+  await page.getByTestId('button-send').click();
+  await expect(input).toHaveValue('');
+  for (const client of [page, viewer]) {
+    await expect(client.locator('.ch-msgs').getByText(comment, { exact: true })).toHaveCount(1);
+  }
+  await viewer.reload();
+  await expect(viewer.locator('.ch-msgs').getByText(comment, { exact: true })).toHaveCount(1);
+  const reply = `Reply ${Date.now()}`;
+  await viewer.getByTestId('input-message').fill(reply);
+  await viewer.getByTestId('input-message').press('Enter');
+  await expect(page.locator('.ch-msgs').getByText(reply, { exact: true })).toHaveCount(1);
+  await viewer.close();
+});
+
 for (const width of [320, 390]) {
   test(`room feeds readable and bots inline at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 844 });

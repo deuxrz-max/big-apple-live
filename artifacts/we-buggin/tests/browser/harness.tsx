@@ -11,8 +11,8 @@ import { GiftArtwork } from '../../src/gifts/GiftArtwork';
 import { RewardsPage } from '../../src/social/MoneyPages';
 import { ShinyName } from '../../src/components/ShinyName';
 import { RoomFeedFixture } from './room-feed-fixture';
+import { LiveLayoutFixture } from './live-layout-fixture';
 import '../../src/chat/live-stream.css';
-import '../../src/joker-finish.css';
 import { BeamTv, type BeamTvHandle } from '../../src/chat/BeamTv';
 import { RoomPerimeter } from '../../src/chat/RoomPerimeter';
 import { OwnProfile } from '../../src/profile/OwnProfile';
@@ -27,6 +27,9 @@ import '../../src/dark-app-theme.css';
 import '../../src/depth-ui.css';
 import '../../src/components/bottom-navigation.css';
 import '../../src/chat/room-black-gold.css';
+import '../../src/mobile-shell.css';
+import '../../src/app-shapes.css';
+import '../../src/joker-finish.css';
 
 declare const __PROMO_REGRESSION__: boolean;
 if (typeof __PROMO_REGRESSION__ === 'undefined' || !__PROMO_REGRESSION__)
@@ -152,6 +155,7 @@ createRoot(document.getElementById('root')!).render(
           : new URLSearchParams(location.search).get('view') === 'gift-artwork' ? <GiftArtworkFixture />
           : new URLSearchParams(location.search).get('view') === 'gifting-levels' ? <GiftingLevelsFixture />
           : new URLSearchParams(location.search).get('view') === 'room-feed' ? <RoomFeedFixture />
+          : new URLSearchParams(location.search).get('view') === 'live-layout' ? <LiveLayoutFixture />
           : new URLSearchParams(location.search).get('view') === 'profile-cleanup' ? <OwnProfile />
           : new URLSearchParams(location.search).get('view') === 'photo-review' ? <ProfilePhotoReviewPage />
           : new URLSearchParams(location.search).get('view') === 'room-playback' ? <RoomPlaybackFixture />

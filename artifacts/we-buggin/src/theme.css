@@ -304,7 +304,9 @@ body {
 #root .ch.ur .ch-msgs { padding-inline: 8px; }
 #root .ch.ur .ch-comp { background: rgba(17,13,34,.72); border: 1px solid rgba(176,144,239,.38); border-radius: 999px; backdrop-filter: blur(12px); }
 #root .ch.ur .ch-comp { flex-wrap: nowrap; align-items: center; gap: 7px; padding: 4px 7px; }
-#root .ch.ur .ch-comp input[type=text] { min-width: 0; width: 0; flex: 1 1 auto; background: transparent; border: 0; }
+/* Fill the composer column in both the current grid and legacy flex layouts.
+   width:0 only expanded with flex-grow; grid left the editable area invisible. */
+#root .ch.ur .ch-comp input[type=text] { box-sizing: border-box; min-width: 0; width: 100%; flex: 1 1 auto; background: transparent; border: 0; }
 #root .ch.ur .ch-acts button { color: #d7baff; }
 #root .ur-wlabel { color: #ffb1d4; }
 #root .ur-modal { background: rgba(5,4,18,.68); backdrop-filter: blur(5px); }

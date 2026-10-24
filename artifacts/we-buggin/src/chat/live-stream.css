@@ -1103,3 +1103,82 @@ body.streamtalk-live-screen .site-header {
   .st-live-host-controls button { min-height: 42px; }
   .st-live-gift-button { min-height: 44px; }
 }
+
+/* ===== Broadcaster layout: feed / control row / full-width composer (stacked, no overlap) ===== */
+.st-live-room {
+  --lv-safe: max(10px, env(safe-area-inset-bottom, 0px));
+  --lv-composer: 48px;
+  --lv-control: 52px;
+  --lv-gap: 8px;
+  --lv-controls-bottom: calc(var(--lv-safe) + var(--lv-composer) + var(--lv-gap));
+  --lv-feed-bottom: calc(var(--lv-controls-bottom) + var(--lv-control) + var(--lv-gap));
+}
+#root .st-live-room .st-live-chat-form,
+#root .st-live-room.is-host .st-live-chat-form {
+  left: 10px; right: 10px; bottom: var(--lv-safe);
+  height: var(--lv-composer); min-height: var(--lv-composer);
+  padding: 3px 3px 3px 10px;
+  border: 1px solid rgba(201,154,62,.7);
+  background: rgba(8,7,5,.78);
+}
+#root .st-live-room .st-live-chat-form input { height: 40px; min-height: 40px; font-size: 16px; }
+#root .st-live-room .st-live-chat-form button[type=submit] { width: 40px; min-width: 40px; height: 40px; min-height: 40px; }
+#root .st-live-room .st-live-bottom-controls {
+  left: 10px; right: 10px; bottom: var(--lv-controls-bottom);
+  width: auto; height: var(--lv-control);
+  padding: 0; margin: 0;
+  display: flex; align-items: center; justify-content: space-evenly; gap: 0;
+  overflow: visible;
+}
+#root .st-live-room .st-live-bottom-controls .st-live-host-controls { display: contents; }
+#root .st-live-room .st-live-bottom-controls > .gift-control,
+#root .st-live-room .st-live-bottom-controls .st-live-host-controls > button {
+  flex: 0 0 var(--lv-control);
+  width: var(--lv-control); min-width: var(--lv-control);
+  height: var(--lv-control); min-height: var(--lv-control);
+  aspect-ratio: 1; box-sizing: border-box;
+  pointer-events: auto;
+}
+#root .st-live-room .st-live-bottom-controls > .gift-control {
+  display: inline-grid; place-items: center; padding: 2px;
+  border: 2px solid #c99a3e;
+}
+#root .st-live-room .st-live-bottom-controls .st-live-host-controls > button {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; padding: 4px 2px;
+  border: 2px solid #c99a3e;
+}
+#root .st-live-room .st-live-bottom-controls .st-live-host-controls > button span { font-size: 10px; }
+.st-live-room .st-live-chat-log {
+  left: 10px; bottom: var(--lv-feed-bottom);
+  width: min(78%, 520px);
+  height: min(34dvh, 320px); max-height: min(34dvh, 320px);
+}
+.st-live-room .st-live-chat-line {
+  font-size: 15px; line-height: 1.3; padding: 3px 7px;
+  background: rgba(8,7,5,.55);
+}
+/* The shared satin layer uses important paints; keep live comments translucent
+   within that same layer so camera video remains visible behind the feed. */
+@layer joker-finish {
+  #root .st-live-room .st-live-chat-line {
+    background: rgba(8,7,5,.55) !important;
+  }
+}
+.st-live-room .st-live-chat-line strong,
+.st-live-room .st-live-chat-name { font-size: 15px; line-height: 1.3; max-width: min(52vw, 260px); }
+.st-live-room .st-live-chat-badge { width: 18px; height: 18px; flex-basis: 18px; }
+.st-live-room .st-live-feed-gift .st-live-chat-text { color: #f3d58a; }
+.st-live-room .st-live-feed-join .st-live-chat-text { color: rgba(255,255,255,.82); }
+.st-live-room .st-live-share-status,
+.st-live-room .st-live-audio-enable { bottom: calc(var(--lv-feed-bottom) + 4px); }
+.st-live-room .st-live-block-panel { bottom: var(--lv-feed-bottom); }
+/* Name tag: use the room the top bar actually has instead of a fixed 34vw cap. */
+.st-live-room .st-live-creator { flex: 1 1 auto; min-width: 0; }
+.st-live-room .st-live-creator-profile { min-width: 0; flex: 0 1 auto; }
+.st-live-room .st-live-creator-copy strong { max-width: none; }
+.st-live-room .st-live-top-actions { flex: 0 0 auto; }
+#root .st-live-room .st-live-close-button.st-live-end { aspect-ratio: auto !important; }
+@media (max-height: 620px) {
+  .st-live-room .st-live-chat-log { bottom: var(--lv-feed-bottom); height: min(26dvh, 180px); max-height: min(26dvh, 180px); }
+}

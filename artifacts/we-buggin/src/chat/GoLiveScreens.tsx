@@ -233,7 +233,7 @@ function liveGiftRecipients(
   return [{ username: hostUsername, displayName: hostDisplayName || hostUsername, isHost: true }];
 }
 
-function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeave, ownUsername }: {
+export function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeave, ownUsername }: {
   streamId: string;
   hostMode: boolean;
   hostState?: HostLiveSnapshot;
@@ -286,8 +286,10 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
   const viewerCount = hostMode ? hostState?.viewerCount ?? 0 : viewerState?.viewerCount ?? 0;
   const muted = hostMode ? !hostState?.microphoneEnabled : false;
   const audioEnabled = viewerState?.audioEnabled ?? false;
-  useEffect(() => { setLiveGifters(new Map()); setGiftQueue([]); }, [streamId]);
+  const [giftFeed, setGiftFeed] = useState<GiftNotice[]>([]);
+  useEffect(() => { setLiveGifters(new Map()); setGiftQueue([]); setGiftFeed([]); }, [streamId]);
   const chat = useLiveChat(streamId, chatReady, blocked, useCallback((gift: GiftNotice, animate: boolean) => {
+    setGiftFeed(current => current.some(item => item.id === gift.id) ? current : [...current, gift].slice(-30));
     setLiveGifters(current => {
       const usernameKey = gift.senderUsername.toLowerCase();
       const next = new Map(current);
@@ -301,6 +303,16 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
     });
     if (animate) setGiftQueue(current => appendUniqueGiftEvents(current, [gift]));
   }, []));
+  const joinNotice = hostState?.joinNotice || viewerState?.joinNotice || "";
+  const [arrivalFeed, setArrivalFeed] = useState<Array<{ id: string; name: string }>>([]);
+  useEffect(() => { setArrivalFeed([]); }, [streamId]);
+  useEffect(() => {
+    if (joinNotice) setArrivalFeed(current => [...current, { id: crypto.randomUUID(), name: joinNotice }].slice(-30));
+  }, [joinNotice]);
+  useEffect(() => {
+    const log = chat.logRef.current;
+    if (log && chat.pinned.current) log.scrollTop = log.scrollHeight;
+  }, [giftFeed, joinNotice, chat.logRef, chat.pinned]);
   const gifterTotals = useMemo(() => {
     return [...liveGifters.values()]
       .sort((a, b) => b.coins - a.coins)
@@ -498,9 +510,6 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
       )}
       {shareNotice && <div className="st-live-share-status" role="status">{shareNotice}</div>}
       <div className="st-live-chat-overlay">
-        {(hostState?.joinNotice || viewerState?.joinNotice) && <div className="st-live-join-banner" role="status">
-          <strong>{hostState?.joinNotice || viewerState?.joinNotice}</strong> joined
-        </div>}
         <section className="st-live-chat" aria-label="Livestream chat">
           <h2>Live chat</h2>
           <div className="st-live-chat-log" role="log" aria-live="polite" ref={chat.logRef}
@@ -508,6 +517,9 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
               const log = chat.logRef.current;
               if (log) chat.pinned.current = log.scrollHeight - log.scrollTop - log.clientHeight < 28;
             }}>
+            {!chat.messages.length && !giftFeed.length && !arrivalFeed.length && (
+              <p className="st-live-chat-line st-live-feed-empty">Comments, arrivals and gifts appear here.</p>
+            )}
             {chat.messages.map(message => (
               <p className="st-live-chat-line" key={message.id}
                 onContextMenu={event => {
@@ -535,6 +547,16 @@ function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeav
                 <span className="st-live-chat-text">{message.text}</span>
               </p>
             ))}
+            {giftFeed.map(gift => (
+              <p className="st-live-chat-line st-live-feed-gift" key={`gift-${gift.id}`} data-testid={`live-feed-gift-${gift.id}`}>
+                <span className="st-live-chat-author"><strong>{gift.senderName || gift.senderUsername}</strong></span>
+                <span className="st-live-chat-text">sent {gift.giftName}{gift.quantity > 1 ? ` x${gift.quantity}` : ""}</span>
+              </p>
+            ))}
+            {arrivalFeed.map(arrival => <p className="st-live-chat-line st-live-feed-join" key={arrival.id} data-testid="live-feed-join">
+              <span className="st-live-chat-author"><strong>{arrival.name}</strong></span>
+              <span className="st-live-chat-text">joined</span>
+            </p>)}
           </div>
           {chat.connectionMessage && <p className="st-live-chat-connection" role="status">{chat.connectionMessage}</p>}
           <form className="st-live-chat-form" onSubmit={chat.send}>
