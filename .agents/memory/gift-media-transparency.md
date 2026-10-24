@@ -54,3 +54,9 @@ Auto-detect only newly uploaded clips, never saved gifts on read. Real transpare
 **Why:** The owner explicitly requested automatic selection without changing existing gifts, manual override, and nonblocking warnings for scenery or green-screen clips. The See-through label must not imply that automatic detection invents transparency.
 
 **How to apply:** Preserve actual source alpha without chroma keying, sample several low-resolution frames, keep explicit warned opaque retention separate from legacy alpha-required processing, and leave existing saved media untouched.
+
+Full-screen custom-gift sizing must preserve the complete artwork and its proportions, not use blanket cover-cropping to hide aspect-ratio gaps. Maximize the animation within the playback viewport; explain when wide, square or internally padded source artwork cannot fill a tall phone without losing content.
+
+**Why:** The owner requested edge-to-edge gifts like Black Panther but explicitly prohibited stretching or cropping the main subject and asked for exceptions to be reported.
+
+**How to apply:** Distinguish a full-screen playback layer from visible artwork occupying every pixel. Do not remove transparent pixels, re-encode media or enlarge past safe bounds merely to claim full-screen coverage. Preserve alpha/black blending and leave the intentional small quantity pop-ups alone.

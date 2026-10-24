@@ -126,3 +126,17 @@ mtime_ms = 1792423795387
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/fc0550eb-3f8e-42eb-9eb0-6a9d3a2373f4/cfe404aa-2cf8-4a47-ad25-09172ed8f985"
 storage_version_token = "1792423802479856"
 content_type = "text/plain"
+
+[[outputs]]
+id = "DFMkNPiCqNbRPb3emnnAm"
+uri = "file://generated-artifacts/gift-sizing-audit/report.md"
+type = "text"
+title = "Gift sizing audit and snapshot reference"
+description = "All ten active custom gifts, before/after sizing, artwork limits, test results and backup coverage."
+logical_id = "035cea92-09a9-44e2-b508-5238b014c552"
+content_hash = "sha256:9d15496cd3afd4b1e1b04cfc53cb173cf0d0255bf36386acf732365453246561"
+size = 4565
+mtime_ms = 1792830943671
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/035cea92-09a9-44e2-b508-5238b014c552/b441ea7c-ccb4-4a82-979f-0789b37cbdbc"
+storage_version_token = "1792831017210722"
+content_type = "text/markdown"
