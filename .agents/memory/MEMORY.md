@@ -44,3 +44,4 @@
 - [Personal block boundaries](personal-block-semantics.md) — personal blocks filter text and bilateral DMs/whispers, but never remove room presence, voice, seats or gift effects.
 - [Card-game room scope](card-game-room-scope.md) — the card engine and test mode belong only in user-created no-TV social rooms, never themed/video or livestream rooms.
 - [Chess room scope](chess-room-scope.md) — separate two-player audio-only rooms: White above, Black below, no chat, audience, TV or card game.
+- [Recharge economics safeguards](recharge-economics.md) — earned-only $100/30,000 rate; bonus liability includes every coin; unknown fees block real checkout approval.

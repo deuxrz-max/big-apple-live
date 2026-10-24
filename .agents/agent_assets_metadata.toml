@@ -140,3 +140,31 @@ mtime_ms = 1792830943671
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/035cea92-09a9-44e2-b508-5238b014c552/b441ea7c-ccb4-4a82-979f-0789b37cbdbc"
 storage_version_token = "1792831017210722"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "7EOC_hCCEJyq9pCCeOu-r"
+uri = "file://generated-artifacts/recharge-review/recharge-review.html"
+type = "html"
+title = "Recharge preview — full economics and snapshot report"
+description = "All 11 proposed packages, effective rates, exact payout liabilities, unknown actual fees and clearly labelled fee illustrations."
+logical_id = "668fa457-e03f-42aa-a851-fdbcb717ca11"
+content_hash = "sha256:a072a794cfc19c1fb10d6b58dc55b70155eed8935a6b9ac7c0581edc0ff68a6c"
+size = 8374
+mtime_ms = 1792859607175
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/668fa457-e03f-42aa-a851-fdbcb717ca11/bcc2a394-cdde-43a4-8dad-21e8cbd271eb"
+storage_version_token = "1792859829559351"
+content_type = "text/html"
+
+[[outputs]]
+id = "xbhvxtnS-oKBd7lqEYus-"
+uri = "file://generated-artifacts/recharge-review/proposed-bonus-economics.csv"
+type = "table"
+title = "Proposed bonus economics — CSV"
+description = "Exact base/bonus totals, liability fractions, illustrative fees and remaining amounts. Actual fees and margins are unknown."
+logical_id = "8393180d-3764-45e5-b343-65538d08ce3f"
+content_hash = "sha256:0f210997b458d0db27c9c5451b2eef17f4618ad7214d5b315e58fb16c48e4640"
+size = 1648
+mtime_ms = 1792859607139
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/8393180d-3764-45e5-b343-65538d08ce3f/931abc97-2e4d-4ab9-a691-1bff3fb4eb2a"
+storage_version_token = "1792859830258983"
+content_type = "text/csv"

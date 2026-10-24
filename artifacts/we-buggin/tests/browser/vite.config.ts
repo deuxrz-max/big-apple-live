@@ -27,7 +27,11 @@ function isolatedRoomResponses(): Plugin {
           res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(value));
         };
         if (pathname === '/api/social/me' && req.method === 'GET')
-          return json({ wallet: { balance: 1234 }, inventory: [], products: [], gifts: [] });
+          return json({
+            profile: { username: 'fixture', displayName: 'Fixture', photoUrl: null },
+            nameColorProgress: { tierIndex: 11, lifetimeCoinsPurchased: 5500 },
+            wallet: { balance: 1234 }, inventory: [], products: [], gifts: [],
+          });
         if (pathname === `${endpoint}/join` && req.method === 'POST')
           return json({ participantSessionId: sessionId, participantId: 'fixture-person', room });
         // This legacy endpoint authenticates by session in its URL, not a header.
