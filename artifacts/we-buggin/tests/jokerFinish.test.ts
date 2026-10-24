@@ -19,8 +19,9 @@ const indexCss = readFileSync('src/index.css', 'utf8');
 const mobile = readFileSync('src/mobile-shell.css', 'utf8');
 const body = rules.slice(rules.indexOf('@layer joker-finish {'));
 
-test('cascade: first-declared layer with important paint props outranks unlayered legacy', () => {
-  assert.match(indexCss, /^@layer joker-finish, theme, base, clerk, components, utilities;$/m);
+test('cascade: shape policy precedes finish; important paint outranks legacy', () => {
+  assert.match(indexCss, /^@layer app-shapes, joker-finish, theme, base, clerk, components, utilities;$/m);
+  assert.ok(app.indexOf("'@/app-shapes.css'") < app.indexOf("'@/joker-finish.css'"));
   assert.ok(rules.includes('@layer joker-finish {'));
   for (const prop of ['background', 'box-shadow', 'color', 'border-radius']) {
     const decls = [...body.matchAll(new RegExp(`\\n\\s+${prop}: ([^;]+);`, 'g'))].map((m) => m[1]);
@@ -147,7 +148,7 @@ test('reduced motion overrides the full pressed and selected selector specificit
   assert.match(reduced, /transition: none !important/);
 });
 
-test('large content controls use card corners; only explicit small chips are pills', () => {
+test('all content and avatar frames are square, with only explicit icon-button exceptions', () => {
   const controls = rules.slice(rules.indexOf('.pf-btn, .pf-round,'), rules.indexOf('}', rules.indexOf('.pf-btn, .pf-round,')));
   assert.match(controls, /border-radius: var\(--jk-radius\) !important/);
   const round = rules.slice(rules.indexOf('.pf-round, .dw-icon-btn,'), rules.indexOf('}', rules.indexOf('.pf-round, .dw-icon-btn,')));
@@ -155,10 +156,16 @@ test('large content controls use card corners; only explicit small chips are pil
   assert.match(round, /aspect-ratio: 1 !important/);
   assert.match(round, /height: auto !important/);
   assert.match(rules, /\.app-bottom-link \{ border-radius: var\(--jk-radius\)/);
+  const shapes = readFileSync('src/app-shapes.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.match(shapes, /@layer app-shapes/);
+  assert.match(shapes, /body :where\(\*\)::after\s*\{\s*border-radius: 0 !important/);
+  assert.match(shapes, /body :is\(\.dw-icon-btn, \.pf-round, \.app-home-live\)/);
+  assert.doesNotMatch(shapes, /avatar|seat|photo/);
 });
 
-test('small room/nav controls use compact legacy 7px boxes; seats are boxes; no pills', () => {
-  assert.match(rules, /--jk-radius-xs: 7px/);
+test('room/nav controls use zero-radius tokens; seats remain boxes; no pills', () => {
+  assert.match(rules, /--jk-radius-xs: 0px/);
+  for (const token of ['radius', 'radius-sm', 'radius-pill']) assert.ok(rules.includes(`--jk-${token}: 0px`));
   const blk = rules.slice(rules.indexOf('.ur-people-btn, .ur-rules-btn, .ch-msg'));
   const sel = blk.slice(0, blk.indexOf('{'));
   for (const s of ['.ur-people-btn', '.ur-rules-btn', '.ch-msg', '.ur-arrival-line', '.dw-room-composer', '.dw-room-composer :is(input, textarea, button)', '.app-bottom-link', '.gift-control', '.dw-home-tabs > a']) assert.ok(sel.includes(s), s);

@@ -104,7 +104,7 @@ try {
     await page.screenshot({ path: `/tmp/deux-finish-shapes/home-${width}.png` });
     assert.ok(Math.abs(geometry.tile.width - geometry.room.width) < 1);
     assert.ok(Math.abs(geometry.tile.height - geometry.room.height) < 1);
-    assert.equal(geometry.radius, '14px');
+    assert.equal(geometry.radius, '0px');
     assert.equal(geometry.color, 'rgb(243, 213, 138)');
     assert.ok(geometry.icon.bottom < geometry.title.top);
     assert.ok(geometry.copy.bottom < geometry.tile.bottom - 4);
@@ -137,6 +137,7 @@ try {
       const element = document.createElement(['pf-edit', 'sc-nav-item', 'app-bottom-link'].includes(name) ? 'a' : 'button');
       element.className = name;
       element.style.cssText = 'position:fixed;left:0;top:0;width:160px;height:220px';
+      if (name === 'pf-round') element.style.cssText = 'position:fixed;left:0;top:0;width:44px;height:44px';
       if (name === 'dw-jk-bar') element.append(document.createElement('button'));
       document.getElementById('root').append(element);
       const target = name === 'dw-jk-bar' ? element.firstElementChild : element;
@@ -146,9 +147,9 @@ try {
       return result;
     });
   });
-  const shapeFailures = probes.filter((p) => p.box13 ? p.radius !== '13px' : p.circle
-    ? p.radius !== '50%' || Math.abs(p.width - p.height) >= 1
-    : p.radius !== '14px');
+  const shapeFailures = probes.filter((p) => p.name === 'pf-round'
+    ? p.radius !== '50%' || p.width > 44 || Math.abs(p.width - p.height) >= 1
+    : p.radius !== '0px');
   assert.deepEqual(shapeFailures, [], 'all component shape probes');
   // Real nine-seat grid: actual .ur-slots five-column CSS, actual arrangeVideoBeamSeats placement
   // (host spans both rows of the centre column), actual seat markup classes. Host occupied, guests 2-9 empty.
@@ -192,25 +193,25 @@ try {
     assert.equal(seats.length, 9);
     const host = seats.find((s) => s.pos === 'host'), guests = seats.filter((s) => s.pos !== 'host');
     assert.ok(guests.every((g) => host.w > g.w && host.h > g.h), 'centre host larger than guests');
-    assert.ok(seats.every((s) => s.radius === '13px'), `seat boxes 13px: ${seats.map((s) => s.radius)}`);
+    assert.ok(seats.every((s) => s.radius === '0px'), `square seat boxes: ${seats.map((s) => s.radius)}`);
     assert.notEqual(host.portraitRadius, '50%', 'full-seat portrait follows box, not circle');
     assert.deepEqual(guests.filter((g) => !g.fits).map((g) => g.pos), [], `Tap to join contained at ${width}px`);
-    console.log(`PASS ${width}px real 5-column seat grid: host ${Math.round(host.w)}x${Math.round(host.h)}, 8 guests contain full Tap to join, 13px boxes`);
+    console.log(`PASS ${width}px real 5-column seat grid: host ${Math.round(host.w)}x${Math.round(host.h)}, 8 guests contain full Tap to join, square boxes`);
   }
-  // Compact legacy 7px corners on small controls; 14px stays on panels/cards.
+  // Shared rectangular policy covers room controls, panels and composers.
   const compact = await page.evaluate(() => ['ur-people-btn', 'ur-rules-btn', 'ch-msg', 'ur-arrival-line', 'dw-room-composer',
     'ch-comp', 'app-bottom-link', 'gift-control'].map((name) => {
     const el = document.createElement('button'); el.className = name; el.style.cssText = 'height:28px;width:90px';
     document.getElementById('root').append(el);
     const r = getComputedStyle(el).borderRadius; el.remove(); return { name, r };
   }));
-  assert.deepEqual(compact.filter((c) => c.r !== '7px'), [], 'compact controls use 7px boxes');
+  assert.deepEqual(compact.filter((c) => c.r !== '0px'), [], 'compact controls use square boxes');
   const form = await page.evaluate(() => {
     const f = document.createElement('form'); f.className = 'ch-comp dw-room-composer';
     f.innerHTML = '<input><button type="submit">Send</button>'; document.getElementById('root').append(f);
     const r = [f, ...f.children].map((e) => getComputedStyle(e).borderRadius); f.remove(); return r;
   });
-  assert.deepEqual(form, ['7px', '7px', '7px'], 'composer wrapper, input and Send are 7px boxes');
+  assert.deepEqual(form, ['0px', '0px', '0px'], 'composer wrapper, input and Send are square boxes');
   assert.equal(writes.length, 0, 'no API mutations');
   assert.equal((await page.evaluate(() => window.__launches)).length, 2);
   console.log(`PASS ${probes.length} cross-screen shape/CSS probes; zero API mutations, no real broadcast/camera started.`);

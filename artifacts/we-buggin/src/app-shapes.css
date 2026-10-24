@@ -1,0 +1,19 @@
+/*
+ * Owner's app-wide shape rule. Keep this first in the important-layer order
+ * (index.css), above the legacy satin-finish rules and inline avatar radii.
+ * This changes frames only, not SVG artwork, images, layouts or media.
+ * Body scope also covers portalled menus, sheets and authentication screens.
+ */
+@layer app-shapes {
+  body :where(*),
+  body :where(*)::before,
+  body :where(*)::after {
+    border-radius: 0 !important;
+  }
+
+  /* Existing small icon-only buttons are the sole permitted round frames.
+     Never infer roundness from dimensions or a generic button/avatar class. */
+  body :is(.dw-icon-btn, .pf-round, .app-home-live) {
+    border-radius: 50% !important;
+  }
+}

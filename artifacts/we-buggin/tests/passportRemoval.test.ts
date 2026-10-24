@@ -88,10 +88,12 @@ test('own Me panel ends on coin stats; public profile order unchanged', () => {
   assert.equal(after, '{!own && children}\n        {!own && links}');
 });
 
-test('full-seat neutral fallback fills the seat shape; small avatars stay circles', () => {
+test('full-seat neutral fallback fills its box; small avatars are square', () => {
   const n = read('src/components/neutral-avatar.tsx');
   assert.match(n, /fill \? 'xMidYMid slice'/);
   assert.doesNotMatch(n, /borderRadius/);
+  assert.match(n, /'square'/);
+  assert.doesNotMatch(n, /<circle cx="50" cy="50"/);
   assert.match(read('src/chat/UniversityRoom.tsx'), /<IdentityAvatar identity=\{person\.identity\} name=\{fallbackName\} size="100%" fill \/>/);
   assert.match(read('src/joker-finish.css'), /\.ur-slot-avatar-button\.ur-slot-photo-action \{ border-radius: inherit !important; \}/);
 });

@@ -8,7 +8,8 @@
  * (e.g. body #root nav ... !important). Portals are covered because selectors are class based.
  * Semantic states (destructive, muted, disabled) use revert-layer so legacy red/disabled
  * colours come back untouched. Shape rules distinguish content rectangles, small pills and
- * true circles; the Home launch tile has an explicit layout so legacy icon positioning cannot overlap its copy.
+ * legacy circles. app-shapes.css now overrides those radii per the owner's
+ * rectangle-only rule; the material finish and lighting remain unchanged.
  */
 :root {
   --jk-gold: #c99a3e;
@@ -16,10 +17,10 @@
   --jk-gold-lo: #7a5a1c;
   --jk-black: #000;
   --jk-satin: #0b0907;
-  --jk-radius: 14px;
-  --jk-radius-sm: 10px;
-  --jk-radius-pill: 999px;
-  --jk-radius-xs: 7px; /* legacy compact control corner (.ur-slot-action) */
+  --jk-radius: 0px;
+  --jk-radius-sm: 0px;
+  --jk-radius-pill: 0px;
+  --jk-radius-xs: 0px;
   --jk-edge: 2px;
   --jk-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 0.88  0 0 0 0 0.62  0 0 0 0.055 0'/></filter><rect width='96' height='96' filter='url(%23n)'/></svg>");
   --jk-satin-fill: var(--jk-grain), linear-gradient(145deg, #1a150d 0%, var(--jk-satin) 42%, #050403 100%);

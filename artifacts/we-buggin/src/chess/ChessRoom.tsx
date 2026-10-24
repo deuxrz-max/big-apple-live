@@ -29,7 +29,7 @@ function PlayerRow({ player, color, active, isMe, room, audio, onLeave, onShare,
 }) {
   return <section className={`chess-player is-${position}${active ? " is-active" : ""}`} data-testid={`chess-player-${color}`}>
     <span className="chess-player-photo">
-      {player ? <UserPhoto username={player.username} displayName={player.displayName} photoUrl={player.photoUrl} size={40} />
+      {player ? <UserPhoto username={player.username} displayName={player.displayName} photoUrl={player.photoUrl} size={72} fit="contain" />
         : <span className="chess-player-empty" aria-hidden="true" />}
     </span>
     <span className="chess-player-copy">

@@ -4,7 +4,8 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, type Plugin } from 'vite';
 
 // Synthetic chess API: never proxies to a real server, account or database.
-const white = { accountId: 'fx-white', username: 'ivory_rook', displayName: 'Mireille Ashdown', photoUrl: null };
+const portrait = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="180"><rect width="120" height="180" fill="#716448"/><path fill="#ffd47a" d="M0 0h120v15H0zM0 165h120v15H0z"/><text x="60" y="90" text-anchor="middle" fill="white" font-size="16">Full photo</text></svg>');
+const white = { accountId: 'fx-white', username: 'ivory_rook', displayName: 'Mireille Ashdown', photoUrl: portrait };
 const black = { accountId: 'fx-black', username: 'ebon_knight', displayName: 'Tobias Venn', photoUrl: null };
 const START = 'k7/4P3/8/8/8/8/8/4K3 w - - 0 1';
 const startMoves = [
@@ -12,7 +13,7 @@ const startMoves = [
   ...['d1', 'f1', 'd2', 'e2', 'f2'].map(to => ({ from: 'e1', to })),
 ];
 function fresh() {
-  return { roomId: 'fx-chess', fen: START, players: { white, black }, turn: 'w', status: 'playing', revision: 3,
+  return { roomId: 'fx-chess', fen: START, players: { white, black: black as typeof black | null }, turn: 'w', status: 'playing', revision: 3,
     yourColor: 'w', rematchRequestedBy: null as string | null, result: null as string | null, inCheck: false, legalMoves: startMoves };
 }
 let state = fresh();
@@ -28,6 +29,7 @@ function chessFixture(): Plugin {
       const body = () => new Promise<any>(resolve => { let d = ''; req.on('data', c => { d += c; }); req.on('end', () => resolve(d ? JSON.parse(d) : {})); });
       if (url.pathname === '/__fixture/reset') {
         state = fresh(); joinFailures = Number(url.searchParams.get('joinFail') ?? 0); getFails = false; actions.length = 0;
+        if (url.searchParams.has('waiting')) state = { ...state, players: { white, black: null }, status: 'waiting', legalMoves: [] };
         return json(200, { ok: true });
       }
       if (url.pathname === '/__fixture/get-fails') { getFails = url.searchParams.get('on') === '1'; return json(200, { ok: true }); }
