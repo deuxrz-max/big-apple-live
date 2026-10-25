@@ -1,5 +1,40 @@
 import { test, expect } from '@playwright/test';
 
+for (const origin of ['/home', '/user-portal', '/rooms/MUSIC1?view=seats#chat']) {
+  test(`Buy Coins Back remembers ${origin}, including after reload`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/tests/browser/harness.html?view=credits');
+    await page.evaluate(async (from) => {
+      const modulePath = '/src/social/buy-coins-navigation.ts';
+      const { buyCoinsReturnState } = await import(/* @vite-ignore */ modulePath);
+      const recharge = location.href;
+      history.replaceState(null, '', from);
+      const state = buyCoinsReturnState();
+      history.pushState(state, '', recharge);
+    }, origin);
+    await expect(page.getByTestId('link-credits-back')).toHaveAttribute('href', origin);
+    await page.reload();
+    await expect(page.getByTestId('link-credits-back')).toHaveAttribute('href', origin);
+    await page.getByTestId('link-credits-back').click();
+    await expect(page).toHaveURL(new RegExp(`${origin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
+  });
+}
+
+test('Buy Coins opened directly falls back to Home, regardless of unrelated browser history', async ({ page }) => {
+  await page.goto('/tests/browser/harness.html?view=credits');
+  await expect(page.getByTestId('link-credits-back')).toHaveAttribute('href', '/home');
+  await page.getByTestId('link-credits-back').click();
+  await expect(page).toHaveURL(/\/home$/);
+});
+
+test('invalid or self-referencing Buy Coins origins fall back to Home', async ({ page }) => {
+  await page.goto('/tests/browser/harness.html?view=credits');
+  for (const target of ['//outside.example', 'https://outside.example', '/community/coins', '/community/credits?x=1', '/\\outside.example']) {
+    await page.evaluate(value => history.replaceState({ buyCoinsReturnTo: value }, '', location.href), target);
+    await expect(page.getByTestId('link-credits-back')).toHaveAttribute('href', '/home');
+  }
+});
+
 test('phone coin store shows exact bundles and review never grants coins or charges', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const writes: string[] = [];

@@ -23,6 +23,7 @@ import { GoLiveButton } from './LiveStreamPages';
 import { selectFeaturedRoom } from './directory-utils';
 import { ActionMenu, ScreenHeader } from '@/components/app-chrome';
 import { AccessCheckError } from './AccessCheckError';
+import { buyCoinsReturnState } from '@/social/buy-coins-navigation';
 import './chat.css';
 
 const DISCLAIMER = 'Deux Wild is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
@@ -84,7 +85,7 @@ function List({ preview, query = '' }: { preview?: boolean; query?: string }) {
 function CreditsChip() {
   const me = useGetSocialMe();
   if (!me.data) return null;
-  return <Link href="/community/coins" className="st-credits" data-testid="text-credits">
+  return <Link href="/community/coins" state={buyCoinsReturnState()} className="st-credits" data-testid="text-credits">
     <Coins size={13} aria-hidden="true" style={{ color: '#f5cb8d' }} />
     {me.data.wallet.unlimited ? 'Unlimited test coins' : `${me.data.wallet.balance.toLocaleString()} coins`}
   </Link>;
@@ -209,7 +210,7 @@ export function ChatDirectory() {
             <Link href="/community/leaderboard" className="st-dir-rewards" aria-label="Open leaderboard" data-testid="link-leaderboard">
               <Trophy size={16} aria-hidden="true" />
             </Link>
-            <Link href="/community/coins" className={`st-dir-wallet${socialMe.data?.wallet.unlimited ? ' is-unlimited' : ''}`} aria-label="Buy coins" data-testid="link-home-wallet">
+            <Link href="/community/coins" state={buyCoinsReturnState()} className={`st-dir-wallet${socialMe.data?.wallet.unlimited ? ' is-unlimited' : ''}`} aria-label="Buy coins" data-testid="link-home-wallet">
               {socialMe.data?.wallet.unlimited
                 ? <><i aria-hidden="true" />Unlimited</>
                 : socialMe.data

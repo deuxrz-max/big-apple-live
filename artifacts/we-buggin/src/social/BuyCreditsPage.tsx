@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'wouter';
+import { useHistoryState } from 'wouter/use-browser-location';
+import { buyCoinsBackTarget } from './buy-coins-navigation';
 import { useGetSocialMe, getGetSocialMeQueryKey } from '@workspace/api-client-react';
 import { CoinAmount, ErrorBox, Loading } from './common';
 import { CREDIT_BUNDLES, formatUsd, RECHARGE_PREVIEW_POLICY, type CreditBundle } from './credit-catalog';
@@ -9,6 +11,7 @@ import './buy-credits.css';
 import { ProfileTap } from '@/profile/QuickProfile';
 
 export function BuyCreditsPage() {
+  const backTarget = buyCoinsBackTarget(useHistoryState());
   const me = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), staleTime: 0, refetchOnMount: 'always', refetchOnWindowFocus: 'always' } });
   const [sel, setSel] = useState<CreditBundle | null>(null);
   if (me.isLoading) return <Loading />;
@@ -22,7 +25,7 @@ export function BuyCreditsPage() {
 
   return (
     <section className="bc" data-testid="page-buy-credits">
-      <Link href="/user-portal" className="bm-back" data-testid="link-credits-back">My profile</Link>
+      <Link href={backTarget} className="bm-back" data-testid="link-credits-back">Back</Link>
 
       <header className="bc-head">
         <div className="bc-ph" data-testid="img-buy-profile">

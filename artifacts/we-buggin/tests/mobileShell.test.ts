@@ -45,12 +45,23 @@ test('Following menu My profile opens Me while the bio editor remains available'
 
 test('Home coin balances open Buy Coins without enabling payment', () => {
   const home = read('src/chat/ChatApp.tsx');
-  assert.match(home, /<Link href="\/community\/coins" className="st-credits" data-testid="text-credits"/);
-  assert.match(home, /<Link href="\/community\/coins" className=\{`st-dir-wallet[^>]+aria-label="Buy coins" data-testid="link-home-wallet"/);
+  assert.match(home, /<Link href="\/community\/coins" state=\{buyCoinsReturnState\(\)\} className="st-credits" data-testid="text-credits"/);
+  assert.match(home, /<Link href="\/community\/coins" state=\{buyCoinsReturnState\(\)\} className=\{`st-dir-wallet[^>]+aria-label="Buy coins" data-testid="link-home-wallet"/);
   const social = read('src/social/SocialApp.tsx');
   assert.match(social, /<Route path="\/community\/coins" component=\{BuyCreditsPage\}/);
   const buyCoins = read('src/social/BuyCreditsPage.tsx');
   assert.match(buyCoins, /<button[^>]*disabled aria-disabled="true" data-testid="button-pay-disabled"/);
+});
+
+test('all existing recharge links remember their origin and Buy Coins reads it', () => {
+  for (const path of ['src/chat/ChatApp.tsx', 'src/profile/OwnProfile.tsx', 'src/gifts/GiftBag.tsx']) {
+    const links = read(path).match(/<Link href="\/community\/coins"[^>]*>/g) ?? [];
+    assert.ok(links.length > 0, path);
+    for (const link of links) assert.ok(link.includes('state={buyCoinsReturnState()}'), link);
+  }
+  const page = read('src/social/BuyCreditsPage.tsx');
+  assert.ok(page.includes('buyCoinsBackTarget(useHistoryState())'));
+  assert.match(page, /<Link href=\{backTarget\} className="bm-back" data-testid="link-credits-back">Back<\/Link>/);
 });
 
 test('thread keeps refresh, clear-history, older/latest and send actions', () => {

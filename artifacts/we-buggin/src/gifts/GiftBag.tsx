@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 
 import { createPortal } from 'react-dom';
 import { ChevronDown, Crown, Flame, Gift, House, LockKeyhole, Sparkles, Star, UserRound, X, type LucideIcon } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
+import { buyCoinsReturnState } from '@/social/buy-coins-navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGetSocialMe, getGetSocialMeQueryKey, sendSocialGift, getGetRoomGiftEventsQueryKey } from '@workspace/api-client-react';
 import { CoinAmount, refreshSocial, errMsg } from '@/social/common';
@@ -394,11 +395,11 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
           {selectedLocked && <p className="gift-panel-message is-error" data-testid="text-gift-locked">This gift unlocks at Platinum gifting level {PLATINUM_UNLOCK_LEVEL}.</p>}
           {error && <p role="alert" className="gift-panel-message is-error">{error}</p>}
           {notice && <p role="status" className="gift-panel-message is-success">{notice}</p>}
-          {canSend && !enough && <p className="gift-panel-message is-error">Not enough coins. <Link href="/community/coins">Recharge &gt;</Link></p>}
+          {canSend && !enough && <p className="gift-panel-message is-error">Not enough coins. <Link href="/community/coins" state={buyCoinsReturnState()}>Recharge &gt;</Link></p>}
           {me.data && <footer className="gift-panel-footer">
             <div className="gift-panel-wallet">
               <span className="gift-panel-wallet-balance"><CoinAmount>{unlimited ? 'Unlimited' : me.data.wallet.balance.toLocaleString()}</CoinAmount></span>
-              <Link href="/community/coins" className="gift-panel-recharge">Recharge &gt;</Link>
+              <Link href="/community/coins" state={buyCoinsReturnState()} className="gift-panel-recharge">Recharge &gt;</Link>
               <span className="gift-panel-points" aria-label="Points balance unavailable"><Star size={13} aria-hidden />— <small>pts</small></span>
             </div>
             <div className="gift-panel-send-controls">

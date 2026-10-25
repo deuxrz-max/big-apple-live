@@ -1,4 +1,5 @@
 import { Link } from 'wouter';
+import { buyCoinsReturnState } from '@/social/buy-coins-navigation';
 import { useEffect, useState, type CSSProperties } from 'react';
 import { GIFTING_LEVEL_THRESHOLDS, giftingTier } from '@workspace/beam-identity';
 import { GiftingShield } from '@/gifting/GiftingShield';
@@ -128,7 +129,7 @@ export function OwnProfile() {
         )}
       </section>
       <div className="dw-me-actions" data-testid="group-me-actions">
-        <Link href="/community/coins" className="pf-btn" data-testid="link-buy-credits"><Coins size={16} aria-hidden="true" style={{ color: '#f5cb8d' }} /> Buy coins</Link>
+        <Link href="/community/coins" state={buyCoinsReturnState()} className="pf-btn" data-testid="link-buy-credits"><Coins size={16} aria-hidden="true" style={{ color: '#f5cb8d' }} /> Buy coins</Link>
         <GiftControl onClick={() => setBagOpen(true)} label="Open your gift bag" />
       </div>
       {bagOpen && <GiftBag onClose={() => setBagOpen(false)} />}
