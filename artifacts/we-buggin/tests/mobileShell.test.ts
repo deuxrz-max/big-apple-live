@@ -43,6 +43,16 @@ test('Following menu My profile opens Me while the bio editor remains available'
   assert.match(social, /<Route path="\/community\/profile" component=\{MyProfilePage\}/);
 });
 
+test('Home coin balances open Buy Coins without enabling payment', () => {
+  const home = read('src/chat/ChatApp.tsx');
+  assert.match(home, /<Link href="\/community\/coins" className="st-credits" data-testid="text-credits"/);
+  assert.match(home, /<Link href="\/community\/coins" className=\{`st-dir-wallet[^>]+aria-label="Buy coins" data-testid="link-home-wallet"/);
+  const social = read('src/social/SocialApp.tsx');
+  assert.match(social, /<Route path="\/community\/coins" component=\{BuyCreditsPage\}/);
+  const buyCoins = read('src/social/BuyCreditsPage.tsx');
+  assert.match(buyCoins, /<button[^>]*disabled aria-disabled="true" data-testid="button-pay-disabled"/);
+});
+
 test('thread keeps refresh, clear-history, older/latest and send actions', () => {
   const t = read('src/social/MoneyPages.tsx');
   for (const id of ['button-refresh', 'button-clear-history', 'button-confirm-clear', 'button-older', 'button-latest', 'button-send-message', 'link-my-messages', 'menu-thread-actions']) assert.ok(t.includes(id), id);
