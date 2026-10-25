@@ -47,3 +47,4 @@
 - [Recharge economics safeguards](recharge-economics.md) — earned-only $100/30,000 rate; bonus liability includes every coin; unknown fees block real checkout approval.
 - [Room composer regression checks](room-composer-regressions.md) — run room tests with mobile-shell styles; legacy zero-width flex inputs collapse when their parent becomes grid.
 - [Profile navigation](profile-navigation.md) — pictures open profiles directly; preserve underlying state, Chess swipes and created-room hands.
+- [Audit review gates](audit-task-review-gates.md) — complete only one cleanup task, then stop for owner review and explicit permission to continue.

@@ -22,6 +22,7 @@ import { BadgeArt } from '@/social/BadgeArt';
 import { GoLiveButton } from './LiveStreamPages';
 import { selectFeaturedRoom } from './directory-utils';
 import { ActionMenu, ScreenHeader } from '@/components/app-chrome';
+import { AccessCheckError } from './AccessCheckError';
 import './chat.css';
 
 const DISCLAIMER = 'Deux Wild is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
@@ -135,6 +136,8 @@ export function AdultGate({ children, keepMountedOnTransientError = false }: {
   children: ReactNode;
   keepMountedOnTransientError?: boolean;
 }) {
+  const { signOut } = useClerk();
+  const [, navigate] = useLocation();
   const qc = useQueryClient();
   const q = useGetChatAccess();
   const confirm = useConfirmChatAdult();
@@ -143,7 +146,18 @@ export function AdultGate({ children, keepMountedOnTransientError = false }: {
   if (q.data) lastSuccessfulAccess.current = q.data;
   const access = q.data ?? (keepMountedOnTransientError ? lastSuccessfulAccess.current : undefined);
   if (q.isLoading && !access) return <Shell><p role="status">Checking access...</p></Shell>;
-  if ((q.isError && !keepMountedOnTransientError) || !access) return <Shell><div className="ch-err" role="alert">Could not check access. <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button></div></Shell>;
+  if ((q.isError && !keepMountedOnTransientError) || !access) return (
+    <Shell>
+      <AccessCheckError
+        retry={() => { void q.refetch(); }}
+        goBack={() => {
+          if (window.history.length > 1) window.history.back();
+          else navigate('/user-portal');
+        }}
+        signOut={() => signOut({ redirectUrl: import.meta.env.BASE_URL || '/' })}
+      />
+    </Shell>
+  );
   if (access.suspended) return <Shell><h1>Chat access restricted</h1><p>Your access requires review by a Deux Wild moderator. A new age confirmation cannot remove this restriction.</p><Link href="/" className="bm-btn">Home</Link></Shell>;
   if (access.adultConfirmed) return <>{children}</>;
   return (
