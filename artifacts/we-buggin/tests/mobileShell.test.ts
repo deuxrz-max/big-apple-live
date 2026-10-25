@@ -35,6 +35,14 @@ test('bottom nav keeps its routes and test ids', () => {
 
 const read = (p: string) => readFileSync(p, 'utf8');
 
+test('Following menu My profile opens Me while the bio editor remains available', () => {
+  const social = read('src/social/SocialApp.tsx');
+  assert.match(social, /\{ to: '\/user-portal', label: 'My profile', icon: UserRound \}/);
+  assert.doesNotMatch(social, /\{ to: '\/community\/profile', label: 'My profile'/);
+  assert.match(app, /<Route path="\/user-portal" component=\{OwnProfileRoute\}/);
+  assert.match(social, /<Route path="\/community\/profile" component=\{MyProfilePage\}/);
+});
+
 test('thread keeps refresh, clear-history, older/latest and send actions', () => {
   const t = read('src/social/MoneyPages.tsx');
   for (const id of ['button-refresh', 'button-clear-history', 'button-confirm-clear', 'button-older', 'button-latest', 'button-send-message', 'link-my-messages', 'menu-thread-actions']) assert.ok(t.includes(id), id);

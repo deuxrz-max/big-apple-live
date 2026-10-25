@@ -24,7 +24,7 @@ const NAV = [
   { to: '/community/messages', label: 'Messages', icon: MessageCircle },
   { to: '/community/rewards', label: 'Rewards', icon: Coins },
   { to: '/community/leaderboard', label: 'Leaderboard', icon: Trophy },
-  { to: '/community/profile', label: 'My profile', icon: UserRound },
+  { to: '/user-portal', label: 'My profile', icon: UserRound },
   { to: '/community/blocks', label: 'Blocked', icon: Ban },
 ];
 
