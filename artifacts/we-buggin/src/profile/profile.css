@@ -5,7 +5,7 @@
 .pf-track{display:flex;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
 .pf-track::-webkit-scrollbar{display:none}
 .pf-slide{flex:0 0 100%;scroll-snap-align:center;height:100%}
-.pf-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.pf-slide img{width:100%;height:100%;object-fit:contain;display:block;background:#000}
 .pf-slide-empty{display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#25252e,#151518)}
 .pf-hero-bar{position:absolute;inset:max(12px,env(safe-area-inset-top)) 14px auto;display:flex;justify-content:space-between;pointer-events:none}
 .pf-hero-bar>*{pointer-events:auto}
@@ -86,7 +86,7 @@
 .gift-panel-person-select{border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer}
 .gift-panel-person-select:disabled{cursor:progress}
 .bc-ph-tap{width:100%;height:100%;align-items:center;justify-content:center}
-.bc-ph-tap img{width:100%;height:100%;object-fit:cover}
+.bc-ph-tap img{width:100%;height:100%;object-fit:contain;background:#000}
 .qp-tap{display:inline-flex;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .qp-tap:focus-visible{outline:2px solid #d4af37;outline-offset:2px}
 .qp-root{position:fixed;inset:0;z-index:10100;display:flex;align-items:flex-end;justify-content:center}

@@ -55,3 +55,51 @@
 
   .st-sign-in-art-logo { object-fit: contain; }
 }
+
+/* Black/gold auth finish: square frames, compact art, nav clearance */
+@layer app-shapes {
+  /* Higher-priority shared form rules must not reintroduce purple inputs. */
+  body #root :is(.st-sign-in, .ch-auth) :is(input, select, textarea) {
+    background: #141414 !important;
+    color: #f2f2ee !important;
+    border-color: #8a6d2f !important;
+    box-shadow: none !important;
+    font-family: 'Nunito Sans', system-ui, sans-serif !important;
+  }
+  body #root :is(.st-sign-in, .ch-auth) :is(input, select, textarea):focus {
+    border-color: #e6c878 !important;
+    outline: 2px solid #8a6d2f !important;
+    outline-offset: 2px !important;
+  }
+}
+#root .st-sign-in,
+#root .ch-auth {
+  padding-bottom: calc(var(--app-bottom-nav-clearance, 92px) + 16px);
+}
+#root .st-sign-in-layout { grid-template-columns: minmax(0, 360px) minmax(0, 440px); justify-content: center; }
+#root .st-sign-in-art {
+  height: min(46svh, 400px);
+  border-radius: 4px;
+  border: 1px solid #3a3426;
+  background: #0b0b0b;
+}
+#root .st-sign-in-art-logo { object-fit: contain; padding: 24px; box-sizing: border-box; }
+#root .depth-auth-card,
+#root .ch-auth .ch-card {
+  background: #0b0b0b !important;
+  background-color: #0b0b0b !important;
+  border: 1px solid #3a3426 !important;
+  border-radius: 6px !important;
+}
+#root .ch-auth [role="tab"] { border-radius: 4px; }
+#root .ch-auth .bm-btn-primary {
+  background: linear-gradient(180deg, #e6c878, #d4b15f 55%, #a8843a);
+  color: #0b0b0b;
+  border-color: #8a6d2f;
+}
+#root .ch-auth input { border-radius: 4px; }
+@media (max-width: 760px) {
+  #root .st-sign-in-layout { grid-template-columns: minmax(0, 1fr); }
+  #root .st-sign-in-art { width: 120px; height: 120px; }
+  #root .st-sign-in-art-logo { padding: 10px; }
+}

@@ -147,9 +147,7 @@ try {
       return result;
     });
   });
-  const shapeFailures = probes.filter((p) => p.name === 'pf-round'
-    ? p.radius !== '50%' || p.width > 44 || Math.abs(p.width - p.height) >= 1
-    : p.radius !== '0px');
+  const shapeFailures = probes.filter((p) => p.radius !== '0px');
   assert.deepEqual(shapeFailures, [], 'all component shape probes');
   // Real nine-seat grid: actual .ur-slots five-column CSS, actual arrangeVideoBeamSeats placement
   // (host spans both rows of the centre column), actual seat markup classes. Host occupied, guests 2-9 empty.

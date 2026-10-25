@@ -7,6 +7,9 @@ for (const width of [320, 390, 430]) {
   test(`access recovery controls fit and respond at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 844 });
     await page.goto('/tests/browser/harness.html?view=access-error');
+    for (const [label, href] of [['Following', '/community/favorites'], ['Messages', '/community/messages'], ['Me', '/user-portal']]) {
+      await expect(page.getByRole('navigation', { name: 'Access error navigation' }).getByRole('link', { name: label, exact: true })).toHaveAttribute('href', href);
+    }
     for (const [label, result] of [['Retry', 'Retried'], ['Back', 'Went back'], ['Sign out', 'Signed out']]) {
       const button = page.getByRole('button', { name: label, exact: true });
       const box = await button.boundingBox();

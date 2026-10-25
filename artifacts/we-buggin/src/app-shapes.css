@@ -11,9 +11,13 @@
     border-radius: 0 !important;
   }
 
-  /* Existing small icon-only buttons are the sole permitted round frames.
-     Never infer roundness from dimensions or a generic button/avatar class. */
-  body :is(.dw-icon-btn, .pf-round, .app-home-live) {
-    border-radius: 50% !important;
+  /* Whole user photos only: do not change video, gift art or room cover images. */
+  body :is(.dw-user-photo-image, .pf-slide img, .bc-ph-tap img,
+    .fg-photo img, .ur-slot-photo-fill, .st-live-avatar img,
+    .st-live-creator-avatar img, .st-live-action-avatar img,
+    .st-live-gifter-avatar img, .gift-panel-avatar img) {
+    object-fit: contain !important;
+    object-position: center !important;
+    background-color: #000 !important;
   }
 }

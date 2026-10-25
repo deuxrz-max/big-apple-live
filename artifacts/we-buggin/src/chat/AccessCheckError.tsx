@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'wouter';
 
 /** Recovery actions must not depend on the unavailable access response. */
 export function AccessCheckError({ retry, goBack, signOut }: {
@@ -23,6 +24,11 @@ export function AccessCheckError({ retry, goBack, signOut }: {
           finally { setSigningOut(false); }
         }}>{signingOut ? 'Signing out…' : 'Sign out'}</button>
       </div>
+      <nav aria-label="Access error navigation" style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 16 }}>
+        <Link href="/community/favorites" className="bm-btn">Following</Link>
+        <Link href="/community/messages" className="bm-btn">Messages</Link>
+        <Link href="/user-portal" className="bm-btn">Me</Link>
+      </nav>
       {signOutFailed && <p role="alert">Could not sign out. Try again, or use Back or the bottom tabs.</p>}
     </section>
   );

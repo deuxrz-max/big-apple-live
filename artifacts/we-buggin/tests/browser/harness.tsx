@@ -14,6 +14,7 @@ import { RoomFeedFixture } from './room-feed-fixture';
 import { LiveLayoutFixture } from './live-layout-fixture';
 import { ProfileNavigationFixture } from './profile-navigation-fixture';
 import { AccessErrorFixture } from './access-error-fixture';
+import { AuditFixesFixture } from './audit-fixes-fixture';
 import '../../src/chat/live-stream.css';
 import { BeamTv, type BeamTvHandle } from '../../src/chat/BeamTv';
 import { RoomPerimeter } from '../../src/chat/RoomPerimeter';
@@ -160,6 +161,7 @@ createRoot(document.getElementById('root')!).render(
           : new URLSearchParams(location.search).get('view') === 'live-layout' ? <LiveLayoutFixture />
           : new URLSearchParams(location.search).get('view') === 'profile-navigation' ? <ProfileNavigationFixture />
           : new URLSearchParams(location.search).get('view') === 'access-error' ? <AccessErrorFixture />
+          : new URLSearchParams(location.search).get('view') === 'audit-fixes' ? <AuditFixesFixture />
           : new URLSearchParams(location.search).get('view') === 'profile-cleanup' ? <OwnProfile />
           : new URLSearchParams(location.search).get('view') === 'photo-review' ? <ProfilePhotoReviewPage />
           : new URLSearchParams(location.search).get('view') === 'room-playback' ? <RoomPlaybackFixture />
