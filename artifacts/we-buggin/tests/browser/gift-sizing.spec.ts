@@ -37,13 +37,13 @@ for (const viewport of [{ width: 320, height: 640 }, { width: 390, height: 844 }
           fit: s.objectFit, transform: s.transform, blend: s.mixBlendMode, radius: s.borderRadius,
           sourceWidth: v.videoWidth, sourceHeight: v.videoHeight };
       });
-      expect(geometry).toMatchObject({ x: 0, y: 0, width: viewport.width, height: viewport.height, fit: 'contain', transform: 'none', radius: '0px' });
+      expect(geometry).toMatchObject({ x: 0, y: 0, width: viewport.width, height: viewport.height, fit: 'cover', transform: 'none', radius: '0px' });
       expect(geometry.blend).toBe(gift.backgroundMode === 'black' ? 'screen' : 'normal');
       expect(geometry.sourceWidth).toBeGreaterThan(0);
-      // Largest uncropped uniform scale must keep the entire source within the screen.
-      const scale = Math.min(viewport.width / geometry.sourceWidth, viewport.height / geometry.sourceHeight);
-      expect(geometry.sourceWidth * scale).toBeLessThanOrEqual(viewport.width + .01);
-      expect(geometry.sourceHeight * scale).toBeLessThanOrEqual(viewport.height + .01);
+      // Uniform cover fills both axes without stretching; mismatched edges can be cropped.
+      const scale = Math.max(viewport.width / geometry.sourceWidth, viewport.height / geometry.sourceHeight);
+      expect(geometry.sourceWidth * scale).toBeGreaterThanOrEqual(viewport.width - .01);
+      expect(geometry.sourceHeight * scale).toBeGreaterThanOrEqual(viewport.height - .01);
       if (viewport.width === 390) {
         await video.evaluate(v => { (v as HTMLVideoElement).currentTime = 2; });
         await expect.poll(() => video.evaluate(v => (v as HTMLVideoElement).seeking)).toBe(false);
@@ -54,7 +54,7 @@ for (const viewport of [{ width: 320, height: 640 }, { width: 390, height: 844 }
   });
 }
 
-test('custom gift sizing: animated-image fallback uses the same full-screen uncropped layout', async ({ page }) => {
+test('custom gift sizing: animated-image fallback uses the same full-screen cover layout', async ({ page }) => {
   test.skip(!gifts.length, 'Run the read-only active-media audit first.');
   await page.setViewportSize({ width: 390, height: 844 });
   const gift = gifts.find(g => g.name === 'Black Panther')!;
@@ -70,5 +70,5 @@ test('custom gift sizing: animated-image fallback uses the same full-screen uncr
   expect(await image.evaluate(el => {
     const b = el.getBoundingClientRect();
     return { x: b.x, y: b.y, w: b.width, h: b.height, fit: getComputedStyle(el).objectFit };
-  })).toEqual({ x: 0, y: 0, w: 390, h: 844, fit: 'contain' });
+  })).toEqual({ x: 0, y: 0, w: 390, h: 844, fit: 'cover' });
 });

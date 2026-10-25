@@ -219,7 +219,8 @@ export function ChatDirectory() {
             </Link>
             <details className="st-dir-menu st-home-profile-menu">
               <summary className="st-dir-avatar st-home-avatar" aria-label={`Open profile menu${me.data?.profile?.username ? ` for ${me.data.profile.username}` : ''}`} data-testid="button-home-profile-menu">
-                {[...(me.data?.profile?.username?.trim() || me.data?.profile?.displayName?.trim() || '?')][0]?.toUpperCase() ?? '?'}
+                <UserPhoto username={me.data?.profile?.username} displayName={me.data?.profile?.displayName}
+                  photoUrl={me.data?.profile?.photoUrl} size={36} />
                 <i aria-hidden="true" />
               </summary>
               <div className="st-home-profile-dropdown">
@@ -329,45 +330,45 @@ function WrestlingArenaArt() {
     <svg className="st-dir-topic-photo st-wrestling-arena-art" viewBox="0 0 480 600" role="img" aria-label="Wrestling ring under arena lights" preserveAspectRatio="xMidYMid slice">
       <defs>
         <linearGradient id="wrestling-arena-bg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#171126" />
-          <stop offset=".48" stopColor="#38203f" />
-          <stop offset="1" stopColor="#09090f" />
+          <stop offset="0" stopColor="#080705" />
+          <stop offset=".48" stopColor="#33270e" />
+          <stop offset="1" stopColor="#000000" />
         </linearGradient>
         <linearGradient id="wrestling-ring-mat" x1="0" y1="0" x2="1" y2="1">
-          <stop stopColor="#ededf2" />
-          <stop offset="1" stopColor="#777481" />
+          <stop stopColor="#dfc782" />
+          <stop offset="1" stopColor="#7b632e" />
         </linearGradient>
         <radialGradient id="wrestling-spotlight">
           <stop stopColor="#fff4d3" stopOpacity=".95" />
-          <stop offset="1" stopColor="#df9fff" stopOpacity="0" />
+          <stop offset="1" stopColor="#d4b15f" stopOpacity="0" />
         </radialGradient>
         <linearGradient id="wrestling-ropes" x1="0" x2="1">
-          <stop stopColor="#f5eaff" />
-          <stop offset=".52" stopColor="#df7cff" />
-          <stop offset="1" stopColor="#fff" />
+          <stop stopColor="#fff0c2" />
+          <stop offset=".52" stopColor="#d4b15f" />
+          <stop offset="1" stopColor="#fff4d3" />
         </linearGradient>
       </defs>
       <rect width="480" height="600" fill="url(#wrestling-arena-bg)" />
       <ellipse cx="240" cy="142" rx="205" ry="160" fill="url(#wrestling-spotlight)" opacity=".62" />
-      <path d="M58 0 211 276H159L0 75V0Zm365 0L270 276h52L480 73V0Z" fill="#f8e9ff" opacity=".13" />
+      <path d="M58 0 211 276H159L0 75V0Zm365 0L270 276h52L480 73V0Z" fill="#ffe6a0" opacity=".13" />
       <g fill="#fff5db">
         <circle cx="80" cy="63" r="7" /><circle cx="128" cy="50" r="5" />
         <circle cx="351" cy="49" r="5" /><circle cx="403" cy="62" r="7" />
       </g>
-      <path d="M0 330q48-44 96 0t96 0 96 0 96 0 96 0v150H0Z" fill="#17121e" />
-      <g fill="#51415e" opacity=".9">
+      <path d="M0 330q48-44 96 0t96 0 96 0 96 0 96 0v150H0Z" fill="#100d07" />
+      <g fill="#4c3d20" opacity=".9">
         <circle cx="32" cy="366" r="18" /><circle cx="83" cy="389" r="15" /><circle cx="131" cy="365" r="18" />
         <circle cx="181" cy="393" r="17" /><circle cx="230" cy="366" r="18" /><circle cx="282" cy="392" r="16" />
         <circle cx="333" cy="365" r="18" /><circle cx="383" cy="393" r="16" /><circle cx="447" cy="365" r="20" />
       </g>
-      <path d="M58 470 138 390h204l80 80-85 99H143Z" fill="#28232f" stroke="#e8d6f1" strokeOpacity=".55" strokeWidth="5" />
+      <path d="M58 470 138 390h204l80 80-85 99H143Z" fill="#19150c" stroke="#e6c878" strokeOpacity=".55" strokeWidth="5" />
       <path d="m138 390 102 43 102-43H138Z" fill="url(#wrestling-ring-mat)" />
-      <path d="m143 489 97-56 97 56H143Z" fill="#b7b3c0" />
-      <path d="M143 489v93m194-93v93M138 390v99m204-99v99" stroke="#d1c5dc" strokeWidth="5" />
-      <path d="M69 426h342M62 449h356M56 474h368" fill="none" stroke="#4c1b55" strokeWidth="12" opacity=".85" />
+      <path d="m143 489 97-56 97 56H143Z" fill="#a88b47" />
+      <path d="M143 489v93m194-93v93M138 390v99m204-99v99" stroke="#c8ab61" strokeWidth="5" />
+      <path d="M69 426h342M62 449h356M56 474h368" fill="none" stroke="#392b10" strokeWidth="12" opacity=".85" />
       <path d="M69 423h342M62 446h356M56 471h368" fill="none" stroke="url(#wrestling-ropes)" strokeWidth="5" />
-      <path d="M80 420v66m320-66v66" stroke="#e8d8f1" strokeWidth="7" />
-      <path d="M215 390v48m37-48v48" stroke="#554063" strokeWidth="3" opacity=".7" />
+      <path d="M80 420v66m320-66v66" stroke="#e6c878" strokeWidth="7" />
+      <path d="M215 390v48m37-48v48" stroke="#685126" strokeWidth="3" opacity=".7" />
     </svg>
   );
 }

@@ -174,7 +174,7 @@ export function MyProfilePage() {
     });
   };
   return (
-    <section>
+    <section className="ep-social-profile">
       <h1 className="bm-h1 sc-h1">My profile</h1>
       <p className="sc-sub" data-testid="room-hangout-streak">
         Room hangout streak: <b>Day {d.hangoutStreak.days}/7</b>

@@ -1,0 +1,56 @@
+/* Edit profile black/gold satin finish: ChatProfile (.ch-profile-screen) + MyProfilePage (.ep-social-profile). */
+@layer app-shapes {
+  .ch-profile-screen, .ep-social-profile {
+    --ep-gold:#e3c27a; --ep-gold-hi:#f6dfa6; --ep-ink:#f4ead6; --ep-mute:#b5a888; --ep-line:rgba(227,194,122,.34);
+    color:var(--ep-ink) !important;
+  }
+  .ch-profile-screen, .ep-social-profile, .ch-profile-screen :is(input,select,textarea,button,label), .ep-social-profile :is(input,select,textarea,button,label) { font-family:"Nunito Sans",sans-serif !important; }
+  .ep-social-profile .sc-hero img { object-fit:contain !important; object-position:center !important; background:#000 !important; }
+  :is(.ch-profile-screen, .ep-social-profile) :is(a,.bm-link) { color:#e3c27a !important; }
+  :is(.ch-profile-screen .ch-form, .ep-social-profile .sc-form) { display:grid !important; grid-template-columns:minmax(0,1fr) !important; gap:16px !important; max-width:640px; }
+  :is(.ch-profile-screen .ch-form, .ep-social-profile .sc-form) > label {
+    display:flex !important; flex-direction:column !important; min-width:0 !important;
+    border:0 !important; background:transparent !important; padding:0 !important; box-shadow:none !important;
+  }
+  .ep-social-profile .sc-form > .sc-check { flex-direction:row !important; align-items:center !important; }
+  .ch-profile-screen { background:linear-gradient(180deg,#0d0b08,#070605) !important; }
+  .ch-profile-screen h1, .ch-profile-screen h2, .ep-social-profile :is(h1,h2) {
+    color:var(--ep-gold-hi) !important; letter-spacing:.04em !important;
+  }
+  :is(.ch-profile-screen .ch-form, .ep-social-profile .sc-form) label { font-size:15px !important; color:var(--ep-ink) !important; gap:7px !important; }
+  :is(.ch-profile-screen, .ep-social-profile) :is(.bm-label, .ch-field-count, small, .ch-note, .sc-sub) { color:var(--ep-mute) !important; font-size:13px !important; line-height:1.45 !important; }
+  :is(.ch-profile-screen, .ep-social-profile .sc-form) :is(input[type=text], input:not([type]), input[type=email], select, textarea, .bm-input, .sc-select, .sc-text) {
+    width:100% !important; min-height:48px !important; padding:12px 14px !important; font-size:16px !important;
+    background:linear-gradient(180deg,#17130d,#0e0c09) !important; color:var(--ep-ink) !important;
+    border:1px solid var(--ep-line) !important; border-radius:0 !important; box-shadow:inset 0 1px rgba(246,223,166,.06) !important;
+  }
+  :is(.ch-profile-screen, .ep-social-profile .sc-form) textarea { min-height:104px !important; line-height:1.5 !important; }
+  :is(.ch-profile-screen, .ep-social-profile .sc-form) :is(input, select, textarea):focus-visible { outline:2px solid var(--ep-gold) !important; outline-offset:2px !important; border-color:var(--ep-gold) !important; }
+  :is(.ch-profile-screen, .ep-social-profile .sc-form) :is(input, select):disabled { opacity:.5 !important; }
+  :is(.ch-profile-screen, .ep-social-profile) .bm-btn {
+    min-height:46px !important; padding:10px 16px !important; font-size:14px !important; font-weight:800 !important; letter-spacing:.06em !important; text-transform:uppercase !important;
+    background:#120f0a !important; color:var(--ep-gold-hi) !important; border:1px solid var(--ep-line) !important; border-radius:0 !important;
+  }
+  :is(.ch-profile-screen, .ep-social-profile) .bm-btn-primary {
+    background:linear-gradient(180deg,#f3d88f,#c99a45 55%,#a87b2f) !important; color:#140f06 !important; border-color:#f6dfa6 !important;
+    box-shadow:inset 0 1px rgba(255,255,255,.45),0 6px 18px rgba(0,0,0,.45) !important;
+  }
+  :is(.ch-profile-screen, .ep-social-profile) .bm-btn:disabled { opacity:.5 !important; }
+  .ch-profile-screen :is(.ch-photo-card, .ch-my-badges, .ch-my-badge), .ep-social-profile :is(.sc-entrance-settings, .sc-entrance-option, .sc-entrance-master) {
+    background:linear-gradient(160deg,#16120c,#0b0907) !important; border:1px solid var(--ep-line) !important; border-radius:0 !important; color:var(--ep-ink) !important; box-shadow:none !important;
+  }
+  .ch-profile-screen .ch-my-badge.is-equipped, .ch-profile-screen .ch-photo-card [aria-pressed=true] { border-color:var(--ep-gold) !important; background:#2a2010 !important; }
+  .ch-profile-screen :is(.ch-my-badges-heading>span, .ch-my-badge-time) { background:transparent !important; color:var(--ep-mute) !important; }
+  .ch-profile-screen .ch-photo-card { padding:10px !important; }
+  .ch-profile-screen :is(.ch-photo-card img, .ch-photo-main img) { width:100% !important; height:auto !important; aspect-ratio:auto !important; object-fit:contain !important; background:#000 !important; border-radius:0 !important; }
+  .ch-profile-screen .ch-photo-actions { display:grid !important; grid-template-columns:1fr !important; gap:8px !important; width:100% !important; }
+  .ch-profile-screen .ch-photo-empty { border-style:dashed !important; color:var(--ep-mute) !important; }
+  .ep-social-profile .sc-check { display:flex !important; gap:12px !important; align-items:flex-start !important; padding:12px !important; font-size:15px !important; }
+  :is(.ch-profile-screen, .ep-social-profile) input[type=checkbox] { width:22px !important; height:22px !important; flex:0 0 22px !important; accent-color:#d6ad5c !important; border-radius:0 !important; }
+  .ch-profile-screen .ch-err { border-color:#b5483a !important; background:#1c0c09 !important; color:#ffd2c8 !important; }
+  .ch-profile-screen .ch-fe { color:#ff9f8a !important; }
+  @media (max-width:520px) {
+    .ch-profile-screen .ch-photos { grid-template-columns:1fr !important; }
+    :is(.ch-profile-screen .ch-form, .ep-social-profile .sc-form) button[type=submit] { width:100% !important; }
+  }
+}

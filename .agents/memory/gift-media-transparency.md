@@ -55,8 +55,8 @@ Auto-detect only newly uploaded clips, never saved gifts on read. Real transpare
 
 **How to apply:** Preserve actual source alpha without chroma keying, sample several low-resolution frames, keep explicit warned opaque retention separate from legacy alpha-required processing, and leave existing saved media untouched.
 
-Full-screen custom-gift sizing must preserve the complete artwork and its proportions, not use blanket cover-cropping to hide aspect-ratio gaps. Maximize the animation within the playback viewport; explain when wide, square or internally padded source artwork cannot fill a tall phone without losing content.
+Full-screen gift sizing has an unavoidable tradeoff: proportional edge-to-edge cover can crop source edges on differently shaped phones, while showing the complete source can leave margins. Do not promise both simultaneously or confuse transparent pixels inside the artwork with an undersized playback layer.
 
-**Why:** The owner requested edge-to-edge gifts like Black Panther but explicitly prohibited stretching or cropping the main subject and asked for exceptions to be reported.
+**Why:** The owner repeatedly reported fit-inside custom gifts as too small and requested edge-to-edge playback like Black Panther. Earlier requests also protected the main subject, so the crop/coverage tradeoff must be reported honestly rather than silently promising universal full-art coverage.
 
-**How to apply:** Distinguish a full-screen playback layer from visible artwork occupying every pixel. Do not remove transparent pixels, re-encode media or enlarge past safe bounds merely to claim full-screen coverage. Preserve alpha/black blending and leave the intentional small quantity pop-ups alone.
+**How to apply:** Preserve proportions, source files, alpha/black blending and the intentional small quantity pop-ups. Explain that cover fills the viewport but can trim edges; transparent or internally padded artwork may still contain empty regions. Reframing source artwork is separate work, not implied permission to alter or remove it.

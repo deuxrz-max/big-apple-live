@@ -22,6 +22,7 @@
 .chess-photo-slide{flex:0 0 100%;height:100%;scroll-snap-align:center;padding:1px}
 .chess-photo-slide img{width:100%;height:100%;object-fit:contain;display:block}
 .chess-photo-fallback{height:100%;display:flex;align-items:center;justify-content:center}
+.chess-photo-fallback > [role="img"]{width:100%!important;height:100%!important;min-width:0!important;background:#000!important;color:#e6c878!important;border-radius:0!important}
 .chess-photo-dots{bottom:auto;top:6px;z-index:2}
 .chess-photo.is-top .chess-photo-dots{top:auto;bottom:36px}
 .chess-photo.is-bottom .chess-photo-dots{top:36px}

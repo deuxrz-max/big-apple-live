@@ -5,6 +5,7 @@ import { Users, Heart, Ban, Flag, MessageCircle, Coins, Trophy, UserRound, Arrow
 import { useGetChatAccess, useGetSocialMe } from '@workspace/api-client-react';
 import '@/beam/beam.css';
 import './social.css';
+import '@/chat/edit-profile-finish.css';
 import { ErrorBox, Loading, errStatus, refreshSocial } from './common';
 import { BlocksPage, CommunityPage, FavoritesPage, MyProfilePage, PersonPage } from './PeoplePages';
 import { ModerationQueue } from '@/chat/ChatApp';

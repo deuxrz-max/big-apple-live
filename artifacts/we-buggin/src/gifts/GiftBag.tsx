@@ -15,6 +15,7 @@ import { ownedGiftItems } from './gift-items';
 import { isGiftLocked, PLATINUM_UNLOCK_LEVEL } from '@/gifting/gifting';
 import '@/gifting/gifting-shield.css';
 import './gifts.css';
+import { isSpecialGift } from './gift-catalog-groups';
 
 type Recipient = {
   username: string;
@@ -26,7 +27,6 @@ type Recipient = {
 } | null;
 
 const FOCUSABLE = 'button:not([disabled]),[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
-const SPECIAL_GIFT_IDS = new Set(['cosmic-encore', 'fireworks', 'rose-shower', 'whip']);
 
 export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamId, onClose }: {
   recipient?: Recipient;
@@ -62,7 +62,6 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
     () => recipient?.username ? { mode: 'one', username: recipient.username } : { mode: 'all' },
   );
   const [activeCategoryId, setActiveCategoryId] = useState('popular');
-  const [activePage, setActivePage] = useState(0);
   const catalogScroller = useRef<HTMLDivElement>(null);
   const ref = useRef<HTMLDivElement>(null);
   const opener = useRef<Element | null>(document.activeElement);
@@ -98,22 +97,17 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
     [me.data?.gifts, roomId, streamId],
   );
   const categories = useMemo(() => {
-    const specialGifts = catalog.filter(g => SPECIAL_GIFT_IDS.has(g.id));
+    const specialGifts = catalog.filter(isSpecialGift);
     const vipGifts = catalog.filter(g => /vip/i.test(`${g.id} ${g.name}`));
     const result: { id: string; label: string; Icon: LucideIcon; gifts: typeof catalog }[] = [
       { id: 'popular', label: 'Popular', Icon: Flame, gifts: catalog },
       ...(specialGifts.length ? [{ id: 'special', label: 'Special', Icon: Sparkles, gifts: specialGifts }] : []),
-      ...(catalog.length > specialGifts.length ? [{ id: 'room', label: 'Room', Icon: House, gifts: catalog.filter(g => !SPECIAL_GIFT_IDS.has(g.id)) }] : []),
+      ...(catalog.length > specialGifts.length ? [{ id: 'room', label: 'Room', Icon: House, gifts: catalog.filter(g => !isSpecialGift(g)) }] : []),
       ...(vipGifts.length ? [{ id: 'vip', label: 'VIP', Icon: Crown, gifts: vipGifts }] : []),
     ];
     return result;
   }, [catalog]);
   const activeCategory = categories.find(category => category.id === activeCategoryId) ?? categories[0] ?? null;
-  const pageSize = 8;
-  const giftPages = activeCategory
-    ? Array.from({ length: Math.max(1, Math.ceil(Math.max(0, activeCategory.gifts.length - 1) / pageSize)) }, (_, index) =>
-      activeCategory.gifts.slice(1 + index * pageSize, 1 + (index + 1) * pageSize))
-    : [];
   const selected = catalog.find(i => i.id === sel) ?? items.find((i) => i.id === sel) ?? null;
   const price = me.data?.gifts.find(g => g.id === sel)?.cost ?? 0;
   const selectedRecipient = recipientSelection.mode === 'one'
@@ -153,8 +147,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
     if (!categories.some(category => category.id === activeCategoryId)) {
       setActiveCategoryId(categories[0]?.id ?? 'popular');
     }
-    setActivePage(0);
-    if (catalogScroller.current) catalogScroller.current.scrollLeft = 0;
+    if (catalogScroller.current) catalogScroller.current.scrollTop = 0;
   }, [activeCategoryId, categories]);
 
   function chooseGift(giftId: string) {
@@ -308,7 +301,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
           {categories.map(({ id, label, Icon }) => <button key={id} type="button"
             className={`gift-panel-category${activeCategory?.id === id ? ' is-active' : ''}`}
             aria-pressed={activeCategory?.id === id} disabled={busy}
-            onClick={() => { setActiveCategoryId(id); setActivePage(0); setError(null); setNotice(null); }}>
+            onClick={() => { setActiveCategoryId(id); setError(null); setNotice(null); }}>
             <Icon size={15} strokeWidth={2.7} aria-hidden />{label}
           </button>)}
         </nav>}
@@ -328,17 +321,13 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
               <Gift size={26} aria-hidden />
               <p>No gifts are available in this room right now.</p>
             </div>
-          ) : activeCategory && giftPages.length > 0 ? (
+          ) : activeCategory && activeCategory.gifts.length > 0 ? (
             <>
-              <div className="gift-panel-pager" ref={catalogScroller}
-                onScroll={event => {
-                  const pageWidth = event.currentTarget.clientWidth;
-                  if (pageWidth > 0) setActivePage(Math.round(event.currentTarget.scrollLeft / pageWidth));
-                }}
+              <div className="gift-panel-catalog" ref={catalogScroller}
                 aria-label={`${activeCategory.label} gifts`}>
-                {giftPages.map((pageGifts, pageIndex) => {
-                  const featured = pageIndex === 0 ? activeCategory.gifts[0] : undefined;
-                  return <section className="gift-panel-page" key={`${activeCategory.id}-${pageIndex}`} aria-label={`${activeCategory.label}, page ${pageIndex + 1}`}>
+                {(() => {
+                  const featured = activeCategory.gifts[0];
+                  return <section aria-label={`${activeCategory.label} gift list`}>
                     {featured && <button type="button" className={`gift-panel-featured${sel === featured.id ? ' is-selected' : ''}${isGiftLocked(featured, giftingLevel) ? ' is-gifting-locked' : ''}`}
                       disabled={busy || isGiftLocked(featured, giftingLevel)} onClick={() => chooseGift(featured.id)} aria-label={`${isGiftLocked(featured, giftingLevel) ? `Locked until gifting level ${PLATINUM_UNLOCK_LEVEL}: ` : 'Select featured gift '}${featured.name}`}>
                       <span className="gift-panel-featured-art"><GiftArtwork gift={featured} size={50} />
@@ -353,7 +342,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
                       {isGiftLocked(featured, giftingLevel) && <span className="gifting-lock-tag" data-testid={`lock-gift-${featured.id}`}><LockKeyhole size={11} aria-hidden /> Platinum · Lv {PLATINUM_UNLOCK_LEVEL}</span>}
                     </button>}
                     <div className="gift-panel-grid" role="list" aria-label={`${activeCategory.label} gifts`}>
-                      {pageGifts.map(gift => <button key={gift.id} type="button" role="listitem"
+                      {activeCategory.gifts.slice(1).map(gift => <button key={gift.id} type="button" role="listitem"
                         className={`gift-panel-card${sel === gift.id ? ' is-selected' : ''}${isGiftLocked(gift, giftingLevel) ? ' is-gifting-locked' : ''}`}
                         aria-pressed={sel === gift.id} disabled={busy || isGiftLocked(gift, giftingLevel)} data-testid={`gift-catalog-${gift.id}`}
                         aria-label={isGiftLocked(gift, giftingLevel) ? `${gift.name}, locked until Platinum gifting level ${PLATINUM_UNLOCK_LEVEL}` : undefined}
@@ -367,14 +356,8 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
                       </button>)}
                     </div>
                   </section>;
-                })}
+                })()}
               </div>
-              {giftPages.length > 1 && <div className="gift-panel-page-indicator" aria-label={`Page ${activePage + 1} of ${giftPages.length}`}>
-                {giftPages.map((_, index) => <button key={index} type="button"
-                  className={activePage === index ? 'is-active' : ''}
-                  aria-label={`Go to gift page ${index + 1}`} aria-current={activePage === index ? 'page' : undefined}
-                  onClick={() => catalogScroller.current?.scrollTo({ left: index * catalogScroller.current.clientWidth, behavior: 'smooth' })} />)}
-              </div>}
             </>
           ) : items.length > 0 ? (
             <div className="gift-panel-grid gift-panel-owned" data-testid="gift-bag-list">
