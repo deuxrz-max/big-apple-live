@@ -72,3 +72,13 @@
 .chess-skeleton b{aspect-ratio:1;border-radius:8px;background:hsl(22 30% 14%);animation:chess-flicker 1.2s infinite}
 .chess-spin{animation:chess-turn 1s linear infinite}@keyframes chess-turn{to{transform:rotate(360deg)}}
 .chess-result-text{font-family:"Cormorant Garamond",serif;font-size:18px!important;color:hsl(var(--cream))!important;margin:0 0 4px}
+/* No-photo placeholder: full-banner black/gold plate with large initials + name. */
+.chess-photo-fallback{width:100%;flex-direction:column;gap:4px;background:linear-gradient(180deg,hsl(30 20% 5%),hsl(20 30% 3%));box-shadow:inset 0 0 0 1px hsl(var(--gold) / .5);cursor:pointer;padding:8px}
+.chess-photo-initials{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:clamp(40px,14vh,96px);line-height:1;letter-spacing:.06em;color:hsl(var(--gold))}
+.chess-photo-fallback-name{max-width:90%;font-family:'Cormorant Garamond',serif;font-size:clamp(14px,3vh,20px);color:hsl(var(--cream) / .85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;letter-spacing:.14em}
+.chess-photo.is-top .chess-photo-fallback{padding-bottom:34px}
+.chess-photo.is-bottom .chess-photo-fallback{padding-top:34px}
+/* Own controls sit on own banner, away from the name label; square finish. */
+.chess-player-tools button{border-radius:0}
+.chess-photo.is-bottom .chess-player-tools{top:auto;bottom:6px}
+.chess-photo.is-top .chess-photo-label,.chess-photo.is-bottom .chess-photo-label{padding-right:10px}

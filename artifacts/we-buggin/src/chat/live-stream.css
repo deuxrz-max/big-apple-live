@@ -1182,3 +1182,9 @@ body.streamtalk-live-screen .site-header {
 @media (max-height: 620px) {
   .st-live-room .st-live-chat-log { bottom: var(--lv-feed-bottom); height: min(26dvh, 180px); max-height: min(26dvh, 180px); }
 }
+/* Long broadcaster names: shrink slightly and ellipsize cleanly without colliding with Follow / top actions. */
+.st-live-room .st-live-creator-copy { min-width: 0; overflow: hidden; }
+.st-live-room .st-live-creator-copy strong { display: block; min-width: 0; max-width: 100%; font-size: clamp(11px, 3.3vw, 14px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-live-room .st-live-follow { flex: 0 0 auto; white-space: nowrap; }
+.st-live-room .st-live-creator-avatar { flex: 0 0 auto; }
+@media (max-width: 360px) { .st-live-room .st-live-creator-copy strong { font-size: 11px; } .st-live-room .st-live-follow { padding: 0 8px; font-size: 10px; } }

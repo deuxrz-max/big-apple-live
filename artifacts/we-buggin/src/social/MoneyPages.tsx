@@ -122,6 +122,7 @@ export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
         const earned = me.data.profile.badgeId === p.id;
         return (
         <div key={p.id} className="sc-gift sc-product" data-testid={`card-product-${p.id}`}>
+          <span className="sc-recharge-tag" data-testid={`label-recharge-tier-${p.id}`}>Recharge tier</span>
           <BadgeArt id={p.id} name={p.name} imageUrl={p.badgeImage} /><b>{p.name}</b><strong>Monthly purchase threshold</strong>
           <span><CoinAmount>{p.cost.toLocaleString()} coins</CoinAmount> in completed coin purchases during one calendar month</span>
           {earned

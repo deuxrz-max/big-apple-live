@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { ChessRoom } from '../../src/chess/ChessRoom';
+import { QuickProfileProvider } from '../../src/profile/QuickProfile';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PromoBackground } from '../../src/chat/PromoBackground';
 import { TextChatRoom } from '../../src/chat/UniversityRoom';
@@ -19,7 +21,7 @@ import '../../src/chat/live-stream.css';
 import { BeamTv, type BeamTvHandle } from '../../src/chat/BeamTv';
 import { RoomPerimeter } from '../../src/chat/RoomPerimeter';
 import { OwnProfile } from '../../src/profile/OwnProfile';
-import { ChatProfile, ProfilePhotoReviewPage } from '../../src/chat/ChatApp';
+import { ChatProfile, ProfilePhotoReviewPage, HomeSections, DirectoryRoomCard } from '../../src/chat/ChatApp';
 import { MyProfilePage } from '../../src/social/PeoplePages';
 import { VisualCleanupFixture } from './visual-cleanup-fixture';
 import type { UniversityVideoBeamTvState } from '@workspace/api-client-react';
@@ -51,6 +53,17 @@ function PlayerFixture() {
     <PromoBackground soundOn={false} onUnavailableChange={setUnavailable} />
     <output data-testid="fixture-unavailable">{String(unavailable)}</output>
   </>;
+}
+
+function HomePolishFixture() {
+  return <div className="st-directory st-home">
+    <HomeSections />
+    <section id="live-channels">
+      <DirectoryRoomCard room={{ roomId: 'empty', label: 'Empty room', headcount: 0, nowPlayingVideoId: 'fixture' }} topic="Music" isFeatured={false} />
+      <DirectoryRoomCard room={{ roomId: 'occupied', label: 'Occupied room', headcount: 2 }} topic="Music" isFeatured={true} />
+    </section>
+    <section id="st-dir-creators-title">Creators</section>
+  </div>;
 }
 
 function GiftingLevelsFixture() {
@@ -166,6 +179,8 @@ createRoot(document.getElementById('root')!).render(
           : new URLSearchParams(location.search).get('view') === 'audit-fixes' ? <AuditFixesFixture />
           : new URLSearchParams(location.search).get('view') === 'visual-cleanup' ? <VisualCleanupFixture />
           : new URLSearchParams(location.search).get('view') === 'edit-profile' ? <ChatProfile />
+          : new URLSearchParams(location.search).get('view') === 'home-polish' ? <HomePolishFixture />
+          : new URLSearchParams(location.search).get('view') === 'chess-polish' ? <QuickProfileProvider><ChessRoom roomId="polish" accountKey="fixture" onExit={() => undefined} /></QuickProfileProvider>
           : new URLSearchParams(location.search).get('view') === 'edit-social-profile' ? <MyProfilePage />
           : new URLSearchParams(location.search).get('view') === 'profile-cleanup' ? <OwnProfile />
           : new URLSearchParams(location.search).get('view') === 'photo-review' ? <ProfilePhotoReviewPage />
@@ -176,7 +191,7 @@ createRoot(document.getElementById('root')!).render(
           : <TextChatRoom roomId="promo-regression-room" userId="synthetic-browser-user" />}
       </main>
       {/* Layout-only nav shell uses the original app's navigation stylesheet. */}
-      <nav className="app-bottom-nav" aria-label="Fixture bottom navigation">
+      {new URLSearchParams(location.search).get('view') !== 'chess-polish' && <nav className="app-bottom-nav" aria-label="Fixture bottom navigation">
         <div className="app-bottom-nav-inner">
           {['Home', 'Follow', 'Message', 'Me'].map(label =>
             <span key={label} className="app-bottom-link">{label}</span>)}
@@ -184,6 +199,6 @@ createRoot(document.getElementById('root')!).render(
             <GiftControl onClick={() => window.dispatchEvent(new Event(OPEN_ROOM_GIFTS_EVENT))} label="Open room gifts" />
           )}
         </div>
-      </nav>
+      </nav>}
     </QueryClientProvider>,
 );

@@ -7,7 +7,7 @@ import {
   actChessRoom, getGetChessRoomQueryKey, joinChessRoom, useGetChessRoom,
 } from "@workspace/api-client-react";
 import type { ChessActionInput, ChessPlayer, ChessRoomState } from "@workspace/api-client-react";
-import { UserPhoto, photoSrc } from "@/components/user-photo";
+import { photoSrc } from "@/components/user-photo";
 import { GiftingShield } from "@/gifting/GiftingShield";
 import "@/profile/profile.css";
 import { useProfileTapHandlers } from "@/profile/QuickProfile";
@@ -32,7 +32,13 @@ export function PhotoCarousel({ urls, name, username }: { urls: string[]; name: 
   const [failed, setFailed] = useState<Record<string, boolean>>({});
   const slides = urls.filter(u => !failed[u]);
   const tap = useProfileTapHandlers(username);
-  if (!slides.length) return <div className="chess-photo-fallback" {...tap} role="button" tabIndex={0} aria-label={`Open profile for ${name}`} data-testid={`tap-chess-photo-${username}`}><UserPhoto username={username} displayName={name} photoUrl={null} size={96} fit="contain" /></div>;
+  if (!slides.length) {
+    const initials = (name || username).split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]?.toUpperCase()).join("") || "?";
+    return <div className="chess-photo-fallback" {...tap} role="button" tabIndex={0} aria-label={`Open profile for ${name}`} data-testid={`tap-chess-photo-${username}`}>
+      <span className="chess-photo-initials" aria-hidden="true">{initials}</span>
+      <span className="chess-photo-fallback-name">{name || username}</span>
+    </div>;
+  }
   return <>
     <div className="chess-photo-track" ref={ref} {...tap} data-testid={`tap-chess-photo-${username}`} tabIndex={0}
       role="region" aria-roledescription="carousel" aria-label={`${name} profile photos`}
@@ -178,10 +184,12 @@ export function ChessRoom({ roomId, accountKey, onExit }: { roomId: string; acco
   const finished = FINISHED.has(room.status);
   const iAskedRematch = !!me && room.rematchRequestedBy === me.accountId;
   const theyAskedRematch = !!room.rematchRequestedBy && !iAskedRematch;
+  const whiteMe = room.yourColor === "w" && !!room.players.white;
+  const blackMe = room.yourColor === "b" && !!room.players.black;
   const rowProps = { room, audio, onLeave: () => void leave(), onShare: () => void share(), shareNote };
 
   return <main className="chess-room" data-testid="chess-room">
-    <PlayerPhoto tools position="top" player={room.players.white} color="w" active={room.status === "playing" && room.turn === "w"}
+    <PlayerPhoto tools={whiteMe || !blackMe} position="top" player={room.players.white} color="w" active={room.status === "playing" && room.turn === "w"}
       isMe={room.yourColor === "w"} {...rowProps} />
     <div className="chess-frame">
       <div className={`chess-board${room.inCheck ? " is-check" : ""}`} role="grid" aria-label="Chess board" data-testid="chess-board">
@@ -198,7 +206,7 @@ export function ChessRoom({ roomId, accountKey, onExit }: { roomId: string; acco
       {error && <p className="chess-error" role="alert" onClick={() => setError("")}>{error}</p>}
       {room.status === "closed" && <p className="chess-note" role="status">This room has closed.</p>}
     </div>
-    <PlayerPhoto tools={false} position="bottom" player={room.players.black} color="b" active={room.status === "playing" && room.turn === "b"}
+    <PlayerPhoto tools={blackMe} position="bottom" player={room.players.black} color="b" active={room.status === "playing" && room.turn === "b"}
       isMe={room.yourColor === "b"} {...rowProps} />
     <div ref={audio.sinkRef} hidden />
     {audio.error && <p className="chess-error is-floating" role="alert">{audio.error}</p>}

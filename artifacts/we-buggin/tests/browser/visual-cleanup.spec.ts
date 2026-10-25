@@ -63,7 +63,7 @@ for (const width of [320, 390, 430]) {
     expect(sends).toBe(0); // selecting or browsing never charges
   });
 
-  test(`both edit profile forms keep readable square dark/gold fields at ${width}px`, async ({ page }) => {
+  test(`consolidated edit profile keeps readable square dark/gold fields at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 844 });
     await page.route('**/api/me', route => route.fulfill({ json: { profile } }));
     await page.route('**/api/social/me', route => route.fulfill({ json: { ...social, gifts: [] } }));
@@ -76,7 +76,7 @@ for (const width of [320, 390, 430]) {
     await expect(name).toHaveCSS('font-size', '16px');
     expect((await name.boundingBox())!.height).toBeGreaterThanOrEqual(48);
     await expect(page.getByTestId('button-save-identity')).toBeEnabled();
-    await page.goto('/tests/browser/harness.html?view=edit-social-profile');
+    await expect(page.getByTestId('input-bio')).toHaveCount(1);
     await expect(page.getByTestId('input-bio')).toHaveValue('Original bio');
     await expect(page.getByTestId('select-profile-country')).toHaveValue('US');
     await expect(page.getByTestId('input-interests')).toHaveValue('Music');

@@ -25,7 +25,7 @@ export function LiveLayoutFixture() {
     viewerCount: 0, chatReady: true, microphoneEnabled: true, cameraFacing: 'user',
     error: '', conflictStreamId: null, joinNotice: 'Fixture viewer',
     session: {
-      streamId: 'layout-fixture', username: 'fixture', displayName: '👑 VAMPSQUAD',
+      streamId: 'layout-fixture', username: 'fixture', displayName: new URLSearchParams(location.search).has('longName') ? 'VAMPSQUAD With An Extremely Long Broadcaster Display Name' : '👑 VAMPSQUAD',
       url: '', token: '', displayNameColor: '#fff', displayNameTierIndex: 96,
     },
   };

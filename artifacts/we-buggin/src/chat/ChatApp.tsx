@@ -24,6 +24,7 @@ import { selectFeaturedRoom } from './directory-utils';
 import { ActionMenu, ScreenHeader } from '@/components/app-chrome';
 import { AccessCheckError } from './AccessCheckError';
 import { buyCoinsReturnState } from '@/social/buy-coins-navigation';
+import { ProfilePreferences } from '@/social/PeoplePages';
 import './chat.css';
 
 const DISCLAIMER = 'Deux Wild is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
@@ -174,6 +175,23 @@ export function AdultGate({ children, keepMountedOnTransientError = false }: {
   );
 }
 
+export function HomeSections() {
+  const [selectedSection, setSelectedSection] = useState<'rooms' | 'creators'>(
+    window.location.hash === '#st-dir-creators-title' ? 'creators' : 'rooms',
+  );
+  useEffect(() => {
+    const sync = () => setSelectedSection(window.location.hash === '#st-dir-creators-title' ? 'creators' : 'rooms');
+    window.addEventListener('hashchange', sync);
+    return () => window.removeEventListener('hashchange', sync);
+  }, []);
+  return <nav className="dw-home-tabs" aria-label="Home sections" data-testid="nav-home-sections">
+    <a href="#live-channels" className={selectedSection === 'rooms' ? 'is-on' : undefined} aria-current={selectedSection === 'rooms' ? 'location' : undefined} onClick={() => setSelectedSection('rooms')}>Rooms</a>
+    <a href="#st-dir-creators-title" className={selectedSection === 'creators' ? 'is-on' : undefined} aria-current={selectedSection === 'creators' ? 'location' : undefined} onClick={() => setSelectedSection('creators')}>Creators</a>
+    <Link href="/live" data-testid="link-home-tab-live">All live</Link>
+    <Link href="/community/leaderboard" data-testid="link-home-tab-leaderboard">Leaderboard</Link>
+  </nav>;
+}
+
 export function ChatDirectory() {
   const { signOut } = useClerk();
   const directory = useGetChatDirectory({ query: { queryKey: getGetChatDirectoryQueryKey(), refetchInterval: 5_000 } });
@@ -232,12 +250,7 @@ export function ChatDirectory() {
         </div>
       </header>
 
-      <nav className="dw-home-tabs" aria-label="Home sections" data-testid="nav-home-sections">
-        <a href="#live-channels" className="is-on" aria-current="true">Rooms</a>
-        <a href="#st-dir-creators-title">Creators</a>
-        <Link href="/live" data-testid="link-home-tab-live">All live</Link>
-        <Link href="/community/leaderboard" data-testid="link-home-tab-leaderboard">Leaderboard</Link>
-      </nav>
+      <HomeSections />
       <section className="st-dir-explore st-home-rooms" id="live-channels" aria-label="Rooms">
         {directory.isError && <div className="st-dir-state st-dir-error" role="alert"><div className="st-dir-state-mark">!</div><h3>Rooms aren’t loading</h3><p>We couldn’t reach the directory. Give it another try.</p><button type="button" onClick={() => directory.refetch()}>Retry directory</button></div>}
         {directory.data && rooms.length === 0 && <div className="st-dir-state"><div className="st-dir-state-mark">—</div><h3>Quiet for a moment</h3><p>There are no rooms in the directory right now. Check back soon.</p></div>}
@@ -286,7 +299,7 @@ export function ChatDirectory() {
   );
 }
 
-function DirectoryRoomCard({ room, topic, isFeatured }: {
+export function DirectoryRoomCard({ room, topic, isFeatured }: {
   room: { roomId: string; label: string; headcount: number; nowPlayingVideoId?: string | null; nowPlayingTitle?: string | null };
   topic: string;
   isFeatured: boolean;
@@ -309,7 +322,7 @@ function DirectoryRoomCard({ room, topic, isFeatured }: {
             ? <img className="st-dir-topic-photo" src={topicPhotoUrl(topic)} alt="" loading="lazy" onError={() => setTopicPhotoFailed(true)} />
             : <div className="st-dir-art-fallback" aria-hidden="true"><span className="st-dir-art-index">{topicInitial(topic)}</span><span className="st-dir-art-lines" /></div>}
         <span className={`st-home-live-label${room.headcount > 0 ? ' is-live' : ''}`} title={room.label}>
-          <i aria-hidden="true" /><b>LIVE</b><span>{room.label}</span>
+          {room.headcount > 0 && <><i aria-hidden="true" /><b>LIVE</b></>}<span>{room.label}</span>
         </span>
         {isFeatured && <span className="st-home-featured-badge">Featured</span>}
         <span className="st-dir-art-shade" />
@@ -521,7 +534,9 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
   const submit = () => {
     setTried(true); setSaved(false);
     if (!nameOk || !dnOk || !bioOk || save.isPending || uploading) return;
-    const data = { username: profile?.username ?? username, displayName: dn, bio: bio.trim(), photoUrl, photoUrls };
+    // Existing accounts edit bio only in the shared preferences form below.
+    // Identity/photo saves must not overwrite a separately saved bio.
+    const data = { username: profile?.username ?? username, displayName: dn, ...(!profile ? { bio: bio.trim() } : {}), photoUrl, photoUrls };
     save.mutate({ data }, {
       onSuccess: (p) => {
         qc.setQueryData(getGetMyProfileQueryKey(), { profile: p });
@@ -537,7 +552,7 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
       <ScreenHeader backHref={setup ? undefined : '/user-portal'} backLabel="Back to profile" testId="header-edit-profile"
         title={profile ? 'Edit profile' : 'Set up your profile'}
         actions={!setup && <ActionMenu label="More profile settings" testId="menu-edit-profile">
-          <Link href="/community/profile" role="menuitem" data-testid="link-edit-platform-bio">Platform and bio</Link>
+          <a href="#profile-preferences" role="menuitem" data-testid="link-edit-platform-bio">Profile preferences</a>
           <Link href="/community" role="menuitem" data-testid="link-edit-community">Community</Link>
           <Link href="/home" role="menuitem" data-testid="link-edit-directory">Home</Link>
         </ActionMenu>} />
@@ -557,10 +572,10 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
             <span className="ch-field-count">{shownDisplay.length}/40</span>
             {tried && !dnOk && <span className="ch-fe" role="alert">Enter a display name.</span>}
           </label>
-          <label>Bio
+          {!profile && <label>Bio
             <textarea value={bio} maxLength={280} rows={3} onChange={(e) => setBio(e.target.value)} data-testid="input-bio" />
             <span className="ch-field-count">{bio.length}/280</span>
-          </label>
+          </label>}
           <div>
             <div className="ch-photo-heading"><b>Profile photos</b><span>{photoUrls.length}/4</span></div>
             <div className="ch-photos" aria-label="Saved profile photos">
@@ -630,6 +645,7 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
             {save.isPending ? 'Saving...' : profile ? 'Save changes' : 'Create profile'}</button></p>
         </form>
       )}
+      {profile && <ProfilePreferences />}
       <p className="ch-note">{DISCLAIMER}</p>
     </>
   );
