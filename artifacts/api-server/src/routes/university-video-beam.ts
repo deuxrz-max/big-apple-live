@@ -1,4 +1,5 @@
 import { Router, type Request } from "express";
+import { UNIFIED_VIDEO_CHANNELS } from "../lib/room-video-channels";
 import {
   GetUniversityVideoBeamStateResponse,
   GetUniversityVideoBeamTokenBody,
@@ -26,7 +27,7 @@ import {
 import { mayModerateAppRunRoom } from "../lib/room-moderation-policy";
 import { isLiveStreamActiveOrStarting, isLiveStreamStarting } from "../lib/live-stream-policy";
 import {
-  COMMUNITY_VIDEO_POOL_ROOMS,
+  COMMUNITY_VIDEO_POOL_ROOMS as SOURCE_VIDEO_POOL_ROOMS,
   communityDefaultVideoSearch,
   isCommunityDailyWebSeriesRoom,
   isPublicTopicRoom,
@@ -68,6 +69,10 @@ import {
   updateBeamTvVideoMetadata,
 } from "../lib/moderator-bots";
 
+const COMMUNITY_VIDEO_POOL_ROOMS = [
+  ...SOURCE_VIDEO_POOL_ROOMS,
+  ...UNIFIED_VIDEO_CHANNELS.map(channel => ({ ...channel, defaultVideoSearch: channel.label })),
+];
 const router = Router();
 const webSeriesMidnightTimers = new Map<string, { dueAt: number; timer: ReturnType<typeof setTimeout> }>();
 async function mayControlRoomSpeakers(roomId: string, accountId: string): Promise<boolean> {

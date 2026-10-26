@@ -396,6 +396,13 @@ export interface ChatDirectoryRoom {
      * @nullable
      */
   nowPlayingTitle: string | null;
+  /**
+     * Server epoch milliseconds when the currently playing clip began; null during an intermission.
+     * @nullable
+     */
+  nowPlayingStartedAtMs?: number | null;
+  /** Server clock sample for synchronizing muted directory previews without joining the room or altering its timeline. */
+  nowPlayingServerNowMs?: number;
 }
 
 export interface ChatAccess {
@@ -1601,6 +1608,13 @@ export interface ChatDirectoryRoom4b96100 {
      * @nullable
      */
   nowPlayingTitle: string | null;
+  /**
+     * Server epoch milliseconds when the currently playing clip began; null during an intermission.
+     * @nullable
+     */
+  nowPlayingStartedAtMs?: number | null;
+  /** Server clock sample for synchronizing muted directory previews without joining the room or altering its timeline. */
+  nowPlayingServerNowMs?: number;
 }
 
 export interface ChatAccess4b96100 {

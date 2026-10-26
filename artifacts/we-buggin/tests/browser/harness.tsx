@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { RoomChannelsFixture } from './room-channels-fixture';
+import { RoomChannelsFixture, CauldronHoldFixture } from './room-channels-fixture';
 import { createRoot } from 'react-dom/client';
 import { ChessRoom } from '../../src/chess/ChessRoom';
 import { QuickProfileProvider } from '../../src/profile/QuickProfile';
@@ -198,6 +198,7 @@ createRoot(document.getElementById('root')!).render(
           : new URLSearchParams(location.search).get('view') === 'gift-artwork' ? <GiftArtworkFixture />
           : new URLSearchParams(location.search).get('view') === 'public-channels' ? <PublicChatLanding />
           : new URLSearchParams(location.search).get('view') === 'room-channels' ? <RoomChannelsFixture />
+          : new URLSearchParams(location.search).get('view') === 'cauldron-hold' ? <CauldronHoldFixture />
           : new URLSearchParams(location.search).get('view') === 'gift-send' ? <GiftSendFixture />
           : new URLSearchParams(location.search).get('view') === 'gifting-levels' ? <GiftingLevelsFixture />
           : new URLSearchParams(location.search).get('view') === 'room-feed' ? <RoomFeedFixture />

@@ -10,7 +10,7 @@ import { setBeamTvSoundMuted } from "./beam-audio-policy";
 type PlayerErrorEvent = { data: number };
 type PlayerReadyEvent = { target: YtPlayer };
 type PlayerStateEvent = { data: number; target: YtPlayer };
-type YtPlayer = {
+export type YtPlayer = {
   destroy(): void;
   stopVideo(): void;
   mute(): void;
@@ -28,7 +28,7 @@ type YtPlayer = {
   getPlayerState(): number;
   unloadModule(moduleName: string): void;
 };
-type YtNamespace = {
+export type YtNamespace = {
   Player: new (target: HTMLElement, options: {
     width?: string;
     height?: string;
@@ -50,7 +50,7 @@ declare global {
 }
 
 let youtubeApiPromise: Promise<YtNamespace> | null = null;
-function loadYoutubeApi(): Promise<YtNamespace> {
+export function loadYoutubeApi(): Promise<YtNamespace> {
   if (window.YT?.Player) return Promise.resolve(window.YT);
   if (youtubeApiPromise) return youtubeApiPromise;
 

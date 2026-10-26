@@ -1,55 +1,26 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
+import { cauldronDisplayLevel } from './cauldron-display-level';
 import './homepage-cauldron.css';
 
 const BASE = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/');
-const WEBM_SRC = `${BASE}api/gift-media/system-cauldron/webm`;
-const FALLBACK_SRC = `${BASE}api/gift-media/system-cauldron/safari`;
 
-function needsImageFallback() {
-  if (typeof navigator === 'undefined') return false;
-  const ua = navigator.userAgent;
-  const appleMobile = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const safari = /Safari/i.test(ua) && !/Chrome|Chromium|CriOS|Edg|OPR/i.test(ua);
-  if (appleMobile || safari) return true;
-  return !document.createElement('video').canPlayType('video/webm; codecs="vp9"');
-}
-
-export function HomepageCauldron() {
-  const [useImage, setUseImage] = useState(needsImageFallback);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v || useImage || typeof IntersectionObserver === 'undefined') return;
-    const io = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) v.play().catch(() => {});
-      else v.pause();
-    });
-    io.observe(v);
-    return () => io.disconnect();
-  }, [useImage]);
-
+/**
+ * A still from the existing artwork, never an independent animation.
+ * Tracking/targets remain deferred: Home supplies no invented progress, so stays empty.
+ * A future authoritative progress source can supply progressPercent.
+ */
+export function HomepageCauldron({ progressPercent }: { progressPercent?: number | null }) {
+  const level = cauldronDisplayLevel(progressPercent);
+  const [failedSource, setFailedSource] = useState<string | null>(null);
+  const src = `${BASE}api/gift-media/system-cauldron/still/${level}`;
   return (
-    <div className="hp-cauldron" data-testid="homepage-cauldron">
-      {useImage ? (
-        <img className="hp-cauldron-media" src={FALLBACK_SRC} alt="" aria-hidden="true" decoding="async" />
+    <div className="hp-cauldron" data-testid="homepage-cauldron" data-display-level={level}>
+      {failedSource === src ? (
+        <span role="status">Cauldron image unavailable.</span>
       ) : (
-        <video
-          ref={videoRef}
-          className="hp-cauldron-media"
-          data-testid="homepage-cauldron-video"
-          src={WEBM_SRC}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          disablePictureInPicture
-          aria-hidden="true"
-          tabIndex={-1}
-          onVolumeChange={(e) => { e.currentTarget.muted = true; }}
-          onError={() => setUseImage(true)}
-        />
+        <img key={src} className="hp-cauldron-media" data-testid="homepage-cauldron-still"
+          src={src} alt="" aria-hidden="true" decoding="async"
+          onError={() => setFailedSource(src)} />
       )}
     </div>
   );

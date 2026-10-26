@@ -36,6 +36,7 @@ import { accountId, sameOrigin } from "./identity";
 import { RoomError, roomStore } from "../lib/room-store";
 import { requireAccount } from "../lib/social/core";
 import { CAULDRON_VERSION_ID } from "../lib/system-cauldron-assets";
+import { cauldronStillFrame } from "../lib/cauldron-still-frame";
 import { nameColorProfileForAccount, setNameColorPurchaseTotalOverride } from "../lib/social/gift-name-color-data";
 import { accessFor, requireAdult, requireOwner } from "../lib/community";
 import { blocks, getMe, getPerson, listPeople, relationship, saveSocialProfile } from "../lib/social/people";
@@ -82,6 +83,15 @@ router.get('/room-entry-effects/lion/:filename', serveRoomEntranceEffectMedia);
 router.get('/room-entry-effects/monthly-credit-tiers/:tier/:filename', serveMonthlyCreditTierEntranceEffectMedia);
 // A fixed decorative homepage asset, like the public built-in gift media above.
 // No arbitrary version ID, source file or Overflow media can be requested here.
+router.get("/gift-media/system-cauldron/still/:level", async (req, res): Promise<void> => {
+  if (!/^(?:0|[1-9]\d?|100)$/.test(req.params.level)) throw new RoomError(400, "Invalid cauldron display level.");
+  const image = await cauldronStillFrame(Number(req.params.level));
+  res.set({
+    "Content-Type": "image/png",
+    "X-Content-Type-Options": "nosniff",
+    "Cache-Control": "public, max-age=86400",
+  }).send(image);
+});
 router.get("/gift-media/system-cauldron/:variant", async (req, res): Promise<void> => {
   const variant = req.params.variant;
   if (variant !== "webm" && variant !== "safari") throw new RoomError(404, "Media not found.");

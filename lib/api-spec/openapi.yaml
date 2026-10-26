@@ -1609,6 +1609,12 @@ components:
         nowPlayingTitle:
           type: [string, "null"]
           maxLength: 200
+        nowPlayingStartedAtMs:
+          type: [integer, "null"]
+          description: Server epoch milliseconds when the currently playing clip began; null during an intermission.
+        nowPlayingServerNowMs:
+          type: integer
+          description: Server clock sample for synchronizing muted directory previews without joining the room or altering its timeline.
     ChatAccess:
       type: object
       required: [adultConfirmed, moderator, owner, suspended, chatMuted, reportsMuted, warning]

@@ -1,8 +1,9 @@
 import { randomInt } from "node:crypto";
-import { and, eq, lt, sql } from "drizzle-orm";
+import { and, eq, inArray, lt, sql } from "drizzle-orm";
 import {
   communityVideoPlayHistory,
   communityVideoPools,
+  communityWebSeriesDaily,
   db,
   type CommunityVideoPoolItem,
   youtubeApiDailyQuota,
@@ -37,6 +38,7 @@ import { isOfficialMusicVideo } from "./music-video-policy";
 import { isCompleteFeatureFilm, MIN_FEATURE_FILM_DURATION_MS } from "./movies-video-policy";
 import { logger } from "./logger";
 import { mergeUniqueRecordsByKey } from "./developer-content-sync-policy";
+import { combineChannelVideos, unifiedVideoChannel } from "./room-video-channels";
 
 const DIRECTORY_COMMUNITY_ROOM_ID_SET = new Set<string>(DIRECTORY_COMMUNITY_ROOM_IDS);
 
@@ -1241,6 +1243,35 @@ export async function getCommunityVideoPool(
   forceRefresh = false,
   pageLimit = MAX_SEARCH_PAGES_PER_REFRESH,
 ): Promise<PoolItem[]> {
+  const parentId = rooms.communityParentId(roomId.toUpperCase()) ?? roomId.toUpperCase();
+  const channel = unifiedVideoChannel(parentId);
+  if (channel) {
+    // Read existing sources only: no new searches, no copies, no category-specific
+    // screening against the mixed channel, and no changes to source pool contents.
+    const rows = await db.select().from(communityVideoPools)
+      .where(inArray(communityVideoPools.roomId, [...channel.sourceRoomIds]));
+    const series = channel.sourceRoomIds.some(id => id === "WEBSER")
+      ? await db.select().from(communityWebSeriesDaily).where(eq(communityWebSeriesDaily.roomId, "WEBSER"))
+      : [];
+    return combineChannelVideos(channel.sourceRoomIds.map(sourceId => {
+      const row = rows.find(item => item.roomId === sourceId);
+      const videos: PoolItem[] = (row?.videos ?? []).filter(video => video.availableInUS === true);
+      if (sourceId === "NEWS01") {
+        // News uses its existing live-video timeline rather than a normal saved pool.
+        const schedule = parseCommunityPlaybackSchedule(row?.sourceCursors?.[COMMUNITY_PLAYBACK_SCHEDULE_KEY]);
+        for (const video of schedule?.queue ?? []) {
+          videos.push({ ...video, discoveredAtMs: schedule!.startedAtMs, availableInUS: true });
+        }
+      }
+      if (sourceId === "WEBSER") {
+        for (const selection of series) {
+          videos.push(...(selection.episodes ?? []).filter(video => video.availableInUS === true)
+            .map(video => ({ ...video, discoveredAtMs: selection.selectedAt?.getTime() ?? 0 })));
+        }
+      }
+      return videos;
+    }));
+  }
   const row = await getOrRefreshPool(roomId.toUpperCase(), apiKey, rooms, forceRefresh, pageLimit);
   return (row.videos ?? []).filter(video => video.availableInUS === true);
 }

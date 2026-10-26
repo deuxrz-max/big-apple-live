@@ -1,3 +1,5 @@
+import { UNIFIED_VIDEO_CHANNELS, unifiedVideoChannel } from "./room-video-channels";
+
 export type CommunityVideoSearchPolicy = {
   order?: "date" | "viewCount";
   publishedWithinDays?: number;
@@ -340,7 +342,7 @@ export const COMMUNITY_ROOMS: CommunityRoomConfig[] = [
 ];
 
 /** Room order and visibility for the public Directory. Hidden room configuration stays above. */
-export const DIRECTORY_COMMUNITY_ROOM_IDS = [
+export const SOURCE_COMMUNITY_ROOM_IDS = [
   "MUSIC1",
   "MOVIES",
   "COMEDY",
@@ -349,6 +351,14 @@ export const DIRECTORY_COMMUNITY_ROOM_IDS = [
   "WEBSER",
   "HIST01",
   "NEWS01",
+] as const;
+
+// Preserve existing source rooms/links. Home enters only the three combined sessions.
+COMMUNITY_ROOMS.push(...UNIFIED_VIDEO_CHANNELS.map(channel => ({
+  roomId: channel.roomId, label: channel.label, defaultVideoSearch: channel.label,
+})));
+export const DIRECTORY_COMMUNITY_ROOM_IDS = [
+  ...SOURCE_COMMUNITY_ROOM_IDS, ...UNIFIED_VIDEO_CHANNELS.map(channel => channel.roomId),
 ] as const;
 
 const DIRECTORY_ROOM_ID_SET = new Set<string>(DIRECTORY_COMMUNITY_ROOM_IDS);
@@ -361,7 +371,7 @@ export const DIRECTORY_COMMUNITY_ROOMS: CommunityRoomConfig[] = DIRECTORY_COMMUN
 
 /** Active rooms that use the rotating topic-video pool rather than a special stream/series flow. */
 export const COMMUNITY_VIDEO_POOL_ROOMS = DIRECTORY_COMMUNITY_ROOMS
-  .filter(room => !room.liveStreamPolicy && !room.dailyWebSeries);
+  .filter(room => !room.liveStreamPolicy && !room.dailyWebSeries && !unifiedVideoChannel(room.roomId));
 
 export interface CommunityParentLookup {
   communityParentId(roomId: string): string | null;
@@ -383,6 +393,7 @@ export function communityDefaultVideoSearch(roomId: string, store?: CommunityPar
   const parentRoomId = store?.communityParentId(normalizedId)?.toUpperCase() ?? normalizedId;
   const configuredRoom = COMMUNITY_ROOMS.find(room => room.roomId === parentRoomId)
     ?? COMMUNITY_ROOMS.find(room => room.roomId === normalizedId);
+  if (unifiedVideoChannel(parentRoomId)) return configuredRoom?.label ?? parentRoomId;
   // Topic-specific searches also apply to overflow children; existing rooms keep searching by their displayed name.
   if (configuredRoom && configuredRoom.defaultVideoSearch !== configuredRoom.label) {
     return configuredRoom.defaultVideoSearch;

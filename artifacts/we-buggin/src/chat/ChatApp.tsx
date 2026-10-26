@@ -203,7 +203,7 @@ export function ChatDirectory() {
     query: { queryKey: getGetLiveStreamsQueryKey(), refetchInterval: 8_000 },
   });
   const topics = ['Music', 'Movies', 'Comedy', 'Sports', 'Pro Wrestling', 'Web Series', 'History', 'News'];
-  type DirectoryRoom = { roomId: string; label: string; headcount: number; headcountSince: number; nowPlayingVideoId?: string | null; nowPlayingTitle?: string | null };
+  type DirectoryRoom = { roomId: string; label: string; headcount: number; headcountSince: number; nowPlayingVideoId?: string | null; nowPlayingTitle?: string | null; nowPlayingStartedAtMs?: number | null; nowPlayingServerNowMs?: number };
   const rooms = (directory.data ?? []) as DirectoryRoom[];
   const featuredRoom = selectFeaturedRoom(rooms);
   const displayedRooms = featuredRoom

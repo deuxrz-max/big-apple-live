@@ -1481,7 +1481,9 @@ export const GetChatDirectoryResponseItem = zod.object({
   "headcount": zod.number().int().min(getChatDirectoryResponseHeadcountMin).describe('Current heartbeat-based presence count; no participant identities are exposed.'),
   "headcountSince": zod.number().int().min(getChatDirectoryResponseHeadcountSinceMin).describe('Epoch milliseconds when the room most recently reached its current headcount; used for deterministic Featured ties.'),
   "nowPlayingVideoId": zod.string().regex(getChatDirectoryResponseNowPlayingVideoIdRegExp).nullable().describe('Video currently playing in Beam TV, when a verified title is available.'),
-  "nowPlayingTitle": zod.string().max(getChatDirectoryResponseNowPlayingTitleMax).nullable()
+  "nowPlayingTitle": zod.string().max(getChatDirectoryResponseNowPlayingTitleMax).nullable(),
+  "nowPlayingStartedAtMs": zod.number().int().nullish().describe('Server epoch milliseconds when the currently playing clip began; null during an intermission.'),
+  "nowPlayingServerNowMs": zod.number().int().optional().describe('Server clock sample for synchronizing muted directory previews without joining the room or altering its timeline.')
 })
 export const GetChatDirectoryResponse = zod.array(GetChatDirectoryResponseItem)
 

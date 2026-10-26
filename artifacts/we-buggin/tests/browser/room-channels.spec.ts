@@ -1,14 +1,15 @@
 import { expect, test } from '@playwright/test';
 import { channelForDirectoryRoom, roomChannelHref } from '../../src/chat/room-channels';
+import { cauldronDisplayLevel } from '../../src/chat/cauldron-display-level';
 
 const groups = [
-  { slug: 'cafe', name: 'The Cafe', rooms: [['MUSIC1', 'Music'], ['COMEDY', 'Comedy'], ['NEWS01', 'News']] },
-  { slug: 'screening', name: 'The Screening Room', rooms: [['MOVIES', 'Movies'], ['WEBSER', 'Web Series'], ['HIST01', 'History']] },
-  { slug: 'arena', name: 'The Arena', rooms: [['SPORTS', 'Sports'], ['KIDS01', 'Pro Wrestling']] },
+  { slug: 'cafe', roomId: 'CAFE01', name: 'The Cafe' },
+  { slug: 'screening', roomId: 'SCREEN', name: 'The Screening Room' },
+  { slug: 'arena', roomId: 'ARENA1', name: 'The Arena' },
 ];
 
 for (const width of [320, 390]) {
-  test(`all eight room links return to the right group at ${width}px`, async ({ page }) => {
+  test(`three channels enter their combined room directly at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 844 });
     await page.goto('/tests/browser/harness.html?view=room-channels');
     await expect(page.locator('[data-testid^="link-channel-"]')).toHaveCount(3);
@@ -16,33 +17,15 @@ for (const width of [320, 390]) {
     if (width === 390) await page.screenshot({ path: '../../generated-artifacts/home-channels-390.png', fullPage: true });
     for (const group of groups) {
       await page.getByTestId(`link-channel-${group.slug}`).click();
-      await expect(page).toHaveURL(new RegExp(`/home\\?channel=${group.slug}$`));
-      await expect(page.getByTestId('text-channel-title')).toHaveText(group.name);
-      await expect(page.locator('[data-testid^="card-home-room-"]')).toHaveCount(group.rooms.length);
-      if (width === 390 && group.slug === 'cafe') {
-        await page.screenshot({ path: '../../generated-artifacts/cafe-channel-390.png', fullPage: true });
-      }
-      for (const [id, name] of group.rooms) {
-        const card = page.getByTestId(`card-home-room-${id}`);
-        await expect(card).toHaveAttribute('href', `/rooms/${id}`);
-        const bounds = await card.boundingBox();
-        expect(bounds!.x).toBeGreaterThanOrEqual(0);
-        expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
-        await card.click();
-        await expect(page).toHaveURL(new RegExp(`/rooms/${id}$`));
-        await expect(page.getByRole('heading', { name: name!, exact: true })).toBeVisible();
-        await page.getByTestId('link-back-to-channel').click();
-        await expect(page).toHaveURL(new RegExp(`/home\\?channel=${group.slug}$`));
-        await expect(page.getByTestId('text-channel-title')).toHaveText(group.name);
-      }
-      await page.getByTestId('link-back-to-channels').click();
+      await expect(page).toHaveURL(new RegExp(`/rooms/${group.roomId}$`));
+      await expect(page.getByRole('heading', { name: group.name, exact: true })).toBeVisible();
+      await expect(page.locator('[data-testid^="card-home-room-"]')).toHaveCount(0);
+      await expect(page.getByTestId('link-back-to-channel')).toHaveText('Back to channels');
+      await page.getByTestId('link-back-to-channel').click();
       await expect(page.locator('[data-testid^="link-channel-"]')).toHaveCount(3);
     }
-    // Browser history restores the channel selection too.
+    // Browser history returns straight from a channel session to Home.
     await page.getByTestId('link-channel-arena').click();
-    await page.getByTestId('card-home-room-SPORTS').click();
-    await page.goBack();
-    await expect(page.getByTestId('text-channel-title')).toHaveText('The Arena');
     await page.goBack();
     await expect(page.getByTestId('section-room-channels')).toBeVisible();
   });
@@ -50,17 +33,17 @@ for (const width of [320, 390]) {
 
 test('channel deep links survive reload and invalid channels show the groups', async ({ page }) => {
   await page.goto('/tests/browser/harness.html?view=room-channels&channel=screening');
-  await expect(page.getByTestId('text-channel-title')).toHaveText('The Screening Room');
-  await page.reload();
-  await expect(page.getByTestId('text-channel-title')).toHaveText('The Screening Room');
-  await expect(page.locator('[data-testid^="card-home-room-"]')).toHaveCount(3);
+  await expect(page).toHaveURL(/\/rooms\/SCREEN$/);
+  await expect(page.getByRole('heading', { name: 'The Screening Room', exact: true })).toBeVisible();
+  await expect(page.locator('[data-testid^="card-home-room-"]')).toHaveCount(0);
   await page.goto('/tests/browser/harness.html?view=room-channels&channel=missing');
   await expect(page.getByTestId('section-room-channels')).toBeVisible();
 });
 
 test('overflow rooms keep their parent channel and unrelated rooms are not reassigned', () => {
   expect(channelForDirectoryRoom('MUSIC12')?.slug).toBe('cafe');
-  expect(roomChannelHref('WEBSER2')).toBe('/home?channel=screening');
+  expect(roomChannelHref('WEBSER2')).toBe('/rooms/SCREEN');
+  expect(roomChannelHref('CAFE012')).toBe('/home');
   expect(channelForDirectoryRoom('KIDS012')?.slug).toBe('arena');
   expect(roomChannelHref('private-user-room')).toBeNull();
   expect(roomChannelHref('CHESS1')).toBeNull();
@@ -69,38 +52,39 @@ test('overflow rooms keep their parent channel and unrelated rooms are not reass
 
 test('signed-out landing shows three channels and retains sign-in before room entry', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.route('**/api/account/chat/**', route => route.fulfill({ json: groups.flatMap(group =>
-    group.rooms.map(([roomId, label]) => ({ roomId, label, headcount: 0, headcountSince: 0 }))) }));
+  await page.route('**/api/account/chat/**', route => route.fulfill({ json: groups.map(group =>
+    ({ roomId: group.roomId, label: group.name, headcount: 0, headcountSince: 0 })) }));
   await page.goto('/tests/browser/harness.html?view=public-channels');
   await expect(page.locator('[data-testid^="link-channel-"]')).toHaveCount(3);
-  await expect(page.getByTestId('link-channel-cafe')).toHaveAttribute('href', '/?channel=cafe');
-  await page.getByTestId('link-channel-cafe').click();
-  await expect(page.getByTestId('text-channel-title')).toHaveText('The Cafe');
-  await expect(page.locator('[data-testid^="card-home-room-"]')).toHaveCount(3);
-  await expect(page.getByTestId('card-home-room-MUSIC1')).toHaveAttribute('href', '/sign-in');
-  await page.getByTestId('link-back-to-channels').click();
-  await expect(page.getByTestId('section-room-channels')).toBeVisible();
+  for (const group of groups) {
+    await expect(page.getByTestId(`link-channel-${group.slug}`)).toHaveAttribute('href', '/sign-in');
+  }
+  await expect(page.locator('[data-testid^="card-home-room-"]')).toHaveCount(0);
 });
 
-test('homepage Cauldron is below all three channels, transparent, silent and absent inside groups', async ({ page }) => {
+test('homepage Cauldron is below all three channels, transparent, silent and absent inside groups', async ({ page, request }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const requests: string[] = [];
   page.on('request', request => { requests.push(request.url()); });
-  await page.route('**/api/gift-media/system-cauldron/webm', route =>
-    route.fulfill({ path: '/tmp/deux-home-cauldron.webm', contentType: 'video/webm' }));
+  const mediaResponse = await request.get('http://127.0.0.1:80/api/gift-media/system-cauldron/still/0');
+  expect(mediaResponse.ok()).toBe(true);
+  const media = await mediaResponse.body();
+  await page.route('**/api/gift-media/system-cauldron/still/0', route =>
+    route.fulfill({ body: media, contentType: 'image/png' }));
   await page.goto('/tests/browser/harness.html?view=room-channels');
   const cauldron = page.getByTestId('homepage-cauldron');
   await cauldron.scrollIntoViewIfNeeded();
-  const video = page.getByTestId('homepage-cauldron-video');
-  await expect.poll(() => video.evaluate(el => (el as HTMLVideoElement).videoWidth)).toBe(266);
-  await expect.poll(() => video.evaluate(el => (el as HTMLVideoElement).currentTime)).toBeGreaterThan(0);
+  const image = page.getByTestId('homepage-cauldron-still');
+  await expect.poll(() => image.evaluate(el => (el as HTMLImageElement).naturalWidth)).toBe(266);
+  await expect(cauldron).toHaveAttribute('data-display-level', '0');
+  await expect(cauldron.locator('video')).toHaveCount(0);
   const details = await cauldron.evaluate(el => {
-    const media = el.querySelector('video')!;
+    const media = el.querySelector('img')!;
     const style = getComputedStyle(el);
     const children = Array.from(el.closest('ul')!.children);
     const index = children.indexOf(el.parentElement!);
     const canvas = document.createElement('canvas');
-    canvas.width = media.videoWidth; canvas.height = media.videoHeight;
+    canvas.width = media.naturalWidth; canvas.height = media.naturalHeight;
     const ctx = canvas.getContext('2d')!;
     ctx.drawImage(media, 0, 0);
     const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
@@ -109,13 +93,158 @@ test('homepage Cauldron is below all three channels, transparent, silent and abs
     return { index, before: children.slice(0, index).filter(child => child.querySelector('[data-testid^="link-channel-"]')).length,
       nextIsLaunch: children[index + 1]?.classList.contains('st-home-go-live'),
       background: style.backgroundColor, border: style.borderTopWidth, shadow: style.boxShadow,
-      muted: media.muted, transparent };
+      transparent };
   });
   expect(details).toMatchObject({ index: 3, before: 3, nextIsLaunch: true,
-    background: 'rgba(0, 0, 0, 0)', border: '0px', shadow: 'none', muted: true });
+    background: 'rgba(0, 0, 0, 0)', border: '0px', shadow: 'none' });
   expect(details.transparent).toBeGreaterThan(1000);
   expect(requests.some(url => url.includes('4e90ea00-98be-4b14-a033-7dfb4138a4cb'))).toBe(false);
   await cauldron.screenshot({ path: '../../generated-artifacts/homepage-cauldron-390.png' });
   await page.getByTestId('link-channel-cafe').click();
   await expect(page.getByTestId('homepage-cauldron')).toHaveCount(0);
+  await page.getByTestId('link-back-to-channel').click();
+  await expect(page.getByTestId('homepage-cauldron')).toHaveAttribute('data-display-level', '0');
+  await expect(page.getByTestId('homepage-cauldron-still')).toHaveAttribute('src', /\/still\/0$/);
+  // Refresh the actual public Home, not the fixture's /home URL (which loses
+  // its harness-only view selector on reload).
+  await page.goto('http://127.0.0.1:80/');
+  await expect(page.getByTestId('homepage-cauldron-still')).toHaveAttribute('src', /\/still\/0$/);
+  await page.reload();
+  await expect(page.getByTestId('homepage-cauldron-still')).toHaveAttribute('src', /\/still\/0$/);
+  await expect.poll(() => page.getByTestId('homepage-cauldron-still')
+    .evaluate(el => (el as HTMLImageElement).naturalWidth)).toBe(266);
+  expect(requests.some(url => /system-cauldron\/(?:webm|safari)$/.test(url))).toBe(false);
 });
+
+test('supplied progress holds partial and full stills, with no time-driven fill or animated fallback', async ({ page, request }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route('**/api/gift-media/system-cauldron/still/*', async route => {
+    const level = new URL(route.request().url()).pathname.split('/').pop();
+    const response = await request.get(`http://127.0.0.1:80/api/gift-media/system-cauldron/still/${level}`);
+    await route.fulfill({ body: await response.body(), contentType: 'image/png' });
+  });
+  await page.goto('/tests/browser/harness.html?view=cauldron-hold');
+  const wrapper = page.getByTestId('homepage-cauldron');
+  const image = page.getByTestId('homepage-cauldron-still');
+  await expect(image).toHaveAttribute('src', /\/still\/0$/);
+  await expect.poll(() => image.evaluate(el => (el as HTMLImageElement).naturalWidth)).toBe(266);
+  const hash = () => image.evaluate(el => {
+    const img = el as HTMLImageElement;
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+    canvas.getContext('2d')!.drawImage(img, 0, 0);
+    return canvas.toDataURL();
+  });
+  const empty = await hash();
+  await page.waitForTimeout(6500);
+  expect(await hash()).toBe(empty);
+  for (const level of [25, 50, 75, 100]) {
+    await page.getByRole('button', { name: `${level}% fixture input`, exact: true }).click();
+    await expect(wrapper).toHaveAttribute('data-display-level', String(level));
+    await expect(image).toHaveAttribute('src', new RegExp(`/still/${level}$`));
+    await expect.poll(() => image.evaluate(el => (el as HTMLImageElement).naturalWidth)).toBe(266);
+  }
+  const held = await hash();
+  expect(held).not.toBe(empty);
+  await page.waitForTimeout(6500); // Longer than the entire original clip.
+  expect(await hash()).toBe(held);
+  await expect(wrapper.locator('video')).toHaveCount(0);
+  await page.getByRole('button', { name: '0% fixture input', exact: true }).click();
+  await expect(image).toHaveAttribute('src', /\/still\/0$/);
+});
+
+test('missing or invalid progress cannot invent filling', () => {
+  for (const value of [undefined, null, NaN, Infinity, -10]) expect(cauldronDisplayLevel(value)).toBe(0);
+  expect(cauldronDisplayLevel(25)).toBe(25);
+  expect(cauldronDisplayLevel(50.4)).toBe(50);
+  expect(cauldronDisplayLevel(200)).toBe(100);
+});
+
+/* MOCK YouTube IFrame API: records commands; no real network playback. */
+const mockYoutube = `(() => {
+  window.__ytLog = []; window.__ytPlayers = [];
+  const log = (id, cmd, arg) => window.__ytLog.push({ id, cmd, arg });
+  window.YT = { Player: function (target, opts) {
+    const id = opts.videoId; let state = -1; const self = this;
+    const frame = document.createElement('iframe'); frame.setAttribute('data-mock-yt', id); target.replaceWith(frame);
+    Object.assign(this, {
+      mute() { log(id, 'mute'); }, unMute() { log(id, 'unMute'); }, isMuted() { return true; }, setVolume(v) { log(id, 'setVolume', v); },
+      playVideo() { log(id, 'play'); state = 1; opts.events.onStateChange?.({ data: 1, target: self }); },
+      pauseVideo() { log(id, 'pause'); state = 2; }, stopVideo() { log(id, 'stop'); },
+      destroy() { log(id, 'destroy'); frame.remove(); }, seekTo(s) { log(id, 'seek', Math.round(s)); },
+      getDuration() { return 600; }, getCurrentTime() { return 0; }, getPlayerState() { return state; },
+      loadVideoById() {}, loadPlaylist() {}, setLoop() {}, unloadModule() {},
+    });
+    window.__ytPlayers.push(this);
+    setTimeout(() => opts.events.onReady?.({ target: self }), 10);
+  } };
+})();`;
+
+test('channel previews play muted only when visible, pause off-screen and destroy on route change (mock player)', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(mockYoutube);
+  await page.goto('/tests/browser/harness.html?view=room-channels&previews=1');
+  await expect(page.locator('iframe[data-mock-yt="mockvid0"]')).toHaveCount(1);
+  await expect(page.getByTestId('preview-channel-cafe')).toHaveAttribute('data-state', 'playing');
+  await expect(page.getByTestId('status-preview-arena')).toHaveText('Intermission');
+  const log = () => page.evaluate(() => (window as unknown as { __ytLog: { id: string; cmd: string; arg?: number }[] }).__ytLog);
+  let entries = await log();
+  expect(entries.some(e => e.cmd === 'unMute')).toBe(false);
+  expect(entries.filter(e => e.id === 'mockvid0' && e.cmd === 'mute').length).toBeGreaterThan(0);
+  expect(entries.find(e => e.id === 'mockvid0' && e.cmd === 'seek')?.arg).toBeGreaterThanOrEqual(29);
+  // Taps reach the channel link, not the iframe.
+  expect(await page.locator('.rc-preview').first().evaluate(el => getComputedStyle(el).pointerEvents)).toBe('none');
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.setViewportSize({ width: 390, height: 120 });
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await expect.poll(async () => (await log()).filter(e => e.id === 'mockvid0').at(-1)?.cmd).toBe('pause');
+  const initialSeeks = (await log()).filter(e => e.id === 'mockvid0' && e.cmd === 'seek').length;
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByTestId('link-channel-cafe').scrollIntoViewIfNeeded();
+  await expect.poll(async () => (await log()).filter(e => e.id === 'mockvid0' && e.cmd === 'seek').length)
+    .toBeGreaterThan(initialSeeks);
+  await page.getByTestId('link-channel-cafe').click();
+  await expect(page).toHaveURL(/\/rooms\/CAFE01$/);
+  entries = await log();
+  expect(entries.some(e => e.id === 'mockvid0' && e.cmd === 'destroy')).toBe(true);
+  await expect(page.locator('iframe[data-mock-yt]')).toHaveCount(0);
+  expect(entries.some(e => e.cmd === 'unMute')).toBe(false);
+});
+
+test('live previews stay at the live edge even when YouTube reports a finite DVR duration (mock player)', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(mockYoutube.replace('getDuration() { return 600; }',
+    'getDuration() { return 600; }, getVideoData() { return { isLive: true }; }'));
+  await page.goto('/tests/browser/harness.html?view=room-channels&previews=1');
+  await expect(page.getByTestId('preview-channel-cafe')).toHaveAttribute('data-state', 'playing');
+  const entries = await page.evaluate(() =>
+    (window as unknown as { __ytLog: { cmd: string }[] }).__ytLog);
+  expect(entries.some(entry => entry.cmd === 'seek' || entry.cmd === 'unMute')).toBe(false);
+});
+
+test('provider errors reveal the poster and status instead of covering them with an iframe error (mock player)', async ({ page }) => {
+  await page.addInitScript(mockYoutube.replace(
+    'setTimeout(() => opts.events.onReady?.({ target: self }), 10);',
+    'setTimeout(() => { opts.events.onReady?.({ target: self }); opts.events.onError?.({ target: self }); }, 10);'));
+  await page.goto('/tests/browser/harness.html?view=room-channels&previews=1');
+  const preview = page.getByTestId('preview-channel-cafe');
+  await expect(preview).toHaveAttribute('data-state', 'unavailable');
+  await expect(page.getByTestId('status-preview-cafe')).toHaveText('Preview unavailable');
+  await expect(preview.locator('.rc-preview-poster')).toBeVisible();
+  await expect(preview.locator('.rc-preview-player')).toHaveCSS('visibility', 'hidden');
+});
+
+for (const width of [320, 390]) {
+  test(`channel cards keep historic compact two-column .88/1 proportions at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('/tests/browser/harness.html?view=room-channels');
+    const boxes = await Promise.all(['cafe', 'screening', 'arena'].map(s => page.getByTestId(`link-channel-${s}`).boundingBox()));
+    for (const b of boxes) expect(Math.abs(b!.width / b!.height - 0.88)).toBeLessThan(0.02);
+    expect(Math.abs(boxes[0]!.width - boxes[1]!.width)).toBeLessThan(1);
+    expect(Math.abs(boxes[0]!.y - boxes[1]!.y)).toBeLessThan(1);
+    expect(boxes[2]!.y).toBeGreaterThan(boxes[0]!.y + boxes[0]!.height);
+    const cauldron = await page.getByTestId('homepage-cauldron').boundingBox();
+    expect(cauldron!.y).toBeGreaterThanOrEqual(boxes[2]!.y + boxes[2]!.height - 1);
+    expect(await page.getByTestId('link-channel-cafe').evaluate(el => getComputedStyle(el).borderRadius)).toBe('0px');
+  });
+}

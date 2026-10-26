@@ -1,4 +1,5 @@
 import { test } from "node:test";
+import { unifiedVideoChannel } from "./room-video-channels";
 import assert from "node:assert/strict";
 import { TrackSource } from "livekit-server-sdk";
 import type { EmojiIdentity } from "@workspace/api-zod";
@@ -93,6 +94,31 @@ function addMember(store: RoomStore, roomId: string, accountId: string) {
   return store.join(roomId, accountId, { accountId, identity });
 }
 
+test("directory previews expose the current server timeline without joining or resetting any channel", () => {
+  let now = 42_000;
+  const rooms = new RoomStore();
+  const beam = new UniversityVideoBeamStore(rooms, () => now);
+  const videos = [{ videoId: "abc12345678", title: "Current clip", channelTitle: "Test", description: null }];
+  for (const roomId of ["CAFE01", "SCREEN", "ARENA1"]) {
+    createRoom(rooms, roomId, `preview-${roomId}`);
+    assert.equal(beam.getDirectoryNowPlaying(roomId), null, "directory reads do not initialize playback");
+    const started = beam.initializeDefaultTvQueue(roomId, communityDefaultVideoSearch(roomId, rooms), videos, { abc12345678: 900_000 });
+    const first = beam.getDirectoryNowPlaying(roomId);
+    assert.ok(first && typeof first.startedAtMs === "number");
+    assert.deepEqual(first, {
+      videoId: "abc12345678", title: "Current clip",
+      startedAtMs: started.tv.startedAtMs, serverNowMs: now,
+    });
+    now += 15_000;
+    assert.equal(beam.getDirectoryNowPlaying(roomId)?.startedAtMs, first!.startedAtMs);
+    assert.equal(beam.getDirectoryNowPlaying(roomId)?.serverNowMs, now);
+    assert.equal(rooms.get(roomId).participants.length, 0, "preview does not count as room presence");
+    beam.restoreAutomaticDefaultTvQueue(roomId, videos, { abc12345678: 900_000 },
+      "abc12345678", first!.startedAtMs, now + 180_000);
+    assert.equal(beam.getDirectoryNowPlaying(roomId), null, "intermissions do not advertise a playing preview");
+  }
+});
+
 test("public topic rooms and their overflow rooms use the ownerless policy", () => {
   const rooms = new RoomStore();
   for (const item of COMMUNITY_ROOMS) {
@@ -117,6 +143,7 @@ test("public topic rooms and their overflow rooms use the ownerless policy", () 
   assert.equal(isPublicTopicRoom("NOT_A_ROOM", rooms), false);
   assert.deepEqual(DIRECTORY_COMMUNITY_ROOMS.map(room => room.label), [
     "Music", "Movies", "Comedy", "Sports", "Pro Wrestling", "Web Series", "History", "News",
+    "The Cafe", "The Screening Room", "The Arena",
   ]);
   assert.deepEqual(COMMUNITY_VIDEO_POOL_ROOMS.map(room => room.label), [
     "Music", "Movies", "Comedy", "Sports", "Pro Wrestling", "History",
@@ -540,7 +567,9 @@ test("all configured categories use their settings across overflow rooms", () =>
     assert.equal(communityDefaultVideoSearch(overflowId, rooms), query,
       `${room.label} overflow inherits the same topic search`);
     const policy = communityVideoSearchPolicy(overflowId, rooms);
-    if (room.label === "News") {
+    if (unifiedVideoChannel(room.roomId)) {
+      assert.equal(policy, null, "combined channels consume source pools, not a new category search");
+    } else if (room.label === "News") {
       assert.equal(policy?.order, "date", "News falls back to CNN's latest uploads");
       assert.equal(policy?.publishedWithinDays, undefined);
       assert.deepEqual(policy?.trustedChannelTitles, ["CNN"]);
@@ -576,7 +605,7 @@ test("all configured categories use their settings across overflow rooms", () =>
       `${room.label} overflow visibility follows the shortened Directory`,
     );
   }
-  assert.equal(COMMUNITY_ROOMS.length, 21);
+  assert.equal(COMMUNITY_ROOMS.length, 24, "retained topic configurations plus three combined channels");
   const wrestlingPolicy = communityWrestlingSearchPolicy("KIDS01", rooms);
   assert.deepEqual(wrestlingPolicy?.channels.map(channel => channel.channelTitle),
     ["All Elite Wrestling", "WWE", "TNA Wrestling", "Ring of Honor Wrestling"]);

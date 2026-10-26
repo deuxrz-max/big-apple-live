@@ -9,6 +9,7 @@ import {
 } from "./community-config";
 import { isOwnerAccount } from "./social/owner-entrance-effects-policy";
 import { universityVideoBeamStore } from "./university-video-beam";
+import { UNIFIED_VIDEO_CHANNELS } from "./room-video-channels";
 export { COMMUNITY_ROOMS, communityDefaultVideoSearch } from "./community-config";
 export async function initializeCommunities() {
   for (const entry of COMMUNITY_ROOMS) {
@@ -43,14 +44,14 @@ export async function initializeCommunities() {
 }
 export async function communityDirectory() {
   const savedRooms = await db.select().from(chatRooms);
-  const activeRoomIds = new Set<string>(DIRECTORY_COMMUNITY_ROOM_IDS);
+  const activeRoomIds = new Set<string>(UNIFIED_VIDEO_CHANNELS.map(channel => channel.roomId));
   const overflow = savedRooms.filter(room =>
     room.parentRoomId
     && activeRoomIds.has(room.parentRoomId)
     && roomStore.isCommunity(room.roomId)
     && roomStore.get(room.roomId).participants.length > 0);
   return [
-    ...DIRECTORY_COMMUNITY_ROOMS.flatMap(base => [
+    ...UNIFIED_VIDEO_CHANNELS.flatMap(base => [
       { roomId: base.roomId, label: base.label },
       ...overflow.filter(r => r.parentRoomId === base.roomId)
       .sort((a, b) => Number(a.overflowNumber) - Number(b.overflowNumber))
@@ -64,6 +65,8 @@ export async function communityDirectory() {
       headcountSince: roomStore.communityHeadcountSince(r.roomId),
       nowPlayingVideoId: nowPlaying?.videoId ?? null,
       nowPlayingTitle: nowPlaying?.title ?? null,
+      nowPlayingStartedAtMs: nowPlaying?.startedAtMs ?? null,
+      nowPlayingServerNowMs: nowPlaying?.serverNowMs ?? Date.now(),
     };
   });
 }
