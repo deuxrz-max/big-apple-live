@@ -97,6 +97,10 @@ import type {
   PinkCardEntry,
   PinkCardPreference,
   PinkCardReward,
+  PkBattleMediaSession,
+  PkBattleState,
+  PkLeaderboard,
+  PkSearchCancellation,
   ProfileEnvelope,
   ProfileInput,
   ProfilePhotoResult,
@@ -2007,6 +2011,382 @@ export const useSendLiveStreamChatMessage = <TError = ErrorType<InvalidInputResp
       > => {
       return useMutation(getSendLiveStreamChatMessageMutationOptions(options));
     }
+
+export const getSearchPkOpponentUrl = (streamId: string,) => {
+
+
+
+
+  return `/api/account/live-streams/${streamId}/pk/search`
+}
+
+/**
+ * @summary Search for a random live broadcaster for a one-on-one PK battle
+ */
+export const searchPkOpponent = async (streamId: string, options?: Parameters<typeof customFetch>[1]): Promise<PkBattleState> => {
+
+  return customFetch<PkBattleState>(getSearchPkOpponentUrl(streamId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getSearchPkOpponentMutationKey = () => ['searchPkOpponent'] as const;
+
+export const getSearchPkOpponentMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof searchPkOpponent>>, TError,SearchPkOpponentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof searchPkOpponent>>, TError,SearchPkOpponentMutationVariables, TContext> => {
+
+const mutationKey = getSearchPkOpponentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof searchPkOpponent>>, SearchPkOpponentMutationVariables> = (props) => {
+          const {streamId} = props ?? {};
+
+          return  searchPkOpponent(streamId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SearchPkOpponentMutationResult = NonNullable<Awaited<ReturnType<typeof searchPkOpponent>>>
+
+    export type SearchPkOpponentMutationError = ErrorType<void>
+    export type SearchPkOpponentMutationVariables = {streamId: string}
+
+    /**
+ * @summary Search for a random live broadcaster for a one-on-one PK battle
+ */
+export const useSearchPkOpponent = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof searchPkOpponent>>, TError,SearchPkOpponentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof searchPkOpponent>>,
+        TError,
+        SearchPkOpponentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSearchPkOpponentMutationOptions(options));
+    }
+
+export const getCancelPkOpponentSearchUrl = (streamId: string,) => {
+
+
+
+
+  return `/api/account/live-streams/${streamId}/pk/search`
+}
+
+/**
+ * @summary Cancel an active PK opponent search
+ */
+export const cancelPkOpponentSearch = async (streamId: string, options?: Parameters<typeof customFetch>[1]): Promise<PkSearchCancellation> => {
+
+  return customFetch<PkSearchCancellation>(getCancelPkOpponentSearchUrl(streamId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getCancelPkOpponentSearchMutationKey = () => ['cancelPkOpponentSearch'] as const;
+
+export const getCancelPkOpponentSearchMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelPkOpponentSearch>>, TError,CancelPkOpponentSearchMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof cancelPkOpponentSearch>>, TError,CancelPkOpponentSearchMutationVariables, TContext> => {
+
+const mutationKey = getCancelPkOpponentSearchMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancelPkOpponentSearch>>, CancelPkOpponentSearchMutationVariables> = (props) => {
+          const {streamId} = props ?? {};
+
+          return  cancelPkOpponentSearch(streamId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CancelPkOpponentSearchMutationResult = NonNullable<Awaited<ReturnType<typeof cancelPkOpponentSearch>>>
+
+    export type CancelPkOpponentSearchMutationError = ErrorType<void>
+    export type CancelPkOpponentSearchMutationVariables = {streamId: string}
+
+    /**
+ * @summary Cancel an active PK opponent search
+ */
+export const useCancelPkOpponentSearch = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelPkOpponentSearch>>, TError,CancelPkOpponentSearchMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof cancelPkOpponentSearch>>,
+        TError,
+        CancelPkOpponentSearchMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCancelPkOpponentSearchMutationOptions(options));
+    }
+
+export const getGetPkBattleStateUrl = (streamId: string,) => {
+
+
+
+
+  return `/api/account/live-streams/${streamId}/pk/state`
+}
+
+/**
+ * @summary Read PK matchmaking, battle timer, score and top gifters
+ */
+export const getPkBattleState = async (streamId: string, options?: Parameters<typeof customFetch>[1]): Promise<PkBattleState> => {
+
+  return customFetch<PkBattleState>(getGetPkBattleStateUrl(streamId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPkBattleStateQueryKey = (streamId: string,) => {
+    return [
+    `/api/account/live-streams/${streamId}/pk/state`
+    ] as const;
+    }
+
+
+export const getGetPkBattleStateQueryOptions = <TData = Awaited<ReturnType<typeof getPkBattleState>>, TError = ErrorType<void>>(streamId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPkBattleState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPkBattleStateQueryKey(streamId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPkBattleState>>> = ({ signal }) => getPkBattleState(streamId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: streamId !== null && streamId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPkBattleState>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPkBattleStateQueryResult = NonNullable<Awaited<ReturnType<typeof getPkBattleState>>>
+export type GetPkBattleStateQueryError = ErrorType<void>
+
+
+/**
+ * @summary Read PK matchmaking, battle timer, score and top gifters
+ */
+
+export function useGetPkBattleState<TData = Awaited<ReturnType<typeof getPkBattleState>>, TError = ErrorType<void>>(
+ streamId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPkBattleState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPkBattleStateQueryOptions(streamId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getJoinPkBattleMediaUrl = (streamId: string,) => {
+
+
+
+
+  return `/api/account/live-streams/${streamId}/pk/session`
+}
+
+/**
+ * @summary Join the shared split-screen LiveKit room for an active PK battle
+ */
+export const joinPkBattleMedia = async (streamId: string, options?: Parameters<typeof customFetch>[1]): Promise<PkBattleMediaSession> => {
+
+  return customFetch<PkBattleMediaSession>(getJoinPkBattleMediaUrl(streamId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getJoinPkBattleMediaMutationKey = () => ['joinPkBattleMedia'] as const;
+
+export const getJoinPkBattleMediaMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinPkBattleMedia>>, TError,JoinPkBattleMediaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof joinPkBattleMedia>>, TError,JoinPkBattleMediaMutationVariables, TContext> => {
+
+const mutationKey = getJoinPkBattleMediaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof joinPkBattleMedia>>, JoinPkBattleMediaMutationVariables> = (props) => {
+          const {streamId} = props ?? {};
+
+          return  joinPkBattleMedia(streamId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type JoinPkBattleMediaMutationResult = NonNullable<Awaited<ReturnType<typeof joinPkBattleMedia>>>
+
+    export type JoinPkBattleMediaMutationError = ErrorType<void>
+    export type JoinPkBattleMediaMutationVariables = {streamId: string}
+
+    /**
+ * @summary Join the shared split-screen LiveKit room for an active PK battle
+ */
+export const useJoinPkBattleMedia = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinPkBattleMedia>>, TError,JoinPkBattleMediaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof joinPkBattleMedia>>,
+        TError,
+        JoinPkBattleMediaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getJoinPkBattleMediaMutationOptions(options));
+    }
+
+export const getGetPkLeaderboardUrl = () => {
+
+
+
+
+  return `/api/social/pk/leaderboard`
+}
+
+/**
+ * @summary Get weekly broadcaster PK wins and longest win streak
+ */
+export const getPkLeaderboard = async ( options?: Parameters<typeof customFetch>[1]): Promise<PkLeaderboard> => {
+
+  return customFetch<PkLeaderboard>(getGetPkLeaderboardUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPkLeaderboardQueryKey = () => {
+    return [
+    `/api/social/pk/leaderboard`
+    ] as const;
+    }
+
+
+export const getGetPkLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getPkLeaderboard>>, TError = ErrorType<SessionUnauthorizedResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPkLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPkLeaderboardQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPkLeaderboard>>> = ({ signal }) => getPkLeaderboard({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPkLeaderboard>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPkLeaderboardQueryResult = NonNullable<Awaited<ReturnType<typeof getPkLeaderboard>>>
+export type GetPkLeaderboardQueryError = ErrorType<SessionUnauthorizedResponse>
+
+
+/**
+ * @summary Get weekly broadcaster PK wins and longest win streak
+ */
+
+export function useGetPkLeaderboard<TData = Awaited<ReturnType<typeof getPkLeaderboard>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPkLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPkLeaderboardQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getEndLiveStreamUrl = (streamId: string,) => {
 

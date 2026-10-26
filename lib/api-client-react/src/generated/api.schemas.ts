@@ -1112,6 +1112,139 @@ export interface LiveStreamEnded {
   ended: boolean;
 }
 
+export type PkBattleStateState = typeof PkBattleStateState[keyof typeof PkBattleStateState];
+
+
+export const PkBattleStateState = {
+  idle: 'idle',
+  searching: 'searching',
+  timed_out: 'timed_out',
+  battle: 'battle',
+} as const;
+
+export type PkBattleStatus = typeof PkBattleStatus[keyof typeof PkBattleStatus];
+
+
+export const PkBattleStatus = {
+  countdown: 'countdown',
+  active: 'active',
+  finished: 'finished',
+} as const;
+
+export type PkBattlePlayerSide = typeof PkBattlePlayerSide[keyof typeof PkBattlePlayerSide];
+
+
+export const PkBattlePlayerSide = {
+  A: 'A',
+  B: 'B',
+} as const;
+
+export interface PkBattlePlayer {
+  /** @pattern ^[a-f0-9]{32}$ */
+  streamId: string;
+  /** @maxLength 40 */
+  username: string;
+  /** @maxLength 80 */
+  displayName: string;
+  side: PkBattlePlayerSide;
+}
+
+/**
+ * @nullable
+ */
+export type PkBattleFinishReason = typeof PkBattleFinishReason[keyof typeof PkBattleFinishReason] | null;
+
+
+export const PkBattleFinishReason = {
+  time: 'time',
+  'opponent-left': 'opponent-left',
+} as const;
+
+export interface PkBattleTopGifter {
+  /** @maxLength 40 */
+  username: string;
+  /** @maxLength 80 */
+  displayName: string;
+  /** @minimum 0 */
+  coins: number;
+}
+
+export interface PkBattle {
+  id: string;
+  status: PkBattleStatus;
+  sideA: PkBattlePlayer;
+  sideB: PkBattlePlayer;
+  /** @minimum 0 */
+  startsAtMs: number;
+  /** @minimum 0 */
+  endsAtMs: number;
+  /** @minimum 0 */
+  bonusStartAtMs: number;
+  /** @minimum 0 */
+  bonusEndAtMs: number;
+  /** @minimum 0 */
+  scoreA: number;
+  /** @minimum 0 */
+  scoreB: number;
+  /**
+     * @maxLength 40
+     * @nullable
+     */
+  winnerUsername: string | null;
+  /** @nullable */
+  finishReason: PkBattleFinishReason;
+  /** @maxItems 3 */
+  topGiftersA: PkBattleTopGifter[];
+  /** @maxItems 3 */
+  topGiftersB: PkBattleTopGifter[];
+}
+
+export interface PkBattleState {
+  state: PkBattleStateState;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  searchExpiresAtMs: number | null;
+  battle: PkBattle | null;
+}
+
+export interface PkSearchCancellation {
+  cancelled: boolean;
+}
+
+export type PkBattleMediaSessionRole = typeof PkBattleMediaSessionRole[keyof typeof PkBattleMediaSessionRole];
+
+
+export const PkBattleMediaSessionRole = {
+  host: 'host',
+  viewer: 'viewer',
+} as const;
+
+export interface PkBattleMediaSession {
+  url: string;
+  token: string;
+  role: PkBattleMediaSessionRole;
+  /** @maxLength 80 */
+  identity: string;
+}
+
+export interface PkLeaderboardPerson {
+  /** @maxLength 40 */
+  username: string;
+  /** @maxLength 80 */
+  displayName: string;
+  /** @minimum 0 */
+  wins: number;
+  /** @minimum 0 */
+  longestWinStreak: number;
+}
+
+export interface PkLeaderboard {
+  weekStartsAt: string;
+  people: PkLeaderboardPerson[];
+}
+
 export type UniversityVideoBeamTokenInputRole = typeof UniversityVideoBeamTokenInputRole[keyof typeof UniversityVideoBeamTokenInputRole];
 
 
@@ -2344,6 +2477,139 @@ export interface LiveStreamChatMessage4b96100 {
 
 export interface LiveStreamEnded4b96100 {
   ended: boolean;
+}
+
+export type PkBattleState4b96100State = typeof PkBattleState4b96100State[keyof typeof PkBattleState4b96100State];
+
+
+export const PkBattleState4b96100State = {
+  idle: 'idle',
+  searching: 'searching',
+  timed_out: 'timed_out',
+  battle: 'battle',
+} as const;
+
+export type PkBattle4b96100Status = typeof PkBattle4b96100Status[keyof typeof PkBattle4b96100Status];
+
+
+export const PkBattle4b96100Status = {
+  countdown: 'countdown',
+  active: 'active',
+  finished: 'finished',
+} as const;
+
+export type PkBattlePlayer4b96100Side = typeof PkBattlePlayer4b96100Side[keyof typeof PkBattlePlayer4b96100Side];
+
+
+export const PkBattlePlayer4b96100Side = {
+  A: 'A',
+  B: 'B',
+} as const;
+
+export interface PkBattlePlayer4b96100 {
+  /** @pattern ^[a-f0-9]{32}$ */
+  streamId: string;
+  /** @maxLength 40 */
+  username: string;
+  /** @maxLength 80 */
+  displayName: string;
+  side: PkBattlePlayer4b96100Side;
+}
+
+/**
+ * @nullable
+ */
+export type PkBattle4b96100FinishReason = typeof PkBattle4b96100FinishReason[keyof typeof PkBattle4b96100FinishReason] | null;
+
+
+export const PkBattle4b96100FinishReason = {
+  time: 'time',
+  'opponent-left': 'opponent-left',
+} as const;
+
+export interface PkBattleTopGifter4b96100 {
+  /** @maxLength 40 */
+  username: string;
+  /** @maxLength 80 */
+  displayName: string;
+  /** @minimum 0 */
+  coins: number;
+}
+
+export interface PkBattle4b96100 {
+  id: string;
+  status: PkBattle4b96100Status;
+  sideA: PkBattlePlayer4b96100;
+  sideB: PkBattlePlayer4b96100;
+  /** @minimum 0 */
+  startsAtMs: number;
+  /** @minimum 0 */
+  endsAtMs: number;
+  /** @minimum 0 */
+  bonusStartAtMs: number;
+  /** @minimum 0 */
+  bonusEndAtMs: number;
+  /** @minimum 0 */
+  scoreA: number;
+  /** @minimum 0 */
+  scoreB: number;
+  /**
+     * @maxLength 40
+     * @nullable
+     */
+  winnerUsername: string | null;
+  /** @nullable */
+  finishReason: PkBattle4b96100FinishReason;
+  /** @maxItems 3 */
+  topGiftersA: PkBattleTopGifter4b96100[];
+  /** @maxItems 3 */
+  topGiftersB: PkBattleTopGifter4b96100[];
+}
+
+export interface PkBattleState4b96100 {
+  state: PkBattleState4b96100State;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  searchExpiresAtMs: number | null;
+  battle: PkBattle4b96100 | null;
+}
+
+export interface PkSearchCancellation4b96100 {
+  cancelled: boolean;
+}
+
+export type PkBattleMediaSession4b96100Role = typeof PkBattleMediaSession4b96100Role[keyof typeof PkBattleMediaSession4b96100Role];
+
+
+export const PkBattleMediaSession4b96100Role = {
+  host: 'host',
+  viewer: 'viewer',
+} as const;
+
+export interface PkBattleMediaSession4b96100 {
+  url: string;
+  token: string;
+  role: PkBattleMediaSession4b96100Role;
+  /** @maxLength 80 */
+  identity: string;
+}
+
+export interface PkLeaderboardPerson4b96100 {
+  /** @maxLength 40 */
+  username: string;
+  /** @maxLength 80 */
+  displayName: string;
+  /** @minimum 0 */
+  wins: number;
+  /** @minimum 0 */
+  longestWinStreak: number;
+}
+
+export interface PkLeaderboard4b96100 {
+  weekStartsAt: string;
+  people: PkLeaderboardPerson4b96100[];
 }
 
 export type UniversityVideoBeamTokenInput4b96100Role = typeof UniversityVideoBeamTokenInput4b96100Role[keyof typeof UniversityVideoBeamTokenInput4b96100Role];

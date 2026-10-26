@@ -390,6 +390,86 @@ paths:
         "401": { $ref: "#/components/responses/SessionUnauthorized" }
         "403": { description: "Chat may be muted, account access may be restricted, or caller may not be in the stream" }
         "404": { description: Livestream is no longer active }
+  /account/live-streams/{streamId}/pk/search:
+    post:
+      operationId: searchPkOpponent
+      tags: [video]
+      summary: Search for a random live broadcaster for a one-on-one PK battle
+      security:
+        - AccountSession: []
+      parameters:
+        - { $ref: "#/components/parameters/LiveStreamId" }
+      responses:
+        "200":
+          description: Current search or matched battle state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PkBattleState" }
+        "403": { description: Only the active broadcaster may start matchmaking }
+        "409": { description: The broadcaster is already searching or in a battle }
+    delete:
+      operationId: cancelPkOpponentSearch
+      tags: [video]
+      summary: Cancel an active PK opponent search
+      security:
+        - AccountSession: []
+      parameters:
+        - { $ref: "#/components/parameters/LiveStreamId" }
+      responses:
+        "200":
+          description: Search cancellation result
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PkSearchCancellation" }
+        "403": { description: Only the broadcaster may cancel this search }
+  /account/live-streams/{streamId}/pk/state:
+    get:
+      operationId: getPkBattleState
+      tags: [video]
+      summary: Read PK matchmaking, battle timer, score and top gifters
+      security:
+        - AccountSession: []
+      parameters:
+        - { $ref: "#/components/parameters/LiveStreamId" }
+      responses:
+        "200":
+          description: Current PK state for the live broadcast
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PkBattleState" }
+        "403": { description: Join the live stream before reading its PK battle }
+        "404": { description: Livestream is no longer active }
+  /account/live-streams/{streamId}/pk/session:
+    post:
+      operationId: joinPkBattleMedia
+      tags: [video]
+      summary: Join the shared split-screen LiveKit room for an active PK battle
+      security:
+        - AccountSession: []
+      parameters:
+        - { $ref: "#/components/parameters/LiveStreamId" }
+      responses:
+        "200":
+          description: Publisher token for battle broadcasters or subscriber token for viewers
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PkBattleMediaSession" }
+        "403": { description: Join the source livestream before joining its PK media room }
+        "404": { description: No active PK battle is available }
+  /social/pk/leaderboard:
+    get:
+      operationId: getPkLeaderboard
+      tags: [social]
+      summary: Get weekly broadcaster PK wins and longest win streak
+      security:
+        - AccountSession: []
+      responses:
+        "200":
+          description: Weekly PK leaderboard (Monday 3 AM Eastern reset)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PkLeaderboard" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
   /account/live-streams/{streamId}:
     delete:
       operationId: endLiveStream
@@ -2100,6 +2180,84 @@ components:
       required: [ended]
       properties:
         ended: { type: boolean }
+    PkBattleState:
+      type: object
+      required: [state, searchExpiresAtMs, battle]
+      properties:
+        state: { type: string, enum: [idle, searching, timed_out, battle] }
+        searchExpiresAtMs: { type: ["integer", "null"], minimum: 0 }
+        battle:
+          oneOf:
+            - { $ref: "#/components/schemas/PkBattle" }
+            - type: "null"
+    PkBattle:
+      type: object
+      required: [id, status, sideA, sideB, startsAtMs, endsAtMs, bonusStartAtMs, bonusEndAtMs, scoreA, scoreB, winnerUsername, finishReason, topGiftersA, topGiftersB]
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [countdown, active, finished] }
+        sideA: { $ref: "#/components/schemas/PkBattlePlayer" }
+        sideB: { $ref: "#/components/schemas/PkBattlePlayer" }
+        startsAtMs: { type: integer, minimum: 0 }
+        endsAtMs: { type: integer, minimum: 0 }
+        bonusStartAtMs: { type: integer, minimum: 0 }
+        bonusEndAtMs: { type: integer, minimum: 0 }
+        scoreA: { type: integer, minimum: 0 }
+        scoreB: { type: integer, minimum: 0 }
+        winnerUsername: { type: ["string", "null"], maxLength: 40 }
+        finishReason: { type: ["string", "null"], enum: [time, opponent-left, null] }
+        topGiftersA:
+          type: array
+          maxItems: 3
+          items: { $ref: "#/components/schemas/PkBattleTopGifter" }
+        topGiftersB:
+          type: array
+          maxItems: 3
+          items: { $ref: "#/components/schemas/PkBattleTopGifter" }
+    PkBattlePlayer:
+      type: object
+      required: [streamId, username, displayName, side]
+      properties:
+        streamId: { type: string, pattern: "^[a-f0-9]{32}$" }
+        username: { type: string, maxLength: 40 }
+        displayName: { type: string, maxLength: 80 }
+        side: { type: string, enum: [A, B] }
+    PkBattleTopGifter:
+      type: object
+      required: [username, displayName, coins]
+      properties:
+        username: { type: string, maxLength: 40 }
+        displayName: { type: string, maxLength: 80 }
+        coins: { type: integer, minimum: 0 }
+    PkSearchCancellation:
+      type: object
+      required: [cancelled]
+      properties:
+        cancelled: { type: boolean }
+    PkBattleMediaSession:
+      type: object
+      required: [url, token, role, identity]
+      properties:
+        url: { type: string, format: uri }
+        token: { type: string }
+        role: { type: string, enum: [host, viewer] }
+        identity: { type: string, maxLength: 80 }
+    PkLeaderboard:
+      type: object
+      required: [weekStartsAt, people]
+      properties:
+        weekStartsAt: { type: string, format: date-time }
+        people:
+          type: array
+          items: { $ref: "#/components/schemas/PkLeaderboardPerson" }
+    PkLeaderboardPerson:
+      type: object
+      required: [username, displayName, wins, longestWinStreak]
+      properties:
+        username: { type: string, maxLength: 40 }
+        displayName: { type: string, maxLength: 80 }
+        wins: { type: integer, minimum: 0 }
+        longestWinStreak: { type: integer, minimum: 0 }
     UniversityVideoBeamTokenInput:
       type: object
       properties:

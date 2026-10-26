@@ -46,3 +46,4 @@ export * from "./community-hangout-rewards";
 export * from "./room-card-games";
 export * from "./chess-rooms";
 export * from "./room-moderation";
+export * from "./pk-battles";

@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { useUser } from "@clerk/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Ban, Crown, Eye, Flag, FlipHorizontal, Mic, MicOff, Radio, Send, Share2, Users, Video, X } from "lucide-react";
+import { ArrowLeft, Ban, Crown, Eye, Flag, FlipHorizontal, Mic, MicOff, Radio, Send, Share2, Swords, Users, Video, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { ScreenHeader } from '@/components/app-chrome';
 import { type RemoteTrack } from "livekit-client";
 import {
-  getGetRoomQueryKey, getGetSocialBlocksQueryKey, getGetSocialMeQueryKey, getGetSocialPersonQueryKey,
-  getLiveStreams, sendLiveStreamChatMessage, useGetSocialBlocks, useGetSocialMe,
+  getGetPkBattleStateQueryKey, getGetRoomQueryKey, getGetSocialBlocksQueryKey, getGetSocialMeQueryKey, getGetSocialPersonQueryKey,
+  getLiveStreams, searchPkOpponent, cancelPkOpponentSearch, sendLiveStreamChatMessage, useGetPkBattleState, useGetSocialBlocks, useGetSocialMe,
   useCreateAccountRoom, useCreateChessRoom, useGetSocialPerson, useSetSocialRelationship,
 } from "@workspace/api-client-react";
 import type { LiveStreamEntry, LiveStreamChatMessage, RoomSession } from "@workspace/api-client-react";
@@ -20,6 +20,8 @@ import { ShinyName } from "@/components/ShinyName";
 import { saveCreds } from "@/lib/room-creds";
 import { ProfileTap } from "@/profile/QuickProfile";
 import { isLiveStreamEventVisible } from "./liveChatBlockPolicy";
+import { PkBattleStage } from "./PkBattleStage";
+import "./pk-battle.css";
 import {
   hostLiveSession, leaveViewerLiveSession, viewerLiveSession,
   type HostLiveSnapshot, type ViewerLiveSnapshot,
@@ -286,6 +288,18 @@ export function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd,
   const videoTrack = viewerState?.videoTrack ?? null;
   const audioTrack = viewerState?.audioTrack ?? null;
   const localStream = hostState?.localStream ?? null;
+  const pkState = useGetPkBattleState(streamId, {
+    query: {
+      queryKey: getGetPkBattleStateQueryKey(streamId),
+      enabled: chatReady,
+      refetchInterval: 2_000,
+      staleTime: 0,
+    },
+    request: { credentials: "include" },
+  });
+  const pkBattle = pkState.data?.state === "battle" ? pkState.data.battle : null;
+  const [pkActionError, setPkActionError] = useState("");
+  const [pkActionBusy, setPkActionBusy] = useState(false);
   const viewerCount = hostMode ? hostState?.viewerCount ?? 0 : viewerState?.viewerCount ?? 0;
   const muted = hostMode ? !hostState?.microphoneEnabled : false;
   const audioEnabled = viewerState?.audioEnabled ?? false;
@@ -452,12 +466,42 @@ export function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd,
     }
   };
   const enableStreamAudio = () => void viewerController.enableAudio();
+  const startPkSearch = async () => {
+    if (pkActionBusy) return;
+    setPkActionBusy(true);
+    setPkActionError("");
+    try {
+      await searchPkOpponent(streamId, { credentials: "include" });
+      await queryClient.invalidateQueries({ queryKey: getGetPkBattleStateQueryKey(streamId) });
+    } catch (failure) {
+      setPkActionError(failure instanceof Error ? failure.message : "Could not start a PK search.");
+    } finally {
+      setPkActionBusy(false);
+    }
+  };
+  const stopPkSearch = async () => {
+    if (pkActionBusy) return;
+    setPkActionBusy(true);
+    setPkActionError("");
+    try {
+      await cancelPkOpponentSearch(streamId, { credentials: "include" });
+      await queryClient.invalidateQueries({ queryKey: getGetPkBattleStateQueryKey(streamId) });
+    } catch (failure) {
+      setPkActionError(failure instanceof Error ? failure.message : "Could not cancel the PK search.");
+    } finally {
+      setPkActionBusy(false);
+    }
+  };
 
   return <main className={`st-live-room${hostMode ? " is-host" : " is-viewer"}${hostMode && hostState?.cameraFacing === "user" ? " is-front-camera" : ""}`}
     data-testid="live-room">
     {hostMode && <PinkCardAnnouncement path={`/live/${encodeURIComponent(streamId)}`} />}
     <div className="st-live-player">
-      {hostMode && localStream
+      {pkBattle
+        ? <PkBattleStage battle={pkBattle} streamId={streamId} hostMode={hostMode} localStream={localStream}
+            localTracks={hostState?.localTracks ?? []} microphoneEnabled={hostState?.microphoneEnabled ?? false}
+            cameraFacing={hostState?.cameraFacing ?? "user"} />
+        : hostMode && localStream
         ? <LocalPreview stream={localStream} videoRef={localVideoRef} onBlocked={markCameraBlocked} />
         : !hostMode && videoTrack
           ? <RemoteVideo track={videoTrack} />
@@ -586,6 +630,23 @@ export function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd,
               <Ban size={18} /><span>Blocks</span>
             </button>
           </div>}
+          {hostMode && chatReady && !pkBattle && <div className="st-pk-control" data-testid="pk-live-controls">
+            <button type="button" className={pkState.data?.state === "searching" ? "st-pk-cancel" : "st-pk-search"}
+              onClick={() => void (pkState.data?.state === "searching" ? stopPkSearch() : startPkSearch())}
+              disabled={pkActionBusy}
+              aria-label={pkState.data?.state === "searching" ? "Cancel PK opponent search" : "Search for a PK opponent"}
+              data-testid="button-pk-search">
+              {pkState.data?.state === "searching" ? <X size={17} /> : <Swords size={17} />}
+              <span>{pkState.data?.state === "searching" ? "Cancel" : "PK"}</span>
+            </button>
+            {pkState.data?.state === "searching" && <span className="st-pk-status" role="status">
+              <i className="st-pk-search-status-dot" />Finding opponent…
+            </span>}
+            {pkState.data?.state === "timed_out" && <span className="st-pk-status is-error" role="status">
+              No one's available, try again.
+            </span>}
+            {pkActionError && <span className="st-pk-status is-error" role="alert">{pkActionError}</span>}
+          </div>}
       </div>
     </div>
     {roomBlockPanelOpen && canManageStream && <section className="st-live-block-panel" aria-label="People blocked from this host's rooms">
@@ -601,7 +662,7 @@ export function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd,
         <button type="button" disabled={moderationBusy} onClick={() => void setHostRoomBlock(person.username, false)}>Unblock</button>
       </li>)}</ul> : <p>No one is blocked from this host’s rooms.</p>}
     </section>}
-    {audioTrack && <RemoteAudio track={audioTrack} />}
+    {audioTrack && !pkBattle && <RemoteAudio track={audioTrack} />}
     {giftOpen && <GiftBag recipients={giftRecipients} streamId={streamId} onClose={() => setGiftOpen(false)} />}
     {activeGift && <GiftComboPlayer
       key={activeGift.id}

@@ -99,6 +99,31 @@ export class LiveKitBeamService {
     return { url: settings.url, token: await token.toJwt() };
   }
 
+  async createPkBattleToken(input: {
+    roomName: string;
+    identity: string;
+    displayName: string;
+    role: "host" | "viewer";
+  }): Promise<{ url: string; token: string }> {
+    const settings = this.getSettings();
+    const token = new AccessToken(settings.apiKey, settings.apiSecret, {
+      identity: input.identity,
+      name: input.displayName,
+      ttl: "10m",
+    });
+    token.addGrant({
+      roomJoin: true,
+      room: input.roomName,
+      canSubscribe: true,
+      canPublish: input.role === "host",
+      canPublishSources: input.role === "host"
+        ? [TrackSource.CAMERA, TrackSource.MICROPHONE]
+        : [],
+      canPublishData: false,
+    });
+    return { url: settings.url, token: await token.toJwt() };
+  }
+
   async listRooms(roomNames?: string[]) {
     const settings = this.getSettings();
     return this.clientFactory(settings).listRooms(roomNames);

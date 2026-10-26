@@ -5,6 +5,7 @@ import { liveKitBeamService } from "./livekit";
 import { RoomError } from "./room-store";
 import { isLiveStreamLeaseExpired, LIVE_STREAM_START_TTL_MS } from "./live-stream-session-policy";
 import { createHash } from "node:crypto";
+import { finishPkBattlesForStreamEnd } from "./pk-battles";
 
 const startingAccounts = new Map<string, number>();
 
@@ -91,6 +92,7 @@ async function removeLiveKitRoom(streamId: string): Promise<void> {
 
 export async function endLiveStreamSession(accountId: string, streamId: string): Promise<void> {
   clearLiveStreamStart(accountId);
+  await finishPkBattlesForStreamEnd(streamId, accountId);
   await db.update(liveStreamSessions).set({ state: "ending", updatedAt: new Date() })
     .where(and(eq(liveStreamSessions.accountId, accountId), eq(liveStreamSessions.streamId, streamId)));
   await removeLiveKitRoom(streamId);

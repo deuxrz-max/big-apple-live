@@ -14,6 +14,10 @@ import {
   StartLiveStreamBody,
   StreamLiveStreamChatParams,
   HeartbeatLiveStreamResponse,
+  SearchPkOpponentResponse,
+  CancelPkOpponentSearchResponse,
+  GetPkBattleStateResponse,
+  JoinPkBattleMediaResponse,
 } from "@workspace/api-zod";
 import { requireCompletedProfile } from "../lib/account-profiles";
 import { liveKitBeamService, publicLiveKitFailure } from "../lib/livekit";
@@ -47,6 +51,9 @@ import { visibleMonthlyPurchaseBadgeSummary } from "../lib/social/monthly-credit
 import { nameColorProfileForAccount, nameColorProfilesForAccounts } from "../lib/social/gift-name-color-data";
 import { accountId, sameOrigin } from "./identity";
 import { logger } from "../lib/logger";
+import {
+  cancelPkSearch, getBattleByStream, getPkBattleStateForStream, pkBattleRoomName, searchPkOpponent,
+} from "../lib/pk-battles";
 
 const router = Router();
 const LIVE_ROOM_RE = /^st-live-([a-f0-9]{32})$/;
@@ -320,6 +327,86 @@ router.post("/account/live-streams/:streamId/token", async (req, res) => {
       displayNameTierIndex: hostNameColor?.tierIndex ?? 0,
       viewerUsername: profile.username,
     }));
+  } catch (failure) {
+    throw publicLiveKitFailure(failure);
+  }
+});
+
+async function requirePkHost(accountId: string, streamId: string) {
+  const lease = await getLiveStreamSessionByStreamId(streamId);
+  if (!lease || lease.accountId !== accountId || lease.state !== "live"
+    || !(await liveStreamSessionIsFresh(lease))) {
+    throw new RoomError(403, "Only the active broadcaster can manage PK matchmaking.");
+  }
+  const participants = await liveKitBeamService.listParticipants(liveStreamRoomName(streamId));
+  if (!participants.some(participant => participant.identity === "host")) {
+    throw new RoomError(404, "This livestream is no longer available.");
+  }
+  return lease;
+}
+
+router.post("/account/live-streams/:streamId/pk/search", async (req, res) => {
+  sameOrigin(req);
+  const id = accountId(req);
+  const params = JoinLiveStreamParams.safeParse(req.params);
+  if (!params.success) throw new RoomError(404, "This livestream is no longer available.");
+  await requireCompletedProfile(id);
+  await requireAdult(id);
+  await requirePkHost(id, params.data.streamId);
+  try {
+    res.set("Cache-Control", "no-store").json(SearchPkOpponentResponse.parse(
+      await searchPkOpponent(id, params.data.streamId),
+    ));
+  } catch (failure) {
+    throw publicLiveKitFailure(failure);
+  }
+});
+
+router.delete("/account/live-streams/:streamId/pk/search", async (req, res) => {
+  sameOrigin(req);
+  const id = accountId(req);
+  const params = JoinLiveStreamParams.safeParse(req.params);
+  if (!params.success) throw new RoomError(404, "This livestream is no longer available.");
+  await requirePkHost(id, params.data.streamId);
+  res.set("Cache-Control", "no-store").json(CancelPkOpponentSearchResponse.parse({
+    cancelled: await cancelPkSearch(id, params.data.streamId),
+  }));
+});
+
+router.get("/account/live-streams/:streamId/pk/state", async (req, res) => {
+  const params = JoinLiveStreamParams.safeParse(req.params);
+  if (!params.success) throw new RoomError(404, "This livestream is no longer available.");
+  const id = accountId(req);
+  await requireCompletedProfile(id);
+  await requireAdult(id);
+  await requireLiveParticipant(id, params.data.streamId);
+  res.set("Cache-Control", "no-store").json(GetPkBattleStateResponse.parse(
+    await getPkBattleStateForStream(params.data.streamId),
+  ));
+});
+
+router.post("/account/live-streams/:streamId/pk/session", async (req, res) => {
+  sameOrigin(req);
+  const params = JoinLiveStreamParams.safeParse(req.params);
+  if (!params.success) throw new RoomError(404, "This livestream is no longer available.");
+  const id = accountId(req);
+  const profile = await requireCompletedProfile(id);
+  await requireAdult(id);
+  const lease = await getLiveStreamSessionByStreamId(params.data.streamId);
+  if (!lease || lease.state !== "live" || !(await liveStreamSessionIsFresh(lease))) {
+    throw new RoomError(404, "This livestream is no longer available.");
+  }
+  await requireLiveParticipant(id, params.data.streamId);
+  const battle = await getBattleByStream(params.data.streamId);
+  if (!battle || battle.endsAt.getTime() <= Date.now()) throw new RoomError(404, "There is no active PK battle.");
+  const role = id === battle.accountA || id === battle.accountB ? "host" : "viewer";
+  const identity = role === "host" ? `host-${liveStreamIdForAccount(id)}` : `viewer-${liveStreamIdForAccount(id)}`;
+  try {
+    const token = await liveKitBeamService.createPkBattleToken({
+      roomName: pkBattleRoomName(battle.id), identity,
+      displayName: profile.displayName?.trim() || profile.username, role,
+    });
+    res.set("Cache-Control", "no-store").json(JoinPkBattleMediaResponse.parse({ ...token, role, identity }));
   } catch (failure) {
     throw publicLiveKitFailure(failure);
   }

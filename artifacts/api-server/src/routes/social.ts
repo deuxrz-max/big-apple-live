@@ -8,6 +8,7 @@ import path from "node:path";
 import { accountProfiles, db } from "@workspace/db";
 import type { DeveloperGiftMotionPreset } from "@workspace/api-zod";
 import { GetGifterLeaderboardResponse } from "@workspace/api-zod";
+import { GetPkLeaderboardResponse } from "@workspace/api-zod";
 import { gifterLeaderboard } from "../lib/social/gifter-leaderboard";
 import {
   SaveSocialProfileBody, SaveSocialProfileResponse, GetSocialMeResponse, GetSocialPeopleResponse,
@@ -56,6 +57,7 @@ import { liveStreamChatHub } from "../lib/live-stream-chat";
 import { getMyEntranceEffectSettings, saveMyEntranceEffectSettings } from "../lib/social/entrance-effect-preferences";
 import { equipEntranceEffect, listEntranceEffectShop, purchaseEntranceEffect } from "../lib/social/entrance-effect-shop";
 import { saveEquippedBadge } from "../lib/social/monthly-credit-badges";
+import { getPkWeeklyLeaderboard } from "../lib/pk-battles";
 import {
   createGiftStudioVersion, deleteGiftStudioVersion, getActiveGiftStudioMedia, giftStudioMediaFile,
   giftStudioIconFile, overrideGiftStudioIcon, regenerateGiftStudioIcon,
@@ -787,6 +789,9 @@ router.post("/social/store/purchase", async (req, res): Promise<void> => {
 });
 router.get("/social/wallet/transactions", async (req, res): Promise<void> => { res.json(GetSocialLedgerResponse.parse(await ledger(accountId(req)))); });
 router.get("/social/leaderboard", async (req, res): Promise<void> => { res.json(GetSocialPeopleResponse.parse(await listPeople(accountId(req), {}, true))); });
+router.get("/social/pk/leaderboard", async (req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store").json(GetPkLeaderboardResponse.parse(await getPkWeeklyLeaderboard()));
+});
 router.get("/social/messages", async (req, res): Promise<void> => { res.json(GetSocialInboxResponse.parse(await inbox(accountId(req)))); });
 router.get("/social/messages/:username", async (req, res): Promise<void> => {
   const input = GetSocialConversationQueryParams.safeParse(req.query);

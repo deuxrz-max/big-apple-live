@@ -16,6 +16,7 @@ import { assertGiftingAccess } from "./gifting-access";
 import { nameColorProfileForAccount } from "./gift-name-color-data";
 import { enterPinkReward } from "../pink-card-rewards";
 import { rewardCycleBounds } from "../pink-card-policy";
+import { recordPkGiftInTransaction } from "../pk-battles";
 
 const giftSendTails = new Map<string, Promise<void>>();
 
@@ -136,6 +137,10 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
         senderName: sender.displayName ?? sender.username, recipientUsername: target.username,
         recipientName: target.displayName ?? target.username, giftId: item.id, giftName: item.name, cost: totalCost, quantity,
       };
+      await recordPkGiftInTransaction(tx, {
+        senderAccountId: id, recipientAccountId: target.accountId,
+        giftId: item.id, giftName: item.name, coins: totalCost, createdAt: now,
+      });
     }
     return { wallet: await wallet(id, tx, sender.username), liveGiftEvent };
   });

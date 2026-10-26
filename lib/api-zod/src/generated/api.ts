@@ -860,6 +860,255 @@ export const SendLiveStreamChatMessageResponse = zod.object({
 
 
 /**
+ * @summary Search for a random live broadcaster for a one-on-one PK battle
+ */
+export const searchPkOpponentPathStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+
+
+export const SearchPkOpponentParams = zod.object({
+  "streamId": zod.coerce.string().regex(searchPkOpponentPathStreamIdRegExp)
+})
+
+export const searchPkOpponentResponseSearchExpiresAtMsMin = 0;
+
+export const searchPkOpponentResponseBattleOneSideAStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+export const searchPkOpponentResponseBattleOneSideAUsernameMax = 40;
+
+export const searchPkOpponentResponseBattleOneSideADisplayNameMax = 80;
+
+export const searchPkOpponentResponseBattleOneSideBStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+export const searchPkOpponentResponseBattleOneSideBUsernameMax = 40;
+
+export const searchPkOpponentResponseBattleOneSideBDisplayNameMax = 80;
+
+export const searchPkOpponentResponseBattleOneStartsAtMsMin = 0;
+
+export const searchPkOpponentResponseBattleOneEndsAtMsMin = 0;
+
+export const searchPkOpponentResponseBattleOneBonusStartAtMsMin = 0;
+
+export const searchPkOpponentResponseBattleOneBonusEndAtMsMin = 0;
+
+export const searchPkOpponentResponseBattleOneScoreAMin = 0;
+
+export const searchPkOpponentResponseBattleOneScoreBMin = 0;
+
+export const searchPkOpponentResponseBattleOneWinnerUsernameMax = 40;
+
+export const searchPkOpponentResponseBattleOneTopGiftersAItemUsernameMax = 40;
+
+export const searchPkOpponentResponseBattleOneTopGiftersAItemDisplayNameMax = 80;
+
+export const searchPkOpponentResponseBattleOneTopGiftersAItemCoinsMin = 0;
+
+export const searchPkOpponentResponseBattleOneTopGiftersAMax = 3;
+
+export const searchPkOpponentResponseBattleOneTopGiftersBItemUsernameMax = 40;
+
+export const searchPkOpponentResponseBattleOneTopGiftersBItemDisplayNameMax = 80;
+
+export const searchPkOpponentResponseBattleOneTopGiftersBItemCoinsMin = 0;
+
+export const searchPkOpponentResponseBattleOneTopGiftersBMax = 3;
+
+
+
+export const SearchPkOpponentResponse = zod.object({
+  "state": zod.enum(['idle', 'searching', 'timed_out', 'battle']),
+  "searchExpiresAtMs": zod.number().int().min(searchPkOpponentResponseSearchExpiresAtMsMin).nullable(),
+  "battle": zod.union([zod.object({
+  "id": zod.string().uuid(),
+  "status": zod.enum(['countdown', 'active', 'finished']),
+  "sideA": zod.object({
+  "streamId": zod.string().regex(searchPkOpponentResponseBattleOneSideAStreamIdRegExp),
+  "username": zod.string().max(searchPkOpponentResponseBattleOneSideAUsernameMax),
+  "displayName": zod.string().max(searchPkOpponentResponseBattleOneSideADisplayNameMax),
+  "side": zod.enum(['A', 'B'])
+}),
+  "sideB": zod.object({
+  "streamId": zod.string().regex(searchPkOpponentResponseBattleOneSideBStreamIdRegExp),
+  "username": zod.string().max(searchPkOpponentResponseBattleOneSideBUsernameMax),
+  "displayName": zod.string().max(searchPkOpponentResponseBattleOneSideBDisplayNameMax),
+  "side": zod.enum(['A', 'B'])
+}),
+  "startsAtMs": zod.number().int().min(searchPkOpponentResponseBattleOneStartsAtMsMin),
+  "endsAtMs": zod.number().int().min(searchPkOpponentResponseBattleOneEndsAtMsMin),
+  "bonusStartAtMs": zod.number().int().min(searchPkOpponentResponseBattleOneBonusStartAtMsMin),
+  "bonusEndAtMs": zod.number().int().min(searchPkOpponentResponseBattleOneBonusEndAtMsMin),
+  "scoreA": zod.number().int().min(searchPkOpponentResponseBattleOneScoreAMin),
+  "scoreB": zod.number().int().min(searchPkOpponentResponseBattleOneScoreBMin),
+  "winnerUsername": zod.string().max(searchPkOpponentResponseBattleOneWinnerUsernameMax).nullable(),
+  "finishReason": zod.union([zod.literal('time'),zod.literal('opponent-left'),zod.literal(null)]).nullable(),
+  "topGiftersA": zod.array(zod.object({
+  "username": zod.string().max(searchPkOpponentResponseBattleOneTopGiftersAItemUsernameMax),
+  "displayName": zod.string().max(searchPkOpponentResponseBattleOneTopGiftersAItemDisplayNameMax),
+  "coins": zod.number().int().min(searchPkOpponentResponseBattleOneTopGiftersAItemCoinsMin)
+})).max(searchPkOpponentResponseBattleOneTopGiftersAMax),
+  "topGiftersB": zod.array(zod.object({
+  "username": zod.string().max(searchPkOpponentResponseBattleOneTopGiftersBItemUsernameMax),
+  "displayName": zod.string().max(searchPkOpponentResponseBattleOneTopGiftersBItemDisplayNameMax),
+  "coins": zod.number().int().min(searchPkOpponentResponseBattleOneTopGiftersBItemCoinsMin)
+})).max(searchPkOpponentResponseBattleOneTopGiftersBMax)
+}),zod.null()])
+})
+
+
+/**
+ * @summary Cancel an active PK opponent search
+ */
+export const cancelPkOpponentSearchPathStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+
+
+export const CancelPkOpponentSearchParams = zod.object({
+  "streamId": zod.coerce.string().regex(cancelPkOpponentSearchPathStreamIdRegExp)
+})
+
+export const CancelPkOpponentSearchResponse = zod.object({
+  "cancelled": zod.boolean()
+})
+
+
+/**
+ * @summary Read PK matchmaking, battle timer, score and top gifters
+ */
+export const getPkBattleStatePathStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+
+
+export const GetPkBattleStateParams = zod.object({
+  "streamId": zod.coerce.string().regex(getPkBattleStatePathStreamIdRegExp)
+})
+
+export const getPkBattleStateResponseSearchExpiresAtMsMin = 0;
+
+export const getPkBattleStateResponseBattleOneSideAStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+export const getPkBattleStateResponseBattleOneSideAUsernameMax = 40;
+
+export const getPkBattleStateResponseBattleOneSideADisplayNameMax = 80;
+
+export const getPkBattleStateResponseBattleOneSideBStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+export const getPkBattleStateResponseBattleOneSideBUsernameMax = 40;
+
+export const getPkBattleStateResponseBattleOneSideBDisplayNameMax = 80;
+
+export const getPkBattleStateResponseBattleOneStartsAtMsMin = 0;
+
+export const getPkBattleStateResponseBattleOneEndsAtMsMin = 0;
+
+export const getPkBattleStateResponseBattleOneBonusStartAtMsMin = 0;
+
+export const getPkBattleStateResponseBattleOneBonusEndAtMsMin = 0;
+
+export const getPkBattleStateResponseBattleOneScoreAMin = 0;
+
+export const getPkBattleStateResponseBattleOneScoreBMin = 0;
+
+export const getPkBattleStateResponseBattleOneWinnerUsernameMax = 40;
+
+export const getPkBattleStateResponseBattleOneTopGiftersAItemUsernameMax = 40;
+
+export const getPkBattleStateResponseBattleOneTopGiftersAItemDisplayNameMax = 80;
+
+export const getPkBattleStateResponseBattleOneTopGiftersAItemCoinsMin = 0;
+
+export const getPkBattleStateResponseBattleOneTopGiftersAMax = 3;
+
+export const getPkBattleStateResponseBattleOneTopGiftersBItemUsernameMax = 40;
+
+export const getPkBattleStateResponseBattleOneTopGiftersBItemDisplayNameMax = 80;
+
+export const getPkBattleStateResponseBattleOneTopGiftersBItemCoinsMin = 0;
+
+export const getPkBattleStateResponseBattleOneTopGiftersBMax = 3;
+
+
+
+export const GetPkBattleStateResponse = zod.object({
+  "state": zod.enum(['idle', 'searching', 'timed_out', 'battle']),
+  "searchExpiresAtMs": zod.number().int().min(getPkBattleStateResponseSearchExpiresAtMsMin).nullable(),
+  "battle": zod.union([zod.object({
+  "id": zod.string().uuid(),
+  "status": zod.enum(['countdown', 'active', 'finished']),
+  "sideA": zod.object({
+  "streamId": zod.string().regex(getPkBattleStateResponseBattleOneSideAStreamIdRegExp),
+  "username": zod.string().max(getPkBattleStateResponseBattleOneSideAUsernameMax),
+  "displayName": zod.string().max(getPkBattleStateResponseBattleOneSideADisplayNameMax),
+  "side": zod.enum(['A', 'B'])
+}),
+  "sideB": zod.object({
+  "streamId": zod.string().regex(getPkBattleStateResponseBattleOneSideBStreamIdRegExp),
+  "username": zod.string().max(getPkBattleStateResponseBattleOneSideBUsernameMax),
+  "displayName": zod.string().max(getPkBattleStateResponseBattleOneSideBDisplayNameMax),
+  "side": zod.enum(['A', 'B'])
+}),
+  "startsAtMs": zod.number().int().min(getPkBattleStateResponseBattleOneStartsAtMsMin),
+  "endsAtMs": zod.number().int().min(getPkBattleStateResponseBattleOneEndsAtMsMin),
+  "bonusStartAtMs": zod.number().int().min(getPkBattleStateResponseBattleOneBonusStartAtMsMin),
+  "bonusEndAtMs": zod.number().int().min(getPkBattleStateResponseBattleOneBonusEndAtMsMin),
+  "scoreA": zod.number().int().min(getPkBattleStateResponseBattleOneScoreAMin),
+  "scoreB": zod.number().int().min(getPkBattleStateResponseBattleOneScoreBMin),
+  "winnerUsername": zod.string().max(getPkBattleStateResponseBattleOneWinnerUsernameMax).nullable(),
+  "finishReason": zod.union([zod.literal('time'),zod.literal('opponent-left'),zod.literal(null)]).nullable(),
+  "topGiftersA": zod.array(zod.object({
+  "username": zod.string().max(getPkBattleStateResponseBattleOneTopGiftersAItemUsernameMax),
+  "displayName": zod.string().max(getPkBattleStateResponseBattleOneTopGiftersAItemDisplayNameMax),
+  "coins": zod.number().int().min(getPkBattleStateResponseBattleOneTopGiftersAItemCoinsMin)
+})).max(getPkBattleStateResponseBattleOneTopGiftersAMax),
+  "topGiftersB": zod.array(zod.object({
+  "username": zod.string().max(getPkBattleStateResponseBattleOneTopGiftersBItemUsernameMax),
+  "displayName": zod.string().max(getPkBattleStateResponseBattleOneTopGiftersBItemDisplayNameMax),
+  "coins": zod.number().int().min(getPkBattleStateResponseBattleOneTopGiftersBItemCoinsMin)
+})).max(getPkBattleStateResponseBattleOneTopGiftersBMax)
+}),zod.null()])
+})
+
+
+/**
+ * @summary Join the shared split-screen LiveKit room for an active PK battle
+ */
+export const joinPkBattleMediaPathStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+
+
+export const JoinPkBattleMediaParams = zod.object({
+  "streamId": zod.coerce.string().regex(joinPkBattleMediaPathStreamIdRegExp)
+})
+
+export const joinPkBattleMediaResponseIdentityMax = 80;
+
+
+
+export const JoinPkBattleMediaResponse = zod.object({
+  "url": zod.string().url(),
+  "token": zod.string(),
+  "role": zod.enum(['host', 'viewer']),
+  "identity": zod.string().max(joinPkBattleMediaResponseIdentityMax)
+})
+
+
+/**
+ * @summary Get weekly broadcaster PK wins and longest win streak
+ */
+export const getPkLeaderboardResponsePeopleItemUsernameMax = 40;
+
+export const getPkLeaderboardResponsePeopleItemDisplayNameMax = 80;
+
+export const getPkLeaderboardResponsePeopleItemWinsMin = 0;
+
+export const getPkLeaderboardResponsePeopleItemLongestWinStreakMin = 0;
+
+
+
+export const GetPkLeaderboardResponse = zod.object({
+  "weekStartsAt": zod.coerce.date(),
+  "people": zod.array(zod.object({
+  "username": zod.string().max(getPkLeaderboardResponsePeopleItemUsernameMax),
+  "displayName": zod.string().max(getPkLeaderboardResponsePeopleItemDisplayNameMax),
+  "wins": zod.number().int().min(getPkLeaderboardResponsePeopleItemWinsMin),
+  "longestWinStreak": zod.number().int().min(getPkLeaderboardResponsePeopleItemLongestWinStreakMin)
+}))
+})
+
+
+/**
  * @summary End the signed-in account's camera livestream
  */
 export const endLiveStreamPathStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');

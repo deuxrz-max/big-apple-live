@@ -6,6 +6,7 @@ import {
   useGetSocialMe, useGetSocialConversation, useSendSocialMessage, useDeleteSocialConversation,
   useClaimSocialDailyReward, useGetSocialLedger, useGetSocialLeaderboard, useGetGifterLeaderboard, getGetGifterLeaderboardQueryKey,
   getGetSocialMeQueryKey, getGetSocialConversationQueryKey, getGetSocialLedgerQueryKey,
+  useGetPkLeaderboard, getGetPkLeaderboardQueryKey,
   getPinkCardEntry,
 } from '@workspace/api-client-react';
 import { BadgeMark, CoinAmount, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, fmt, refreshSocial, useIdemKey } from './common';
@@ -206,20 +207,48 @@ export function TransactionHistoryPage() {
 }
 
 export function LeaderboardPage() {
-  const [view, setView] = useState<'givers' | 'receivers'>('receivers');
+  const [view, setView] = useState<'givers' | 'receivers' | 'pk'>('receivers');
   return (
     <section>
       <h1 className="bm-h1 sc-h1"><Trophy size={36} /> Leaderboard</h1>
       <div className="sc-tabs" role="tablist" aria-label="Leaderboard view" style={{ display: 'flex', gap: 8, margin: '4px 0 14px' }}>
-        {(['receivers', 'givers'] as const).map(id => (
+        {(['receivers', 'givers', 'pk'] as const).map(id => (
           <button key={id} type="button" role="tab" aria-selected={view === id}
             className={`bm-btn bm-btn-sm${view === id ? ' bm-btn-primary' : ''}`} style={{ borderRadius: 0 }}
-            onClick={() => setView(id)} data-testid={`tab-leaderboard-${id}`}>{id === 'givers' ? 'Givers' : 'Receivers'}</button>
+            onClick={() => setView(id)} data-testid={`tab-leaderboard-${id}`}>
+            {id === 'pk' ? 'PK' : id === 'givers' ? 'Givers' : 'Receivers'}
+          </button>
         ))}
       </div>
-      {view === 'receivers' ? <ReceiverLeaderboard /> : <GiverLeaderboard />}
+      {view === 'receivers' ? <ReceiverLeaderboard /> : view === 'givers' ? <GiverLeaderboard /> : <PkLeaderboard />}
     </section>
   );
+}
+
+function PkLeaderboard() {
+  const q = useGetPkLeaderboard({
+    query: { queryKey: getGetPkLeaderboardQueryKey(), refetchInterval: 30_000 },
+  });
+  return <>
+    <p className="bm-lede">Weekly PK wins and longest win streak. Resets Monday at 3 AM Eastern.</p>
+    {q.isLoading && <Loading />}
+    {q.isError && <ErrorBox error={q.error} retry={() => q.refetch()} />}
+    {q.data && (q.data.people.length === 0
+      ? <Empty title="No PK results this week"><p>Broadcasters appear after their first completed battle.</p></Empty>
+      : <ol className="sc-rank" data-testid="pk-leaderboard">
+        {q.data.people.map((person, index) => <li key={person.username}>
+          <span className="sc-pos" aria-label={`Rank ${index + 1}`}>{index + 1}</span>
+          <div className="sc-card-leaderboard">
+            <strong>{person.displayName}</strong>
+            <small>@{person.username}</small>
+            <span className="sc-rank-score">
+              <b>{person.wins} {person.wins === 1 ? 'win' : 'wins'}</b>
+              <span>Best streak: {person.longestWinStreak}</span>
+            </span>
+          </div>
+        </li>)}
+      </ol>)}
+  </>;
 }
 
 function ReceiverLeaderboard() {
