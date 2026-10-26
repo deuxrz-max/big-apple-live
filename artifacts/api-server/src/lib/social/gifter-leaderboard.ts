@@ -1,5 +1,5 @@
 import { db, accountProfiles, socialSettings, socialLedger } from "@workspace/db";
-import { and, desc, eq, gt, inArray, lt, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import { GIFTING_LEVEL_THRESHOLDS } from "@workspace/beam-identity";
 import { person } from "./core";
 
@@ -7,8 +7,8 @@ import { person } from "./core";
 export async function gifterLeaderboard(viewerId: string) {
   const totals = db.select({
     accountId: socialLedger.accountId,
-    giftXp: sql<number>`sum(-${socialLedger.delta})::bigint`.mapWith(Number).as("gift_xp"),
-  }).from(socialLedger).where(and(eq(socialLedger.kind, "gift_sent"), lt(socialLedger.delta, 0)))
+    giftXp: sql<number>`sum(case when ${socialLedger.xpUnits} > 0 then ${socialLedger.xpUnits} else -${socialLedger.delta} end)::bigint`.mapWith(Number).as("gift_xp"),
+  }).from(socialLedger).where(and(eq(socialLedger.kind, "gift_sent")))
     .groupBy(socialLedger.accountId).as("gift_totals");
   const rows = await db.select({
     accountId: totals.accountId, giftXp: totals.giftXp,

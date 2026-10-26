@@ -5,6 +5,7 @@ import { db, accountProfiles, socialWallets, socialLedger, profilePhotos, chatAd
 import { eq, inArray } from "drizzle-orm";
 import { getMe, getPerson, listPeople, relationship, saveSocialProfile, blocks } from "./people";
 import { claimDaily, gift, purchase, ledger } from "./rewards";
+import { getGiftCatalogItem } from "../gift-studio-catalog";
 import { sendMessage, thread, inbox, clearThread } from "./messages";
 import { GetSocialMeResponse, GetSocialPeopleResponse, GetSocialConversationResponse, GetSocialInboxResponse } from "@workspace/api-zod";
 
@@ -81,13 +82,20 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     assert.equal((await thread(b, names[0]!)).messages.length, 1);
   });
   await t.test("concurrent gifts cannot overdraw; retired badge purchases do not spend credits", async () => {
+    const giftCost = (await getGiftCatalogItem("good-vibes"))!.cost;
+    const [senderWallet] = await db.select().from(socialWallets).where(eq(socialWallets.accountId, a));
+    const fixtureFunding = giftCost * 5 - senderWallet!.balance;
+    await db.update(socialWallets).set({ balance: giftCost * 5 }).where(eq(socialWallets.accountId, a));
+    if (fixtureFunding) await db.insert(socialLedger).values({
+      accountId: a, delta: fixtureFunding, kind: "reward", description: "Isolated concurrent-gift test funding",
+    });
     const results = await Promise.allSettled(Array.from({ length: 8 }, () => gift(a, names[1]!, "good-vibes", randomUUID())));
     assert.equal(results.filter(r => r.status === "fulfilled").length, 5);
     assert.equal((await getMe(a)).wallet.balance, 0);
-    assert.equal((await getMe(b)).wallet.balance, 50);
+    assert.equal((await getMe(b)).wallet.balance, 25 + giftCost * 5);
     await assert.rejects(purchase(b, "good-neighbor", randomUUID()), /confirmed coin purchases/);
     const me = await getMe(b);
-    assert.equal(me.wallet.balance, 50);
+    assert.equal(me.wallet.balance, 25 + giftCost * 5);
     assert.deepEqual(me.inventory, []);
     assert.equal(me.profile.badgeId, null);
     assert.deepEqual(me.profile.badges, []);
@@ -95,29 +103,29 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     const storePurchaseKey = randomUUID();
     await purchase(b, "good-vibes", storePurchaseKey);
     await purchase(b, "good-vibes", storePurchaseKey);
-    assert.equal((await getMe(b)).wallet.balance, 45, "a repeated Store request does not debit twice");
+    assert.equal((await getMe(b)).wallet.balance, 25 + giftCost * 4, "a repeated Store request does not debit twice");
     assert.deepEqual((await getMe(b)).inventory, ["good-vibes"], "a Store purchase adds a collectible, not a sent gift");
     assert.equal((await getMe(b)).giftQuantities?.["good-vibes"], 1);
     const giftKey = randomUUID();
     await gift(b, names[0]!, "good-vibes", giftKey);
     await gift(b, names[0]!, "good-vibes", giftKey);
-    assert.equal((await getMe(a)).wallet.balance, 5);
-    assert.equal((await getMe(b)).wallet.balance, 45, "sending the gift already in the bag does not charge its price twice");
+    assert.equal((await getMe(a)).wallet.balance, giftCost);
+    assert.equal((await getMe(b)).wallet.balance, 25 + giftCost * 4, "sending the gift already in the bag does not charge its price twice");
     await assert.rejects(gift(b, names[0]!, "big-love", giftKey), /retry key/);
     const [row] = await db.select().from(socialWallets).where(eq(socialWallets.accountId, b));
-    assert.equal(row!.received, 25);
-    assert.equal(row!.sent, 5);
+    assert.equal(row!.received, giftCost * 5);
+    assert.equal(row!.sent, giftCost);
     const publicStats = await getPerson(a, names[1]!);
-    assert.equal(publicStats.receivedCredits, 25);
-    assert.equal(publicStats.sentCredits, 5);
+    assert.equal(publicStats.receivedCredits, giftCost * 5);
+    assert.equal(publicStats.sentCredits, giftCost);
     await db.update(socialWallets).set({ received: 1000000 }).where(eq(socialWallets.accountId, c));
     const leader = await listPeople(b, { search: token }, true);
     assert.equal(leader.people[0]!.username, names[1]);
     assert.equal(leader.people.some(person => person.username === names[2]), false, "test accounts are excluded from public leaderboards");
     const bTransactions = (await ledger(b)).transactions;
     assert.equal(bTransactions.filter(r => r.kind === "purchase").length, 1);
-    assert.ok(bTransactions.some(r => r.kind === "purchase" && r.delta === -5), "a Store purchase is recorded as coins out");
-    assert.ok(bTransactions.some(r => r.kind === "gift_sent" && r.delta < 0), "a sent gift is recorded as coins out");
+    assert.ok(bTransactions.some(r => r.kind === "purchase" && r.delta === -giftCost), "a Store purchase is recorded as coins out");
+    assert.ok(bTransactions.some(r => r.kind === "gift_sent" && r.delta === 0), "a stored gift send is recorded without a second coin debit");
     assert.ok(bTransactions.some(r => r.kind === "gift_received" && r.delta > 0), "a received gift is recorded as coins in");
     assert.equal((await ledger(a)).transactions.some(r => r.kind === "purchase"), false, "one account's ledger never contains another account's purchase");
   });

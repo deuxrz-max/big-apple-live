@@ -100,7 +100,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
       }
     };
   }, [roomId, streamId]);
-  const items = useMemo(() => (me.data ? ownedGiftItems(me.data) : []), [me.data]);
+  const items = useMemo(() => (me.data ? ownedGiftItems(me.data, clockNow) : []), [clockNow, me.data]);
   useEffect(() => {
     if (!items.length) return;
     const timer = window.setInterval(() => setClockNow(Date.now()), 30_000);
@@ -150,7 +150,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
   const canSend = selectedRecipients.length > 0 && (!!streamId || (!!roomId && !!sessionId)) && !!sel
     && catalog.some(gift => gift.id === sel);
   const unlimited = me.data?.wallet.unlimited === true;
-  const heldQuantity = sel ? me.data?.giftQuantities?.[sel] ?? 0 : 0;
+  const heldQuantity = sel ? items.find(item => item.id === sel)?.quantity ?? 0 : 0;
   const totalCost = price * Math.max(0, quantity * selectedRecipients.length - heldQuantity);
   const bagOnly = activeCategoryId === 'my-bag';
   const enoughStored = !bagOnly || heldQuantity >= quantity * selectedRecipients.length;
@@ -353,7 +353,8 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
             items.length > 0 ? (
               <div className="gift-panel-grid gift-panel-owned" data-testid="gift-bag-list">
                 {items.map(gift => {
-                  const lots = me.data?.giftBagLots?.filter(lot => lot.giftId === gift.id) ?? [];
+                  const lots = me.data?.giftBagLots?.filter(lot =>
+                    lot.giftId === gift.id && (!lot.expiresAt || Date.parse(lot.expiresAt) > clockNow)) ?? [];
                   return <button key={gift.id} type="button"
                     className={`gift-panel-card gift-panel-owned-card${sel === gift.id ? ' is-selected' : ''}`}
                     aria-pressed={sel === gift.id} disabled={busy || !catalog.some(item => item.id === gift.id)} data-testid={`gift-bag-item-${gift.id}`}

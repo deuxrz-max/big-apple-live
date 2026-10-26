@@ -18,12 +18,23 @@ try {
     );
     CREATE INDEX IF NOT EXISTS social_gift_bag_lots_account_gift_expiry
       ON social_gift_bag_lots(account_id, gift_id, expires_at);
+    ALTER TABLE social_ledger ADD COLUMN IF NOT EXISTS xp_units integer NOT NULL DEFAULT 0;
+    ALTER TABLE social_ledger DROP CONSTRAINT IF EXISTS social_nonzero_delta;
+    ALTER TABLE social_ledger ADD CONSTRAINT social_nonzero_delta
+      CHECK (delta <> 0 OR kind = 'gift_sent');
+    ALTER TABLE social_ledger DROP CONSTRAINT IF EXISTS social_gift_xp_nonnegative;
+    ALTER TABLE social_ledger ADD CONSTRAINT social_gift_xp_nonnegative
+      CHECK (xp_units >= 0);
     WITH remaining AS (
       SELECT b.account_id, b.gift_id,
         GREATEST(b.quantity - COALESCE(SUM(l.quantity), 0)::integer, 0) AS quantity
       FROM social_gift_bag b
       LEFT JOIN social_gift_bag_lots l
         ON l.account_id = b.account_id AND l.gift_id = b.gift_id
+      WHERE NOT EXISTS (
+        SELECT 1 FROM social_gift_bag_lots existing
+        WHERE existing.account_id = b.account_id AND existing.gift_id = b.gift_id
+      )
       GROUP BY b.account_id, b.gift_id, b.quantity
     ), purchases AS (
       SELECT r.account_id, r.gift_id, r.quantity AS available,
@@ -49,7 +60,7 @@ try {
       HAVING b.quantity > COALESCE(SUM(l.quantity), 0);
   `);
   await client.query("COMMIT");
-  process.stdout.write("Added gift acquisition lots; existing bag quantities were preserved as non-expiring legacy inventory.\n");
+  process.stdout.write("Added gift acquisition lots; ledger-matched purchases receive their original expiry, and unclassified inventory is preserved.\n");
 } catch (error) {
   await client.query("ROLLBACK");
   throw error;

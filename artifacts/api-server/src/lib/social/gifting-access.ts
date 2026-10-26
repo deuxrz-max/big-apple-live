@@ -1,5 +1,5 @@
 import { db, socialLedger } from "@workspace/db";
-import { and, eq, lt, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { giftingProgress } from "@workspace/beam-identity";
 
 export function canAccessGiftingExclusive(_platinumExclusive: boolean | undefined, _xp: number): boolean {
@@ -8,9 +8,9 @@ export function canAccessGiftingExclusive(_platinumExclusive: boolean | undefine
 
 export async function realGiftingLevel(accountId: string, executor: Pick<typeof db, "select"> = db) {
   const [row] = await executor.select({
-    xp: sql<string>`coalesce(sum(-${socialLedger.delta}), 0)::text`,
+    xp: sql<string>`coalesce(sum(case when ${socialLedger.xpUnits} > 0 then ${socialLedger.xpUnits} else -${socialLedger.delta} end), 0)::text`,
   }).from(socialLedger).where(and(
-    eq(socialLedger.accountId, accountId), eq(socialLedger.kind, "gift_sent"), lt(socialLedger.delta, 0),
+    eq(socialLedger.accountId, accountId), eq(socialLedger.kind, "gift_sent"),
   ));
   return giftingProgress(Number(row?.xp ?? 0)).level;
 }

@@ -1,5 +1,5 @@
 import { db, socialCreditPurchases, socialLedger } from "@workspace/db";
-import { and, eq, inArray, lt, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { existingUsernameColor, nameColorTierForLifetimeCoins, type NameColorTierSummary } from "./gift-name-color";
 
 const developmentPurchaseTotalOverrides = new Map<string, number>();
@@ -35,9 +35,9 @@ export async function nameColorProfilesForAccounts(
     .groupBy(socialCreditPurchases.accountId),
     executor.select({
       accountId: socialLedger.accountId,
-      totalCoins: sql<string>`coalesce(sum(-${socialLedger.delta}), 0)::text`,
+      totalCoins: sql<string>`coalesce(sum(case when ${socialLedger.xpUnits} > 0 then ${socialLedger.xpUnits} else -${socialLedger.delta} end), 0)::text`,
     }).from(socialLedger)
-      .where(and(inArray(socialLedger.accountId, ids), eq(socialLedger.kind, "gift_sent"), lt(socialLedger.delta, 0)))
+      .where(and(inArray(socialLedger.accountId, ids), eq(socialLedger.kind, "gift_sent")))
       .groupBy(socialLedger.accountId),
   ]);
   const totals = new Map(rows.map(row => [row.accountId, Number(row.totalCoins) || 0]));

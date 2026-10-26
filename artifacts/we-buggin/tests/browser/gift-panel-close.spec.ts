@@ -1,10 +1,14 @@
 import { expect, test, type Page } from '@playwright/test';
 
-async function setup(page: Page, context: string, multi = false, expanded = false) {
+async function setup(page: Page, context: string, multi = false, expanded = false, bag = false) {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.route('**/api/social/me', route => route.fulfill({ json: {
     profile: { username: 'fixture', displayName: 'Fixture', photoUrl: null },
-    wallet: { balance: 5000 }, inventory: [], products: [], giftQuantities: {},
+    wallet: { balance: 5000 }, inventory: bag ? ['heart'] : [], products: [], giftQuantities: bag ? { heart: 2 } : {},
+    giftBagLots: bag ? [
+      { giftId: 'heart', quantity: 1, expiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString() },
+      { giftId: 'heart', quantity: 1, expiresAt: null },
+    ] : [],
     gifts: [
       { id: 'heart', name: 'Heart', cost: 10 },
       { id: 'spirit-pup', name: 'Spirit Pup', cost: 100 },
@@ -18,6 +22,32 @@ async function setup(page: Page, context: string, multi = false, expanded = fals
   await page.goto(`/tests/browser/harness.html?view=gift-send&context=${context}${multi ? '&multi=1' : ''}`);
   await page.getByRole('button', { name: 'Send a gift', exact: true }).click();
 }
+
+test('My Bag lists held quantities and expiry, and sends a stored gift without a second charge', async ({ page }) => {
+  let sent: Record<string, unknown> | undefined;
+  await page.clock.install({ time: new Date() });
+  await page.route('**/api/social/gifts', route => {
+    sent = route.request().postDataJSON();
+    return route.fulfill({ json: { balance: 5000, sent: 10 } });
+  });
+  await setup(page, 'room', false, false, true);
+  const panel = page.getByTestId('gift-bag');
+  const categoryLabels = await panel.locator('.gift-panel-category').allTextContents();
+  expect(categoryLabels[0]).toContain('My Bag');
+  await panel.getByRole('button', { name: /My Bag/ }).click();
+  const stored = panel.getByTestId('gift-bag-item-heart');
+  await expect(stored).toContainText('In bag · 2');
+  await expect(stored).toContainText('Expires in 5d');
+  await expect(stored).toContainText('No expiry');
+  await stored.click();
+  await expect(panel.locator('.gift-panel-total')).toContainText('0 coins to charge');
+  await page.clock.fastForward(5 * 24 * 60 * 60 * 1000 + 60_000);
+  await expect(stored).toContainText('In bag · 1');
+  await expect(stored).toContainText('No expiry');
+  await panel.getByTestId('gift-bag-send').click();
+  await expect(panel).toHaveCount(0);
+  expect(sent).toMatchObject({ giftId: 'heart', quantity: 1, useGiftBagOnly: true });
+});
 
 for (const context of ['room', 'live']) {
   for (const giftId of ['heart', 'spirit-pup', 'studio-fixture']) {

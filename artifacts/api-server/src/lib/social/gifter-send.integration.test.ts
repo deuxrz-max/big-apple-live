@@ -92,14 +92,17 @@ test("gifter XP, retired exclusivity and atomic spending with isolated developme
       .where(eq(socialGiftBagLots.accountId, ids[0]!));
     assert.ok(heldGift);
     assert.equal(heldGift.expiresAt!.getTime() - heldGift.createdAt.getTime(), 7 * 24 * 60 * 60 * 1000);
+    setNameColorPurchaseTotalOverride(ids[0]!, null);
+    const xpBeforeStoredSend = (await nameColorProfileForAccount(ids[0]!)).lifetimeCoinsPurchased;
     await gift(ids[0]!, names[1]!, giftId, randomUUID(), context, 1, true);
     assert.equal(await balance(), afterStorePurchase, "sending the stored gift does not charge again");
     assert.equal((await getMe(ids[0]!)).giftQuantities?.[giftId] ?? 0, 0);
-    setNameColorPurchaseTotalOverride(ids[0]!, null);
+    assert.equal((await nameColorProfileForAccount(ids[0]!)).lifetimeCoinsPurchased, xpBeforeStoredSend + 20,
+      "the sender still earns gifter XP when the stored gift is sent");
   });
   await t.test("Platinum derives from successful total; store purchase adds no XP", async () => {
     await db.insert(socialLedger).values({
-      accountId: ids[0]!, kind: "gift_sent", delta: -(355000 - 240),
+      accountId: ids[0]!, kind: "gift_sent", delta: -(355000 - 260),
       description: "Isolated historical successful gifting fixture",
     });
     assert.equal((await nameColorProfileForAccount(ids[0]!)).tierIndex, 61);
