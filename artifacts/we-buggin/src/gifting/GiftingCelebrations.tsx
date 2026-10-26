@@ -6,7 +6,7 @@ import './gifting-shield.css';
 
 export type GiftingArrival = { id: string; at: number; displayName: string; level: number };
 
-/** Gold+ entrance banner; Platinum adds a sweep; Deux Wild adds a neon fullscreen frame. */
+/** Gold+ entrance banner; only Deux Wild adds a neon fullscreen frame. */
 export function GiftingEntranceOverlay({ arrival, onFinish }: { arrival: GiftingArrival | null; onFinish: (id: string) => void }) {
   const finishRef = useRef(onFinish);
   finishRef.current = onFinish;
@@ -21,7 +21,6 @@ export function GiftingEntranceOverlay({ arrival, onFinish }: { arrival: Gifting
   const tier = giftingTier(arrival.level);
   return <>
     {perks.neonEntrance && <div className="gifting-entrance-fullscreen" aria-hidden="true" />}
-    {perks.entranceEffect && !perks.neonEntrance && <div className="gifting-entrance-sweep" aria-hidden="true" />}
     <div className={`gifting-entrance gifting-entrance--${tier.key}`} role="status" aria-live="polite" data-testid="banner-gifting-entrance">
       <GiftingShield level={arrival.level} size={30} decorative />
       <span><small>{tier.name} gifter</small>{arrival.displayName} has entered</span>

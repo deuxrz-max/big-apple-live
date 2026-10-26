@@ -41,6 +41,11 @@
   border-radius: inherit;
   border: 2px solid #E7BC58;
   box-shadow: inset 0 0 0 1px rgba(20, 14, 4, .8), inset 0 0 10px rgba(231, 188, 88, .28);
+  animation: gifting-frame-pulse 3.2s ease-in-out infinite;
+}
+.ur-slot[data-gifting-frame='silver'] .ur-slot-media::after {
+  border-color: #D8DFE8;
+  box-shadow: inset 0 0 0 1px rgba(16, 18, 22, .8), inset 0 0 10px rgba(216, 223, 232, .28);
 }
 .ur-slot[data-gifting-frame='platinum'] .ur-slot-media::after {
   border-color: #D9F2FF;
@@ -83,19 +88,12 @@
   box-shadow: inset 0 0 0 3px rgba(57, 255, 20, .55), inset 0 0 60px rgba(57, 255, 20, .25);
   animation: gifting-flash 2.8s ease-out both;
 }
-.gifting-entrance-sweep { position: fixed; inset: 0; z-index: 69; pointer-events: none; overflow: hidden; }
-.gifting-entrance-sweep::before {
-  content: ''; position: absolute; top: 0; bottom: 0; width: 30%; left: -40%;
-  background: linear-gradient(100deg, transparent, rgba(220, 242, 255, .16), transparent);
-  animation: gifting-sweep 1.6s ease-out both;
-}
 @keyframes gifting-entrance-in {
   0% { opacity: 0; transform: translate(-50%, -12px); }
   12%, 82% { opacity: 1; transform: translate(-50%, 0); }
   100% { opacity: 0; transform: translate(-50%, -6px); }
 }
 @keyframes gifting-flash { 0% { opacity: 0; } 15% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes gifting-sweep { to { transform: translateX(480%); } }
 
 /* Level-up celebration */
 .gifting-levelup {
@@ -113,14 +111,6 @@
 .gifting-levelup-card button { pointer-events: auto; margin-top: 6px; padding: 6px 14px; border: 1px solid currentColor; background: transparent; color: inherit; border-radius: 0; cursor: pointer; }
 @keyframes gifting-levelup-pop { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
 
-/* Locked platinum-exclusive gifts */
-.gifting-lock-tag {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 2px 6px; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-  color: #D9F2FF; border: 1px solid rgba(217, 242, 255, .55); background: rgba(12, 16, 20, .85);
-}
-.is-gifting-locked { opacity: .55; filter: grayscale(.6); }
-
 /* Own profile level panel */
 .pf-gifting-level { display: flex; gap: 14px; align-items: center; }
 .pf-gifting-meter { position: relative; height: 6px; background: rgba(255, 255, 255, .1); overflow: hidden; margin: 6px 0 2px; }
@@ -128,9 +118,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .gifting-shield-shine, .ur-slot[data-gifting-frame] .ur-slot-media::after,
-  .gifting-entrance-sweep::before, .gifting-levelup-card,
+  .gifting-levelup-card,
   .gifting-entrance, .gifting-entrance-fullscreen, .gifting-levelup { animation: none !important; }
-  .gifting-entrance-sweep { display: none; }
   .gifting-entrance-fullscreen { opacity: .5; }
 }
 

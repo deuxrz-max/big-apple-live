@@ -581,8 +581,8 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                   return (
                     <article className={`ur-slot${isSpeaking ? ' is-speaking' : ''}${slot.participantId ? ' is-occupied' : ''}${person ? ' has-person' : ''}${isBeamHost ? ' is-beam-host' : ''}`}
                       key={slot.slotNumber}
-                      data-gifting-frame={person && giftingPerks(person.displayNameTierIndex).goldSeatFrame
-                        ? giftingPerks(person.displayNameTierIndex).animatedFrame ? giftingTier(normalizeGiftingLevel(person.displayNameTierIndex)).key : 'gold'
+                      data-gifting-frame={person && giftingPerks(person.displayNameTierIndex).animatedFrame
+                        ? giftingTier(normalizeGiftingLevel(person.displayNameTierIndex)).key
                         : undefined}
                       data-seat-position={area}
                       style={{ gridColumn, gridRow: area === 'host' ? '1 / span 2' : gridRow }}

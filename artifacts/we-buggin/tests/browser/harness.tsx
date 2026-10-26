@@ -12,6 +12,9 @@ import { GiftComboPlayer } from '../../src/gifts/GiftComboPlayer';
 import { GiftArtwork } from '../../src/gifts/GiftArtwork';
 import { RewardsPage } from '../../src/social/MoneyPages';
 import { ShinyName } from '../../src/components/ShinyName';
+import { giftingTier } from '@workspace/beam-identity';
+import { giftingPerks } from '../../src/gifting/gifting';
+import { GiftingEntranceOverlay } from '../../src/gifting/GiftingCelebrations';
 import { RoomFeedFixture } from './room-feed-fixture';
 import { LiveLayoutFixture } from './live-layout-fixture';
 import { ProfileNavigationFixture } from './profile-navigation-fixture';
@@ -68,10 +71,17 @@ function HomePolishFixture() {
 
 function GiftingLevelsFixture() {
   const levels = [0, 1, 10, 11, 30, 31, 60, 61, 90, 91, 100];
+  const entranceLevel = Number(new URLSearchParams(location.search).get('entrance'));
   return <section style={{ background: '#14100A', color: '#F6E6C0', padding: 20 }}>
+    {entranceLevel > 0 && <GiftingEntranceOverlay arrival={{ id: 'fixture', at: Date.now(), displayName: 'Test gifter', level: entranceLevel }} onFinish={() => {}} />}
     {levels.map(level => (
       <p key={level} data-testid={`gifting-level-${level}`}>
         <ShinyName displayNameColor="#FFFFFF" displayNameTierIndex={level}>VAMPSQUAD</ShinyName>
+        <span className="ur-slot" data-testid={`frame-level-${level}`}
+          data-gifting-frame={giftingPerks(level).animatedFrame ? giftingTier(level).key : undefined}
+          style={{ display: 'block', width: 100, height: 64, borderRadius: 0 }}>
+          <span className="ur-slot-media" style={{ display: 'block', width: '100%', height: '100%', borderRadius: 0, background: '#000' }} />
+        </span>
       </p>
     ))}
     <p data-testid="gifting-preserves-username">

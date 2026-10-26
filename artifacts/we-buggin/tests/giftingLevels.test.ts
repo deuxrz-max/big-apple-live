@@ -16,21 +16,27 @@ test('platinum unlock is derived from the shared tier function', () => {
   assert.equal(PLATINUM_UNLOCK_LEVEL, 61);
 });
 
-test('perks are cumulative per tier', () => {
+test('Silver through Deux Wild unlock both name color and animated tier frame', () => {
   assert.equal(giftingPerks(0).tierNameColor, false);
   assert.equal(giftingPerks(10).tierNameColor, false);
   assert.equal(giftingPerks(11).tierNameColor, true);
-  assert.equal(giftingPerks(30).goldSeatFrame, false);
-  assert.deepEqual([giftingPerks(31).goldSeatFrame, giftingPerks(31).entranceBanner, giftingPerks(31).animatedFrame], [true, true, false]);
-  assert.deepEqual([giftingPerks(61).animatedFrame, giftingPerks(61).entranceEffect, giftingPerks(61).neonEntrance], [true, true, false]);
+  for (let level = 0; level <= 100; level++) {
+    assert.equal(giftingPerks(level).tierNameColor, level >= 11);
+    assert.equal(giftingPerks(level).animatedFrame, level >= 11);
+    assert.equal(giftingPerks(level).entranceBanner, level >= 31);
+    assert.equal(giftingPerks(level).neonEntrance, level >= 91);
+    assert.equal('entranceEffect' in giftingPerks(level), false);
+    assert.equal('platinumExclusiveGifts' in giftingPerks(level), false);
+  }
   assert.equal(giftingPerks(91).neonEntrance, true);
-  assert.equal(giftingPerks(91).goldSeatFrame, true);
 });
 
-test('only marked gifts lock below level 61', () => {
+test('legacy exclusive flags never lock gifts at any level', () => {
   assert.equal(isGiftLocked({ id: 'a' }, 0), false);
   assert.equal(isGiftLocked({ id: 'a', platinumExclusive: false }, 1), false);
-  assert.equal(isGiftLocked({ id: 'a', platinumExclusive: true }, 60), true);
+  for (let level = 0; level <= 100; level++) {
+    assert.equal(isGiftLocked({ id: 'a', platinumExclusive: true }, level), false);
+  }
   assert.equal(isGiftLocked({ id: 'a', platinumExclusive: true }, 61), false);
   assert.equal(isGiftLocked(undefined, 0), false);
 });

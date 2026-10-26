@@ -13,7 +13,7 @@ import { nameColorProfileForAccount, setNameColorPurchaseTotalOverride } from ".
 import { roomStore } from "../room-store";
 import { GetSocialMeResponse } from "@workspace/api-zod";
 
-test("gifter XP, exclusivity and atomic spending with isolated development fixtures", async t => {
+test("gifter XP, retired exclusivity and atomic spending with isolated development fixtures", async t => {
   if (process.env.NODE_ENV !== "development") throw new Error("Development-only gift fixture");
   const token = randomUUID();
   const ids = [`gifter-test-${token}-a`, `gifter-test-${token}-b`];
@@ -73,21 +73,25 @@ test("gifter XP, exclusivity and atomic spending with isolated development fixtu
     assert.equal((await nameColorProfileForAccount(ids[0]!)).lifetimeCoinsPurchased, xp);
     await db.update(socialWallets).set({ balance: before }).where(eq(socialWallets.accountId, ids[0]!));
   });
-  await t.test("Studio exclusivity persists; preview level cannot bypass purchase or send authorization", async () => {
+  await t.test("legacy exclusive gifts are purchasable and sendable below Platinum", async () => {
     assert.equal((await getGiftCatalogItem(giftId))!.platinumExclusive, false);
     await updateGiftCatalogItem({ giftId, platinumExclusive: true });
-    assert.equal((await getGiftCatalogItem(giftId))!.platinumExclusive, true);
+    assert.equal((await getGiftCatalogItem(giftId))!.platinumExclusive, false);
+    // Old stored flags must also be harmless without migrating user data.
+    await db.update(socialGiftCatalogSettings).set({ platinumExclusive: true })
+      .where(eq(socialGiftCatalogSettings.giftId, giftId));
+    assert.equal((await getGiftCatalogItem(giftId))!.platinumExclusive, false);
     const before = await balance();
     setNameColorPurchaseTotalOverride(ids[0]!, 2_995_500);
     assert.equal((await getMe(ids[0]!)).gifterAccessLevel, 2);
-    await assert.rejects(gift(ids[0]!, names[1]!, giftId, randomUUID(), context), /Level 61/);
-    await assert.rejects(purchase(ids[0]!, giftId, randomUUID()), /Level 61/);
-    assert.equal(await balance(), before);
+    await gift(ids[0]!, names[1]!, giftId, randomUUID(), context);
+    await purchase(ids[0]!, giftId, randomUUID());
+    assert.equal(await balance(), before - 40);
     setNameColorPurchaseTotalOverride(ids[0]!, null);
   });
-  await t.test("Platinum unlocks from existing successful total, store purchase adds no XP", async () => {
+  await t.test("Platinum derives from successful total; store purchase adds no XP", async () => {
     await db.insert(socialLedger).values({
-      accountId: ids[0]!, kind: "gift_sent", delta: -(355000 - 220),
+      accountId: ids[0]!, kind: "gift_sent", delta: -(355000 - 240),
       description: "Isolated historical successful gifting fixture",
     });
     assert.equal((await nameColorProfileForAccount(ids[0]!)).tierIndex, 61);

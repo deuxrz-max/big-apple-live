@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { giftingProgress, giftingTier, GIFTING_LEVEL_THRESHOLDS } from "@workspace/beam-identity";
 import { NAME_COLOR_TIERS, existingUsernameColor, nameColorTierForLifetimeCoins } from "./gift-name-color";
-import { canAccessGiftingExclusive } from "./gifting-access";
+import { canAccessGiftingExclusive, assertGiftingAccess } from "./gifting-access";
 
 test("all 100 levels and each threshold boundary are inclusive", () => {
   assert.equal(NAME_COLOR_TIERS.length, 101);
@@ -28,7 +28,7 @@ test("supplied running totals, first gift, max level and progress are exact", ()
   assert.equal(giftingProgress(1e9).level, 100);
   assert.equal(giftingProgress(1e9).nextThreshold, null);
 });
-test("tier colors and Platinum access are independent of purchase appearance", () => {
+test("tier colors and unrestricted gift access are independent of purchase appearance", () => {
   for (const [level, name] of [[1,"Bronze"],[10,"Bronze"],[11,"Silver"],[30,"Silver"],
     [31,"Gold"],[60,"Gold"],[61,"Platinum"],[90,"Platinum"],[91,"Deux Wild"],[100,"Deux Wild"]] as const) {
     assert.equal(giftingTier(level).name, name);
@@ -37,7 +37,14 @@ test("tier colors and Platinum access are independent of purchase appearance", (
   assert.equal(existingUsernameColor(20_000), "#C0C0C0");
   assert.equal(existingUsernameColor(180_000), "#09B0EC");
   assert.equal(canAccessGiftingExclusive(false, 0), true);
-  assert.equal(canAccessGiftingExclusive(true, 354999), false);
+  assert.equal(canAccessGiftingExclusive(true, 0), true);
+  assert.equal(canAccessGiftingExclusive(true, 354999), true);
   assert.equal(canAccessGiftingExclusive(true, 355000), true);
   assert.equal(canAccessGiftingExclusive(true, 2995500), true);
+});
+
+test("retired exclusivity does not query XP or block any send path", async () => {
+  const executor = { select() { throw new Error("must not query XP for retired access restriction"); } };
+  await assertGiftingAccess("test-account", { platinumExclusive: true }, executor as never);
+  await assertGiftingAccess("test-account", { platinumExclusive: false }, executor as never);
 });

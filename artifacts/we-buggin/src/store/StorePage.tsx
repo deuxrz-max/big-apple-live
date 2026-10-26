@@ -5,7 +5,6 @@ import {
   ArrowLeft, BadgeCheck, Check, ChevronRight, Coins, Gift, LockKeyhole, Plus,
   Play, ShoppingBag, Sparkles, WandSparkles, X,
 } from 'lucide-react';
-import { isGiftLocked, PLATINUM_UNLOCK_LEVEL } from '@/gifting/gifting';
 import '@/gifting/gifting-shield.css';
 import {
   getGetEntranceEffectShopQueryKey, getGetSocialMeQueryKey,
@@ -174,7 +173,6 @@ export function StorePage() {
             {type === 'badges'
               ? <><span className="st-card-price"><Coins size={13} /> {formatCredits(item.cost)} <small>qualifying monthly spend</small></span><span className="st-card-earned">Auto-earned / not purchasable</span></>
               : <span><Coins size={13} /> {formatCredits(item.cost)} coins</span>}
-            {type === 'gifts' && isGiftLocked(item, me.data?.gifterAccessLevel ?? 0) && <span className="gifting-lock-tag" data-testid={`lock-store-gift-${item.id}`}><LockKeyhole size={11} /> Platinum · Lv {PLATINUM_UNLOCK_LEVEL}</span>}
           </span>
           <ChevronRight className="st-card-arrow" size={16} aria-hidden="true" />
           <span className="st-card-index">{String(index + 1).padStart(2, '0')}</span>
@@ -308,8 +306,8 @@ export function StorePage() {
               <div className="st-detail-price"><Coins size={17} /> {formatCredits(modalGift.cost)} <small>coins</small></div>
               {wallet && !wallet.unlimited && wallet.balance < modalGift.cost && <div className="st-detail-coin-note"><span>Not enough coins.</span><button type="button" onClick={() => setNotice(true)}><Plus size={14} /> Add coins</button></div>}
               {(me.data?.giftQuantities?.[modalGift.id] ?? 0) > 0 && <div className="st-detail-fact"><ShoppingBag size={16} /><span>In your bag: {me.data?.giftQuantities?.[modalGift.id]}</span></div>}
-              <button type="button" className="st-detail-action" disabled={giftPurchase.isPending || isGiftLocked(modalGift, me.data?.gifterAccessLevel ?? 0) || (!wallet?.unlimited && (wallet?.balance ?? 0) < modalGift.cost)} onClick={() => buyGift(modalGift.id, modalGift.name)} data-testid={`button-detail-buy-gift-${modalGift.id}`}>
-                {isGiftLocked(modalGift, me.data?.gifterAccessLevel ?? 0) ? `Unlocks at Platinum level ${PLATINUM_UNLOCK_LEVEL}` : giftPurchase.isPending && giftPurchase.variables?.data.itemId === modalGift.id ? 'Adding…' : (!wallet?.unlimited && (wallet?.balance ?? 0) < modalGift.cost) ? 'Not enough coins' : 'Buy'}
+              <button type="button" className="st-detail-action" disabled={giftPurchase.isPending || (!wallet?.unlimited && (wallet?.balance ?? 0) < modalGift.cost)} onClick={() => buyGift(modalGift.id, modalGift.name)} data-testid={`button-detail-buy-gift-${modalGift.id}`}>
+                {giftPurchase.isPending && giftPurchase.variables?.data.itemId === modalGift.id ? 'Adding…' : (!wallet?.unlimited && (wallet?.balance ?? 0) < modalGift.cost) ? 'Not enough coins' : 'Buy'}
               </button>
             </>}
           </div>}

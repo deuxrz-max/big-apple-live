@@ -1,10 +1,9 @@
 import { db, socialLedger } from "@workspace/db";
 import { and, eq, lt, sql } from "drizzle-orm";
 import { giftingProgress } from "@workspace/beam-identity";
-import { RoomError } from "../room-store";
 
-export function canAccessGiftingExclusive(platinumExclusive: boolean | undefined, xp: number): boolean {
-  return !platinumExclusive || giftingProgress(xp).level >= 61;
+export function canAccessGiftingExclusive(_platinumExclusive: boolean | undefined, _xp: number): boolean {
+  return true;
 }
 
 export async function realGiftingLevel(accountId: string, executor: Pick<typeof db, "select"> = db) {
@@ -16,14 +15,13 @@ export async function realGiftingLevel(accountId: string, executor: Pick<typeof 
   return giftingProgress(Number(row?.xp ?? 0)).level;
 }
 
-/** Real committed spending only: owner appearance overrides never unlock gifts. */
+/** Compatibility boundary: gifting-tier exclusivity has been retired.
+ * Existing flags stay stored without a data migration, but cannot restrict access.
+ */
 export async function assertGiftingAccess(
-  accountId: string,
-  item: { platinumExclusive?: boolean },
-  executor: Pick<typeof db, "select"> = db,
+  _accountId: string,
+  _item: { platinumExclusive?: boolean },
+  _executor: Pick<typeof db, "select"> = db,
 ) {
-  if (!item.platinumExclusive) return;
-  if (await realGiftingLevel(accountId, executor) < 61) {
-    throw new RoomError(403, "This exclusive gift unlocks at Platinum, gifter Level 61.");
-  }
+  // Normal balance, availability and send validations remain at each caller.
 }

@@ -88,7 +88,7 @@ export function OwnProfile() {
             )}
           </div>
         </div>
-        <small>Every successfully sent gift adds its coin value as XP. Recharges and failed sends do not count. Silver unlocks a tier name color, Gold a seat frame and entrance banner, Platinum an animated frame, entrance effect and exclusive gifts, Deux Wild a neon full-screen entrance.</small>
+        <small>Every successfully sent gift adds its coin value as XP. Recharges and failed sends do not count. Silver, Gold, Platinum and Deux Wild each unlock a name color and an animated frame matching their tier color. Gold also unlocks an entrance banner, inherited by Platinum and Deux Wild. Deux Wild adds a neon full-screen entrance. Bronze unlocks the badge only. Gifts are available at every gifting level.</small>
         {me.data.nameColorTest.enabled && (
           <div className="pf-name-tier-test">
             <label htmlFor="name-color-test-level">Development-only level preview</label>
@@ -123,7 +123,7 @@ export function OwnProfile() {
             </div>
             <button type="button" className="pf-name-tier-reset" disabled={nameColorTest.isPending}
               onClick={() => saveNameColorTestTotal(null)} data-testid="button-clear-gifting-preview">Clear test override</button>
-            <p>Preview levels never unlock Platinum-exclusive gifts; the server checks your real gift XP.</p>
+            <p>Preview levels change appearance only, never your gift XP or wallet.</p>
             {testMessage && <span className="pf-name-tier-status" role="status">{testMessage}</span>}
           </div>
         )}

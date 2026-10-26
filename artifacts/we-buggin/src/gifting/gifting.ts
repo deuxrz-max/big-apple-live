@@ -25,22 +25,15 @@ export function giftingPerks(level: number | null | undefined) {
   const rank = tierRankOf(level);
   return {
     tierNameColor: rank >= 2,
-    goldSeatFrame: rank >= 3,
     entranceBanner: rank >= 3,
-    animatedFrame: rank >= 4,
-    entranceEffect: rank >= 4,
+    animatedFrame: rank >= 2,
     neonEntrance: rank >= 5,
-    platinumExclusiveGifts: rank >= 4,
   };
 }
 
-/** `platinumExclusive` is optional on the wire until codegen lands; absent means unlocked. */
-export function isPlatinumExclusive(gift: unknown): boolean {
-  return !!gift && typeof gift === 'object' && (gift as { platinumExclusive?: unknown }).platinumExclusive === true;
-}
-
-export function isGiftLocked(gift: unknown, level: number | null | undefined): boolean {
-  return isPlatinumExclusive(gift) && normalizeGiftingLevel(level) < PLATINUM_UNLOCK_LEVEL;
+/** Legacy catalog flags no longer restrict gifts at any gifting level. */
+export function isGiftLocked(_gift: unknown, _level: number | null | undefined): boolean {
+  return false;
 }
 
 export function giftingLabel(level: number | null | undefined) {
