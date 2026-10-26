@@ -3,9 +3,9 @@ export type RoomChannelRoom = { roomId: string; label: string };
 export type RoomChannel = { slug: RoomChannelSlug; roomId: string; title: string; rooms: readonly RoomChannelRoom[] };
 
 export const ROOM_CHANNELS: readonly RoomChannel[] = [
-  { slug: 'cafe', roomId: 'CAFE01', title: 'The Cafe', rooms: [{ roomId: 'MUSIC1', label: 'Music' }, { roomId: 'COMEDY', label: 'Comedy' }, { roomId: 'NEWS01', label: 'News' }] },
-  { slug: 'screening', roomId: 'SCREEN', title: 'The Screening Room', rooms: [{ roomId: 'MOVIES', label: 'Movies' }, { roomId: 'WEBSER', label: 'Web Series' }, { roomId: 'HIST01', label: 'History' }] },
-  { slug: 'arena', roomId: 'ARENA1', title: 'The Arena', rooms: [{ roomId: 'SPORTS', label: 'Sports' }, { roomId: 'KIDS01', label: 'Pro Wrestling' }] },
+  { slug: 'cafe', roomId: 'CAFE01', title: 'Times Square', rooms: [{ roomId: 'MUSIC1', label: 'Music' }, { roomId: 'COMEDY', label: 'Comedy' }, { roomId: 'NEWS01', label: 'News' }] },
+  { slug: 'screening', roomId: 'SCREEN', title: 'Broadway', rooms: [{ roomId: 'MOVIES', label: 'Movies' }, { roomId: 'WEBSER', label: 'Web Series' }, { roomId: 'HIST01', label: 'History' }] },
+  { slug: 'arena', roomId: 'ARENA1', title: 'Harlem', rooms: [{ roomId: 'SPORTS', label: 'Sports' }, { roomId: 'KIDS01', label: 'Pro Wrestling' }] },
 ];
 
 /** Exact topic-room match only. */

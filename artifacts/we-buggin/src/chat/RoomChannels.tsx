@@ -51,7 +51,7 @@ export function RoomChannels<R extends DirectoryChannelRoom>({ rooms, loading, r
           const count = rooms.filter((r) => channelForDirectoryRoom(r.roomId)?.slug === ch.slug).reduce((n, r) => n + r.headcount, 0);
           return (
             <li key={ch.slug}>
-              <Link href={baseHref === '/' ? '/sign-in' : `/rooms/${ch.roomId}`} className="rc-tile" data-testid={`link-channel-${ch.slug}`}>
+              <Link href={baseHref === '/' ? '/sign-in' : `/rooms/${ch.roomId}`} className={`rc-tile rc-channel-${ch.slug}`} data-testid={`link-channel-${ch.slug}`}>
                 <ChannelPreview slug={ch.slug} videoId={source?.nowPlayingVideoId} title={source?.nowPlayingTitle}
                   startedAtMs={source?.nowPlayingStartedAtMs} serverNowMs={source?.nowPlayingServerNowMs} />
                 <span className="rc-tile-title">{ch.title}</span>

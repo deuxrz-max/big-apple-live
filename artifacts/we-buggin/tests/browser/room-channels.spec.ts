@@ -4,9 +4,9 @@ import { cauldronDisplayLevel } from '../../src/chat/cauldron-display-level';
 import { cauldronArtworkBounds, cauldronArtworkFit } from '../../src/chat/cauldron-artwork-fit';
 
 const groups = [
-  { slug: 'cafe', roomId: 'CAFE01', name: 'The Cafe' },
-  { slug: 'screening', roomId: 'SCREEN', name: 'The Screening Room' },
-  { slug: 'arena', roomId: 'ARENA1', name: 'The Arena' },
+  { slug: 'cafe', roomId: 'CAFE01', name: 'Times Square' },
+  { slug: 'screening', roomId: 'SCREEN', name: 'Broadway' },
+  { slug: 'arena', roomId: 'ARENA1', name: 'Harlem' },
 ];
 
 for (const width of [320, 390]) {
@@ -35,7 +35,7 @@ for (const width of [320, 390]) {
 test('channel deep links survive reload and invalid channels show the groups', async ({ page }) => {
   await page.goto('/tests/browser/harness.html?view=room-channels&channel=screening');
   await expect(page).toHaveURL(/\/rooms\/SCREEN$/);
-  await expect(page.getByRole('heading', { name: 'The Screening Room', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Broadway', exact: true })).toBeVisible();
   await expect(page.locator('[data-testid^="card-home-room-"]')).toHaveCount(0);
   await page.goto('/tests/browser/harness.html?view=room-channels&channel=missing');
   await expect(page.getByTestId('section-room-channels')).toBeVisible();
@@ -63,58 +63,26 @@ test('signed-out landing shows three channels and retains sign-in before room en
   await expect(page.locator('[data-testid^="card-home-room-"]')).toHaveCount(0);
 });
 
-test('homepage Cauldron occupies the fourth tile, keeps transparent media silent and is absent inside groups', async ({ page, request }) => {
+test('homepage Pink Card occupies the fourth tile, remains static and is absent inside groups', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  const requests: string[] = [];
-  page.on('request', request => { requests.push(request.url()); });
-  const mediaResponse = await request.get('http://127.0.0.1:80/api/gift-media/system-cauldron/still/0');
-  expect(mediaResponse.ok()).toBe(true);
-  const media = await mediaResponse.body();
-  await page.route('**/api/gift-media/system-cauldron/still/0', route =>
-    route.fulfill({ body: media, contentType: 'image/png' }));
   await page.goto('/tests/browser/harness.html?view=room-channels');
-  const cauldron = page.getByTestId('homepage-cauldron');
-  await cauldron.scrollIntoViewIfNeeded();
-  const image = page.getByTestId('homepage-cauldron-still');
-  await expect.poll(() => image.evaluate(el => (el as HTMLImageElement).naturalWidth)).toBe(266);
-  await expect(cauldron).toHaveAttribute('data-display-level', '0');
-  await expect(cauldron.locator('video')).toHaveCount(0);
-  const details = await cauldron.evaluate(el => {
-    const media = el.querySelector('img')!;
-    const style = getComputedStyle(el);
+  const card = page.getByTestId('tile-pink-card');
+  await card.scrollIntoViewIfNeeded();
+  await expect(card).toBeVisible();
+  await expect(card.locator('video')).toHaveCount(0);
+  await expect(card.locator('img')).toHaveAttribute('src', /pink-card\/media\/card$/);
+  const details = await card.evaluate(el => {
     const children = Array.from(el.closest('ul')!.children);
     const index = children.indexOf(el.closest('li')!);
-    const canvas = document.createElement('canvas');
-    canvas.width = media.naturalWidth; canvas.height = media.naturalHeight;
-    const ctx = canvas.getContext('2d')!;
-    ctx.drawImage(media, 0, 0);
-    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-    let transparent = 0;
-    for (let i = 3; i < pixels.length; i += 4) if (pixels[i] === 0) transparent++;
     return { index, before: children.slice(0, index).filter(child => child.querySelector('[data-testid^="link-channel-"]')).length,
-      nextIsLaunch: children[index + 1]?.classList.contains('st-home-go-live'),
-      background: style.backgroundColor, border: style.borderTopWidth, shadow: style.boxShadow,
-      transparent };
+      nextIsLaunch: children[index + 1]?.classList.contains('st-home-go-live') };
   });
-  expect(details).toMatchObject({ index: 3, before: 3, nextIsLaunch: true,
-    background: 'rgba(0, 0, 0, 0)', border: '0px', shadow: 'none' });
-  expect(details.transparent).toBeGreaterThan(1000);
-  expect(requests.some(url => url.includes('4e90ea00-98be-4b14-a033-7dfb4138a4cb'))).toBe(false);
-  await cauldron.screenshot({ path: '../../generated-artifacts/homepage-cauldron-390.png' });
+  expect(details).toMatchObject({ index: 3, before: 3, nextIsLaunch: true });
+  await card.screenshot({ path: '../../generated-artifacts/homepage-pink-card-390.png' });
   await page.getByTestId('link-channel-cafe').click();
-  await expect(page.getByTestId('homepage-cauldron')).toHaveCount(0);
+  await expect(page.getByTestId('tile-pink-card')).toHaveCount(0);
   await page.getByTestId('link-back-to-channel').click();
-  await expect(page.getByTestId('homepage-cauldron')).toHaveAttribute('data-display-level', '0');
-  await expect(page.getByTestId('homepage-cauldron-still')).toHaveAttribute('src', /\/still\/0$/);
-  // Refresh the actual public Home, not the fixture's /home URL (which loses
-  // its harness-only view selector on reload).
-  await page.goto('http://127.0.0.1:80/');
-  await expect(page.getByTestId('homepage-cauldron-still')).toHaveAttribute('src', /\/still\/0$/);
-  await page.reload();
-  await expect(page.getByTestId('homepage-cauldron-still')).toHaveAttribute('src', /\/still\/0$/);
-  await expect.poll(() => page.getByTestId('homepage-cauldron-still')
-    .evaluate(el => (el as HTMLImageElement).naturalWidth)).toBe(266);
-  expect(requests.some(url => /system-cauldron\/(?:webm|safari)$/.test(url))).toBe(false);
+  await expect(page.getByTestId('tile-pink-card')).toBeVisible();
 });
 
 test('supplied progress holds partial and full stills, with no time-driven fill or animated fallback', async ({ page, request }) => {
@@ -236,7 +204,7 @@ test('provider errors reveal the poster and status instead of covering them with
 });
 
 for (const width of [320, 390]) {
-  test(`channel cards keep historic compact two-column .88/1 proportions at ${width}px`, async ({ page, request }) => {
+  test(`channel cards use compact two-column 1.15/1 proportions at ${width}px`, async ({ page, request }) => {
     await page.setViewportSize({ width, height: 844 });
     const response = await request.get('http://127.0.0.1:80/api/gift-media/system-cauldron/still/0');
     expect(response.ok()).toBe(true);
@@ -245,55 +213,28 @@ for (const width of [320, 390]) {
       route.fulfill({ body: media, contentType: 'image/png' }));
     await page.goto('/tests/browser/harness.html?view=room-channels');
     const boxes = await Promise.all(['cafe', 'screening', 'arena'].map(s => page.getByTestId(`link-channel-${s}`).boundingBox()));
-    for (const b of boxes) expect(Math.abs(b!.width / b!.height - 0.88)).toBeLessThan(0.02);
+    for (const b of boxes) expect(Math.abs(b!.width / b!.height - 1.15)).toBeLessThan(0.02);
     expect(Math.abs(boxes[0]!.width - boxes[1]!.width)).toBeLessThan(1);
     expect(Math.abs(boxes[0]!.y - boxes[1]!.y)).toBeLessThan(1);
     expect(boxes[2]!.y).toBeGreaterThan(boxes[0]!.y + boxes[0]!.height);
-    const cauldronTile = page.getByTestId('tile-cauldron');
-    const cauldron = await cauldronTile.boundingBox();
-    expect(Math.abs(cauldron!.y - boxes[2]!.y)).toBeLessThan(1);
-    expect(Math.abs(cauldron!.width - boxes[2]!.width)).toBeLessThan(1);
-    expect(Math.abs(cauldron!.height - boxes[2]!.height)).toBeLessThan(1);
-    expect(cauldron!.x).toBeGreaterThan(boxes[2]!.x + boxes[2]!.width);
-    await expect(cauldronTile).toHaveCSS('background-color', 'rgb(0, 0, 0)');
-    await expect(cauldronTile).toHaveCSS('border-top-width', '1px');
-    await expect(cauldronTile).toHaveCSS('border-radius', '0px');
+    const pinkCardTile = page.getByTestId('tile-pink-card');
+    const pinkCard = await pinkCardTile.boundingBox();
+    expect(Math.abs(pinkCard!.y - boxes[2]!.y)).toBeLessThan(1);
+    expect(Math.abs(pinkCard!.width - boxes[2]!.width)).toBeLessThan(1);
+    expect(Math.abs(pinkCard!.height - boxes[2]!.height)).toBeLessThan(1);
+    expect(pinkCard!.x).toBeGreaterThan(boxes[2]!.x + boxes[2]!.width);
+    await expect(pinkCardTile).toHaveCSS('background-color', 'rgb(11, 10, 8)');
+    await expect(pinkCardTile).toHaveCSS('border-top-width', '1px');
+    await expect(pinkCardTile).toHaveCSS('border-radius', '0px');
     const launch = await page.locator('.rc-tiles > .st-home-go-live').boundingBox();
     expect(Math.abs(launch!.x - boxes[0]!.x)).toBeLessThan(1);
     expect(Math.abs(launch!.width - (boxes[1]!.x + boxes[1]!.width - boxes[0]!.x))).toBeLessThan(1);
-    expect(launch!.y - (cauldron!.y + cauldron!.height)).toBeGreaterThanOrEqual(10);
-    expect(launch!.y - (cauldron!.y + cauldron!.height)).toBeLessThanOrEqual(12);
+    expect(launch!.y - (pinkCard!.y + pinkCard!.height)).toBeGreaterThanOrEqual(8);
+    expect(launch!.y - (pinkCard!.y + pinkCard!.height)).toBeLessThanOrEqual(10);
     await expect(page.locator('.rc-tiles .st-home-go-live-button')).toHaveCSS('height', '128px');
-    const image = page.getByTestId('homepage-cauldron-still');
-    await expect(image).toHaveCSS('position', 'absolute');
-    const visible = await image.evaluate(el => {
-      const img = el as HTMLImageElement;
-      const box = img.parentElement!.getBoundingClientRect();
-      const rect = img.getBoundingClientRect();
-      const canvas = document.createElement('canvas');
-      canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(img, 0, 0);
-      const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-      let left = canvas.width, top = canvas.height, right = 0, bottom = 0;
-      for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) {
-        if (pixels[(y * canvas.width + x) * 4 + 3] > 8) {
-          left = Math.min(left, x); top = Math.min(top, y);
-          right = Math.max(right, x + 1); bottom = Math.max(bottom, y + 1);
-        }
-      }
-      const scale = rect.width / canvas.width;
-      return {
-        gain: scale / Math.min(box.width / canvas.width, box.height / canvas.height),
-        left: rect.left + left * scale - box.left, top: rect.top + top * scale - box.top,
-        right: box.right - (rect.left + right * scale), bottom: box.bottom - (rect.top + bottom * scale),
-      };
-    });
-    expect(visible.gain).toBeGreaterThan(1.8);
-    expect(visible.gain).toBeLessThanOrEqual(2.01);
-    for (const edge of [visible.left, visible.top, visible.right, visible.bottom]) expect(edge).toBeGreaterThanOrEqual(-0.6);
-    expect(Math.abs(visible.left - visible.right)).toBeLessThan(1);
-    expect(Math.abs(visible.top - visible.bottom)).toBeLessThan(1);
+    const borders = await Promise.all(['cafe', 'screening', 'arena'].map(s =>
+      page.getByTestId(`link-channel-${s}`).evaluate(el => getComputedStyle(el).borderTopColor)));
+    expect(borders).toEqual(['rgb(255, 79, 200)', 'rgb(73, 223, 255)', 'rgb(166, 255, 77)']);
     expect(await page.getByTestId('link-channel-cafe').evaluate(el => getComputedStyle(el).borderRadius)).toBe('0px');
   });
 }
@@ -310,7 +251,7 @@ test('artwork sizing doubles when possible and clamps without cutting visible ed
     { x: 10, y: 40, width: 248, height: 369 },
     { x: 0, y: 0, width: 266, height: 480 },
   ]) for (const width of [117, 154, 200]) {
-    const height = width / .88;
+      const height = width / 1.15;
     const fit = cauldronArtworkFit(266, 480, bounds, width, height);
     const scale = fit.width / 266;
     expect(scale).toBeLessThanOrEqual(2 * Math.min(width / 266, height / 480));

@@ -810,3 +810,56 @@ body.streamtalk-directory-screen #root .ch.st-home .st-home-featured-badge{
   background:rgba(24,15,28,.9);color:#ffe6a5;box-shadow:0 3px 12px #0008;
   font:850 9px/1 'DM Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;
 }
+
+/* NYC night styling: static color ambience only, never presented as live footage. */
+.st-directory.st-home{
+  background:
+    radial-gradient(ellipse at 4% 18%,rgba(255,45,178,.14),transparent 30%),
+    radial-gradient(ellipse at 96% 35%,rgba(48,174,255,.14),transparent 32%),
+    radial-gradient(ellipse at 52% 82%,rgba(139,255,74,.08),transparent 34%),
+    linear-gradient(180deg,#050509 0%,#090a10 56%,#050609 100%);
+}
+body.streamtalk-directory-screen #root .ch.st-home{
+  background:
+    radial-gradient(ellipse at 4% 18%,rgba(255,45,178,.14),transparent 30%),
+    radial-gradient(ellipse at 96% 35%,rgba(48,174,255,.14),transparent 32%),
+    radial-gradient(ellipse at 52% 82%,rgba(139,255,74,.08),transparent 34%),
+    linear-gradient(180deg,#050509 0%,#090a10 56%,#050609 100%)!important;
+}
+.st-home .rc-tiles > li > .rc-tile{
+  aspect-ratio:1.15/1;
+}
+.st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"]{
+  --channel-neon:#f4f7ff;
+  padding:10px;
+  border:1px solid var(--channel-neon,#f4f7ff);
+  background:#08090de8;
+  box-shadow:0 0 9px color-mix(in srgb,var(--channel-neon,#f4f7ff) 38%,transparent),
+    inset 0 0 12px color-mix(in srgb,var(--channel-neon,#f4f7ff) 9%,transparent);
+}
+.st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"]:hover,
+.st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"]:focus-visible{
+  border-color:var(--channel-neon,#f4f7ff);
+  outline:2px solid color-mix(in srgb,var(--channel-neon,#f4f7ff) 58%,transparent);
+  outline-offset:2px;
+  box-shadow:0 0 16px color-mix(in srgb,var(--channel-neon,#f4f7ff) 48%,transparent),
+    inset 0 0 14px color-mix(in srgb,var(--channel-neon,#f4f7ff) 12%,transparent);
+}
+.st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"] .rc-tile-title{
+  color:#fff;
+  text-shadow:0 0 8px color-mix(in srgb,var(--channel-neon,#f4f7ff) 60%,transparent),0 2px 5px #000;
+}
+.st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"] .rc-tile-rooms{
+  color:#e7e9f1;
+}
+.st-home .rc-tiles > li > a.rc-tile.rc-channel-cafe{--channel-neon:#ff4fc8}
+.st-home .rc-tiles > li > a.rc-tile.rc-channel-screening{--channel-neon:#49dfff}
+.st-home .rc-tiles > li > a.rc-tile.rc-channel-arena{--channel-neon:#a6ff4d}
+@media(max-width:420px){
+  .st-home .rc-tiles{gap:9px}
+  .st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"]{padding:8px}
+  .st-home .rc-tiles a.rc-tile[data-testid^="link-channel-"] .rc-tile-title{font-size:.93rem}
+}
+@media(prefers-reduced-motion:reduce){
+  .st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"]{transition:none}
+}
