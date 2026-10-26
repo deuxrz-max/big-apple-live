@@ -62,7 +62,7 @@ test('signed-out landing shows three channels and retains sign-in before room en
   await expect(page.locator('[data-testid^="card-home-room-"]')).toHaveCount(0);
 });
 
-test('homepage Cauldron is below all three channels, transparent, silent and absent inside groups', async ({ page, request }) => {
+test('homepage Cauldron occupies the fourth tile, keeps transparent media silent and is absent inside groups', async ({ page, request }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const requests: string[] = [];
   page.on('request', request => { requests.push(request.url()); });
@@ -82,7 +82,7 @@ test('homepage Cauldron is below all three channels, transparent, silent and abs
     const media = el.querySelector('img')!;
     const style = getComputedStyle(el);
     const children = Array.from(el.closest('ul')!.children);
-    const index = children.indexOf(el.parentElement!);
+    const index = children.indexOf(el.closest('li')!);
     const canvas = document.createElement('canvas');
     canvas.width = media.naturalWidth; canvas.height = media.naturalHeight;
     const ctx = canvas.getContext('2d')!;
@@ -243,8 +243,21 @@ for (const width of [320, 390]) {
     expect(Math.abs(boxes[0]!.width - boxes[1]!.width)).toBeLessThan(1);
     expect(Math.abs(boxes[0]!.y - boxes[1]!.y)).toBeLessThan(1);
     expect(boxes[2]!.y).toBeGreaterThan(boxes[0]!.y + boxes[0]!.height);
-    const cauldron = await page.getByTestId('homepage-cauldron').boundingBox();
-    expect(cauldron!.y).toBeGreaterThanOrEqual(boxes[2]!.y + boxes[2]!.height - 1);
+    const cauldronTile = page.getByTestId('tile-cauldron');
+    const cauldron = await cauldronTile.boundingBox();
+    expect(Math.abs(cauldron!.y - boxes[2]!.y)).toBeLessThan(1);
+    expect(Math.abs(cauldron!.width - boxes[2]!.width)).toBeLessThan(1);
+    expect(Math.abs(cauldron!.height - boxes[2]!.height)).toBeLessThan(1);
+    expect(cauldron!.x).toBeGreaterThan(boxes[2]!.x + boxes[2]!.width);
+    await expect(cauldronTile).toHaveCSS('background-color', 'rgb(0, 0, 0)');
+    await expect(cauldronTile).toHaveCSS('border-top-width', '1px');
+    await expect(cauldronTile).toHaveCSS('border-radius', '0px');
+    const launch = await page.locator('.rc-tiles > .st-home-go-live').boundingBox();
+    expect(Math.abs(launch!.x - boxes[0]!.x)).toBeLessThan(1);
+    expect(Math.abs(launch!.width - (boxes[1]!.x + boxes[1]!.width - boxes[0]!.x))).toBeLessThan(1);
+    expect(launch!.y - (cauldron!.y + cauldron!.height)).toBeGreaterThanOrEqual(10);
+    expect(launch!.y - (cauldron!.y + cauldron!.height)).toBeLessThanOrEqual(12);
+    await expect(page.locator('.rc-tiles .st-home-go-live-button')).toHaveCSS('height', '128px');
     expect(await page.getByTestId('link-channel-cafe').evaluate(el => getComputedStyle(el).borderRadius)).toBe('0px');
   });
 }

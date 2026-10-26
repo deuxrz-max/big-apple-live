@@ -61,7 +61,11 @@ export function RoomChannels<R extends DirectoryChannelRoom>({ rooms, loading, r
             </li>
           );
         })}
-        <li className="hp-cauldron-slot"><HomepageCauldron /></li>
+        <li className="hp-cauldron-slot">
+          <div className="rc-tile rc-cauldron-tile" role="group" aria-label="Cauldron" data-testid="tile-cauldron">
+            <HomepageCauldron />
+          </div>
+        </li>
         <li className="st-home-go-live">{goLive}</li>
       </ul>
       {!loading && others.length > 0 && (

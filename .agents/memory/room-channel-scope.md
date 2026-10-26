@@ -14,7 +14,11 @@ Rooms discovery must use the earlier compact room-box proportions, not a newly i
 
 **How to apply:** Inspect historical layout before changing dimensions; preserve unified source content and square black-and-gold styling. Pause previews offscreen/on page hide and remove them on room entry to avoid background playback.
 
-Cauldron is approved only as a transparent homepage visual directly below the three channel groups, with no added background/border. Cauldron and Cauldron Overflow are system assets, not selectable gifts or entrances; retain the underlying media. Do not wire Overflow playback or add tickets, hours tracking, drawings, rewards, daily targets or global announcements without new approval.
+Cauldron belongs in its own black-and-gold box matching the compact channel tiles, alongside Arena as the fourth tile. Go Live spans the row immediately underneath the three channels plus Cauldron, without a large empty gap. Preserve transparency of the artwork inside its framed box. Cauldron and Cauldron Overflow are system assets, not selectable gifts or entrances; retain the underlying media. Do not wire Overflow playback or add tickets, hours tracking, drawings, rewards, daily targets or global announcements without new approval.
+
+**Why:** The owner replaced the earlier floating, unframed Cauldron placement with “its own box next to the rooms and the Go Live box right under all of them.”
+
+**How to apply:** Keep the shared channel dimensions and two-column grid, without changing actual-fill still rendering or exposing Overflow.
 
 The Home Cauldron must hold the empty artwork at zero progress and hold the matching fill when authoritative progress is supplied. Never autoplay/loop the fill clip or animate an image fallback independently of progress, including after Home re-entry or refresh.
 
