@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, Crown, Flame, Gift, House, Plus, Sparkles, UserRound, X, type LucideIcon } from 'lucide-react';
+import { ChevronDown, Crown, Flame, Gift, House, Plus, ShoppingBag, Sparkles, UserRound, X, type LucideIcon } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { buyCoinsReturnState } from '@/social/buy-coins-navigation';
 import { useQueryClient } from '@tanstack/react-query';
@@ -70,6 +70,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
     () => recipient?.username ? { mode: 'one', username: recipient.username } : { mode: 'all' },
   );
   const [activeCategoryId, setActiveCategoryId] = useState('popular');
+  const [clockNow, setClockNow] = useState(() => Date.now());
   const catalogScroller = useRef<HTMLDivElement>(null);
   const ref = useRef<HTMLDivElement>(null);
   const opener = useRef<Element | null>(document.activeElement);
@@ -100,6 +101,19 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
     };
   }, [roomId, streamId]);
   const items = useMemo(() => (me.data ? ownedGiftItems(me.data) : []), [me.data]);
+  useEffect(() => {
+    if (!items.length) return;
+    const timer = window.setInterval(() => setClockNow(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, [items.length]);
+  const remainingTime = (expiresAt: string | null) => {
+    if (!expiresAt) return 'No expiry';
+    const minutes = Math.max(0, Math.ceil((new Date(expiresAt).getTime() - clockNow) / 60_000));
+    if (!minutes) return 'Expired · refreshing bag';
+    const days = Math.floor(minutes / 1440);
+    const hours = Math.floor((minutes % 1440) / 60);
+    return days ? `Expires in ${days}d ${hours}h` : hours ? `Expires in ${hours}h ${minutes % 60}m` : `Expires in ${minutes}m`;
+  };
   const catalog = useMemo(
     () => roomId || streamId ? me.data?.gifts ?? [] : [],
     [me.data?.gifts, roomId, streamId],
@@ -107,14 +121,19 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
   const categories = useMemo(() => {
     const specialGifts = catalog.filter(isSpecialGift);
     const vipGifts = catalog.filter(g => /vip/i.test(`${g.id} ${g.name}`));
-    const result: { id: string; label: string; Icon: LucideIcon; gifts: typeof catalog }[] = [
+    const bagItems = items.map(item => {
+      const gift = me.data?.gifts.find(candidate => candidate.id === item.id);
+      return gift ?? { id: item.id, name: item.name, cost: 0, iconUrl: null };
+    });
+    const result: { id: string; label: string; Icon: LucideIcon; gifts: Array<{ id: string; name: string; cost: number; iconUrl?: string | null }> }[] = [
+      { id: 'my-bag', label: 'My Bag', Icon: ShoppingBag, gifts: bagItems },
       { id: 'popular', label: 'Popular', Icon: Flame, gifts: catalog },
       ...(specialGifts.length ? [{ id: 'special', label: 'Special', Icon: Sparkles, gifts: specialGifts }] : []),
       ...(catalog.length > specialGifts.length ? [{ id: 'room', label: 'Room', Icon: House, gifts: catalog.filter(g => !isSpecialGift(g)) }] : []),
       ...(vipGifts.length ? [{ id: 'vip', label: 'VIP', Icon: Crown, gifts: vipGifts }] : []),
     ];
     return result;
-  }, [catalog]);
+  }, [catalog, items, me.data?.gifts]);
   const activeCategory = categories.find(category => category.id === activeCategoryId) ?? categories[0] ?? null;
   const selected = catalog.find(i => i.id === sel) ?? items.find((i) => i.id === sel) ?? null;
   const price = me.data?.gifts.find(g => g.id === sel)?.cost ?? 0;
@@ -128,10 +147,14 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
     ?? recipients.find(person => person.isHost)
     ?? recipients[0]
     ?? null;
-  const canSend = selectedRecipients.length > 0 && (!!streamId || (!!roomId && !!sessionId)) && !!sel && catalog.some(gift => gift.id === sel);
+  const canSend = selectedRecipients.length > 0 && (!!streamId || (!!roomId && !!sessionId)) && !!sel
+    && catalog.some(gift => gift.id === sel);
   const unlimited = me.data?.wallet.unlimited === true;
-  const totalCost = price * quantity * selectedRecipients.length;
-  const enough = unlimited || (me.data?.wallet.balance ?? 0) >= totalCost;
+  const heldQuantity = sel ? me.data?.giftQuantities?.[sel] ?? 0 : 0;
+  const totalCost = price * Math.max(0, quantity * selectedRecipients.length - heldQuantity);
+  const bagOnly = activeCategoryId === 'my-bag';
+  const enoughStored = !bagOnly || heldQuantity >= quantity * selectedRecipients.length;
+  const enough = enoughStored && (unlimited || (me.data?.wallet.balance ?? 0) >= totalCost);
 
   useEffect(() => {
     if (!sel || catalog.some(gift => gift.id === sel)) return;
@@ -177,7 +200,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
     const recipientIntent = recipientSelection.mode === 'all'
       ? 'all'
       : `one:${recipientSelection.username.toLowerCase()}`;
-    const signature = JSON.stringify([contextId, sel, quantity, recipientIntent]);
+    const signature = JSON.stringify([contextId, sel, quantity, recipientIntent, bagOnly]);
     if (!retry.current || retry.current.signature !== signature) {
       retry.current = {
         signature,
@@ -203,6 +226,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
           recipient: username,
           giftId: sel,
           quantity,
+          ...(bagOnly ? { useGiftBagOnly: true } : {}),
           ...(roomId ? { roomId } : {}),
           ...(streamId ? { streamId } : {}),
           idempotencyKey: attempt.keys.get(normalized)!,
@@ -325,6 +349,34 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
               <p>Your gift catalog could not be loaded.</p>
               <button type="button" className="gift-panel-secondary" onClick={() => me.refetch()} data-testid="gift-bag-retry">Retry</button>
             </div>
+          ) : activeCategory?.id === 'my-bag' ? (
+            items.length > 0 ? (
+              <div className="gift-panel-grid gift-panel-owned" data-testid="gift-bag-list">
+                {items.map(gift => {
+                  const lots = me.data?.giftBagLots?.filter(lot => lot.giftId === gift.id) ?? [];
+                  return <button key={gift.id} type="button"
+                    className={`gift-panel-card gift-panel-owned-card${sel === gift.id ? ' is-selected' : ''}`}
+                    aria-pressed={sel === gift.id} disabled={busy || !catalog.some(item => item.id === gift.id)} data-testid={`gift-bag-item-${gift.id}`}
+                    onClick={() => chooseGift(gift.id)}>
+                    <span className="gift-panel-card-art"><GiftArtwork gift={gift} size={48} /></span>
+                    <span className="gift-panel-card-name">{gift.name}</span>
+                    <span className="gift-panel-owned-count">In bag · {gift.quantity ?? 0}</span>
+                    <span className="gift-panel-owned-expiry">
+                      {lots.length ? lots.map((lot, index) =>
+                        <span key={`${gift.id}-${index}`}>{lot.quantity} · {remainingTime(lot.expiresAt)}</span>)
+                        : <span>{gift.quantity ?? 0} · No expiry</span>}
+                    </span>
+                    {!catalog.some(item => item.id === gift.id) && <span className="gift-panel-owned-expiry">This gift is not currently available to send.</span>}
+                    <span className="gift-panel-owned-value">Held gift</span>
+                  </button>;
+                })}
+              </div>
+            ) : (
+              <div className="gift-panel-empty" data-testid="gift-bag-empty">
+                <ShoppingBag size={26} aria-hidden />
+                <p>Your bag is empty. Buy a gift in the Store to hold it here.</p>
+              </div>
+            )
           ) : !catalog.length ? (
             <div className="gift-panel-empty">
               <Gift size={26} aria-hidden />
@@ -348,20 +400,14 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
                 </div>
               </div>
             </>
-          ) : items.length > 0 ? (
-            <div className="gift-panel-grid gift-panel-owned" data-testid="gift-bag-list">
-              {items.map(gift => <div key={gift.id} className="gift-panel-owned-card">
-                <span className="gift-panel-card-art"><GiftArtwork gift={gift} size={48} /></span>
-                <span className="gift-panel-card-name">{gift.name}</span>
-                {gift.quantity && <span className="gift-panel-owned-count">Owned · {gift.quantity}</span>}
-              </div>)}
-            </div>
           ) : null}
         </div>
 
         <div className="gift-panel-send-zone">
           {selected && selectedRecipients.length > 0 && <p className="gift-panel-total">
-            {selectedRecipients.length > 1 ? `${selectedRecipients.length} recipients · ` : ''}{quantity} × {selected.name} · <CoinAmount>{totalCost.toLocaleString()} coins</CoinAmount>
+            {selectedRecipients.length > 1 ? `${selectedRecipients.length} recipients · ` : ''}{quantity} × {selected.name}
+            {heldQuantity > 0 && ` · ${Math.min(heldQuantity, quantity * selectedRecipients.length)} from My Bag`}
+            {' · '}<CoinAmount>{totalCost.toLocaleString()} coins to charge</CoinAmount>
           </p>}
           {error && <p role="alert" className="gift-panel-message is-error">{error}</p>}
           {notice && <p role="status" className="gift-panel-message is-success">{notice}</p>}

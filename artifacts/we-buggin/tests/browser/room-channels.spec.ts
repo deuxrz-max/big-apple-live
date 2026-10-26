@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { channelForDirectoryRoom, roomChannelHref } from '../../src/chat/room-channels';
 import { cauldronDisplayLevel } from '../../src/chat/cauldron-display-level';
+import { cauldronArtworkBounds, cauldronArtworkFit } from '../../src/chat/cauldron-artwork-fit';
 
 const groups = [
   { slug: 'cafe', roomId: 'CAFE01', name: 'The Cafe' },
@@ -235,8 +236,13 @@ test('provider errors reveal the poster and status instead of covering them with
 });
 
 for (const width of [320, 390]) {
-  test(`channel cards keep historic compact two-column .88/1 proportions at ${width}px`, async ({ page }) => {
+  test(`channel cards keep historic compact two-column .88/1 proportions at ${width}px`, async ({ page, request }) => {
     await page.setViewportSize({ width, height: 844 });
+    const response = await request.get('http://127.0.0.1:80/api/gift-media/system-cauldron/still/0');
+    expect(response.ok()).toBe(true);
+    const media = await response.body();
+    await page.route('**/api/gift-media/system-cauldron/still/0', route =>
+      route.fulfill({ body: media, contentType: 'image/png' }));
     await page.goto('/tests/browser/harness.html?view=room-channels');
     const boxes = await Promise.all(['cafe', 'screening', 'arena'].map(s => page.getByTestId(`link-channel-${s}`).boundingBox()));
     for (const b of boxes) expect(Math.abs(b!.width / b!.height - 0.88)).toBeLessThan(0.02);
@@ -258,6 +264,60 @@ for (const width of [320, 390]) {
     expect(launch!.y - (cauldron!.y + cauldron!.height)).toBeGreaterThanOrEqual(10);
     expect(launch!.y - (cauldron!.y + cauldron!.height)).toBeLessThanOrEqual(12);
     await expect(page.locator('.rc-tiles .st-home-go-live-button')).toHaveCSS('height', '128px');
+    const image = page.getByTestId('homepage-cauldron-still');
+    await expect(image).toHaveCSS('position', 'absolute');
+    const visible = await image.evaluate(el => {
+      const img = el as HTMLImageElement;
+      const box = img.parentElement!.getBoundingClientRect();
+      const rect = img.getBoundingClientRect();
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0);
+      const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      let left = canvas.width, top = canvas.height, right = 0, bottom = 0;
+      for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) {
+        if (pixels[(y * canvas.width + x) * 4 + 3] > 8) {
+          left = Math.min(left, x); top = Math.min(top, y);
+          right = Math.max(right, x + 1); bottom = Math.max(bottom, y + 1);
+        }
+      }
+      const scale = rect.width / canvas.width;
+      return {
+        gain: scale / Math.min(box.width / canvas.width, box.height / canvas.height),
+        left: rect.left + left * scale - box.left, top: rect.top + top * scale - box.top,
+        right: box.right - (rect.left + right * scale), bottom: box.bottom - (rect.top + bottom * scale),
+      };
+    });
+    expect(visible.gain).toBeGreaterThan(1.8);
+    expect(visible.gain).toBeLessThanOrEqual(2.01);
+    for (const edge of [visible.left, visible.top, visible.right, visible.bottom]) expect(edge).toBeGreaterThanOrEqual(-0.6);
+    expect(Math.abs(visible.left - visible.right)).toBeLessThan(1);
+    expect(Math.abs(visible.top - visible.bottom)).toBeLessThan(1);
     expect(await page.getByTestId('link-channel-cafe').evaluate(el => getComputedStyle(el).borderRadius)).toBe('0px');
   });
 }
+
+test('artwork sizing doubles when possible and clamps without cutting visible edges', () => {
+  const pixels = new Uint8ClampedArray(4 * 4 * 4);
+  pixels[(1 * 4 + 1) * 4 + 3] = 255;
+  pixels[(2 * 4 + 2) * 4 + 3] = 255;
+  pixels[3] = 1; // Codec noise outside the artwork.
+  expect(cauldronArtworkBounds(pixels, 4, 4)).toEqual({ x: 1, y: 1, width: 2, height: 2 });
+  expect(cauldronArtworkBounds(new Uint8ClampedArray(64), 4, 4)).toBeNull();
+  for (const bounds of [
+    { x: 25, y: 147, width: 216, height: 226 },
+    { x: 10, y: 40, width: 248, height: 369 },
+    { x: 0, y: 0, width: 266, height: 480 },
+  ]) for (const width of [117, 154, 200]) {
+    const height = width / .88;
+    const fit = cauldronArtworkFit(266, 480, bounds, width, height);
+    const scale = fit.width / 266;
+    expect(scale).toBeLessThanOrEqual(2 * Math.min(width / 266, height / 480));
+    expect(fit.left + bounds.x * scale).toBeGreaterThanOrEqual(-1e-9);
+    expect(fit.top + bounds.y * scale).toBeGreaterThanOrEqual(-1e-9);
+    expect(fit.left + (bounds.x + bounds.width) * scale).toBeLessThanOrEqual(width + 1e-9);
+    expect(fit.top + (bounds.y + bounds.height) * scale).toBeLessThanOrEqual(height + 1e-9);
+  }
+  expect(cauldronArtworkFit(100, 100, { x: 40, y: 40, width: 20, height: 20 }, 100, 100).width).toBe(200);
+});

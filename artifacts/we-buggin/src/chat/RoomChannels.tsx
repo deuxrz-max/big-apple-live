@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Link, Redirect, useSearch } from 'wouter';
 import { ROOM_CHANNELS, channelBySlug, channelForDirectoryRoom, roomChannelHref } from './room-channels';
 import './room-channels.css';
-import { HomepageCauldron } from './HomepageCauldron';
+import { PinkCardRewardTile } from './PinkCardRewardTile';
 import { ChannelPreview } from './ChannelPreview';
 
 export type DirectoryChannelRoom = {
@@ -61,10 +61,8 @@ export function RoomChannels<R extends DirectoryChannelRoom>({ rooms, loading, r
             </li>
           );
         })}
-        <li className="hp-cauldron-slot">
-          <div className="rc-tile rc-cauldron-tile" role="group" aria-label="Cauldron" data-testid="tile-cauldron">
-            <HomepageCauldron />
-          </div>
+        <li className="pc-slot">
+          <PinkCardRewardTile signedIn={baseHref !== '/'} />
         </li>
         <li className="st-home-go-live">{goLive}</li>
       </ul>

@@ -1,18 +1,21 @@
-import { db, socialWallets, socialLedger, socialGiftEvents, socialGiftBag } from "@workspace/db";
+import { db, socialWallets, socialLedger, socialGiftEvents } from "@workspace/db";
 import { desc, eq, sql } from "drizzle-orm";
 import { RoomError, roomStore } from "../room-store";
 import { DAILY_REWARD } from "./catalog";
-import { assertContact, lockAccounts, lockPair, replay, requireAccount, targetAccount, wallet } from "./core";
+import { assertContact, hasClaimedDaily, lockAccounts, lockPair, replay, requireAccount, targetAccount, wallet } from "./core";
 import { SPIRIT_PUP, spiritSplit } from './spirit-pup-policy';
 import { validateGiftRoom } from './room-gifts';
 import { requireAdult } from '../community';
 import { hasDevelopmentUnlimitedCredits, planCreditSpend } from "./credits-policy";
+import { addGiftBagLot, consumeGiftBagItems, ensureGiftBagLots, expirePurchasedGiftLots } from "./gift-bag-inventory";
 import { liveStreamIdForAccount, isLiveStreamActiveOrStarting } from "../live-stream-policy";
 import { getSendableGiftCatalogItem } from "../gift-studio-catalog";
 import { requireSendableGift } from "../gift-availability";
 import { giftChargeTotal } from "./gift-quantity";
 import { assertGiftingAccess } from "./gifting-access";
 import { nameColorProfileForAccount } from "./gift-name-color-data";
+import { enterPinkReward } from "../pink-card-rewards";
+import { rewardCycleBounds } from "../pink-card-policy";
 
 const giftSendTails = new Map<string, Promise<void>>();
 
@@ -41,16 +44,19 @@ export async function claimDaily(id: string) {
   const result = await db.transaction(async tx => {
     await lockAccounts(tx, [id]);
     const [row] = await tx.select().from(socialWallets).where(eq(socialWallets.accountId, id));
-    const day = new Date().toISOString().slice(0, 10);
-    if (row!.lastClaimDay === day) throw new RoomError(409, "Today's reward is already claimed. Come back after 00:00 UTC.");
+    const at = new Date();
+    const { cycle: day } = rewardCycleBounds(at);
+    if (await hasClaimedDaily(id, row!.lastClaimDay, tx, at)) throw new RoomError(409, "Today's reward is already claimed. Come back after 3 AM Eastern.");
     await tx.update(socialWallets).set({ balance: sql`${socialWallets.balance} + ${DAILY_REWARD}`,
       earned: sql`${socialWallets.earned} + ${DAILY_REWARD}`, lastClaimDay: day }).where(eq(socialWallets.accountId, id));
-    await tx.insert(socialLedger).values({ accountId: id, delta: DAILY_REWARD, kind: "reward", description: `Daily reward · ${day}` });
+    await tx.insert(socialLedger).values({ accountId: id, delta: DAILY_REWARD, kind: "reward", description: `Daily reward · ${day}`, createdAt: at });
+    await enterPinkReward(tx, id, at);
     return wallet(id, tx, profile.username);
   });
+  return result;
 }
 export async function gift(id: string, recipient: string, giftId: string, key: string,
-  context?: { roomId: string; sessionId: string } | { streamId: string }, quantity = 1) {
+  context?: { roomId: string; sessionId: string } | { streamId: string }, quantity = 1, useGiftBagOnly = false) {
   const sender = await requireAccount(id);
   const target = await targetAccount(recipient);
   const item = requireSendableGift(
@@ -87,9 +93,13 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
       ? validateGiftRoom(roomContext.roomId.toUpperCase(), roomContext.sessionId, id, target.accountId)
       : null;
     if (roomContext && historyId !== boundHistory) throw new RoomError(409, 'This room changed. Re-enter before sending.');
+    const now = new Date();
+    const held = await consumeGiftBagItems(tx, id, item.id, quantity, now);
+    if (useGiftBagOnly && held !== quantity) throw new RoomError(409, "That stored gift is no longer available in your bag.");
+    const billableCost = totalCost - held * item.cost;
     const current = await wallet(id, tx, sender.username);
     const unlimited = hasDevelopmentUnlimitedCredits(sender.username);
-    const spend = planCreditSpend(current.balance, totalCost, unlimited);
+    const spend = planCreditSpend(current.balance, billableCost, unlimited);
     if (!spend.allowed) throw new RoomError(409, roomGift ? "Not enough coins. Open the coin store to get more." : "Not enough coins. Claim a daily coin reward first.");
     const recipientCredits = roomGift ? spiritSplit(totalCost).recipientCredits : totalCost;
     if (spend.debit > 0) {
@@ -99,7 +109,7 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
     }
     await tx.update(socialWallets).set({ balance: sql`${socialWallets.balance} + ${recipientCredits}`, received: sql`${socialWallets.received} + ${recipientCredits}` }).where(eq(socialWallets.accountId, target.accountId));
     await tx.insert(socialLedger).values([
-      { accountId: id, delta: -giftLedgerDebit(spend.debit, totalCost, unlimited), kind: "gift_sent", description: `${item.name}${quantity > 1 ? ` ×${quantity}` : ""} sent to ${target.username}${unlimited ? " (development unlimited coins)" : ""}`, peer: target.username, requestKey: key, refKey: ref },
+      { accountId: id, delta: -giftLedgerDebit(totalCost, totalCost, unlimited), kind: "gift_sent", description: `${item.name}${quantity > 1 ? ` ×${quantity}` : ""} sent to ${target.username}${unlimited ? " (development unlimited coins)" : ""}`, peer: target.username, requestKey: key, refKey: ref },
       { accountId: target.accountId, delta: recipientCredits, kind: "gift_received", description: `${item.name}${quantity > 1 ? ` ×${quantity}` : ""} from ${sender.username}`, peer: sender.username },
     ]);
     let liveGiftEvent: {
@@ -115,13 +125,11 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
       });
     }
     if (roomGift && roomContext) {
-      await tx.insert(socialGiftBag).values({ accountId: target.accountId, giftId: item.id, quantity })
-        .onConflictDoUpdate({ target: [socialGiftBag.accountId, socialGiftBag.giftId], set: { quantity: sql`${socialGiftBag.quantity} + ${quantity}` } });
+      await addGiftBagLot(tx, target.accountId, item.id, quantity, "received", now);
     }
     if (streamContext) {
       if (roomGift) {
-        await tx.insert(socialGiftBag).values({ accountId: target.accountId, giftId: item.id, quantity })
-          .onConflictDoUpdate({ target: [socialGiftBag.accountId, socialGiftBag.giftId], set: { quantity: sql`${socialGiftBag.quantity} + ${quantity}` } });
+        await addGiftBagLot(tx, target.accountId, item.id, quantity, "received", now);
       }
       liveGiftEvent = {
         streamId: streamContext.streamId, senderAccountId: id, senderUsername: sender.username,
@@ -147,6 +155,9 @@ export async function purchase(id: string, itemId: string, key: string) {
     await lockAccounts(tx, [id]);
     if (await replay(tx, id, key, ref)) return wallet(id, tx, buyer.username);
     await assertGiftingAccess(id, item, tx);
+    const purchasedAt = new Date();
+    await ensureGiftBagLots(tx, id);
+    await expirePurchasedGiftLots(tx, id, purchasedAt);
     const [current] = await tx.select().from(socialWallets).where(eq(socialWallets.accountId, id));
     if (!current) throw new RoomError(409, "Open Rewards to initialize your wallet");
     const unlimited = hasDevelopmentUnlimitedCredits(buyer.username);
@@ -165,11 +176,8 @@ export async function purchase(id: string, itemId: string, key: string) {
       requestKey: key as `${string}-${string}-${string}-${string}-${string}`,
       refKey: ref,
     });
-    await tx.insert(socialGiftBag).values({ accountId: id, giftId: item.id, quantity: 1 })
-      .onConflictDoUpdate({
-        target: [socialGiftBag.accountId, socialGiftBag.giftId],
-        set: { quantity: sql`${socialGiftBag.quantity} + 1` },
-      });
+    await addGiftBagLot(tx, id, item.id, 1, "purchase", purchasedAt,
+      new Date(purchasedAt.getTime() + 7 * 24 * 60 * 60 * 1000));
     return wallet(id, tx, buyer.username);
   });
 }

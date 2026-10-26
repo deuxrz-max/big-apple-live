@@ -30,7 +30,8 @@
     "test:joker-webgl": "esbuild tests/jokerWebgl.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-joker-webgl-tests.mjs && node --test /tmp/we-buggin-joker-webgl-tests.mjs",
     "test:joker-finish": "esbuild tests/jokerFinish.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-joker-finish-tests.mjs && node --test /tmp/we-buggin-joker-finish-tests.mjs",
     "test:gifting-levels": "esbuild tests/giftingLevels.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-gifting-levels-tests.mjs && node --test /tmp/we-buggin-gifting-levels-tests.mjs",
-    "test:passport-removal": "esbuild tests/passportRemoval.test.ts --bundle --platform=node --format=esm --jsx=automatic --outfile=/tmp/we-buggin-passport-removal-tests.mjs && node --test /tmp/we-buggin-passport-removal-tests.mjs"
+    "test:passport-removal": "esbuild tests/passportRemoval.test.ts --bundle --platform=node --format=esm --jsx=automatic --outfile=/tmp/we-buggin-passport-removal-tests.mjs && node --test /tmp/we-buggin-passport-removal-tests.mjs",
+    "test:pink-card": "esbuild tests/pinkCard.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-pink-card-tests.mjs && node --test /tmp/we-buggin-pink-card-tests.mjs"
   },
   "devDependencies": {
     "@ffmpeg/core": "^0.12.10",

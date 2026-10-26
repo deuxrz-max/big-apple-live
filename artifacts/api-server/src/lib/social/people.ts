@@ -1,5 +1,5 @@
-import { db, accountProfiles, socialSettings, socialWallets, socialRelations, socialLoginStreaks, socialGiftBag } from "@workspace/db";
-import { and, eq, ne, or, ilike, desc, sql } from "drizzle-orm";
+import { db, accountProfiles, socialSettings, socialWallets, socialRelations, socialLoginStreaks, socialGiftBag, socialGiftBagLots } from "@workspace/db";
+import { and, eq, ne, or, ilike, desc, isNotNull, isNull, lte, gt, sql } from "drizzle-orm";
 import type { SocialProfileInput } from "@workspace/api-zod";
 import { RoomError } from "../room-store";
 import { assertContact, ensureSocial, lockAccounts, lockPair, pairBlocked, person, requireAccount, targetAccount, wallet } from "./core";
@@ -12,10 +12,27 @@ import { nameColorProfileForAccount, nameColorPurchaseTotalOverride } from "./gi
 import { hasOwnerTierTestAccess } from "./owner-entrance-effects-policy";
 import { getHangoutStreakSummary } from "../community-hangout-rewards";
 import { realGiftingLevel } from "./gifting-access";
+import { expirePurchasedGiftLots } from "./gift-bag-inventory";
 
 export async function getMe(id: string) {
   const profile = await requireAccount(id);
   await ensureSocial(id);
+  const now = new Date();
+  const [expiredGiftLot] = await db.select({ id: socialGiftBagLots.id }).from(socialGiftBagLots)
+    .where(and(eq(socialGiftBagLots.accountId, id), isNotNull(socialGiftBagLots.expiresAt), lte(socialGiftBagLots.expiresAt, now)))
+    .limit(1);
+  if (expiredGiftLot) await db.transaction(async tx => {
+    await lockAccounts(tx, [id]);
+    await expirePurchasedGiftLots(tx, id, now);
+  });
+  const giftBagLots = await db.select({
+    giftId: socialGiftBagLots.giftId,
+    quantity: socialGiftBagLots.quantity,
+    expiresAt: socialGiftBagLots.expiresAt,
+  }).from(socialGiftBagLots).where(and(eq(socialGiftBagLots.accountId, id),
+    or(isNull(socialGiftBagLots.expiresAt), gt(socialGiftBagLots.expiresAt, now))))
+    .orderBy(socialGiftBagLots.giftId, socialGiftBagLots.expiresAt);
+  const giftBag = giftBagLots.map(lot => ({ ...lot, expiresAt: lot.expiresAt?.toISOString() ?? null }));
   const [[streak], giftsOwned, badgeState, badges] = await Promise.all([
     db.select().from(socialLoginStreaks).where(eq(socialLoginStreaks.accountId, id)),
     db.select().from(socialGiftBag).where(eq(socialGiftBag.accountId, id)),
@@ -44,6 +61,7 @@ export async function getMe(id: string) {
     },
     wallet: await wallet(id, db, profile.username), inventory: giftsOwned.map(g => g.giftId),
     giftQuantities: Object.fromEntries(giftsOwned.map(g => [g.giftId, g.quantity])),
+    giftBagLots: giftBag,
     badges,
     equippedBadgeId: badgeState.equippedBadgeId,
     badgeExpirations: Object.fromEntries(badges.filter(badge => badge.expiresAt)

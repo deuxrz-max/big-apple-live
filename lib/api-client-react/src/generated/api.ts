@@ -94,6 +94,9 @@ import type {
   NameColorTestTotalResponse,
   Participant,
   PhotoReviewEntry,
+  PinkCardEntry,
+  PinkCardPreference,
+  PinkCardReward,
   ProfileEnvelope,
   ProfileInput,
   ProfilePhotoResult,
@@ -163,6 +166,230 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetPinkCardRewardUrl = () => {
+
+
+
+
+  return `/api/rewards/pink-card`
+}
+
+export const getPinkCardReward = async ( options?: Parameters<typeof customFetch>[1]): Promise<PinkCardReward> => {
+
+  return customFetch<PinkCardReward>(getGetPinkCardRewardUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPinkCardRewardQueryKey = () => {
+    return [
+    `/api/rewards/pink-card`
+    ] as const;
+    }
+
+
+export const getGetPinkCardRewardQueryOptions = <TData = Awaited<ReturnType<typeof getPinkCardReward>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPinkCardReward>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPinkCardRewardQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPinkCardReward>>> = ({ signal }) => getPinkCardReward({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPinkCardReward>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPinkCardRewardQueryResult = NonNullable<Awaited<ReturnType<typeof getPinkCardReward>>>
+export type GetPinkCardRewardQueryError = ErrorType<unknown>
+
+
+
+export function useGetPinkCardReward<TData = Awaited<ReturnType<typeof getPinkCardReward>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPinkCardReward>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPinkCardRewardQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetPinkCardEntryUrl = () => {
+
+
+
+
+  return `/api/social/pink-card/entry`
+}
+
+export const getPinkCardEntry = async ( options?: Parameters<typeof customFetch>[1]): Promise<PinkCardEntry> => {
+
+  return customFetch<PinkCardEntry>(getGetPinkCardEntryUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPinkCardEntryQueryKey = () => {
+    return [
+    `/api/social/pink-card/entry`
+    ] as const;
+    }
+
+
+export const getGetPinkCardEntryQueryOptions = <TData = Awaited<ReturnType<typeof getPinkCardEntry>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPinkCardEntry>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPinkCardEntryQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPinkCardEntry>>> = ({ signal }) => getPinkCardEntry({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPinkCardEntry>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPinkCardEntryQueryResult = NonNullable<Awaited<ReturnType<typeof getPinkCardEntry>>>
+export type GetPinkCardEntryQueryError = ErrorType<unknown>
+
+
+
+export function useGetPinkCardEntry<TData = Awaited<ReturnType<typeof getPinkCardEntry>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPinkCardEntry>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPinkCardEntryQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdatePinkCardEntryUrl = () => {
+
+
+
+
+  return `/api/social/pink-card/entry`
+}
+
+export const updatePinkCardEntry = async (pinkCardPreference: PinkCardPreference, options?: Parameters<typeof customFetch>[1]): Promise<PinkCardEntry> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PinkCardEntry>(getUpdatePinkCardEntryUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(pinkCardPreference)
+  }
+);}
+
+
+
+
+
+export const getUpdatePinkCardEntryMutationKey = () => ['updatePinkCardEntry'] as const;
+
+export const getUpdatePinkCardEntryMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePinkCardEntry>>, TError,UpdatePinkCardEntryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updatePinkCardEntry>>, TError,UpdatePinkCardEntryMutationVariables, TContext> => {
+
+const mutationKey = getUpdatePinkCardEntryMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePinkCardEntry>>, UpdatePinkCardEntryMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  updatePinkCardEntry(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdatePinkCardEntryMutationResult = NonNullable<Awaited<ReturnType<typeof updatePinkCardEntry>>>
+    export type UpdatePinkCardEntryMutationBody = BodyType<PinkCardPreference>
+    export type UpdatePinkCardEntryMutationError = ErrorType<unknown>
+    export type UpdatePinkCardEntryMutationVariables = {data: BodyType<PinkCardPreference>}
+
+    export const useUpdatePinkCardEntry = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePinkCardEntry>>, TError,UpdatePinkCardEntryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updatePinkCardEntry>>,
+        TError,
+        UpdatePinkCardEntryMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdatePinkCardEntryMutationOptions(options));
+    }
 
 export const getGetModeratorBotSettingsUrl = () => {
 

@@ -11,6 +11,7 @@ import type { MyOwnedBadge } from './myOwnedBadge';
 import type { NameColorProgress } from './nameColorProgress';
 import type { NameColorTestState } from './nameColorTestState';
 import type { SocialGift } from './socialGift';
+import type { SocialGiftBagLot } from './socialGiftBagLot';
 import type { SocialMeBadgeExpirations } from './socialMeBadgeExpirations';
 import type { SocialMeCountriesItem } from './socialMeCountriesItem';
 import type { SocialMeGiftQuantities } from './socialMeGiftQuantities';
@@ -41,5 +42,6 @@ export interface SocialMe {
   products: SocialProduct[];
   gifts: SocialGift[];
   giftQuantities?: SocialMeGiftQuantities;
+  giftBagLots?: SocialGiftBagLot[];
   countries: SocialMeCountriesItem[];
 }

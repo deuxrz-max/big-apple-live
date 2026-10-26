@@ -6,6 +6,7 @@ import {
   useGetSocialMe, useGetSocialConversation, useSendSocialMessage, useDeleteSocialConversation,
   useClaimSocialDailyReward, useGetSocialLedger, useGetSocialLeaderboard, useGetGifterLeaderboard, getGetGifterLeaderboardQueryKey,
   getGetSocialMeQueryKey, getGetSocialConversationQueryKey, getGetSocialLedgerQueryKey,
+  getPinkCardEntry,
 } from '@workspace/api-client-react';
 import { BadgeMark, CoinAmount, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, fmt, refreshSocial, useIdemKey } from './common';
 import { BadgeArt } from './BadgeArt';
@@ -98,7 +99,14 @@ export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
   if (me.isError || !me.data) return <ErrorBox error={me.error} retry={() => me.refetch()} />;
   const { wallet: w, products, gifts, inventory } = me.data;
   const doClaim = () => { setMsg(null); claim.mutate(undefined, {
-    onSuccess: () => { setMsg({ ok: true, t: <>Claimed <CoinAmount>{w.dailyReward.toLocaleString()} coins</CoinAmount>.</> }); refreshSocial(qc); },
+    onSuccess: () => {
+      const base = <>Claimed <CoinAmount>{w.dailyReward.toLocaleString()} coins</CoinAmount>.</>;
+      setMsg({ ok: true, t: base }); refreshSocial(qc);
+      // Only mention the Pink Card draw when the server confirms an active entry.
+      getPinkCardEntry().then((e) => {
+        if (e.entered && !e.optedOut) setMsg({ ok: true, t: <>{base} <span data-testid="text-pink-card-entered">You're in today's Pink Card draw.</span></> });
+      }).catch(() => {});
+    },
     onError: (e) => setMsg({ ok: false, t: errMsg(e) }) }); };
   return (
     <section>
@@ -112,7 +120,7 @@ export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
           <div><dt>Coins sent</dt><dd><CoinAmount>{w.sent.toLocaleString()}</CoinAmount></dd></div>
         </dl>
         <button type="button" className="bm-btn bm-btn-primary" disabled={!w.canClaimDaily || claim.isPending} onClick={doClaim} data-testid="button-claim">
-          {claim.isPending ? 'Claiming...' : w.canClaimDaily ? <>Claim <CoinAmount>{w.dailyReward.toLocaleString()} daily coins</CoinAmount></> : 'Claimed today, back after 00:00 UTC'}</button>
+          {claim.isPending ? 'Claiming...' : w.canClaimDaily ? <>Claim <CoinAmount>{w.dailyReward.toLocaleString()} daily coins</CoinAmount></> : 'Claimed today, back after 3 AM Eastern'}</button>
       </div>
       {msg && <Msg ok={msg.ok}>{msg.t}</Msg>}
       <h2 className="sc-h2">Badge store</h2>

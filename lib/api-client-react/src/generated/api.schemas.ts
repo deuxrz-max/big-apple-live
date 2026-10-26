@@ -5,6 +5,28 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface PinkCardWinner {
+  id: string;
+  name: string;
+  prizeName: string;
+  drawnAt: string;
+}
+
+export interface PinkCardReward {
+  cycle: string;
+  serverTime: string;
+  winner: PinkCardWinner | null;
+}
+
+export interface PinkCardEntry {
+  entered: boolean;
+  optedOut: boolean;
+}
+
+export interface PinkCardPreference {
+  optedOut: boolean;
+}
+
 export interface FavoriteRoom {
   roomId: string;
   label: string;
@@ -1446,6 +1468,28 @@ export interface RoomSession {
 
 export interface ErrorResponse {
   error: string;
+}
+
+export interface PinkCardWinner4b96100 {
+  id: string;
+  name: string;
+  prizeName: string;
+  drawnAt: string;
+}
+
+export interface PinkCardReward4b96100 {
+  cycle: string;
+  serverTime: string;
+  winner: PinkCardWinner4b96100 | null;
+}
+
+export interface PinkCardEntry4b96100 {
+  entered: boolean;
+  optedOut: boolean;
+}
+
+export interface PinkCardPreference4b96100 {
+  optedOut: boolean;
 }
 
 export interface FavoriteRoom4b96100 {
@@ -3460,6 +3504,14 @@ export interface HangoutStreakSummary {
   rewardClaimedToday: boolean;
 }
 
+export interface SocialGiftBagLot {
+  giftId: string;
+  /** @minimum 1 */
+  quantity: number;
+  /** @nullable */
+  expiresAt: string | null;
+}
+
 export interface SocialMe {
   /**
      * Real ledger-earned level; excludes development appearance overrides.
@@ -3483,6 +3535,7 @@ export interface SocialMe {
   products: SocialProduct[];
   gifts: SocialGift[];
   giftQuantities?: SocialMeGiftQuantities;
+  giftBagLots?: SocialGiftBagLot[];
   countries: SocialMeCountriesItem[];
 }
 
@@ -3608,6 +3661,8 @@ export interface SocialGiftInput {
      * @maximum 1314
      */
   quantity?: number;
+  /** Do not charge for missing units; reject if held inventory is insufficient. */
+  useGiftBagOnly?: boolean;
   idempotencyKey: string;
 }
 

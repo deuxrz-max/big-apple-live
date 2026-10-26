@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import {
   db, accountProfiles, chatAdmissions, giftStudioAssets, socialGiftCatalogSettings,
-  socialGiftEvents, socialLedger, socialWallets, socialSettings,
+  socialGiftEvents, socialLedger, socialWallets, socialSettings, socialGiftBagLots,
 } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
 import { getMe } from "./people";
@@ -87,6 +87,14 @@ test("gifter XP, retired exclusivity and atomic spending with isolated developme
     await gift(ids[0]!, names[1]!, giftId, randomUUID(), context);
     await purchase(ids[0]!, giftId, randomUUID());
     assert.equal(await balance(), before - 40);
+    const afterStorePurchase = await balance();
+    const [heldGift] = await db.select().from(socialGiftBagLots)
+      .where(eq(socialGiftBagLots.accountId, ids[0]!));
+    assert.ok(heldGift);
+    assert.equal(heldGift.expiresAt!.getTime() - heldGift.createdAt.getTime(), 7 * 24 * 60 * 60 * 1000);
+    await gift(ids[0]!, names[1]!, giftId, randomUUID(), context, 1, true);
+    assert.equal(await balance(), afterStorePurchase, "sending the stored gift does not charge again");
+    assert.equal((await getMe(ids[0]!)).giftQuantities?.[giftId] ?? 0, 0);
     setNameColorPurchaseTotalOverride(ids[0]!, null);
   });
   await t.test("Platinum derives from successful total; store purchase adds no XP", async () => {
@@ -99,6 +107,13 @@ test("gifter XP, retired exclusivity and atomic spending with isolated developme
     assert.equal((await nameColorProfileForAccount(ids[0]!)).lifetimeCoinsPurchased, 355000);
     await gift(ids[0]!, names[1]!, giftId, randomUUID(), context);
     assert.equal((await nameColorProfileForAccount(ids[0]!)).lifetimeCoinsPurchased, 355020);
+    await purchase(ids[0]!, giftId, randomUUID());
+    await db.update(socialGiftBagLots).set({ expiresAt: new Date(Date.now() - 1_000) })
+      .where(eq(socialGiftBagLots.accountId, ids[0]!));
+    const afterExpiredPurchase = await balance();
+    assert.equal((await getMe(ids[0]!)).giftQuantities?.[giftId] ?? 0, 0, "expired purchased gifts leave the usable bag");
+    await assert.rejects(gift(ids[0]!, names[1]!, giftId, randomUUID(), context, 1, true), /no longer available in your bag/);
+    assert.equal(await balance(), afterExpiredPurchase, "an expired bag gift is not silently charged as a new purchase");
     await updateGiftCatalogItem({ giftId, platinumExclusive: false });
     assert.equal((await getGiftCatalogItem(giftId))!.platinumExclusive, false);
   });

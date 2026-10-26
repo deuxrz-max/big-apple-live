@@ -49,4 +49,4 @@
 - [Profile navigation](profile-navigation.md) — pictures open profiles directly; preserve underlying state, Chess swipes and created-room hands.
 - [Audit review gates](audit-task-review-gates.md) — complete only one cleanup task, then stop for owner review and explicit permission to continue.
 - [Gift panel design](gift-panel-design.md) — explicit rounding exception for the reference-style gift sheet; keep photo frames square and sending behavior unchanged.
-- [Room channel scope](room-channel-scope.md) — three direct-entry combined video feeds, not category pickers; Cauldron on Home, Overflow hidden and event logic deferred.
+- [Room channel and reward scope](room-channel-scope.md) — direct-entry combined feeds; pink-card rewards replace Cauldron, with six daily draws and one winner per draw.

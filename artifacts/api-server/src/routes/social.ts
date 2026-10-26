@@ -753,7 +753,7 @@ router.post("/social/gifts", async (req, res): Promise<void> => {
       if (!recipient) throw new RoomError(404, "This livestream is no longer available.");
       await requireLiveStreamGiftAccess(senderId, recipient.accountId, input.data.streamId!);
       return gift(senderId, input.data.recipient, input.data.giftId, input.data.idempotencyKey,
-        { streamId: input.data.streamId! }, input.data.quantity ?? 1);
+        { streamId: input.data.streamId! }, input.data.quantity ?? 1, input.data.useGiftBagOnly ?? false);
     });
     if ("liveGiftEvent" in result && result.liveGiftEvent) {
       const senderNameColor = await nameColorProfileForAccount(senderId);
@@ -775,7 +775,7 @@ router.post("/social/gifts", async (req, res): Promise<void> => {
     ? { roomId: input.data.roomId, sessionId: req.get('X-Room-Session') ?? '' }
     : undefined;
   const operation = () => gift(senderId, input.data.recipient, input.data.giftId, input.data.idempotencyKey,
-    context, input.data.quantity ?? 1);
+    context, input.data.quantity ?? 1, input.data.useGiftBagOnly ?? false);
   res.json(context
     ? await serializeGiftSends(`room:${context.roomId.toUpperCase()}`, operation)
     : await operation());

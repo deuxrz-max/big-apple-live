@@ -1,7 +1,7 @@
 .rc-tiles > li.hp-cauldron-slot { min-width: 0; padding: 0; }
 .rc-tiles .rc-cauldron-tile { justify-content: center; background: #000; }
-.rc-cauldron-tile .hp-cauldron { height: 100%; min-height: 0; overflow: hidden; }
-.rc-cauldron-tile .hp-cauldron-media { width: 100%; height: 100%; max-height: none; object-fit: contain; }
+.rc-cauldron-tile .hp-cauldron { position: relative; height: 100%; min-height: 0; overflow: hidden; }
+.rc-cauldron-tile .hp-cauldron-media { width: 100%; height: 100%; max-width: none; max-height: none; object-fit: contain; }
 .hp-cauldron { display: flex; justify-content: center; align-items: center; width: 100%; background: transparent !important; border: 0 !important; box-shadow: none !important; outline: none; overflow: visible; pointer-events: none; }
 .hp-cauldron::before, .hp-cauldron::after { content: none !important; }
 .hp-cauldron-media { display: block; width: 100%; max-height: 260px; height: auto; object-fit: contain; background: transparent !important; border: 0 !important; border-radius: 0; box-shadow: none !important; filter: none !important; }

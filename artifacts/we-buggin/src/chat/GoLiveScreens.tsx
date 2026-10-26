@@ -234,6 +234,8 @@ function liveGiftRecipients(
   return [{ username: hostUsername, displayName: hostDisplayName || hostUsername, isHost: true }];
 }
 
+import { PinkCardAnnouncement } from "./PinkCardAnnouncement";
+
 export function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd, onLeave, ownUsername }: {
   streamId: string;
   hostMode: boolean;
@@ -453,6 +455,7 @@ export function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd,
 
   return <main className={`st-live-room${hostMode ? " is-host" : " is-viewer"}${hostMode && hostState?.cameraFacing === "user" ? " is-front-camera" : ""}`}
     data-testid="live-room">
+    {hostMode && <PinkCardAnnouncement path={`/live/${encodeURIComponent(streamId)}`} />}
     <div className="st-live-player">
       {hostMode && localStream
         ? <LocalPreview stream={localStream} videoRef={localVideoRef} onBlocked={markCameraBlocked} />

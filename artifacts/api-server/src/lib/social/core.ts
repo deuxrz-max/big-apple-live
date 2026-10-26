@@ -1,5 +1,7 @@
 import { db, accountProfiles, socialSettings, socialWallets, socialRelations, socialLedger, socialMessages } from "@workspace/db";
 import { and, eq, or, sql } from "drizzle-orm";
+import { rewardCycleBounds } from "../pink-card-policy";
+import { desc } from "drizzle-orm";
 import { RoomError } from "../room-store";
 import { publicProfile } from "../account-profiles";
 import { DAILY_REWARD } from "./catalog";
@@ -103,11 +105,22 @@ export async function person(viewer: string, profile: ProfileRow, settings?: Set
     } : {}),
   };
 }
+export async function hasClaimedDaily(id: string, lastClaimDay: string | null, tx: Tx | typeof db, at = new Date()) {
+  const cycle = rewardCycleBounds(at);
+  const [receipt] = await tx.select({ createdAt: socialLedger.createdAt }).from(socialLedger).where(and(
+    eq(socialLedger.accountId, id), eq(socialLedger.kind, "reward"),
+    sql`${socialLedger.description} LIKE 'Daily reward · %'`,
+  )).orderBy(desc(socialLedger.createdAt)).limit(1);
+  // Prefer the receipt's actual instant over the former UTC calendar key.
+  // Missing legacy receipts fail closed for an already-recorded current-day claim.
+  return receipt ? receipt.createdAt >= cycle.start : lastClaimDay === cycle.cycle;
+}
 export async function wallet(id: string, tx: Tx | typeof db = db, username?: string) {
   const [row] = await tx.select().from(socialWallets).where(eq(socialWallets.accountId, id));
   if (!row) throw new RoomError(409, "Open Rewards to initialize your wallet");
+  const claimed = await hasClaimedDaily(id, row.lastClaimDay, tx);
   return { balance: row.balance, earned: row.earned, received: row.received, sent: row.sent,
-    canClaimDaily: row.lastClaimDay !== new Date().toISOString().slice(0, 10), dailyReward: DAILY_REWARD,
+    canClaimDaily: !claimed, dailyReward: DAILY_REWARD,
     unlimited: hasDevelopmentUnlimitedCredits(username) };
 }
 export async function replay(tx: Tx, id: string, key: string, ref: string) {

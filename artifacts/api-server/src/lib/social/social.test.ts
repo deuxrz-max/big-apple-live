@@ -40,7 +40,7 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     await assert.rejects(saveSocialProfile(a, { ...prefs, badgeId: "beam-champion" }), /cannot be selected manually/);
     await assert.rejects(saveSocialProfile(a, { ...prefs, country: "XX" }), /country/);
   });
-  await t.test("a concurrent daily claim pays exactly once per UTC day", async () => {
+  await t.test("a concurrent daily claim pays exactly once per Eastern 3 AM cycle", async () => {
     const results = await Promise.allSettled(Array.from({ length: 6 }, () => claimDaily(a)));
     assert.equal(results.filter(r => r.status === "fulfilled").length, 1);
     assert.equal((await getMe(a)).wallet.balance, 25);
@@ -102,7 +102,7 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     await gift(b, names[0]!, "good-vibes", giftKey);
     await gift(b, names[0]!, "good-vibes", giftKey);
     assert.equal((await getMe(a)).wallet.balance, 5);
-    assert.equal((await getMe(b)).wallet.balance, 40);
+    assert.equal((await getMe(b)).wallet.balance, 45, "sending the gift already in the bag does not charge its price twice");
     await assert.rejects(gift(b, names[0]!, "big-love", giftKey), /retry key/);
     const [row] = await db.select().from(socialWallets).where(eq(socialWallets.accountId, b));
     assert.equal(row!.received, 25);

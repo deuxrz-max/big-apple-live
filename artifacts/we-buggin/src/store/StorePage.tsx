@@ -110,7 +110,7 @@ export function StorePage() {
     setMessage(null);
     giftPurchase.mutate({ data: { itemId: giftId, idempotencyKey: requestId() } }, {
       onSuccess: () => {
-        setMessage({ ok: true, text: `${name} was added to your gift collection. It does not send a gift or change past gift history.` });
+        setMessage({ ok: true, text: `${name} was added to your bag. If unsent, it expires 7 days after purchase.` });
         setSelected(null);
         void queryClient.invalidateQueries({ queryKey: getGetSocialMeQueryKey() });
       },
@@ -302,7 +302,10 @@ export function StorePage() {
               </div>
             </>}
             {selected.type === 'gifts' && modalGift && <>
-              <p>Collect a copy for your bag. Buying does not send this gift or alter gift receipts or history.</p>
+              <p>Buy this gift to hold it in My Bag and send it later. Buying does not send it immediately.</p>
+              <div className="st-detail-fact" role="note" data-testid="gift-expiry-before-purchase">
+                <ShoppingBag size={16} /><span>Unsent purchased gifts expire 7 days after purchase and are then removed from your usable bag.</span>
+              </div>
               <div className="st-detail-price"><Coins size={17} /> {formatCredits(modalGift.cost)} <small>coins</small></div>
               {wallet && !wallet.unlimited && wallet.balance < modalGift.cost && <div className="st-detail-coin-note"><span>Not enough coins.</span><button type="button" onClick={() => setNotice(true)}><Plus size={14} /> Add coins</button></div>}
               {(me.data?.giftQuantities?.[modalGift.id] ?? 0) > 0 && <div className="st-detail-fact"><ShoppingBag size={16} /><span>In your bag: {me.data?.giftQuantities?.[modalGift.id]}</span></div>}

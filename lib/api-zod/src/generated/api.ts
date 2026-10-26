@@ -8,6 +8,34 @@
 import * as zod from 'zod';
 
 
+export const GetPinkCardRewardResponse = zod.object({
+  "cycle": zod.string(),
+  "serverTime": zod.string(),
+  "winner": zod.union([zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "prizeName": zod.string(),
+  "drawnAt": zod.string()
+}),zod.null()])
+})
+
+
+export const GetPinkCardEntryResponse = zod.object({
+  "entered": zod.boolean(),
+  "optedOut": zod.boolean()
+})
+
+
+export const UpdatePinkCardEntryBody = zod.object({
+  "optedOut": zod.boolean()
+})
+
+export const UpdatePinkCardEntryResponse = zod.object({
+  "entered": zod.boolean(),
+  "optedOut": zod.boolean()
+})
+
+
 export const getModeratorBotSettingsResponseBannedWordsItemMin = 2;
 export const getModeratorBotSettingsResponseBannedWordsItemMax = 80;
 
@@ -1629,6 +1657,7 @@ export const getSocialMeResponseProfilePassportPlatformsItemColorRegExp = new Re
 
 
 
+
 export const GetSocialMeResponse = zod.object({
   "gifterAccessLevel": zod.number().int().min(getSocialMeResponseGifterAccessLevelMin).max(getSocialMeResponseGifterAccessLevelMax).optional().describe('Real ledger-earned level; excludes development appearance overrides.'),
   "nameColorProgress": zod.object({
@@ -1750,6 +1779,11 @@ export const GetSocialMeResponse = zod.object({
   "iconStatus": zod.enum(['transparent', 'fallback', 'manual-transparent', 'manual-fallback', 'builtin'])
 })),
   "giftQuantities": zod.record(zod.string(), zod.number().int().min(1)).optional(),
+  "giftBagLots": zod.array(zod.object({
+  "giftId": zod.string(),
+  "quantity": zod.number().int().min(1),
+  "expiresAt": zod.coerce.date().nullable()
+})).optional(),
   "countries": zod.array(zod.object({
   "code": zod.string(),
   "name": zod.string()
@@ -3166,6 +3200,7 @@ export const SendSocialGiftBody = zod.object({
   "roomId": zod.string().optional(),
   "streamId": zod.string().optional(),
   "quantity": zod.number().int().min(1).max(sendSocialGiftBodyQuantityMax).optional(),
+  "useGiftBagOnly": zod.boolean().optional().describe('Do not charge for missing units; reject if held inventory is insufficient.'),
   "idempotencyKey": zod.string().uuid()
 })
 

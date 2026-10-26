@@ -1,6 +1,6 @@
 ---
 name: Room channel organization scope
-description: Three direct-entry combined video channels replace category pickers; Cauldron homepage-only and Overflow hidden.
+description: Three direct-entry video channels and the owner-approved pink-card reward replacement.
 ---
 Each Home channel must open one combined video experience directly, not a category picker or separate subrooms: The Cafe combines Music, Comedy and News; The Screening Room combines Movies, Web Series and History; The Arena combines Sports and Pro Wrestling. Keep the three channels separate, never one global feed.
 
@@ -14,20 +14,26 @@ Rooms discovery must use the earlier compact room-box proportions, not a newly i
 
 **How to apply:** Inspect historical layout before changing dimensions; preserve unified source content and square black-and-gold styling. Pause previews offscreen/on page hide and remove them on room entry to avoid background playback.
 
-Cauldron belongs in its own black-and-gold box matching the compact channel tiles, alongside Arena as the fourth tile. Go Live spans the row immediately underneath the three channels plus Cauldron, without a large empty gap. Preserve transparency of the artwork inside its framed box. Cauldron and Cauldron Overflow are system assets, not selectable gifts or entrances; retain the underlying media. Do not wire Overflow playback or add tickets, hours tracking, drawings, rewards, daily targets or global announcements without new approval.
+The owner replaced the Cauldron concept with Edward's static pink-neon playing card in the existing fourth Home reward tile, alongside Arena. Display the single winner's name inside the card. Go Live stays immediately below the grid. Remove cauldron visuals and fill-triggered reward logic when implementing the replacement, preserving unrelated card-game functionality.
 
-**Why:** The owner replaced the earlier floating, unframed Cauldron placement with “its own box next to the rooms and the Go Live box right under all of them.”
+**Why:** The owner revised the feature to “one winner” and six random draws rather than cauldron fill.
 
-**How to apply:** Keep the shared channel dimensions and two-column grid, without changing actual-fill still rendering or exposing Overflow.
+**How to apply:** Use the uploaded static reference and uploaded shuffle video, with transparent shuffle/reveal replacing Overflow globally across rooms. If either asset is unavailable, report the dependency; do not substitute unrelated artwork. The rounded pink-card reference is explicitly approved, not permission to round unrelated app surfaces.
 
-The Home Cauldron must hold the empty artwork at zero progress and hold the matching fill when authoritative progress is supplied. Never autoplay/loop the fill clip or animate an image fallback independently of progress, including after Home re-entry or refresh.
+Reward eligibility comes from claiming the daily 25 coins, never room seats/presence, purchases or gifting. Respect the earlier opt-out requirement. Schedule six random draws within the daily cycle anchored to 3 AM Eastern, not six draws at reset. Each draw has one eligible winner and one random catalog gift or entrance effect in their bag, excluding hidden system assets. A winner is ineligible until a rolling 24-hour cooldown expires, independent of daily reset.
 
-**Why:** The owner reported the decorative clip falsely filling and draining while the actual cauldron was empty: “It should display the empty part.”
+**Why:** The owner explicitly changed three winners to one, specified six random draws, and limited each user to one win in any 24 hours.
 
-**How to apply:** Keep display-state rendering separate from tracking/reward logic. Do not invent a target, counter or elapsed-time-based progress to make the visual move.
+**How to apply:** Keep the reward system separate from the card-game engine and payment switches. Inspect actual claim/reset and draw implementation rather than assuming earlier proposed cauldron behavior exists.
 
-Overflow must remain unseen in normal use, including Home, rooms, gift previews and waiting/autoplay states. Preserve it for a future target-met announcement in every room, but the target and all event wiring remain deferred.
+Daily-cycle time is Eastern wall-clock 03:00, while the win cooldown is exactly 24 elapsed hours; a DST cycle can therefore be 23 or 25 hours.
 
-**Why:** The owner separately approved placement and catalog removal only after the room grouping.
+**Why:** The owner requires the existing Eastern reset and a separate rolling 24-hour win limit. Treating both as a fixed UTC day would violate one of those rules.
 
-**How to apply:** Keep homepage media separate from user-selectable catalogs and preserve unrelated gifts. Hide reserved assets from Gift Studio's selectable/preview library and block accidental activation or reassignment. Never infer approval for reward mechanics from approval to display the visual.
+**How to apply:** Keep these clocks separate when adjusting schedules or eligibility. The daily coin claim previously used midnight UTC despite the earlier requested Eastern reset; do not restore that older behavior.
+
+Conservative preview defaults: no prize when a draw has no eligible entrant or active prize; do not invent winners. No retroactive awards for elapsed slots at first initialization or expired previous cycles. Rejoining after opting out waits for the next daily claim.
+
+**Why:** These unspecified cases should not create extra prizes, silently invent an entry, or show fabricated announcements.
+
+**How to apply:** Present them as implementation defaults open to owner revision, not as rules the owner explicitly chose.

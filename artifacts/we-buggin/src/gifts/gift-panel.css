@@ -120,3 +120,8 @@
   body .gift-room-panel .gift-panel-skeletons div{border-radius:14px !important}
   body .gift-room-panel .gift-panel-card-quantity{border-radius:6px !important}
 }
+
+.gift-room-panel .gift-panel-owned-card{width:100%;min-width:0;text-align:center;color:inherit}
+.gift-room-panel .gift-panel-owned-expiry{display:grid;gap:2px;max-width:100%;color:#e4c979;font-size:10px;line-height:1.25}
+.gift-room-panel .gift-panel-owned-expiry span{overflow-wrap:anywhere}
+.gift-room-panel .gift-panel-owned-value{color:#e4c979;font-size:11px;font-weight:750}

@@ -17,6 +17,37 @@ tags:
   - name: video
     description: Authenticated university video beam management and LiveKit access
 paths:
+  /rewards/pink-card:
+    get:
+      operationId: getPinkCardReward
+      responses:
+        "200":
+          description: Latest public pink-card draw, never future draw times
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PinkCardReward" }
+  /social/pink-card/entry:
+    get:
+      operationId: getPinkCardEntry
+      responses:
+        "200":
+          description: Current daily reward entry
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PinkCardEntry" }
+    put:
+      operationId: updatePinkCardEntry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PinkCardPreference" }
+      responses:
+        "200":
+          description: Updated opt-out preference
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PinkCardEntry" }
   /account/chat/bots/settings:
     get:
       operationId: getModeratorBotSettings
@@ -1484,6 +1515,35 @@ components:
         type: string
         pattern: "^[a-f0-9]{32}$"
   schemas:
+    PinkCardWinner:
+      type: object
+      required: [id, name, prizeName, drawnAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        prizeName: { type: string }
+        drawnAt: { type: string }
+    PinkCardReward:
+      type: object
+      required: [cycle, serverTime, winner]
+      properties:
+        cycle: { type: string }
+        serverTime: { type: string }
+        winner:
+          anyOf:
+            - { $ref: "#/components/schemas/PinkCardWinner" }
+            - { type: "null" }
+    PinkCardEntry:
+      type: object
+      required: [entered, optedOut]
+      properties:
+        entered: { type: boolean }
+        optedOut: { type: boolean }
+    PinkCardPreference:
+      type: object
+      required: [optedOut]
+      properties:
+        optedOut: { type: boolean }
     FavoriteRoom:
       type: object
       required: [roomId, label]

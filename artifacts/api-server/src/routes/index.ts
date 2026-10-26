@@ -20,6 +20,7 @@ import { requireCompletedProfile } from "../lib/account-profiles";
 import { devAudioHarnessEnabled } from "../lib/dev-audio-harness-policy";
 import devAudioHarnessRouter from "./dev-audio-harness";
 
+import pinkCardRewardsRouter from "./pink-card-rewards";
 const router: IRouter = Router();
 
 router.use(healthRouter);
@@ -34,6 +35,7 @@ router.use(["/account/rooms", "/account/live-streams", "/account/host-room-block
 });
 router.use(identityRouter);
 router.use(socialRouter);
+router.use(pinkCardRewardsRouter);
 router.use(chessRouter);
 router.use(chatRouter);
 router.use(universityChatRouter);

@@ -8,6 +8,7 @@ import { getGetSocialMeQueryKey, useGetSocialMe } from '@workspace/api-client-re
 import { ErrorBoundary, type ErrorFallbackProps } from '@/components/error-boundary';
 import { APP_NAME, Wordmark } from '@/components/brand';
 import { BottomNavigation } from '@/components/bottom-navigation';
+import { PinkCardAnnouncement } from '@/chat/PinkCardAnnouncement';
 import NotFound from '@/pages/not-found';
 import { clearAllCreds } from '@/lib/room-creds';
 import { AdultGate, ChatDirectory, ChatProfile, LiveProfileGate, ProfileGate, ProfilePhotoReviewPage, PublicChatLanding, TextChatRoom } from '@/chat/ChatApp';
@@ -480,6 +481,7 @@ function ClerkProviderWithRoutes() {
           </Switch>
         </RoutedErrorBoundary></div>
         <BottomNavigation />
+        <PinkCardAnnouncement path={currentPath} />
         <NameColorLevelUpToast />
         </QuickProfileProvider>
       </QueryClientProvider>

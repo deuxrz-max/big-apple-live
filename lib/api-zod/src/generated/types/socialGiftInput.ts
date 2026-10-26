@@ -16,5 +16,7 @@ export interface SocialGiftInput {
      * @maximum 1314
      */
   quantity?: number;
+  /** Do not charge for missing units; reject if held inventory is insufficient. */
+  useGiftBagOnly?: boolean;
   idempotencyKey: string;
 }
