@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, Crown, Flame, Gift, House, Sparkles, Star, UserRound, X, type LucideIcon } from 'lucide-react';
+import { ChevronDown, Crown, Flame, Gift, House, Plus, Sparkles, UserRound, X, type LucideIcon } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { buyCoinsReturnState } from '@/social/buy-coins-navigation';
 import { useQueryClient } from '@tanstack/react-query';
@@ -14,6 +14,7 @@ import { bigTierGiftMedia } from './BigTierGift';
 import { ownedGiftItems } from './gift-items';
 import '@/gifting/gifting-shield.css';
 import './gifts.css';
+import './gift-panel.css';
 import { isSpecialGift } from './gift-catalog-groups';
 
 type Recipient = {
@@ -24,6 +25,14 @@ type Recipient = {
   photoUrl?: string | null;
   isHost?: boolean;
 } | null;
+
+const QUICK_QUANTITIES = [1, 10, 66, 99];
+const ALL_QUANTITIES = [1, 10, 66, 99, 188, 520, 1314];
+function abbreviate(n: number) {
+  if (n >= 1_000_000) return `${(Math.floor(n / 100_000) / 10).toString()}M`;
+  if (n >= 1_000) return `${(Math.floor(n / 100) / 10).toFixed(1)}k`;
+  return n.toLocaleString();
+}
 
 const FOCUSABLE = 'button:not([disabled]),[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
 
@@ -247,10 +256,13 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
       <div ref={ref} className="gift-framework gift-sheet gift-room-panel" role="dialog" aria-modal="true" aria-labelledby={titleId} onKeyDown={onKey} data-testid="gift-bag">
         <div className="gift-panel-handle" aria-hidden="true"><span /></div>
         <header className="gift-panel-heading">
-          <div>
-            <h2 id={titleId} data-testid="gift-bag-title">Send a gift</h2>
-            <p>Choose a seat and a gift for the room.</p>
-          </div>
+          <h2 id={titleId} data-testid="gift-bag-title">Send a gift</h2>
+          {me.data && <Link href="/community/coins" state={buyCoinsReturnState()} className="gift-panel-balance-pill"
+            aria-label={`Balance ${unlimited ? 'unlimited' : me.data.wallet.balance.toLocaleString()} coins. Buy coins`} data-testid="gift-bag-balance">
+            <span className="gift-panel-coin" aria-hidden />
+            <span>{unlimited ? 'Unlimited' : abbreviate(me.data.wallet.balance)}</span>
+            <Plus size={13} strokeWidth={3} aria-hidden />
+          </Link>}
           <button type="button" className="gift-panel-icon-button" onClick={onClose} aria-label="Close gift panel" data-testid="gift-bag-close"><X size={18} aria-hidden /></button>
         </header>
 
@@ -303,7 +315,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
           </button>)}
         </nav>}
 
-        <div className="gift-panel-scroll">
+        <div className="gift-panel-scroll" ref={catalogScroller}>
           {me.isLoading ? (
             <div role="status" aria-label="Loading gift catalog" className="gift-panel-skeletons">
               <div /><div /><div />
@@ -320,37 +332,20 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
             </div>
           ) : activeCategory && activeCategory.gifts.length > 0 ? (
             <>
-              <div className="gift-panel-catalog" ref={catalogScroller}
+              <div className="gift-panel-catalog"
                 aria-label={`${activeCategory.label} gifts`}>
-                {(() => {
-                  const featured = activeCategory.gifts[0];
-                  return <section aria-label={`${activeCategory.label} gift list`}>
-                    {featured && <button type="button" className={`gift-panel-featured${sel === featured.id ? ' is-selected' : ''}`}
-                      disabled={busy} onClick={() => chooseGift(featured.id)} aria-label={`Select featured gift ${featured.name}`}>
-                      <span className="gift-panel-featured-art"><GiftArtwork gift={featured} size={50} />
-                        {sel === featured.id && <span className="gift-panel-card-quantity">×{quantity}</span>}
-                      </span>
-                      <span className="gift-panel-featured-copy">
-                        <span className="gift-panel-featured-kicker">FEATURED · {activeCategory.label.toUpperCase()}</span>
-                        <strong>{featured.name}</strong>
-                        <span>Send a little magic to the room</span>
-                      </span>
-                      <span className="gift-panel-featured-price"><CoinAmount>{featured.cost.toLocaleString()} coins</CoinAmount></span>
-                    </button>}
-                    <div className="gift-panel-grid" role="list" aria-label={`${activeCategory.label} gifts`}>
-                      {activeCategory.gifts.slice(1).map(gift => <button key={gift.id} type="button" role="listitem"
-                        className={`gift-panel-card${sel === gift.id ? ' is-selected' : ''}`}
-                        aria-pressed={sel === gift.id} disabled={busy} data-testid={`gift-catalog-${gift.id}`}
-                        onClick={() => chooseGift(gift.id)}>
-                        <span className="gift-panel-card-art"><GiftArtwork gift={gift} size={48} />
-                          {sel === gift.id && <span className="gift-panel-card-quantity">×{quantity}</span>}
-                        </span>
-                        <span className="gift-panel-card-name">{gift.name}</span>
-                        <CoinAmount>{gift.cost.toLocaleString()} coins</CoinAmount>
-                      </button>)}
-                    </div>
-                  </section>;
-                })()}
+                <div className="gift-panel-grid" role="list" aria-label={`${activeCategory.label} gifts`}>
+                  {activeCategory.gifts.map(gift => <button key={gift.id} type="button" role="listitem"
+                    className={`gift-panel-card${sel === gift.id ? ' is-selected' : ''}`}
+                    aria-pressed={sel === gift.id} disabled={busy} data-testid={`gift-catalog-${gift.id}`}
+                    onClick={() => chooseGift(gift.id)}>
+                    <span className="gift-panel-card-art"><GiftArtwork gift={gift} size={44} />
+                      {sel === gift.id && quantity > 1 && <span className="gift-panel-card-quantity">×{quantity}</span>}
+                    </span>
+                    <span className="gift-panel-card-name">{gift.name}</span>
+                    <CoinAmount>{gift.cost.toLocaleString()}</CoinAmount>
+                  </button>)}
+                </div>
               </div>
             </>
           ) : items.length > 0 ? (
@@ -372,18 +367,21 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
           {notice && <p role="status" className="gift-panel-message is-success">{notice}</p>}
           {canSend && !enough && <p className="gift-panel-message is-error">Not enough coins. <Link href="/community/coins" state={buyCoinsReturnState()}>Recharge &gt;</Link></p>}
           {me.data && <footer className="gift-panel-footer">
-            <div className="gift-panel-wallet">
-              <span className="gift-panel-wallet-balance"><CoinAmount>{unlimited ? 'Unlimited' : me.data.wallet.balance.toLocaleString()}</CoinAmount></span>
-              <Link href="/community/coins" state={buyCoinsReturnState()} className="gift-panel-recharge">Recharge &gt;</Link>
-              <span className="gift-panel-points" aria-label="Points balance unavailable"><Star size={13} aria-hidden />— <small>pts</small></span>
-            </div>
+            <span className="gift-panel-wallet-balance gift-panel-sr" data-testid="gift-bag-wallet"><CoinAmount>{unlimited ? 'Unlimited' : me.data.wallet.balance.toLocaleString()}</CoinAmount></span>
             <div className="gift-panel-send-controls">
-              <label className="gift-panel-quantity" htmlFor={quantityId}>
-                <select id={quantityId} value={quantity} onChange={event => chooseQuantity(Number(event.target.value))} aria-label="Gift quantity" disabled={busy}>
-                  {[1, 10, 66, 99, 188, 520, 1314].map(value => <option key={value} value={value}>{value}</option>)}
-                </select>
-                <ChevronDown size={14} aria-hidden />
-              </label>
+              <div className="gift-panel-qty-pills" role="group" aria-label="Gift quantity">
+                {QUICK_QUANTITIES.map(value => <button key={value} type="button" className={`gift-panel-qty${quantity === value ? ' is-selected' : ''}`}
+                  aria-pressed={quantity === value} disabled={busy} onClick={() => chooseQuantity(value)} data-testid={`button-gift-quantity-${value}`}>
+                  x{value}
+                </button>)}
+                <label className={`gift-panel-quantity${QUICK_QUANTITIES.includes(quantity) ? '' : ' is-selected'}`} htmlFor={quantityId}>
+                  <select id={quantityId} value={quantity} onChange={event => chooseQuantity(Number(event.target.value))} aria-label="More gift quantities" disabled={busy} data-testid="select-gift-quantity">
+                    {ALL_QUANTITIES.map(value => <option key={value} value={value}>{`x${value}`}</option>)}
+                  </select>
+                  <span aria-hidden>{QUICK_QUANTITIES.includes(quantity) ? 'More' : `x${quantity}`}</span>
+                  <ChevronDown size={12} aria-hidden />
+                </label>
+              </div>
               <button type="button" className="gift-panel-send" disabled={busy || !canSend || !enough}
                 onClick={send} data-testid="gift-bag-send">
                 {busy ? batchProgress ? `${batchProgress.done}/${batchProgress.total}` : 'Sending…' : 'Send'}

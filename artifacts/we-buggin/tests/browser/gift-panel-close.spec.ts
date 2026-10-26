@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-async function setup(page: Page, context: string, multi = false) {
+async function setup(page: Page, context: string, multi = false, expanded = false) {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.route('**/api/social/me', route => route.fulfill({ json: {
     profile: { username: 'fixture', displayName: 'Fixture', photoUrl: null },
@@ -9,6 +9,9 @@ async function setup(page: Page, context: string, multi = false) {
       { id: 'heart', name: 'Heart', cost: 10 },
       { id: 'spirit-pup', name: 'Spirit Pup', cost: 100 },
       { id: 'studio-fixture', name: 'Custom fixture', cost: 20 },
+      ...(expanded ? Array.from({ length: 13 }, (_, i) => ({
+        id: `custom-${i}`, name: `Custom ${i + 1}`, cost: i + 1,
+      })) : []),
     ],
   } }));
   await page.route('**/api/social/gifts/rooms/*', route => route.fulfill({ json: { events: [] } }));
@@ -29,9 +32,7 @@ for (const context of ['room', 'live']) {
         await route.fulfill({ json: { balance: 4900, sent: 100 } });
       });
       await setup(page, context);
-      await (giftId === 'heart'
-        ? page.getByRole('button', { name: 'Select featured gift Heart', exact: true })
-        : page.getByTestId(`gift-catalog-${giftId}`)).click();
+      await page.getByTestId(`gift-catalog-${giftId}`).click();
       await page.getByTestId('gift-bag-send').click();
       await expect(page.getByTestId('gift-bag-send')).toBeDisabled();
       await expect(page.getByTestId('gift-bag')).toBeVisible();
@@ -51,7 +52,7 @@ for (const context of ['room', 'live']) {
       status: 400, json: { message: 'Not enough coins' },
     }));
     await setup(page, context);
-    await page.getByRole('button', { name: 'Select featured gift Heart', exact: true }).click();
+    await page.getByTestId('gift-catalog-heart').click();
     await page.getByTestId('gift-bag-send').click();
     await expect(page.getByTestId('gift-bag')).toBeVisible();
     await expect(page.getByRole('alert')).toContainText('Not enough coins');
@@ -70,7 +71,7 @@ test('partial batch stays open; retry skips confirmed recipient and closes after
       : { json: { balance: 4800, sent: 200 } });
   });
   await setup(page, 'room', true);
-  await page.getByRole('button', { name: 'Select featured gift Heart', exact: true }).click();
+  await page.getByTestId('gift-catalog-heart').click();
   await page.getByTestId('gift-bag-send').click();
   await expect(page.getByRole('alert')).toContainText('1 of 2 recipients sent');
   await expect(page.getByTestId('gift-bag')).toBeVisible();
@@ -79,4 +80,52 @@ test('partial batch stays open; retry skips confirmed recipient and closes after
   await expect(page.getByTestId('gift-bag')).toHaveCount(0);
   expect(requests.map(r => r.recipient)).toEqual(['test-recipient', 'second-recipient', 'second-recipient']);
   expect(requests[1]!.idempotencyKey).toBe(requests[2]!.idempotencyKey);
+});
+
+for (const width of [320, 390, 430]) {
+  test(`gift panel reference layout at ${width}px: four columns, vertical scroll, quantities and recharge`, async ({ page }) => {
+    await setup(page, 'room', false, true);
+    await page.setViewportSize({ width, height: 844 });
+    const panel = page.getByTestId('gift-bag');
+    await expect(panel).toBeVisible();
+    const grid = panel.locator('.gift-panel-grid').first();
+    await expect(grid.locator('[data-testid^="gift-catalog-"]')).toHaveCount(16);
+    const boxes = await grid.locator('[data-testid^="gift-catalog-"]').evaluateAll(els =>
+      els.map(el => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, right: r.right, bottom: r.bottom }; }));
+    expect(new Set(boxes.slice(0, 4).map(b => Math.round(b.y))).size).toBe(1);
+    expect(boxes[4]!.y).toBeGreaterThan(boxes[0]!.y);
+    expect(boxes.every(b => b.x >= 0 && b.right <= width)).toBe(true);
+    const scrolling = await panel.locator('.gift-panel-scroll').evaluate(el => ({
+      vertical: el.scrollHeight > el.clientHeight, horizontal: el.scrollWidth > el.clientWidth,
+    }));
+    expect(scrolling).toEqual({ vertical: true, horizontal: false });
+    await page.getByTestId('gift-catalog-heart').click();
+    for (const q of [1, 10, 66, 99]) {
+      const choice = panel.getByRole('button', { name: `x${q}`, exact: true });
+      await choice.click();
+      await expect(choice).toHaveAttribute('aria-pressed', 'true');
+      await expect(panel.locator('.gift-panel-total')).toContainText(`${q * 10}`);
+    }
+    const rect = await panel.boundingBox();
+    expect(rect!.height).toBeLessThan(844 * .64);
+    await expect(panel.getByRole('link', { name: /buy coins/i })).toHaveAttribute('href', /community\/coins/);
+    if (width === 390) {
+      await page.screenshot({ path: '../../generated-artifacts/gift-panel-reference-390.png' });
+    }
+  });
+}
+
+test('quantity sends preserve multiplied cost and selected recipient', async ({ page }) => {
+  let body: Record<string, unknown> | undefined;
+  await page.route('**/api/social/gifts', route => {
+    body = route.request().postDataJSON();
+    return route.fulfill({ json: { balance: 4010, sent: 990 } });
+  });
+  await setup(page, 'room');
+  await page.getByTestId('gift-catalog-heart').click();
+  await page.getByRole('button', { name: 'x99', exact: true }).click();
+  await expect(page.locator('.gift-panel-total')).toContainText('990');
+  await page.getByTestId('gift-bag-send').click();
+  await expect(page.getByTestId('gift-bag')).toHaveCount(0);
+  expect(body).toMatchObject({ giftId: 'heart', quantity: 99, recipient: 'test-recipient' });
 });

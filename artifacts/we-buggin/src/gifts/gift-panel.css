@@ -1,0 +1,122 @@
+/* Scoped redesign of the shared GiftBag sheet. Every selector is rooted at
+   .gift-framework.gift-room-panel so nothing outside this panel changes. */
+.gift-panel-backdrop .gift-framework.gift-room-panel{
+  --gp-gold:#f2c14e;--gp-gold-deep:#c98f1f;--gp-ink:#0d0c0f;--gp-raise:#1a181d;--gp-muted:#8d8794;
+  height:auto;min-height:min(40dvh,360px);max-height:min(64dvh,560px);
+  padding:6px 12px calc(10px + env(safe-area-inset-bottom));
+  background:var(--gp-ink);border:0;border-top:1px solid rgba(242,193,78,.16);
+  box-shadow:0 -18px 50px rgba(0,0,0,.55);color:#f6f3ee;
+}
+.gift-room-panel .gift-panel-heading{padding:2px 0 8px;gap:10px}
+.gift-room-panel .gift-panel-heading h2{flex:1;font-size:18px;font-weight:850;color:#f8f6f2}
+.gift-room-panel .gift-panel-balance-pill{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 6px 0 7px;background:var(--gp-raise);border:1px solid rgba(242,193,78,.22);color:var(--gp-gold);font-size:13px;font-weight:800;text-decoration:none;font-variant-numeric:tabular-nums}
+.gift-room-panel .gift-panel-balance-pill svg{width:18px;height:18px;padding:2px;background:var(--gp-gold);color:var(--gp-ink)}
+.gift-room-panel .gift-panel-coin{width:16px;height:16px;background:radial-gradient(circle at 35% 30%,#ffe7a1,var(--gp-gold) 45%,var(--gp-gold-deep));box-shadow:inset 0 0 0 1.5px rgba(120,80,10,.45)}
+.gift-room-panel .gift-panel-icon-button{width:32px;height:32px;border:0;background:var(--gp-raise);color:#e9e5ee}
+.gift-room-panel .gift-panel-icon-button:focus-visible,.gift-room-panel .gift-panel-balance-pill:focus-visible,.gift-room-panel button:focus-visible{outline:2px solid var(--gp-gold);outline-offset:2px}
+
+/* compact recipients */
+.gift-room-panel .gift-panel-recipients{min-height:0;grid-template-columns:40px minmax(0,1fr) 30px;gap:6px;padding:4px 0 6px;border:0}
+.gift-room-panel .gift-panel-all{width:40px;height:28px;border:1px solid rgba(255,255,255,.12);background:var(--gp-raise);color:#cfc9d6;font-size:10px}
+.gift-room-panel .gift-panel-all.is-selected{border-color:var(--gp-gold);background:rgba(242,193,78,.14);color:var(--gp-gold);box-shadow:none}
+.gift-room-panel .gift-panel-people{gap:7px;align-items:center}
+.gift-room-panel .gift-panel-person{min-width:40px;max-width:46px;gap:2px}
+.gift-room-panel .gift-panel-avatar{width:32px;height:32px}
+.gift-room-panel .gift-panel-person.is-selected .gift-panel-avatar{border-color:var(--gp-gold);box-shadow:0 0 0 2px rgba(242,193,78,.2)}
+.gift-room-panel .gift-panel-host-mark{width:14px;height:14px;background:var(--gp-gold-deep);border-color:var(--gp-ink)}
+.gift-room-panel .gift-panel-avatar .gift-panel-host-mark{width:14px!important;height:14px!important}
+.gift-room-panel .gift-panel-person-name{font-size:9px}
+.gift-room-panel .gift-panel-person.is-selected .gift-panel-person-name{color:var(--gp-gold)}
+.gift-room-panel .gift-panel-profile-button{width:30px;height:30px;border:0;background:var(--gp-raise)}
+
+/* categories */
+.gift-room-panel .gift-panel-categories{gap:4px;padding:2px 0 6px}
+.gift-room-panel .gift-panel-category{min-height:26px;padding:0 10px;font-size:11px;color:var(--gp-muted)}
+.gift-room-panel .gift-panel-category.is-active{border-color:transparent;background:var(--gp-raise);color:var(--gp-gold)}
+
+/* single vertical scroll: 4 columns, ~2 rows visible */
+.gift-room-panel .gift-panel-scroll{flex:1 1 auto;min-height:228px;max-height:228px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:none}
+.gift-room-panel .gift-panel-scroll::-webkit-scrollbar{display:none}
+.gift-room-panel .gift-panel-catalog{overflow:visible;height:auto;max-height:none;padding:0}
+.gift-room-panel .gift-panel-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:1px}
+.gift-room-panel .gift-panel-card,.gift-room-panel .gift-panel-owned-card{position:relative;min-height:104px;height:auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:3px;padding:8px 3px 7px;border:1px solid transparent;background:transparent;box-shadow:none;color:#fff;transition:background-color .15s ease,border-color .15s ease}
+.gift-room-panel .gift-panel-card:active{transform:scale(.97)}
+.gift-room-panel .gift-panel-card.is-selected{border-color:var(--gp-gold);background:rgba(242,193,78,.1);box-shadow:none}
+.gift-room-panel .gift-panel-card:disabled{opacity:.55}
+.gift-room-panel .gift-panel-card-art{position:relative;width:52px;height:52px;display:grid;place-items:center;background:transparent}
+.gift-room-panel .gift-panel-card-quantity{position:absolute;top:-4px;right:-10px;padding:1px 4px;background:var(--gp-gold);color:var(--gp-ink);font-size:9px;font-weight:900}
+.gift-room-panel .gift-panel-card-name{width:100%;overflow:hidden;color:#fbf9f6;font-size:11px;font-weight:700;text-align:center;text-overflow:ellipsis;white-space:nowrap}
+.gift-room-panel .gift-panel-card > :last-child:not(.gift-panel-card-name){color:var(--gp-gold);font-size:10.5px;font-weight:800}
+.gift-room-panel .gift-panel-owned-count{color:var(--gp-gold);font-size:10px}
+
+/* send zone */
+.gift-room-panel .gift-panel-send-zone{flex:0 0 auto;padding-top:8px;border-top:1px solid rgba(255,255,255,.06)}
+.gift-room-panel .gift-panel-total{margin:0 0 6px;color:#d9d3df;font-size:11px}
+.gift-room-panel .gift-panel-message{margin:0 0 6px;font-size:11px}
+.gift-room-panel .gift-panel-message a{color:var(--gp-gold)}
+.gift-room-panel .gift-panel-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.gift-room-panel .gift-panel-footer{display:flex;align-items:center;gap:8px;padding:0;background:transparent;border:0}
+.gift-room-panel .gift-panel-send-controls{flex:1;display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.gift-room-panel .gift-panel-qty-pills{display:flex;align-items:center;gap:4px;min-width:0;overflow-x:auto;scrollbar-width:none}
+.gift-room-panel .gift-panel-qty,.gift-room-panel .gift-panel-quantity{position:relative;flex:0 0 auto;height:30px;min-width:36px;display:inline-flex;align-items:center;justify-content:center;gap:2px;padding:0 8px;border:1px solid rgba(255,255,255,.08);background:var(--gp-raise);color:#d8d2de;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums}
+.gift-room-panel .gift-panel-qty.is-selected,.gift-room-panel .gift-panel-quantity.is-selected{border-color:var(--gp-gold);background:var(--gp-gold);color:var(--gp-ink)}
+.gift-room-panel .gift-panel-quantity select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;appearance:none}
+.gift-room-panel .gift-panel-quantity:focus-within{outline:2px solid var(--gp-gold);outline-offset:2px}
+.gift-room-panel .gift-panel-send{flex:0 0 auto;min-width:86px;height:40px;padding:0 18px;border:0;background:linear-gradient(180deg,#ffd26a,var(--gp-gold) 55%,var(--gp-gold-deep));color:var(--gp-ink);font-size:15px;font-weight:900;box-shadow:none}
+.gift-room-panel .gift-panel-send:disabled{opacity:.42}
+.gift-room-panel .gift-panel-skeletons{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.gift-room-panel .gift-panel-skeletons div{height:96px;background:var(--gp-raise)}
+
+@media (max-width:360px){
+  .gift-room-panel .gift-panel-qty,.gift-room-panel .gift-panel-quantity{padding:0 6px;min-width:32px;font-size:11px}
+  .gift-room-panel .gift-panel-send{min-width:72px;padding:0 12px}
+}
+
+/* Rounding exception for this panel only. The app-wide square rule lives in the
+   app-shapes layer with !important, which beats unlayered rules, so this override
+   must sit inside the same layer with higher specificity. */
+@layer app-shapes {
+  body .gift-panel-backdrop .gift-framework.gift-room-panel{
+    background:#0d0c0f !important;
+    box-shadow:0 -12px 36px #0008 !important;
+    border:0 !important;
+  }
+  body .gift-room-panel :is(.gift-panel-card,.gift-panel-owned-card){
+    background:transparent !important;border:1px solid transparent !important;
+    box-shadow:none !important;
+  }
+  body .gift-room-panel .gift-panel-card.is-selected{
+    background:rgb(242 193 78 / 10%) !important;
+    border-color:#f2c14e !important;box-shadow:none !important;
+  }
+  body .gift-room-panel .gift-panel-card::after,
+  body .gift-room-panel .gift-panel-category::before,
+  body .gift-room-panel .gift-panel-all::before,
+  body .gift-room-panel .gift-panel-send::after{content:none !important}
+  body .gift-room-panel :is(.gift-panel-category,.gift-panel-all,.gift-panel-icon-button,.gift-panel-profile-button){
+    background:#1a181d !important;border:1px solid transparent !important;box-shadow:none !important;
+  }
+  body .gift-room-panel :is(.gift-panel-category.is-active,.gift-panel-all.is-selected){color:#f2c14e !important}
+  body .gift-room-panel .gift-panel-send{
+    background:#f2c14e !important;color:#0d0c0f !important;border:0 !important;box-shadow:none !important;
+  }
+  body .gift-room-panel .gift-panel-send:disabled{opacity:.42 !important}
+  body .gift-panel-backdrop .gift-framework.gift-room-panel{border-radius:22px 22px 0 0 !important}
+  body .gift-room-panel .gift-panel-handle span,
+  body .gift-room-panel .gift-panel-balance-pill,
+  body .gift-room-panel .gift-panel-all,
+  body .gift-room-panel .gift-panel-category,
+  body .gift-room-panel .gift-panel-qty,
+  body .gift-room-panel .gift-panel-quantity,
+  body .gift-room-panel .gift-panel-send{border-radius:999px !important}
+  body .gift-room-panel .gift-panel-icon-button,
+  body .gift-room-panel .gift-panel-profile-button,
+  body .gift-room-panel .gift-panel-avatar{border-radius:0 !important}
+  body .gift-room-panel .gift-panel-coin,
+  body .gift-room-panel .gift-panel-host-mark{border-radius:50% !important}
+  body .gift-room-panel .gift-panel-balance-pill svg{border-radius:50% !important}
+  body .gift-room-panel .gift-panel-card,
+  body .gift-room-panel .gift-panel-owned-card,
+  body .gift-room-panel .gift-panel-skeletons div{border-radius:14px !important}
+  body .gift-room-panel .gift-panel-card-quantity{border-radius:6px !important}
+}

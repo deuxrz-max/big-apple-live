@@ -48,3 +48,4 @@
 - [Room composer regression checks](room-composer-regressions.md) — run room tests with mobile-shell styles; legacy zero-width flex inputs collapse when their parent becomes grid.
 - [Profile navigation](profile-navigation.md) — pictures open profiles directly; preserve underlying state, Chess swipes and created-room hands.
 - [Audit review gates](audit-task-review-gates.md) — complete only one cleanup task, then stop for owner review and explicit permission to continue.
+- [Gift panel design](gift-panel-design.md) — explicit rounding exception for the reference-style gift sheet; keep photo frames square and sending behavior unchanged.
