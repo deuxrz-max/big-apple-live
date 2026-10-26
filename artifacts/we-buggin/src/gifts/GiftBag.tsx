@@ -204,7 +204,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
       refreshSocial(qc);
       if (roomId) void qc.invalidateQueries({ queryKey: getGetRoomGiftEventsQueryKey(roomId) });
       retry.current = null;
-      setNotice(`Sent ${quantity > 1 ? `${quantity} ` : ''}${selected?.name ?? 'gift'} to ${attempt.recipients.length === 1 ? '1 person' : `${attempt.recipients.length} people`}.`);
+      closeRef.current();
     } catch (e) {
       refreshSocial(qc);
       if (roomId) void qc.invalidateQueries({ queryKey: getGetRoomGiftEventsQueryKey(roomId) });

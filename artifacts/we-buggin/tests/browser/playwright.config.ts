@@ -3,7 +3,7 @@ import { chromiumPath } from './native-browser';
 
 export default defineConfig({
   testDir: '.',
-  testMatch: ['usability-polish.spec.ts', 'visual-cleanup.spec.ts', 'audit-fixes.spec.ts', 'access-error.spec.ts', 'promo.spec.ts', 'credits.spec.ts', 'gifts.spec.ts', 'gift-sizing.spec.ts', 'badges.spec.ts', 'gifting-levels.spec.ts', 'room-playback.spec.ts', 'room-feed.spec.ts', 'live-layout.spec.ts', 'profile-navigation.spec.ts', 'profile-cleanup.spec.ts', 'photo-review-page.spec.ts'],
+  testMatch: ['gift-panel-close.spec.ts', 'usability-polish.spec.ts', 'visual-cleanup.spec.ts', 'audit-fixes.spec.ts', 'access-error.spec.ts', 'promo.spec.ts', 'credits.spec.ts', 'gifts.spec.ts', 'gift-sizing.spec.ts', 'badges.spec.ts', 'gifting-levels.spec.ts', 'room-playback.spec.ts', 'room-feed.spec.ts', 'live-layout.spec.ts', 'profile-navigation.spec.ts', 'profile-cleanup.spec.ts', 'photo-review-page.spec.ts'],
   fullyParallel: false,
   workers: 1,
   retries: 0,

@@ -96,6 +96,20 @@ function GiftFixture() {
     {open && <GiftBag recipient={{ username: 'test-recipient', displayName: 'Test Recipient' }} onClose={() => setOpen(false)} />}</>;
 }
 
+function GiftSendFixture() {
+  const [open, setOpen] = useState(false);
+  const params = new URLSearchParams(location.search);
+  const multi = params.get('multi') === '1';
+  const people = [{ username: 'test-recipient', displayName: 'Test Recipient' },
+    ...(multi ? [{ username: 'second-recipient', displayName: 'Second Recipient' }] : [])];
+  return <><GiftControl onClick={() => setOpen(true)} />
+    {open && <GiftBag recipient={multi ? undefined : people[0]} recipients={people}
+      {...(params.get('context') === 'live'
+        ? { streamId: 'fixture-stream' }
+        : { roomId: 'fixture-room', sessionId: 'fixture-session' })}
+      onClose={() => setOpen(false)} />}</>;
+}
+
 function GiftCatalogFixture() {
   return <GiftBag
     recipient={{ username: 'fixture-recipient', displayName: 'Fixture Recipient' }}
@@ -181,6 +195,7 @@ createRoot(document.getElementById('root')!).render(
           : new URLSearchParams(location.search).get('view') === 'store' ? <StorePage />
           : new URLSearchParams(location.search).get('view') === 'gift-catalog' ? <GiftCatalogFixture />
           : new URLSearchParams(location.search).get('view') === 'gift-artwork' ? <GiftArtworkFixture />
+          : new URLSearchParams(location.search).get('view') === 'gift-send' ? <GiftSendFixture />
           : new URLSearchParams(location.search).get('view') === 'gifting-levels' ? <GiftingLevelsFixture />
           : new URLSearchParams(location.search).get('view') === 'room-feed' ? <RoomFeedFixture />
           : new URLSearchParams(location.search).get('view') === 'live-layout' ? <LiveLayoutFixture />
