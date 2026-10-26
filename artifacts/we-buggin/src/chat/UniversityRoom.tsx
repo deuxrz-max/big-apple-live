@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Clapperboard, LogOut, Mic, MicOff, Send, X } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
+import { RoomChannelBack } from './RoomChannels';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getGetMyProfileQueryKey, getGetUniversitySessionQueryKey, useAcknowledgeUniversityRules, useGetUniversitySession,
@@ -486,6 +487,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
         {(chatAccess.data?.chatMuted || chatAccess.data?.reportsMuted) && (
           <p className="ur-moderation-notice" role="status">Chat is temporarily muted while a moderator reviews reports.</p>
         )}
+        <RoomChannelBack roomId={roomId} />
         <div className="ur-head">
           <button type="button" ref={peopleBtn} className="bm-btn bm-btn-sm ur-people-btn" aria-haspopup="dialog" aria-expanded={drawer} onClick={() => setDrawer(true)} data-testid="button-people">People · {people.length}</button>
           <div className="ur-titlebox">

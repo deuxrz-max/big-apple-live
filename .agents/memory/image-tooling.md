@@ -33,8 +33,8 @@ When probing alpha in a browser canvas, crop a source pixel rather than scaling 
 
 **How to apply:** Use the 9-argument `drawImage` overload to copy a known transparent source corner into the 1×1 test canvas.
 
-Some bundled API profile/social tests can stop before assertions when the Linux Sharp runtime is unavailable; externalizing Sharp from a `/tmp` bundle may instead fail module resolution.
+Some bundled API profile/social tests can stop before assertions because Sharp uses native code and module metadata; externalizing Sharp from a `/tmp` bundle may instead fail module resolution.
 
-**Why:** These are runner dependency failures, not evidence that the test assertions or application behavior failed.
+**Why:** Bundling Sharp as CommonJS can discard the module URL its loader needs. These are runner dependency failures, not evidence that the test assertions or application behavior failed.
 
-**How to apply:** Report the suite as blocked unless the existing runtime can load Sharp; do not change application dependencies only to force that test command to run.
+**How to apply:** Keep native addons external and run generated integration bundles inside the owning package so installed dependencies resolve. If the existing runtime still cannot load Sharp, report the suite blocked; do not change application dependencies just to force a test command to run.

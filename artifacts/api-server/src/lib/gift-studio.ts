@@ -4,6 +4,7 @@ import { db, giftStudioAssets, socialGiftCatalogSettings, socialSettings, type G
 import type { GiftStudioGiftId, GiftStudioProcessingSettings, GiftStudioVersion } from "@workspace/api-zod";
 import { randomUUID } from "node:crypto";
 import { execFile } from "node:child_process";
+import { CAULDRON_OVERFLOW_VERSION_ID, isSystemCauldronProduct, isSystemCauldronVersion } from "./system-cauldron-assets";
 import { createReadStream, promises as fs } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -338,7 +339,7 @@ export async function listGiftStudioVersions(ownerId: string) {
       .orderBy(desc(giftStudioAssets.createdAt)),
     listGiftCatalogForOwner(),
   ]);
-  return { items: rows.map(toVersion), catalog };
+  return { items: rows.filter(row => !isSystemCauldronVersion(row.id)).map(toVersion), catalog };
 }
 
 function giftKeyColor(settings: GiftStudioProcessingSettings) {
@@ -669,6 +670,7 @@ export async function renameGiftStudioVersion(ownerId: string, versionId: string
 }
 
 export async function deleteGiftStudioVersion(ownerId: string, versionId: string) {
+  if (isSystemCauldronVersion(versionId)) throw new RoomError(403, "This media is reserved for system use.");
   const [asset] = await db.select().from(giftStudioAssets).where(eq(giftStudioAssets.id, versionId));
   if (!asset || asset.ownerId !== ownerId) throw new RoomError(404, "Saved gift not found.");
   await deleteAssets(asset.id, asset.originalExtension);
@@ -695,6 +697,7 @@ export async function deleteGiftStudioVersion(ownerId: string, versionId: string
 }
 
 export async function assignGiftStudioVersionToGift(ownerId: string, versionId: string, giftId: GiftStudioGiftId) {
+  if (isSystemCauldronVersion(versionId)) throw new RoomError(403, "This media is reserved for system use.");
   const catalogItem = await getGiftCatalogItem(giftId);
   if (!catalogItem || catalogItem.status === "deleted") throw new RoomError(400, "Choose an existing catalog item.");
   const [asset] = await db.select().from(giftStudioAssets).where(eq(giftStudioAssets.id, versionId));
@@ -718,6 +721,7 @@ export async function setGiftStudioVersionActive(
   active: boolean,
   options?: { productType?: GiftStudioProductType; cost?: number },
 ) {
+  if (isSystemCauldronVersion(versionId)) throw new RoomError(403, "This media is reserved for system use.");
   const [asset] = await db.select().from(giftStudioAssets).where(eq(giftStudioAssets.id, versionId));
   if (!asset || asset.ownerId !== ownerId) throw new RoomError(404, "Gift animation version not found.");
   if (active && !asset.giftId && (!options?.productType || !options.cost || !Number.isSafeInteger(options.cost) || options.cost < 1)) {
@@ -787,6 +791,7 @@ export async function setGiftStudioVersionActive(
 }
 
 export async function getActiveGiftStudioMedia(giftId: string) {
+  if (isSystemCauldronProduct(giftId)) return { media: null };
   const [row] = await db.select().from(giftStudioAssets)
     .where(and(eq(giftStudioAssets.giftId, giftId), eq(giftStudioAssets.status, "active"))).limit(1);
   if (!row) return { media: null };
@@ -903,6 +908,7 @@ export async function overrideGiftStudioIcon(ownerId: string, giftId: string, pn
 }
 
 export async function giftStudioIconFile(input: { versionId: string; ownerId?: string; activeOnly?: boolean }) {
+  if (input.versionId === CAULDRON_OVERFLOW_VERSION_ID) throw new RoomError(404, "Gift icon not found.");
   if (!/^[0-9a-f-]{36}$/i.test(input.versionId)) throw new RoomError(404, "Gift icon not found.");
   const [row] = await db.select().from(giftStudioAssets).where(eq(giftStudioAssets.id, input.versionId)).limit(1);
   if (!row || (input.ownerId && row.ownerId !== input.ownerId) ||
@@ -930,6 +936,9 @@ export async function giftStudioMediaFile(input: {
   ownerId?: string;
   activeOnly?: boolean;
 }) {
+  // No user-facing playback route may expose Overflow, including owner previews.
+  // Future system-event playback requires separate, explicitly approved wiring.
+  if (input.versionId === CAULDRON_OVERFLOW_VERSION_ID) throw new RoomError(404, "Gift media not found.");
   const [row] = await db.select().from(giftStudioAssets).where(eq(giftStudioAssets.id, input.versionId));
   if (!row || (input.ownerId && row.ownerId !== input.ownerId) ||
     (input.activeOnly && row.status !== "active") ||

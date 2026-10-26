@@ -1,0 +1,17 @@
+.rc { display: grid; gap: 14px; }
+.rc-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.rc-title { margin: 0; color: #f5cb8d; font-size: 1.25rem; letter-spacing: .04em; text-transform: uppercase; }
+.rc-back { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border: 1px solid #c9a24a; border-radius: 0; background: #0b0a08; color: #f5cb8d; font-size: .8rem; font-weight: 700; text-decoration: none; text-transform: uppercase; letter-spacing: .06em; }
+.rc-back:hover, .rc-back:focus-visible { background: #c9a24a; color: #0b0a08; }
+.rc-tiles, .rc-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 767px) { .rc-tiles { grid-template-columns: 1fr; } }
+.rc-tiles > .st-home-go-live .st-home-go-live-button { min-height:128px !important; height:128px !important; aspect-ratio:auto !important; }
+.rc-tile { display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; min-height: 150px; height: 100%; padding: 18px; border: 1px solid #c9a24a; border-radius: 0; background: linear-gradient(160deg, #17130b, #0b0a08 70%); color: #f5cb8d; text-decoration: none; transition: transform .18s ease; }
+.rc-tile:hover, .rc-tile:focus-visible { transform: translateY(-2px); outline: 1px solid #f5cb8d; }
+.rc-tile-title { font-size: 1.3rem; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; }
+.rc-tile-rooms { color: #e9dcc0; font-size: .85rem; }
+.rc-tile-count { color: #c9a24a; font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.rc-empty { margin: 0; color: #e9dcc0; }
+.rc-other-title { margin-top: 10px; }
+.ur-channel-back { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; margin: 0 0 8px; padding: 6px 10px; border: 1px solid #c9a24a; border-radius: 0; background: #0b0a08; color: #f5cb8d; font-size: .75rem; font-weight: 700; text-decoration: none; text-transform: uppercase; letter-spacing: .06em; position: relative; z-index: 2; }
+.ur-channel-back:hover, .ur-channel-back:focus-visible { background: #c9a24a; color: #0b0a08; }

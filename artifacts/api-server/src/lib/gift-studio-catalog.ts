@@ -11,6 +11,7 @@ import { RoomError } from "./room-store";
 import { GIFTS } from "./social/catalog";
 import { isRoomGift } from "./social/room-gift-policy";
 import { filterSendableGifts, isSendableGift } from "./gift-availability";
+import { isSystemCauldronProduct, withoutSystemCauldronProducts } from "./system-cauldron-assets";
 
 const DEFAULT_GIFTS = new Map(GIFTS.map((gift) => [gift.id, gift] as const));
 type GiftCatalogStatus = "active" | "inactive" | "deleted";
@@ -101,10 +102,11 @@ export async function listGiftCatalogForOwner() {
           : activeAsset ? "fallback" : "builtin";
       })(),
     }));
-  return [...builtIns, ...custom];
+  return withoutSystemCauldronProducts([...builtIns, ...custom]);
 }
 
 export async function getGiftCatalogItem(giftId: string) {
+  if (isSystemCauldronProduct(giftId)) return null;
   const [motionGift] = await db.select({
     giftId: developerGiftMotions.giftId,
     name: developerGiftMotions.name,

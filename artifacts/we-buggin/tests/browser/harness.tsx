@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { RoomChannelsFixture } from './room-channels-fixture';
 import { createRoot } from 'react-dom/client';
 import { ChessRoom } from '../../src/chess/ChessRoom';
 import { QuickProfileProvider } from '../../src/profile/QuickProfile';
@@ -24,7 +25,7 @@ import '../../src/chat/live-stream.css';
 import { BeamTv, type BeamTvHandle } from '../../src/chat/BeamTv';
 import { RoomPerimeter } from '../../src/chat/RoomPerimeter';
 import { OwnProfile } from '../../src/profile/OwnProfile';
-import { ChatProfile, ProfilePhotoReviewPage, HomeSections, DirectoryRoomCard } from '../../src/chat/ChatApp';
+import { ChatProfile, ProfilePhotoReviewPage, HomeSections, DirectoryRoomCard, PublicChatLanding } from '../../src/chat/ChatApp';
 import { MyProfilePage } from '../../src/social/PeoplePages';
 import { VisualCleanupFixture } from './visual-cleanup-fixture';
 import type { UniversityVideoBeamTvState } from '@workspace/api-client-react';
@@ -195,6 +196,8 @@ createRoot(document.getElementById('root')!).render(
           : new URLSearchParams(location.search).get('view') === 'store' ? <StorePage />
           : new URLSearchParams(location.search).get('view') === 'gift-catalog' ? <GiftCatalogFixture />
           : new URLSearchParams(location.search).get('view') === 'gift-artwork' ? <GiftArtworkFixture />
+          : new URLSearchParams(location.search).get('view') === 'public-channels' ? <PublicChatLanding />
+          : new URLSearchParams(location.search).get('view') === 'room-channels' ? <RoomChannelsFixture />
           : new URLSearchParams(location.search).get('view') === 'gift-send' ? <GiftSendFixture />
           : new URLSearchParams(location.search).get('view') === 'gifting-levels' ? <GiftingLevelsFixture />
           : new URLSearchParams(location.search).get('view') === 'room-feed' ? <RoomFeedFixture />

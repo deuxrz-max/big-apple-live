@@ -21,6 +21,7 @@ import { BotModerationPanel } from './BotModerationPanel';
 import { BadgeArt } from '@/social/BadgeArt';
 import { GoLiveButton } from './LiveStreamPages';
 import { selectFeaturedRoom } from './directory-utils';
+import { RoomChannels } from './RoomChannels';
 import { ActionMenu, ScreenHeader } from '@/components/app-chrome';
 import { AccessCheckError } from './AccessCheckError';
 import { buyCoinsReturnState } from '@/social/buy-coins-navigation';
@@ -76,9 +77,10 @@ function List({ preview, query = '' }: { preview?: boolean; query?: string }) {
       {q.isError && <div className="ch-err" role="alert">{preview ? 'Sign in to see the directory.' : 'Could not load the directory.'} {!preview && <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button>}</div>}
       {q.data && q.data.length === 0 && <p>No entries.</p>}
       {q.data && q.data.length > 0 && rows.length === 0 && <p>No room matches your search.</p>}
-      <ul className="ch-list st-grid">
-        {rows.map((r) => <UniCard key={r.roomId} roomId={r.roomId} label={r.label} headcount={r.headcount} i={(q.data ?? []).findIndex((entry) => entry.roomId === r.roomId)} preview={preview} />)}
-      </ul>
+      <RoomChannels rooms={rows} loading={q.isLoading} baseHref={preview ? '/' : '/home'}
+        renderRoom={room => <DirectoryRoomCard room={room} topic={room.label} isFeatured={false} preview={preview} />}
+        goLive={<Link href="/sign-in" className="st-home-go-live-button"><span className="st-home-go-live-copy"><strong>Go Live</strong><small>Start your own room</small></span></Link>}
+      />
     </>
   );
 }
@@ -214,8 +216,6 @@ export function ChatDirectory() {
   const liveCreators = (liveStreams.data?.streams ?? []).filter((stream) =>
     !!stream.streamId,
   );
-  const leftRooms = displayedRooms.filter((_, index) => index % 2 === 0);
-  const rightRooms = displayedRooms.filter((_, index) => index % 2 === 1);
   return (
     <Shell className="st-directory st-home">
       <header className="st-dir-header">
@@ -254,24 +254,15 @@ export function ChatDirectory() {
       <section className="st-dir-explore st-home-rooms" id="live-channels" aria-label="Rooms">
         {directory.isError && <div className="st-dir-state st-dir-error" role="alert"><div className="st-dir-state-mark">!</div><h3>Rooms aren’t loading</h3><p>We couldn’t reach the directory. Give it another try.</p><button type="button" onClick={() => directory.refetch()}>Retry directory</button></div>}
         {directory.data && rooms.length === 0 && <div className="st-dir-state"><div className="st-dir-state-mark">—</div><h3>Quiet for a moment</h3><p>There are no rooms in the directory right now. Check back soon.</p></div>}
-        <div className="st-home-grid" aria-label={directory.isLoading ? 'Loading rooms' : 'Rooms'} aria-busy={directory.isLoading}>
-          <ul className="st-home-grid-column" aria-label="Room cards, first column">
-            {directory.isLoading
-              ? [0, 1, 2].map((n) => <li className="st-dir-skeleton" key={`left-loading-${n}`}><span /><div><i /><i /></div></li>)
-              : leftRooms.map((room) => <li key={room.roomId} className={room.roomId === featuredRoom?.roomId ? 'st-home-card-tall' : undefined}><DirectoryRoomCard room={room} topic={topicFor(room)} isFeatured={room.roomId === featuredRoom?.roomId} /></li>)}
-          </ul>
-          <ul className="st-home-grid-column" aria-label="Room cards, second column">
-            <li className="st-home-go-live">
-              <GoLiveButton className="st-home-go-live-button">
-                <span className="st-home-go-live-icon"><Camera size={31} strokeWidth={1.8} /></span>
-                <span className="st-home-go-live-copy"><strong>Go Live</strong><small>Start your own room</small></span>
-              </GoLiveButton>
-            </li>
-            {directory.isLoading
-              ? [0, 1, 2].map((n) => <li className="st-dir-skeleton" key={`right-loading-${n}`}><span /><div><i /><i /></div></li>)
-              : rightRooms.map((room) => <li key={room.roomId} className={room.roomId === featuredRoom?.roomId ? 'st-home-card-tall' : undefined}><DirectoryRoomCard room={room} topic={topicFor(room)} isFeatured={room.roomId === featuredRoom?.roomId} /></li>)}
-          </ul>
-        </div>
+        <RoomChannels
+          rooms={displayedRooms}
+          loading={directory.isLoading}
+          renderRoom={(room) => <DirectoryRoomCard room={room} topic={topicFor(room)} isFeatured={room.roomId === featuredRoom?.roomId} />}
+          goLive={<GoLiveButton className="st-home-go-live-button">
+            <span className="st-home-go-live-icon"><Camera size={31} strokeWidth={1.8} /></span>
+            <span className="st-home-go-live-copy"><strong>Go Live</strong><small>Start your own room</small></span>
+          </GoLiveButton>}
+        />
       </section>
       <section className="st-dir-explore st-dir-creators st-home-creators" aria-labelledby="st-dir-creators-title" data-testid="section-home-creators">
           <div className="st-dir-section-head st-dir-explore-heading">
@@ -299,10 +290,11 @@ export function ChatDirectory() {
   );
 }
 
-export function DirectoryRoomCard({ room, topic, isFeatured }: {
+export function DirectoryRoomCard({ room, topic, isFeatured, preview = false }: {
   room: { roomId: string; label: string; headcount: number; nowPlayingVideoId?: string | null; nowPlayingTitle?: string | null };
   topic: string;
   isFeatured: boolean;
+  preview?: boolean;
 }) {
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
   const [topicPhotoFailed, setTopicPhotoFailed] = useState(false);
@@ -312,7 +304,7 @@ export function DirectoryRoomCard({ room, topic, isFeatured }: {
   const isWrestling = topic === 'Pro Wrestling';
   const displayTitle = room.nowPlayingTitle?.trim();
   return (
-    <Link href={`/rooms/${encodeURIComponent(room.roomId)}`} className={`st-dir-card${isFeatured ? ' is-featured' : ''}`} aria-label={`Enter ${room.label}, ${room.headcount} ${room.headcount === 1 ? 'person' : 'people'} here${isFeatured ? ', featured room' : ''}`} data-testid={`card-home-room-${room.roomId}`}>
+    <Link href={preview ? '/sign-in' : `/rooms/${encodeURIComponent(room.roomId)}`} className={`st-dir-card${isFeatured ? ' is-featured' : ''}`} aria-label={`Enter ${room.label}, ${room.headcount} ${room.headcount === 1 ? 'person' : 'people'} here${isFeatured ? ', featured room' : ''}`} data-testid={`card-home-room-${room.roomId}`}>
       <div className={`st-dir-art st-dir-art-${topicClass(topic)}${hasThumbnail ? ' has-video' : ''}`}>
         {hasThumbnail
           ? <img src={`https://img.youtube.com/vi/${encodeURIComponent(videoId!)}/hqdefault.jpg`} alt="" loading="lazy" onError={() => setThumbnailFailed(true)} />

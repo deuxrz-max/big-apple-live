@@ -35,6 +35,7 @@ import {
 import { accountId, sameOrigin } from "./identity";
 import { RoomError, roomStore } from "../lib/room-store";
 import { requireAccount } from "../lib/social/core";
+import { CAULDRON_VERSION_ID } from "../lib/system-cauldron-assets";
 import { nameColorProfileForAccount, setNameColorPurchaseTotalOverride } from "../lib/social/gift-name-color-data";
 import { accessFor, requireAdult, requireOwner } from "../lib/community";
 import { blocks, getMe, getPerson, listPeople, relationship, saveSocialProfile } from "../lib/social/people";
@@ -79,6 +80,13 @@ router.get('/gift-media/rose-shower/v3/:filename', serveRoseShowerGiftMedia);
 router.get('/gift-media/whip/v3/:filename', serveWhipGiftMedia);
 router.get('/room-entry-effects/lion/:filename', serveRoomEntranceEffectMedia);
 router.get('/room-entry-effects/monthly-credit-tiers/:tier/:filename', serveMonthlyCreditTierEntranceEffectMedia);
+// A fixed decorative homepage asset, like the public built-in gift media above.
+// No arbitrary version ID, source file or Overflow media can be requested here.
+router.get("/gift-media/system-cauldron/:variant", async (req, res): Promise<void> => {
+  const variant = req.params.variant;
+  if (variant !== "webm" && variant !== "safari") throw new RoomError(404, "Media not found.");
+  await streamStudioMedia(req, res, { versionId: CAULDRON_VERSION_ID, variant, activeOnly: true });
+});
 router.use("/social", async (req, res, next) => {
   const id = accountId(req);
   if (req.method !== "GET") sameOrigin(req);
