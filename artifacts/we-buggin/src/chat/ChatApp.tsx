@@ -218,6 +218,18 @@ export function ChatDirectory() {
   );
   return (
     <Shell className="st-directory st-home">
+      <div className="st-home-background" aria-hidden="true">
+        <video
+          className="st-home-background-video"
+          src={`${import.meta.env.BASE_URL}nyc-home-background.mp4`}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          tabIndex={-1}
+        />
+      </div>
       <header className="st-dir-header">
         <div className="st-dir-topline">
           <div className="st-dir-lockup">
