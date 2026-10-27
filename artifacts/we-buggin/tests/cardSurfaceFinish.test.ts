@@ -29,7 +29,7 @@ test("tilt is clamped to the max and light stays in 0-100%", () => {
     const p = computeCardFinishPose(x, y, rect);
     assert.ok(Math.abs(p.rx) <= CARD_FINISH_MAX_TILT_DEG && Math.abs(p.ry) <= CARD_FINISH_MAX_TILT_DEG);
     assert.ok(p.lx >= 0 && p.lx <= 100 && p.ly >= 0 && p.ly <= 100);
-    assert.ok(p.scale < 1);
+    assert.equal(p.scale, 1);
   }
   assert.equal(CARD_FINISH_MAX_TILT_DEG, 3);
   const c = computeCardFinishPose(50, 70, rect);
@@ -43,7 +43,7 @@ test("tilt is clamped to the max and light stays in 0-100%", () => {
 test("reduced motion removes tilt", () => {
   const p = computeCardFinishPose(100, 0, rect, true);
   assert.equal(p.rx, 0); assert.equal(p.ry, 0);
-  assert.match(finishCss, /prefers-reduced-motion: reduce[\s\S]*scale\(\.955\) !important/);
+  assert.match(finishCss, /prefers-reduced-motion: reduce[\s\S]*scale\(1\) !important/);
   assert.match(wrapper, /prefers-reduced-motion: reduce/);
 });
 
@@ -63,4 +63,14 @@ test("Joker shimmer keyframes and timing are unchanged", () => {
   assert.match(css, /animation: dw-card-tile-shimmer 3\.4s ease-in-out infinite;/);
   assert.match(css, /@keyframes dw-test-wild-shimmer \{\n  0%, 24% \{ transform: translateX\(-55%\) rotate\(-8deg\); \}\n  70%, 100% \{ transform: translateX\(55%\) rotate\(-8deg\); \}/);
   assert.match(css, /animation: dw-test-wild-shimmer 3\.4s ease-in-out infinite;/);
+});
+
+test("card artwork and lettering stay sharp through display and reveal animations", () => {
+  assert.match(css, /\.dw-card-face-image \{[^}]*image-rendering: auto;[^}]*filter: none;/);
+  assert.doesNotMatch(css, /@keyframes dw-test-card-deal \{[^}]*scale\(/);
+  assert.doesNotMatch(css, /@keyframes dw-card-flight \{[^}]*scale\(/);
+  assert.doesNotMatch(css, /@keyframes dw-card-zoom-in \{[^}]*scale\(/);
+  assert.match(css, /text-shadow: 0 0 1px var\(--card-neon\), 0 0 2px var\(--card-neon\)/);
+  assert.match(css, /dw-card-simple\[data-suit="hearts"\][^{]*\{[^}]*text-shadow: 0 0 1px #ff45d4, 0 0 2px #ff45d4/);
+  assert.equal(CARD_FINISH_REST.scale, 1);
 });

@@ -14,3 +14,9 @@ For responsive card lighting, move a static light layer with transforms rather t
 **Why:** A throttled browser trace of the owner-only card finish showed substantially more repainting with a pointer-driven gradient center. Moving the same static light layer brought accumulated paint time close to the unchanged-card comparison without changing the existing Joker shimmer.
 
 **How to apply:** Keep textures static and effects card-local, ease pointer updates through animation frames, and recheck paint cost under CPU slowdown. Real Android touch performance, heat and battery use still require device verification.
+
+For card readability, keep the raster face at its native aspect ratio and size; avoid fractional resting scales, scale-based deal/reveal animations, and broad text halos. Confine neon glow to compact frame and glyph edges.
+
+**Why:** The owner reported soft card faces on mobile even though the supplied art was sufficient for the normal hand grid; layered surface light, wide glow, and fractional transforms made details appear washed or resampled.
+
+**How to apply:** Audit effect layers and transforms before replacing card art. Verify the hand at high-density phone dimensions and treat real-device rendering as a separate check.

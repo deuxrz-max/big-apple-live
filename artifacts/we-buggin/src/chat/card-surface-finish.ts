@@ -1,7 +1,7 @@
 /** Pure helpers for the owner-only premium card finish prototype. No DOM, no network. */
 export const CARD_FINISH_MAX_TILT_DEG = 3;
-export const CARD_FINISH_REST_SCALE = 0.955;
-export const CARD_FINISH_ACTIVE_SCALE = 0.97;
+export const CARD_FINISH_REST_SCALE = 1;
+export const CARD_FINISH_ACTIVE_SCALE = 1;
 
 export type CardFinishAccess = { owner?: boolean | null } | null | undefined;
 
