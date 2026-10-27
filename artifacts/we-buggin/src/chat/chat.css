@@ -896,7 +896,8 @@ body.streamtalk-directory-screen #root .ch.st-home{
   position:absolute;right:12px;bottom:12px;left:12px;
 }
 @media(max-width:420px){
-  .st-home .rc-tiles{gap:16px 14px}
+  .st-home .rc-tiles{gap:20px 18px}
+  .st-home .rc-tiles > .st-home-go-live{margin-top:12px}
   .st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"]{padding:8px}
   .st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"] .rc-tile-title{top:12px;right:10px;left:10px}
   .st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"] .rc-tile-rooms{top:36px;right:10px;left:10px}
