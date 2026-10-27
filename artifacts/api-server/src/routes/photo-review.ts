@@ -14,7 +14,7 @@ async function requirePhotoReviewer(id: string) {
   if (!hasPhotoReviewAccess(access)) {
     const message = access.adultConfirmed
       ? "Photo review access required"
-      : "Deux Wild is adults-only. Confirm that you are 18 or older before entering chat.";
+      : "Big Apple Live is adults-only. Confirm that you are 18 or older before entering chat.";
     throw new RoomError(403, message);
   }
 }

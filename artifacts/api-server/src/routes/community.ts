@@ -202,7 +202,7 @@ router.patch("/account/chat/reports/:reportId", async (req, res) => {
     }
     if (targetId) {
       const admissionUpdate = action === "warn"
-        ? { moderationWarning: "A moderator reviewed a report about your account. Please follow Deux Wild's community rules.", warningAt: new Date() }
+        ? { moderationWarning: "A moderator reviewed a report about your account. Please follow Big Apple Live's community rules.", warningAt: new Date() }
         : action === "mute" ? { chatMuted: true }
         : action === "ban" || action === "restrict" ? { suspended: true }
         : {};

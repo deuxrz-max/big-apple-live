@@ -28,7 +28,7 @@ import { buyCoinsReturnState } from '@/social/buy-coins-navigation';
 import { ProfilePreferences } from '@/social/PeoplePages';
 import './chat.css';
 
-const DISCLAIMER = 'Deux Wild is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
+const DISCLAIMER = 'Big Apple Live is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
 
 function Shell({ children, className = '' }: { children: ReactNode; className?: string }) {
   return <div className={`ch ${className}`.trim()}><div className="ch-in">{children}</div></div>;
@@ -123,8 +123,8 @@ export function PublicChatLanding() {
           <li><Coins size={16} aria-hidden="true" /> Send gifts</li>
         </ul>
         <details className="dw-landing-about">
-          <summary>About Deux Wild</summary>
-          <p>Deux Wild is a live-streaming and social media platform where users can broadcast video in real time, watch others, watch categorized videos, chat, and send virtual gifts.</p>
+          <summary>About Big Apple Live</summary>
+          <p>Big Apple Live is a live-streaming and social media platform where users can broadcast video in real time, watch others, watch categorized videos, chat, and send virtual gifts.</p>
         </details>
       </section>
       <section className="dw-landing-rooms" aria-labelledby="dw-landing-rooms-title">
@@ -162,7 +162,7 @@ export function AdultGate({ children, keepMountedOnTransientError = false }: {
       />
     </Shell>
   );
-  if (access.suspended) return <Shell><h1>Chat access restricted</h1><p>Your access requires review by a Deux Wild moderator. A new age confirmation cannot remove this restriction.</p><Link href="/" className="bm-btn">Home</Link></Shell>;
+  if (access.suspended) return <Shell><h1>Chat access restricted</h1><p>Your access requires review by a Big Apple Live moderator. A new age confirmation cannot remove this restriction.</p><Link href="/" className="bm-btn">Home</Link></Shell>;
   if (access.adultConfirmed) return <>{children}</>;
   return (
     <Shell>
@@ -233,8 +233,8 @@ export function ChatDirectory() {
       <header className="st-dir-header">
         <div className="st-dir-topline">
           <div className="st-dir-lockup">
-            <Link href="/home" className="st-home-app-logo" aria-label="Deux Wild home" data-testid="link-home-logo"><AppLogo size={36} /></Link>
-            <span className="dw-home-title"><strong>Deux Wild</strong><small>{liveCreators.length ? `${liveCreators.length} creator${liveCreators.length === 1 ? '' : 's'} live` : 'Live rooms'}</small></span>
+            <Link href="/home" className="st-home-app-logo" aria-label="Big Apple Live home" data-testid="link-home-logo"><AppLogo size={36} /></Link>
+            <span className="dw-home-title"><strong>Big Apple Live</strong><small>{liveCreators.length ? `${liveCreators.length} creator${liveCreators.length === 1 ? '' : 's'} live` : 'Live rooms'}</small></span>
           </div>
           <div className="st-dir-account">
             <Link href="/community/leaderboard" className="st-dir-rewards" aria-label="Open leaderboard" data-testid="link-leaderboard">
@@ -297,7 +297,7 @@ export function ChatDirectory() {
                 </div>
                 : <div className="st-dir-state"><h3>No creator streams right now</h3><p>When someone goes live, their stream will appear here.</p></div>}
       </section>
-      <footer className="st-dir-footer"><span>DEUX WILD · FIND YOUR PEOPLE</span></footer>
+      <footer className="st-dir-footer"><span>BIG APPLE LIVE · FIND YOUR PEOPLE</span></footer>
     </Shell>
   );
 }
@@ -680,7 +680,7 @@ export function ProfilePhotoReviewPage() {
   if (!access.data?.adultConfirmed)
     return <Shell><div className="sc-empty" role="status"><h1>Access required</h1><p>Confirm adult access before reviewing profile photos.</p></div></Shell>;
   if (!access.data?.moderator && !access.data?.owner)
-    return <Shell><div className="sc-empty" role="status"><h1>Restricted</h1><p>Photo review is limited to the Deux Wild owner and authorized moderators.</p></div></Shell>;
+    return <Shell><div className="sc-empty" role="status"><h1>Restricted</h1><p>Photo review is limited to the Big Apple Live owner and authorized moderators.</p></div></Shell>;
   return <Shell>
     <ScreenHeader backHref="/user-portal" backLabel="Back to Me" title="Photo review" testId="header-photo-review" />
     <PhotoReviewQueue />

@@ -40,7 +40,7 @@ export function RoomCoinDropOverlay({
           ? event.qualified
             ? `You caught ${event.amount} coins!`
             : "Sit in a seat for 15 min to catch the next drop."
-          : "A Deux Wild coin drop is here"}
+          : "A Big Apple Live coin drop is here"}
       </span>
     </div>
   );

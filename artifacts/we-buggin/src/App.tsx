@@ -62,7 +62,7 @@ const clerkAppearance = {
   options: {
     logoPlacement: 'inside' as const,
     logoLinkUrl: basePath || '/',
-    logoImageUrl: `${window.location.origin}${basePath}/brand/deux-wild-icon-512.png`,
+    logoImageUrl: `${window.location.origin}${basePath}/brand/big-apple-live-approved.jpg`,
   },
   variables: {
     colorPrimary: GOLD,
@@ -380,7 +380,7 @@ function LiveRouteErrorFallback({ resetError }: ErrorFallbackProps) {
         <strong>Live could not load.</strong>
         <span>Try opening the live screen again.</span>
         <button type="button" className="st-live-start-button" onClick={resetError}>Try again</button>
-        <Link className="st-live-start-button" href="/home">Back to Deux Wild</Link>
+        <Link className="st-live-start-button" href="/home">Back to Big Apple Live</Link>
       </section>
     </main>
   );
@@ -496,7 +496,7 @@ function AppRoutes() {
 
 function App() {
   useEffect(() => {
-    const shareImage = new URL(`${basePath}/brand/deux-wild-icon-512.png`, window.location.origin).href;
+    const shareImage = new URL(`${basePath}/brand/big-apple-live-approved.jpg`, window.location.origin).href;
     document.querySelector('meta[property="og:image"]')?.setAttribute('content', shareImage);
     document.querySelector('meta[name="twitter:image"]')?.setAttribute('content', shareImage);
   }, []);

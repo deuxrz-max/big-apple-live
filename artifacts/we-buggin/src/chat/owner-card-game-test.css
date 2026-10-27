@@ -222,8 +222,11 @@
   place-items: center;
   overflow: hidden;
   background:
-    repeating-linear-gradient(135deg, rgba(206, 168, 70, .22) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(135deg, rgba(255, 69, 212, .2) 0 1px, transparent 1px 5px),
     #050505;
+  border-color: #ff45d4;
+  box-shadow: inset 0 0 0 2px rgba(255, 69, 212, .3), inset 0 0 0 4px #050505,
+    0 0 7px rgba(255, 69, 212, .85), 0 0 15px rgba(255, 69, 212, .42);
 }
 
 .dw-card-back-shadow {
@@ -242,7 +245,6 @@
   width: 27px;
   height: 27px;
   object-fit: contain;
-  filter: sepia(1) saturate(2.2) brightness(1.3);
 }
 
 .dw-card-test-deck small {
@@ -317,6 +319,95 @@
   object-fit: contain;
 }
 
+.dw-card-face-neon {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  isolation: isolate;
+  container-type: inline-size;
+  pointer-events: none;
+}
+.dw-card-face-neon[data-suit="hearts"] { --card-neon: #ff45d4; }
+.dw-card-face-neon[data-suit="clubs"] { --card-neon: #ffffff; }
+.dw-card-face-neon[data-suit="diamonds"] { --card-neon: #3da9ff; }
+.dw-card-face-neon[data-suit="spades"] { --card-neon: #65ff78; }
+.dw-card-face-neon[data-suit]::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: var(--card-neon);
+  mix-blend-mode: color;
+  opacity: .82;
+  content: "";
+  pointer-events: none;
+}
+.dw-card-face-neon:not(.is-joker)::before,
+.dw-card-face-neon.is-joker::before {
+  position: absolute;
+  z-index: 2;
+  inset: 1.5%;
+  border: 2px solid var(--card-neon, #ff45d4);
+  border-radius: 6px;
+  box-shadow: 0 0 5px var(--card-neon, #ff45d4), 0 0 12px color-mix(in srgb, var(--card-neon, #ff45d4) 78%, transparent),
+    inset 0 0 8px color-mix(in srgb, var(--card-neon, #ff45d4) 42%, transparent);
+  content: "";
+  pointer-events: none;
+}
+.dw-card-face-neon.is-joker { --card-neon: #ff45d4; }
+.dw-test-card:has(.dw-card-face-neon[data-suit="hearts"]) {
+  border: 2px solid #ff45d4;
+  box-shadow: 0 0 7px #ff45d4, 0 0 15px #ff45d466, inset 0 0 8px #ff45d433;
+}
+.dw-test-card:has(.dw-card-face-neon[data-suit="clubs"]) {
+  border: 2px solid #fff;
+  box-shadow: 0 0 7px #fff, 0 0 15px #ffffff66, inset 0 0 8px #ffffff33;
+}
+.dw-test-card:has(.dw-card-face-neon[data-suit="diamonds"]) {
+  border: 2px solid #3da9ff;
+  box-shadow: 0 0 7px #3da9ff, 0 0 15px #3da9ff66, inset 0 0 8px #3da9ff33;
+}
+.dw-test-card:has(.dw-card-face-neon[data-suit="spades"]) {
+  border: 2px solid #65ff78;
+  box-shadow: 0 0 7px #65ff78, 0 0 15px #65ff7866, inset 0 0 8px #65ff7833;
+}
+.dw-card-neon-corner {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  width: 31%;
+  height: 23%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  border: 1px solid color-mix(in srgb, var(--card-neon) 82%, transparent);
+  background: #050506;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--card-neon) 75%, transparent);
+  color: var(--card-neon);
+  font: 900 clamp(7px, 16cqw, 19px)/.9 "DM Sans", sans-serif;
+  text-shadow: 0 0 4px var(--card-neon), 0 0 9px var(--card-neon), 0 0 16px color-mix(in srgb, var(--card-neon) 82%, transparent);
+}
+.dw-card-neon-corner-top { top: 3%; left: 4%; }
+.dw-card-neon-corner-bottom { right: 4%; bottom: 3%; transform: rotate(180deg); }
+.dw-card-neon-corner b,
+.dw-card-neon-corner i { font: inherit; font-style: normal; }
+.dw-card-neon-corner i { font-size: .82em; }
+.dw-card-ace-brand {
+  position: absolute;
+  z-index: 3;
+  right: 27%;
+  bottom: 10.5%;
+  left: 27%;
+  overflow: hidden;
+  background: #050506;
+  color: #f4ead3;
+  font: 900 clamp(4px, 4.3cqw, 15px)/1 "DM Sans", sans-serif;
+  letter-spacing: .12em;
+  text-align: center;
+  white-space: nowrap;
+}
+
 .dw-test-card:has(.dw-card-face-image)::after {
   display: none;
 }
@@ -325,6 +416,9 @@
   background:
     radial-gradient(circle at 50% 45%, rgba(229, 185, 74, .19), transparent 49%),
     #050505;
+  border-color: #ff45d4;
+  box-shadow: inset 0 0 0 2px rgba(255, 69, 212, .28), inset 0 0 0 4px #050505,
+    0 0 7px rgba(255, 69, 212, .82), 0 0 15px rgba(255, 69, 212, .4);
 }
 
 .dw-test-card.is-wild::before {
@@ -581,6 +675,7 @@
 }
 .dw-card-tile-face:has(img) { background: #050505; }
 .dw-card-tile-face.is-wild { background: radial-gradient(circle at 50% 45%, rgba(229, 185, 74, .19), transparent 49%), #050505; }
+.dw-card-tile-face.is-wild { border-color: #ff45d4; box-shadow: 0 0 9px rgba(255, 69, 212, .9), 0 0 17px rgba(255, 69, 212, .4), inset 0 0 9px rgba(255, 69, 212, .2); }
 .dw-card-tile-face.is-wild::before {
   position: absolute; z-index: 2; inset: 0; content: ""; pointer-events: none;
   background: linear-gradient(110deg, transparent 37%, rgba(255, 226, 145, .3) 50%, transparent 63%);
@@ -592,6 +687,18 @@
 }
 .dw-card-simple { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2%; color: #f4e8c4; container-type: size; font-family: inherit; line-height: 1; }
 .dw-card-simple.is-red { color: #ff4358; }
+.dw-card-simple[data-suit="hearts"] { color: #ff45d4; text-shadow: 0 0 4px #ff45d4, 0 0 9px #ff45d4, 0 0 16px #ff45d4; }
+.dw-card-simple[data-suit="clubs"] { color: #ffffff; text-shadow: 0 0 4px #ffffff, 0 0 9px #ffffff, 0 0 16px #ffffff; }
+.dw-card-simple[data-suit="diamonds"] { color: #3da9ff; text-shadow: 0 0 4px #3da9ff, 0 0 9px #3da9ff, 0 0 16px #3da9ff; }
+.dw-card-simple[data-suit="spades"] { color: #65ff78; text-shadow: 0 0 4px #65ff78, 0 0 9px #65ff78, 0 0 16px #65ff78; }
+.dw-card-tile-face:has(.dw-card-simple[data-suit="hearts"]),
+.dw-card-tile-face:has(.dw-card-face-neon[data-suit="hearts"]) { border-color: #ff45d4; box-shadow: 0 0 9px #ff45d4, 0 0 16px #ff45d466, inset 0 0 8px #ff45d433; }
+.dw-card-tile-face:has(.dw-card-simple[data-suit="clubs"]),
+.dw-card-tile-face:has(.dw-card-face-neon[data-suit="clubs"]) { border-color: #ffffff; box-shadow: 0 0 9px #ffffff, 0 0 16px #ffffff66, inset 0 0 8px #ffffff33; }
+.dw-card-tile-face:has(.dw-card-simple[data-suit="diamonds"]),
+.dw-card-tile-face:has(.dw-card-face-neon[data-suit="diamonds"]) { border-color: #3da9ff; box-shadow: 0 0 9px #3da9ff, 0 0 16px #3da9ff66, inset 0 0 8px #3da9ff33; }
+.dw-card-tile-face:has(.dw-card-simple[data-suit="spades"]),
+.dw-card-tile-face:has(.dw-card-face-neon[data-suit="spades"]) { border-color: #65ff78; box-shadow: 0 0 9px #65ff78, 0 0 16px #65ff7866, inset 0 0 8px #65ff7833; }
 .dw-card-simple b { font-size: 46cqh; font-size: min(46cqh, 62cqw); font-weight: 900; letter-spacing: -.04em; font-style: normal; }
 .dw-card-simple i { font-size: 30cqh; font-style: normal; }
 .dw-card-fan-zoom { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; height: 100%; width: 100%; }

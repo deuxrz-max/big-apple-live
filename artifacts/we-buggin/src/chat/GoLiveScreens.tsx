@@ -454,7 +454,7 @@ export function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd,
     const path = base.endsWith("/") ? base : `${base}/`;
     const url = new URL(`${path}live/${encodeURIComponent(streamId)}`, window.location.origin).toString();
     try {
-      if (navigator.share) await navigator.share({ title: `${displayName} is live on Deux Wild`, text: "Join my live stream", url });
+      if (navigator.share) await navigator.share({ title: `${displayName} is live on Big Apple Live`, text: "Join my live stream", url });
       else {
         await navigator.clipboard.writeText(url);
         setShareNotice("Stream link copied");
@@ -720,7 +720,7 @@ function HostStatusScreen({ snapshot, username, recoveryId, checking, onStart, o
         <button type="button" onClick={onFresh}>End old stream &amp; go live</button>
       </div> : <button type="button" disabled={checking} onClick={recoveryId ? onResume : onStart}
         data-testid="live-start-camera">{recoveryId ? "Tap to start camera" : "Go live"}</button>}
-      <button type="button" className="st-live-recovery-back" onClick={onBack}>Back to Deux Wild</button>
+      <button type="button" className="st-live-recovery-back" onClick={onBack}>Back to Big Apple Live</button>
       {username && <span className="st-live-sr">Signed in as @{username}</span>}
     </section>
   </main>;
@@ -783,7 +783,7 @@ export function WatchLiveStreamPage({ streamId }: { streamId: string }) {
       <section className="st-live-camera-recovery st-live-recovery-card">
         <strong>Live stream unavailable</strong><span>{snapshot.error}</span>
         <button type="button" onClick={() => void controller.retry()}>Try again</button>
-        <button type="button" className="st-live-recovery-back" onClick={() => navigate("/home")}>Back to Deux Wild</button>
+        <button type="button" className="st-live-recovery-back" onClick={() => navigate("/home")}>Back to Big Apple Live</button>
       </section>
     </main>;
   }
@@ -836,7 +836,7 @@ export function GoLiveButton({ className, children }: { className: string; child
   const trigger = useRef<HTMLButtonElement>(null);
   const dialog = useRef<HTMLDivElement>(null);
   const username = me.data?.profile?.username ?? "";
-  const displayName = me.data?.profile?.displayName?.trim() || username || "Deux Wild";
+  const displayName = me.data?.profile?.displayName?.trim() || username || "Big Apple Live";
   const roomName = `${Array.from(displayName).slice(0, 25).join("").trimEnd()}'s Room`;
 
   useEffect(() => {

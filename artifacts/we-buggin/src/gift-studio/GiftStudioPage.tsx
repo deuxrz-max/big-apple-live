@@ -114,7 +114,7 @@ async function processClipOnServer(
     signal,
   });
   if (!response.ok) {
-    throw await responseError(response, `Deux Wild could not process this clip (server error ${response.status}).`);
+    throw await responseError(response, `Big Apple Live could not process this clip (server error ${response.status}).`);
   }
   const output = await response.blob();
   if (output.size === 0) throw new Error('The processor returned an empty video. Try processing again.');
@@ -153,7 +153,7 @@ async function saveGiftStudioClip(input: {
       }),
     });
     if (response.status !== 410) {
-      if (!response.ok) throw await responseError(response, `Deux Wild could not save this gift (server error ${response.status}).`);
+      if (!response.ok) throw await responseError(response, `Big Apple Live could not save this gift (server error ${response.status}).`);
       return await response.json() as GiftStudioVersion;
     }
     // A dev preview/server restart may expire its temporary copy. The browser still
@@ -179,7 +179,7 @@ async function saveGiftStudioClip(input: {
     headers: authHeaders,
     body: form,
   });
-  if (!response.ok) throw await responseError(response, `Deux Wild could not save this gift (server error ${response.status}).`);
+  if (!response.ok) throw await responseError(response, `Big Apple Live could not save this gift (server error ${response.status}).`);
   return await response.json() as GiftStudioVersion;
 }
 
@@ -615,7 +615,7 @@ export function GiftStudioPage() {
       let usedServerProcessor = preferServer;
       if (preferServer) {
         setServerProcessing(true);
-        setStatus('Using Deux Wild’s low-memory processor (480 px, 24 fps)…');
+        setStatus('Using Big Apple Live’s low-memory processor (480 px, 24 fps)…');
         const controller = new AbortController();
         serverAbortRef.current = controller;
         const result = await processClipOnServer(file, processSettings, controller.signal, getToken);
@@ -634,7 +634,7 @@ export function GiftStudioPage() {
           usedServerProcessor = true;
           setServerProcessing(true);
           setProgress(0);
-          setStatus('Phone encoding could not finish. Retrying with Deux Wild’s low-memory processor (480 px, 24 fps)…');
+          setStatus('Phone encoding could not finish. Retrying with Big Apple Live’s low-memory processor (480 px, 24 fps)…');
           const controller = new AbortController();
           serverAbortRef.current = controller;
           try {
@@ -1171,10 +1171,10 @@ export function GiftStudioPage() {
   return (
     <main className="gs">
       <div className="gs-shell">
-        <div className="gs-topline"><span className="gs-topline-mark" /> DEUX WILD · GIFT STUDIO</div>
+        <div className="gs-topline"><span className="gs-topline-mark" /> BIG APPLE LIVE · GIFT STUDIO</div>
         <header className="gs-production-intro">
           <h1>Gift production</h1>
-          <p>Name it, remove the screen, check the transparent animation, then activate it in Deux Wild.</p>
+          <p>Name it, remove the screen, check the transparent animation, then activate it in Big Apple Live.</p>
           <div className="gs-private"><LockKeyhole size={13} /> Owner-only workspace</div>
         </header>
 
@@ -1421,7 +1421,7 @@ export function GiftStudioPage() {
           >
             <div className="gs-production-step-head">
               <span className="gs-production-step-number">03</span>
-              <div><h2 id="gs-step-remove-title">{backgroundMode === 'black' ? 'Black background' : 'Remove background'}</h2><p>{backgroundMode === 'black' ? 'Keep the normal video and blend its black background away during playback.' : 'Deux Wild detects the screen color and starts processing automatically.'}</p></div>
+              <div><h2 id="gs-step-remove-title">{backgroundMode === 'black' ? 'Black background' : 'Remove background'}</h2><p>{backgroundMode === 'black' ? 'Keep the normal video and blend its black background away during playback.' : 'Big Apple Live detects the screen color and starts processing automatically.'}</p></div>
             </div>
             <div className="gs-production-step-body">
               {backgroundMode === 'black' && <p className="gs-caption" data-testid="black-mode-processing-note">The black background stays in the video; it is blended away when the animation plays.</p>}
@@ -1494,7 +1494,7 @@ export function GiftStudioPage() {
                 <button type="button" aria-pressed={reviewMode === 'sample'} onClick={() => setReviewMode('sample')} data-testid="button-review-sample">Sample stream</button>
               </div>
               <div className={`gs-result-preview${reviewMode === 'sample' ? ' is-sample' : ''}${backgroundMode === 'black' ? ' is-black-background' : ''}`} style={previewStageStyle} data-testid="preview-final-result">
-                {reviewMode === 'sample' && <><div className="gs-stream-mock-top"><span className="gs-live-dot" /> LIVE · DEUX WILD</div><div className="gs-stream-mock-chat">Chat stays visible under the gift.</div><div className="gs-stream-mock-name">{draftName || 'Gift preview'}</div></>}
+                {reviewMode === 'sample' && <><div className="gs-stream-mock-top"><span className="gs-live-dot" /> LIVE · BIG APPLE LIVE</div><div className="gs-stream-mock-chat">Chat stays visible under the gift.</div><div className="gs-stream-mock-name">{draftName || 'Gift preview'}</div></>}
                 {processedUrl
                   ? <video key={processedUrl} ref={processedVideoRef} src={processedUrl} muted playsInline loop autoPlay preload="metadata" onLoadedMetadata={onProcessedMetadata} onTimeUpdate={syncTime} aria-label={backgroundMode === 'black' ? 'Processed black-background gift animation' : 'Processed transparent gift animation'} data-testid="video-final-result" />
                   : originalUrl
@@ -1532,7 +1532,7 @@ export function GiftStudioPage() {
           >
             <div className="gs-production-step-head">
               <span className="gs-production-step-number">05</span>
-              <div><h2 id="gs-step-activate-title">Activate in Deux Wild</h2><p>Save the finished clip to the real gift library.</p></div>
+              <div><h2 id="gs-step-activate-title">Activate in Big Apple Live</h2><p>Save the finished clip to the real gift library.</p></div>
             </div>
             <div className="gs-production-step-body">
               <div className="gs-activation-summary">

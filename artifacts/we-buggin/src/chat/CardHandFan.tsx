@@ -33,7 +33,7 @@ function PopupCardFace({ code }: { code: string }) {
   if (!f) return null;
   if (!f.isWild && isSimpleNumberRank(f.rank)) {
     return (
-      <span className={`dw-card-simple${isRedSuit(f.suit) ? " is-red" : ""}`} aria-hidden="true">
+      <span className={`dw-card-simple${isRedSuit(f.suit) ? " is-red" : ""}`} data-suit={f.suitName} aria-hidden="true">
         <b>{f.rank}</b><i>{f.symbol}</i>
       </span>
     );

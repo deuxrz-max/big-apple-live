@@ -18,7 +18,7 @@ import { GiftArtwork } from '@/gifts/GiftArtwork';
 import './store-page.css';
 
 type StoreSection = 'badges' | 'effects' | 'gifts';
-const PROMO_HEADLINE = 'THE DEUX WILD STORE IS OPEN.';
+const PROMO_HEADLINE = 'THE BIG APPLE LIVE STORE IS OPEN.';
 const SECTIONS: { id: StoreSection; label: string; icon: typeof Sparkles; deck: string }[] = [
   { id: 'badges', label: 'Badges', icon: BadgeCheck, deck: 'Status, earned over time' },
   { id: 'effects', label: 'Entrance effects', icon: WandSparkles, deck: 'Make an entrance' },
@@ -226,7 +226,7 @@ export function StorePage() {
           <div className="st-promo-orbit st-promo-orbit-one" /><div className="st-promo-orbit st-promo-orbit-two" />
           <span className="st-promo-label"><Sparkles size={13} /> MEMBER SPOTLIGHT</span>
           <h2 data-testid="text-store-promo-headline">{PROMO_HEADLINE}</h2>
-          <p>Find your signature in the Deux Wild collection.</p>
+          <p>Find your signature in the Big Apple Live collection.</p>
           <span className="st-promo-stamp">DW<br /><small>18+</small></span>
         </section>
 
@@ -264,7 +264,7 @@ export function StorePage() {
           </div>}
         </div>}
 
-        <footer className="st-store-footer"><span>DEUX WILD / MEMBER STORE</span><span>Made for your next entrance.</span></footer>
+        <footer className="st-store-footer"><span>BIG APPLE LIVE / MEMBER STORE</span><span>Made for your next entrance.</span></footer>
       </div>
 
       <aside className="st-balance-bar" aria-label="Wallet balance" data-testid="text-store-balance">
@@ -285,7 +285,7 @@ export function StorePage() {
             {art(selected.type, modalBadge ?? modalEffect ?? modalGift, 'large')}
             <h2>{(modalBadge ?? modalEffect ?? modalGift)?.name}</h2>
             {selected.type === 'badges' && modalBadge && <>
-              <p>{modalBadge.description || 'A distinctive mark in the Deux Wild community.'}</p>
+              <p>{modalBadge.description || 'A distinctive mark in the Big Apple Live community.'}</p>
               <div className="st-detail-fact"><LockKeyhole size={16} /><span>Automatically earned from qualifying completed monthly coin purchases. Not purchasable with wallet coins.</span></div>
               <div className="st-detail-price"><Coins size={17} /> {formatCredits(modalBadge.cost)} <small>monthly qualifying spend</small></div>
               <button type="button" className="st-detail-action is-disabled" disabled data-testid={`button-detail-auto-${modalBadge.id}`}><LockKeyhole size={16} /> Auto-earned</button>

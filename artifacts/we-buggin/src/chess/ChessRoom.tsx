@@ -165,7 +165,7 @@ export function ChessRoom({ roomId, accountKey, onExit }: { roomId: string; acco
     const base = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
     const url = new URL(`${base}community/chess/${encodeURIComponent(roomId)}`, window.location.origin).toString();
     try {
-      if (navigator.share) await navigator.share({ title: "Play chess on Deux Wild", url });
+      if (navigator.share) await navigator.share({ title: "Play chess on Big Apple Live", url });
       else { await navigator.clipboard.writeText(url); setShareNote("link copied"); window.setTimeout(() => setShareNote(""), 2400); }
     } catch (e) { if (!(e instanceof DOMException && e.name === "AbortError")) setError("Could not share the link."); }
   };

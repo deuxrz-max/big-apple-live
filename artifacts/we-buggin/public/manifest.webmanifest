@@ -1,7 +1,7 @@
 {
-  "name": "Deux Wild",
-  "short_name": "Deux Wild",
-  "description": "Deux Wild is a live-streaming and social media platform where users can broadcast video in real time, watch others, watch categorized videos, chat, and send virtual gifts.",
+  "name": "Big Apple Live",
+  "short_name": "Big Apple Live",
+  "description": "Big Apple Live is a live-streaming and social media platform where users can broadcast video in real time, watch others, watch categorized videos, chat, and send virtual gifts.",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#08070b",

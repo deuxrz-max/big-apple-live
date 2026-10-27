@@ -108,12 +108,12 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
               <Route path="/community/moderation" component={ModerationQueue} />
               <Route path="/community/reports">{() => access.data?.owner
                 ? <SafetyReportsPage />
-                : <div className="sc-empty" role="status" data-testid="status-reports-access"><h2>Owner access required</h2><p>Safety reports are private to the Deux Wild owner.</p><Link href="/community" className="bm-btn">Back to People</Link></div>}</Route>
+                : <div className="sc-empty" role="status" data-testid="status-reports-access"><h2>Owner access required</h2><p>Safety reports are private to the Big Apple Live owner.</p><Link href="/community" className="bm-btn">Back to People</Link></div>}</Route>
               <Route path="/community/gift-studio">{() => access.data?.owner
                 ? <GiftStudioPage />
                 : access.isLoading
                   ? <Loading />
-                  : <div className="sc-empty" role="status" data-testid="status-gift-studio-access"><h2>Owner access required</h2><p>Gift Studio is available only to the Deux Wild owner.</p><Link href="/community/profile" className="bm-btn">Back to Me</Link></div>}</Route>
+                  : <div className="sc-empty" role="status" data-testid="status-gift-studio-access"><h2>Owner access required</h2><p>Gift Studio is available only to the Big Apple Live owner.</p><Link href="/community/profile" className="bm-btn">Back to Me</Link></div>}</Route>
               <Route path="/community/rewards"><RewardsPage /></Route>
               <Route path="/community/coins" component={BuyCreditsPage} />
               {/* Keep the old address working for saved links; new links use /coins. */}

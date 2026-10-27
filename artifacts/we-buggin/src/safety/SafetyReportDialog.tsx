@@ -97,14 +97,14 @@ export function SafetyReportDialog({
           <>
             <header className="st-report-heading">
               <div>
-                <span className="st-report-eyebrow">Deux Wild safety</span>
+                <span className="st-report-eyebrow">Big Apple Live safety</span>
                 <h2 id={titleId}>Report {targetType}</h2>
               </div>
               <button type="button" className="st-report-close" aria-label="Close report dialog" onClick={onClose} disabled={report.isPending} data-testid="button-close-report">
                 <X size={18} aria-hidden="true" />
               </button>
             </header>
-            <p className="st-report-copy">Tell us what happened. Reports are private and help keep Deux Wild welcoming.</p>
+            <p className="st-report-copy">Tell us what happened. Reports are private and help keep Big Apple Live welcoming.</p>
             {targetUsername && <p className="st-report-target">Reporting <strong>@{targetUsername}</strong></p>}
             <form onSubmit={submit}>
               <fieldset style={{ border: 0, padding: 0, margin: 0 }} aria-labelledby={reasonGroupId}>

@@ -528,9 +528,10 @@ body #root nav.app-bottom-nav .app-bottom-nav-inner .app-bottom-link svg { strok
   flex-direction: row; align-items: center; gap: 8px; overflow: visible;
 }
 #root .st-home .st-home-app-logo { flex: 0 0 32px; width: 32px; min-height: 44px; display: grid; place-items: center; }
-#root .st-home .dw-home-title { min-width: 0; }
+#root .st-home .dw-home-title { flex: 1 1 0%; min-width: 0; }
 #root .st-home .dw-home-title strong {
-  white-space: nowrap; font-size: 17px; overflow: hidden; text-overflow: ellipsis;
+  white-space: normal; font-size: clamp(13px, 4vw, 16px); letter-spacing: 0; line-height: 1.05;
+  overflow: visible; text-overflow: clip;
 }
 #root .st-home .st-dir-account { flex-shrink: 0; gap: 6px; }
 #root .st-home .st-home-go-live-button,
