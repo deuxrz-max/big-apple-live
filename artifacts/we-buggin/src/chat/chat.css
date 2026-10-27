@@ -583,7 +583,7 @@ body.streamtalk-directory-screen #root .ch.st-home .st-home-background{
 body.streamtalk-directory-screen #root .ch.st-home .st-home-background::after{
   position:absolute;
   inset:0;
-  background:linear-gradient(180deg,rgba(8,7,11,.4),rgba(8,7,11,.62) 55%,rgba(8,7,11,.78));
+   background:linear-gradient(180deg,rgba(8,7,11,.16),rgba(8,7,11,.3) 55%,rgba(8,7,11,.48));
   content:"";
 }
 body.streamtalk-directory-screen #root .ch.st-home .st-home-background-video{
@@ -592,8 +592,8 @@ body.streamtalk-directory-screen #root .ch.st-home .st-home-background-video{
   height:100%;
   object-fit:cover;
   object-position:center;
-  opacity:.72;
-  filter:brightness(.72) saturate(.82);
+   opacity:1;
+   filter:none;
 }
 body.streamtalk-directory-screen #root .ch.st-home .st-dir-topline{padding-bottom:8px}
 body.streamtalk-directory-screen #root .ch.st-home .st-home-app-logo{
@@ -863,18 +863,18 @@ body.streamtalk-directory-screen #root .ch.st-home{
 .st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"]{
   --channel-neon:#f4f7ff;
   padding:10px;
-  border:1px solid var(--channel-neon,#f4f7ff);
+   border:2px solid var(--channel-neon,#f4f7ff);
   background:#08090de8;
-  box-shadow:0 0 9px color-mix(in srgb,var(--channel-neon,#f4f7ff) 38%,transparent),
-    inset 0 0 12px color-mix(in srgb,var(--channel-neon,#f4f7ff) 9%,transparent);
+   box-shadow:0 0 12px color-mix(in srgb,var(--channel-neon,#f4f7ff) 48%,transparent),
+     inset 0 0 14px color-mix(in srgb,var(--channel-neon,#f4f7ff) 12%,transparent);
 }
 .st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"]:hover,
 .st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"]:focus-visible{
   border-color:var(--channel-neon,#f4f7ff);
   outline:2px solid color-mix(in srgb,var(--channel-neon,#f4f7ff) 58%,transparent);
   outline-offset:2px;
-  box-shadow:0 0 16px color-mix(in srgb,var(--channel-neon,#f4f7ff) 48%,transparent),
-    inset 0 0 14px color-mix(in srgb,var(--channel-neon,#f4f7ff) 12%,transparent);
+   box-shadow:0 0 19px color-mix(in srgb,var(--channel-neon,#f4f7ff) 58%,transparent),
+     inset 0 0 16px color-mix(in srgb,var(--channel-neon,#f4f7ff) 15%,transparent);
 }
 .st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"] .rc-tile-title{
   color:#fff;
@@ -886,9 +886,21 @@ body.streamtalk-directory-screen #root .ch.st-home{
 .st-home .rc-tiles > li > a.rc-tile.rc-channel-cafe{--channel-neon:#ff4fc8}
 .st-home .rc-tiles > li > a.rc-tile.rc-channel-screening{--channel-neon:#49dfff}
 .st-home .rc-tiles > li > a.rc-tile.rc-channel-arena{--channel-neon:#a6ff4d}
+.st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"] .rc-tile-title{
+  position:absolute;top:14px;right:12px;left:12px;
+}
+.st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"] .rc-tile-rooms{
+  position:absolute;top:40px;right:12px;left:12px;
+}
+.st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"] .rc-tile-count{
+  position:absolute;right:12px;bottom:12px;left:12px;
+}
 @media(max-width:420px){
-  .st-home .rc-tiles{gap:9px}
+  .st-home .rc-tiles{gap:16px 14px}
   .st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"]{padding:8px}
+  .st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"] .rc-tile-title{top:12px;right:10px;left:10px}
+  .st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"] .rc-tile-rooms{top:36px;right:10px;left:10px}
+  .st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"] .rc-tile-count{right:10px;bottom:10px;left:10px}
   .st-home .rc-tiles a.rc-tile[data-testid^="link-channel-"] .rc-tile-title{font-size:.93rem}
 }
 @media(prefers-reduced-motion:reduce){
