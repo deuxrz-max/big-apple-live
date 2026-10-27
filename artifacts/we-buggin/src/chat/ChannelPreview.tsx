@@ -103,12 +103,17 @@ export function ChannelPreview({ videoId, title, startedAtMs, serverNowMs, slug 
       host.replaceChildren(target);
       created = new YT.Player(target, {
         width: '100%', height: '100%', videoId,
-        playerVars: { autoplay: 0, mute: 1, playsinline: 1, controls: 0, disablekb: 1, fs: 0, rel: 0, cc_load_policy: 0, iv_load_policy: 3, enablejsapi: 1, origin: window.location.origin },
+        // The IFrame API is still visibility-gated below. Enabling provider
+        // autoplay lets muted previews start reliably on mobile browsers.
+        playerVars: { autoplay: 1, mute: 1, playsinline: 1, controls: 0, disablekb: 1, fs: 0, rel: 0, cc_load_policy: 0, iv_load_policy: 3, enablejsapi: 1, origin: window.location.origin },
         events: {
           onReady: (e) => {
             if (!active) return;
             readyRef.current = true;
-            try { e.target.mute(); } catch { /* ignore */ }
+            try {
+              e.target.mute();
+              e.target.unloadModule('captions');
+            } catch { /* ignore */ }
             apply();
             blockedTimer = window.setTimeout(() => {
               if (!active || !created) return;
@@ -121,7 +126,10 @@ export function ChannelPreview({ videoId, title, startedAtMs, serverNowMs, slug 
           onStateChange: (e) => {
             if (!active) return;
             if (e.data === 1) {
-              try { e.target.mute(); } catch { /* ignore */ }
+              try {
+                e.target.mute();
+                e.target.unloadModule('captions');
+              } catch { /* ignore */ }
               if (!inViewRef.current || document.visibilityState !== 'visible') {
                 try { (e.target as PreviewPlayer).pauseVideo?.(); } catch { /* unloading */ }
                 syncedRef.current = false;
@@ -162,12 +170,10 @@ export function ChannelPreview({ videoId, title, startedAtMs, serverNowMs, slug 
   }, [startedAtMs, serverNowMs]);
 
   const poster = videoId ? `https://img.youtube.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg` : null;
-  const label = !videoId ? 'Intermission' : state === 'blocked' ? 'Preview paused' : state === 'unavailable' ? 'Preview unavailable' : state === 'playing' ? null : 'Loading preview';
   return (
     <div ref={rootRef} className={`rc-preview is-${state}`} aria-hidden="true" data-testid={`preview-channel-${slug}`} data-state={state} title={title ?? undefined}>
       {poster && state !== 'playing' && <img className="rc-preview-poster" src={poster} alt="" loading="lazy" />}
       <div ref={hostRef} className="rc-preview-player" />
-      {label && <span className="rc-preview-status" data-testid={`status-preview-${slug}`}>{label}</span>}
     </div>
   );
 }

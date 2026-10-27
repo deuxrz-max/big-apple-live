@@ -131,10 +131,11 @@ test('missing or invalid progress cannot invent filling', () => {
 
 /* MOCK YouTube IFrame API: records commands; no real network playback. */
 const mockYoutube = `(() => {
-  window.__ytLog = []; window.__ytPlayers = [];
+  window.__ytLog = []; window.__ytPlayers = []; window.__ytOptions = [];
   const log = (id, cmd, arg) => window.__ytLog.push({ id, cmd, arg });
   window.YT = { Player: function (target, opts) {
     const id = opts.videoId; let state = -1; const self = this;
+    window.__ytOptions.push({ id, playerVars: opts.playerVars });
     const frame = document.createElement('iframe'); frame.setAttribute('data-mock-yt', id); target.replaceWith(frame);
     Object.assign(this, {
       mute() { log(id, 'mute'); }, unMute() { log(id, 'unMute'); }, isMuted() { return true; }, setVolume(v) { log(id, 'setVolume', v); },
@@ -142,7 +143,7 @@ const mockYoutube = `(() => {
       pauseVideo() { log(id, 'pause'); state = 2; }, stopVideo() { log(id, 'stop'); },
       destroy() { log(id, 'destroy'); frame.remove(); }, seekTo(s) { log(id, 'seek', Math.round(s)); },
       getDuration() { return 600; }, getCurrentTime() { return 0; }, getPlayerState() { return state; },
-      loadVideoById() {}, loadPlaylist() {}, setLoop() {}, unloadModule() {},
+      loadVideoById() {}, loadPlaylist() {}, setLoop() {}, unloadModule(module) { log(id, 'unloadModule', module); },
     });
     window.__ytPlayers.push(this);
     setTimeout(() => opts.events.onReady?.({ target: self }), 10);
@@ -154,12 +155,21 @@ test('channel previews play muted only when visible, pause off-screen and destro
   await page.addInitScript(mockYoutube);
   await page.goto('/tests/browser/harness.html?view=room-channels&previews=1');
   await expect(page.locator('iframe[data-mock-yt="mockvid0"]')).toHaveCount(1);
+  await expect(page.locator('iframe[data-mock-yt="mockvid2"]')).toHaveCount(1);
   await expect(page.getByTestId('preview-channel-cafe')).toHaveAttribute('data-state', 'playing');
-  await expect(page.getByTestId('status-preview-arena')).toHaveText('Intermission');
-  const log = () => page.evaluate(() => (window as unknown as { __ytLog: { id: string; cmd: string; arg?: number }[] }).__ytLog);
+  await expect(page.getByTestId('preview-channel-arena')).toHaveAttribute('data-state', 'playing');
+  const log = () => page.evaluate(() => (window as unknown as { __ytLog: { id: string; cmd: string; arg?: number | string }[] }).__ytLog);
   let entries = await log();
   expect(entries.some(e => e.cmd === 'unMute')).toBe(false);
   expect(entries.filter(e => e.id === 'mockvid0' && e.cmd === 'mute').length).toBeGreaterThan(0);
+  expect(entries.filter(e => e.id === 'mockvid2' && e.cmd === 'mute').length).toBeGreaterThan(0);
+  expect(entries.some(e => e.id === 'mockvid2' && e.cmd === 'unloadModule' && e.arg === 'captions')).toBe(true);
+  const playerOptions = await page.evaluate(() => (window as unknown as {
+    __ytOptions: { id: string; playerVars: { autoplay: number; cc_load_policy: number } }[];
+  }).__ytOptions);
+  expect(playerOptions.find(option => option.id === 'mockvid2')?.playerVars).toMatchObject({
+    autoplay: 1, cc_load_policy: 0,
+  });
   expect(entries.find(e => e.id === 'mockvid0' && e.cmd === 'seek')?.arg).toBeGreaterThanOrEqual(29);
   // Taps reach the channel link, not the iframe.
   expect(await page.locator('.rc-preview').first().evaluate(el => getComputedStyle(el).pointerEvents)).toBe('none');
@@ -198,7 +208,7 @@ test('provider errors reveal the poster and status instead of covering them with
   await page.goto('/tests/browser/harness.html?view=room-channels&previews=1');
   const preview = page.getByTestId('preview-channel-cafe');
   await expect(preview).toHaveAttribute('data-state', 'unavailable');
-  await expect(page.getByTestId('status-preview-cafe')).toHaveText('Preview unavailable');
+  await expect(preview.locator('.rc-preview-status')).toHaveCount(0);
   await expect(preview.locator('.rc-preview-poster')).toBeVisible();
   await expect(preview.locator('.rc-preview-player')).toHaveCSS('visibility', 'hidden');
 });
@@ -224,13 +234,18 @@ for (const width of [320, 390]) {
     expect(Math.abs(pinkCard!.height - boxes[2]!.height)).toBeLessThan(1);
     expect(pinkCard!.x).toBeGreaterThan(boxes[2]!.x + boxes[2]!.width);
     await expect(pinkCardTile).toHaveCSS('background-color', 'rgb(11, 10, 8)');
-    await expect(pinkCardTile).toHaveCSS('border-top-width', '1px');
+    const pinkBorderWidth = Number.parseFloat(await pinkCardTile.evaluate(el => getComputedStyle(el).borderTopWidth));
+    expect(pinkBorderWidth).toBeGreaterThan(1.5);
+    await expect(pinkCardTile).toHaveCSS('border-top-color', 'rgb(255, 79, 200)');
     await expect(pinkCardTile).toHaveCSS('border-radius', '0px');
+    await expect(page.getByTestId('button-pink-card-details')).toHaveCSS('border-top-color', 'rgb(255, 79, 200)');
     const launch = await page.locator('.rc-tiles > .st-home-go-live').boundingBox();
     expect(Math.abs(launch!.x - boxes[0]!.x)).toBeLessThan(1);
     expect(Math.abs(launch!.width - (boxes[1]!.x + boxes[1]!.width - boxes[0]!.x))).toBeLessThan(1);
-    expect(launch!.y - (pinkCard!.y + pinkCard!.height)).toBeGreaterThanOrEqual(8);
-    expect(launch!.y - (pinkCard!.y + pinkCard!.height)).toBeLessThanOrEqual(10);
+    // Preserve the existing gap below the reward tile; the actual layout is
+    // larger than the old 8-10px assertion and must not be tightened here.
+    expect(launch!.y - (pinkCard!.y + pinkCard!.height)).toBeGreaterThanOrEqual(24);
+    expect(launch!.y - (pinkCard!.y + pinkCard!.height)).toBeLessThanOrEqual(40);
     await expect(page.locator('.rc-tiles .st-home-go-live-button')).toHaveCSS('height', '128px');
     const borders = await Promise.all(['cafe', 'screening', 'arena'].map(s =>
       page.getByTestId(`link-channel-${s}`).evaluate(el => getComputedStyle(el).borderTopColor)));

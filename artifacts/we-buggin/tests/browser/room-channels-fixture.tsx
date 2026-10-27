@@ -30,8 +30,8 @@ export function RoomChannelsFixture() {
   const rooms = ROOM_CHANNELS.map((channel, i) => ({
     roomId: channel.roomId, label: channel.title, headcount: 0, headcountSince: 0,
     // MOCK video ids for fixture only; real playback is verified separately.
-    nowPlayingVideoId: previews && i < 2 ? `mockvid${i}` : null,
-    nowPlayingTitle: previews && i < 2 ? `Mock ${channel.title}` : null,
+    nowPlayingVideoId: previews ? `mockvid${i}` : null,
+    nowPlayingTitle: previews ? `Mock ${channel.title}` : null,
     nowPlayingStartedAtMs: previews ? now - 30_000 : null,
     nowPlayingServerNowMs: now,
   }));

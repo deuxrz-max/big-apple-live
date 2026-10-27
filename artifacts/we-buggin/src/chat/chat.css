@@ -593,7 +593,12 @@ body.streamtalk-directory-screen #root .ch.st-home .st-home-background-video{
 }
 body.streamtalk-directory-screen #root .ch.st-home .st-dir-topline{padding-bottom:8px}
 body.streamtalk-directory-screen #root .ch.st-home .st-home-app-logo{
-  background:#f8f6fb!important;color:#17131b!important;border-color:#fff!important;
+  background:#050505!important;color:#f5cb8d!important;border-color:transparent!important;
+  box-shadow:none!important;
+}
+body.streamtalk-directory-screen #root .ch.st-home .st-home-app-logo .dw-logo-glass-image{
+  object-fit:contain!important;
+  mix-blend-mode:screen;
 }
 body.streamtalk-directory-screen #root .ch.st-home .st-dir-rewards{
   background:#211827!important;border-color:#483953!important;color:#f4eaff!important;

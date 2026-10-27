@@ -10,6 +10,7 @@ import {
 import { isOwnerAccount } from "./social/owner-entrance-effects-policy";
 import { universityVideoBeamStore } from "./university-video-beam";
 import { UNIFIED_VIDEO_CHANNELS } from "./room-video-channels";
+import { getCommunityVideoPool } from "./room-video-rotation";
 export { COMMUNITY_ROOMS, communityDefaultVideoSearch } from "./community-config";
 export async function initializeCommunities() {
   for (const entry of COMMUNITY_ROOMS) {
@@ -45,6 +46,11 @@ export async function initializeCommunities() {
 export async function communityDirectory() {
   const savedRooms = await db.select().from(chatRooms);
   const activeRoomIds = new Set<string>(UNIFIED_VIDEO_CHANNELS.map(channel => channel.roomId));
+  // Keep Harlem's Home tile visually active when the combined channel is in a
+  // TV intermission. Read only its existing Sports/Pro Wrestling pool; this
+  // does not start, seek, or otherwise alter playback inside the room.
+  const arenaFallback = await getCommunityVideoPool("ARENA1", "", roomStore);
+  const arenaPreview = arenaFallback[0] ?? null;
   const overflow = savedRooms.filter(room =>
     room.parentRoomId
     && activeRoomIds.has(room.parentRoomId)
@@ -59,12 +65,13 @@ export async function communityDirectory() {
     ]),
   ].map(r => {
     const nowPlaying = universityVideoBeamStore.getDirectoryNowPlaying(r.roomId);
+    const fallback = r.roomId === "ARENA1" ? arenaPreview : null;
     return {
       ...r,
       headcount: roomStore.get(r.roomId).participants.length,
       headcountSince: roomStore.communityHeadcountSince(r.roomId),
-      nowPlayingVideoId: nowPlaying?.videoId ?? null,
-      nowPlayingTitle: nowPlaying?.title ?? null,
+      nowPlayingVideoId: nowPlaying?.videoId ?? fallback?.videoId ?? null,
+      nowPlayingTitle: nowPlaying?.title ?? fallback?.title ?? null,
       nowPlayingStartedAtMs: nowPlaying?.startedAtMs ?? null,
       nowPlayingServerNowMs: nowPlaying?.serverNowMs ?? Date.now(),
     };
