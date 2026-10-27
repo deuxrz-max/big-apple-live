@@ -447,7 +447,6 @@ body.streamtalk-directory-screen #root .app-home-live:focus-visible{outline:2px 
 .ch.st-home .st-home-grid .st-dir-enter:after{content:"↗";font:700 14px 'DM Sans',sans-serif}
 .ch.st-home .st-home-grid .st-home-go-live{position:relative;align-self:start;min-height:0;padding:0;border:0;background:none}
 .ch.st-home .st-home-go-live-button{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;width:100%;aspect-ratio:.88/1;padding:13px;border:1px solid rgba(227,122,239,.35);border-radius:16px;background:radial-gradient(ellipse at 82% 18%,rgba(244,110,231,.26),transparent 34%),linear-gradient(145deg,#3a1e47,#1d1427 65%,#19131e);color:#fff;text-align:left;cursor:pointer}
-.st-home-go-live-icon{display:grid;place-items:center;width:36px;height:36px;border:1px solid #f2a6f0;background:#d84ce926;border-radius:12px;color:#f6b6ee;position:absolute;top:13px;left:13px}
 .st-home-go-live-copy{display:grid;gap:4px}
 .st-home-go-live-copy strong{font:750 16px 'Bricolage Grotesque','DM Sans',sans-serif}
 .st-home-go-live-copy small{color:#c3adca;font:500 9px 'DM Sans',sans-serif}
@@ -477,7 +476,6 @@ body.streamtalk-directory-screen #root .app-bottom-link{position:relative}
   .ch.st-home .st-home-intro h1{font-size:41px}
   .ch.st-home .st-home-grid .st-dir-art{aspect-ratio:.82/1}
   .ch.st-home .st-home-go-live-button{aspect-ratio:.82/1;padding:10px}
-  .st-home-go-live-icon{top:10px;left:10px;width:33px;height:33px}
   .ch.st-home .st-home-grid .st-dir-card-titles h3{font-size:12px}
 }
 @media(prefers-reduced-motion:reduce){
@@ -530,7 +528,6 @@ body.streamtalk-directory-screen #root .app-bottom-link{position:relative}
 .st-home-card-category{overflow:hidden;color:#fff;text-overflow:ellipsis;font:800 clamp(20px,6vw,27px)/1 'Bricolage Grotesque','DM Sans',sans-serif;letter-spacing:-.045em;text-shadow:0 2px 12px #000}
 .st-home-card-subtitle{overflow:hidden;color:#dfd3e3;text-overflow:ellipsis;white-space:nowrap;font:600 9px/1.2 'DM Sans',sans-serif;text-shadow:0 1px 7px #000}
 .ch.st-home .st-home-go-live-button{height:100%;min-height:0;aspect-ratio:auto;align-items:flex-start;justify-content:flex-end;flex-direction:column;gap:8px;padding:13px;background:radial-gradient(ellipse at 75% 20%,rgba(255,139,241,.4),transparent 34%),linear-gradient(145deg,#b42bc5 0%,#7130b3 52%,#341641 100%)}
-.st-home-go-live-icon{position:absolute;top:24%;left:50%;width:76px;height:76px;transform:translateX(-50%);border:1.5px solid rgba(255,255,255,.72);border-radius:50%;background:rgba(255,255,255,.07);color:#fff}
 .st-home-go-live-copy strong{font-size:18px}
 .st-home-go-live-copy small{color:#f0d7f1;font-size:10px}
 .ch.st-home .st-home-grid .st-dir-count svg{fill:none}
@@ -550,7 +547,6 @@ body.streamtalk-directory-screen #root .app-bottom-unread{background:#ed354f}
   .ch.st-home .st-dir-wallet{max-width:100px;overflow:hidden;text-overflow:ellipsis}
   .ch.st-home .st-home-grid .st-dir-live{font-size:7px}
   .st-home-card-category{font-size:22px}
-  .st-home-go-live-icon{width:66px;height:66px}
 }
 
 /* Home is intentionally dark even when the rest of the app uses the light theme. */
@@ -690,10 +686,6 @@ body.streamtalk-directory-screen #root .ch.st-home .st-home-go-live-button{
   background:radial-gradient(ellipse at 78% 16%,#ff8cf065,transparent 36%),linear-gradient(145deg,#a52bc2 0%,#7429b4 52%,#3b164b 100%);
   color:#fff;text-align:left;
 }
-body.streamtalk-directory-screen #root .ch.st-home .st-home-go-live-icon{
-  position:absolute;top:22%;left:50%;display:grid;place-items:center;width:68px;height:68px;
-  transform:translateX(-50%);border:1px solid #ffffffc4;border-radius:50%;background:#ffffff13;color:#fff;
-}
 body.streamtalk-directory-screen #root .ch.st-home .st-home-go-live-copy{display:grid;gap:4px}
 body.streamtalk-directory-screen #root .ch.st-home .st-home-go-live-copy strong{
   color:#fff;font:850 18px/1.1 'Bricolage Grotesque','DM Sans',sans-serif;
@@ -739,7 +731,6 @@ body.streamtalk-directory-screen #root .app-bottom-nav-inner.has-home-live .app-
   body.streamtalk-directory-screen #root .ch.st-home .st-home-grid-column{gap:12px}
   body.streamtalk-directory-screen #root .ch.st-home .st-home-card-category{font-size:22px}
   body.streamtalk-directory-screen #root .ch.st-home .st-home-card-subtitle{font-size:9px}
-  body.streamtalk-directory-screen #root .ch.st-home .st-home-go-live-icon{width:58px;height:58px}
 }
 
 /* Home refresh: keep the Featured / Go Live row compact and readable. */

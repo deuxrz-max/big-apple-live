@@ -162,17 +162,6 @@
     text-align: center !important;
     border-radius: var(--jk-radius) !important;
   }
-  .st-home-go-live-icon {
-    position: static !important;
-    transform: none !important;
-    width: 48px !important;
-    height: 48px !important;
-    flex: 0 0 48px !important;
-    border-radius: var(--jk-radius) !important;
-    color: var(--jk-gold-hi) !important;
-    background: var(--jk-satin-fill) !important;
-    border-color: var(--jk-gold) !important;
-  }
   .st-home-go-live-copy {
     position: static !important;
     display: grid !important;
@@ -385,6 +374,131 @@
     .gift-panel-category, .gift-panel-send, .sc-nav-item, .st-live-bottom-controls button,
     .dw-cfp-controls button):active:not(:disabled) { transform: none !important; }
   }
+
+  /* Home launch tile: crisp vector "Rooms for Rent" neon, while preserving the button flow. */
+  body.streamtalk-directory-screen #root .ch.st-home .st-home-go-live-button {
+    padding: 6px !important;
+    border: 0 !important;
+    background: #020204 !important;
+    box-shadow: none !important;
+  }
+  body.streamtalk-directory-screen #root .ch.st-home .st-home-hotel-sign {
+    position: relative !important;
+    isolation: isolate !important;
+    display: grid !important;
+    place-items: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 116px !important;
+    overflow: hidden !important;
+    background: #020204 !important;
+  }
+  body.streamtalk-directory-screen #root .ch.st-home .st-home-hotel-sign::before {
+    content: "" !important;
+    position: absolute !important;
+    z-index: 0 !important;
+    inset: 3px !important;
+    padding: 2.5px !important;
+    background: linear-gradient(112deg, #ff43d9 0%, #3da9ff 34%, #69ff82 67%, #ffa348 100%) !important;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0) !important;
+    -webkit-mask-composite: xor !important;
+    mask-composite: exclude !important;
+    filter: drop-shadow(0 0 4px #ff43d988) drop-shadow(0 0 7px #3da9ff55) !important;
+    animation: st-home-hotel-sign-flicker 5.4s ease-in-out infinite !important;
+    pointer-events: none !important;
+  }
+  body.streamtalk-directory-screen #root .ch.st-home .st-home-hotel-sign-copy {
+    position: relative !important;
+    z-index: 1 !important;
+    display: grid !important;
+    justify-items: center !important;
+    align-content: center !important;
+    gap: 1px !important;
+    min-width: 0 !important;
+    padding: 4px 14px !important;
+    font-family: "Nunito Sans", system-ui, sans-serif !important;
+    font-weight: 900 !important;
+    line-height: .88 !important;
+    text-align: center !important;
+  }
+  body.streamtalk-directory-screen #root .ch.st-home .st-home-hotel-sign-rooms {
+    color: #72ff7a !important;
+    -webkit-text-fill-color: #72ff7a !important;
+    font-size: clamp(24px, 8vw, 34px) !important;
+    font-weight: 950 !important;
+    letter-spacing: .065em !important;
+    text-shadow: 0 0 2px #c0ffc2, 0 0 6px #49ff66, 0 0 13px #41ff6599 !important;
+    animation: st-home-hotel-sign-flicker 5.4s ease-in-out infinite !important;
+  }
+  body.streamtalk-directory-screen #root .ch.st-home .st-home-hotel-sign-for-row {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    min-height: 17px !important;
+  }
+  body.streamtalk-directory-screen #root .ch.st-home .st-home-hotel-sign-for {
+    color: #ff62dc !important;
+    -webkit-text-fill-color: #ff62dc !important;
+    font-size: 11px !important;
+    font-weight: 900 !important;
+    letter-spacing: .3em !important;
+    text-shadow: 0 0 3px #ff8ce9, 0 0 9px #ff43d9 !important;
+    animation: st-home-hotel-sign-flicker 5.4s ease-in-out infinite !important;
+    animation-delay: 80ms !important;
+  }
+  body.streamtalk-directory-screen #root .ch.st-home .st-home-hotel-sign-camera {
+    display: block !important;
+    width: 16px !important;
+    height: 16px !important;
+    flex: 0 0 16px !important;
+    color: #ff62dc !important;
+    filter: drop-shadow(0 0 3px #ff43d9) drop-shadow(0 0 7px #ff43d988) !important;
+  }
+  body.streamtalk-directory-screen #root .ch.st-home .st-home-hotel-sign-rent {
+    color: #62aaff !important;
+    background: linear-gradient(90deg, #4e9eff 0%, #ff54d1 38%, #ff9845 67%, #b46cff 100%) !important;
+    background-clip: text !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    font-size: clamp(24px, 8vw, 34px) !important;
+    font-weight: 950 !important;
+    letter-spacing: .085em !important;
+    filter: drop-shadow(0 0 3px #ff62d877) !important;
+    animation: st-home-hotel-sign-flicker 5.4s ease-in-out infinite !important;
+    animation-delay: 140ms !important;
+  }
+  body.streamtalk-directory-screen #root .ch.st-home .st-home-hotel-sign-gap {
+    position: absolute !important;
+    z-index: 2 !important;
+    bottom: 1px !important;
+    left: 50% !important;
+    width: 36px !important;
+    height: 7px !important;
+    transform: translateX(-50%) !important;
+    border-radius: 0 !important;
+    background: #020204 !important;
+    pointer-events: none !important;
+  }
+  body.streamtalk-directory-screen #root .ch.st-home .st-home-hotel-sign-sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    body.streamtalk-directory-screen #root .ch.st-home .st-home-hotel-sign::before,
+    body.streamtalk-directory-screen #root .ch.st-home .st-home-hotel-sign-rooms,
+    body.streamtalk-directory-screen #root .ch.st-home .st-home-hotel-sign-for,
+    body.streamtalk-directory-screen #root .ch.st-home .st-home-hotel-sign-rent {
+      animation: none !important;
+    }
+  }
 }
 
 @keyframes jk-flash {
@@ -397,4 +511,12 @@
   0% { transform: translateX(-120%); opacity: 0; }
   25% { opacity: 1; }
   100% { transform: translateX(120%); opacity: 0; }
+}
+
+@keyframes st-home-hotel-sign-flicker {
+  0%, 39%, 43%, 100% { opacity: 1; }
+  40% { opacity: .82; }
+  41% { opacity: .96; }
+  42% { opacity: .88; }
+  62% { opacity: .97; }
 }

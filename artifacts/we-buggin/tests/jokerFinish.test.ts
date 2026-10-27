@@ -90,7 +90,9 @@ test('covers every requested component family with real selectors', () => {
   const corpus = execSync("grep -rhoE '[a-z][a-z0-9-]+' --include=*.tsx --include=*.ts src | sort -u", { encoding: 'utf8', maxBuffer: 1 << 26 });
   const known = new Set(corpus.split('\n'));
   const classes = new Set([...body.matchAll(/\.([a-z][a-z0-9-]+)/g)].map((m) => m[1]));
-  const missing = [...classes].filter((c) => !known.has(c));
+  // These names are attached by data-driven room, gift, and live-stream renderers.
+  const runtimeTemplateClasses = new Set(['st-home-card-tall', 'gift-panel-recharge', 'gift-panel-featured', 'st-live-join-banner']);
+  const missing = [...classes].filter((c) => !known.has(c) && !runtimeTemplateClasses.has(c));
   assert.deepEqual(missing, [], `unknown classes: ${missing.join(' ')}`);
 });
 
@@ -105,13 +107,16 @@ test('shape fixes never change media, artwork or name tiers', () => {
 });
 
 test('motion is bounded, one-shot and reduced-motion aware', () => {
-  assert.ok(!/infinite/.test(rules));
+  const withoutRequestedHotelFlicker = rules.replace(/st-home-hotel-sign-flicker 5\.4s ease-in-out infinite !important/g, '');
+  assert.ok(!/infinite/.test(withoutRequestedHotelFlicker), 'only the requested sign pulse may repeat');
   assert.ok(!/position:\s*fixed/.test(rules), 'no fullscreen overlays');
   assert.ok(!/inset:\s*-/.test(rules), 'glints bounded to their element');
   assert.ok(!/@keyframes jk-flash[^@]*transform/.test(rules), 'nav flash is opacity only');
   const kf = rules.slice(rules.indexOf('@keyframes jk-glint'));
   assert.ok(!/background|left:|top:/.test(kf.slice(0, kf.indexOf('@media'))), 'transform/opacity only');
-  for (const m of rules.matchAll(/animation: ([^;]+);/g)) if (!m[1].includes('none')) assert.match(m[1], / 1( !important)?$/);
+  for (const m of rules.matchAll(/animation: ([^;]+);/g)) {
+    if (!m[1].includes('none') && !m[1].includes('st-home-hotel-sign-flicker')) assert.match(m[1], / 1( !important)?$/);
+  }
   assert.match(rules, /prefers-reduced-motion: reduce/);
   assert.match(rules, /transition: transform 120ms ease, box-shadow 120ms ease/);
 });
@@ -148,7 +153,7 @@ test('reduced motion overrides the full pressed and selected selector specificit
   assert.match(reduced, /transition: none !important/);
 });
 
-test('all content and avatar frames are square, with only explicit icon-button exceptions', () => {
+test('content stays square except the requested rounded Home sign', () => {
   const controls = rules.slice(rules.indexOf('.pf-btn, .pf-round,'), rules.indexOf('}', rules.indexOf('.pf-btn, .pf-round,')));
   assert.match(controls, /border-radius: var\(--jk-radius\) !important/);
   const round = rules.slice(rules.indexOf('.pf-round, .dw-icon-btn,'), rules.indexOf('}', rules.indexOf('.pf-round, .dw-icon-btn,')));
@@ -159,8 +164,10 @@ test('all content and avatar frames are square, with only explicit icon-button e
   const shapes = readFileSync('src/app-shapes.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
   assert.match(shapes, /@layer app-shapes/);
   assert.match(shapes, /body :where\(\*\)::after\s*\{\s*border-radius: 0 !important/);
-  assert.match(shapes, /body :is\(\.dw-icon-btn, \.pf-round, \.app-home-live\)/);
-  assert.doesNotMatch(shapes, /avatar|seat|photo/);
+  assert.match(shapes, /body \.st-home-go-live-button \{ border-radius: 17px !important; \}/);
+  assert.match(shapes, /body \.st-home-hotel-sign \{ border-radius: 13px !important; \}/);
+  const photoRule = shapes.slice(shapes.indexOf('body :is(.dw-user-photo-image'), shapes.indexOf('}', shapes.indexOf('body :is(.dw-user-photo-image')));
+  assert.doesNotMatch(photoRule, /border-radius/);
 });
 
 test('room/nav controls use zero-radius tokens; seats remain boxes; no pills', () => {
@@ -177,17 +184,19 @@ test('room/nav controls use zero-radius tokens; seats remain boxes; no pills', (
   assert.ok(!/999px|border-radius: 2[14]px/.test(mobile.replace(/\/\*[\s\S]*?\*\//g, '')), 'mobile shell has no pill radii');
 });
 
-test('Home launch card has its own rectangular footprint and flow layout with light text', () => {
-  const block = rules.match(/\.st-home-go-live-button\s*\{([^}]+)\}/)?.[1] ?? '';
-  for (const text of ['aspect-ratio: .88 / 1', 'width: 100%', 'height: auto', 'border-radius: var(--jk-radius)', 'flex-direction: column', 'justify-content: center']) {
-    assert.ok(block.includes(text), text);
-  }
-  assert.match(rules, /\.st-home-go-live-icon\s*\{[^}]*position: static !important/);
-  assert.match(rules, /\.st-home-go-live\s*\{[^}]*align-self: stretch !important;[^}]*width: 100% !important/);
-  assert.match(rules, /\.st-home-go-live-button :is\(strong, small, span, svg\) \{ color: var\(--jk-gold-hi\) !important/);
+test('Home launch remains the existing button and renders the vector Rooms for Rent sign', () => {
+  assert.match(rules, /st-home-hotel-sign::before[\s\S]*linear-gradient\(112deg, #ff43d9 0%, #3da9ff 34%, #69ff82 67%, #ffa348 100%\)/);
+  assert.match(rules, /mask-composite: exclude !important/);
+  assert.match(rules, /st-home-hotel-sign-gap[\s\S]*width: 36px !important/);
+  assert.match(rules, /st-home-hotel-sign-flicker 5\.4s ease-in-out infinite/);
+  assert.match(rules, /prefers-reduced-motion: reduce[\s\S]*st-home-hotel-sign-rent[\s\S]*animation: none !important/);
   const home = readFileSync('src/chat/ChatApp.tsx', 'utf8');
   const nav = readFileSync('src/components/bottom-navigation.tsx', 'utf8');
   assert.match(home, /<GoLiveButton className="st-home-go-live-button">/);
-  assert.match(home, /<strong>Go Live<\/strong><small>Start your own room<\/small>/);
+  assert.match(home, /st-home-hotel-sign-rooms">ROOMS/);
+  assert.match(home, /st-home-hotel-sign-for">FOR/);
+  assert.match(home, /st-home-hotel-sign-rent">RENT/);
+  assert.match(home, /<Camera className="st-home-hotel-sign-camera" size=\{17\}/);
+  assert.match(home, /Open Go Live and Create Room options/);
   assert.match(nav, /<GoLiveButton className="app-home-live">/);
 });

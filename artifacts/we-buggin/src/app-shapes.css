@@ -11,6 +11,11 @@
     border-radius: 0 !important;
   }
 
+  /* The owner explicitly requested a rounded-rectangle neon frame for this Home sign. */
+  body .st-home-go-live-button { border-radius: 17px !important; }
+  body .st-home-hotel-sign { border-radius: 13px !important; }
+  body .st-home-hotel-sign::before { border-radius: 12px !important; }
+
   /* Whole user photos only: do not change video, gift art or room cover images. */
   body :is(.dw-user-photo-image, .pf-slide img, .bc-ph-tap img,
     .fg-photo img, .ur-slot-photo-fill, .st-live-avatar img,

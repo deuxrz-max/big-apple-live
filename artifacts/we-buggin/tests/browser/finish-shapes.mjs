@@ -56,10 +56,16 @@ try {
     document.body.append(root);
     document.body.classList.add('streamtalk-directory-screen');
     const h = React.createElement;
+    const hotelSign = h('span', { className: 'st-home-hotel-sign', 'aria-hidden': 'true' },
+      h('span', { className: 'st-home-hotel-sign-copy' },
+        h('span', { className: 'st-home-hotel-sign-rooms' }, 'ROOMS'),
+        h('span', { className: 'st-home-hotel-sign-for-row' },
+          h('span', { className: 'st-home-hotel-sign-for' }, 'FOR'),
+          h(I.Camera, { className: 'st-home-hotel-sign-camera', size: 17, strokeWidth: 2 })),
+        h('span', { className: 'st-home-hotel-sign-rent' }, 'RENT')),
+      h('span', { className: 'st-home-hotel-sign-gap' }));
     const tile = h(GoLiveButton, { className: 'st-home-go-live-button' },
-      h('span', { className: 'st-home-go-live-icon' }, h(I.Camera, { size: 31, strokeWidth: 1.8 })),
-      h('span', { className: 'st-home-go-live-copy' },
-        h('strong', null, 'Go Live'), h('small', null, 'Start your own room')));
+      hotelSign, h('span', { className: 'st-home-hotel-sign-sr-only' }, 'Open Go Live and Create Room options'));
     const nav = h('nav', { className: 'app-bottom-nav' },
       h('div', { className: 'app-bottom-nav-inner has-home-live' },
         ...['Home', 'Following'].map((name) => h('a', { className: 'app-bottom-link', key: name }, name)),
@@ -68,15 +74,17 @@ try {
     const card = h('article', { className: 'st-dir-card' },
       h('div', { className: 'st-dir-art' }),
       h('div', { className: 'st-dir-card-copy' }, h('h3', null, 'Synthetic room card')));
+    const roomTiles = ['Times Square', 'Broadway', 'Harlem', 'Card Draw'].map((name) =>
+      h('li', { key: name }, h('a', { className: 'rc-tile', href: '#' },
+        h('span', { className: 'rc-tile-title' }, name), h('span', { className: 'rc-tile-rooms' }, 'Synthetic preview'))));
     function Fixture() {
       const [path, setPath] = React.useState('/');
       window.__fixturePath = path;
       return h(W.Router, { hook: () => [path, setPath] },
         h('main', { className: 'ch st-home' },
           h('h1', null, 'Actual GoLiveButton / synthetic profile'),
-          h('div', { className: 'st-home-grid' },
-            h('ul', { className: 'st-home-grid-column' }, h('li', null, card)),
-            h('ul', { className: 'st-home-grid-column' }, h('li', { className: 'st-home-go-live' }, tile)))),
+          h('ul', { className: 'rc-tiles' },
+            ...roomTiles, h('li', { className: 'st-home-go-live' }, tile))),
         nav);
     }
     (D.createRoot ?? D.default.createRoot)(root).render(
@@ -85,32 +93,55 @@ try {
     react: dependency('react.js'), dom: dependency('react-dom_client.js'), query: dependency('@tanstack_react-query.js'),
     router: dependency('wouter.js'), icons: dependency('lucide-react.js'),
   });
-  await page.locator('.st-home-go-live-button').waitFor();
+  await page.locator('button.st-home-go-live-button').waitFor();
   await mkdir('/tmp/deux-finish-shapes', { recursive: true });
   for (const [width, height] of [[360, 800], [390, 844]]) {
     await page.setViewportSize({ width, height });
     const geometry = await page.evaluate(() => {
-      const box = (s) => document.querySelector(s).getBoundingClientRect().toJSON();
-      const tile = document.querySelector('.st-home-go-live-button');
+      const root = document.querySelector('#root');
+      const box = (s) => root.querySelector(s).getBoundingClientRect().toJSON();
+      const tile = root.querySelector('button.st-home-go-live-button');
+      const sign = root.querySelector('.st-home-hotel-sign');
+      const rooms = root.querySelector('.st-home-hotel-sign-rooms');
+      const rent = root.querySelector('.st-home-hotel-sign-rent');
       return {
-        tile: box('.st-home-go-live-button'), room: box('.st-dir-card'),
-        icon: box('.st-home-go-live-icon'), title: box('.st-home-go-live-copy strong'),
-        copy: box('.st-home-go-live-copy small'), camera: box('.app-home-live'),
-        radius: getComputedStyle(tile).borderRadius,
-        color: getComputedStyle(document.querySelector('.st-home-go-live-copy strong')).color,
+        tile: tile.getBoundingClientRect().toJSON(), room: box('.rc-tile'),
+        grid: box('.rc-tiles'), launch: box('.rc-tiles > .st-home-go-live'),
+        nav: box('.app-bottom-nav'),
+        sign: sign.getBoundingClientRect().toJSON(), rooms: rooms.getBoundingClientRect().toJSON(),
+        rent: rent.getBoundingClientRect().toJSON(),
+        camera: box('.st-home-hotel-sign-camera'), gap: box('.st-home-hotel-sign-gap'),
+        navCamera: box('.app-home-live'),
+        radius: getComputedStyle(sign).borderRadius,
+        background: getComputedStyle(sign).backgroundColor,
+        roomsColor: getComputedStyle(rooms).color,
+        rentFill: getComputedStyle(rent).backgroundImage,
         overflow: document.documentElement.scrollWidth > innerWidth,
       };
     });
     await page.screenshot({ path: `/tmp/deux-finish-shapes/home-${width}.png` });
-    assert.ok(Math.abs(geometry.tile.width - geometry.room.width) < 1);
-    assert.ok(Math.abs(geometry.tile.height - geometry.room.height) < 1);
-    assert.equal(geometry.radius, '0px');
-    assert.equal(geometry.color, 'rgb(243, 213, 138)');
-    assert.ok(geometry.icon.bottom < geometry.title.top);
-    assert.ok(geometry.copy.bottom < geometry.tile.bottom - 4);
-    assert.ok(Math.abs(geometry.camera.width - geometry.camera.height) < 1);
+    const fitsInside = (child, parent, inset = 1) =>
+      child.left >= parent.left - inset && child.top >= parent.top - inset
+      && child.right <= parent.right + inset && child.bottom <= parent.bottom + inset;
+    assert.ok(Math.abs(geometry.launch.left - geometry.grid.left) < 1);
+    assert.ok(Math.abs(geometry.launch.width - geometry.grid.width) < 1);
+    assert.ok(geometry.launch.top > geometry.grid.top);
+    assert.ok(geometry.tile.width > geometry.room.width * 1.8);
+    assert.equal(Math.round(geometry.tile.height), 128);
+    assert.ok(geometry.tile.bottom < geometry.nav.top);
+    assert.ok(fitsInside(geometry.sign, geometry.tile));
+    assert.ok(fitsInside(geometry.rooms, geometry.sign));
+    assert.ok(fitsInside(geometry.rent, geometry.sign));
+    assert.ok(fitsInside(geometry.camera, geometry.sign));
+    assert.ok(Math.abs((geometry.gap.left + geometry.gap.right) / 2 - (geometry.sign.left + geometry.sign.right) / 2) < 1);
+    assert.ok(Math.abs(geometry.sign.bottom - geometry.gap.bottom - 1) < 1);
+    assert.equal(geometry.radius, '13px');
+    assert.equal(geometry.background, 'rgb(2, 2, 4)');
+    assert.equal(geometry.roomsColor, 'rgb(114, 255, 122)');
+    assert.match(geometry.rentFill, /linear-gradient/);
+    assert.ok(Math.abs(geometry.navCamera.width - geometry.navCamera.height) < 1);
     assert.equal(geometry.overflow, false);
-    await page.locator('.st-home-go-live-button').tap();
+    await page.locator('button.st-home-go-live-button').tap();
     await page.getByTestId('dialog-go-live-choice').waitFor();
     assert.ok(await page.getByTestId('button-start-live-broadcast').isEnabled());
     assert.ok(await page.getByTestId('button-create-social-room').isEnabled());
@@ -119,7 +150,7 @@ try {
     await page.getByTestId('dialog-go-live-choice').waitFor();
     await page.getByTestId('button-start-live-broadcast').tap();
     assert.equal(await page.evaluate(() => window.__fixturePath), '/live/start');
-    console.log(`PASS ${width}x${height}: equal room/launch card dimensions ${Math.round(geometry.tile.width)}x${Math.round(geometry.tile.height)}, readable separated text, tile + nav launch chooser, Go Live routing`);
+    console.log(`PASS ${width}x${height}: full-width 128px Home sign fits below the four tiles, sign details fit inside, tile + nav choice dialog and Go Live routing`);
   }
   // Representative real stylesheet classes, not claims of signed-in page journeys.
   const probes = await page.evaluate(() => {

@@ -271,8 +271,18 @@ export function ChatDirectory() {
           loading={directory.isLoading}
           renderRoom={(room) => <DirectoryRoomCard room={room} topic={topicFor(room)} isFeatured={room.roomId === featuredRoom?.roomId} />}
           goLive={<GoLiveButton className="st-home-go-live-button">
-            <span className="st-home-go-live-icon"><Camera size={31} strokeWidth={1.8} /></span>
-            <span className="st-home-go-live-copy"><strong>Go Live</strong><small>Start your own room</small></span>
+            <span className="st-home-hotel-sign" aria-hidden="true">
+              <span className="st-home-hotel-sign-copy">
+                <span className="st-home-hotel-sign-rooms">ROOMS</span>
+                <span className="st-home-hotel-sign-for-row">
+                  <span className="st-home-hotel-sign-for">FOR</span>
+                  <Camera className="st-home-hotel-sign-camera" size={17} strokeWidth={2} />
+                </span>
+                <span className="st-home-hotel-sign-rent">RENT</span>
+              </span>
+              <span className="st-home-hotel-sign-gap" />
+            </span>
+            <span className="st-home-hotel-sign-sr-only">Open Go Live and Create Room options</span>
           </GoLiveButton>}
         />
       </section>
