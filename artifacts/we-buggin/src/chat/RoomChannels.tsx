@@ -50,11 +50,11 @@ export function RoomChannels<R extends DirectoryChannelRoom>({ rooms, loading, r
           const source = rooms.find((r) => r.roomId.toUpperCase() === ch.roomId);
           const count = rooms.filter((r) => channelForDirectoryRoom(r.roomId)?.slug === ch.slug).reduce((n, r) => n + r.headcount, 0);
           return (
-            <li key={ch.slug}>
+            <li key={ch.slug} className="rc-channel-item">
+              <span className="rc-channel-sign" data-testid={`label-channel-${ch.slug}`}>{ch.title}</span>
               <Link href={baseHref === '/' ? '/sign-in' : `/rooms/${ch.roomId}`} className={`rc-tile rc-channel-${ch.slug}`} data-testid={`link-channel-${ch.slug}`}>
                 <ChannelPreview slug={ch.slug} videoId={source?.nowPlayingVideoId} title={source?.nowPlayingTitle}
                   startedAtMs={source?.nowPlayingStartedAtMs} serverNowMs={source?.nowPlayingServerNowMs} />
-                <span className="rc-tile-title">{ch.title}</span>
                 <span className="rc-tile-rooms">{ch.rooms.map((r) => r.label).join(' · ')}</span>
                 <span className="rc-tile-count">{loading ? '…' : `${count} here`}</span>
               </Link>

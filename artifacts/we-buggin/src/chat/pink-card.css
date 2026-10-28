@@ -1,4 +1,4 @@
-.rc-tiles > li.pc-slot { min-width: 0; padding: 0; }
+.rc-tiles > li.pc-slot { min-width: 0; padding: 28px 0 0; }
 .rc-tiles .pc-tile { justify-content: center; align-items: center; padding: 6px; background: #0b0a08; }
 .rc-tiles > li > .pc-tile { border: 2px solid #ff4fc8; box-shadow: 0 0 12px #ff4fc866, inset 0 0 10px #ff4fc81f; }
 .pc-tile:hover { transform: none; }

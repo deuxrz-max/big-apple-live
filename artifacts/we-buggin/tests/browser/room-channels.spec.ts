@@ -14,6 +14,17 @@ for (const width of [320, 390]) {
     await page.setViewportSize({ width, height: 844 });
     await page.goto('/tests/browser/harness.html?view=room-channels');
     await expect(page.locator('[data-testid^="link-channel-"]')).toHaveCount(3);
+    for (const group of groups) {
+      const sign = page.getByTestId(`label-channel-${group.slug}`);
+      const tile = page.getByTestId(`link-channel-${group.slug}`);
+      await expect(sign).toHaveText(group.name);
+      await expect(sign).toHaveCSS('background-color', 'rgb(0, 107, 63)');
+      await expect(sign).toHaveCSS('color', 'rgb(255, 255, 255)');
+      await expect(tile.locator('.rc-tile-title')).toHaveCount(0);
+      const [signBox, tileBox] = await Promise.all([sign.boundingBox(), tile.boundingBox()]);
+      expect(Math.abs(signBox!.x - tileBox!.x)).toBeLessThan(1);
+      expect(signBox!.y + signBox!.height).toBeLessThanOrEqual(tileBox!.y);
+    }
     await expect(page.getByTestId('section-room-channels').getByText('Go Live', { exact: true })).toBeVisible();
     if (width === 390) await page.screenshot({ path: '../../generated-artifacts/home-channels-390.png', fullPage: true });
     for (const group of groups) {
