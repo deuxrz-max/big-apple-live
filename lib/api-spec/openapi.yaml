@@ -390,6 +390,42 @@ paths:
         "401": { $ref: "#/components/responses/SessionUnauthorized" }
         "403": { description: "Chat may be muted, account access may be restricted, or caller may not be in the stream" }
         "404": { description: Livestream is no longer active }
+  /account/live-streams/{streamId}/engagement/heart:
+    post:
+      operationId: addLiveStreamHeart
+      tags: [video]
+      summary: Add a viewer heart to an active live stream
+      security:
+        - AccountSession: []
+      parameters:
+        - { $ref: "#/components/parameters/LiveStreamId" }
+      responses:
+        "200":
+          description: Current audience engagement totals
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LiveStreamEngagement" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "403": { description: Account is not an active viewer or speaker }
+        "404": { description: Livestream is no longer active }
+  /account/live-streams/{streamId}/engagement/share:
+    post:
+      operationId: addLiveStreamShare
+      tags: [video]
+      summary: Record a completed share of an active live stream
+      security:
+        - AccountSession: []
+      parameters:
+        - { $ref: "#/components/parameters/LiveStreamId" }
+      responses:
+        "200":
+          description: Current audience engagement totals
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LiveStreamEngagement" }
+        "401": { $ref: "#/components/responses/SessionUnauthorized" }
+        "403": { description: Account is not an active viewer or speaker }
+        "404": { description: Livestream is no longer active }
   /account/live-streams/{streamId}/pk/search:
     post:
       operationId: searchPkOpponent
@@ -2180,6 +2216,12 @@ components:
       required: [ended]
       properties:
         ended: { type: boolean }
+    LiveStreamEngagement:
+      type: object
+      required: [hearts, shares]
+      properties:
+        hearts: { type: integer, minimum: 0 }
+        shares: { type: integer, minimum: 0 }
     PkBattleState:
       type: object
       required: [state, searchExpiresAtMs, battle]

@@ -78,6 +78,33 @@ test("live stream gifts are retained briefly and delivered to viewers", () => {
   unsubscribe();
 });
 
+test("live stream hearts and shares are counted separately and broadcast to connected viewers", () => {
+  const streamId = "e".repeat(32);
+  liveStreamChatHub.start(streamId);
+  const received: Array<{ hearts: number; shares: number } | null> = [];
+  const unsubscribe = liveStreamChatHub.subscribeEngagement(streamId, engagement => received.push(engagement));
+
+  assert.deepEqual(liveStreamChatHub.recordEngagement(streamId, "viewer-one", "heart"), { hearts: 1, shares: 0 });
+  assert.deepEqual(liveStreamChatHub.recordEngagement(streamId, "viewer-two", "share"), { hearts: 1, shares: 1 });
+  assert.deepEqual(received, [{ hearts: 1, shares: 0 }, { hearts: 1, shares: 1 }]);
+  assert.deepEqual(liveStreamChatHub.currentEngagement(streamId), { hearts: 1, shares: 1 });
+
+  liveStreamChatHub.end(streamId);
+  assert.equal(received.at(-1), null);
+  unsubscribe();
+});
+
+test("engagement totals reset when a new live stream session starts", () => {
+  const streamId = "f".repeat(32);
+  liveStreamChatHub.start(streamId);
+  liveStreamChatHub.recordEngagement(streamId, "viewer-one", "heart");
+  liveStreamChatHub.end(streamId);
+
+  liveStreamChatHub.start(streamId);
+  assert.deepEqual(liveStreamChatHub.currentEngagement(streamId), { hearts: 0, shares: 0 });
+  liveStreamChatHub.end(streamId);
+});
+
 test("a large gift queue retains ordered, quantity-bearing events for all live viewers", () => {
   const streamId = "d".repeat(32);
   const receivedByOne: string[] = [];

@@ -1112,6 +1112,13 @@ export interface LiveStreamEnded {
   ended: boolean;
 }
 
+export interface LiveStreamEngagement {
+  /** @minimum 0 */
+  hearts: number;
+  /** @minimum 0 */
+  shares: number;
+}
+
 export type PkBattleStateState = typeof PkBattleStateState[keyof typeof PkBattleStateState];
 
 
@@ -2477,6 +2484,13 @@ export interface LiveStreamChatMessage4b96100 {
 
 export interface LiveStreamEnded4b96100 {
   ended: boolean;
+}
+
+export interface LiveStreamEngagement4b96100 {
+  /** @minimum 0 */
+  hearts: number;
+  /** @minimum 0 */
+  shares: number;
 }
 
 export type PkBattleState4b96100State = typeof PkBattleState4b96100State[keyof typeof PkBattleState4b96100State];

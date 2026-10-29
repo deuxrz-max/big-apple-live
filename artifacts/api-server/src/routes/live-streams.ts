@@ -18,6 +18,8 @@ import {
   CancelPkOpponentSearchResponse,
   GetPkBattleStateResponse,
   JoinPkBattleMediaResponse,
+  AddLiveStreamHeartResponse,
+  AddLiveStreamShareResponse,
 } from "@workspace/api-zod";
 import { requireCompletedProfile } from "../lib/account-profiles";
 import { liveKitBeamService, publicLiveKitFailure } from "../lib/livekit";
@@ -533,6 +535,21 @@ router.get("/account/live-streams/:streamId/chat/events", async (req, res) => {
     if (flushingGiftHistory) pendingGifts.push(gift);
     else enqueueGift(gift);
   });
+  let engagementWriteTail = Promise.resolve();
+  const enqueueEngagement = (engagement: ReturnType<typeof liveStreamChatHub.currentEngagement>) => {
+    engagementWriteTail = engagementWriteTail.then(() => {
+      if (!res.destroyed && !res.writableEnded) {
+        res.write(`event: engagement\ndata: ${JSON.stringify(engagement)}\n\n`);
+      }
+    }).catch(error => {
+      req.log.warn({ error }, "Live stream engagement event could not be delivered");
+    });
+  };
+  const unsubscribeEngagement = liveStreamChatHub.subscribeEngagement(params.data.streamId, engagement => {
+    if (!engagement) { res.end(); return; }
+    enqueueEngagement(engagement);
+  });
+  enqueueEngagement(liveStreamChatHub.currentEngagement(params.data.streamId));
   for (const message of liveStreamChatHub.recent(params.data.streamId)) await writeMessage(message);
   const gifts = liveStreamChatHub.recentGifts(params.data.streamId);
   for (const gift of gifts) {
@@ -548,7 +565,12 @@ router.get("/account/live-streams/:streamId/chat/events", async (req, res) => {
     if (!res.destroyed && !res.writableEnded) res.write(": keepalive\n\n");
   }, 15_000);
   keepalive.unref();
-  res.on("close", () => { clearInterval(keepalive); unsubscribe(); unsubscribeGifts(); });
+  res.on("close", () => {
+    clearInterval(keepalive);
+    unsubscribe();
+    unsubscribeGifts();
+    unsubscribeEngagement();
+  });
 });
 
 router.post("/account/live-streams/:streamId/chat", async (req, res) => {
@@ -585,6 +607,30 @@ router.post("/account/live-streams/:streamId/chat", async (req, res) => {
   const { accountId: _privateAccountId, ...publicMessage } = message;
   res.status(201).json(SendLiveStreamChatMessageResponse.parse(publicMessage));
 });
+
+async function recordLiveStreamEngagement(req: Request, res: Response, kind: "heart" | "share") {
+  sameOrigin(req);
+  const params = JoinLiveStreamParams.safeParse(req.params);
+  if (!params.success) throw new RoomError(404, "This livestream is no longer available.");
+  const id = accountId(req);
+  await requireCompletedProfile(id);
+  await requireAdult(id);
+  await requireLiveParticipant(id, params.data.streamId);
+  try {
+    const engagement = liveStreamChatHub.recordEngagement(params.data.streamId, id, kind);
+    const response = kind === "heart"
+      ? AddLiveStreamHeartResponse.parse(engagement)
+      : AddLiveStreamShareResponse.parse(engagement);
+    res.set("Cache-Control", "no-store").json(response);
+  } catch {
+    throw new RoomError(404, "This livestream is no longer available.");
+  }
+}
+
+router.post("/account/live-streams/:streamId/engagement/heart", (req, res) =>
+  recordLiveStreamEngagement(req, res, "heart"));
+router.post("/account/live-streams/:streamId/engagement/share", (req, res) =>
+  recordLiveStreamEngagement(req, res, "share"));
 
 async function endOwnedLiveStream(req: Request, res: Response): Promise<void> {
   sameOrigin(req);

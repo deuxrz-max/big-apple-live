@@ -179,6 +179,8 @@ export * from './liveStreamChatMessage';
 export * from './liveStreamChatMessage4b96100';
 export * from './liveStreamEnded';
 export * from './liveStreamEnded4b96100';
+export * from './liveStreamEngagement';
+export * from './liveStreamEngagement4b96100';
 export * from './liveStreamEntry';
 export * from './liveStreamEntry4b96100';
 export * from './liveStreamHeartbeat';

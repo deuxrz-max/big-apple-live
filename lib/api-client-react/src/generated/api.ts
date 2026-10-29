@@ -81,6 +81,7 @@ import type {
   LiveStreamChatInput,
   LiveStreamChatMessage,
   LiveStreamEnded,
+  LiveStreamEngagement,
   LiveStreamHeartbeat,
   LiveStreamHostSession,
   LiveStreamList,
@@ -2010,6 +2011,154 @@ export const useSendLiveStreamChatMessage = <TError = ErrorType<InvalidInputResp
         TContext
       > => {
       return useMutation(getSendLiveStreamChatMessageMutationOptions(options));
+    }
+
+export const getAddLiveStreamHeartUrl = (streamId: string,) => {
+
+
+
+
+  return `/api/account/live-streams/${streamId}/engagement/heart`
+}
+
+/**
+ * @summary Add a viewer heart to an active live stream
+ */
+export const addLiveStreamHeart = async (streamId: string, options?: Parameters<typeof customFetch>[1]): Promise<LiveStreamEngagement> => {
+
+  return customFetch<LiveStreamEngagement>(getAddLiveStreamHeartUrl(streamId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getAddLiveStreamHeartMutationKey = () => ['addLiveStreamHeart'] as const;
+
+export const getAddLiveStreamHeartMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addLiveStreamHeart>>, TError,AddLiveStreamHeartMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addLiveStreamHeart>>, TError,AddLiveStreamHeartMutationVariables, TContext> => {
+
+const mutationKey = getAddLiveStreamHeartMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addLiveStreamHeart>>, AddLiveStreamHeartMutationVariables> = (props) => {
+          const {streamId} = props ?? {};
+
+          return  addLiveStreamHeart(streamId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddLiveStreamHeartMutationResult = NonNullable<Awaited<ReturnType<typeof addLiveStreamHeart>>>
+
+    export type AddLiveStreamHeartMutationError = ErrorType<SessionUnauthorizedResponse | void>
+    export type AddLiveStreamHeartMutationVariables = {streamId: string}
+
+    /**
+ * @summary Add a viewer heart to an active live stream
+ */
+export const useAddLiveStreamHeart = <TError = ErrorType<SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addLiveStreamHeart>>, TError,AddLiveStreamHeartMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addLiveStreamHeart>>,
+        TError,
+        AddLiveStreamHeartMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAddLiveStreamHeartMutationOptions(options));
+    }
+
+export const getAddLiveStreamShareUrl = (streamId: string,) => {
+
+
+
+
+  return `/api/account/live-streams/${streamId}/engagement/share`
+}
+
+/**
+ * @summary Record a completed share of an active live stream
+ */
+export const addLiveStreamShare = async (streamId: string, options?: Parameters<typeof customFetch>[1]): Promise<LiveStreamEngagement> => {
+
+  return customFetch<LiveStreamEngagement>(getAddLiveStreamShareUrl(streamId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getAddLiveStreamShareMutationKey = () => ['addLiveStreamShare'] as const;
+
+export const getAddLiveStreamShareMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addLiveStreamShare>>, TError,AddLiveStreamShareMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addLiveStreamShare>>, TError,AddLiveStreamShareMutationVariables, TContext> => {
+
+const mutationKey = getAddLiveStreamShareMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addLiveStreamShare>>, AddLiveStreamShareMutationVariables> = (props) => {
+          const {streamId} = props ?? {};
+
+          return  addLiveStreamShare(streamId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddLiveStreamShareMutationResult = NonNullable<Awaited<ReturnType<typeof addLiveStreamShare>>>
+
+    export type AddLiveStreamShareMutationError = ErrorType<SessionUnauthorizedResponse | void>
+    export type AddLiveStreamShareMutationVariables = {streamId: string}
+
+    /**
+ * @summary Record a completed share of an active live stream
+ */
+export const useAddLiveStreamShare = <TError = ErrorType<SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addLiveStreamShare>>, TError,AddLiveStreamShareMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addLiveStreamShare>>,
+        TError,
+        AddLiveStreamShareMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAddLiveStreamShareMutationOptions(options));
     }
 
 export const getSearchPkOpponentUrl = (streamId: string,) => {

@@ -860,6 +860,50 @@ export const SendLiveStreamChatMessageResponse = zod.object({
 
 
 /**
+ * @summary Add a viewer heart to an active live stream
+ */
+export const addLiveStreamHeartPathStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+
+
+export const AddLiveStreamHeartParams = zod.object({
+  "streamId": zod.coerce.string().regex(addLiveStreamHeartPathStreamIdRegExp)
+})
+
+export const addLiveStreamHeartResponseHeartsMin = 0;
+
+export const addLiveStreamHeartResponseSharesMin = 0;
+
+
+
+export const AddLiveStreamHeartResponse = zod.object({
+  "hearts": zod.number().int().min(addLiveStreamHeartResponseHeartsMin),
+  "shares": zod.number().int().min(addLiveStreamHeartResponseSharesMin)
+})
+
+
+/**
+ * @summary Record a completed share of an active live stream
+ */
+export const addLiveStreamSharePathStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
+
+
+export const AddLiveStreamShareParams = zod.object({
+  "streamId": zod.coerce.string().regex(addLiveStreamSharePathStreamIdRegExp)
+})
+
+export const addLiveStreamShareResponseHeartsMin = 0;
+
+export const addLiveStreamShareResponseSharesMin = 0;
+
+
+
+export const AddLiveStreamShareResponse = zod.object({
+  "hearts": zod.number().int().min(addLiveStreamShareResponseHeartsMin),
+  "shares": zod.number().int().min(addLiveStreamShareResponseSharesMin)
+})
+
+
+/**
  * @summary Search for a random live broadcaster for a one-on-one PK battle
  */
 export const searchPkOpponentPathStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');

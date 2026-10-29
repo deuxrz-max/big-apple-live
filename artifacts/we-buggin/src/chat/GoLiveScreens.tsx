@@ -7,10 +7,10 @@ import { ScreenHeader } from '@/components/app-chrome';
 import { type RemoteTrack } from "livekit-client";
 import {
   getGetPkBattleStateQueryKey, getGetRoomQueryKey, getGetSocialBlocksQueryKey, getGetSocialMeQueryKey, getGetSocialPersonQueryKey,
-  getLiveStreams, searchPkOpponent, cancelPkOpponentSearch, sendLiveStreamChatMessage, useGetPkBattleState, useGetSocialBlocks, useGetSocialMe,
+  addLiveStreamShare, getLiveStreams, searchPkOpponent, cancelPkOpponentSearch, sendLiveStreamChatMessage, useGetPkBattleState, useGetSocialBlocks, useGetSocialMe,
   useCreateAccountRoom, useCreateChessRoom, useGetSocialPerson, useSetSocialRelationship,
 } from "@workspace/api-client-react";
-import type { LiveStreamEntry, LiveStreamChatMessage, RoomSession } from "@workspace/api-client-react";
+import type { LiveStreamEntry, LiveStreamChatMessage, LiveStreamEngagement, RoomSession } from "@workspace/api-client-react";
 import { GiftBag } from "@/gifts/GiftBag";
 import { GiftControl } from "@/gifts/GiftControl";
 import { GiftComboPlayer, type GiftComboNotice } from "@/gifts/GiftComboPlayer";
@@ -20,6 +20,7 @@ import { ShinyName } from "@/components/ShinyName";
 import { saveCreds } from "@/lib/room-creds";
 import { ProfileTap } from "@/profile/QuickProfile";
 import { isLiveStreamEventVisible } from "./liveChatBlockPolicy";
+import { LiveViewerActions } from "./LiveViewerActions";
 import { PkBattleStage } from "./PkBattleStage";
 import "./pk-battle.css";
 import {
@@ -62,6 +63,7 @@ function leadingEmoji(text: string) {
 
 function useLiveChat(streamId: string, enabled: boolean, blocked: string[], onGift: (gift: GiftNotice, animate: boolean) => void) {
   const [messages, setMessages] = useState<LiveStreamChatMessage[]>([]);
+  const [engagement, setEngagement] = useState<LiveStreamEngagement>({ hearts: 0, shares: 0 });
   const [connectionMessage, setConnectionMessage] = useState("");
   const logRef = useRef<HTMLDivElement>(null);
   const pinned = useRef(true);
@@ -71,7 +73,12 @@ function useLiveChat(streamId: string, enabled: boolean, blocked: string[], onGi
   const [profile, setProfile] = useState<ActionTarget | null>(null);
   const blockedKey = blocked.join("|");
   const seenGiftIds = useRef(new Set<string>());
-  useEffect(() => { seenGiftIds.current.clear(); }, [streamId]);
+  useEffect(() => {
+    seenGiftIds.current.clear();
+    setMessages([]);
+    setEngagement({ hearts: 0, shares: 0 });
+    setConnectionMessage("");
+  }, [streamId]);
 
   useEffect(() => {
     if (!enabled || !streamId) return;
@@ -101,6 +108,14 @@ function useLiveChat(streamId: string, enabled: boolean, blocked: string[], onGi
         onGift({ ...gift, quantity: gift.quantity || 1 }, animate || recentHistoryEvent);
       } catch { /* Ignore malformed events. */ }
     };
+    const receiveEngagement = (event: MessageEvent<string>) => {
+      try {
+        const value = JSON.parse(event.data) as LiveStreamEngagement;
+        if (!Number.isSafeInteger(value.hearts) || !Number.isSafeInteger(value.shares)
+          || value.hearts < 0 || value.shares < 0) return;
+        setEngagement(value);
+      } catch { /* Ignore malformed events. */ }
+    };
     const connect = () => {
       if (disposed) return;
       const current = new EventSource(liveEndpoint(streamId, "chat/events"), { withCredentials: true });
@@ -108,6 +123,7 @@ function useLiveChat(streamId: string, enabled: boolean, blocked: string[], onGi
       current.addEventListener("message", receiveMessage as EventListener);
       current.addEventListener("gift", ((event: MessageEvent<string>) => receiveGift(event, true)) as EventListener);
       current.addEventListener("gift-history-item", ((event: MessageEvent<string>) => receiveGift(event, false)) as EventListener);
+      current.addEventListener("engagement", receiveEngagement as EventListener);
       current.onopen = () => { retryDelay = 1000; setConnectionMessage(""); };
       current.onerror = () => {
         if (disposed) return;
@@ -155,7 +171,7 @@ function useLiveChat(streamId: string, enabled: boolean, blocked: string[], onGi
   };
 
   return {
-    messages, text, setText, connectionMessage, logRef, pinned, longPress,
+    messages, engagement, setEngagement, text, setText, connectionMessage, logRef, pinned, longPress,
     send, profile, setProfile, report, setReport,
   };
 }
@@ -461,6 +477,11 @@ export function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd,
         if (shareTimer.current) window.clearTimeout(shareTimer.current);
         shareTimer.current = window.setTimeout(() => setShareNotice(""), 2400);
       }
+      try {
+        chat.setEngagement(await addLiveStreamShare(streamId, { credentials: "include" }));
+      } catch {
+        setShareNotice("Shared, but the count could not be updated.");
+      }
     } catch (failure) {
       if (!(failure instanceof DOMException && failure.name === "AbortError")) setError("Could not share the stream link.");
     }
@@ -550,6 +571,15 @@ export function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd,
         onClick={enableStreamAudio} data-testid="live-enable-audio">Tap to hear stream</button>}
       {!hostMode && <button type="button" className="st-live-report-stream" onClick={openStreamReport}
         aria-label="Report stream" data-testid="live-report-stream"><Flag size={16} /></button>}
+      {!hostMode && chatReady && <LiveViewerActions
+        streamId={streamId}
+        hostUsername={hostUsername}
+        hostDisplayName={displayName}
+        isPk={Boolean(pkBattle)}
+        engagement={chat.engagement}
+        onEngagement={chat.setEngagement}
+        onOpenGifts={() => setGiftOpen(true)}
+      />}
       {(error || hostState?.phase === "livekit-error" || viewerState?.phase === "error") && (
         <div className="st-live-error" role="status" data-testid="live-error">
           <span>{error || hostState?.error || viewerState?.error}</span>
