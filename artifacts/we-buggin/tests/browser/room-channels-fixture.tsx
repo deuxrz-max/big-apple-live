@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'wouter';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { HomepageCauldron } from '../../src/chat/HomepageCauldron';
 import { RoomChannels, RoomChannelBack } from '../../src/chat/RoomChannels';
 import { ROOM_CHANNELS } from '../../src/chat/room-channels';
@@ -18,6 +18,10 @@ export function CauldronHoldFixture() {
 /** Exercises production navigation components without joining rooms or publishing media. */
 export function RoomChannelsFixture() {
   const [location] = useLocation();
+  useEffect(() => {
+    document.body.classList.add('streamtalk-directory-screen');
+    return () => document.body.classList.remove('streamtalk-directory-screen');
+  }, []);
   const roomId = location.match(/^\/rooms\/([^/]+)$/)?.[1];
   if (roomId) return <section data-testid="fixture-room-destination">
     <RoomChannelBack roomId={roomId} />
@@ -27,17 +31,25 @@ export function RoomChannelsFixture() {
   </section>;
   const now = Date.now();
   const previews = new URLSearchParams(window.location.search).get('previews') === '1';
-  const rooms = ROOM_CHANNELS.map((channel, i) => ({
-    roomId: channel.roomId, label: channel.title, headcount: 0, headcountSince: 0,
-    // MOCK video ids for fixture only; real playback is verified separately.
-    nowPlayingVideoId: previews ? `mockvid${i}` : null,
-    nowPlayingTitle: previews ? `Mock ${channel.title}` : null,
-    nowPlayingStartedAtMs: previews ? now - 30_000 : null,
-    nowPlayingServerNowMs: now,
-  }));
+  const includeOtherRoom = new URLSearchParams(window.location.search).get('other') === '1';
+  const rooms = [
+    ...ROOM_CHANNELS.map((channel, i) => ({
+      roomId: channel.roomId, label: channel.title, headcount: 0, headcountSince: 0,
+      // MOCK video ids for fixture only; real playback is verified separately.
+      nowPlayingVideoId: previews ? `mockvid${i}` : null,
+      nowPlayingTitle: previews ? `Mock ${channel.title}` : null,
+      nowPlayingStartedAtMs: previews ? now - 30_000 : null,
+      nowPlayingServerNowMs: now,
+    })),
+    ...(includeOtherRoom ? [{
+      roomId: 'LOUNGE1', label: 'Private Lounge', headcount: 0, headcountSince: 0,
+      nowPlayingVideoId: null, nowPlayingTitle: null, nowPlayingStartedAtMs: null, nowPlayingServerNowMs: now,
+    }] : []),
+  ];
   return <div className="st-directory st-home"><RoomChannels
-    rooms={rooms} loading={false}
-    renderRoom={room => <DirectoryRoomCard room={room} topic={room.label} isFeatured={false} />}
+    rooms={rooms} loading={false} baseHref="/home"
+    showOtherRoomSigns
+    renderRoom={room => <DirectoryRoomCard room={room} topic={room.label} isFeatured={false} hideDetails={includeOtherRoom} />}
     goLive={<Link className="st-home-go-live-button" href="/live">Go Live</Link>}
   /></div>;
 }

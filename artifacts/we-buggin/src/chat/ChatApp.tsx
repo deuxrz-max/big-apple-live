@@ -198,7 +198,7 @@ export function HomeSections() {
 
 export function ChatDirectory() {
   const { signOut } = useClerk();
-  const nycBackgroundVideo = useHomeNycBackgroundVideo();
+  const nycBackgroundVideos = useHomeNycBackgroundVideo();
   const directory = useGetChatDirectory({ query: { queryKey: getGetChatDirectoryQueryKey(), refetchInterval: 5_000 } });
   const me = useGetMyProfile({ query: { queryKey: getGetMyProfileQueryKey(), refetchInterval: 60_000 } });
   const socialMe = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), refetchInterval: 60_000 } });
@@ -224,7 +224,7 @@ export function ChatDirectory() {
       <div className="st-home-background" aria-hidden="true">
         <NycLoopingVideo
           className="st-home-background-video"
-          src={nycBackgroundVideo}
+          sources={nycBackgroundVideos}
           testId="video-home-background"
         />
       </div>
@@ -267,7 +267,8 @@ export function ChatDirectory() {
         <RoomChannels
           rooms={displayedRooms}
           loading={directory.isLoading}
-          renderRoom={(room) => <DirectoryRoomCard room={room} topic={topicFor(room)} isFeatured={room.roomId === featuredRoom?.roomId} />}
+          showOtherRoomSigns
+          renderRoom={(room) => <DirectoryRoomCard room={room} topic={topicFor(room)} isFeatured={room.roomId === featuredRoom?.roomId} hideDetails />}
           goLive={<GoLiveButton className="st-home-go-live-button">
             <span className="st-home-hotel-sign" aria-hidden="true">
               <span className="st-home-hotel-sign-copy">
@@ -310,11 +311,12 @@ export function ChatDirectory() {
   );
 }
 
-export function DirectoryRoomCard({ room, topic, isFeatured, preview = false }: {
+export function DirectoryRoomCard({ room, topic, isFeatured, preview = false, hideDetails = false }: {
   room: { roomId: string; label: string; headcount: number; nowPlayingVideoId?: string | null; nowPlayingTitle?: string | null };
   topic: string;
   isFeatured: boolean;
   preview?: boolean;
+  hideDetails?: boolean;
 }) {
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
   const [topicPhotoFailed, setTopicPhotoFailed] = useState(false);
@@ -333,15 +335,15 @@ export function DirectoryRoomCard({ room, topic, isFeatured, preview = false }: 
             : hasTopicPhoto
             ? <img className="st-dir-topic-photo" src={topicPhotoUrl(topic)} alt="" loading="lazy" onError={() => setTopicPhotoFailed(true)} />
             : <div className="st-dir-art-fallback" aria-hidden="true"><span className="st-dir-art-index">{topicInitial(topic)}</span><span className="st-dir-art-lines" /></div>}
-        <span className={`st-home-live-label${room.headcount > 0 ? ' is-live' : ''}`} title={room.label}>
-          {room.headcount > 0 && <><i aria-hidden="true" /><b>LIVE</b></>}<span>{room.label}</span>
-        </span>
-        {isFeatured && <span className="st-home-featured-badge">Featured</span>}
+        {(!hideDetails || room.headcount > 0) && <span className={`st-home-live-label${room.headcount > 0 ? ' is-live' : ''}`} title={hideDetails ? undefined : room.label}>
+          {room.headcount > 0 && <><i aria-hidden="true" /><b>LIVE</b></>}{!hideDetails && <span>{room.label}</span>}
+        </span>}
+        {!hideDetails && isFeatured && <span className="st-home-featured-badge">Featured</span>}
         <span className="st-dir-art-shade" />
-        <div className="st-home-card-copy">
+        {!hideDetails && <div className="st-home-card-copy">
           <span className="st-home-card-category">{topic}</span>
           <span className="st-home-card-subtitle" title={displayTitle || topicDescription(topic)}>{displayTitle || topicDescription(topic)}</span>
-        </div>
+        </div>}
         <span className="st-dir-count" aria-label={`${room.headcount} people in ${room.label}`}>
           <Flame size={12} aria-hidden="true" /><span>{room.headcount}</span>
         </span>

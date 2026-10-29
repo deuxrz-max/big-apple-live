@@ -1,13 +1,13 @@
-import type { RoomChannelSlug } from './room-channels';
-
 type WeatheredStreetSignProps = {
   label: string;
-  slug: RoomChannelSlug;
+  slug: string;
+  testId?: string;
 };
 
 /** Crisp, scalable street-sign artwork; texture is layered over paint and lettering. */
-export function WeatheredStreetSign({ label, slug }: WeatheredStreetSignProps) {
-  const id = `street-sign-${slug}`;
+export function WeatheredStreetSign({ label, slug, testId }: WeatheredStreetSignProps) {
+  const id = `street-sign-${slug.toLowerCase().replace(/[^a-z0-9_-]/g, '-')}`;
+  const fontSize = Math.min(42, 324 / Math.max(1, label.trim().length * 0.62));
 
   return (
     <svg
@@ -16,7 +16,7 @@ export function WeatheredStreetSign({ label, slug }: WeatheredStreetSignProps) {
       preserveAspectRatio="xMinYMid meet"
       role="img"
       aria-label={label}
-      data-testid={`label-channel-${slug}`}
+      data-testid={testId ?? `label-channel-${slug}`}
     >
       <defs>
         <linearGradient id={`${id}-paint`} x1="0" y1="0" x2="0.9" y2="1">
@@ -44,7 +44,7 @@ export function WeatheredStreetSign({ label, slug }: WeatheredStreetSignProps) {
         fill="#f5f4e9"
         filter={`url(#${id}-letter-shadow)`}
         fontFamily="Arial, Helvetica, sans-serif"
-        fontSize="42"
+        fontSize={fontSize}
         fontWeight="900"
         letterSpacing=".8"
       >

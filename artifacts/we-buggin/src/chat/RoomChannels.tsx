@@ -23,6 +23,7 @@ export type RoomChannelsProps<R extends DirectoryChannelRoom> = {
   renderRoom: (room: R) => ReactNode;
   goLive: ReactNode;
   baseHref?: string;
+  showOtherRoomSigns?: boolean;
 };
 
 /** Square "Back to [channel]" link; renders nothing for rooms outside the 8 topic rooms. */
@@ -33,7 +34,14 @@ export function RoomChannelBack({ roomId }: { roomId: string }) {
   return <Link href={href} className="ur-channel-back" data-testid="link-back-to-channel">{href === '/home' ? 'Back to channels' : `Back to ${channel.title}`}</Link>;
 }
 
-export function RoomChannels<R extends DirectoryChannelRoom>({ rooms, loading, renderRoom, goLive, baseHref = '/home' }: RoomChannelsProps<R>) {
+export function RoomChannels<R extends DirectoryChannelRoom>({
+  rooms,
+  loading,
+  renderRoom,
+  goLive,
+  baseHref = '/home',
+  showOtherRoomSigns = false,
+}: RoomChannelsProps<R>) {
   const search = useSearch();
   const selected = channelBySlug(new URLSearchParams(search).get('channel'));
   const others = rooms.filter((r) => !channelForDirectoryRoom(r.roomId));
@@ -67,7 +75,18 @@ export function RoomChannels<R extends DirectoryChannelRoom>({ rooms, loading, r
       {!loading && others.length > 0 && (
         <>
           <h2 className="rc-title rc-other-title">Other rooms</h2>
-          <ul className="rc-grid">{others.map((room) => <li key={room.roomId}>{renderRoom(room)}</li>)}</ul>
+          <ul className={`rc-grid${showOtherRoomSigns ? ' rc-grid-signed-in-home' : ''}`}>
+            {others.map((room) => (
+              <li key={room.roomId} className={showOtherRoomSigns ? 'rc-other-room-item' : undefined}>
+                {showOtherRoomSigns && <WeatheredStreetSign
+                  label={room.label}
+                  slug={`room-${room.roomId}`}
+                  testId={`label-room-${room.roomId.toLowerCase()}`}
+                />}
+                {renderRoom(room)}
+              </li>
+            ))}
+          </ul>
         </>
       )}
     </div>

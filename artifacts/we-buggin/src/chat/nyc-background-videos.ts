@@ -51,8 +51,47 @@ export async function loadNycBackgroundVideos(baseUrl: string): Promise<string[]
   }
 }
 
-export function pickRandomHomeBackground(videos: readonly string[], random = Math.random()): string | null {
-  if (videos.length !== NYC_BACKGROUND_VIDEO_SLOTS.length) return null;
-  const value = Number.isFinite(random) ? Math.min(0.999999999, Math.max(0, random)) : 0;
-  return videos[Math.floor(value * videos.length)] ?? null;
+export function shuffleHomeBackgroundVideos(
+  videos: readonly string[],
+  random: () => number = Math.random,
+): string[] {
+  if (videos.length !== NYC_BACKGROUND_VIDEO_SLOTS.length) return [];
+
+  const shuffled = [...videos];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const sample = random();
+    const normalized = Number.isFinite(sample) ? Math.min(0.999999999, Math.max(0, sample)) : 0;
+    const swapIndex = Math.floor(normalized * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
+export function advanceHomeBackgroundPlaylist(
+  videos: readonly string[],
+  activePosition: number,
+  random: () => number = Math.random,
+): { videos: string[]; activePosition: number; nextPosition: number } {
+  if (videos.length !== NYC_BACKGROUND_VIDEO_SLOTS.length
+    || !Number.isInteger(activePosition)
+    || activePosition < 0
+    || activePosition >= videos.length) {
+    throw new Error('Home background playlist requires six clips and a valid current position.');
+  }
+
+  if (activePosition < videos.length - 1) {
+    return { videos: [...videos], activePosition, nextPosition: activePosition + 1 };
+  }
+
+  const currentVideo = videos[activePosition];
+  const shuffled = shuffleHomeBackgroundVideos(videos, random);
+  if (shuffled[0] === currentVideo) {
+    [shuffled[0], shuffled[1]] = [shuffled[1], shuffled[0]];
+  }
+  const nextActivePosition = shuffled.indexOf(currentVideo);
+  return {
+    videos: shuffled,
+    activePosition: nextActivePosition,
+    nextPosition: (nextActivePosition + 1) % shuffled.length,
+  };
 }

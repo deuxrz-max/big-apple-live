@@ -4,6 +4,7 @@
 .rc-back { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border: 1px solid #c9a24a; border-radius: 0; background: #0b0a08; color: #f5cb8d; font-size: .8rem; font-weight: 700; text-decoration: none; text-transform: uppercase; letter-spacing: .06em; }
 .rc-back:hover, .rc-back:focus-visible { background: #c9a24a; color: #0b0a08; }
 .rc-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.rc-grid-signed-in-home > .rc-other-room-item { display: grid; grid-template-rows: 32px auto; gap: 4px; min-width: 0; }
 /* Historical compact home grid (df977d7): two equal columns, 11px/10px gaps, .88/1 cards. */
 .rc-tiles { list-style: none; margin: 0; padding: 0; display: grid; gap: 24px 20px; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
 .rc-channel-item { display: grid; grid-template-rows: 32px auto; gap: 4px; min-width: 0; }

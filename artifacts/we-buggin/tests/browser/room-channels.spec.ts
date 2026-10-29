@@ -3,7 +3,7 @@ import { channelForDirectoryRoom, roomChannelHref } from '../../src/chat/room-ch
 import { cauldronDisplayLevel } from '../../src/chat/cauldron-display-level';
 import { cauldronArtworkBounds, cauldronArtworkFit } from '../../src/chat/cauldron-artwork-fit';
 import {
-  configuredNycBackgroundVideos, pickRandomHomeBackground, NYC_BACKGROUND_VIDEO_SLOTS,
+  configuredNycBackgroundVideos, shuffleHomeBackgroundVideos, NYC_BACKGROUND_VIDEO_SLOTS,
 } from '../../src/chat/nyc-background-videos';
 
 const groups = [
@@ -59,6 +59,25 @@ test('channel deep links survive reload and invalid channels show the groups', a
   await expect(page.getByTestId('section-room-channels')).toBeVisible();
 });
 
+test('signed-in Home signs each additional room and keeps the tile text-free on phones', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/tests/browser/harness.html?view=room-channels&other=1');
+  await expect(page.getByTestId('label-channel-cafe')).toHaveText('TIMES SQUARE');
+  await expect(page.getByTestId('label-channel-screening')).toHaveText('BROADWAY');
+  await expect(page.getByTestId('label-channel-arena')).toHaveText('HARLEM');
+
+  const sign = page.getByTestId('label-room-lounge1');
+  const tile = page.getByTestId('card-home-room-LOUNGE1');
+  await expect(sign).toHaveText('PRIVATE LOUNGE');
+  await expect(tile).not.toContainText('Private Lounge');
+  await expect(tile).not.toContainText('LOUNGE');
+  await expect(tile).not.toContainText('Enter');
+
+  const [signBox, tileBox] = await Promise.all([sign.boundingBox(), tile.boundingBox()]);
+  expect(Math.abs(signBox!.x - tileBox!.x)).toBeLessThan(1);
+  expect(signBox!.y + signBox!.height).toBeLessThanOrEqual(tileBox!.y);
+});
+
 test('overflow rooms keep their parent channel and unrelated rooms are not reassigned', () => {
   expect(channelForDirectoryRoom('MUSIC12')?.slug).toBe('cafe');
   expect(roomChannelHref('WEBSER2')).toBe('/rooms/SCREEN');
@@ -72,7 +91,7 @@ test('overflow rooms keep their parent channel and unrelated rooms are not reass
 test('NYC background selection is Home-only and waits for all six sources', () => {
   const empty = { videos: NYC_BACKGROUND_VIDEO_SLOTS.map(slot => ({ id: slot.id, src: null })) };
   expect(configuredNycBackgroundVideos(empty)).toEqual([]);
-  expect(pickRandomHomeBackground([])).toBeNull();
+  expect(shuffleHomeBackgroundVideos([])).toEqual([]);
 
   const manifest = { videos: NYC_BACKGROUND_VIDEO_SLOTS.map(slot => ({
     id: slot.id, src: `nyc-backgrounds/${slot.fileName}`,
@@ -80,8 +99,10 @@ test('NYC background selection is Home-only and waits for all six sources', () =
   const videos = configuredNycBackgroundVideos(manifest, '/big-apple-live/');
   expect(videos).toHaveLength(6);
   expect(videos[0]).toBe('/big-apple-live/nyc-backgrounds/nyc-background-1.mp4');
-  expect(pickRandomHomeBackground(videos, 0)).toBe(videos[0]);
-  expect(pickRandomHomeBackground(videos, 0.999)).toBe(videos[5]);
+  const shuffled = shuffleHomeBackgroundVideos(videos, () => 0);
+  expect(shuffled).toHaveLength(6);
+  expect([...shuffled].sort()).toEqual([...videos].sort());
+  expect(shuffled).not.toEqual(videos);
   expect(configuredNycBackgroundVideos({ videos: manifest.videos.slice(0, 5) })).toEqual([]);
 });
 
