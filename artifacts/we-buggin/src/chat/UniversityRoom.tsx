@@ -484,7 +484,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
       onKeyDownCapture={activateRoomAudio}
       onWheelCapture={activateRoomAudio}>
       {nycBackgroundVideo && <div className="ur-background-video-layer" aria-hidden="true" data-testid="video-social-room-background">
-        <video src={nycBackgroundVideo} autoPlay muted loop playsInline preload="metadata" tabIndex={-1} />
+        <video src={nycBackgroundVideo} autoPlay muted loop playsInline preload="auto" tabIndex={-1} />
       </div>}
       <RoomPerimeter />
       <div className="ch-in ur-in">

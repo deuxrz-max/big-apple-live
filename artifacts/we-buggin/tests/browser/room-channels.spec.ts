@@ -70,7 +70,7 @@ test('overflow rooms keep their parent channel and unrelated rooms are not reass
   expect(channelForDirectoryRoom('MUSIC1-unrelated')).toBeNull();
 });
 
-test('NYC backgrounds remain on the current Home video until all six supplied URLs exist', () => {
+test('NYC background selection stays disabled until all six sources exist', () => {
   const empty = { videos: NYC_BACKGROUND_VIDEO_SLOTS.map(slot => ({ id: slot.id, src: null })) };
   expect(configuredNycBackgroundVideos(empty)).toEqual([]);
   expect(pickRandomHomeBackground([])).toBeNull();

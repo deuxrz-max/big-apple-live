@@ -21,9 +21,11 @@ import { devAudioHarnessEnabled } from "../lib/dev-audio-harness-policy";
 import devAudioHarnessRouter from "./dev-audio-harness";
 
 import pinkCardRewardsRouter from "./pink-card-rewards";
+import nycBackgroundsRouter from "./nyc-backgrounds";
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(nycBackgroundsRouter);
 router.use(communityRouter);
 router.use(moderatorBotRouter);
 router.use(profilePhotosRouter);

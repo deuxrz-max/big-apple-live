@@ -223,13 +223,13 @@ export function ChatDirectory() {
       <div className="st-home-background" aria-hidden="true">
         <video
           className="st-home-background-video"
-          src={nycBackgroundVideo ?? `${import.meta.env.BASE_URL}nyc-home-background.mp4`}
+          src={nycBackgroundVideo ?? undefined}
           data-testid="video-home-background"
           autoPlay
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="auto"
           tabIndex={-1}
         />
       </div>

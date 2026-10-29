@@ -7,7 +7,8 @@ export function useHomeNycBackgroundVideo() {
   useEffect(() => {
     let active = true;
     void loadNycBackgroundVideos(import.meta.env.BASE_URL).then(videos => {
-      if (active) setSource(pickRandomHomeBackground(videos));
+      if (!active) return;
+      setSource(pickRandomHomeBackground(videos));
     });
     return () => { active = false; };
   }, []);

@@ -50,8 +50,7 @@
 .ch.ur{padding-bottom:0}
 .ch.ur.has-nyc-room-background{position:relative;isolation:isolate;background:#111216}
 .ur-background-video-layer{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#080910}
-.ur-background-video-layer::after{position:absolute;inset:0;content:"";background:linear-gradient(180deg,rgba(5,6,10,.4),rgba(5,6,10,.62) 58%,rgba(5,6,10,.72))}
-.ur-background-video-layer video{display:block;width:100%;height:100%;object-fit:cover;object-position:center;opacity:.52}
+.ur-background-video-layer video{display:block;width:100%;height:100%;object-fit:cover;object-position:center;opacity:1;filter:none}
 .ch.ur.has-nyc-room-background .ur-in{position:relative;z-index:2;background:transparent!important}
 .ch.ur.has-nyc-room-background .ur-perimeter-shine{z-index:1}
 .ch.ur .ur-in{display:flex;flex-direction:column;height:calc(100dvh - var(--app-bottom-nav-clearance,80px));min-height:0}

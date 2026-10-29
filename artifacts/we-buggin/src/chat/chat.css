@@ -576,12 +576,6 @@ body.streamtalk-directory-screen #root .ch.st-home .st-home-background{
     radial-gradient(ellipse at 82% 0%,rgba(116,44,148,.2),transparent 34%),
     linear-gradient(180deg,#09080d 0%,#100b15 58%,#08070b 100%);
 }
-body.streamtalk-directory-screen #root .ch.st-home .st-home-background::after{
-  position:absolute;
-  inset:0;
-   background:linear-gradient(180deg,rgba(8,7,11,.16),rgba(8,7,11,.3) 55%,rgba(8,7,11,.48));
-  content:"";
-}
 body.streamtalk-directory-screen #root .ch.st-home .st-home-background-video{
   display:block;
   width:100%;

@@ -132,6 +132,17 @@ default context attached with the supported CDP no-default-overrides option.
 Keep this distinct from normal isolated contexts and never patch document.hidden
 or fabricate visibility events and then claim real background-tab verification.
 
+An ad-hoc Playwright launch from a Node shell may fail because its Chromium binary
+cannot load a system library such as `libglib-2.0.so.0`, even when the managed
+preview screenshot service can render the app.
+
+**Why:** A direct phone-sized playback probe could not start its bundled
+headless Chromium, while the Replit preview screenshot still loaded the page.
+
+**How to apply:** Report the shell-browser limitation separately. Use available
+managed screenshots and media/API checks as partial evidence, not as proof of
+actual playback or signed-in interaction.
+
 When mounting original components in a temporary Vite browser harness, use the
 same optimized dependency URLs, including their version query, as the served
 source. CommonJS-prebundled React and ReactDOM may expose their APIs on `default`.
