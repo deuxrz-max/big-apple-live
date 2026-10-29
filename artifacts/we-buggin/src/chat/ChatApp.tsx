@@ -27,6 +27,7 @@ import { AccessCheckError } from './AccessCheckError';
 import { buyCoinsReturnState } from '@/social/buy-coins-navigation';
 import { ProfilePreferences } from '@/social/PeoplePages';
 import { useHomeNycBackgroundVideo } from './useNycBackgroundVideo';
+import { NycLoopingVideo } from './NycLoopingVideo';
 import './chat.css';
 
 const DISCLAIMER = 'Big Apple Live is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
@@ -221,16 +222,10 @@ export function ChatDirectory() {
   return (
     <Shell className="st-directory st-home">
       <div className="st-home-background" aria-hidden="true">
-        <video
+        <NycLoopingVideo
           className="st-home-background-video"
-          src={nycBackgroundVideo ?? undefined}
-          data-testid="video-home-background"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          tabIndex={-1}
+          src={nycBackgroundVideo}
+          testId="video-home-background"
         />
       </div>
       <header className="st-dir-header">

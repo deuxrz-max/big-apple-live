@@ -50,3 +50,4 @@
 - [Audit review gates](audit-task-review-gates.md) — complete only one cleanup task, then stop for owner review and explicit permission to continue.
 - [Gift panel design](gift-panel-design.md) — explicit rounding exception for the reference-style gift sheet; keep photo frames square and sending behavior unchanged.
 - [Room channel and reward scope](room-channel-scope.md) — direct-entry combined feeds; pink-card rewards replace Cauldron, with six daily draws and one winner per draw.
+- [NYC background loop seams](nyc-background-loop-seams.md) — preserve original clips and crossfade Home loop boundaries; do not apply NYC clips to rooms.

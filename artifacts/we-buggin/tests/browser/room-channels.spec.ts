@@ -3,8 +3,7 @@ import { channelForDirectoryRoom, roomChannelHref } from '../../src/chat/room-ch
 import { cauldronDisplayLevel } from '../../src/chat/cauldron-display-level';
 import { cauldronArtworkBounds, cauldronArtworkFit } from '../../src/chat/cauldron-artwork-fit';
 import {
-  configuredNycBackgroundVideos, pickRandomHomeBackground, pickRoomBackground,
-  NYC_BACKGROUND_VIDEO_SLOTS,
+  configuredNycBackgroundVideos, pickRandomHomeBackground, NYC_BACKGROUND_VIDEO_SLOTS,
 } from '../../src/chat/nyc-background-videos';
 
 const groups = [
@@ -70,7 +69,7 @@ test('overflow rooms keep their parent channel and unrelated rooms are not reass
   expect(channelForDirectoryRoom('MUSIC1-unrelated')).toBeNull();
 });
 
-test('NYC background selection stays disabled until all six sources exist', () => {
+test('NYC background selection is Home-only and waits for all six sources', () => {
   const empty = { videos: NYC_BACKGROUND_VIDEO_SLOTS.map(slot => ({ id: slot.id, src: null })) };
   expect(configuredNycBackgroundVideos(empty)).toEqual([]);
   expect(pickRandomHomeBackground([])).toBeNull();
@@ -83,10 +82,6 @@ test('NYC background selection stays disabled until all six sources exist', () =
   expect(videos[0]).toBe('/big-apple-live/nyc-backgrounds/nyc-background-1.mp4');
   expect(pickRandomHomeBackground(videos, 0)).toBe(videos[0]);
   expect(pickRandomHomeBackground(videos, 0.999)).toBe(videos[5]);
-  expect(pickRoomBackground('ABC123', 'social', videos)).toBe(pickRoomBackground('ABC123', 'social', videos));
-  expect(videos).toContain(pickRoomBackground('ABC123', 'social', videos));
-  expect(pickRoomBackground('ABC123', 'topic', videos)).toBeNull();
-  expect(pickRoomBackground('CHESSABC', 'social', videos)).toBeNull();
   expect(configuredNycBackgroundVideos({ videos: manifest.videos.slice(0, 5) })).toEqual([]);
 });
 

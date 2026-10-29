@@ -56,20 +56,3 @@ export function pickRandomHomeBackground(videos: readonly string[], random = Mat
   const value = Number.isFinite(random) ? Math.min(0.999999999, Math.max(0, random)) : 0;
   return videos[Math.floor(value * videos.length)] ?? null;
 }
-
-/**
- * Room codes are generated from random bytes. Hashing that code gives every
- * viewer the same random-looking clip for the room without adding DB state.
- */
-export function pickRoomBackground(roomId: string, roomType: string | undefined, videos: readonly string[]): string | null {
-  const normalizedId = roomId.trim().toUpperCase();
-  if (roomType !== 'social' || normalizedId.startsWith('CHESS')
-    || videos.length !== NYC_BACKGROUND_VIDEO_SLOTS.length) return null;
-
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < normalizedId.length; i += 1) {
-    hash ^= normalizedId.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return videos[(hash >>> 0) % videos.length] ?? null;
-}
