@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { useUser } from "@clerk/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Ban, Crown, Eye, Flag, FlipHorizontal, Mic, MicOff, Radio, Send, Share2, Swords, Users, Video, X } from "lucide-react";
+import { ArrowLeft, Ban, Crown, Eye, Flag, FlipHorizontal, Gift, Mic, MicOff, Radio, Send, Share2, Swords, Users, Video, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { ScreenHeader } from '@/components/app-chrome';
 import { type RemoteTrack } from "livekit-client";
@@ -12,7 +12,6 @@ import {
 } from "@workspace/api-client-react";
 import type { LiveStreamEntry, LiveStreamChatMessage, LiveStreamEngagement, RoomSession } from "@workspace/api-client-react";
 import { GiftBag } from "@/gifts/GiftBag";
-import { GiftControl } from "@/gifts/GiftControl";
 import { GiftComboPlayer, type GiftComboNotice } from "@/gifts/GiftComboPlayer";
 import { appendUniqueGiftEvents, finishGiftQueueItem } from "@/gifts/gift-combo-policy";
 import { SafetyReportDialog } from "@/safety/SafetyReportDialog";
@@ -647,37 +646,48 @@ export function LiveSurface({ streamId, hostMode, hostState, viewerState, onEnd,
           </form>
         </section>
       </div>
-      <div className={`st-live-bottom-controls dw-live-dock${hostMode ? ' is-host' : ''}`} data-testid="dock-live-controls">
-        <GiftControl label="Open live gifts" onClick={() => setGiftOpen(true)} />
-        {hostMode && <div className="st-live-host-controls">
-            <button type="button" onClick={() => void hostLiveSession.flipCamera()} aria-label="Flip camera"><FlipHorizontal size={18} /><span>Flip</span></button>
-            <button type="button" className={muted ? "is-mic-off" : "is-mic-on"} onClick={() => void hostLiveSession.toggleMicrophone()}
-              aria-label={muted ? "Unmute microphone" : "Mute microphone"} aria-pressed={!muted}>{muted ? <MicOff size={18} /> : <Mic size={18} />}<span>{muted ? "Mic off" : "Mic on"}</span></button>
-            <button type="button" onClick={() => void share()} aria-label="Share stream link"><Share2 size={18} /><span>Share</span></button>
-          </div>}
-          {canManageStream && <div className="st-live-host-controls">
-            <button type="button" aria-expanded={roomBlockPanelOpen} onClick={() => setRoomBlockPanelOpen(value => !value)}>
-              <Ban size={18} /><span>Blocks</span>
-            </button>
-          </div>}
-          {hostMode && chatReady && !pkBattle && <div className="st-pk-control" data-testid="pk-live-controls">
-            <button type="button" className={pkState.data?.state === "searching" ? "st-pk-cancel" : "st-pk-search"}
-              onClick={() => void (pkState.data?.state === "searching" ? stopPkSearch() : startPkSearch())}
-              disabled={pkActionBusy}
-              aria-label={pkState.data?.state === "searching" ? "Cancel PK opponent search" : "Search for a PK opponent"}
-              data-testid="button-pk-search">
-              {pkState.data?.state === "searching" ? <X size={17} /> : <Swords size={17} />}
-              <span>{pkState.data?.state === "searching" ? "Cancel" : "PK"}</span>
-            </button>
-            {pkState.data?.state === "searching" && <span className="st-pk-status" role="status">
-              <i className="st-pk-search-status-dot" />Finding opponent…
-            </span>}
-            {pkState.data?.state === "timed_out" && <span className="st-pk-status is-error" role="status">
-              No one's available, try again.
-            </span>}
-            {pkActionError && <span className="st-pk-status is-error" role="alert">{pkActionError}</span>}
-          </div>}
-      </div>
+      {hostMode && <aside className={`st-live-host-action-rail${pkBattle ? " is-pk" : ""}`}
+        aria-label="Broadcaster controls" data-testid="dock-live-controls">
+        <button type="button" className="st-live-action-button st-live-host-action-button"
+          onClick={() => void hostLiveSession.flipCamera()} aria-label="Flip camera">
+          <FlipHorizontal size={23} aria-hidden="true" /><small>Flip</small>
+        </button>
+        <button type="button" className="st-live-action-button st-live-host-action-button"
+          onClick={() => void hostLiveSession.toggleMicrophone()}
+          aria-label={muted ? "Unmute microphone" : "Mute microphone"} aria-pressed={!muted}>
+          {muted ? <MicOff size={23} aria-hidden="true" /> : <Mic size={23} aria-hidden="true" />}
+          <small>{muted ? "Mic off" : "Mic on"}</small>
+        </button>
+        <button type="button" className="st-live-action-button st-live-host-action-button"
+          onClick={() => void share()} aria-label="Share stream link">
+          <Share2 size={23} aria-hidden="true" /><small>Share</small>
+        </button>
+        {canManageStream && <button type="button" className="st-live-action-button st-live-host-action-button"
+          aria-expanded={roomBlockPanelOpen} onClick={() => setRoomBlockPanelOpen(value => !value)}>
+          <Ban size={23} aria-hidden="true" /><small>Blocks</small>
+        </button>}
+        {hostMode && chatReady && !pkBattle && <div className="st-pk-control" data-testid="pk-live-controls">
+          <button type="button" className={`st-live-action-button st-live-host-action-button ${pkState.data?.state === "searching" ? "st-pk-cancel" : "st-pk-search"}`}
+            onClick={() => void (pkState.data?.state === "searching" ? stopPkSearch() : startPkSearch())}
+            disabled={pkActionBusy}
+            aria-label={pkState.data?.state === "searching" ? "Cancel PK opponent search" : "Search for a PK opponent"}
+            data-testid="button-pk-search">
+            {pkState.data?.state === "searching" ? <X size={23} aria-hidden="true" /> : <Swords size={23} aria-hidden="true" />}
+            <small>{pkState.data?.state === "searching" ? "Cancel" : "PK"}</small>
+          </button>
+          {pkState.data?.state === "searching" && <span className="st-pk-status" role="status">
+            <i className="st-pk-search-status-dot" />Finding opponent…
+          </span>}
+          {pkState.data?.state === "timed_out" && <span className="st-pk-status is-error" role="status">
+            No one's available, try again.
+          </span>}
+          {pkActionError && <span className="st-pk-status is-error" role="alert">{pkActionError}</span>}
+        </div>}
+        <button type="button" className="st-live-action-button st-live-host-action-button"
+          onClick={() => setGiftOpen(true)} aria-label="Open live gifts" data-testid="button-open-live-gifts">
+          <Gift size={25} aria-hidden="true" /><small>Gift</small>
+        </button>
+      </aside>}
     </div>
     {roomBlockPanelOpen && canManageStream && <section className="st-live-block-panel" aria-label="People blocked from this host's rooms">
       <strong>Blocked from this host’s rooms</strong>

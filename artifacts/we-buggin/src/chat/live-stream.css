@@ -1429,3 +1429,105 @@ body.streamtalk-live-screen .site-header {
   .st-live-action-rail { right: 4px; width: 46px; }
   .st-live-action-button { width: 46px; min-width: 46px; }
 }
+
+/* Broadcaster controls share the viewer's floating right-side action style. */
+#root .st-live-host-action-rail {
+  position: absolute;
+  z-index: 6;
+  top: 39%;
+  right: 8px;
+  bottom: max(148px, calc(env(safe-area-inset-bottom, 0px) + 132px));
+  display: flex;
+  width: 56px;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+#root .st-live-host-action-rail.is-pk {
+  top: calc(51% + 52px);
+  bottom: max(148px, calc(env(safe-area-inset-bottom, 0px) + 132px));
+}
+#root .st-live-host-action-rail .st-live-host-action-button {
+  display: flex;
+  width: 56px;
+  min-width: 56px;
+  min-height: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
+  font: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+  backdrop-filter: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#root .st-live-host-action-rail .st-live-host-action-button > svg {
+  width: 23px;
+  height: 23px;
+  color: #fff !important;
+  stroke: currentColor;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,.95));
+}
+#root .st-live-host-action-rail .st-live-host-action-button small {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
+  font-size: 9px;
+  font-weight: 750;
+  line-height: 1.05;
+  text-shadow: 0 1px 4px #000, 0 0 8px rgba(0,0,0,.9);
+  white-space: nowrap;
+}
+#root .st-live-host-action-rail .st-live-host-action-button:focus-visible {
+  outline: 2px solid rgba(255,255,255,.92);
+  outline-offset: 1px;
+}
+#root .st-live-host-action-rail .st-live-host-action-button:disabled { opacity: .55; }
+#root .st-live-host-action-rail .st-pk-control {
+  position: relative;
+  display: flex;
+  width: 56px;
+  height: 40px;
+  flex: 0 0 40px;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+#root .st-live-host-action-rail .st-pk-status {
+  right: calc(100% + 8px);
+  bottom: 50%;
+  transform: translateY(50%);
+  text-align: left;
+}
+@media (max-height: 700px) {
+  #root .st-live-host-action-rail {
+    top: 36%;
+    bottom: max(124px, calc(env(safe-area-inset-bottom, 0px) + 108px));
+  }
+  #root .st-live-host-action-rail.is-pk {
+    top: calc(51% + 40px);
+    bottom: max(124px, calc(env(safe-area-inset-bottom, 0px) + 108px));
+  }
+  #root .st-live-host-action-rail .st-live-host-action-button,
+  #root .st-live-host-action-rail .st-pk-control {
+    min-height: 34px;
+    height: 34px;
+    flex-basis: 34px;
+  }
+}
+@media (max-width: 360px) {
+  #root .st-live-host-action-rail { right: 4px; width: 48px; }
+  #root .st-live-host-action-rail .st-live-host-action-button,
+  #root .st-live-host-action-rail .st-pk-control { width: 48px; min-width: 48px; }
+}
