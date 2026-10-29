@@ -37,6 +37,7 @@ import { canUsePremiumCardFinish } from './card-surface-finish';
 import { OwnerCardGameTestMode, type OwnerCardTestState } from './OwnerCardGameTestMode';
 import './university-room.css';
 import { RoomPerimeter } from './RoomPerimeter';
+import { useRoomNycBackgroundVideo } from './useNycBackgroundVideo';
 import './bot-moderation.css';
 
 const RULES = "Stick to the room's topic. Be kind — no harassment or hate. Nothing sexual or explicit, in chat, names or photos. Don't share real names, phone numbers, addresses or other contact details. Don't hog the screen, no ALL CAPS, no ads or spam. Use Ignore on anyone bothering you, or Block and Report for anything serious. Public room chat is moderated by Big Apple Live bots. Whispers and direct messages are private and are not scanned by these bots.";
@@ -144,6 +145,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const handledCoinDrops = useRef(new Set<string>());
   const isComedyRoom = roomId.toUpperCase() === 'COMEDY';
   const isSocialRoom = r.room?.roomType === 'social';
+  const nycBackgroundVideo = useRoomNycBackgroundVideo(roomId, r.room?.roomType);
 
   useEffect(() => {
     if (!isSocialRoom || !menu?.participantId || !sessionId) {
@@ -477,10 +479,13 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   }
 
   return (
-    <div className={`ch ch-university ur${isComedyRoom ? ' ur-comedy' : ''}`}
+    <div className={`ch ch-university ur${isComedyRoom ? ' ur-comedy' : ''}${nycBackgroundVideo ? ' has-nyc-room-background' : ''}`}
       onPointerDownCapture={activateRoomAudio}
       onKeyDownCapture={activateRoomAudio}
       onWheelCapture={activateRoomAudio}>
+      {nycBackgroundVideo && <div className="ur-background-video-layer" aria-hidden="true" data-testid="video-social-room-background">
+        <video src={nycBackgroundVideo} autoPlay muted loop playsInline preload="metadata" tabIndex={-1} />
+      </div>}
       <RoomPerimeter />
       <div className="ch-in ur-in">
         {chatAccess.data?.warning && <p className="ur-moderation-notice" role="alert">{chatAccess.data.warning}</p>}

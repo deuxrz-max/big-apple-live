@@ -2,6 +2,10 @@ import { expect, test } from '@playwright/test';
 import { channelForDirectoryRoom, roomChannelHref } from '../../src/chat/room-channels';
 import { cauldronDisplayLevel } from '../../src/chat/cauldron-display-level';
 import { cauldronArtworkBounds, cauldronArtworkFit } from '../../src/chat/cauldron-artwork-fit';
+import {
+  configuredNycBackgroundVideos, pickRandomHomeBackground, pickRoomBackground,
+  NYC_BACKGROUND_VIDEO_SLOTS,
+} from '../../src/chat/nyc-background-videos';
 
 const groups = [
   { slug: 'cafe', roomId: 'CAFE01', name: 'Times Square' },
@@ -17,10 +21,14 @@ for (const width of [320, 390]) {
     for (const group of groups) {
       const sign = page.getByTestId(`label-channel-${group.slug}`);
       const tile = page.getByTestId(`link-channel-${group.slug}`);
-      await expect(sign).toHaveText(group.name);
-      await expect(sign).toHaveCSS('background-color', 'rgb(0, 107, 63)');
-      await expect(sign).toHaveCSS('color', 'rgb(255, 255, 255)');
+      await expect(sign).toHaveAttribute('aria-label', group.name);
+      await expect(sign).toHaveText(group.name.toUpperCase());
+      await expect(sign.locator('rect').first()).toHaveAttribute('stroke', '#e4e4d7');
+      await expect(sign.locator('rect').first()).toHaveAttribute('fill', new RegExp(`street-sign-${group.slug}-paint`));
       await expect(tile.locator('.rc-tile-title')).toHaveCount(0);
+      await expect(tile).toHaveText('');
+      await expect(tile).not.toHaveAttribute('title');
+      await expect(tile).toHaveAttribute('aria-label', `Enter ${group.name} room`);
       const [signBox, tileBox] = await Promise.all([sign.boundingBox(), tile.boundingBox()]);
       expect(Math.abs(signBox!.x - tileBox!.x)).toBeLessThan(1);
       expect(signBox!.y + signBox!.height).toBeLessThanOrEqual(tileBox!.y);
@@ -60,6 +68,26 @@ test('overflow rooms keep their parent channel and unrelated rooms are not reass
   expect(roomChannelHref('private-user-room')).toBeNull();
   expect(roomChannelHref('CHESS1')).toBeNull();
   expect(channelForDirectoryRoom('MUSIC1-unrelated')).toBeNull();
+});
+
+test('NYC backgrounds remain on the current Home video until all six supplied URLs exist', () => {
+  const empty = { videos: NYC_BACKGROUND_VIDEO_SLOTS.map(slot => ({ id: slot.id, src: null })) };
+  expect(configuredNycBackgroundVideos(empty)).toEqual([]);
+  expect(pickRandomHomeBackground([])).toBeNull();
+
+  const manifest = { videos: NYC_BACKGROUND_VIDEO_SLOTS.map(slot => ({
+    id: slot.id, src: `nyc-backgrounds/${slot.fileName}`,
+  })) };
+  const videos = configuredNycBackgroundVideos(manifest, '/big-apple-live/');
+  expect(videos).toHaveLength(6);
+  expect(videos[0]).toBe('/big-apple-live/nyc-backgrounds/nyc-background-1.mp4');
+  expect(pickRandomHomeBackground(videos, 0)).toBe(videos[0]);
+  expect(pickRandomHomeBackground(videos, 0.999)).toBe(videos[5]);
+  expect(pickRoomBackground('ABC123', 'social', videos)).toBe(pickRoomBackground('ABC123', 'social', videos));
+  expect(videos).toContain(pickRoomBackground('ABC123', 'social', videos));
+  expect(pickRoomBackground('ABC123', 'topic', videos)).toBeNull();
+  expect(pickRoomBackground('CHESSABC', 'social', videos)).toBeNull();
+  expect(configuredNycBackgroundVideos({ videos: manifest.videos.slice(0, 5) })).toEqual([]);
 });
 
 test('signed-out landing shows three channels and retains sign-in before room entry', async ({ page }) => {

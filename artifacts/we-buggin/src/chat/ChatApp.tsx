@@ -26,6 +26,7 @@ import { ActionMenu, ScreenHeader } from '@/components/app-chrome';
 import { AccessCheckError } from './AccessCheckError';
 import { buyCoinsReturnState } from '@/social/buy-coins-navigation';
 import { ProfilePreferences } from '@/social/PeoplePages';
+import { useHomeNycBackgroundVideo } from './useNycBackgroundVideo';
 import './chat.css';
 
 const DISCLAIMER = 'Big Apple Live is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
@@ -196,6 +197,7 @@ export function HomeSections() {
 
 export function ChatDirectory() {
   const { signOut } = useClerk();
+  const nycBackgroundVideo = useHomeNycBackgroundVideo();
   const directory = useGetChatDirectory({ query: { queryKey: getGetChatDirectoryQueryKey(), refetchInterval: 5_000 } });
   const me = useGetMyProfile({ query: { queryKey: getGetMyProfileQueryKey(), refetchInterval: 60_000 } });
   const socialMe = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), refetchInterval: 60_000 } });
@@ -221,7 +223,8 @@ export function ChatDirectory() {
       <div className="st-home-background" aria-hidden="true">
         <video
           className="st-home-background-video"
-          src={`${import.meta.env.BASE_URL}nyc-home-background.mp4`}
+          src={nycBackgroundVideo ?? `${import.meta.env.BASE_URL}nyc-home-background.mp4`}
+          data-testid="video-home-background"
           autoPlay
           muted
           loop

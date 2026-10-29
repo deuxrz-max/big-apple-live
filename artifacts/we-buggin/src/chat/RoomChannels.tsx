@@ -4,6 +4,7 @@ import { ROOM_CHANNELS, channelBySlug, channelForDirectoryRoom, roomChannelHref 
 import './room-channels.css';
 import { PinkCardRewardTile } from './PinkCardRewardTile';
 import { ChannelPreview } from './ChannelPreview';
+import { WeatheredStreetSign } from './WeatheredStreetSign';
 
 export type DirectoryChannelRoom = {
   roomId: string;
@@ -48,15 +49,12 @@ export function RoomChannels<R extends DirectoryChannelRoom>({ rooms, loading, r
           // Preview exactly the room this link opens, never an overflow/source
           // room which may be playing something different during an intermission.
           const source = rooms.find((r) => r.roomId.toUpperCase() === ch.roomId);
-          const count = rooms.filter((r) => channelForDirectoryRoom(r.roomId)?.slug === ch.slug).reduce((n, r) => n + r.headcount, 0);
           return (
             <li key={ch.slug} className="rc-channel-item">
-              <span className="rc-channel-sign" data-testid={`label-channel-${ch.slug}`}>{ch.title}</span>
-              <Link href={baseHref === '/' ? '/sign-in' : `/rooms/${ch.roomId}`} className={`rc-tile rc-channel-${ch.slug}`} data-testid={`link-channel-${ch.slug}`}>
-                <ChannelPreview slug={ch.slug} videoId={source?.nowPlayingVideoId} title={source?.nowPlayingTitle}
+              <WeatheredStreetSign label={ch.title} slug={ch.slug} />
+              <Link href={baseHref === '/' ? '/sign-in' : `/rooms/${ch.roomId}`} className={`rc-tile rc-channel-${ch.slug}`} data-testid={`link-channel-${ch.slug}`} aria-label={`Enter ${ch.title} room`}>
+                <ChannelPreview slug={ch.slug} videoId={source?.nowPlayingVideoId}
                   startedAtMs={source?.nowPlayingStartedAtMs} serverNowMs={source?.nowPlayingServerNowMs} />
-                <span className="rc-tile-rooms">{ch.rooms.map((r) => r.label).join(' · ')}</span>
-                <span className="rc-tile-count">{loading ? '…' : `${count} here`}</span>
               </Link>
             </li>
           );

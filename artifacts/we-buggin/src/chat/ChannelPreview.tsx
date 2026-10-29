@@ -10,7 +10,6 @@ type PreviewState = 'poster' | 'loading' | 'playing' | 'blocked' | 'unavailable'
 
 export type ChannelPreviewProps = {
   videoId: string | null | undefined;
-  title?: string | null;
   startedAtMs?: number | null;
   serverNowMs?: number | null;
   slug: string;
@@ -26,7 +25,7 @@ export function previewPositionSeconds(startedAtMs: number | null | undefined, s
  * pointer-events:none so the surrounding channel link always receives taps.
  * Plays only while on screen and the page is visible; never unmutes.
  */
-export function ChannelPreview({ videoId, title, startedAtMs, serverNowMs, slug }: ChannelPreviewProps) {
+export function ChannelPreview({ videoId, startedAtMs, serverNowMs, slug }: ChannelPreviewProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<PreviewPlayer | null>(null);
@@ -171,7 +170,7 @@ export function ChannelPreview({ videoId, title, startedAtMs, serverNowMs, slug 
 
   const poster = videoId ? `https://img.youtube.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg` : null;
   return (
-    <div ref={rootRef} className={`rc-preview is-${state}`} aria-hidden="true" data-testid={`preview-channel-${slug}`} data-state={state} title={title ?? undefined}>
+    <div ref={rootRef} className={`rc-preview is-${state}`} aria-hidden="true" data-testid={`preview-channel-${slug}`} data-state={state}>
       {poster && state !== 'playing' && <img className="rc-preview-poster" src={poster} alt="" loading="lazy" />}
       <div ref={hostRef} className="rc-preview-player" />
     </div>
