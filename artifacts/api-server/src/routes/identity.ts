@@ -19,6 +19,7 @@ import { universityAudioBeamStore } from "../lib/university-audio-beam";
 import { coloredEmoji, emojiCatalog } from "../lib/emoji-library";
 import { claimRoomEntranceEffect } from "../lib/room-entrance-effects";
 import { accountEntranceEffectSelection } from "../lib/social/entrance-effect-preferences";
+import { normalizeAccountRoomTitle } from "../lib/account-room-title";
 
 const router: IRouter = Router();
 router.get("/emojis", (_req, res): void => {
@@ -71,15 +72,14 @@ router.post("/account/rooms", async (req, res) => {
   sameOrigin(req);
   const id = accountId(req);
   const profile = await requireCompletedProfile(id);
-  let name = `${(profile.displayName ?? profile.username).trim().slice(0, 25)}'s Room`;
-  if (req.body && Object.keys(req.body).length > 0) {
-    const body = CreateAccountRoomBody.safeParse(req.body);
-    if (!body.success || body.data.capacity !== 9) {
-      throw new RoomError(400, "Choose a room name and the nine-seat layout.");
-    }
-    name = body.data.name.trim();
+  const body = CreateAccountRoomBody.safeParse(req.body);
+  if (!body.success) {
+    throw new RoomError(400, "Enter a one-word room name. Ave is added automatically.");
   }
-  if (name.length < 2 || name.length > 32) throw new RoomError(400, "Room names must be 2 to 32 characters.");
+  if (body.data.capacity !== 9) throw new RoomError(400, "Created rooms use the nine-seat layout.");
+  const title = normalizeAccountRoomTitle(body.data.name);
+  if (!title.ok) throw new RoomError(400, title.message);
+  const name = title.name;
   const access = await accessFor(id);
   const nameColors = await nameColorProfilesForAccounts([id]);
 

@@ -1166,7 +1166,7 @@ paths:
       tags: [identity, rooms]
       security: [{ AccountSession: [] }]
       requestBody:
-        required: false
+        required: true
         content:
           application/json:
             schema: { $ref: "#/components/schemas/AccountRoomInput" }
@@ -1910,7 +1910,7 @@ components:
     AccountRoomInput:
       type: object
       properties:
-        name: { type: string, minLength: 2, maxLength: 32 }
+        name: { type: string, minLength: 1, maxLength: 64 }
         capacity: { type: integer, enum: [2, 4, 9, 12] }
       required: [name, capacity]
     ChatInput:

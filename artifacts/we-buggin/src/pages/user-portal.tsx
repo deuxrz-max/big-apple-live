@@ -30,6 +30,7 @@ export default function UserPortal({ userId }: { userId: string }) {
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
   const [code, setCode] = useState('');
+  const [roomTitle, setRoomTitle] = useState('');
   const save = useSaveMyProfile();
   const create = useCreateAccountRoom();
   const join = useJoinAccountRoom();
@@ -68,6 +69,10 @@ export default function UserPortal({ userId }: { userId: string }) {
       : errMessage(save.error)
     : null;
   const roomErr = create.error ?? join.error;
+  const trimmedRoomTitle = roomTitle.trim();
+  const roomTitleHasWhitespace = /\s/u.test(trimmedRoomTitle);
+  const roomTitleIsTooLong = trimmedRoomTitle.length > 32;
+  const roomTitleIsValid = trimmedRoomTitle.length > 0 && !roomTitleHasWhitespace && !roomTitleIsTooLong;
 
   return (
     <div className="min-h-[100dvh]">
@@ -134,13 +139,25 @@ export default function UserPortal({ userId }: { userId: string }) {
             )}
 
             <section className="grid gap-5 md:grid-cols-2" aria-label="Rooms">
-              <div className="sticker bg-primary/15 p-5">
+              <form className="sticker bg-primary/15 p-5" onSubmit={(event) => {
+                event.preventDefault();
+                if (roomTitleIsValid) {
+                  create.mutate({ data: { name: trimmedRoomTitle, capacity: 9 } }, { onSuccess: enter });
+                }
+              }}>
                 <h2 className="font-display text-3xl font-extrabold">Start a room</h2>
-                <p className="mt-1 text-sm">You get a room code to share with friends.</p>
-                <button type="button" className="btn btn-pink mt-4" disabled={!profile || create.isPending} onClick={() => create.mutate({}, { onSuccess: enter })} data-testid="button-create-room">
+                <p className="mt-1 text-sm">Choose a one-word name. “Ave” is added automatically on the room sign.</p>
+                <label htmlFor="portal-room-title" className="label-mono mt-3 block">Room name</label>
+                <input id="portal-room-title" className="field mt-1" value={roomTitle}
+                  onChange={event => setRoomTitle(event.target.value)} maxLength={64}
+                  autoComplete="off" spellCheck={false} placeholder="For example, Gold"
+                  aria-invalid={roomTitleHasWhitespace || roomTitleIsTooLong} data-testid="input-portal-room-title" />
+                {roomTitleHasWhitespace && <p className="mt-1 text-sm font-bold text-destructive" role="alert">Use one word only. Ave is added automatically.</p>}
+                {roomTitleIsTooLong && <p className="mt-1 text-sm font-bold text-destructive" role="alert">Room names must be 32 characters or fewer.</p>}
+                <button type="submit" className="btn btn-pink mt-4" disabled={!profile || !roomTitleIsValid || create.isPending} data-testid="button-create-room">
                   {create.isPending ? 'Opening...' : 'Create room'}
                 </button>
-              </div>
+              </form>
               <form
                 className="sticker bg-accent/25 p-5"
                 onSubmit={(e) => { e.preventDefault(); if (code.trim()) join.mutate({ roomId: code.trim() }, { onSuccess: enter }); }}

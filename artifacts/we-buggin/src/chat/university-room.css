@@ -105,6 +105,8 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 .ch.ur .ur-in{background:#111216}
 .ch.ur .ch-room{display:flex;flex-direction:column;gap:8px;overflow:hidden}
 .ur-beam{box-sizing:border-box;position:relative;flex:0 0 50%;min-height:0;padding:0;border:0;border-radius:0;background:transparent;display:flex;flex-direction:column;gap:4px}
+.ur-social-room-sign{flex:0 0 auto;width:min(100%,420px);height:auto;margin:0 auto;padding:0;line-height:0}
+.ur-social-room-sign .rc-channel-sign{width:100%;height:auto;display:block}
 .ur-audio-status-row{flex:0 0 auto;min-height:22px;display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}
 .ur-audio-status{position:static;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;color:#c2c3cb;font-size:10px;font-weight:700}
 .ur-mic-lock-indicator{display:inline-flex;align-items:center;gap:4px;margin-left:auto;color:#e3d5f6;font-size:9px;font-weight:700;white-space:nowrap}

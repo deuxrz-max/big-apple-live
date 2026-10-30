@@ -8459,7 +8459,7 @@ export const getCreateAccountRoomUrl = () => {
   return `/api/account/rooms`
 }
 
-export const createAccountRoom = async (accountRoomInput?: AccountRoomInput, options?: Parameters<typeof customFetch>[1]): Promise<RoomSession> => {
+export const createAccountRoom = async (accountRoomInput: AccountRoomInput, options?: Parameters<typeof customFetch>[1]): Promise<RoomSession> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -8518,9 +8518,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type CreateAccountRoomMutationResult = NonNullable<Awaited<ReturnType<typeof createAccountRoom>>>
-    export type CreateAccountRoomMutationBody = BodyType<AccountRoomInput> | undefined
+    export type CreateAccountRoomMutationBody = BodyType<AccountRoomInput>
     export type CreateAccountRoomMutationError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>
-    export type CreateAccountRoomMutationVariables = {data?: BodyType<AccountRoomInput>}
+    export type CreateAccountRoomMutationVariables = {data: BodyType<AccountRoomInput>}
 
     export const useCreateAccountRoom = <TError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAccountRoom>>, TError,CreateAccountRoomMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}

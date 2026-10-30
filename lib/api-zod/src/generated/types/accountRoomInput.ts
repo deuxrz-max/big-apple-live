@@ -9,8 +9,8 @@ import type { AccountRoomInputCapacity } from './accountRoomInputCapacity';
 
 export interface AccountRoomInput {
   /**
-     * @minLength 2
-     * @maxLength 32
+     * @minLength 1
+     * @maxLength 64
      */
   name: string;
   capacity: AccountRoomInputCapacity;

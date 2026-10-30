@@ -873,11 +873,15 @@ export function GoLiveButton({ className, children }: { className: string; child
   const createRoom = useCreateAccountRoom();
   const createChess = useCreateChessRoom();
   const [choiceOpen, setChoiceOpen] = useState(false);
+  const [roomTitle, setRoomTitle] = useState("");
+  const [roomTitleAttempted, setRoomTitleAttempted] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
   const dialog = useRef<HTMLDivElement>(null);
   const username = me.data?.profile?.username ?? "";
-  const displayName = me.data?.profile?.displayName?.trim() || username || "Big Apple Live";
-  const roomName = `${Array.from(displayName).slice(0, 25).join("").trimEnd()}'s Room`;
+  const trimmedRoomTitle = roomTitle.trim();
+  const roomTitleHasWhitespace = /\s/u.test(trimmedRoomTitle);
+  const roomTitleIsTooLong = trimmedRoomTitle.length > 32;
+  const roomTitleIsValid = trimmedRoomTitle.length > 0 && !roomTitleHasWhitespace && !roomTitleIsTooLong;
 
   useEffect(() => {
     if (!choiceOpen) return;
@@ -901,7 +905,11 @@ export function GoLiveButton({ className, children }: { className: string; child
   };
   const createSocialRoom = () => {
     if (!username || !user?.id || createRoom.isPending) return;
-    createRoom.mutate({ data: { name: roomName, capacity: 9 } }, {
+    if (!roomTitleIsValid) {
+      setRoomTitleAttempted(true);
+      return;
+    }
+    createRoom.mutate({ data: { name: trimmedRoomTitle, capacity: 9 } }, {
       onSuccess: (session: RoomSession) => {
         saveCreds(user.id, session.room.roomId, {
           participantSessionId: session.participantSessionId,
@@ -926,7 +934,13 @@ export function GoLiveButton({ className, children }: { className: string; child
 
   return <>
     <button ref={trigger} type="button" className={className} aria-haspopup="dialog"
-      aria-expanded={choiceOpen} onClick={() => { createRoom.reset(); createChess.reset(); setChoiceOpen(true); }}>
+      aria-expanded={choiceOpen} onClick={() => {
+        createRoom.reset();
+        createChess.reset();
+        setRoomTitle("");
+        setRoomTitleAttempted(false);
+        setChoiceOpen(true);
+      }}>
       {children}
     </button>
     {choiceOpen && <div className="st-room-choice-scrim" onMouseDown={(event) => {
@@ -942,12 +956,34 @@ export function GoLiveButton({ className, children }: { className: string; child
           <span className="st-room-choice-icon"><Video size={22} /></span>
           <span><strong>Go Live</strong><small>Start your full-screen video broadcast.</small></span>
         </button>
-        <button type="button" className="st-room-choice-option" onClick={createSocialRoom}
-          disabled={!username || !user?.id || createRoom.isPending} data-testid="button-create-social-room">
-          <span className="st-room-choice-icon"><Users size={22} /></span>
-          <span><strong>{createRoom.isPending ? "Creating room…" : "Create Room"}</strong>
-            <small>Open a nine-seat social room with chat and gifts.</small></span>
-        </button>
+        <form className="st-room-choice-room-form" onSubmit={event => {
+          event.preventDefault();
+          createSocialRoom();
+        }}>
+          <label htmlFor="st-created-room-title">One-word room name</label>
+          <input id="st-created-room-title" type="text" value={roomTitle}
+            onChange={event => setRoomTitle(event.target.value)} maxLength={64}
+            autoComplete="off" spellCheck={false} aria-invalid={roomTitleHasWhitespace
+              || roomTitleIsTooLong || (roomTitleAttempted && !trimmedRoomTitle)} data-testid="input-created-room-title"
+            placeholder="For example, Gold" />
+          <small className="st-room-title-hint">The sign will add “Ave” automatically.</small>
+          {(roomTitleHasWhitespace || roomTitleIsTooLong || (roomTitleAttempted && !trimmedRoomTitle)) && (
+            <p className="st-room-choice-error" role="alert">
+              {roomTitleHasWhitespace
+                ? "Use one word only. Ave is added automatically."
+                : roomTitleIsTooLong
+                  ? "Room names must be 32 characters or fewer."
+                  : "Enter a room name. Ave is added automatically."}
+            </p>
+          )}
+          <button type="submit" className="st-room-choice-option"
+            disabled={!username || !user?.id || createRoom.isPending}
+            data-testid="button-create-social-room">
+            <span className="st-room-choice-icon"><Users size={22} /></span>
+            <span><strong>{createRoom.isPending ? "Creating room…" : "Create Room"}</strong>
+              <small>Open a nine-seat social room with chat and gifts.</small></span>
+          </button>
+        </form>
         <button type="button" className="st-room-choice-option" onClick={createChessGame}
           disabled={!username || createChess.isPending} data-testid="button-create-chess-room">
           <span className="st-room-choice-icon"><Crown size={22} /></span>

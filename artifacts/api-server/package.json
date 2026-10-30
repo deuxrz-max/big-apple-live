@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:account-room-title": "esbuild src/lib/account-room-title.test.ts --bundle --platform=node --format=esm --outfile=.tests/account-room-title.test.mjs && node --test .tests/account-room-title.test.mjs",
     "test:marathon": "esbuild src/lib/social/marathon.test.ts --bundle --platform=node --format=esm --banner:js=\"import { createRequire as createTestRequire } from 'node:module'; const require = createTestRequire(import.meta.url);\" --outfile=.tests/marathon.test.mjs && node --test .tests/marathon.test.mjs",
     "test:spirit-pup": "esbuild src/lib/social/spirit-pup.test.ts --bundle --platform=node --format=esm --external:sharp --external:pino --banner:js=\"import { createRequire as cr } from 'node:module'; const require = cr(import.meta.url);\" --outfile=.tests/spirit-pup.test.mjs && node --test .tests/spirit-pup.test.mjs",
     "test:gifting-levels": "esbuild src/lib/social/gift-name-color.test.ts src/lib/social/gifting-level-ledger.test.ts src/lib/social/gifter-send.integration.test.ts --bundle --platform=node --format=esm --external:pino --external:sharp --external:@google-cloud/storage --banner:js=\"import { createRequire as cr } from 'node:module'; const require=cr(import.meta.url);\" --outdir=.tests/gifter-levels --out-extension:.js=.mjs && NODE_ENV=development node --test .tests/gifter-levels/*.mjs",

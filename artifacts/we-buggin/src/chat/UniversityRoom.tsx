@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { Clapperboard, LogOut, Mic, MicOff, Send, X } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { RoomChannelBack } from './RoomChannels';
+import { WeatheredStreetSign } from './WeatheredStreetSign';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getGetMyProfileQueryKey, getGetUniversitySessionQueryKey, useAcknowledgeUniversityRules, useGetUniversitySession,
@@ -144,6 +145,8 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const handledCoinDrops = useRef(new Set<string>());
   const isComedyRoom = roomId.toUpperCase() === 'COMEDY';
   const isSocialRoom = r.room?.roomType === 'social';
+  const roomDisplayName = r.room?.name?.trim() ?? '';
+  const hasCreatedStreetSign = isSocialRoom && !!roomDisplayName && !/\s/u.test(roomDisplayName);
 
   useEffect(() => {
     if (!isSocialRoom || !menu?.participantId || !sessionId) {
@@ -490,7 +493,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
         <RoomChannelBack roomId={roomId} />
         <div className="ur-head">
           <button type="button" ref={peopleBtn} className="bm-btn bm-btn-sm ur-people-btn" aria-haspopup="dialog" aria-expanded={drawer} onClick={() => setDrawer(true)} data-testid="button-people">People · {people.length}</button>
-          <div className="ur-titlebox">
+          {(!isSocialRoom || !hasCreatedStreetSign) && <div className="ur-titlebox">
             <h1 className="ch-title ur-title" aria-label={r.room?.name ?? 'Room'} data-testid="text-university-name">
               {isComedyRoom && <span className="ur-comedy-room-icon" aria-hidden="true">🎭</span>}
               {(r.room?.name ?? 'Room').split(/\s+/).map((w, i) => (
@@ -503,7 +506,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
               </p>
             )}
             {session?.topic && <p className="ur-topic" title={session.topic} data-testid="text-topic">{session.topic}</p>}
-          </div>
+          </div>}
           <button type="button" className="bm-btn bm-btn-sm ur-rules-btn" onClick={() => setRulesOpen(true)} data-testid="button-rules">Rules</button>
         </div>
         {r.error && <div className="ch-err" role="alert">{r.error} <Link href="/user-portal" className="bm-link">Profile</Link></div>}
@@ -543,6 +546,15 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
               {videoBeam.error && <p className="ur-beam-error" role="alert">{videoBeam.error}</p>}
               {videoBeam.beam.beamActive && !videoBeam.ownSlot && beamSlots.every(slot => slot.participantId)
                 && <p className="ur-beam-full" role="status">Beam is full. You can still watch and chat; an open spot can be joined as soon as someone leaves.</p>}
+              {hasCreatedStreetSign && (
+                <h1 className="ur-social-room-sign" aria-label={`${roomDisplayName} Ave`} data-testid="text-created-room-street-sign">
+                  <WeatheredStreetSign
+                    label={`${roomDisplayName} Ave`}
+                    slug={`created-room-${roomId}`}
+                    testId="image-created-room-street-sign"
+                  />
+                </h1>
+              )}
                   <div className="ur-slots" data-count={speakerCount}
                     data-tv={!isSocialRoom && videoBeam.beam.tv.enabled ? 'on' : 'off'}>
                 {beamSeatLayout.map(({ slot, area, gridColumn, gridRow }) => {

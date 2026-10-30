@@ -4164,13 +4164,12 @@ export const ConnectChessAudioResponse = zod.object({
 })
 
 
-export const createAccountRoomBodyNameMin = 2;
-export const createAccountRoomBodyNameMax = 32;
+export const createAccountRoomBodyNameMax = 64;
 
 
 
 export const CreateAccountRoomBody = zod.object({
-  "name": zod.string().min(createAccountRoomBodyNameMin).max(createAccountRoomBodyNameMax),
+  "name": zod.string().min(1).max(createAccountRoomBodyNameMax),
   "capacity": zod.union([zod.literal(2),zod.literal(4),zod.literal(9),zod.literal(12)])
 })
 

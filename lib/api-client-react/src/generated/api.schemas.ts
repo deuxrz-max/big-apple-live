@@ -675,8 +675,8 @@ export const AccountRoomInputCapacity = {
 
 export interface AccountRoomInput {
   /**
-     * @minLength 2
-     * @maxLength 32
+     * @minLength 1
+     * @maxLength 64
      */
   name: string;
   capacity: AccountRoomInputCapacity;
@@ -2049,8 +2049,8 @@ export const AccountRoomInput4b96100Capacity = {
 
 export interface AccountRoomInput4b96100 {
   /**
-     * @minLength 2
-     * @maxLength 32
+     * @minLength 1
+     * @maxLength 64
      */
   name: string;
   capacity: AccountRoomInput4b96100Capacity;

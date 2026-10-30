@@ -152,7 +152,7 @@ test("real HTTP/DB/storage photo moderation and unlimited public rooms; syntheti
       "hidden room rows remain stored");
 
     const created = await request(owner, "/account/rooms", {
-      method: "POST", ...json({ name: `Safety Room ${suffix}`, capacity: 9 }),
+      method: "POST", ...json({ name: ` Safety${suffix} `, capacity: 9 }),
     });
     const createdPayload = await created.json();
     assert.equal(created.status, 201, JSON.stringify(createdPayload));
@@ -160,9 +160,22 @@ test("real HTTP/DB/storage photo moderation and unlimited public rooms; syntheti
     const roomId = ownerSession.room.roomId;
     createdRoomIds.push(roomId);
     assert.equal(ownerSession.room.roomType, "social");
+    assert.equal(ownerSession.room.name, `Safety${suffix}`, "surrounding whitespace is trimmed");
     assert.equal(ownerSession.room.hostParticipantId, ownerSession.participantId);
     assert.equal(roomStore.isCommunity(roomId), true);
     assert.equal(roomStore.publicCommunityRoomIds().includes(roomId), false);
+    for (const invalidName of ["Two Words", "Two\tWords", "Two\nWords"]) {
+      const rejected = await request(owner, "/account/rooms", {
+        method: "POST", ...json({ name: invalidName, capacity: 9 }),
+      });
+      assert.equal(rejected.status, 400, `multiword title rejected: ${JSON.stringify(invalidName)}`);
+      const rejectedPayload = await rejected.json() as { error?: string };
+      assert.match(rejectedPayload.error ?? "", /single word/i);
+    }
+    const missingName = await request(owner, "/account/rooms", { method: "POST" });
+    assert.equal(missingName.status, 400, "a room title is required");
+    const missingNamePayload = await missingName.json() as { error?: string };
+    assert.match(missingNamePayload.error ?? "", /one-word room name/i);
     const guestResponse = await request(viewer, `/account/rooms/${roomId}/join`, { method: "POST" });
     const guestPayload = await guestResponse.json();
     assert.equal(guestResponse.status, 201, JSON.stringify(guestPayload));
@@ -179,13 +192,6 @@ test("real HTTP/DB/storage photo moderation and unlimited public rooms; syntheti
       headers: { "X-Room-Session": guestSession.participantSessionId },
     })).json());
     assert.ok(guestHistory.some((message: { text: string }) => message.text === roomMessage));
-    const defaultRoom = await request(viewer, "/account/rooms", { method: "POST" });
-    const defaultPayload = await defaultRoom.json();
-    assert.equal(defaultRoom.status, 201, JSON.stringify(defaultPayload));
-    const defaultSession = CreateAccountRoomResponse.parse(defaultPayload);
-    createdRoomIds.push(defaultSession.room.roomId);
-    assert.equal(defaultSession.room.roomType, "social");
-    assert.equal(defaultSession.room.capacity, 0);
   });
   const sessions: { participantSessionId: string }[] = [];
   await t.test("audience beyond 24 stays in the same room with chat and moderation intact", async () => {
