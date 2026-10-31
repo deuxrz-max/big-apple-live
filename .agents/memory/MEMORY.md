@@ -51,3 +51,4 @@
 - [Gift panel design](gift-panel-design.md) — explicit rounding exception for the reference-style gift sheet; keep photo frames square and sending behavior unchanged.
 - [Room channel and reward scope](room-channel-scope.md) — direct-entry combined feeds; pink-card rewards replace Cauldron, with six daily draws and one winner per draw.
 - [NYC background loop seams](nyc-background-loop-seams.md) — shuffle all six original clips on Home with crossfaded boundaries; never use them as room backgrounds.
+- [Canceled GCS media requests](gcs-stream-cancellation.md) — keep pending GCS streams alive on browser disconnect; destroying them can crash outside Express.

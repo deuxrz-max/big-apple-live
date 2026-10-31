@@ -1,13 +1,14 @@
 import assert from "node:assert/strict";
 import { once } from "node:events";
-import { createServer, type AddressInfo } from "node:http";
+import { createServer, type RequestListener } from "node:http";
+import type { AddressInfo } from "node:net";
 import { Readable } from "node:stream";
 import { setTimeout as delay } from "node:timers/promises";
 import test from "node:test";
 import { streamGcsObject } from "./gcs-response-stream";
 
 async function withServer<T>(
-  handler: Parameters<typeof createServer>[0],
+  handler: RequestListener,
   run: (baseUrl: string) => Promise<T>,
 ): Promise<T> {
   const server = createServer(handler);
