@@ -7,12 +7,8 @@
  */
 
 export type GetRoomGiftEventsParams = {
-/**
- * Opaque cursor returned by the previous page
- */
-after?: string;
-/**
- * Return gift events from this time, in FIFO pages
- */
-since?: Date;
+  /** Opaque cursor returned by the previous page */
+  after?: string;
+  /** Return gift events from this time, in FIFO pages */
+  since?: Date;
 };

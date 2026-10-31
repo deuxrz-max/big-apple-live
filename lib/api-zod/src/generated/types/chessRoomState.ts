@@ -19,7 +19,9 @@ export interface ChessRoomState {
   status: ChessRoomStateStatus;
   revision: number;
   yourColor: ChessRoomStateYourColor;
+  /** @nullable */
   rematchRequestedBy: string | null;
+  /** @nullable */
   result: string | null;
   inCheck?: boolean;
   legalMoves: ChessRoomStateLegalMovesItem[];

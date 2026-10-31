@@ -5,8 +5,8 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { EmojiIdentity4b96100 } from './emojiIdentity4b96100';
-import type { PhotoReviewStatus4b96100 } from './photoReviewStatus4b96100';
+import type { EmojiIdentity } from './emojiIdentity';
+import type { PhotoReviewStatus } from './photoReviewStatus';
 import type { SocialPersonBadgesItem } from './socialPersonBadgesItem';
 import type { SocialPersonExternalPlatform } from './socialPersonExternalPlatform';
 import type { StreamerPassportBadgeSummary } from './streamerPassportBadgeSummary';
@@ -39,8 +39,8 @@ export interface SocialPerson {
   photoUrl?: string | null;
   /** @maxItems 4 */
   photoUrls?: string[];
-  photoReviews?: PhotoReviewStatus4b96100[];
-  identity: EmojiIdentity4b96100;
+  photoReviews?: PhotoReviewStatus[];
+  identity: EmojiIdentity;
   bio: string;
   country: string | null;
   interests: string[];

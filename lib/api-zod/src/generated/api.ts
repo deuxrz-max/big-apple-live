@@ -48,7 +48,7 @@ export const getModeratorBotSettingsResponseBreakSecondsMax = 600;
 
 export const GetModeratorBotSettingsResponse = zod.object({
   "bannedWords": zod.array(zod.string().min(getModeratorBotSettingsResponseBannedWordsItemMin).max(getModeratorBotSettingsResponseBannedWordsItemMax)).max(getModeratorBotSettingsResponseBannedWordsMax),
-  "breakSeconds": zod.number().int().min(getModeratorBotSettingsResponseBreakSecondsMin).max(getModeratorBotSettingsResponseBreakSecondsMax)
+  "breakSeconds": zod.int().min(getModeratorBotSettingsResponseBreakSecondsMin).max(getModeratorBotSettingsResponseBreakSecondsMax)
 })
 
 
@@ -64,7 +64,7 @@ export const saveModeratorBotSettingsBodyBreakSecondsMax = 600;
 
 export const SaveModeratorBotSettingsBody = zod.object({
   "bannedWords": zod.array(zod.string().min(saveModeratorBotSettingsBodyBannedWordsItemMin).max(saveModeratorBotSettingsBodyBannedWordsItemMax)).max(saveModeratorBotSettingsBodyBannedWordsMax),
-  "breakSeconds": zod.number().int().min(saveModeratorBotSettingsBodyBreakSecondsMin).max(saveModeratorBotSettingsBodyBreakSecondsMax)
+  "breakSeconds": zod.int().min(saveModeratorBotSettingsBodyBreakSecondsMin).max(saveModeratorBotSettingsBodyBreakSecondsMax)
 })
 
 export const saveModeratorBotSettingsResponseBannedWordsItemMin = 2;
@@ -79,7 +79,7 @@ export const saveModeratorBotSettingsResponseBreakSecondsMax = 600;
 
 export const SaveModeratorBotSettingsResponse = zod.object({
   "bannedWords": zod.array(zod.string().min(saveModeratorBotSettingsResponseBannedWordsItemMin).max(saveModeratorBotSettingsResponseBannedWordsItemMax)).max(saveModeratorBotSettingsResponseBannedWordsMax),
-  "breakSeconds": zod.number().int().min(saveModeratorBotSettingsResponseBreakSecondsMin).max(saveModeratorBotSettingsResponseBreakSecondsMax)
+  "breakSeconds": zod.int().min(saveModeratorBotSettingsResponseBreakSecondsMin).max(saveModeratorBotSettingsResponseBreakSecondsMax)
 })
 
 
@@ -167,14 +167,14 @@ export const getModeratorBotFlagsResponseDisplayNameTierIndexMax = 100;
 
 
 export const GetModeratorBotFlagsResponseItem = zod.object({
-  "id": zod.string().uuid(),
-  "messageId": zod.string().uuid(),
+  "id": zod.uuid(),
+  "messageId": zod.uuid(),
   "roomId": zod.string(),
   "roomLabel": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
   "displayNameColor": zod.string().regex(getModeratorBotFlagsResponseDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(getModeratorBotFlagsResponseDisplayNameTierIndexMin).max(getModeratorBotFlagsResponseDisplayNameTierIndexMax).optional(),
+  "displayNameTierIndex": zod.int().min(getModeratorBotFlagsResponseDisplayNameTierIndexMin).max(getModeratorBotFlagsResponseDisplayNameTierIndexMax).optional(),
   "text": zod.string(),
   "reason": zod.string(),
   "createdAt": zod.coerce.date(),
@@ -184,7 +184,7 @@ export const GetModeratorBotFlagsResponse = zod.array(GetModeratorBotFlagsRespon
 
 
 export const AcknowledgeModeratorBotFlagParams = zod.object({
-  "flagId": zod.coerce.string().uuid()
+  "flagId": zod.uuid()
 })
 
 export const acknowledgeModeratorBotFlagResponseDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -194,14 +194,14 @@ export const acknowledgeModeratorBotFlagResponseDisplayNameTierIndexMax = 100;
 
 
 export const AcknowledgeModeratorBotFlagResponse = zod.object({
-  "id": zod.string().uuid(),
-  "messageId": zod.string().uuid(),
+  "id": zod.uuid(),
+  "messageId": zod.uuid(),
   "roomId": zod.string(),
   "roomLabel": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
   "displayNameColor": zod.string().regex(acknowledgeModeratorBotFlagResponseDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(acknowledgeModeratorBotFlagResponseDisplayNameTierIndexMin).max(acknowledgeModeratorBotFlagResponseDisplayNameTierIndexMax).optional(),
+  "displayNameTierIndex": zod.int().min(acknowledgeModeratorBotFlagResponseDisplayNameTierIndexMin).max(acknowledgeModeratorBotFlagResponseDisplayNameTierIndexMax).optional(),
   "text": zod.string(),
   "reason": zod.string(),
   "createdAt": zod.coerce.date(),
@@ -237,10 +237,10 @@ export const GetFavoritesGalleryResponseItem = zod.object({
   "username": zod.string(),
   "displayName": zod.string().optional(),
   "displayNameColor": zod.string().regex(getFavoritesGalleryResponsePersonDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(getFavoritesGalleryResponsePersonDisplayNameTierIndexMin).max(getFavoritesGalleryResponsePersonDisplayNameTierIndexMax).optional(),
-  "followerCount": zod.number().int().min(getFavoritesGalleryResponsePersonFollowerCountMin).optional(),
-  "followingCount": zod.number().int().min(getFavoritesGalleryResponsePersonFollowingCountMin).optional(),
-  "sentCredits": zod.number().int().min(getFavoritesGalleryResponsePersonSentCreditsMin).optional(),
+  "displayNameTierIndex": zod.int().min(getFavoritesGalleryResponsePersonDisplayNameTierIndexMin).max(getFavoritesGalleryResponsePersonDisplayNameTierIndexMax).optional(),
+  "followerCount": zod.int().min(getFavoritesGalleryResponsePersonFollowerCountMin).optional(),
+  "followingCount": zod.int().min(getFavoritesGalleryResponsePersonFollowingCountMin).optional(),
+  "sentCredits": zod.int().min(getFavoritesGalleryResponsePersonSentCreditsMin).optional(),
   "badges": zod.array(zod.object({
   "id": zod.string(),
   "earnedAt": zod.coerce.date()
@@ -265,7 +265,7 @@ export const GetFavoritesGalleryResponseItem = zod.object({
   "discoverable": zod.boolean(),
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
-  "receivedCredits": zod.number().int(),
+  "receivedCredits": zod.int(),
   "badgeId": zod.union([zod.string(),zod.null()]),
   "badgeName": zod.string().nullable(),
   "badgeImage": zod.string().nullable(),
@@ -329,7 +329,7 @@ export const GetUniversitySessionResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "displayNameColor": zod.string().regex(getUniversitySessionResponsePeopleItemDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(getUniversitySessionResponsePeopleItemDisplayNameTierIndexMin).max(getUniversitySessionResponsePeopleItemDisplayNameTierIndexMax).optional(),
+  "displayNameTierIndex": zod.int().min(getUniversitySessionResponsePeopleItemDisplayNameTierIndexMin).max(getUniversitySessionResponsePeopleItemDisplayNameTierIndexMax).optional(),
   "passport": zod.object({
   "platforms": zod.array(zod.object({
   "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
@@ -362,7 +362,7 @@ export const GetUniversitySessionResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "displayNameColor": zod.string().regex(getUniversitySessionResponseWhispersItemDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(getUniversitySessionResponseWhispersItemDisplayNameTierIndexMin).max(getUniversitySessionResponseWhispersItemDisplayNameTierIndexMax).optional(),
+  "displayNameTierIndex": zod.int().min(getUniversitySessionResponseWhispersItemDisplayNameTierIndexMin).max(getUniversitySessionResponseWhispersItemDisplayNameTierIndexMax).optional(),
   "badgeId": zod.string().nullable(),
   "badgeName": zod.string().nullish(),
   "badgeImage": zod.string().nullish(),
@@ -393,7 +393,7 @@ export const GetUniversityAudioStateParams = zod.object({
 })
 
 export const GetUniversityAudioStateHeader = zod.object({
-  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+  "X-Room-Session": zod.uuid().describe('Private participant session; must belong to the authenticated account in this room')
 })
 
 export const getUniversityAudioStateResponseSlotsItemSlotNumberMax = 4;
@@ -406,10 +406,10 @@ export const getUniversityAudioStateResponseSlotsMax = 4;
 export const GetUniversityAudioStateResponse = zod.object({
   "roomId": zod.string(),
   "beamActive": zod.boolean(),
-  "hostParticipantId": zod.string().uuid().nullable(),
+  "hostParticipantId": zod.uuid().nullable(),
   "slots": zod.array(zod.object({
-  "slotNumber": zod.number().int().min(1).max(getUniversityAudioStateResponseSlotsItemSlotNumberMax),
-  "participantId": zod.string().uuid().nullable(),
+  "slotNumber": zod.int().min(1).max(getUniversityAudioStateResponseSlotsItemSlotNumberMax),
+  "participantId": zod.uuid().nullable(),
   "micEnabled": zod.boolean(),
   "mutedByHost": zod.boolean()
 })).min(getUniversityAudioStateResponseSlotsMin).max(getUniversityAudioStateResponseSlotsMax)
@@ -427,7 +427,7 @@ export const GetUniversityVideoBeamStateParams = zod.object({
 })
 
 export const GetUniversityVideoBeamStateHeader = zod.object({
-  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+  "X-Room-Session": zod.uuid().describe('Private participant session; must belong to the authenticated account in this room')
 })
 
 export const getUniversityVideoBeamStateResponseTvDefaultSearchMax = 120;
@@ -470,7 +470,7 @@ export const getUniversityVideoBeamStateResponseSlotsMax = 9;
 export const GetUniversityVideoBeamStateResponse = zod.object({
   "roomId": zod.string(),
   "beamActive": zod.boolean(),
-  "hostParticipantId": zod.string().uuid().nullable(),
+  "hostParticipantId": zod.uuid().nullable(),
   "tv": zod.object({
   "enabled": zod.boolean(),
   "searchAvailable": zod.boolean(),
@@ -486,22 +486,22 @@ export const GetUniversityVideoBeamStateResponse = zod.object({
   "description": zod.string().max(getUniversityVideoBeamStateResponseTvVideoMetadataItemDescriptionMax).nullable()
 })).max(getUniversityVideoBeamStateResponseTvVideoMetadataMax),
   "currentVideoId": zod.string().regex(getUniversityVideoBeamStateResponseTvCurrentVideoIdRegExp).nullable(),
-  "startedAtMs": zod.number().int().min(getUniversityVideoBeamStateResponseTvStartedAtMsMin).nullable(),
-  "breakEndsAtMs": zod.number().int().min(getUniversityVideoBeamStateResponseTvBreakEndsAtMsMin).nullable(),
-  "serverNowMs": zod.number().int().min(getUniversityVideoBeamStateResponseTvServerNowMsMin),
+  "startedAtMs": zod.int().min(getUniversityVideoBeamStateResponseTvStartedAtMsMin).nullable(),
+  "breakEndsAtMs": zod.int().min(getUniversityVideoBeamStateResponseTvBreakEndsAtMsMin).nullable(),
+  "serverNowMs": zod.int().min(getUniversityVideoBeamStateResponseTvServerNowMsMin),
   "micLockedDuringVideo": zod.boolean(),
   "skipVotingEnabled": zod.boolean(),
-  "skipVoteCount": zod.number().int().min(getUniversityVideoBeamStateResponseTvSkipVoteCountMin),
-  "skipVoteTotal": zod.number().int().min(getUniversityVideoBeamStateResponseTvSkipVoteTotalMin),
+  "skipVoteCount": zod.int().min(getUniversityVideoBeamStateResponseTvSkipVoteCountMin),
+  "skipVoteTotal": zod.int().min(getUniversityVideoBeamStateResponseTvSkipVoteTotalMin),
   "hasVotedToSkip": zod.boolean(),
-  "skipSequence": zod.number().int().min(getUniversityVideoBeamStateResponseTvSkipSequenceMin),
+  "skipSequence": zod.int().min(getUniversityVideoBeamStateResponseTvSkipSequenceMin),
   "seriesTitle": zod.string().max(getUniversityVideoBeamStateResponseTvSeriesTitleMax).nullable(),
   "seriesDate": zod.coerce.date().nullable(),
-  "seriesEpisodeNumber": zod.number().int().min(1).nullable()
+  "seriesEpisodeNumber": zod.int().min(1).nullable()
 }),
   "slots": zod.array(zod.object({
-  "slotNumber": zod.number().int().min(1).max(getUniversityVideoBeamStateResponseSlotsItemSlotNumberMax),
-  "participantId": zod.string().uuid().nullable(),
+  "slotNumber": zod.int().min(1).max(getUniversityVideoBeamStateResponseSlotsItemSlotNumberMax),
+  "participantId": zod.uuid().nullable(),
   "micMuted": zod.boolean(),
   "cameraOff": zod.boolean(),
   "mutedByHost": zod.boolean(),
@@ -521,7 +521,7 @@ export const GetUniversityVideoBeamTokenParams = zod.object({
 })
 
 export const GetUniversityVideoBeamTokenHeader = zod.object({
-  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+  "X-Room-Session": zod.uuid().describe('Private participant session; must belong to the authenticated account in this room')
 })
 
 export const GetUniversityVideoBeamTokenBody = zod.object({
@@ -533,10 +533,10 @@ export const getUniversityVideoBeamTokenResponseSlotNumberMax = 9;
 
 
 export const GetUniversityVideoBeamTokenResponse = zod.object({
-  "url": zod.string().url(),
+  "url": zod.url(),
   "token": zod.string(),
   "role": zod.enum(['audience', 'speaker']),
-  "slotNumber": zod.number().int().min(1).max(getUniversityVideoBeamTokenResponseSlotNumberMax).nullable()
+  "slotNumber": zod.int().min(1).max(getUniversityVideoBeamTokenResponseSlotNumberMax).nullable()
 })
 
 
@@ -551,7 +551,7 @@ export const PerformUniversityVideoBeamActionParams = zod.object({
 })
 
 export const PerformUniversityVideoBeamActionHeader = zod.object({
-  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+  "X-Room-Session": zod.uuid().describe('Private participant session; must belong to the authenticated account in this room')
 })
 
 export const performUniversityVideoBeamActionBodyTargetSlotNumberMax = 9;
@@ -561,8 +561,8 @@ export const performUniversityVideoBeamActionBodyTargetSlotNumberMax = 9;
 export const PerformUniversityVideoBeamActionBody = zod.object({
   "action": zod.enum(['reserve-slot', 'speaker-connected', 'leave-slot', 'move-slot', 'set-self-mic', 'host-mute-mic', 'kick']),
   "enabled": zod.boolean().optional(),
-  "targetParticipantId": zod.string().uuid().optional(),
-  "targetSlotNumber": zod.number().int().min(1).max(performUniversityVideoBeamActionBodyTargetSlotNumberMax).optional()
+  "targetParticipantId": zod.uuid().optional(),
+  "targetSlotNumber": zod.int().min(1).max(performUniversityVideoBeamActionBodyTargetSlotNumberMax).optional()
 })
 
 export const performUniversityVideoBeamActionResponseTvDefaultSearchMax = 120;
@@ -605,7 +605,7 @@ export const performUniversityVideoBeamActionResponseSlotsMax = 9;
 export const PerformUniversityVideoBeamActionResponse = zod.object({
   "roomId": zod.string(),
   "beamActive": zod.boolean(),
-  "hostParticipantId": zod.string().uuid().nullable(),
+  "hostParticipantId": zod.uuid().nullable(),
   "tv": zod.object({
   "enabled": zod.boolean(),
   "searchAvailable": zod.boolean(),
@@ -621,22 +621,22 @@ export const PerformUniversityVideoBeamActionResponse = zod.object({
   "description": zod.string().max(performUniversityVideoBeamActionResponseTvVideoMetadataItemDescriptionMax).nullable()
 })).max(performUniversityVideoBeamActionResponseTvVideoMetadataMax),
   "currentVideoId": zod.string().regex(performUniversityVideoBeamActionResponseTvCurrentVideoIdRegExp).nullable(),
-  "startedAtMs": zod.number().int().min(performUniversityVideoBeamActionResponseTvStartedAtMsMin).nullable(),
-  "breakEndsAtMs": zod.number().int().min(performUniversityVideoBeamActionResponseTvBreakEndsAtMsMin).nullable(),
-  "serverNowMs": zod.number().int().min(performUniversityVideoBeamActionResponseTvServerNowMsMin),
+  "startedAtMs": zod.int().min(performUniversityVideoBeamActionResponseTvStartedAtMsMin).nullable(),
+  "breakEndsAtMs": zod.int().min(performUniversityVideoBeamActionResponseTvBreakEndsAtMsMin).nullable(),
+  "serverNowMs": zod.int().min(performUniversityVideoBeamActionResponseTvServerNowMsMin),
   "micLockedDuringVideo": zod.boolean(),
   "skipVotingEnabled": zod.boolean(),
-  "skipVoteCount": zod.number().int().min(performUniversityVideoBeamActionResponseTvSkipVoteCountMin),
-  "skipVoteTotal": zod.number().int().min(performUniversityVideoBeamActionResponseTvSkipVoteTotalMin),
+  "skipVoteCount": zod.int().min(performUniversityVideoBeamActionResponseTvSkipVoteCountMin),
+  "skipVoteTotal": zod.int().min(performUniversityVideoBeamActionResponseTvSkipVoteTotalMin),
   "hasVotedToSkip": zod.boolean(),
-  "skipSequence": zod.number().int().min(performUniversityVideoBeamActionResponseTvSkipSequenceMin),
+  "skipSequence": zod.int().min(performUniversityVideoBeamActionResponseTvSkipSequenceMin),
   "seriesTitle": zod.string().max(performUniversityVideoBeamActionResponseTvSeriesTitleMax).nullable(),
   "seriesDate": zod.coerce.date().nullable(),
-  "seriesEpisodeNumber": zod.number().int().min(1).nullable()
+  "seriesEpisodeNumber": zod.int().min(1).nullable()
 }),
   "slots": zod.array(zod.object({
-  "slotNumber": zod.number().int().min(1).max(performUniversityVideoBeamActionResponseSlotsItemSlotNumberMax),
-  "participantId": zod.string().uuid().nullable(),
+  "slotNumber": zod.int().min(1).max(performUniversityVideoBeamActionResponseSlotsItemSlotNumberMax),
+  "participantId": zod.uuid().nullable(),
   "micMuted": zod.boolean(),
   "cameraOff": zod.boolean(),
   "mutedByHost": zod.boolean(),
@@ -667,8 +667,8 @@ export const GetLiveStreamsResponse = zod.object({
   "displayName": zod.string().max(getLiveStreamsResponseStreamsItemDisplayNameMax),
   "username": zod.string().max(getLiveStreamsResponseStreamsItemUsernameMax),
   "displayNameColor": zod.string().regex(getLiveStreamsResponseStreamsItemDisplayNameColorRegExp),
-  "displayNameTierIndex": zod.number().int().min(getLiveStreamsResponseStreamsItemDisplayNameTierIndexMin).max(getLiveStreamsResponseStreamsItemDisplayNameTierIndexMax),
-  "viewerCount": zod.number().int().min(getLiveStreamsResponseStreamsItemViewerCountMin)
+  "displayNameTierIndex": zod.int().min(getLiveStreamsResponseStreamsItemDisplayNameTierIndexMin).max(getLiveStreamsResponseStreamsItemDisplayNameTierIndexMax),
+  "viewerCount": zod.int().min(getLiveStreamsResponseStreamsItemViewerCountMin)
 }))
 })
 
@@ -695,12 +695,12 @@ export const startLiveStreamResponseDisplayNameTierIndexMax = 100;
 
 export const StartLiveStreamResponse = zod.object({
   "streamId": zod.string().regex(startLiveStreamResponseStreamIdRegExp),
-  "url": zod.string().url(),
+  "url": zod.url(),
   "token": zod.string(),
   "displayName": zod.string().max(startLiveStreamResponseDisplayNameMax),
   "username": zod.string().max(startLiveStreamResponseUsernameMax),
   "displayNameColor": zod.string().regex(startLiveStreamResponseDisplayNameColorRegExp),
-  "displayNameTierIndex": zod.number().int().min(startLiveStreamResponseDisplayNameTierIndexMin).max(startLiveStreamResponseDisplayNameTierIndexMax)
+  "displayNameTierIndex": zod.int().min(startLiveStreamResponseDisplayNameTierIndexMin).max(startLiveStreamResponseDisplayNameTierIndexMax)
 })
 
 
@@ -757,12 +757,12 @@ export const joinLiveStreamResponseViewerUsernameMax = 40;
 
 
 export const JoinLiveStreamResponse = zod.object({
-  "url": zod.string().url(),
+  "url": zod.url(),
   "token": zod.string(),
   "displayName": zod.string().max(joinLiveStreamResponseDisplayNameMax),
   "username": zod.string().max(joinLiveStreamResponseUsernameMax),
   "displayNameColor": zod.string().regex(joinLiveStreamResponseDisplayNameColorRegExp),
-  "displayNameTierIndex": zod.number().int().min(joinLiveStreamResponseDisplayNameTierIndexMin).max(joinLiveStreamResponseDisplayNameTierIndexMax),
+  "displayNameTierIndex": zod.int().min(joinLiveStreamResponseDisplayNameTierIndexMin).max(joinLiveStreamResponseDisplayNameTierIndexMax),
   "viewerUsername": zod.string().max(joinLiveStreamResponseViewerUsernameMax)
 })
 
@@ -790,12 +790,12 @@ export const rejoinLiveStreamResponseDisplayNameTierIndexMax = 100;
 
 export const RejoinLiveStreamResponse = zod.object({
   "streamId": zod.string().regex(rejoinLiveStreamResponseStreamIdRegExp),
-  "url": zod.string().url(),
+  "url": zod.url(),
   "token": zod.string(),
   "displayName": zod.string().max(rejoinLiveStreamResponseDisplayNameMax),
   "username": zod.string().max(rejoinLiveStreamResponseUsernameMax),
   "displayNameColor": zod.string().regex(rejoinLiveStreamResponseDisplayNameColorRegExp),
-  "displayNameTierIndex": zod.number().int().min(rejoinLiveStreamResponseDisplayNameTierIndexMin).max(rejoinLiveStreamResponseDisplayNameTierIndexMax)
+  "displayNameTierIndex": zod.int().min(rejoinLiveStreamResponseDisplayNameTierIndexMin).max(rejoinLiveStreamResponseDisplayNameTierIndexMax)
 })
 
 
@@ -846,12 +846,12 @@ export const sendLiveStreamChatMessageResponseTextMax = 280;
 
 
 export const SendLiveStreamChatMessageResponse = zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "streamId": zod.string().regex(sendLiveStreamChatMessageResponseStreamIdRegExp),
   "username": zod.string().max(sendLiveStreamChatMessageResponseUsernameMax),
   "displayName": zod.string().max(sendLiveStreamChatMessageResponseDisplayNameMax),
   "displayNameColor": zod.string().regex(sendLiveStreamChatMessageResponseDisplayNameColorRegExp),
-  "displayNameTierIndex": zod.number().int().min(sendLiveStreamChatMessageResponseDisplayNameTierIndexMin).max(sendLiveStreamChatMessageResponseDisplayNameTierIndexMax),
+  "displayNameTierIndex": zod.int().min(sendLiveStreamChatMessageResponseDisplayNameTierIndexMin).max(sendLiveStreamChatMessageResponseDisplayNameTierIndexMax),
   "badgeName": zod.string().max(sendLiveStreamChatMessageResponseBadgeNameMax).nullable(),
   "badgeImage": zod.string().nullable(),
   "text": zod.string().max(sendLiveStreamChatMessageResponseTextMax),
@@ -876,8 +876,8 @@ export const addLiveStreamHeartResponseSharesMin = 0;
 
 
 export const AddLiveStreamHeartResponse = zod.object({
-  "hearts": zod.number().int().min(addLiveStreamHeartResponseHeartsMin),
-  "shares": zod.number().int().min(addLiveStreamHeartResponseSharesMin)
+  "hearts": zod.int().min(addLiveStreamHeartResponseHeartsMin),
+  "shares": zod.int().min(addLiveStreamHeartResponseSharesMin)
 })
 
 
@@ -898,8 +898,8 @@ export const addLiveStreamShareResponseSharesMin = 0;
 
 
 export const AddLiveStreamShareResponse = zod.object({
-  "hearts": zod.number().int().min(addLiveStreamShareResponseHeartsMin),
-  "shares": zod.number().int().min(addLiveStreamShareResponseSharesMin)
+  "hearts": zod.int().min(addLiveStreamShareResponseHeartsMin),
+  "shares": zod.int().min(addLiveStreamShareResponseSharesMin)
 })
 
 
@@ -959,9 +959,9 @@ export const searchPkOpponentResponseBattleOneTopGiftersBMax = 3;
 
 export const SearchPkOpponentResponse = zod.object({
   "state": zod.enum(['idle', 'searching', 'timed_out', 'battle']),
-  "searchExpiresAtMs": zod.number().int().min(searchPkOpponentResponseSearchExpiresAtMsMin).nullable(),
+  "searchExpiresAtMs": zod.int().min(searchPkOpponentResponseSearchExpiresAtMsMin).nullable(),
   "battle": zod.union([zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "status": zod.enum(['countdown', 'active', 'finished']),
   "sideA": zod.object({
   "streamId": zod.string().regex(searchPkOpponentResponseBattleOneSideAStreamIdRegExp),
@@ -975,23 +975,23 @@ export const SearchPkOpponentResponse = zod.object({
   "displayName": zod.string().max(searchPkOpponentResponseBattleOneSideBDisplayNameMax),
   "side": zod.enum(['A', 'B'])
 }),
-  "startsAtMs": zod.number().int().min(searchPkOpponentResponseBattleOneStartsAtMsMin),
-  "endsAtMs": zod.number().int().min(searchPkOpponentResponseBattleOneEndsAtMsMin),
-  "bonusStartAtMs": zod.number().int().min(searchPkOpponentResponseBattleOneBonusStartAtMsMin),
-  "bonusEndAtMs": zod.number().int().min(searchPkOpponentResponseBattleOneBonusEndAtMsMin),
-  "scoreA": zod.number().int().min(searchPkOpponentResponseBattleOneScoreAMin),
-  "scoreB": zod.number().int().min(searchPkOpponentResponseBattleOneScoreBMin),
+  "startsAtMs": zod.int().min(searchPkOpponentResponseBattleOneStartsAtMsMin),
+  "endsAtMs": zod.int().min(searchPkOpponentResponseBattleOneEndsAtMsMin),
+  "bonusStartAtMs": zod.int().min(searchPkOpponentResponseBattleOneBonusStartAtMsMin),
+  "bonusEndAtMs": zod.int().min(searchPkOpponentResponseBattleOneBonusEndAtMsMin),
+  "scoreA": zod.int().min(searchPkOpponentResponseBattleOneScoreAMin),
+  "scoreB": zod.int().min(searchPkOpponentResponseBattleOneScoreBMin),
   "winnerUsername": zod.string().max(searchPkOpponentResponseBattleOneWinnerUsernameMax).nullable(),
   "finishReason": zod.union([zod.literal('time'),zod.literal('opponent-left'),zod.literal(null)]).nullable(),
   "topGiftersA": zod.array(zod.object({
   "username": zod.string().max(searchPkOpponentResponseBattleOneTopGiftersAItemUsernameMax),
   "displayName": zod.string().max(searchPkOpponentResponseBattleOneTopGiftersAItemDisplayNameMax),
-  "coins": zod.number().int().min(searchPkOpponentResponseBattleOneTopGiftersAItemCoinsMin)
+  "coins": zod.int().min(searchPkOpponentResponseBattleOneTopGiftersAItemCoinsMin)
 })).max(searchPkOpponentResponseBattleOneTopGiftersAMax),
   "topGiftersB": zod.array(zod.object({
   "username": zod.string().max(searchPkOpponentResponseBattleOneTopGiftersBItemUsernameMax),
   "displayName": zod.string().max(searchPkOpponentResponseBattleOneTopGiftersBItemDisplayNameMax),
-  "coins": zod.number().int().min(searchPkOpponentResponseBattleOneTopGiftersBItemCoinsMin)
+  "coins": zod.int().min(searchPkOpponentResponseBattleOneTopGiftersBItemCoinsMin)
 })).max(searchPkOpponentResponseBattleOneTopGiftersBMax)
 }),zod.null()])
 })
@@ -1068,9 +1068,9 @@ export const getPkBattleStateResponseBattleOneTopGiftersBMax = 3;
 
 export const GetPkBattleStateResponse = zod.object({
   "state": zod.enum(['idle', 'searching', 'timed_out', 'battle']),
-  "searchExpiresAtMs": zod.number().int().min(getPkBattleStateResponseSearchExpiresAtMsMin).nullable(),
+  "searchExpiresAtMs": zod.int().min(getPkBattleStateResponseSearchExpiresAtMsMin).nullable(),
   "battle": zod.union([zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "status": zod.enum(['countdown', 'active', 'finished']),
   "sideA": zod.object({
   "streamId": zod.string().regex(getPkBattleStateResponseBattleOneSideAStreamIdRegExp),
@@ -1084,23 +1084,23 @@ export const GetPkBattleStateResponse = zod.object({
   "displayName": zod.string().max(getPkBattleStateResponseBattleOneSideBDisplayNameMax),
   "side": zod.enum(['A', 'B'])
 }),
-  "startsAtMs": zod.number().int().min(getPkBattleStateResponseBattleOneStartsAtMsMin),
-  "endsAtMs": zod.number().int().min(getPkBattleStateResponseBattleOneEndsAtMsMin),
-  "bonusStartAtMs": zod.number().int().min(getPkBattleStateResponseBattleOneBonusStartAtMsMin),
-  "bonusEndAtMs": zod.number().int().min(getPkBattleStateResponseBattleOneBonusEndAtMsMin),
-  "scoreA": zod.number().int().min(getPkBattleStateResponseBattleOneScoreAMin),
-  "scoreB": zod.number().int().min(getPkBattleStateResponseBattleOneScoreBMin),
+  "startsAtMs": zod.int().min(getPkBattleStateResponseBattleOneStartsAtMsMin),
+  "endsAtMs": zod.int().min(getPkBattleStateResponseBattleOneEndsAtMsMin),
+  "bonusStartAtMs": zod.int().min(getPkBattleStateResponseBattleOneBonusStartAtMsMin),
+  "bonusEndAtMs": zod.int().min(getPkBattleStateResponseBattleOneBonusEndAtMsMin),
+  "scoreA": zod.int().min(getPkBattleStateResponseBattleOneScoreAMin),
+  "scoreB": zod.int().min(getPkBattleStateResponseBattleOneScoreBMin),
   "winnerUsername": zod.string().max(getPkBattleStateResponseBattleOneWinnerUsernameMax).nullable(),
   "finishReason": zod.union([zod.literal('time'),zod.literal('opponent-left'),zod.literal(null)]).nullable(),
   "topGiftersA": zod.array(zod.object({
   "username": zod.string().max(getPkBattleStateResponseBattleOneTopGiftersAItemUsernameMax),
   "displayName": zod.string().max(getPkBattleStateResponseBattleOneTopGiftersAItemDisplayNameMax),
-  "coins": zod.number().int().min(getPkBattleStateResponseBattleOneTopGiftersAItemCoinsMin)
+  "coins": zod.int().min(getPkBattleStateResponseBattleOneTopGiftersAItemCoinsMin)
 })).max(getPkBattleStateResponseBattleOneTopGiftersAMax),
   "topGiftersB": zod.array(zod.object({
   "username": zod.string().max(getPkBattleStateResponseBattleOneTopGiftersBItemUsernameMax),
   "displayName": zod.string().max(getPkBattleStateResponseBattleOneTopGiftersBItemDisplayNameMax),
-  "coins": zod.number().int().min(getPkBattleStateResponseBattleOneTopGiftersBItemCoinsMin)
+  "coins": zod.int().min(getPkBattleStateResponseBattleOneTopGiftersBItemCoinsMin)
 })).max(getPkBattleStateResponseBattleOneTopGiftersBMax)
 }),zod.null()])
 })
@@ -1121,7 +1121,7 @@ export const joinPkBattleMediaResponseIdentityMax = 80;
 
 
 export const JoinPkBattleMediaResponse = zod.object({
-  "url": zod.string().url(),
+  "url": zod.url(),
   "token": zod.string(),
   "role": zod.enum(['host', 'viewer']),
   "identity": zod.string().max(joinPkBattleMediaResponseIdentityMax)
@@ -1146,8 +1146,8 @@ export const GetPkLeaderboardResponse = zod.object({
   "people": zod.array(zod.object({
   "username": zod.string().max(getPkLeaderboardResponsePeopleItemUsernameMax),
   "displayName": zod.string().max(getPkLeaderboardResponsePeopleItemDisplayNameMax),
-  "wins": zod.number().int().min(getPkLeaderboardResponsePeopleItemWinsMin),
-  "longestWinStreak": zod.number().int().min(getPkLeaderboardResponsePeopleItemLongestWinStreakMin)
+  "wins": zod.int().min(getPkLeaderboardResponsePeopleItemWinsMin),
+  "longestWinStreak": zod.int().min(getPkLeaderboardResponsePeopleItemLongestWinStreakMin)
 }))
 })
 
@@ -1178,7 +1178,7 @@ export const GetUniversityVideoBeamTvStateParams = zod.object({
 })
 
 export const GetUniversityVideoBeamTvStateHeader = zod.object({
-  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+  "X-Room-Session": zod.uuid().describe('Private participant session; must belong to the authenticated account in this room')
 })
 
 export const getUniversityVideoBeamTvStateResponseDefaultSearchMax = 120;
@@ -1228,18 +1228,18 @@ export const GetUniversityVideoBeamTvStateResponse = zod.object({
   "description": zod.string().max(getUniversityVideoBeamTvStateResponseVideoMetadataItemDescriptionMax).nullable()
 })).max(getUniversityVideoBeamTvStateResponseVideoMetadataMax),
   "currentVideoId": zod.string().regex(getUniversityVideoBeamTvStateResponseCurrentVideoIdRegExp).nullable(),
-  "startedAtMs": zod.number().int().min(getUniversityVideoBeamTvStateResponseStartedAtMsMin).nullable(),
-  "breakEndsAtMs": zod.number().int().min(getUniversityVideoBeamTvStateResponseBreakEndsAtMsMin).nullable(),
-  "serverNowMs": zod.number().int().min(getUniversityVideoBeamTvStateResponseServerNowMsMin),
+  "startedAtMs": zod.int().min(getUniversityVideoBeamTvStateResponseStartedAtMsMin).nullable(),
+  "breakEndsAtMs": zod.int().min(getUniversityVideoBeamTvStateResponseBreakEndsAtMsMin).nullable(),
+  "serverNowMs": zod.int().min(getUniversityVideoBeamTvStateResponseServerNowMsMin),
   "micLockedDuringVideo": zod.boolean(),
   "skipVotingEnabled": zod.boolean(),
-  "skipVoteCount": zod.number().int().min(getUniversityVideoBeamTvStateResponseSkipVoteCountMin),
-  "skipVoteTotal": zod.number().int().min(getUniversityVideoBeamTvStateResponseSkipVoteTotalMin),
+  "skipVoteCount": zod.int().min(getUniversityVideoBeamTvStateResponseSkipVoteCountMin),
+  "skipVoteTotal": zod.int().min(getUniversityVideoBeamTvStateResponseSkipVoteTotalMin),
   "hasVotedToSkip": zod.boolean(),
-  "skipSequence": zod.number().int().min(getUniversityVideoBeamTvStateResponseSkipSequenceMin),
+  "skipSequence": zod.int().min(getUniversityVideoBeamTvStateResponseSkipSequenceMin),
   "seriesTitle": zod.string().max(getUniversityVideoBeamTvStateResponseSeriesTitleMax).nullable(),
   "seriesDate": zod.coerce.date().nullable(),
-  "seriesEpisodeNumber": zod.number().int().min(1).nullable()
+  "seriesEpisodeNumber": zod.int().min(1).nullable()
 })
 
 
@@ -1254,7 +1254,7 @@ export const PerformUniversityVideoBeamTvActionParams = zod.object({
 })
 
 export const PerformUniversityVideoBeamTvActionHeader = zod.object({
-  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+  "X-Room-Session": zod.uuid().describe('Private participant session; must belong to the authenticated account in this room')
 })
 
 export const performUniversityVideoBeamTvActionBodySourceValueMax = 160;
@@ -1282,7 +1282,7 @@ export const PerformUniversityVideoBeamTvActionBody = zod.object({
   "playlistId": zod.string().regex(performUniversityVideoBeamTvActionBodyPlaylistIdRegExp).optional(),
   "queue": zod.array(zod.string().regex(performUniversityVideoBeamTvActionBodyQueueItemRegExp)).max(performUniversityVideoBeamTvActionBodyQueueMax).optional(),
   "currentVideoId": zod.string().regex(performUniversityVideoBeamTvActionBodyCurrentVideoIdRegExp).optional(),
-  "startedAtMs": zod.number().int().min(performUniversityVideoBeamTvActionBodyStartedAtMsMin).optional(),
+  "startedAtMs": zod.int().min(performUniversityVideoBeamTvActionBodyStartedAtMsMin).optional(),
   "skipVotingEnabled": zod.boolean().optional(),
   "videoMetadata": zod.object({
   "videoId": zod.string().regex(performUniversityVideoBeamTvActionBodyVideoMetadataVideoIdRegExp),
@@ -1339,18 +1339,18 @@ export const PerformUniversityVideoBeamTvActionResponse = zod.object({
   "description": zod.string().max(performUniversityVideoBeamTvActionResponseVideoMetadataItemDescriptionMax).nullable()
 })).max(performUniversityVideoBeamTvActionResponseVideoMetadataMax),
   "currentVideoId": zod.string().regex(performUniversityVideoBeamTvActionResponseCurrentVideoIdRegExp).nullable(),
-  "startedAtMs": zod.number().int().min(performUniversityVideoBeamTvActionResponseStartedAtMsMin).nullable(),
-  "breakEndsAtMs": zod.number().int().min(performUniversityVideoBeamTvActionResponseBreakEndsAtMsMin).nullable(),
-  "serverNowMs": zod.number().int().min(performUniversityVideoBeamTvActionResponseServerNowMsMin),
+  "startedAtMs": zod.int().min(performUniversityVideoBeamTvActionResponseStartedAtMsMin).nullable(),
+  "breakEndsAtMs": zod.int().min(performUniversityVideoBeamTvActionResponseBreakEndsAtMsMin).nullable(),
+  "serverNowMs": zod.int().min(performUniversityVideoBeamTvActionResponseServerNowMsMin),
   "micLockedDuringVideo": zod.boolean(),
   "skipVotingEnabled": zod.boolean(),
-  "skipVoteCount": zod.number().int().min(performUniversityVideoBeamTvActionResponseSkipVoteCountMin),
-  "skipVoteTotal": zod.number().int().min(performUniversityVideoBeamTvActionResponseSkipVoteTotalMin),
+  "skipVoteCount": zod.int().min(performUniversityVideoBeamTvActionResponseSkipVoteCountMin),
+  "skipVoteTotal": zod.int().min(performUniversityVideoBeamTvActionResponseSkipVoteTotalMin),
   "hasVotedToSkip": zod.boolean(),
-  "skipSequence": zod.number().int().min(performUniversityVideoBeamTvActionResponseSkipSequenceMin),
+  "skipSequence": zod.int().min(performUniversityVideoBeamTvActionResponseSkipSequenceMin),
   "seriesTitle": zod.string().max(performUniversityVideoBeamTvActionResponseSeriesTitleMax).nullable(),
   "seriesDate": zod.coerce.date().nullable(),
-  "seriesEpisodeNumber": zod.number().int().min(1).nullable()
+  "seriesEpisodeNumber": zod.int().min(1).nullable()
 })
 
 
@@ -1365,7 +1365,7 @@ export const SearchYouTubeForVideoBeamParams = zod.object({
 })
 
 export const SearchYouTubeForVideoBeamHeader = zod.object({
-  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+  "X-Room-Session": zod.uuid().describe('Private participant session; must belong to the authenticated account in this room')
 })
 
 export const searchYouTubeForVideoBeamBodyQueryMax = 120;
@@ -1417,7 +1417,7 @@ export const GetComedyRoomVideoCatalogParams = zod.object({
 })
 
 export const GetComedyRoomVideoCatalogHeader = zod.object({
-  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+  "X-Room-Session": zod.uuid().describe('Private participant session; must belong to the authenticated account in this room')
 })
 
 export const getComedyRoomVideoCatalogResponseVideosItemVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
@@ -1436,7 +1436,7 @@ export const GetComedyRoomVideoCatalogResponse = zod.object({
   "title": zod.string().max(getComedyRoomVideoCatalogResponseVideosItemTitleMax),
   "channelTitle": zod.string().max(getComedyRoomVideoCatalogResponseVideosItemChannelTitleMax).nullable(),
   "source": zod.enum(['jkdanimator', 'comedycentral', 'playlist']),
-  "durationMs": zod.number().int().min(getComedyRoomVideoCatalogResponseVideosItemDurationMsMin)
+  "durationMs": zod.int().min(getComedyRoomVideoCatalogResponseVideosItemDurationMsMin)
 })),
   "currentVideoId": zod.string().regex(getComedyRoomVideoCatalogResponseCurrentVideoIdRegExp).nullable()
 })
@@ -1453,7 +1453,7 @@ export const PerformComedyRoomVideoActionParams = zod.object({
 })
 
 export const PerformComedyRoomVideoActionHeader = zod.object({
-  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+  "X-Room-Session": zod.uuid().describe('Private participant session; must belong to the authenticated account in this room')
 })
 
 export const performComedyRoomVideoActionBodyVideoIdRegExp = new RegExp('^[A-Za-z0-9_-]{11}$');
@@ -1511,18 +1511,18 @@ export const PerformComedyRoomVideoActionResponse = zod.object({
   "description": zod.string().max(performComedyRoomVideoActionResponseVideoMetadataItemDescriptionMax).nullable()
 })).max(performComedyRoomVideoActionResponseVideoMetadataMax),
   "currentVideoId": zod.string().regex(performComedyRoomVideoActionResponseCurrentVideoIdRegExp).nullable(),
-  "startedAtMs": zod.number().int().min(performComedyRoomVideoActionResponseStartedAtMsMin).nullable(),
-  "breakEndsAtMs": zod.number().int().min(performComedyRoomVideoActionResponseBreakEndsAtMsMin).nullable(),
-  "serverNowMs": zod.number().int().min(performComedyRoomVideoActionResponseServerNowMsMin),
+  "startedAtMs": zod.int().min(performComedyRoomVideoActionResponseStartedAtMsMin).nullable(),
+  "breakEndsAtMs": zod.int().min(performComedyRoomVideoActionResponseBreakEndsAtMsMin).nullable(),
+  "serverNowMs": zod.int().min(performComedyRoomVideoActionResponseServerNowMsMin),
   "micLockedDuringVideo": zod.boolean(),
   "skipVotingEnabled": zod.boolean(),
-  "skipVoteCount": zod.number().int().min(performComedyRoomVideoActionResponseSkipVoteCountMin),
-  "skipVoteTotal": zod.number().int().min(performComedyRoomVideoActionResponseSkipVoteTotalMin),
+  "skipVoteCount": zod.int().min(performComedyRoomVideoActionResponseSkipVoteCountMin),
+  "skipVoteTotal": zod.int().min(performComedyRoomVideoActionResponseSkipVoteTotalMin),
   "hasVotedToSkip": zod.boolean(),
-  "skipSequence": zod.number().int().min(performComedyRoomVideoActionResponseSkipSequenceMin),
+  "skipSequence": zod.int().min(performComedyRoomVideoActionResponseSkipSequenceMin),
   "seriesTitle": zod.string().max(performComedyRoomVideoActionResponseSeriesTitleMax).nullable(),
   "seriesDate": zod.coerce.date().nullable(),
-  "seriesEpisodeNumber": zod.number().int().min(1).nullable()
+  "seriesEpisodeNumber": zod.int().min(1).nullable()
 })
 
 
@@ -1537,12 +1537,12 @@ export const PerformUniversityAudioActionParams = zod.object({
 })
 
 export const PerformUniversityAudioActionHeader = zod.object({
-  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+  "X-Room-Session": zod.uuid().describe('Private participant session; must belong to the authenticated account in this room')
 })
 
 export const PerformUniversityAudioActionBody = zod.object({
   "action": zod.enum(['join-slot', 'leave-slot', 'mute-self', 'unmute-self', 'host-mute', 'host-unmute', 'kick']),
-  "targetParticipantId": zod.string().uuid().optional()
+  "targetParticipantId": zod.uuid().optional()
 })
 
 export const performUniversityAudioActionResponseSlotsItemSlotNumberMax = 4;
@@ -1555,10 +1555,10 @@ export const performUniversityAudioActionResponseSlotsMax = 4;
 export const PerformUniversityAudioActionResponse = zod.object({
   "roomId": zod.string(),
   "beamActive": zod.boolean(),
-  "hostParticipantId": zod.string().uuid().nullable(),
+  "hostParticipantId": zod.uuid().nullable(),
   "slots": zod.array(zod.object({
-  "slotNumber": zod.number().int().min(1).max(performUniversityAudioActionResponseSlotsItemSlotNumberMax),
-  "participantId": zod.string().uuid().nullable(),
+  "slotNumber": zod.int().min(1).max(performUniversityAudioActionResponseSlotsItemSlotNumberMax),
+  "participantId": zod.uuid().nullable(),
   "micEnabled": zod.boolean(),
   "mutedByHost": zod.boolean()
 })).min(performUniversityAudioActionResponseSlotsMin).max(performUniversityAudioActionResponseSlotsMax)
@@ -1576,7 +1576,7 @@ export const StreamUniversityAudioEventsParams = zod.object({
 })
 
 export const StreamUniversityAudioEventsHeader = zod.object({
-  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+  "X-Room-Session": zod.uuid().describe('Private participant session; must belong to the authenticated account in this room')
 })
 
 export const StreamUniversityAudioEventsResponse = zod.unknown()
@@ -1593,7 +1593,7 @@ export const SendUniversityAudioSignalParams = zod.object({
 })
 
 export const SendUniversityAudioSignalHeader = zod.object({
-  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+  "X-Room-Session": zod.uuid().describe('Private participant session; must belong to the authenticated account in this room')
 })
 
 export const sendUniversityAudioSignalBodyDescriptionSdpMax = 12000;
@@ -1609,9 +1609,9 @@ export const sendUniversityAudioSignalBodyCandidateOneUsernameFragmentMax = 256;
 
 
 export const SendUniversityAudioSignalBody = zod.object({
-  "sourceConnectionId": zod.string().uuid(),
-  "targetParticipantId": zod.string().uuid(),
-  "targetConnectionId": zod.string().uuid(),
+  "sourceConnectionId": zod.uuid(),
+  "targetParticipantId": zod.uuid(),
+  "targetConnectionId": zod.uuid(),
   "kind": zod.enum(['description', 'candidate']),
   "description": zod.object({
   "type": zod.enum(['offer', 'answer']),
@@ -1620,7 +1620,7 @@ export const SendUniversityAudioSignalBody = zod.object({
   "candidate": zod.union([zod.object({
   "candidate": zod.string().max(sendUniversityAudioSignalBodyCandidateOneCandidateMax),
   "sdpMid": zod.string().max(sendUniversityAudioSignalBodyCandidateOneSdpMidMax).nullish(),
-  "sdpMLineIndex": zod.number().int().min(sendUniversityAudioSignalBodyCandidateOneSdpMLineIndexMin).nullish(),
+  "sdpMLineIndex": zod.int().min(sendUniversityAudioSignalBodyCandidateOneSdpMLineIndexMin).nullish(),
   "usernameFragment": zod.string().max(sendUniversityAudioSignalBodyCandidateOneUsernameFragmentMax).nullish()
 }),zod.null()]).optional()
 })
@@ -1636,11 +1636,11 @@ export const disconnectUniversityAudioPathRoomIdRegExp = new RegExp('^([A-Za-z0-
 
 export const DisconnectUniversityAudioParams = zod.object({
   "roomId": zod.coerce.string().regex(disconnectUniversityAudioPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code'),
-  "connectionId": zod.coerce.string().uuid()
+  "connectionId": zod.uuid()
 })
 
 export const DisconnectUniversityAudioHeader = zod.object({
-  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+  "X-Room-Session": zod.uuid().describe('Private participant session; must belong to the authenticated account in this room')
 })
 
 export const DisconnectUniversityAudioResponse = zod.void()
@@ -1657,7 +1657,7 @@ export const sendUniversityWhisperBodyBodyMax = 1000;
 export const SendUniversityWhisperBody = zod.object({
   "username": zod.string(),
   "body": zod.string().min(1).max(sendUniversityWhisperBodyBodyMax),
-  "idempotencyKey": zod.string().uuid()
+  "idempotencyKey": zod.uuid()
 })
 
 export const SendUniversityWhisperResponse = zod.object({
@@ -1696,14 +1696,14 @@ export const GetPhotoReviewQueueResponseItem = zod.object({
   "username": zod.string().nullish(),
   "displayName": zod.string().nullish(),
   "displayNameColor": zod.string().regex(getPhotoReviewQueueResponseDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(getPhotoReviewQueueResponseDisplayNameTierIndexMin).max(getPhotoReviewQueueResponseDisplayNameTierIndexMax).optional(),
+  "displayNameTierIndex": zod.int().min(getPhotoReviewQueueResponseDisplayNameTierIndexMin).max(getPhotoReviewQueueResponseDisplayNameTierIndexMax).optional(),
   "createdAt": zod.coerce.date()
 })
 export const GetPhotoReviewQueueResponse = zod.array(GetPhotoReviewQueueResponseItem)
 
 
 export const ReviewProfilePhotoParams = zod.object({
-  "photoId": zod.coerce.string().uuid()
+  "photoId": zod.uuid()
 })
 
 export const ReviewProfilePhotoBody = zod.object({
@@ -1725,7 +1725,7 @@ export const UploadProfilePhotoResponse = zod.object({
 
 
 export const GetProfilePhotoParams = zod.object({
-  "photoId": zod.coerce.string().uuid()
+  "photoId": zod.uuid()
 })
 
 export const GetProfilePhotoResponse = zod.unknown()
@@ -1736,7 +1736,7 @@ export const getOlderRoomMessagesPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}
 
 export const GetOlderRoomMessagesParams = zod.object({
   "roomId": zod.coerce.string().regex(getOlderRoomMessagesPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code'),
-  "beforeId": zod.coerce.string().uuid()
+  "beforeId": zod.uuid()
 })
 
 export const getOlderRoomMessagesResponseIdentityEmojiIdMax = 100;
@@ -1756,9 +1756,9 @@ export const GetOlderRoomMessagesResponseItem = zod.object({
   "badgeId": zod.string().nullish(),
   "badgeName": zod.string().nullish(),
   "badgeImage": zod.string().nullish(),
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "roomId": zod.string(),
-  "authorId": zod.string().uuid(),
+  "authorId": zod.uuid(),
   "username": zod.string(),
   "photoUrl": zod.string().nullish(),
   "identity": zod.object({
@@ -1772,7 +1772,7 @@ export const GetOlderRoomMessagesResponseItem = zod.object({
   "kind": zod.enum(['text', 'reaction']),
   "text": zod.string(),
   "displayNameColor": zod.string().regex(getOlderRoomMessagesResponseDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(getOlderRoomMessagesResponseDisplayNameTierIndexMin).max(getOlderRoomMessagesResponseDisplayNameTierIndexMax).optional(),
+  "displayNameTierIndex": zod.int().min(getOlderRoomMessagesResponseDisplayNameTierIndexMin).max(getOlderRoomMessagesResponseDisplayNameTierIndexMax).optional(),
   "passport": zod.object({
   "platforms": zod.array(zod.object({
   "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
@@ -1799,12 +1799,12 @@ export const getChatDirectoryResponseNowPlayingTitleMax = 200;
 export const GetChatDirectoryResponseItem = zod.object({
   "roomId": zod.string(),
   "label": zod.string(),
-  "headcount": zod.number().int().min(getChatDirectoryResponseHeadcountMin).describe('Current heartbeat-based presence count; no participant identities are exposed.'),
-  "headcountSince": zod.number().int().min(getChatDirectoryResponseHeadcountSinceMin).describe('Epoch milliseconds when the room most recently reached its current headcount; used for deterministic Featured ties.'),
+  "headcount": zod.int().min(getChatDirectoryResponseHeadcountMin).describe('Current heartbeat-based presence count; no participant identities are exposed.'),
+  "headcountSince": zod.int().min(getChatDirectoryResponseHeadcountSinceMin).describe('Epoch milliseconds when the room most recently reached its current headcount; used for deterministic Featured ties.'),
   "nowPlayingVideoId": zod.string().regex(getChatDirectoryResponseNowPlayingVideoIdRegExp).nullable().describe('Video currently playing in Beam TV, when a verified title is available.'),
   "nowPlayingTitle": zod.string().max(getChatDirectoryResponseNowPlayingTitleMax).nullable(),
-  "nowPlayingStartedAtMs": zod.number().int().nullish().describe('Server epoch milliseconds when the currently playing clip began; null during an intermission.'),
-  "nowPlayingServerNowMs": zod.number().int().optional().describe('Server clock sample for synchronizing muted directory previews without joining the room or altering its timeline.')
+  "nowPlayingStartedAtMs": zod.int().nullish().describe('Server epoch milliseconds when the currently playing clip began; null during an intermission.'),
+  "nowPlayingServerNowMs": zod.int().optional().describe('Server clock sample for synchronizing muted directory previews without joining the room or altering its timeline.')
 })
 export const GetChatDirectoryResponse = zod.array(GetChatDirectoryResponseItem)
 
@@ -1858,7 +1858,7 @@ export const ReportChatMessageBody = zod.object({
   "targetType": zod.enum(['user', 'message', 'stream']),
   "targetUsername": zod.string().max(reportChatMessageBodyTargetUsernameMax).optional(),
   "roomId": zod.string().max(reportChatMessageBodyRoomIdMax).optional(),
-  "messageId": zod.string().uuid().optional(),
+  "messageId": zod.uuid().optional(),
   "streamId": zod.string().regex(reportChatMessageBodyStreamIdRegExp).optional(),
   "messageText": zod.string().max(reportChatMessageBodyMessageTextMax).optional(),
   "reason": zod.enum(['harassment', 'hate_speech', 'sexual_content', 'spam_scams', 'violence_threats', 'underage_user', 'other']),
@@ -1866,19 +1866,19 @@ export const ReportChatMessageBody = zod.object({
 })
 
 export const ReportChatMessageResponse = zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "status": zod.enum(['pending', 'reviewed', 'warned', 'dismissed', 'hidden', 'muted', 'restricted', 'banned'])
 })
 
 
 export const GetChatReportsResponseItem = zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "status": zod.enum(['pending', 'reviewed', 'warned', 'dismissed', 'hidden', 'muted', 'restricted', 'banned'])
 }).and(zod.object({
   "targetType": zod.enum(['user', 'message', 'stream']),
   "source": zod.enum(['user', 'moderator_bot']),
   "roomId": zod.string().nullable(),
-  "messageId": zod.string().uuid().nullable(),
+  "messageId": zod.uuid().nullable(),
   "streamId": zod.string().nullable(),
   "reason": zod.string(),
   "details": zod.string(),
@@ -1891,7 +1891,7 @@ export const GetChatReportsResponse = zod.array(GetChatReportsResponseItem)
 
 
 export const ReviewChatReportParams = zod.object({
-  "reportId": zod.coerce.string().uuid()
+  "reportId": zod.uuid()
 })
 
 export const ReviewChatReportBody = zod.object({
@@ -1899,7 +1899,7 @@ export const ReviewChatReportBody = zod.object({
 })
 
 export const ReviewChatReportResponse = zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "status": zod.enum(['pending', 'reviewed', 'warned', 'dismissed', 'hidden', 'muted', 'restricted', 'banned'])
 })
 
@@ -1952,18 +1952,18 @@ export const getSocialMeResponseProfilePassportPlatformsItemColorRegExp = new Re
 
 
 export const GetSocialMeResponse = zod.object({
-  "gifterAccessLevel": zod.number().int().min(getSocialMeResponseGifterAccessLevelMin).max(getSocialMeResponseGifterAccessLevelMax).optional().describe('Real ledger-earned level; excludes development appearance overrides.'),
+  "gifterAccessLevel": zod.int().min(getSocialMeResponseGifterAccessLevelMin).max(getSocialMeResponseGifterAccessLevelMax).optional().describe('Real ledger-earned level; excludes development appearance overrides.'),
   "nameColorProgress": zod.object({
   "tierName": zod.string(),
-  "tierIndex": zod.number().int().min(getSocialMeResponseNameColorProgressTierIndexMin).max(getSocialMeResponseNameColorProgressTierIndexMax),
-  "lifetimeCoinsPurchased": zod.number().int().min(getSocialMeResponseNameColorProgressLifetimeCoinsPurchasedMin),
+  "tierIndex": zod.int().min(getSocialMeResponseNameColorProgressTierIndexMin).max(getSocialMeResponseNameColorProgressTierIndexMax),
+  "lifetimeCoinsPurchased": zod.int().min(getSocialMeResponseNameColorProgressLifetimeCoinsPurchasedMin),
   "nextTierName": zod.string().nullable(),
-  "nextTierThreshold": zod.number().int().min(getSocialMeResponseNameColorProgressNextTierThresholdMin).nullable(),
-  "coinsToNextTier": zod.number().int().min(getSocialMeResponseNameColorProgressCoinsToNextTierMin)
+  "nextTierThreshold": zod.int().min(getSocialMeResponseNameColorProgressNextTierThresholdMin).nullable(),
+  "coinsToNextTier": zod.int().min(getSocialMeResponseNameColorProgressCoinsToNextTierMin)
 }),
   "nameColorTest": zod.object({
   "enabled": zod.boolean(),
-  "overrideCoins": zod.number().int().min(getSocialMeResponseNameColorTestOverrideCoinsMin).nullable()
+  "overrideCoins": zod.int().min(getSocialMeResponseNameColorTestOverrideCoinsMin).nullable()
 }),
   "entranceEffects": zod.object({
   "eligible": zod.boolean(),
@@ -1985,17 +1985,17 @@ export const GetSocialMeResponse = zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "badgeImage": zod.string(),
-  "rank": zod.number().int(),
+  "rank": zod.int(),
   "earnedAt": zod.coerce.date(),
   "expiresAt": zod.coerce.date().nullable(),
-  "daysLeft": zod.number().int().min(1).nullable(),
+  "daysLeft": zod.int().min(1).nullable(),
   "permanent": zod.boolean(),
   "equipped": zod.boolean()
 })),
   "equippedBadgeId": zod.string().nullable(),
-  "loginStreak": zod.number().int().min(getSocialMeResponseLoginStreakMin).optional(),
+  "loginStreak": zod.int().min(getSocialMeResponseLoginStreakMin).optional(),
   "hangoutStreak": zod.object({
-  "days": zod.number().int().min(getSocialMeResponseHangoutStreakDaysMin).max(getSocialMeResponseHangoutStreakDaysMax),
+  "days": zod.int().min(getSocialMeResponseHangoutStreakDaysMin).max(getSocialMeResponseHangoutStreakDaysMax),
   "rewardClaimedToday": zod.boolean()
 }),
   "profile": zod.object({
@@ -2004,10 +2004,10 @@ export const GetSocialMeResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().optional(),
   "displayNameColor": zod.string().regex(getSocialMeResponseProfileDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(getSocialMeResponseProfileDisplayNameTierIndexMin).max(getSocialMeResponseProfileDisplayNameTierIndexMax).optional(),
-  "followerCount": zod.number().int().min(getSocialMeResponseProfileFollowerCountMin).optional(),
-  "followingCount": zod.number().int().min(getSocialMeResponseProfileFollowingCountMin).optional(),
-  "sentCredits": zod.number().int().min(getSocialMeResponseProfileSentCreditsMin).optional(),
+  "displayNameTierIndex": zod.int().min(getSocialMeResponseProfileDisplayNameTierIndexMin).max(getSocialMeResponseProfileDisplayNameTierIndexMax).optional(),
+  "followerCount": zod.int().min(getSocialMeResponseProfileFollowerCountMin).optional(),
+  "followingCount": zod.int().min(getSocialMeResponseProfileFollowingCountMin).optional(),
+  "sentCredits": zod.int().min(getSocialMeResponseProfileSentCreditsMin).optional(),
   "badges": zod.array(zod.object({
   "id": zod.string(),
   "earnedAt": zod.coerce.date()
@@ -2032,7 +2032,7 @@ export const GetSocialMeResponse = zod.object({
   "discoverable": zod.boolean(),
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
-  "receivedCredits": zod.number().int(),
+  "receivedCredits": zod.int(),
   "badgeId": zod.union([zod.string(),zod.null()]),
   "badgeName": zod.string().nullable(),
   "badgeImage": zod.string().nullable(),
@@ -2047,12 +2047,12 @@ export const GetSocialMeResponse = zod.object({
 }).optional()
 }),
   "wallet": zod.object({
-  "balance": zod.number().int(),
-  "earned": zod.number().int(),
-  "received": zod.number().int(),
-  "sent": zod.number().int(),
+  "balance": zod.int(),
+  "earned": zod.int(),
+  "received": zod.int(),
+  "sent": zod.int(),
   "canClaimDaily": zod.boolean(),
-  "dailyReward": zod.number().int(),
+  "dailyReward": zod.int(),
   "unlimited": zod.boolean().describe('True only for the development-preview owner account; does not alter the stored wallet balance.')
 }),
   "inventory": zod.array(zod.string()),
@@ -2061,20 +2061,20 @@ export const GetSocialMeResponse = zod.object({
   "name": zod.string(),
   "badgeImage": zod.string(),
   "description": zod.string(),
-  "cost": zod.number().int()
+  "cost": zod.int()
 })),
   "gifts": zod.array(zod.object({
   "platinumExclusive": zod.boolean().optional(),
   "id": zod.string(),
   "name": zod.string(),
-  "cost": zod.number().int(),
+  "cost": zod.int(),
   "iconUrl": zod.string().nullable(),
   "iconStatus": zod.enum(['transparent', 'fallback', 'manual-transparent', 'manual-fallback', 'builtin'])
 })),
-  "giftQuantities": zod.record(zod.string(), zod.number().int().min(1)).optional(),
+  "giftQuantities": zod.record(zod.string(), zod.int().min(1)).optional(),
   "giftBagLots": zod.array(zod.object({
   "giftId": zod.string(),
-  "quantity": zod.number().int().min(1),
+  "quantity": zod.int().min(1),
   "expiresAt": zod.coerce.date().nullable()
 })).optional(),
   "countries": zod.array(zod.object({
@@ -2132,10 +2132,10 @@ export const SaveSocialProfileResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().optional(),
   "displayNameColor": zod.string().regex(saveSocialProfileResponseDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(saveSocialProfileResponseDisplayNameTierIndexMin).max(saveSocialProfileResponseDisplayNameTierIndexMax).optional(),
-  "followerCount": zod.number().int().min(saveSocialProfileResponseFollowerCountMin).optional(),
-  "followingCount": zod.number().int().min(saveSocialProfileResponseFollowingCountMin).optional(),
-  "sentCredits": zod.number().int().min(saveSocialProfileResponseSentCreditsMin).optional(),
+  "displayNameTierIndex": zod.int().min(saveSocialProfileResponseDisplayNameTierIndexMin).max(saveSocialProfileResponseDisplayNameTierIndexMax).optional(),
+  "followerCount": zod.int().min(saveSocialProfileResponseFollowerCountMin).optional(),
+  "followingCount": zod.int().min(saveSocialProfileResponseFollowingCountMin).optional(),
+  "sentCredits": zod.int().min(saveSocialProfileResponseSentCreditsMin).optional(),
   "badges": zod.array(zod.object({
   "id": zod.string(),
   "earnedAt": zod.coerce.date()
@@ -2160,7 +2160,7 @@ export const SaveSocialProfileResponse = zod.object({
   "discoverable": zod.boolean(),
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
-  "receivedCredits": zod.number().int(),
+  "receivedCredits": zod.int(),
   "badgeId": zod.union([zod.string(),zod.null()]),
   "badgeName": zod.string().nullable(),
   "badgeImage": zod.string().nullable(),
@@ -2205,10 +2205,10 @@ export const GetGifterLeaderboardResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().optional(),
   "displayNameColor": zod.string().regex(getGifterLeaderboardResponsePeopleItemOneDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(getGifterLeaderboardResponsePeopleItemOneDisplayNameTierIndexMin).max(getGifterLeaderboardResponsePeopleItemOneDisplayNameTierIndexMax).optional(),
-  "followerCount": zod.number().int().min(getGifterLeaderboardResponsePeopleItemOneFollowerCountMin).optional(),
-  "followingCount": zod.number().int().min(getGifterLeaderboardResponsePeopleItemOneFollowingCountMin).optional(),
-  "sentCredits": zod.number().int().min(getGifterLeaderboardResponsePeopleItemOneSentCreditsMin).optional(),
+  "displayNameTierIndex": zod.int().min(getGifterLeaderboardResponsePeopleItemOneDisplayNameTierIndexMin).max(getGifterLeaderboardResponsePeopleItemOneDisplayNameTierIndexMax).optional(),
+  "followerCount": zod.int().min(getGifterLeaderboardResponsePeopleItemOneFollowerCountMin).optional(),
+  "followingCount": zod.int().min(getGifterLeaderboardResponsePeopleItemOneFollowingCountMin).optional(),
+  "sentCredits": zod.int().min(getGifterLeaderboardResponsePeopleItemOneSentCreditsMin).optional(),
   "badges": zod.array(zod.object({
   "id": zod.string(),
   "earnedAt": zod.coerce.date()
@@ -2233,7 +2233,7 @@ export const GetGifterLeaderboardResponse = zod.object({
   "discoverable": zod.boolean(),
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
-  "receivedCredits": zod.number().int(),
+  "receivedCredits": zod.int(),
   "badgeId": zod.union([zod.string(),zod.null()]),
   "badgeName": zod.string().nullable(),
   "badgeImage": zod.string().nullable(),
@@ -2247,7 +2247,7 @@ export const GetGifterLeaderboardResponse = zod.object({
   "foundingLeague": zod.boolean()
 }).optional()
 }).and(zod.object({
-  "giftXp": zod.number().int().min(1)
+  "giftXp": zod.int().min(1)
 })))
 })
 
@@ -2257,7 +2257,7 @@ export const setMyNameColorTestTotalBodyTotalCoinsMin = 0;
 
 
 export const SetMyNameColorTestTotalBody = zod.object({
-  "totalCoins": zod.number().int().min(setMyNameColorTestTotalBodyTotalCoinsMin).nullable()
+  "totalCoins": zod.int().min(setMyNameColorTestTotalBodyTotalCoinsMin).nullable()
 })
 
 export const setMyNameColorTestTotalResponseOverrideCoinsMin = 0;
@@ -2274,14 +2274,14 @@ export const setMyNameColorTestTotalResponseProgressCoinsToNextTierMin = 0;
 
 
 export const SetMyNameColorTestTotalResponse = zod.object({
-  "overrideCoins": zod.number().int().min(setMyNameColorTestTotalResponseOverrideCoinsMin).nullable(),
+  "overrideCoins": zod.int().min(setMyNameColorTestTotalResponseOverrideCoinsMin).nullable(),
   "progress": zod.object({
   "tierName": zod.string(),
-  "tierIndex": zod.number().int().min(setMyNameColorTestTotalResponseProgressTierIndexMin).max(setMyNameColorTestTotalResponseProgressTierIndexMax),
-  "lifetimeCoinsPurchased": zod.number().int().min(setMyNameColorTestTotalResponseProgressLifetimeCoinsPurchasedMin),
+  "tierIndex": zod.int().min(setMyNameColorTestTotalResponseProgressTierIndexMin).max(setMyNameColorTestTotalResponseProgressTierIndexMax),
+  "lifetimeCoinsPurchased": zod.int().min(setMyNameColorTestTotalResponseProgressLifetimeCoinsPurchasedMin),
   "nextTierName": zod.string().nullable(),
-  "nextTierThreshold": zod.number().int().min(setMyNameColorTestTotalResponseProgressNextTierThresholdMin).nullable(),
-  "coinsToNextTier": zod.number().int().min(setMyNameColorTestTotalResponseProgressCoinsToNextTierMin)
+  "nextTierThreshold": zod.int().min(setMyNameColorTestTotalResponseProgressNextTierThresholdMin).nullable(),
+  "coinsToNextTier": zod.int().min(setMyNameColorTestTotalResponseProgressCoinsToNextTierMin)
 })
 })
 
@@ -2326,15 +2326,15 @@ export const GetEntranceEffectShopResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.string().regex(getEntranceEffectShopResponseItemsItemIdRegExp),
   "name": zod.string().min(1),
-  "cost": zod.number().int().min(1),
+  "cost": zod.int().min(1),
   "availableForPurchase": zod.boolean(),
   "owned": zod.boolean(),
   "equipped": zod.boolean(),
   "media": zod.union([zod.object({
-  "versionId": zod.string().uuid(),
+  "versionId": zod.uuid(),
   "webmUrl": zod.string(),
   "safariUrl": zod.string(),
-  "durationMs": zod.number().int().min(1)
+  "durationMs": zod.int().min(1)
 }),zod.null()])
 }))
 })
@@ -2348,7 +2348,7 @@ export const PurchaseEntranceEffectParams = zod.object({
 })
 
 export const PurchaseEntranceEffectBody = zod.object({
-  "requestId": zod.string().uuid()
+  "requestId": zod.uuid()
 })
 
 export const purchaseEntranceEffectResponseEffectIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
@@ -2358,12 +2358,12 @@ export const PurchaseEntranceEffectResponse = zod.object({
   "effectId": zod.string().regex(purchaseEntranceEffectResponseEffectIdRegExp),
   "purchased": zod.boolean(),
   "wallet": zod.object({
-  "balance": zod.number().int(),
-  "earned": zod.number().int(),
-  "received": zod.number().int(),
-  "sent": zod.number().int(),
+  "balance": zod.int(),
+  "earned": zod.int(),
+  "received": zod.int(),
+  "sent": zod.int(),
   "canClaimDaily": zod.boolean(),
-  "dailyReward": zod.number().int(),
+  "dailyReward": zod.int(),
   "unlimited": zod.boolean().describe('True only for the development-preview owner account; does not alter the stored wallet balance.')
 })
 })
@@ -2415,12 +2415,12 @@ export const getGiftStudioLibraryResponseCatalogItemIdRegExp = new RegExp('^(goo
 
 export const GetGiftStudioLibraryResponse = zod.object({
   "items": zod.array(zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "giftId": zod.union([zod.string().regex(getGiftStudioLibraryResponseItemsItemGiftIdOneRegExp),zod.null()]),
-  "version": zod.number().int(),
+  "version": zod.int(),
   "status": zod.enum(['draft', 'active']),
   "originalName": zod.string(),
-  "durationMs": zod.number().int(),
+  "durationMs": zod.int(),
   "settings": zod.object({
   "preset": zod.enum(['green', 'magenta', 'black', 'custom']),
   "keyColor": zod.string().regex(getGiftStudioLibraryResponseItemsItemSettingsKeyColorRegExp),
@@ -2438,14 +2438,14 @@ export const GetGiftStudioLibraryResponse = zod.object({
   "originalUrl": zod.string(),
   "webmUrl": zod.string(),
   "safariUrl": zod.string(),
-  "originalBytes": zod.number().int(),
-  "webmBytes": zod.number().int(),
-  "safariBytes": zod.number().int()
+  "originalBytes": zod.int(),
+  "webmBytes": zod.int(),
+  "safariBytes": zod.int()
 })),
   "catalog": zod.array(zod.object({
   "id": zod.string().regex(getGiftStudioLibraryResponseCatalogItemIdRegExp),
   "name": zod.string(),
-  "cost": zod.number().int().min(1),
+  "cost": zod.int().min(1),
   "productType": zod.enum(['gift', 'entrance-effect']),
   "status": zod.enum(['active', 'inactive', 'deleted']),
   "roomGift": zod.boolean(),
@@ -2490,26 +2490,26 @@ export const GetDeveloperContentSyncResponse = zod.object({
   "lastScheduledEasternDate": zod.union([zod.coerce.date(),zod.null()]),
   "summary": zod.union([zod.object({
   "trigger": zod.enum(['manual', 'scheduled', 'startup-catchup']),
-  "added": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneAddedMin),
-  "updated": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneUpdatedMin),
-  "skipped": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneSkippedMin),
+  "added": zod.int().min(getDeveloperContentSyncResponseSummaryOneAddedMin),
+  "updated": zod.int().min(getDeveloperContentSyncResponseSummaryOneUpdatedMin),
+  "skipped": zod.int().min(getDeveloperContentSyncResponseSummaryOneSkippedMin),
   "videoPools": zod.array(zod.object({
   "roomId": zod.string(),
-  "added": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneVideoPoolsItemAddedMin),
-  "updated": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneVideoPoolsItemUpdatedMin),
-  "skipped": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneVideoPoolsItemSkippedMin),
-  "savedCount": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneVideoPoolsItemSavedCountMin),
+  "added": zod.int().min(getDeveloperContentSyncResponseSummaryOneVideoPoolsItemAddedMin),
+  "updated": zod.int().min(getDeveloperContentSyncResponseSummaryOneVideoPoolsItemUpdatedMin),
+  "skipped": zod.int().min(getDeveloperContentSyncResponseSummaryOneVideoPoolsItemSkippedMin),
+  "savedCount": zod.int().min(getDeveloperContentSyncResponseSummaryOneVideoPoolsItemSavedCountMin),
   "message": zod.string().optional()
 })),
   "giftEffects": zod.object({
-  "active": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneGiftEffectsActiveMin),
-  "drafts": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneGiftEffectsDraftsMin),
-  "skipped": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneGiftEffectsSkippedMin)
+  "active": zod.int().min(getDeveloperContentSyncResponseSummaryOneGiftEffectsActiveMin),
+  "drafts": zod.int().min(getDeveloperContentSyncResponseSummaryOneGiftEffectsDraftsMin),
+  "skipped": zod.int().min(getDeveloperContentSyncResponseSummaryOneGiftEffectsSkippedMin)
 }),
   "entranceEffects": zod.object({
-  "active": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneEntranceEffectsActiveMin),
-  "drafts": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneEntranceEffectsDraftsMin),
-  "skipped": zod.number().int().min(getDeveloperContentSyncResponseSummaryOneEntranceEffectsSkippedMin)
+  "active": zod.int().min(getDeveloperContentSyncResponseSummaryOneEntranceEffectsActiveMin),
+  "drafts": zod.int().min(getDeveloperContentSyncResponseSummaryOneEntranceEffectsDraftsMin),
+  "skipped": zod.int().min(getDeveloperContentSyncResponseSummaryOneEntranceEffectsSkippedMin)
 })
 }),zod.null()]),
   "isRunning": zod.boolean()
@@ -2549,26 +2549,26 @@ export const RunDeveloperContentSyncResponse = zod.object({
   "lastScheduledEasternDate": zod.union([zod.coerce.date(),zod.null()]),
   "summary": zod.union([zod.object({
   "trigger": zod.enum(['manual', 'scheduled', 'startup-catchup']),
-  "added": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneAddedMin),
-  "updated": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneUpdatedMin),
-  "skipped": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneSkippedMin),
+  "added": zod.int().min(runDeveloperContentSyncResponseSummaryOneAddedMin),
+  "updated": zod.int().min(runDeveloperContentSyncResponseSummaryOneUpdatedMin),
+  "skipped": zod.int().min(runDeveloperContentSyncResponseSummaryOneSkippedMin),
   "videoPools": zod.array(zod.object({
   "roomId": zod.string(),
-  "added": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneVideoPoolsItemAddedMin),
-  "updated": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneVideoPoolsItemUpdatedMin),
-  "skipped": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneVideoPoolsItemSkippedMin),
-  "savedCount": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneVideoPoolsItemSavedCountMin),
+  "added": zod.int().min(runDeveloperContentSyncResponseSummaryOneVideoPoolsItemAddedMin),
+  "updated": zod.int().min(runDeveloperContentSyncResponseSummaryOneVideoPoolsItemUpdatedMin),
+  "skipped": zod.int().min(runDeveloperContentSyncResponseSummaryOneVideoPoolsItemSkippedMin),
+  "savedCount": zod.int().min(runDeveloperContentSyncResponseSummaryOneVideoPoolsItemSavedCountMin),
   "message": zod.string().optional()
 })),
   "giftEffects": zod.object({
-  "active": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneGiftEffectsActiveMin),
-  "drafts": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneGiftEffectsDraftsMin),
-  "skipped": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneGiftEffectsSkippedMin)
+  "active": zod.int().min(runDeveloperContentSyncResponseSummaryOneGiftEffectsActiveMin),
+  "drafts": zod.int().min(runDeveloperContentSyncResponseSummaryOneGiftEffectsDraftsMin),
+  "skipped": zod.int().min(runDeveloperContentSyncResponseSummaryOneGiftEffectsSkippedMin)
 }),
   "entranceEffects": zod.object({
-  "active": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneEntranceEffectsActiveMin),
-  "drafts": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneEntranceEffectsDraftsMin),
-  "skipped": zod.number().int().min(runDeveloperContentSyncResponseSummaryOneEntranceEffectsSkippedMin)
+  "active": zod.int().min(runDeveloperContentSyncResponseSummaryOneEntranceEffectsActiveMin),
+  "drafts": zod.int().min(runDeveloperContentSyncResponseSummaryOneEntranceEffectsDraftsMin),
+  "skipped": zod.int().min(runDeveloperContentSyncResponseSummaryOneEntranceEffectsSkippedMin)
 })
 }),zod.null()]),
   "isRunning": zod.boolean()
@@ -2581,7 +2581,7 @@ export const getHangoutRewardSettingsResponseAverageIntervalMinutesMax = 360;
 
 
 export const GetHangoutRewardSettingsResponse = zod.object({
-  "averageIntervalMinutes": zod.number().int().min(getHangoutRewardSettingsResponseAverageIntervalMinutesMin).max(getHangoutRewardSettingsResponseAverageIntervalMinutesMax),
+  "averageIntervalMinutes": zod.int().min(getHangoutRewardSettingsResponseAverageIntervalMinutesMin).max(getHangoutRewardSettingsResponseAverageIntervalMinutesMax),
   "nextDropAt": zod.coerce.date(),
   "lastDropAt": zod.coerce.date().nullable()
 })
@@ -2593,7 +2593,7 @@ export const setHangoutRewardIntervalBodyAverageIntervalMinutesMax = 360;
 
 
 export const SetHangoutRewardIntervalBody = zod.object({
-  "averageIntervalMinutes": zod.number().int().min(setHangoutRewardIntervalBodyAverageIntervalMinutesMin).max(setHangoutRewardIntervalBodyAverageIntervalMinutesMax)
+  "averageIntervalMinutes": zod.int().min(setHangoutRewardIntervalBodyAverageIntervalMinutesMin).max(setHangoutRewardIntervalBodyAverageIntervalMinutesMax)
 })
 
 export const setHangoutRewardIntervalResponseAverageIntervalMinutesMin = 15;
@@ -2602,7 +2602,7 @@ export const setHangoutRewardIntervalResponseAverageIntervalMinutesMax = 360;
 
 
 export const SetHangoutRewardIntervalResponse = zod.object({
-  "averageIntervalMinutes": zod.number().int().min(setHangoutRewardIntervalResponseAverageIntervalMinutesMin).max(setHangoutRewardIntervalResponseAverageIntervalMinutesMax),
+  "averageIntervalMinutes": zod.int().min(setHangoutRewardIntervalResponseAverageIntervalMinutesMin).max(setHangoutRewardIntervalResponseAverageIntervalMinutesMax),
   "nextDropAt": zod.coerce.date(),
   "lastDropAt": zod.coerce.date().nullable()
 })
@@ -2641,7 +2641,7 @@ export const GetAdminGiftMotionsResponse = zod.object({
   "motions": zod.array(zod.object({
   "id": zod.string().regex(getAdminGiftMotionsResponseMotionsItemIdRegExp),
   "name": zod.string(),
-  "cost": zod.number().int().min(1),
+  "cost": zod.int().min(1),
   "format": zod.enum(['glb', 'gltf']),
   "category": zod.enum(['vehicle', 'character', 'object', 'logo']),
   "animationNames": zod.array(zod.string()),
@@ -2657,9 +2657,9 @@ export const GetAdminGiftMotionsResponse = zod.object({
   "bounce": zod.number().min(getAdminGiftMotionsResponseMotionsItemMotionBounceMin).max(getAdminGiftMotionsResponseMotionsItemMotionBounceMax),
   "cameraYaw": zod.number().min(getAdminGiftMotionsResponseMotionsItemMotionCameraYawMin).max(getAdminGiftMotionsResponseMotionsItemMotionCameraYawMax),
   "cameraPitch": zod.number().min(getAdminGiftMotionsResponseMotionsItemMotionCameraPitchMin).max(getAdminGiftMotionsResponseMotionsItemMotionCameraPitchMax),
-  "animationIndex": zod.number().int().min(getAdminGiftMotionsResponseMotionsItemMotionAnimationIndexMin).max(getAdminGiftMotionsResponseMotionsItemMotionAnimationIndexMax).nullable()
+  "animationIndex": zod.int().min(getAdminGiftMotionsResponseMotionsItemMotionAnimationIndexMin).max(getAdminGiftMotionsResponseMotionsItemMotionAnimationIndexMax).nullable()
 }),
-  "byteSize": zod.number().int().min(1),
+  "byteSize": zod.int().min(1),
   "fileUrl": zod.string(),
   "active": zod.boolean(),
   "createdAt": zod.coerce.date()
@@ -2674,7 +2674,7 @@ export const uploadGiftMotionBodyNameMax = 60;
 
 export const UploadGiftMotionBody = zod.object({
   "name": zod.string().min(1).max(uploadGiftMotionBodyNameMax),
-  "cost": zod.number().int().min(1),
+  "cost": zod.int().min(1),
   "category": zod.enum(['vehicle', 'character', 'object', 'logo']),
   "animationNames": zod.string().describe('JSON array of built-in animation clip names'),
   "motion": zod.string().describe('JSON-encoded deterministic 6-second motion preset'),
@@ -2713,7 +2713,7 @@ export const uploadGiftMotionResponseMotionAnimationIndexMax = 100;
 export const UploadGiftMotionResponse = zod.object({
   "id": zod.string().regex(uploadGiftMotionResponseIdRegExp),
   "name": zod.string(),
-  "cost": zod.number().int().min(1),
+  "cost": zod.int().min(1),
   "format": zod.enum(['glb', 'gltf']),
   "category": zod.enum(['vehicle', 'character', 'object', 'logo']),
   "animationNames": zod.array(zod.string()),
@@ -2729,9 +2729,9 @@ export const UploadGiftMotionResponse = zod.object({
   "bounce": zod.number().min(uploadGiftMotionResponseMotionBounceMin).max(uploadGiftMotionResponseMotionBounceMax),
   "cameraYaw": zod.number().min(uploadGiftMotionResponseMotionCameraYawMin).max(uploadGiftMotionResponseMotionCameraYawMax),
   "cameraPitch": zod.number().min(uploadGiftMotionResponseMotionCameraPitchMin).max(uploadGiftMotionResponseMotionCameraPitchMax),
-  "animationIndex": zod.number().int().min(uploadGiftMotionResponseMotionAnimationIndexMin).max(uploadGiftMotionResponseMotionAnimationIndexMax).nullable()
+  "animationIndex": zod.int().min(uploadGiftMotionResponseMotionAnimationIndexMin).max(uploadGiftMotionResponseMotionAnimationIndexMax).nullable()
 }),
-  "byteSize": zod.number().int().min(1),
+  "byteSize": zod.int().min(1),
   "fileUrl": zod.string(),
   "active": zod.boolean(),
   "createdAt": zod.coerce.date()
@@ -2789,7 +2789,7 @@ export const getGiftMotionPlaybackResponseMotionAnimationIndexMax = 100;
 export const GetGiftMotionPlaybackResponse = zod.object({
   "id": zod.string().regex(getGiftMotionPlaybackResponseIdRegExp),
   "name": zod.string(),
-  "cost": zod.number().int().min(1),
+  "cost": zod.int().min(1),
   "format": zod.enum(['glb', 'gltf']),
   "category": zod.enum(['vehicle', 'character', 'object', 'logo']),
   "animationNames": zod.array(zod.string()),
@@ -2805,9 +2805,9 @@ export const GetGiftMotionPlaybackResponse = zod.object({
   "bounce": zod.number().min(getGiftMotionPlaybackResponseMotionBounceMin).max(getGiftMotionPlaybackResponseMotionBounceMax),
   "cameraYaw": zod.number().min(getGiftMotionPlaybackResponseMotionCameraYawMin).max(getGiftMotionPlaybackResponseMotionCameraYawMax),
   "cameraPitch": zod.number().min(getGiftMotionPlaybackResponseMotionCameraPitchMin).max(getGiftMotionPlaybackResponseMotionCameraPitchMax),
-  "animationIndex": zod.number().int().min(getGiftMotionPlaybackResponseMotionAnimationIndexMin).max(getGiftMotionPlaybackResponseMotionAnimationIndexMax).nullable()
+  "animationIndex": zod.int().min(getGiftMotionPlaybackResponseMotionAnimationIndexMin).max(getGiftMotionPlaybackResponseMotionAnimationIndexMax).nullable()
 }),
-  "byteSize": zod.number().int().min(1),
+  "byteSize": zod.int().min(1),
   "fileUrl": zod.string(),
   "active": zod.boolean(),
   "createdAt": zod.coerce.date()
@@ -2838,7 +2838,7 @@ export const updateGiftStudioCatalogItemBodyNameMax = 60;
 
 export const UpdateGiftStudioCatalogItemBody = zod.object({
   "name": zod.string().min(1).max(updateGiftStudioCatalogItemBodyNameMax).optional(),
-  "cost": zod.number().int().min(1).optional(),
+  "cost": zod.int().min(1).optional(),
   "productType": zod.enum(['gift', 'entrance-effect']).optional(),
   "status": zod.enum(['active', 'inactive', 'deleted']).optional(),
   "platinumExclusive": zod.boolean().optional().describe('Owner-selected gift restricted to gifter level 61 or higher. Defaults false.')
@@ -2851,7 +2851,7 @@ export const updateGiftStudioCatalogItemResponseIdRegExp = new RegExp('^(good-vi
 export const UpdateGiftStudioCatalogItemResponse = zod.object({
   "id": zod.string().regex(updateGiftStudioCatalogItemResponseIdRegExp),
   "name": zod.string(),
-  "cost": zod.number().int().min(1),
+  "cost": zod.int().min(1),
   "productType": zod.enum(['gift', 'entrance-effect']),
   "status": zod.enum(['active', 'inactive', 'deleted']),
   "roomGift": zod.boolean(),
@@ -2877,11 +2877,11 @@ export const saveGiftStudioProcessedBodyGiftIdOneRegExp = new RegExp('^(good-vib
 
 
 export const SaveGiftStudioProcessedBody = zod.object({
-  "processingSession": zod.string().uuid(),
+  "processingSession": zod.uuid(),
   "draftName": zod.string().min(1).max(saveGiftStudioProcessedBodyDraftNameMax),
   "giftId": zod.union([zod.string().regex(saveGiftStudioProcessedBodyGiftIdOneRegExp),zod.null()]).optional(),
   "productType": zod.enum(['gift', 'entrance-effect']).optional(),
-  "cost": zod.number().int().min(1).optional().describe('Optional updated credit price for an existing catalog gift')
+  "cost": zod.int().min(1).optional().describe('Optional updated credit price for an existing catalog gift')
 })
 
 export const saveGiftStudioProcessedResponseGiftIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
@@ -2903,12 +2903,12 @@ export const saveGiftStudioProcessedResponseSettingsDraftNameMax = 60;
 
 
 export const SaveGiftStudioProcessedResponse = zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "giftId": zod.union([zod.string().regex(saveGiftStudioProcessedResponseGiftIdOneRegExp),zod.null()]),
-  "version": zod.number().int(),
+  "version": zod.int(),
   "status": zod.enum(['draft', 'active']),
   "originalName": zod.string(),
-  "durationMs": zod.number().int(),
+  "durationMs": zod.int(),
   "settings": zod.object({
   "preset": zod.enum(['green', 'magenta', 'black', 'custom']),
   "keyColor": zod.string().regex(saveGiftStudioProcessedResponseSettingsKeyColorRegExp),
@@ -2926,9 +2926,9 @@ export const SaveGiftStudioProcessedResponse = zod.object({
   "originalUrl": zod.string(),
   "webmUrl": zod.string(),
   "safariUrl": zod.string(),
-  "originalBytes": zod.number().int(),
-  "webmBytes": zod.number().int(),
-  "safariBytes": zod.number().int()
+  "originalBytes": zod.int(),
+  "webmBytes": zod.int(),
+  "safariBytes": zod.int()
 })
 
 
@@ -2939,7 +2939,7 @@ export const createGiftStudioVersionBodyGiftIdOneRegExp = new RegExp('^(good-vib
 export const CreateGiftStudioVersionBody = zod.object({
   "giftId": zod.union([zod.string().regex(createGiftStudioVersionBodyGiftIdOneRegExp),zod.null()]).optional(),
   "productType": zod.enum(['gift', 'entrance-effect']).optional(),
-  "cost": zod.number().int().min(1).optional().describe('Optional updated credit price for an existing catalog gift'),
+  "cost": zod.int().min(1).optional().describe('Optional updated credit price for an existing catalog gift'),
   "settings": zod.string().describe('JSON-serialized GiftStudioProcessingSettings'),
   "sourceVideo": zod.string().describe('Video file part'),
   "processedWebm": zod.string().describe('Processed WebM file part; transparent for see-through videos and opaque for black-background videos')
@@ -2964,12 +2964,12 @@ export const createGiftStudioVersionResponseSettingsDraftNameMax = 60;
 
 
 export const CreateGiftStudioVersionResponse = zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "giftId": zod.union([zod.string().regex(createGiftStudioVersionResponseGiftIdOneRegExp),zod.null()]),
-  "version": zod.number().int(),
+  "version": zod.int(),
   "status": zod.enum(['draft', 'active']),
   "originalName": zod.string(),
-  "durationMs": zod.number().int(),
+  "durationMs": zod.int(),
   "settings": zod.object({
   "preset": zod.enum(['green', 'magenta', 'black', 'custom']),
   "keyColor": zod.string().regex(createGiftStudioVersionResponseSettingsKeyColorRegExp),
@@ -2987,14 +2987,14 @@ export const CreateGiftStudioVersionResponse = zod.object({
   "originalUrl": zod.string(),
   "webmUrl": zod.string(),
   "safariUrl": zod.string(),
-  "originalBytes": zod.number().int(),
-  "webmBytes": zod.number().int(),
-  "safariBytes": zod.number().int()
+  "originalBytes": zod.int(),
+  "webmBytes": zod.int(),
+  "safariBytes": zod.int()
 })
 
 
 export const SetGiftStudioVersionActiveParams = zod.object({
-  "versionId": zod.coerce.string().uuid()
+  "versionId": zod.uuid()
 })
 
 
@@ -3003,7 +3003,7 @@ export const SetGiftStudioVersionActiveParams = zod.object({
 export const SetGiftStudioVersionActiveBody = zod.object({
   "active": zod.boolean(),
   "productType": zod.enum(['gift', 'entrance-effect']).optional(),
-  "cost": zod.number().int().min(1).optional()
+  "cost": zod.int().min(1).optional()
 })
 
 export const setGiftStudioVersionActiveResponseGiftIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
@@ -3025,12 +3025,12 @@ export const setGiftStudioVersionActiveResponseSettingsDraftNameMax = 60;
 
 
 export const SetGiftStudioVersionActiveResponse = zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "giftId": zod.union([zod.string().regex(setGiftStudioVersionActiveResponseGiftIdOneRegExp),zod.null()]),
-  "version": zod.number().int(),
+  "version": zod.int(),
   "status": zod.enum(['draft', 'active']),
   "originalName": zod.string(),
-  "durationMs": zod.number().int(),
+  "durationMs": zod.int(),
   "settings": zod.object({
   "preset": zod.enum(['green', 'magenta', 'black', 'custom']),
   "keyColor": zod.string().regex(setGiftStudioVersionActiveResponseSettingsKeyColorRegExp),
@@ -3048,14 +3048,14 @@ export const SetGiftStudioVersionActiveResponse = zod.object({
   "originalUrl": zod.string(),
   "webmUrl": zod.string(),
   "safariUrl": zod.string(),
-  "originalBytes": zod.number().int(),
-  "webmBytes": zod.number().int(),
-  "safariBytes": zod.number().int()
+  "originalBytes": zod.int(),
+  "webmBytes": zod.int(),
+  "safariBytes": zod.int()
 })
 
 
 export const RenameGiftStudioVersionParams = zod.object({
-  "versionId": zod.coerce.string().uuid()
+  "versionId": zod.uuid()
 })
 
 export const renameGiftStudioVersionBodyNameMax = 60;
@@ -3085,12 +3085,12 @@ export const renameGiftStudioVersionResponseSettingsDraftNameMax = 60;
 
 
 export const RenameGiftStudioVersionResponse = zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "giftId": zod.union([zod.string().regex(renameGiftStudioVersionResponseGiftIdOneRegExp),zod.null()]),
-  "version": zod.number().int(),
+  "version": zod.int(),
   "status": zod.enum(['draft', 'active']),
   "originalName": zod.string(),
-  "durationMs": zod.number().int(),
+  "durationMs": zod.int(),
   "settings": zod.object({
   "preset": zod.enum(['green', 'magenta', 'black', 'custom']),
   "keyColor": zod.string().regex(renameGiftStudioVersionResponseSettingsKeyColorRegExp),
@@ -3108,14 +3108,14 @@ export const RenameGiftStudioVersionResponse = zod.object({
   "originalUrl": zod.string(),
   "webmUrl": zod.string(),
   "safariUrl": zod.string(),
-  "originalBytes": zod.number().int(),
-  "webmBytes": zod.number().int(),
-  "safariBytes": zod.number().int()
+  "originalBytes": zod.int(),
+  "webmBytes": zod.int(),
+  "safariBytes": zod.int()
 })
 
 
 export const DeleteGiftStudioVersionParams = zod.object({
-  "versionId": zod.coerce.string().uuid()
+  "versionId": zod.uuid()
 })
 
 export const DeleteGiftStudioVersionResponse = zod.object({
@@ -3124,7 +3124,7 @@ export const DeleteGiftStudioVersionResponse = zod.object({
 
 
 export const AssignGiftStudioVersionToGiftParams = zod.object({
-  "versionId": zod.coerce.string().uuid()
+  "versionId": zod.uuid()
 })
 
 export const assignGiftStudioVersionToGiftBodyGiftIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
@@ -3153,12 +3153,12 @@ export const assignGiftStudioVersionToGiftResponseSettingsDraftNameMax = 60;
 
 
 export const AssignGiftStudioVersionToGiftResponse = zod.object({
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "giftId": zod.union([zod.string().regex(assignGiftStudioVersionToGiftResponseGiftIdOneRegExp),zod.null()]),
-  "version": zod.number().int(),
+  "version": zod.int(),
   "status": zod.enum(['draft', 'active']),
   "originalName": zod.string(),
-  "durationMs": zod.number().int(),
+  "durationMs": zod.int(),
   "settings": zod.object({
   "preset": zod.enum(['green', 'magenta', 'black', 'custom']),
   "keyColor": zod.string().regex(assignGiftStudioVersionToGiftResponseSettingsKeyColorRegExp),
@@ -3176,14 +3176,14 @@ export const AssignGiftStudioVersionToGiftResponse = zod.object({
   "originalUrl": zod.string(),
   "webmUrl": zod.string(),
   "safariUrl": zod.string(),
-  "originalBytes": zod.number().int(),
-  "webmBytes": zod.number().int(),
-  "safariBytes": zod.number().int()
+  "originalBytes": zod.int(),
+  "webmBytes": zod.int(),
+  "safariBytes": zod.int()
 })
 
 
 export const GetGiftStudioVersionMediaParams = zod.object({
-  "versionId": zod.coerce.string().uuid(),
+  "versionId": zod.uuid(),
   "variant": zod.enum(['original', 'webm', 'safari'])
 })
 
@@ -3191,7 +3191,7 @@ export const GetGiftStudioVersionMediaResponse = zod.unknown()
 
 
 export const GetActiveGiftStudioVersionMediaParams = zod.object({
-  "versionId": zod.coerce.string().uuid(),
+  "versionId": zod.uuid(),
   "variant": zod.enum(['webm', 'safari'])
 })
 
@@ -3213,11 +3213,11 @@ export const getActiveGiftStudioMediaResponseMediaOneDurationMsMax = 15000;
 
 export const GetActiveGiftStudioMediaResponse = zod.object({
   "media": zod.union([zod.object({
-  "versionId": zod.string().uuid(),
+  "versionId": zod.uuid(),
   "name": zod.string().min(1).max(getActiveGiftStudioMediaResponseMediaOneNameMax),
   "webmUrl": zod.string(),
   "safariUrl": zod.string(),
-  "durationMs": zod.number().int().min(1).max(getActiveGiftStudioMediaResponseMediaOneDurationMsMax),
+  "durationMs": zod.int().min(1).max(getActiveGiftStudioMediaResponseMediaOneDurationMsMax),
   "backgroundMode": zod.enum(['see-through', 'black'])
 }),zod.null()])
 })
@@ -3263,10 +3263,10 @@ export const GetSocialPeopleResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().optional(),
   "displayNameColor": zod.string().regex(getSocialPeopleResponsePeopleItemDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(getSocialPeopleResponsePeopleItemDisplayNameTierIndexMin).max(getSocialPeopleResponsePeopleItemDisplayNameTierIndexMax).optional(),
-  "followerCount": zod.number().int().min(getSocialPeopleResponsePeopleItemFollowerCountMin).optional(),
-  "followingCount": zod.number().int().min(getSocialPeopleResponsePeopleItemFollowingCountMin).optional(),
-  "sentCredits": zod.number().int().min(getSocialPeopleResponsePeopleItemSentCreditsMin).optional(),
+  "displayNameTierIndex": zod.int().min(getSocialPeopleResponsePeopleItemDisplayNameTierIndexMin).max(getSocialPeopleResponsePeopleItemDisplayNameTierIndexMax).optional(),
+  "followerCount": zod.int().min(getSocialPeopleResponsePeopleItemFollowerCountMin).optional(),
+  "followingCount": zod.int().min(getSocialPeopleResponsePeopleItemFollowingCountMin).optional(),
+  "sentCredits": zod.int().min(getSocialPeopleResponsePeopleItemSentCreditsMin).optional(),
   "badges": zod.array(zod.object({
   "id": zod.string(),
   "earnedAt": zod.coerce.date()
@@ -3291,7 +3291,7 @@ export const GetSocialPeopleResponse = zod.object({
   "discoverable": zod.boolean(),
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
-  "receivedCredits": zod.number().int(),
+  "receivedCredits": zod.int(),
   "badgeId": zod.union([zod.string(),zod.null()]),
   "badgeName": zod.string().nullable(),
   "badgeImage": zod.string().nullable(),
@@ -3305,7 +3305,7 @@ export const GetSocialPeopleResponse = zod.object({
   "foundingLeague": zod.boolean()
 }).optional()
 })),
-  "total": zod.number().int()
+  "total": zod.int()
 })
 
 
@@ -3340,10 +3340,10 @@ export const GetSocialPersonResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().optional(),
   "displayNameColor": zod.string().regex(getSocialPersonResponseDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(getSocialPersonResponseDisplayNameTierIndexMin).max(getSocialPersonResponseDisplayNameTierIndexMax).optional(),
-  "followerCount": zod.number().int().min(getSocialPersonResponseFollowerCountMin).optional(),
-  "followingCount": zod.number().int().min(getSocialPersonResponseFollowingCountMin).optional(),
-  "sentCredits": zod.number().int().min(getSocialPersonResponseSentCreditsMin).optional(),
+  "displayNameTierIndex": zod.int().min(getSocialPersonResponseDisplayNameTierIndexMin).max(getSocialPersonResponseDisplayNameTierIndexMax).optional(),
+  "followerCount": zod.int().min(getSocialPersonResponseFollowerCountMin).optional(),
+  "followingCount": zod.int().min(getSocialPersonResponseFollowingCountMin).optional(),
+  "sentCredits": zod.int().min(getSocialPersonResponseSentCreditsMin).optional(),
   "badges": zod.array(zod.object({
   "id": zod.string(),
   "earnedAt": zod.coerce.date()
@@ -3368,7 +3368,7 @@ export const GetSocialPersonResponse = zod.object({
   "discoverable": zod.boolean(),
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
-  "receivedCredits": zod.number().int(),
+  "receivedCredits": zod.int(),
   "badgeId": zod.union([zod.string(),zod.null()]),
   "badgeName": zod.string().nullable(),
   "badgeImage": zod.string().nullable(),
@@ -3426,10 +3426,10 @@ export const GetSocialBlocksResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().optional(),
   "displayNameColor": zod.string().regex(getSocialBlocksResponsePeopleItemDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(getSocialBlocksResponsePeopleItemDisplayNameTierIndexMin).max(getSocialBlocksResponsePeopleItemDisplayNameTierIndexMax).optional(),
-  "followerCount": zod.number().int().min(getSocialBlocksResponsePeopleItemFollowerCountMin).optional(),
-  "followingCount": zod.number().int().min(getSocialBlocksResponsePeopleItemFollowingCountMin).optional(),
-  "sentCredits": zod.number().int().min(getSocialBlocksResponsePeopleItemSentCreditsMin).optional(),
+  "displayNameTierIndex": zod.int().min(getSocialBlocksResponsePeopleItemDisplayNameTierIndexMin).max(getSocialBlocksResponsePeopleItemDisplayNameTierIndexMax).optional(),
+  "followerCount": zod.int().min(getSocialBlocksResponsePeopleItemFollowerCountMin).optional(),
+  "followingCount": zod.int().min(getSocialBlocksResponsePeopleItemFollowingCountMin).optional(),
+  "sentCredits": zod.int().min(getSocialBlocksResponsePeopleItemSentCreditsMin).optional(),
   "badges": zod.array(zod.object({
   "id": zod.string(),
   "earnedAt": zod.coerce.date()
@@ -3454,7 +3454,7 @@ export const GetSocialBlocksResponse = zod.object({
   "discoverable": zod.boolean(),
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
-  "receivedCredits": zod.number().int(),
+  "receivedCredits": zod.int(),
   "badgeId": zod.union([zod.string(),zod.null()]),
   "badgeName": zod.string().nullable(),
   "badgeImage": zod.string().nullable(),
@@ -3468,17 +3468,17 @@ export const GetSocialBlocksResponse = zod.object({
   "foundingLeague": zod.boolean()
 }).optional()
 })),
-  "total": zod.number().int()
+  "total": zod.int()
 })
 
 
 export const ClaimSocialDailyRewardResponse = zod.object({
-  "balance": zod.number().int(),
-  "earned": zod.number().int(),
-  "received": zod.number().int(),
-  "sent": zod.number().int(),
+  "balance": zod.int(),
+  "earned": zod.int(),
+  "received": zod.int(),
+  "sent": zod.int(),
   "canClaimDaily": zod.boolean(),
-  "dailyReward": zod.number().int(),
+  "dailyReward": zod.int(),
   "unlimited": zod.boolean().describe('True only for the development-preview owner account; does not alter the stored wallet balance.')
 })
 
@@ -3492,18 +3492,18 @@ export const SendSocialGiftBody = zod.object({
   "giftId": zod.string(),
   "roomId": zod.string().optional(),
   "streamId": zod.string().optional(),
-  "quantity": zod.number().int().min(1).max(sendSocialGiftBodyQuantityMax).optional(),
+  "quantity": zod.int().min(1).max(sendSocialGiftBodyQuantityMax).optional(),
   "useGiftBagOnly": zod.boolean().optional().describe('Do not charge for missing units; reject if held inventory is insufficient.'),
-  "idempotencyKey": zod.string().uuid()
+  "idempotencyKey": zod.uuid()
 })
 
 export const SendSocialGiftResponse = zod.object({
-  "balance": zod.number().int(),
-  "earned": zod.number().int(),
-  "received": zod.number().int(),
-  "sent": zod.number().int(),
+  "balance": zod.int(),
+  "earned": zod.int(),
+  "received": zod.int(),
+  "sent": zod.int(),
   "canClaimDaily": zod.boolean(),
-  "dailyReward": zod.number().int(),
+  "dailyReward": zod.int(),
   "unlimited": zod.boolean().describe('True only for the development-preview owner account; does not alter the stored wallet balance.')
 })
 
@@ -3536,15 +3536,15 @@ export const GetRoomGiftEventsResponse = zod.object({
   "id": zod.string(),
   "giftId": zod.string(),
   "giftName": zod.string(),
-  "quantity": zod.number().int().min(1).max(getRoomGiftEventsResponseEventsItemQuantityMax),
+  "quantity": zod.int().min(1).max(getRoomGiftEventsResponseEventsItemQuantityMax),
   "senderUsername": zod.string(),
   "recipientUsername": zod.string(),
   "senderName": zod.string(),
   "recipientName": zod.string(),
   "senderNameColor": zod.string().regex(getRoomGiftEventsResponseEventsItemSenderNameColorRegExp).optional(),
-  "senderNameTierIndex": zod.number().int().min(getRoomGiftEventsResponseEventsItemSenderNameTierIndexMin).max(getRoomGiftEventsResponseEventsItemSenderNameTierIndexMax).optional(),
+  "senderNameTierIndex": zod.int().min(getRoomGiftEventsResponseEventsItemSenderNameTierIndexMin).max(getRoomGiftEventsResponseEventsItemSenderNameTierIndexMax).optional(),
   "recipientNameColor": zod.string().regex(getRoomGiftEventsResponseEventsItemRecipientNameColorRegExp).optional(),
-  "recipientNameTierIndex": zod.number().int().min(getRoomGiftEventsResponseEventsItemRecipientNameTierIndexMin).max(getRoomGiftEventsResponseEventsItemRecipientNameTierIndexMax).optional(),
+  "recipientNameTierIndex": zod.int().min(getRoomGiftEventsResponseEventsItemRecipientNameTierIndexMin).max(getRoomGiftEventsResponseEventsItemRecipientNameTierIndexMax).optional(),
   "senderBadgeId": zod.string().nullable(),
   "recipientBadgeId": zod.string().nullable(),
   "senderBadgeName": zod.string().nullable(),
@@ -3578,16 +3578,16 @@ export const GetRoomGiftEventsResponse = zod.object({
 
 export const PurchaseSocialProductBody = zod.object({
   "itemId": zod.string(),
-  "idempotencyKey": zod.string().uuid()
+  "idempotencyKey": zod.uuid()
 })
 
 export const PurchaseSocialProductResponse = zod.object({
-  "balance": zod.number().int(),
-  "earned": zod.number().int(),
-  "received": zod.number().int(),
-  "sent": zod.number().int(),
+  "balance": zod.int(),
+  "earned": zod.int(),
+  "received": zod.int(),
+  "sent": zod.int(),
   "canClaimDaily": zod.boolean(),
-  "dailyReward": zod.number().int(),
+  "dailyReward": zod.int(),
   "unlimited": zod.boolean().describe('True only for the development-preview owner account; does not alter the stored wallet balance.')
 })
 
@@ -3596,7 +3596,7 @@ export const GetSocialLedgerResponse = zod.object({
   "transactions": zod.array(zod.object({
   "id": zod.string(),
   "createdAt": zod.coerce.date(),
-  "delta": zod.number().int(),
+  "delta": zod.int(),
   "kind": zod.string(),
   "description": zod.string(),
   "peer": zod.union([zod.string(),zod.null()])
@@ -3632,10 +3632,10 @@ export const GetSocialLeaderboardResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().optional(),
   "displayNameColor": zod.string().regex(getSocialLeaderboardResponsePeopleItemDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(getSocialLeaderboardResponsePeopleItemDisplayNameTierIndexMin).max(getSocialLeaderboardResponsePeopleItemDisplayNameTierIndexMax).optional(),
-  "followerCount": zod.number().int().min(getSocialLeaderboardResponsePeopleItemFollowerCountMin).optional(),
-  "followingCount": zod.number().int().min(getSocialLeaderboardResponsePeopleItemFollowingCountMin).optional(),
-  "sentCredits": zod.number().int().min(getSocialLeaderboardResponsePeopleItemSentCreditsMin).optional(),
+  "displayNameTierIndex": zod.int().min(getSocialLeaderboardResponsePeopleItemDisplayNameTierIndexMin).max(getSocialLeaderboardResponsePeopleItemDisplayNameTierIndexMax).optional(),
+  "followerCount": zod.int().min(getSocialLeaderboardResponsePeopleItemFollowerCountMin).optional(),
+  "followingCount": zod.int().min(getSocialLeaderboardResponsePeopleItemFollowingCountMin).optional(),
+  "sentCredits": zod.int().min(getSocialLeaderboardResponsePeopleItemSentCreditsMin).optional(),
   "badges": zod.array(zod.object({
   "id": zod.string(),
   "earnedAt": zod.coerce.date()
@@ -3660,7 +3660,7 @@ export const GetSocialLeaderboardResponse = zod.object({
   "discoverable": zod.boolean(),
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
-  "receivedCredits": zod.number().int(),
+  "receivedCredits": zod.int(),
   "badgeId": zod.union([zod.string(),zod.null()]),
   "badgeName": zod.string().nullable(),
   "badgeImage": zod.string().nullable(),
@@ -3674,7 +3674,7 @@ export const GetSocialLeaderboardResponse = zod.object({
   "foundingLeague": zod.boolean()
 }).optional()
 })),
-  "total": zod.number().int()
+  "total": zod.int()
 })
 
 
@@ -3693,7 +3693,7 @@ export const GetSocialInboxResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "displayNameColor": zod.string().regex(getSocialInboxResponseConversationsItemDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(getSocialInboxResponseConversationsItemDisplayNameTierIndexMin).max(getSocialInboxResponseConversationsItemDisplayNameTierIndexMax).optional(),
+  "displayNameTierIndex": zod.int().min(getSocialInboxResponseConversationsItemDisplayNameTierIndexMin).max(getSocialInboxResponseConversationsItemDisplayNameTierIndexMax).optional(),
   "badgeId": zod.string().nullable(),
   "badgeName": zod.string().nullable(),
   "badgeImage": zod.string().nullable(),
@@ -3710,7 +3710,7 @@ export const GetSocialInboxResponse = zod.object({
 }),
   "lastMessage": zod.string(),
   "updatedAt": zod.coerce.date(),
-  "unreadCount": zod.number().int(),
+  "unreadCount": zod.int(),
   "blocked": zod.boolean()
 }))
 })
@@ -3721,7 +3721,7 @@ export const GetSocialConversationParams = zod.object({
 })
 
 export const GetSocialConversationQueryParams = zod.object({
-  "cursor": zod.coerce.string().uuid().optional()
+  "cursor": zod.uuid().optional()
 })
 
 export const getSocialConversationResponsePersonExternalHandleMax = 64;
@@ -3752,10 +3752,10 @@ export const GetSocialConversationResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().optional(),
   "displayNameColor": zod.string().regex(getSocialConversationResponsePersonDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(getSocialConversationResponsePersonDisplayNameTierIndexMin).max(getSocialConversationResponsePersonDisplayNameTierIndexMax).optional(),
-  "followerCount": zod.number().int().min(getSocialConversationResponsePersonFollowerCountMin).optional(),
-  "followingCount": zod.number().int().min(getSocialConversationResponsePersonFollowingCountMin).optional(),
-  "sentCredits": zod.number().int().min(getSocialConversationResponsePersonSentCreditsMin).optional(),
+  "displayNameTierIndex": zod.int().min(getSocialConversationResponsePersonDisplayNameTierIndexMin).max(getSocialConversationResponsePersonDisplayNameTierIndexMax).optional(),
+  "followerCount": zod.int().min(getSocialConversationResponsePersonFollowerCountMin).optional(),
+  "followingCount": zod.int().min(getSocialConversationResponsePersonFollowingCountMin).optional(),
+  "sentCredits": zod.int().min(getSocialConversationResponsePersonSentCreditsMin).optional(),
   "badges": zod.array(zod.object({
   "id": zod.string(),
   "earnedAt": zod.coerce.date()
@@ -3780,7 +3780,7 @@ export const GetSocialConversationResponse = zod.object({
   "discoverable": zod.boolean(),
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
-  "receivedCredits": zod.number().int(),
+  "receivedCredits": zod.int(),
   "badgeId": zod.union([zod.string(),zod.null()]),
   "badgeName": zod.string().nullable(),
   "badgeImage": zod.string().nullable(),
@@ -3817,7 +3817,7 @@ export const sendSocialMessageBodyBodyMax = 1000;
 
 export const SendSocialMessageBody = zod.object({
   "body": zod.string().min(1).max(sendSocialMessageBodyBodyMax),
-  "idempotencyKey": zod.string().uuid()
+  "idempotencyKey": zod.uuid()
 })
 
 export const SendSocialMessageResponse = zod.object({
@@ -3972,20 +3972,20 @@ export const CreateChessRoomResponse = zod.object({
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
-  "giftingLevel": zod.number().int().min(createChessRoomResponsePlayersWhiteGiftingLevelMin).max(createChessRoomResponsePlayersWhiteGiftingLevelMax).optional()
+  "giftingLevel": zod.int().min(createChessRoomResponsePlayersWhiteGiftingLevelMin).max(createChessRoomResponsePlayersWhiteGiftingLevelMax).optional()
 }),
-  "black": zod.object({
+  "black": zod.union([zod.object({
   "accountId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
-  "giftingLevel": zod.number().int().min(createChessRoomResponsePlayersBlackOneGiftingLevelMin).max(createChessRoomResponsePlayersBlackOneGiftingLevelMax).optional()
-}).nullable()
+  "giftingLevel": zod.int().min(createChessRoomResponsePlayersBlackOneGiftingLevelMin).max(createChessRoomResponsePlayersBlackOneGiftingLevelMax).optional()
+}),zod.null()])
 }),
   "turn": zod.enum(['w', 'b']),
   "status": zod.enum(['waiting', 'playing', 'checkmate', 'stalemate', 'draw', 'resigned', 'closed']),
-  "revision": zod.number().int(),
+  "revision": zod.int(),
   "yourColor": zod.enum(['w', 'b']),
   "rematchRequestedBy": zod.string().nullable(),
   "result": zod.string().nullable(),
@@ -4020,20 +4020,20 @@ export const GetChessRoomResponse = zod.object({
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
-  "giftingLevel": zod.number().int().min(getChessRoomResponsePlayersWhiteGiftingLevelMin).max(getChessRoomResponsePlayersWhiteGiftingLevelMax).optional()
+  "giftingLevel": zod.int().min(getChessRoomResponsePlayersWhiteGiftingLevelMin).max(getChessRoomResponsePlayersWhiteGiftingLevelMax).optional()
 }),
-  "black": zod.object({
+  "black": zod.union([zod.object({
   "accountId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
-  "giftingLevel": zod.number().int().min(getChessRoomResponsePlayersBlackOneGiftingLevelMin).max(getChessRoomResponsePlayersBlackOneGiftingLevelMax).optional()
-}).nullable()
+  "giftingLevel": zod.int().min(getChessRoomResponsePlayersBlackOneGiftingLevelMin).max(getChessRoomResponsePlayersBlackOneGiftingLevelMax).optional()
+}),zod.null()])
 }),
   "turn": zod.enum(['w', 'b']),
   "status": zod.enum(['waiting', 'playing', 'checkmate', 'stalemate', 'draw', 'resigned', 'closed']),
-  "revision": zod.number().int(),
+  "revision": zod.int(),
   "yourColor": zod.enum(['w', 'b']),
   "rematchRequestedBy": zod.string().nullable(),
   "result": zod.string().nullable(),
@@ -4068,20 +4068,20 @@ export const JoinChessRoomResponse = zod.object({
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
-  "giftingLevel": zod.number().int().min(joinChessRoomResponsePlayersWhiteGiftingLevelMin).max(joinChessRoomResponsePlayersWhiteGiftingLevelMax).optional()
+  "giftingLevel": zod.int().min(joinChessRoomResponsePlayersWhiteGiftingLevelMin).max(joinChessRoomResponsePlayersWhiteGiftingLevelMax).optional()
 }),
-  "black": zod.object({
+  "black": zod.union([zod.object({
   "accountId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
-  "giftingLevel": zod.number().int().min(joinChessRoomResponsePlayersBlackOneGiftingLevelMin).max(joinChessRoomResponsePlayersBlackOneGiftingLevelMax).optional()
-}).nullable()
+  "giftingLevel": zod.int().min(joinChessRoomResponsePlayersBlackOneGiftingLevelMin).max(joinChessRoomResponsePlayersBlackOneGiftingLevelMax).optional()
+}),zod.null()])
 }),
   "turn": zod.enum(['w', 'b']),
   "status": zod.enum(['waiting', 'playing', 'checkmate', 'stalemate', 'draw', 'resigned', 'closed']),
-  "revision": zod.number().int(),
+  "revision": zod.int(),
   "yourColor": zod.enum(['w', 'b']),
   "rematchRequestedBy": zod.string().nullable(),
   "result": zod.string().nullable(),
@@ -4104,7 +4104,7 @@ export const actChessRoomBodyRevisionMin = 0;
 
 export const ActChessRoomBody = zod.object({
   "action": zod.enum(['move', 'rematch', 'resign', 'leave']),
-  "revision": zod.number().int().min(actChessRoomBodyRevisionMin),
+  "revision": zod.int().min(actChessRoomBodyRevisionMin),
   "from": zod.string().optional(),
   "to": zod.string().optional(),
   "promotion": zod.enum(['q', 'r', 'b', 'n']).optional()
@@ -4128,20 +4128,20 @@ export const ActChessRoomResponse = zod.object({
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
-  "giftingLevel": zod.number().int().min(actChessRoomResponsePlayersWhiteGiftingLevelMin).max(actChessRoomResponsePlayersWhiteGiftingLevelMax).optional()
+  "giftingLevel": zod.int().min(actChessRoomResponsePlayersWhiteGiftingLevelMin).max(actChessRoomResponsePlayersWhiteGiftingLevelMax).optional()
 }),
-  "black": zod.object({
+  "black": zod.union([zod.object({
   "accountId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
   "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
-  "giftingLevel": zod.number().int().min(actChessRoomResponsePlayersBlackOneGiftingLevelMin).max(actChessRoomResponsePlayersBlackOneGiftingLevelMax).optional()
-}).nullable()
+  "giftingLevel": zod.int().min(actChessRoomResponsePlayersBlackOneGiftingLevelMin).max(actChessRoomResponsePlayersBlackOneGiftingLevelMax).optional()
+}),zod.null()])
 }),
   "turn": zod.enum(['w', 'b']),
   "status": zod.enum(['waiting', 'playing', 'checkmate', 'stalemate', 'draw', 'resigned', 'closed']),
-  "revision": zod.number().int(),
+  "revision": zod.int(),
   "yourColor": zod.enum(['w', 'b']),
   "rematchRequestedBy": zod.string().nullable(),
   "result": zod.string().nullable(),
@@ -4184,13 +4184,13 @@ export const createAccountRoomResponseRoomParticipantsItemIdentityOneHairColorRe
 
 
 export const CreateAccountRoomResponse = zod.object({
-  "participantSessionId": zod.string().uuid(),
-  "participantId": zod.string().uuid(),
+  "participantSessionId": zod.uuid(),
+  "participantId": zod.uuid(),
   "room": zod.object({
-  "hostParticipantId": zod.string().uuid(),
+  "hostParticipantId": zod.uuid(),
   "roomType": zod.enum(['legacy', 'topic', 'social']).optional(),
   "name": zod.string(),
-  "capacity": zod.number().int(),
+  "capacity": zod.int(),
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
   "participants": zod.array(zod.object({
@@ -4198,8 +4198,8 @@ export const CreateAccountRoomResponse = zod.object({
   "hostMuted": zod.boolean(),
   "unmuteRequested": zod.boolean(),
   "displayNameColor": zod.string().regex(createAccountRoomResponseRoomParticipantsItemDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(createAccountRoomResponseRoomParticipantsItemDisplayNameTierIndexMin).max(createAccountRoomResponseRoomParticipantsItemDisplayNameTierIndexMax).optional(),
-  "participantId": zod.string().uuid(),
+  "displayNameTierIndex": zod.int().min(createAccountRoomResponseRoomParticipantsItemDisplayNameTierIndexMin).max(createAccountRoomResponseRoomParticipantsItemDisplayNameTierIndexMax).optional(),
+  "participantId": zod.uuid(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
   "joinedAt": zod.coerce.date(),
@@ -4235,13 +4235,13 @@ export const joinAccountRoomResponseRoomParticipantsItemIdentityOneHairColorRegE
 
 
 export const JoinAccountRoomResponse = zod.object({
-  "participantSessionId": zod.string().uuid(),
-  "participantId": zod.string().uuid(),
+  "participantSessionId": zod.uuid(),
+  "participantId": zod.uuid(),
   "room": zod.object({
-  "hostParticipantId": zod.string().uuid(),
+  "hostParticipantId": zod.uuid(),
   "roomType": zod.enum(['legacy', 'topic', 'social']).optional(),
   "name": zod.string(),
-  "capacity": zod.number().int(),
+  "capacity": zod.int(),
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
   "participants": zod.array(zod.object({
@@ -4249,8 +4249,8 @@ export const JoinAccountRoomResponse = zod.object({
   "hostMuted": zod.boolean(),
   "unmuteRequested": zod.boolean(),
   "displayNameColor": zod.string().regex(joinAccountRoomResponseRoomParticipantsItemDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(joinAccountRoomResponseRoomParticipantsItemDisplayNameTierIndexMin).max(joinAccountRoomResponseRoomParticipantsItemDisplayNameTierIndexMax).optional(),
-  "participantId": zod.string().uuid(),
+  "displayNameTierIndex": zod.int().min(joinAccountRoomResponseRoomParticipantsItemDisplayNameTierIndexMin).max(joinAccountRoomResponseRoomParticipantsItemDisplayNameTierIndexMax).optional(),
+  "participantId": zod.uuid(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
   "joinedAt": zod.coerce.date(),
@@ -4285,7 +4285,7 @@ export const GetRoomMessagesParams = zod.object({
 })
 
 export const GetRoomMessagesHeader = zod.object({
-  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+  "X-Room-Session": zod.uuid().describe('Private participant session; must belong to the authenticated account in this room')
 })
 
 export const getRoomMessagesResponseIdentityEmojiIdMax = 100;
@@ -4305,9 +4305,9 @@ export const GetRoomMessagesResponseItem = zod.object({
   "badgeId": zod.string().nullish(),
   "badgeName": zod.string().nullish(),
   "badgeImage": zod.string().nullish(),
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "roomId": zod.string(),
-  "authorId": zod.string().uuid(),
+  "authorId": zod.uuid(),
   "username": zod.string(),
   "photoUrl": zod.string().nullish(),
   "identity": zod.object({
@@ -4321,7 +4321,7 @@ export const GetRoomMessagesResponseItem = zod.object({
   "kind": zod.enum(['text', 'reaction']),
   "text": zod.string(),
   "displayNameColor": zod.string().regex(getRoomMessagesResponseDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(getRoomMessagesResponseDisplayNameTierIndexMin).max(getRoomMessagesResponseDisplayNameTierIndexMax).optional(),
+  "displayNameTierIndex": zod.int().min(getRoomMessagesResponseDisplayNameTierIndexMin).max(getRoomMessagesResponseDisplayNameTierIndexMax).optional(),
   "passport": zod.object({
   "platforms": zod.array(zod.object({
   "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
@@ -4344,7 +4344,7 @@ export const SendRoomMessageParams = zod.object({
 })
 
 export const SendRoomMessageHeader = zod.object({
-  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+  "X-Room-Session": zod.uuid().describe('Private participant session; must belong to the authenticated account in this room')
 })
 
 export const sendRoomMessageBodyTextMax = 280;
@@ -4380,9 +4380,9 @@ export const SendRoomMessageResponse = zod.object({
   "badgeId": zod.string().nullish(),
   "badgeName": zod.string().nullish(),
   "badgeImage": zod.string().nullish(),
-  "id": zod.string().uuid(),
+  "id": zod.uuid(),
   "roomId": zod.string(),
-  "authorId": zod.string().uuid(),
+  "authorId": zod.uuid(),
   "username": zod.string(),
   "photoUrl": zod.string().nullish(),
   "identity": zod.object({
@@ -4396,7 +4396,7 @@ export const SendRoomMessageResponse = zod.object({
   "kind": zod.enum(['text', 'reaction']),
   "text": zod.string(),
   "displayNameColor": zod.string().regex(sendRoomMessageResponseMessageDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(sendRoomMessageResponseMessageDisplayNameTierIndexMin).max(sendRoomMessageResponseMessageDisplayNameTierIndexMax).optional(),
+  "displayNameTierIndex": zod.int().min(sendRoomMessageResponseMessageDisplayNameTierIndexMin).max(sendRoomMessageResponseMessageDisplayNameTierIndexMax).optional(),
   "passport": zod.object({
   "platforms": zod.array(zod.object({
   "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
@@ -4439,7 +4439,7 @@ export const StreamAccountRoomEventsParams = zod.object({
 })
 
 export const StreamAccountRoomEventsHeader = zod.object({
-  "X-Room-Session": zod.string().uuid().describe('Private participant session; must belong to the authenticated account in this room')
+  "X-Room-Session": zod.uuid().describe('Private participant session; must belong to the authenticated account in this room')
 })
 
 export const StreamAccountRoomEventsResponse = zod.unknown()
@@ -4467,13 +4467,13 @@ export const createRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp = 
 
 
 export const CreateRoomResponse = zod.object({
-  "participantSessionId": zod.string().uuid(),
-  "participantId": zod.string().uuid(),
+  "participantSessionId": zod.uuid(),
+  "participantId": zod.uuid(),
   "room": zod.object({
-  "hostParticipantId": zod.string().uuid(),
+  "hostParticipantId": zod.uuid(),
   "roomType": zod.enum(['legacy', 'topic', 'social']).optional(),
   "name": zod.string(),
-  "capacity": zod.number().int(),
+  "capacity": zod.int(),
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
   "participants": zod.array(zod.object({
@@ -4481,8 +4481,8 @@ export const CreateRoomResponse = zod.object({
   "hostMuted": zod.boolean(),
   "unmuteRequested": zod.boolean(),
   "displayNameColor": zod.string().regex(createRoomResponseRoomParticipantsItemDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(createRoomResponseRoomParticipantsItemDisplayNameTierIndexMin).max(createRoomResponseRoomParticipantsItemDisplayNameTierIndexMax).optional(),
-  "participantId": zod.string().uuid(),
+  "displayNameTierIndex": zod.int().min(createRoomResponseRoomParticipantsItemDisplayNameTierIndexMin).max(createRoomResponseRoomParticipantsItemDisplayNameTierIndexMax).optional(),
+  "participantId": zod.uuid(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
   "joinedAt": zod.coerce.date(),
@@ -4521,10 +4521,10 @@ export const getRoomResponseParticipantsItemIdentityOneHairColorRegExp = new Reg
 
 
 export const GetRoomResponse = zod.object({
-  "hostParticipantId": zod.string().uuid(),
+  "hostParticipantId": zod.uuid(),
   "roomType": zod.enum(['legacy', 'topic', 'social']).optional(),
   "name": zod.string(),
-  "capacity": zod.number().int(),
+  "capacity": zod.int(),
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
   "participants": zod.array(zod.object({
@@ -4532,8 +4532,8 @@ export const GetRoomResponse = zod.object({
   "hostMuted": zod.boolean(),
   "unmuteRequested": zod.boolean(),
   "displayNameColor": zod.string().regex(getRoomResponseParticipantsItemDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(getRoomResponseParticipantsItemDisplayNameTierIndexMin).max(getRoomResponseParticipantsItemDisplayNameTierIndexMax).optional(),
-  "participantId": zod.string().uuid(),
+  "displayNameTierIndex": zod.int().min(getRoomResponseParticipantsItemDisplayNameTierIndexMin).max(getRoomResponseParticipantsItemDisplayNameTierIndexMax).optional(),
+  "participantId": zod.uuid(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
   "joinedAt": zod.coerce.date(),
@@ -4579,13 +4579,13 @@ export const joinRoomResponseRoomParticipantsItemIdentityOneHairColorRegExp = ne
 
 
 export const JoinRoomResponse = zod.object({
-  "participantSessionId": zod.string().uuid(),
-  "participantId": zod.string().uuid(),
+  "participantSessionId": zod.uuid(),
+  "participantId": zod.uuid(),
   "room": zod.object({
-  "hostParticipantId": zod.string().uuid(),
+  "hostParticipantId": zod.uuid(),
   "roomType": zod.enum(['legacy', 'topic', 'social']).optional(),
   "name": zod.string(),
-  "capacity": zod.number().int(),
+  "capacity": zod.int(),
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
   "participants": zod.array(zod.object({
@@ -4593,8 +4593,8 @@ export const JoinRoomResponse = zod.object({
   "hostMuted": zod.boolean(),
   "unmuteRequested": zod.boolean(),
   "displayNameColor": zod.string().regex(joinRoomResponseRoomParticipantsItemDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(joinRoomResponseRoomParticipantsItemDisplayNameTierIndexMin).max(joinRoomResponseRoomParticipantsItemDisplayNameTierIndexMax).optional(),
-  "participantId": zod.string().uuid(),
+  "displayNameTierIndex": zod.int().min(joinRoomResponseRoomParticipantsItemDisplayNameTierIndexMin).max(joinRoomResponseRoomParticipantsItemDisplayNameTierIndexMax).optional(),
+  "participantId": zod.uuid(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
   "joinedAt": zod.coerce.date(),
@@ -4621,7 +4621,7 @@ export const heartbeatParticipantPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}
 
 export const HeartbeatParticipantParams = zod.object({
   "roomId": zod.coerce.string().regex(heartbeatParticipantPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code'),
-  "sessionId": zod.coerce.string().uuid()
+  "sessionId": zod.uuid()
 })
 
 export const heartbeatParticipantResponseDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
@@ -4639,8 +4639,8 @@ export const HeartbeatParticipantResponse = zod.object({
   "hostMuted": zod.boolean(),
   "unmuteRequested": zod.boolean(),
   "displayNameColor": zod.string().regex(heartbeatParticipantResponseDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(heartbeatParticipantResponseDisplayNameTierIndexMin).max(heartbeatParticipantResponseDisplayNameTierIndexMax).optional(),
-  "participantId": zod.string().uuid(),
+  "displayNameTierIndex": zod.int().min(heartbeatParticipantResponseDisplayNameTierIndexMin).max(heartbeatParticipantResponseDisplayNameTierIndexMax).optional(),
+  "participantId": zod.uuid(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
   "joinedAt": zod.coerce.date(),
@@ -4664,7 +4664,7 @@ export const leaveRoomPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-Fa-f0-9
 
 export const LeaveRoomParams = zod.object({
   "roomId": zod.coerce.string().regex(leaveRoomPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code'),
-  "sessionId": zod.coerce.string().uuid()
+  "sessionId": zod.uuid()
 })
 
 export const LeaveRoomResponse = zod.void()
@@ -4713,9 +4713,9 @@ export const sendAudioSignalBodyDescriptionSdpMax = 12000;
 
 
 export const SendAudioSignalBody = zod.object({
-  "sourceConnectionId": zod.string().uuid(),
-  "targetParticipantId": zod.string().uuid(),
-  "targetConnectionId": zod.string().uuid(),
+  "sourceConnectionId": zod.uuid(),
+  "targetParticipantId": zod.uuid(),
+  "targetConnectionId": zod.uuid(),
   "description": zod.object({
   "type": zod.enum(['offer', 'answer']),
   "sdp": zod.string().min(1).max(sendAudioSignalBodyDescriptionSdpMax)
@@ -4733,7 +4733,7 @@ export const disconnectAudioPathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6}|[A-F
 
 export const DisconnectAudioParams = zod.object({
   "roomId": zod.coerce.string().regex(disconnectAudioPathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code'),
-  "connectionId": zod.coerce.string().uuid()
+  "connectionId": zod.uuid()
 })
 
 export const DisconnectAudioResponse = zod.void()
@@ -4748,7 +4748,7 @@ export const controlRoomMicrophonePathRoomIdRegExp = new RegExp('^([A-Za-z0-9]{6
 
 export const ControlRoomMicrophoneParams = zod.object({
   "roomId": zod.coerce.string().regex(controlRoomMicrophonePathRoomIdRegExp).describe('Case-insensitive six-character Beam code or legacy 12-character room code'),
-  "participantId": zod.coerce.string().uuid()
+  "participantId": zod.uuid()
 })
 
 export const ControlRoomMicrophoneBody = zod.object({
@@ -4766,10 +4766,10 @@ export const controlRoomMicrophoneResponseParticipantsItemIdentityOneHairColorRe
 
 
 export const ControlRoomMicrophoneResponse = zod.object({
-  "hostParticipantId": zod.string().uuid(),
+  "hostParticipantId": zod.uuid(),
   "roomType": zod.enum(['legacy', 'topic', 'social']).optional(),
   "name": zod.string(),
-  "capacity": zod.number().int(),
+  "capacity": zod.int(),
   "roomId": zod.string(),
   "createdAt": zod.coerce.date(),
   "participants": zod.array(zod.object({
@@ -4777,8 +4777,8 @@ export const ControlRoomMicrophoneResponse = zod.object({
   "hostMuted": zod.boolean(),
   "unmuteRequested": zod.boolean(),
   "displayNameColor": zod.string().regex(controlRoomMicrophoneResponseParticipantsItemDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.number().int().min(controlRoomMicrophoneResponseParticipantsItemDisplayNameTierIndexMin).max(controlRoomMicrophoneResponseParticipantsItemDisplayNameTierIndexMax).optional(),
-  "participantId": zod.string().uuid(),
+  "displayNameTierIndex": zod.int().min(controlRoomMicrophoneResponseParticipantsItemDisplayNameTierIndexMin).max(controlRoomMicrophoneResponseParticipantsItemDisplayNameTierIndexMax).optional(),
+  "participantId": zod.uuid(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
   "joinedAt": zod.coerce.date(),

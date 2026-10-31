@@ -10,6 +10,7 @@ export interface ChessPlayer {
   accountId: string;
   username: string;
   displayName: string;
+  /** @nullable */
   photoUrl?: string | null;
   /** Approved saved profile photos, main photo first. */
   photoUrls?: string[];

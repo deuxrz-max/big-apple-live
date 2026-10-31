@@ -10,9 +10,14 @@ import {
   useQuery
 } from '@tanstack/react-query';
 import type {
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   MutationFunction,
+  QueryClient,
   QueryFunction,
   QueryKey,
+  UndefinedInitialDataOptions,
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
@@ -54,7 +59,6 @@ import type {
   EquipMyBadgeInput,
   EquippedBadgeState,
   ErrorResponse,
-  ErrorResponse4b96100,
   FavoriteGalleryEntry,
   FavoriteRoomResult,
   GetRoomGiftEvents200,
@@ -202,7 +206,7 @@ export const getGetPinkCardRewardQueryKey = () => {
     }
 
 
-export const getGetPinkCardRewardQueryOptions = <TData = Awaited<ReturnType<typeof getPinkCardReward>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPinkCardReward>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetPinkCardRewardQueryOptions = <TData = Awaited<ReturnType<typeof getPinkCardReward>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPinkCardReward>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -217,22 +221,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPinkCardReward>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPinkCardReward>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetPinkCardRewardQueryResult = NonNullable<Awaited<ReturnType<typeof getPinkCardReward>>>
 export type GetPinkCardRewardQueryError = ErrorType<unknown>
 
 
+export function useGetPinkCardReward<TData = Awaited<ReturnType<typeof getPinkCardReward>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPinkCardReward>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPinkCardReward>>,
+          TError,
+          Awaited<ReturnType<typeof getPinkCardReward>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPinkCardReward<TData = Awaited<ReturnType<typeof getPinkCardReward>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPinkCardReward>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPinkCardReward>>,
+          TError,
+          Awaited<ReturnType<typeof getPinkCardReward>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPinkCardReward<TData = Awaited<ReturnType<typeof getPinkCardReward>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPinkCardReward>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetPinkCardReward<TData = Awaited<ReturnType<typeof getPinkCardReward>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPinkCardReward>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPinkCardReward>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetPinkCardRewardQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -273,7 +301,7 @@ export const getGetPinkCardEntryQueryKey = () => {
     }
 
 
-export const getGetPinkCardEntryQueryOptions = <TData = Awaited<ReturnType<typeof getPinkCardEntry>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPinkCardEntry>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetPinkCardEntryQueryOptions = <TData = Awaited<ReturnType<typeof getPinkCardEntry>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPinkCardEntry>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -288,22 +316,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPinkCardEntry>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPinkCardEntry>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetPinkCardEntryQueryResult = NonNullable<Awaited<ReturnType<typeof getPinkCardEntry>>>
 export type GetPinkCardEntryQueryError = ErrorType<unknown>
 
 
+export function useGetPinkCardEntry<TData = Awaited<ReturnType<typeof getPinkCardEntry>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPinkCardEntry>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPinkCardEntry>>,
+          TError,
+          Awaited<ReturnType<typeof getPinkCardEntry>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPinkCardEntry<TData = Awaited<ReturnType<typeof getPinkCardEntry>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPinkCardEntry>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPinkCardEntry>>,
+          TError,
+          Awaited<ReturnType<typeof getPinkCardEntry>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPinkCardEntry<TData = Awaited<ReturnType<typeof getPinkCardEntry>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPinkCardEntry>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetPinkCardEntry<TData = Awaited<ReturnType<typeof getPinkCardEntry>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPinkCardEntry>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPinkCardEntry>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetPinkCardEntryQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -387,13 +439,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export const useUpdatePinkCardEntry = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePinkCardEntry>>, TError,UpdatePinkCardEntryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updatePinkCardEntry>>,
         TError,
         UpdatePinkCardEntryMutationVariables,
         TContext
       > => {
-      return useMutation(getUpdatePinkCardEntryMutationOptions(options));
+      return useMutation(getUpdatePinkCardEntryMutationOptions(options), queryClient);
     }
 
 export const getGetModeratorBotSettingsUrl = () => {
@@ -426,7 +478,7 @@ export const getGetModeratorBotSettingsQueryKey = () => {
     }
 
 
-export const getGetModeratorBotSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getModeratorBotSettings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetModeratorBotSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getModeratorBotSettings>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotSettings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -441,22 +493,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotSettings>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotSettings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetModeratorBotSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getModeratorBotSettings>>>
 export type GetModeratorBotSettingsQueryError = ErrorType<unknown>
 
 
+export function useGetModeratorBotSettings<TData = Awaited<ReturnType<typeof getModeratorBotSettings>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotSettings>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getModeratorBotSettings>>,
+          TError,
+          Awaited<ReturnType<typeof getModeratorBotSettings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetModeratorBotSettings<TData = Awaited<ReturnType<typeof getModeratorBotSettings>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotSettings>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getModeratorBotSettings>>,
+          TError,
+          Awaited<ReturnType<typeof getModeratorBotSettings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetModeratorBotSettings<TData = Awaited<ReturnType<typeof getModeratorBotSettings>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotSettings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetModeratorBotSettings<TData = Awaited<ReturnType<typeof getModeratorBotSettings>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotSettings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetModeratorBotSettingsQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -540,13 +616,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export const useSaveModeratorBotSettings = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveModeratorBotSettings>>, TError,SaveModeratorBotSettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof saveModeratorBotSettings>>,
         TError,
         SaveModeratorBotSettingsMutationVariables,
         TContext
       > => {
-      return useMutation(getSaveModeratorBotSettingsMutationOptions(options));
+      return useMutation(getSaveModeratorBotSettingsMutationOptions(options), queryClient);
     }
 
 export const getGetModeratorBotChatterSettingsUrl = () => {
@@ -579,7 +655,7 @@ export const getGetModeratorBotChatterSettingsQueryKey = () => {
     }
 
 
-export const getGetModeratorBotChatterSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getModeratorBotChatterSettings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotChatterSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetModeratorBotChatterSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getModeratorBotChatterSettings>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotChatterSettings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -594,22 +670,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotChatterSettings>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotChatterSettings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetModeratorBotChatterSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getModeratorBotChatterSettings>>>
 export type GetModeratorBotChatterSettingsQueryError = ErrorType<unknown>
 
 
+export function useGetModeratorBotChatterSettings<TData = Awaited<ReturnType<typeof getModeratorBotChatterSettings>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotChatterSettings>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getModeratorBotChatterSettings>>,
+          TError,
+          Awaited<ReturnType<typeof getModeratorBotChatterSettings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetModeratorBotChatterSettings<TData = Awaited<ReturnType<typeof getModeratorBotChatterSettings>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotChatterSettings>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getModeratorBotChatterSettings>>,
+          TError,
+          Awaited<ReturnType<typeof getModeratorBotChatterSettings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetModeratorBotChatterSettings<TData = Awaited<ReturnType<typeof getModeratorBotChatterSettings>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotChatterSettings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetModeratorBotChatterSettings<TData = Awaited<ReturnType<typeof getModeratorBotChatterSettings>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotChatterSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotChatterSettings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetModeratorBotChatterSettingsQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -693,13 +793,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export const useSaveModeratorBotChatterSettings = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveModeratorBotChatterSettings>>, TError,SaveModeratorBotChatterSettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof saveModeratorBotChatterSettings>>,
         TError,
         SaveModeratorBotChatterSettingsMutationVariables,
         TContext
       > => {
-      return useMutation(getSaveModeratorBotChatterSettingsMutationOptions(options));
+      return useMutation(getSaveModeratorBotChatterSettingsMutationOptions(options), queryClient);
     }
 
 export const getGetModeratorBotFlagsUrl = () => {
@@ -732,7 +832,7 @@ export const getGetModeratorBotFlagsQueryKey = () => {
     }
 
 
-export const getGetModeratorBotFlagsQueryOptions = <TData = Awaited<ReturnType<typeof getModeratorBotFlags>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotFlags>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetModeratorBotFlagsQueryOptions = <TData = Awaited<ReturnType<typeof getModeratorBotFlags>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotFlags>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -747,22 +847,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotFlags>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotFlags>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetModeratorBotFlagsQueryResult = NonNullable<Awaited<ReturnType<typeof getModeratorBotFlags>>>
 export type GetModeratorBotFlagsQueryError = ErrorType<unknown>
 
 
+export function useGetModeratorBotFlags<TData = Awaited<ReturnType<typeof getModeratorBotFlags>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotFlags>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getModeratorBotFlags>>,
+          TError,
+          Awaited<ReturnType<typeof getModeratorBotFlags>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetModeratorBotFlags<TData = Awaited<ReturnType<typeof getModeratorBotFlags>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotFlags>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getModeratorBotFlags>>,
+          TError,
+          Awaited<ReturnType<typeof getModeratorBotFlags>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetModeratorBotFlags<TData = Awaited<ReturnType<typeof getModeratorBotFlags>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotFlags>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetModeratorBotFlags<TData = Awaited<ReturnType<typeof getModeratorBotFlags>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotFlags>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getModeratorBotFlags>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetModeratorBotFlagsQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -832,13 +956,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export const useAcknowledgeModeratorBotFlag = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acknowledgeModeratorBotFlag>>, TError,AcknowledgeModeratorBotFlagMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof acknowledgeModeratorBotFlag>>,
         TError,
         AcknowledgeModeratorBotFlagMutationVariables,
         TContext
       > => {
-      return useMutation(getAcknowledgeModeratorBotFlagMutationOptions(options));
+      return useMutation(getAcknowledgeModeratorBotFlagMutationOptions(options), queryClient);
     }
 
 export const getGetFavoritesGalleryUrl = () => {
@@ -871,7 +995,7 @@ export const getGetFavoritesGalleryQueryKey = () => {
     }
 
 
-export const getGetFavoritesGalleryQueryOptions = <TData = Awaited<ReturnType<typeof getFavoritesGallery>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFavoritesGallery>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetFavoritesGalleryQueryOptions = <TData = Awaited<ReturnType<typeof getFavoritesGallery>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFavoritesGallery>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -886,22 +1010,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFavoritesGallery>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFavoritesGallery>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetFavoritesGalleryQueryResult = NonNullable<Awaited<ReturnType<typeof getFavoritesGallery>>>
 export type GetFavoritesGalleryQueryError = ErrorType<unknown>
 
 
+export function useGetFavoritesGallery<TData = Awaited<ReturnType<typeof getFavoritesGallery>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFavoritesGallery>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFavoritesGallery>>,
+          TError,
+          Awaited<ReturnType<typeof getFavoritesGallery>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFavoritesGallery<TData = Awaited<ReturnType<typeof getFavoritesGallery>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFavoritesGallery>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFavoritesGallery>>,
+          TError,
+          Awaited<ReturnType<typeof getFavoritesGallery>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFavoritesGallery<TData = Awaited<ReturnType<typeof getFavoritesGallery>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFavoritesGallery>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetFavoritesGallery<TData = Awaited<ReturnType<typeof getFavoritesGallery>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFavoritesGallery>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFavoritesGallery>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetFavoritesGalleryQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -942,7 +1090,7 @@ export const getGetFavoriteRoomQueryKey = (username: string,) => {
     }
 
 
-export const getGetFavoriteRoomQueryOptions = <TData = Awaited<ReturnType<typeof getFavoriteRoom>>, TError = ErrorType<unknown>>(username: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFavoriteRoom>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetFavoriteRoomQueryOptions = <TData = Awaited<ReturnType<typeof getFavoriteRoom>>, TError = ErrorType<unknown>>(username: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFavoriteRoom>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -957,22 +1105,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: username !== null && username !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFavoriteRoom>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: username !== null && username !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFavoriteRoom>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetFavoriteRoomQueryResult = NonNullable<Awaited<ReturnType<typeof getFavoriteRoom>>>
 export type GetFavoriteRoomQueryError = ErrorType<unknown>
 
 
+export function useGetFavoriteRoom<TData = Awaited<ReturnType<typeof getFavoriteRoom>>, TError = ErrorType<unknown>>(
+ username: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFavoriteRoom>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFavoriteRoom>>,
+          TError,
+          Awaited<ReturnType<typeof getFavoriteRoom>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFavoriteRoom<TData = Awaited<ReturnType<typeof getFavoriteRoom>>, TError = ErrorType<unknown>>(
+ username: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFavoriteRoom>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFavoriteRoom>>,
+          TError,
+          Awaited<ReturnType<typeof getFavoriteRoom>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFavoriteRoom<TData = Awaited<ReturnType<typeof getFavoriteRoom>>, TError = ErrorType<unknown>>(
+ username: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFavoriteRoom>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetFavoriteRoom<TData = Awaited<ReturnType<typeof getFavoriteRoom>>, TError = ErrorType<unknown>>(
- username: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFavoriteRoom>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ username: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFavoriteRoom>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetFavoriteRoomQueryOptions(username,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -1013,7 +1185,7 @@ export const getGetUniversitySessionQueryKey = (roomId: string,) => {
     }
 
 
-export const getGetUniversitySessionQueryOptions = <TData = Awaited<ReturnType<typeof getUniversitySession>>, TError = ErrorType<unknown>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUniversitySession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetUniversitySessionQueryOptions = <TData = Awaited<ReturnType<typeof getUniversitySession>>, TError = ErrorType<unknown>>(roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUniversitySession>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1028,22 +1200,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUniversitySession>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUniversitySession>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUniversitySessionQueryResult = NonNullable<Awaited<ReturnType<typeof getUniversitySession>>>
 export type GetUniversitySessionQueryError = ErrorType<unknown>
 
 
+export function useGetUniversitySession<TData = Awaited<ReturnType<typeof getUniversitySession>>, TError = ErrorType<unknown>>(
+ roomId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUniversitySession>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUniversitySession>>,
+          TError,
+          Awaited<ReturnType<typeof getUniversitySession>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUniversitySession<TData = Awaited<ReturnType<typeof getUniversitySession>>, TError = ErrorType<unknown>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUniversitySession>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUniversitySession>>,
+          TError,
+          Awaited<ReturnType<typeof getUniversitySession>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUniversitySession<TData = Awaited<ReturnType<typeof getUniversitySession>>, TError = ErrorType<unknown>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUniversitySession>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetUniversitySession<TData = Awaited<ReturnType<typeof getUniversitySession>>, TError = ErrorType<unknown>>(
- roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUniversitySession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUniversitySession>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetUniversitySessionQueryOptions(roomId,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -1087,7 +1283,7 @@ export const getGetUniversityAudioStateQueryKey = (roomId: string,) => {
     }
 
 
-export const getGetUniversityAudioStateQueryOptions = <TData = Awaited<ReturnType<typeof getUniversityAudioState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUniversityAudioState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetUniversityAudioStateQueryOptions = <TData = Awaited<ReturnType<typeof getUniversityAudioState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse>>(roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUniversityAudioState>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1102,25 +1298,49 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUniversityAudioState>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUniversityAudioState>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUniversityAudioStateQueryResult = NonNullable<Awaited<ReturnType<typeof getUniversityAudioState>>>
 export type GetUniversityAudioStateQueryError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse>
 
 
+export function useGetUniversityAudioState<TData = Awaited<ReturnType<typeof getUniversityAudioState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse>>(
+ roomId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUniversityAudioState>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUniversityAudioState>>,
+          TError,
+          Awaited<ReturnType<typeof getUniversityAudioState>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUniversityAudioState<TData = Awaited<ReturnType<typeof getUniversityAudioState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUniversityAudioState>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUniversityAudioState>>,
+          TError,
+          Awaited<ReturnType<typeof getUniversityAudioState>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUniversityAudioState<TData = Awaited<ReturnType<typeof getUniversityAudioState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUniversityAudioState>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Read the four-slot audio beam state for an authenticated university member
  */
 
 export function useGetUniversityAudioState<TData = Awaited<ReturnType<typeof getUniversityAudioState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse>>(
- roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUniversityAudioState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUniversityAudioState>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetUniversityAudioStateQueryOptions(roomId,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -1164,7 +1384,7 @@ export const getGetUniversityVideoBeamStateQueryKey = (roomId: string,) => {
     }
 
 
-export const getGetUniversityVideoBeamStateQueryOptions = <TData = Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse | void>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetUniversityVideoBeamStateQueryOptions = <TData = Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse | void>>(roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1179,25 +1399,49 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUniversityVideoBeamStateQueryResult = NonNullable<Awaited<ReturnType<typeof getUniversityVideoBeamState>>>
 export type GetUniversityVideoBeamStateQueryError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse | void>
 
 
+export function useGetUniversityVideoBeamState<TData = Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse | void>>(
+ roomId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUniversityVideoBeamState>>,
+          TError,
+          Awaited<ReturnType<typeof getUniversityVideoBeamState>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUniversityVideoBeamState<TData = Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse | void>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUniversityVideoBeamState>>,
+          TError,
+          Awaited<ReturnType<typeof getUniversityVideoBeamState>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUniversityVideoBeamState<TData = Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse | void>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Read the nine-seat LiveKit video beam for an authenticated room member
  */
 
 export function useGetUniversityVideoBeamState<TData = Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse | void>>(
- roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamState>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetUniversityVideoBeamStateQueryOptions(roomId,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -1288,13 +1532,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useGetUniversityVideoBeamToken = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getUniversityVideoBeamToken>>, TError,GetUniversityVideoBeamTokenMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof getUniversityVideoBeamToken>>,
         TError,
         GetUniversityVideoBeamTokenMutationVariables,
         TContext
       > => {
-      return useMutation(getGetUniversityVideoBeamTokenMutationOptions(options));
+      return useMutation(getGetUniversityVideoBeamTokenMutationOptions(options), queryClient);
     }
 
 export const getPerformUniversityVideoBeamActionUrl = (roomId: string,) => {
@@ -1377,13 +1621,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const usePerformUniversityVideoBeamAction = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof performUniversityVideoBeamAction>>, TError,PerformUniversityVideoBeamActionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof performUniversityVideoBeamAction>>,
         TError,
         PerformUniversityVideoBeamActionMutationVariables,
         TContext
       > => {
-      return useMutation(getPerformUniversityVideoBeamActionMutationOptions(options));
+      return useMutation(getPerformUniversityVideoBeamActionMutationOptions(options), queryClient);
     }
 
 export const getGetLiveStreamsUrl = () => {
@@ -1419,7 +1663,7 @@ export const getGetLiveStreamsQueryKey = () => {
     }
 
 
-export const getGetLiveStreamsQueryOptions = <TData = Awaited<ReturnType<typeof getLiveStreams>>, TError = ErrorType<SessionUnauthorizedResponse | void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLiveStreams>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetLiveStreamsQueryOptions = <TData = Awaited<ReturnType<typeof getLiveStreams>>, TError = ErrorType<SessionUnauthorizedResponse | void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLiveStreams>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1434,25 +1678,49 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLiveStreams>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLiveStreams>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetLiveStreamsQueryResult = NonNullable<Awaited<ReturnType<typeof getLiveStreams>>>
 export type GetLiveStreamsQueryError = ErrorType<SessionUnauthorizedResponse | void>
 
 
+export function useGetLiveStreams<TData = Awaited<ReturnType<typeof getLiveStreams>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLiveStreams>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLiveStreams>>,
+          TError,
+          Awaited<ReturnType<typeof getLiveStreams>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetLiveStreams<TData = Awaited<ReturnType<typeof getLiveStreams>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLiveStreams>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLiveStreams>>,
+          TError,
+          Awaited<ReturnType<typeof getLiveStreams>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetLiveStreams<TData = Awaited<ReturnType<typeof getLiveStreams>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLiveStreams>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary List active independent camera livestreams
  */
 
 export function useGetLiveStreams<TData = Awaited<ReturnType<typeof getLiveStreams>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLiveStreams>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLiveStreams>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetLiveStreamsQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -1542,13 +1810,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useStartLiveStream = <TError = ErrorType<SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startLiveStream>>, TError,StartLiveStreamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof startLiveStream>>,
         TError,
         StartLiveStreamMutationVariables,
         TContext
       > => {
-      return useMutation(getStartLiveStreamMutationOptions(options));
+      return useMutation(getStartLiveStreamMutationOptions(options), queryClient);
     }
 
 export const getHeartbeatLiveStreamUrl = (streamId: string,) => {
@@ -1616,13 +1884,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useHeartbeatLiveStream = <TError = ErrorType<SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof heartbeatLiveStream>>, TError,HeartbeatLiveStreamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof heartbeatLiveStream>>,
         TError,
         HeartbeatLiveStreamMutationVariables,
         TContext
       > => {
-      return useMutation(getHeartbeatLiveStreamMutationOptions(options));
+      return useMutation(getHeartbeatLiveStreamMutationOptions(options), queryClient);
     }
 
 export const getBeaconEndLiveStreamUrl = (streamId: string,) => {
@@ -1690,13 +1958,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useBeaconEndLiveStream = <TError = ErrorType<SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof beaconEndLiveStream>>, TError,BeaconEndLiveStreamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof beaconEndLiveStream>>,
         TError,
         BeaconEndLiveStreamMutationVariables,
         TContext
       > => {
-      return useMutation(getBeaconEndLiveStreamMutationOptions(options));
+      return useMutation(getBeaconEndLiveStreamMutationOptions(options), queryClient);
     }
 
 export const getJoinLiveStreamUrl = (streamId: string,) => {
@@ -1764,13 +2032,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useJoinLiveStream = <TError = ErrorType<SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinLiveStream>>, TError,JoinLiveStreamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof joinLiveStream>>,
         TError,
         JoinLiveStreamMutationVariables,
         TContext
       > => {
-      return useMutation(getJoinLiveStreamMutationOptions(options));
+      return useMutation(getJoinLiveStreamMutationOptions(options), queryClient);
     }
 
 export const getRejoinLiveStreamUrl = (streamId: string,) => {
@@ -1838,13 +2106,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useRejoinLiveStream = <TError = ErrorType<SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejoinLiveStream>>, TError,RejoinLiveStreamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof rejoinLiveStream>>,
         TError,
         RejoinLiveStreamMutationVariables,
         TContext
       > => {
-      return useMutation(getRejoinLiveStreamMutationOptions(options));
+      return useMutation(getRejoinLiveStreamMutationOptions(options), queryClient);
     }
 
 export const getStreamLiveStreamChatUrl = (streamId: string,) => {
@@ -1880,7 +2148,7 @@ export const getStreamLiveStreamChatQueryKey = (streamId: string,) => {
     }
 
 
-export const getStreamLiveStreamChatQueryOptions = <TData = Awaited<ReturnType<typeof streamLiveStreamChat>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(streamId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamLiveStreamChat>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getStreamLiveStreamChatQueryOptions = <TData = Awaited<ReturnType<typeof streamLiveStreamChat>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(streamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamLiveStreamChat>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1895,25 +2163,49 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: streamId !== null && streamId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof streamLiveStreamChat>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: streamId !== null && streamId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof streamLiveStreamChat>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type StreamLiveStreamChatQueryResult = NonNullable<Awaited<ReturnType<typeof streamLiveStreamChat>>>
 export type StreamLiveStreamChatQueryError = ErrorType<SessionUnauthorizedResponse | void>
 
 
+export function useStreamLiveStreamChat<TData = Awaited<ReturnType<typeof streamLiveStreamChat>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ streamId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamLiveStreamChat>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof streamLiveStreamChat>>,
+          TError,
+          Awaited<ReturnType<typeof streamLiveStreamChat>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStreamLiveStreamChat<TData = Awaited<ReturnType<typeof streamLiveStreamChat>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ streamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamLiveStreamChat>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof streamLiveStreamChat>>,
+          TError,
+          Awaited<ReturnType<typeof streamLiveStreamChat>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStreamLiveStreamChat<TData = Awaited<ReturnType<typeof streamLiveStreamChat>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ streamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamLiveStreamChat>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Receive block-filtered chat for a live camera stream
  */
 
 export function useStreamLiveStreamChat<TData = Awaited<ReturnType<typeof streamLiveStreamChat>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
- streamId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamLiveStreamChat>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ streamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamLiveStreamChat>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getStreamLiveStreamChatQueryOptions(streamId,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -2004,13 +2296,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useSendLiveStreamChatMessage = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendLiveStreamChatMessage>>, TError,SendLiveStreamChatMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof sendLiveStreamChatMessage>>,
         TError,
         SendLiveStreamChatMessageMutationVariables,
         TContext
       > => {
-      return useMutation(getSendLiveStreamChatMessageMutationOptions(options));
+      return useMutation(getSendLiveStreamChatMessageMutationOptions(options), queryClient);
     }
 
 export const getAddLiveStreamHeartUrl = (streamId: string,) => {
@@ -2078,13 +2370,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useAddLiveStreamHeart = <TError = ErrorType<SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addLiveStreamHeart>>, TError,AddLiveStreamHeartMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof addLiveStreamHeart>>,
         TError,
         AddLiveStreamHeartMutationVariables,
         TContext
       > => {
-      return useMutation(getAddLiveStreamHeartMutationOptions(options));
+      return useMutation(getAddLiveStreamHeartMutationOptions(options), queryClient);
     }
 
 export const getAddLiveStreamShareUrl = (streamId: string,) => {
@@ -2152,13 +2444,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useAddLiveStreamShare = <TError = ErrorType<SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addLiveStreamShare>>, TError,AddLiveStreamShareMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof addLiveStreamShare>>,
         TError,
         AddLiveStreamShareMutationVariables,
         TContext
       > => {
-      return useMutation(getAddLiveStreamShareMutationOptions(options));
+      return useMutation(getAddLiveStreamShareMutationOptions(options), queryClient);
     }
 
 export const getSearchPkOpponentUrl = (streamId: string,) => {
@@ -2226,13 +2518,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useSearchPkOpponent = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof searchPkOpponent>>, TError,SearchPkOpponentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof searchPkOpponent>>,
         TError,
         SearchPkOpponentMutationVariables,
         TContext
       > => {
-      return useMutation(getSearchPkOpponentMutationOptions(options));
+      return useMutation(getSearchPkOpponentMutationOptions(options), queryClient);
     }
 
 export const getCancelPkOpponentSearchUrl = (streamId: string,) => {
@@ -2300,13 +2592,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useCancelPkOpponentSearch = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelPkOpponentSearch>>, TError,CancelPkOpponentSearchMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof cancelPkOpponentSearch>>,
         TError,
         CancelPkOpponentSearchMutationVariables,
         TContext
       > => {
-      return useMutation(getCancelPkOpponentSearchMutationOptions(options));
+      return useMutation(getCancelPkOpponentSearchMutationOptions(options), queryClient);
     }
 
 export const getGetPkBattleStateUrl = (streamId: string,) => {
@@ -2342,7 +2634,7 @@ export const getGetPkBattleStateQueryKey = (streamId: string,) => {
     }
 
 
-export const getGetPkBattleStateQueryOptions = <TData = Awaited<ReturnType<typeof getPkBattleState>>, TError = ErrorType<void>>(streamId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPkBattleState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetPkBattleStateQueryOptions = <TData = Awaited<ReturnType<typeof getPkBattleState>>, TError = ErrorType<void>>(streamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPkBattleState>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -2357,25 +2649,49 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: streamId !== null && streamId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPkBattleState>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: streamId !== null && streamId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPkBattleState>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetPkBattleStateQueryResult = NonNullable<Awaited<ReturnType<typeof getPkBattleState>>>
 export type GetPkBattleStateQueryError = ErrorType<void>
 
 
+export function useGetPkBattleState<TData = Awaited<ReturnType<typeof getPkBattleState>>, TError = ErrorType<void>>(
+ streamId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPkBattleState>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPkBattleState>>,
+          TError,
+          Awaited<ReturnType<typeof getPkBattleState>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPkBattleState<TData = Awaited<ReturnType<typeof getPkBattleState>>, TError = ErrorType<void>>(
+ streamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPkBattleState>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPkBattleState>>,
+          TError,
+          Awaited<ReturnType<typeof getPkBattleState>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPkBattleState<TData = Awaited<ReturnType<typeof getPkBattleState>>, TError = ErrorType<void>>(
+ streamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPkBattleState>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Read PK matchmaking, battle timer, score and top gifters
  */
 
 export function useGetPkBattleState<TData = Awaited<ReturnType<typeof getPkBattleState>>, TError = ErrorType<void>>(
- streamId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPkBattleState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ streamId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPkBattleState>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetPkBattleStateQueryOptions(streamId,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -2451,13 +2767,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useJoinPkBattleMedia = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinPkBattleMedia>>, TError,JoinPkBattleMediaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof joinPkBattleMedia>>,
         TError,
         JoinPkBattleMediaMutationVariables,
         TContext
       > => {
-      return useMutation(getJoinPkBattleMediaMutationOptions(options));
+      return useMutation(getJoinPkBattleMediaMutationOptions(options), queryClient);
     }
 
 export const getGetPkLeaderboardUrl = () => {
@@ -2493,7 +2809,7 @@ export const getGetPkLeaderboardQueryKey = () => {
     }
 
 
-export const getGetPkLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getPkLeaderboard>>, TError = ErrorType<SessionUnauthorizedResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPkLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetPkLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getPkLeaderboard>>, TError = ErrorType<SessionUnauthorizedResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPkLeaderboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -2508,25 +2824,49 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPkLeaderboard>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPkLeaderboard>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetPkLeaderboardQueryResult = NonNullable<Awaited<ReturnType<typeof getPkLeaderboard>>>
 export type GetPkLeaderboardQueryError = ErrorType<SessionUnauthorizedResponse>
 
 
+export function useGetPkLeaderboard<TData = Awaited<ReturnType<typeof getPkLeaderboard>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPkLeaderboard>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPkLeaderboard>>,
+          TError,
+          Awaited<ReturnType<typeof getPkLeaderboard>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPkLeaderboard<TData = Awaited<ReturnType<typeof getPkLeaderboard>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPkLeaderboard>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPkLeaderboard>>,
+          TError,
+          Awaited<ReturnType<typeof getPkLeaderboard>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPkLeaderboard<TData = Awaited<ReturnType<typeof getPkLeaderboard>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPkLeaderboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Get weekly broadcaster PK wins and longest win streak
  */
 
 export function useGetPkLeaderboard<TData = Awaited<ReturnType<typeof getPkLeaderboard>>, TError = ErrorType<SessionUnauthorizedResponse>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPkLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPkLeaderboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetPkLeaderboardQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -2602,13 +2942,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useEndLiveStream = <TError = ErrorType<SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof endLiveStream>>, TError,EndLiveStreamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof endLiveStream>>,
         TError,
         EndLiveStreamMutationVariables,
         TContext
       > => {
-      return useMutation(getEndLiveStreamMutationOptions(options));
+      return useMutation(getEndLiveStreamMutationOptions(options), queryClient);
     }
 
 export const getGetUniversityVideoBeamTvStateUrl = (roomId: string,) => {
@@ -2644,7 +2984,7 @@ export const getGetUniversityVideoBeamTvStateQueryKey = (roomId: string,) => {
     }
 
 
-export const getGetUniversityVideoBeamTvStateQueryOptions = <TData = Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetUniversityVideoBeamTvStateQueryOptions = <TData = Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse>>(roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -2659,25 +2999,49 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUniversityVideoBeamTvStateQueryResult = NonNullable<Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>>
 export type GetUniversityVideoBeamTvStateQueryError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse>
 
 
+export function useGetUniversityVideoBeamTvState<TData = Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse>>(
+ roomId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>,
+          TError,
+          Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUniversityVideoBeamTvState<TData = Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>,
+          TError,
+          Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUniversityVideoBeamTvState<TData = Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Read the room-synchronized Beam TV state
  */
 
 export function useGetUniversityVideoBeamTvState<TData = Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>, TError = ErrorType<SessionUnauthorizedResponse | InvalidInputResponse>>(
- roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getUniversityVideoBeamTvState>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetUniversityVideoBeamTvStateQueryOptions(roomId,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -2768,13 +3132,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const usePerformUniversityVideoBeamTvAction = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof performUniversityVideoBeamTvAction>>, TError,PerformUniversityVideoBeamTvActionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof performUniversityVideoBeamTvAction>>,
         TError,
         PerformUniversityVideoBeamTvActionMutationVariables,
         TContext
       > => {
-      return useMutation(getPerformUniversityVideoBeamTvActionMutationOptions(options));
+      return useMutation(getPerformUniversityVideoBeamTvActionMutationOptions(options), queryClient);
     }
 
 export const getSearchYouTubeForVideoBeamUrl = (roomId: string,) => {
@@ -2857,13 +3221,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useSearchYouTubeForVideoBeam = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof searchYouTubeForVideoBeam>>, TError,SearchYouTubeForVideoBeamMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof searchYouTubeForVideoBeam>>,
         TError,
         SearchYouTubeForVideoBeamMutationVariables,
         TContext
       > => {
-      return useMutation(getSearchYouTubeForVideoBeamMutationOptions(options));
+      return useMutation(getSearchYouTubeForVideoBeamMutationOptions(options), queryClient);
     }
 
 export const getGetComedyRoomVideoCatalogUrl = (roomId: string,) => {
@@ -2899,7 +3263,7 @@ export const getGetComedyRoomVideoCatalogQueryKey = (roomId: string,) => {
     }
 
 
-export const getGetComedyRoomVideoCatalogQueryOptions = <TData = Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetComedyRoomVideoCatalogQueryOptions = <TData = Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -2914,25 +3278,49 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetComedyRoomVideoCatalogQueryResult = NonNullable<Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>>
 export type GetComedyRoomVideoCatalogQueryError = ErrorType<SessionUnauthorizedResponse | void>
 
 
+export function useGetComedyRoomVideoCatalog<TData = Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ roomId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>,
+          TError,
+          Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetComedyRoomVideoCatalog<TData = Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>,
+          TError,
+          Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetComedyRoomVideoCatalog<TData = Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary List screened Comedy room videos from its configured sources
  */
 
 export function useGetComedyRoomVideoCatalog<TData = Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
- roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getComedyRoomVideoCatalog>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetComedyRoomVideoCatalogQueryOptions(roomId,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -3023,13 +3411,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const usePerformComedyRoomVideoAction = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof performComedyRoomVideoAction>>, TError,PerformComedyRoomVideoActionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof performComedyRoomVideoAction>>,
         TError,
         PerformComedyRoomVideoActionMutationVariables,
         TContext
       > => {
-      return useMutation(getPerformComedyRoomVideoActionMutationOptions(options));
+      return useMutation(getPerformComedyRoomVideoActionMutationOptions(options), queryClient);
     }
 
 export const getPerformUniversityAudioActionUrl = (roomId: string,) => {
@@ -3112,13 +3500,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const usePerformUniversityAudioAction = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof performUniversityAudioAction>>, TError,PerformUniversityAudioActionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof performUniversityAudioAction>>,
         TError,
         PerformUniversityAudioActionMutationVariables,
         TContext
       > => {
-      return useMutation(getPerformUniversityAudioActionMutationOptions(options));
+      return useMutation(getPerformUniversityAudioActionMutationOptions(options), queryClient);
     }
 
 export const getStreamUniversityAudioEventsUrl = (roomId: string,) => {
@@ -3154,7 +3542,7 @@ export const getStreamUniversityAudioEventsQueryKey = (roomId: string,) => {
     }
 
 
-export const getStreamUniversityAudioEventsQueryOptions = <TData = Awaited<ReturnType<typeof streamUniversityAudioEvents>>, TError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamUniversityAudioEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getStreamUniversityAudioEventsQueryOptions = <TData = Awaited<ReturnType<typeof streamUniversityAudioEvents>>, TError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>>(roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamUniversityAudioEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -3169,25 +3557,49 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof streamUniversityAudioEvents>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof streamUniversityAudioEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type StreamUniversityAudioEventsQueryResult = NonNullable<Awaited<ReturnType<typeof streamUniversityAudioEvents>>>
 export type StreamUniversityAudioEventsQueryError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>
 
 
+export function useStreamUniversityAudioEvents<TData = Awaited<ReturnType<typeof streamUniversityAudioEvents>>, TError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>>(
+ roomId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamUniversityAudioEvents>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof streamUniversityAudioEvents>>,
+          TError,
+          Awaited<ReturnType<typeof streamUniversityAudioEvents>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStreamUniversityAudioEvents<TData = Awaited<ReturnType<typeof streamUniversityAudioEvents>>, TError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamUniversityAudioEvents>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof streamUniversityAudioEvents>>,
+          TError,
+          Awaited<ReturnType<typeof streamUniversityAudioEvents>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStreamUniversityAudioEvents<TData = Awaited<ReturnType<typeof streamUniversityAudioEvents>>, TError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamUniversityAudioEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Listen for audio-only beam peers and moderation state
  */
 
 export function useStreamUniversityAudioEvents<TData = Awaited<ReturnType<typeof streamUniversityAudioEvents>>, TError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>>(
- roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamUniversityAudioEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamUniversityAudioEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getStreamUniversityAudioEventsQueryOptions(roomId,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -3278,13 +3690,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useSendUniversityAudioSignal = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendUniversityAudioSignal>>, TError,SendUniversityAudioSignalMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof sendUniversityAudioSignal>>,
         TError,
         SendUniversityAudioSignalMutationVariables,
         TContext
       > => {
-      return useMutation(getSendUniversityAudioSignalMutationOptions(options));
+      return useMutation(getSendUniversityAudioSignalMutationOptions(options), queryClient);
     }
 
 export const getDisconnectUniversityAudioUrl = (roomId: string,
@@ -3354,13 +3766,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useDisconnectUniversityAudio = <TError = ErrorType<SessionUnauthorizedResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disconnectUniversityAudio>>, TError,DisconnectUniversityAudioMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof disconnectUniversityAudio>>,
         TError,
         DisconnectUniversityAudioMutationVariables,
         TContext
       > => {
-      return useMutation(getDisconnectUniversityAudioMutationOptions(options));
+      return useMutation(getDisconnectUniversityAudioMutationOptions(options), queryClient);
     }
 
 export const getSendUniversityWhisperUrl = (roomId: string,) => {
@@ -3437,13 +3849,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export const useSendUniversityWhisper = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendUniversityWhisper>>, TError,SendUniversityWhisperMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof sendUniversityWhisper>>,
         TError,
         SendUniversityWhisperMutationVariables,
         TContext
       > => {
-      return useMutation(getSendUniversityWhisperMutationOptions(options));
+      return useMutation(getSendUniversityWhisperMutationOptions(options), queryClient);
     }
 
 export const getSetUniversityIgnoreUrl = (username: string,) => {
@@ -3520,13 +3932,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export const useSetUniversityIgnore = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setUniversityIgnore>>, TError,SetUniversityIgnoreMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof setUniversityIgnore>>,
         TError,
         SetUniversityIgnoreMutationVariables,
         TContext
       > => {
-      return useMutation(getSetUniversityIgnoreMutationOptions(options));
+      return useMutation(getSetUniversityIgnoreMutationOptions(options), queryClient);
     }
 
 export const getAcknowledgeUniversityRulesUrl = () => {
@@ -3588,13 +4000,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export const useAcknowledgeUniversityRules = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acknowledgeUniversityRules>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof acknowledgeUniversityRules>>,
         TError,
         void,
         TContext
       > => {
-      return useMutation(getAcknowledgeUniversityRulesMutationOptions(options));
+      return useMutation(getAcknowledgeUniversityRulesMutationOptions(options), queryClient);
     }
 
 export const getGetPhotoReviewQueueUrl = () => {
@@ -3627,7 +4039,7 @@ export const getGetPhotoReviewQueueQueryKey = () => {
     }
 
 
-export const getGetPhotoReviewQueueQueryOptions = <TData = Awaited<ReturnType<typeof getPhotoReviewQueue>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPhotoReviewQueue>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetPhotoReviewQueueQueryOptions = <TData = Awaited<ReturnType<typeof getPhotoReviewQueue>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPhotoReviewQueue>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -3642,22 +4054,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPhotoReviewQueue>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPhotoReviewQueue>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetPhotoReviewQueueQueryResult = NonNullable<Awaited<ReturnType<typeof getPhotoReviewQueue>>>
 export type GetPhotoReviewQueueQueryError = ErrorType<unknown>
 
 
+export function useGetPhotoReviewQueue<TData = Awaited<ReturnType<typeof getPhotoReviewQueue>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPhotoReviewQueue>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPhotoReviewQueue>>,
+          TError,
+          Awaited<ReturnType<typeof getPhotoReviewQueue>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPhotoReviewQueue<TData = Awaited<ReturnType<typeof getPhotoReviewQueue>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPhotoReviewQueue>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPhotoReviewQueue>>,
+          TError,
+          Awaited<ReturnType<typeof getPhotoReviewQueue>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPhotoReviewQueue<TData = Awaited<ReturnType<typeof getPhotoReviewQueue>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPhotoReviewQueue>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetPhotoReviewQueue<TData = Awaited<ReturnType<typeof getPhotoReviewQueue>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPhotoReviewQueue>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPhotoReviewQueue>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetPhotoReviewQueueQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -3742,13 +4178,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export const useReviewProfilePhoto = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewProfilePhoto>>, TError,ReviewProfilePhotoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof reviewProfilePhoto>>,
         TError,
         ReviewProfilePhotoMutationVariables,
         TContext
       > => {
-      return useMutation(getReviewProfilePhotoMutationOptions(options));
+      return useMutation(getReviewProfilePhotoMutationOptions(options), queryClient);
     }
 
 export const getUploadProfilePhotoUrl = () => {
@@ -3830,13 +4266,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useUploadProfilePhoto = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadProfilePhoto>>, TError,UploadProfilePhotoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof uploadProfilePhoto>>,
         TError,
         UploadProfilePhotoMutationVariables,
         TContext
       > => {
-      return useMutation(getUploadProfilePhotoMutationOptions(options));
+      return useMutation(getUploadProfilePhotoMutationOptions(options), queryClient);
     }
 
 export const getGetProfilePhotoUrl = (photoId: string,) => {
@@ -3869,7 +4305,7 @@ export const getGetProfilePhotoQueryKey = (photoId: string,) => {
     }
 
 
-export const getGetProfilePhotoQueryOptions = <TData = Awaited<ReturnType<typeof getProfilePhoto>>, TError = ErrorType<void>>(photoId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProfilePhoto>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetProfilePhotoQueryOptions = <TData = Awaited<ReturnType<typeof getProfilePhoto>>, TError = ErrorType<void>>(photoId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfilePhoto>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -3884,22 +4320,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: photoId !== null && photoId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProfilePhoto>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: photoId !== null && photoId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProfilePhoto>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetProfilePhotoQueryResult = NonNullable<Awaited<ReturnType<typeof getProfilePhoto>>>
 export type GetProfilePhotoQueryError = ErrorType<void>
 
 
+export function useGetProfilePhoto<TData = Awaited<ReturnType<typeof getProfilePhoto>>, TError = ErrorType<void>>(
+ photoId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfilePhoto>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProfilePhoto>>,
+          TError,
+          Awaited<ReturnType<typeof getProfilePhoto>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProfilePhoto<TData = Awaited<ReturnType<typeof getProfilePhoto>>, TError = ErrorType<void>>(
+ photoId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfilePhoto>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProfilePhoto>>,
+          TError,
+          Awaited<ReturnType<typeof getProfilePhoto>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProfilePhoto<TData = Awaited<ReturnType<typeof getProfilePhoto>>, TError = ErrorType<void>>(
+ photoId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfilePhoto>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetProfilePhoto<TData = Awaited<ReturnType<typeof getProfilePhoto>>, TError = ErrorType<void>>(
- photoId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProfilePhoto>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ photoId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfilePhoto>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetProfilePhotoQueryOptions(photoId,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -3944,7 +4404,7 @@ export const getGetOlderRoomMessagesQueryKey = (roomId: string,
 
 
 export const getGetOlderRoomMessagesQueryOptions = <TData = Awaited<ReturnType<typeof getOlderRoomMessages>>, TError = ErrorType<unknown>>(roomId: string,
-    beforeId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOlderRoomMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+    beforeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOlderRoomMessages>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -3959,23 +4419,50 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined && beforeId !== null && beforeId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOlderRoomMessages>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined && beforeId !== null && beforeId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOlderRoomMessages>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOlderRoomMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof getOlderRoomMessages>>>
 export type GetOlderRoomMessagesQueryError = ErrorType<unknown>
 
 
+export function useGetOlderRoomMessages<TData = Awaited<ReturnType<typeof getOlderRoomMessages>>, TError = ErrorType<unknown>>(
+ roomId: string,
+    beforeId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOlderRoomMessages>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOlderRoomMessages>>,
+          TError,
+          Awaited<ReturnType<typeof getOlderRoomMessages>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOlderRoomMessages<TData = Awaited<ReturnType<typeof getOlderRoomMessages>>, TError = ErrorType<unknown>>(
+ roomId: string,
+    beforeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOlderRoomMessages>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getOlderRoomMessages>>,
+          TError,
+          Awaited<ReturnType<typeof getOlderRoomMessages>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetOlderRoomMessages<TData = Awaited<ReturnType<typeof getOlderRoomMessages>>, TError = ErrorType<unknown>>(
+ roomId: string,
+    beforeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOlderRoomMessages>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetOlderRoomMessages<TData = Awaited<ReturnType<typeof getOlderRoomMessages>>, TError = ErrorType<unknown>>(
  roomId: string,
-    beforeId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOlderRoomMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+    beforeId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getOlderRoomMessages>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetOlderRoomMessagesQueryOptions(roomId,beforeId,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -4016,7 +4503,7 @@ export const getGetChatDirectoryQueryKey = () => {
     }
 
 
-export const getGetChatDirectoryQueryOptions = <TData = Awaited<ReturnType<typeof getChatDirectory>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getChatDirectory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetChatDirectoryQueryOptions = <TData = Awaited<ReturnType<typeof getChatDirectory>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatDirectory>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -4031,22 +4518,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getChatDirectory>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getChatDirectory>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetChatDirectoryQueryResult = NonNullable<Awaited<ReturnType<typeof getChatDirectory>>>
 export type GetChatDirectoryQueryError = ErrorType<unknown>
 
 
+export function useGetChatDirectory<TData = Awaited<ReturnType<typeof getChatDirectory>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatDirectory>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChatDirectory>>,
+          TError,
+          Awaited<ReturnType<typeof getChatDirectory>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChatDirectory<TData = Awaited<ReturnType<typeof getChatDirectory>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatDirectory>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChatDirectory>>,
+          TError,
+          Awaited<ReturnType<typeof getChatDirectory>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChatDirectory<TData = Awaited<ReturnType<typeof getChatDirectory>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatDirectory>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetChatDirectory<TData = Awaited<ReturnType<typeof getChatDirectory>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getChatDirectory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatDirectory>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetChatDirectoryQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -4087,7 +4598,7 @@ export const getGetChatAccessQueryKey = () => {
     }
 
 
-export const getGetChatAccessQueryOptions = <TData = Awaited<ReturnType<typeof getChatAccess>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getChatAccess>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetChatAccessQueryOptions = <TData = Awaited<ReturnType<typeof getChatAccess>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatAccess>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -4102,22 +4613,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getChatAccess>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getChatAccess>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetChatAccessQueryResult = NonNullable<Awaited<ReturnType<typeof getChatAccess>>>
 export type GetChatAccessQueryError = ErrorType<unknown>
 
 
+export function useGetChatAccess<TData = Awaited<ReturnType<typeof getChatAccess>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatAccess>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChatAccess>>,
+          TError,
+          Awaited<ReturnType<typeof getChatAccess>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChatAccess<TData = Awaited<ReturnType<typeof getChatAccess>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatAccess>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChatAccess>>,
+          TError,
+          Awaited<ReturnType<typeof getChatAccess>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChatAccess<TData = Awaited<ReturnType<typeof getChatAccess>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatAccess>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetChatAccess<TData = Awaited<ReturnType<typeof getChatAccess>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getChatAccess>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatAccess>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetChatAccessQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -4201,13 +4736,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export const useConfirmChatAdult = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmChatAdult>>, TError,ConfirmChatAdultMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof confirmChatAdult>>,
         TError,
         ConfirmChatAdultMutationVariables,
         TContext
       > => {
-      return useMutation(getConfirmChatAdultMutationOptions(options));
+      return useMutation(getConfirmChatAdultMutationOptions(options), queryClient);
     }
 
 export const getReportChatMessageUrl = () => {
@@ -4283,13 +4818,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export const useReportChatMessage = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportChatMessage>>, TError,ReportChatMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof reportChatMessage>>,
         TError,
         ReportChatMessageMutationVariables,
         TContext
       > => {
-      return useMutation(getReportChatMessageMutationOptions(options));
+      return useMutation(getReportChatMessageMutationOptions(options), queryClient);
     }
 
 export const getGetChatReportsUrl = () => {
@@ -4322,7 +4857,7 @@ export const getGetChatReportsQueryKey = () => {
     }
 
 
-export const getGetChatReportsQueryOptions = <TData = Awaited<ReturnType<typeof getChatReports>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getChatReports>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetChatReportsQueryOptions = <TData = Awaited<ReturnType<typeof getChatReports>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatReports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -4337,22 +4872,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getChatReports>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getChatReports>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetChatReportsQueryResult = NonNullable<Awaited<ReturnType<typeof getChatReports>>>
 export type GetChatReportsQueryError = ErrorType<unknown>
 
 
+export function useGetChatReports<TData = Awaited<ReturnType<typeof getChatReports>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatReports>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChatReports>>,
+          TError,
+          Awaited<ReturnType<typeof getChatReports>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChatReports<TData = Awaited<ReturnType<typeof getChatReports>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatReports>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChatReports>>,
+          TError,
+          Awaited<ReturnType<typeof getChatReports>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChatReports<TData = Awaited<ReturnType<typeof getChatReports>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatReports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetChatReports<TData = Awaited<ReturnType<typeof getChatReports>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getChatReports>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatReports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetChatReportsQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -4437,13 +4996,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export const useReviewChatReport = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewChatReport>>, TError,ReviewChatReportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof reviewChatReport>>,
         TError,
         ReviewChatReportMutationVariables,
         TContext
       > => {
-      return useMutation(getReviewChatReportMutationOptions(options));
+      return useMutation(getReviewChatReportMutationOptions(options), queryClient);
     }
 
 export const getGetSocialMeUrl = () => {
@@ -4476,7 +5035,7 @@ export const getGetSocialMeQueryKey = () => {
     }
 
 
-export const getGetSocialMeQueryOptions = <TData = Awaited<ReturnType<typeof getSocialMe>>, TError = ErrorType<ErrorResponse4b96100 | void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialMe>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetSocialMeQueryOptions = <TData = Awaited<ReturnType<typeof getSocialMe>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialMe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -4491,22 +5050,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialMe>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialMe>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetSocialMeQueryResult = NonNullable<Awaited<ReturnType<typeof getSocialMe>>>
-export type GetSocialMeQueryError = ErrorType<ErrorResponse4b96100 | void>
+export type GetSocialMeQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
 
 
+export function useGetSocialMe<TData = Awaited<ReturnType<typeof getSocialMe>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialMe>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSocialMe>>,
+          TError,
+          Awaited<ReturnType<typeof getSocialMe>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSocialMe<TData = Awaited<ReturnType<typeof getSocialMe>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialMe>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSocialMe>>,
+          TError,
+          Awaited<ReturnType<typeof getSocialMe>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSocialMe<TData = Awaited<ReturnType<typeof getSocialMe>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialMe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetSocialMe<TData = Awaited<ReturnType<typeof getSocialMe>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialMe>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+export function useGetSocialMe<TData = Awaited<ReturnType<typeof getSocialMe>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialMe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetSocialMeQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -4556,7 +5139,7 @@ return customFetch<SocialPerson>(getSaveSocialProfileUrl(),
 
 export const getSaveSocialProfileMutationKey = () => ['saveSocialProfile'] as const;
 
-export const getSaveSocialProfileMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getSaveSocialProfileMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveSocialProfile>>, TError,SaveSocialProfileMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveSocialProfile>>, TError,SaveSocialProfileMutationVariables, TContext> => {
 
@@ -4585,18 +5168,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SaveSocialProfileMutationResult = NonNullable<Awaited<ReturnType<typeof saveSocialProfile>>>
     export type SaveSocialProfileMutationBody = BodyType<SocialProfileInput>
-    export type SaveSocialProfileMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type SaveSocialProfileMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
     export type SaveSocialProfileMutationVariables = {data: BodyType<SocialProfileInput>}
 
-    export const useSaveSocialProfile = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useSaveSocialProfile = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveSocialProfile>>, TError,SaveSocialProfileMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof saveSocialProfile>>,
         TError,
         SaveSocialProfileMutationVariables,
         TContext
       > => {
-      return useMutation(getSaveSocialProfileMutationOptions(options));
+      return useMutation(getSaveSocialProfileMutationOptions(options), queryClient);
     }
 
 export const getGetGifterLeaderboardUrl = () => {
@@ -4629,7 +5212,7 @@ export const getGetGifterLeaderboardQueryKey = () => {
     }
 
 
-export const getGetGifterLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getGifterLeaderboard>>, TError = ErrorType<ErrorResponse4b96100>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGifterLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetGifterLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getGifterLeaderboard>>, TError = ErrorType<SessionUnauthorizedResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGifterLeaderboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -4644,22 +5227,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGifterLeaderboard>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGifterLeaderboard>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetGifterLeaderboardQueryResult = NonNullable<Awaited<ReturnType<typeof getGifterLeaderboard>>>
-export type GetGifterLeaderboardQueryError = ErrorType<ErrorResponse4b96100>
+export type GetGifterLeaderboardQueryError = ErrorType<SessionUnauthorizedResponse>
 
 
+export function useGetGifterLeaderboard<TData = Awaited<ReturnType<typeof getGifterLeaderboard>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGifterLeaderboard>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGifterLeaderboard>>,
+          TError,
+          Awaited<ReturnType<typeof getGifterLeaderboard>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGifterLeaderboard<TData = Awaited<ReturnType<typeof getGifterLeaderboard>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGifterLeaderboard>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGifterLeaderboard>>,
+          TError,
+          Awaited<ReturnType<typeof getGifterLeaderboard>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGifterLeaderboard<TData = Awaited<ReturnType<typeof getGifterLeaderboard>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGifterLeaderboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetGifterLeaderboard<TData = Awaited<ReturnType<typeof getGifterLeaderboard>>, TError = ErrorType<ErrorResponse4b96100>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGifterLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+export function useGetGifterLeaderboard<TData = Awaited<ReturnType<typeof getGifterLeaderboard>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGifterLeaderboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetGifterLeaderboardQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -4709,7 +5316,7 @@ return customFetch<NameColorTestTotalResponse>(getSetMyNameColorTestTotalUrl(),
 
 export const getSetMyNameColorTestTotalMutationKey = () => ['setMyNameColorTestTotal'] as const;
 
-export const getSetMyNameColorTestTotalMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getSetMyNameColorTestTotalMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setMyNameColorTestTotal>>, TError,SetMyNameColorTestTotalMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof setMyNameColorTestTotal>>, TError,SetMyNameColorTestTotalMutationVariables, TContext> => {
 
@@ -4738,18 +5345,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SetMyNameColorTestTotalMutationResult = NonNullable<Awaited<ReturnType<typeof setMyNameColorTestTotal>>>
     export type SetMyNameColorTestTotalMutationBody = BodyType<NameColorTestTotalInput>
-    export type SetMyNameColorTestTotalMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type SetMyNameColorTestTotalMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
     export type SetMyNameColorTestTotalMutationVariables = {data: BodyType<NameColorTestTotalInput>}
 
-    export const useSetMyNameColorTestTotal = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useSetMyNameColorTestTotal = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setMyNameColorTestTotal>>, TError,SetMyNameColorTestTotalMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof setMyNameColorTestTotal>>,
         TError,
         SetMyNameColorTestTotalMutationVariables,
         TContext
       > => {
-      return useMutation(getSetMyNameColorTestTotalMutationOptions(options));
+      return useMutation(getSetMyNameColorTestTotalMutationOptions(options), queryClient);
     }
 
 export const getUpdateMyEntranceEffectSettingsUrl = () => {
@@ -4791,7 +5398,7 @@ return customFetch<EntranceEffectSettings>(getUpdateMyEntranceEffectSettingsUrl(
 
 export const getUpdateMyEntranceEffectSettingsMutationKey = () => ['updateMyEntranceEffectSettings'] as const;
 
-export const getUpdateMyEntranceEffectSettingsMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getUpdateMyEntranceEffectSettingsMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMyEntranceEffectSettings>>, TError,UpdateMyEntranceEffectSettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateMyEntranceEffectSettings>>, TError,UpdateMyEntranceEffectSettingsMutationVariables, TContext> => {
 
@@ -4820,18 +5427,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateMyEntranceEffectSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateMyEntranceEffectSettings>>>
     export type UpdateMyEntranceEffectSettingsMutationBody = BodyType<EntranceEffectSettingsInput>
-    export type UpdateMyEntranceEffectSettingsMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type UpdateMyEntranceEffectSettingsMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
     export type UpdateMyEntranceEffectSettingsMutationVariables = {data: BodyType<EntranceEffectSettingsInput>}
 
-    export const useUpdateMyEntranceEffectSettings = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useUpdateMyEntranceEffectSettings = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMyEntranceEffectSettings>>, TError,UpdateMyEntranceEffectSettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateMyEntranceEffectSettings>>,
         TError,
         UpdateMyEntranceEffectSettingsMutationVariables,
         TContext
       > => {
-      return useMutation(getUpdateMyEntranceEffectSettingsMutationOptions(options));
+      return useMutation(getUpdateMyEntranceEffectSettingsMutationOptions(options), queryClient);
     }
 
 export const getGetEntranceEffectShopUrl = () => {
@@ -4864,7 +5471,7 @@ export const getGetEntranceEffectShopQueryKey = () => {
     }
 
 
-export const getGetEntranceEffectShopQueryOptions = <TData = Awaited<ReturnType<typeof getEntranceEffectShop>>, TError = ErrorType<ErrorResponse4b96100>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEntranceEffectShop>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetEntranceEffectShopQueryOptions = <TData = Awaited<ReturnType<typeof getEntranceEffectShop>>, TError = ErrorType<SessionUnauthorizedResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntranceEffectShop>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -4879,22 +5486,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEntranceEffectShop>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEntranceEffectShop>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetEntranceEffectShopQueryResult = NonNullable<Awaited<ReturnType<typeof getEntranceEffectShop>>>
-export type GetEntranceEffectShopQueryError = ErrorType<ErrorResponse4b96100>
+export type GetEntranceEffectShopQueryError = ErrorType<SessionUnauthorizedResponse>
 
 
+export function useGetEntranceEffectShop<TData = Awaited<ReturnType<typeof getEntranceEffectShop>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntranceEffectShop>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEntranceEffectShop>>,
+          TError,
+          Awaited<ReturnType<typeof getEntranceEffectShop>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetEntranceEffectShop<TData = Awaited<ReturnType<typeof getEntranceEffectShop>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntranceEffectShop>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEntranceEffectShop>>,
+          TError,
+          Awaited<ReturnType<typeof getEntranceEffectShop>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetEntranceEffectShop<TData = Awaited<ReturnType<typeof getEntranceEffectShop>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntranceEffectShop>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetEntranceEffectShop<TData = Awaited<ReturnType<typeof getEntranceEffectShop>>, TError = ErrorType<ErrorResponse4b96100>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEntranceEffectShop>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+export function useGetEntranceEffectShop<TData = Awaited<ReturnType<typeof getEntranceEffectShop>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntranceEffectShop>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetEntranceEffectShopQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -4945,7 +5576,7 @@ return customFetch<EntranceEffectPurchaseResponse>(getPurchaseEntranceEffectUrl(
 
 export const getPurchaseEntranceEffectMutationKey = () => ['purchaseEntranceEffect'] as const;
 
-export const getPurchaseEntranceEffectMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getPurchaseEntranceEffectMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purchaseEntranceEffect>>, TError,PurchaseEntranceEffectMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof purchaseEntranceEffect>>, TError,PurchaseEntranceEffectMutationVariables, TContext> => {
 
@@ -4974,18 +5605,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type PurchaseEntranceEffectMutationResult = NonNullable<Awaited<ReturnType<typeof purchaseEntranceEffect>>>
     export type PurchaseEntranceEffectMutationBody = BodyType<EntranceEffectPurchaseInput>
-    export type PurchaseEntranceEffectMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type PurchaseEntranceEffectMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
     export type PurchaseEntranceEffectMutationVariables = {effectId: SocialGiftCatalogId;data: BodyType<EntranceEffectPurchaseInput>}
 
-    export const usePurchaseEntranceEffect = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const usePurchaseEntranceEffect = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purchaseEntranceEffect>>, TError,PurchaseEntranceEffectMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof purchaseEntranceEffect>>,
         TError,
         PurchaseEntranceEffectMutationVariables,
         TContext
       > => {
-      return useMutation(getPurchaseEntranceEffectMutationOptions(options));
+      return useMutation(getPurchaseEntranceEffectMutationOptions(options), queryClient);
     }
 
 export const getEquipEntranceEffectUrl = () => {
@@ -5027,7 +5658,7 @@ return customFetch<EntranceEffectEquipResponse>(getEquipEntranceEffectUrl(),
 
 export const getEquipEntranceEffectMutationKey = () => ['equipEntranceEffect'] as const;
 
-export const getEquipEntranceEffectMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getEquipEntranceEffectMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof equipEntranceEffect>>, TError,EquipEntranceEffectMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof equipEntranceEffect>>, TError,EquipEntranceEffectMutationVariables, TContext> => {
 
@@ -5056,18 +5687,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type EquipEntranceEffectMutationResult = NonNullable<Awaited<ReturnType<typeof equipEntranceEffect>>>
     export type EquipEntranceEffectMutationBody = BodyType<EntranceEffectEquipInput>
-    export type EquipEntranceEffectMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type EquipEntranceEffectMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
     export type EquipEntranceEffectMutationVariables = {data: BodyType<EntranceEffectEquipInput>}
 
-    export const useEquipEntranceEffect = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useEquipEntranceEffect = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof equipEntranceEffect>>, TError,EquipEntranceEffectMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof equipEntranceEffect>>,
         TError,
         EquipEntranceEffectMutationVariables,
         TContext
       > => {
-      return useMutation(getEquipEntranceEffectMutationOptions(options));
+      return useMutation(getEquipEntranceEffectMutationOptions(options), queryClient);
     }
 
 export const getEquipMyBadgeUrl = () => {
@@ -5109,7 +5740,7 @@ return customFetch<EquippedBadgeState>(getEquipMyBadgeUrl(),
 
 export const getEquipMyBadgeMutationKey = () => ['equipMyBadge'] as const;
 
-export const getEquipMyBadgeMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getEquipMyBadgeMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof equipMyBadge>>, TError,EquipMyBadgeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof equipMyBadge>>, TError,EquipMyBadgeMutationVariables, TContext> => {
 
@@ -5138,18 +5769,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type EquipMyBadgeMutationResult = NonNullable<Awaited<ReturnType<typeof equipMyBadge>>>
     export type EquipMyBadgeMutationBody = BodyType<EquipMyBadgeInput>
-    export type EquipMyBadgeMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type EquipMyBadgeMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
     export type EquipMyBadgeMutationVariables = {data: BodyType<EquipMyBadgeInput>}
 
-    export const useEquipMyBadge = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useEquipMyBadge = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof equipMyBadge>>, TError,EquipMyBadgeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof equipMyBadge>>,
         TError,
         EquipMyBadgeMutationVariables,
         TContext
       > => {
-      return useMutation(getEquipMyBadgeMutationOptions(options));
+      return useMutation(getEquipMyBadgeMutationOptions(options), queryClient);
     }
 
 export const getGetGiftStudioLibraryUrl = () => {
@@ -5182,7 +5813,7 @@ export const getGetGiftStudioLibraryQueryKey = () => {
     }
 
 
-export const getGetGiftStudioLibraryQueryOptions = <TData = Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError = ErrorType<ErrorResponse4b96100 | void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetGiftStudioLibraryQueryOptions = <TData = Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError = ErrorType<SessionUnauthorizedResponse | void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -5197,22 +5828,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetGiftStudioLibraryQueryResult = NonNullable<Awaited<ReturnType<typeof getGiftStudioLibrary>>>
-export type GetGiftStudioLibraryQueryError = ErrorType<ErrorResponse4b96100 | void>
+export type GetGiftStudioLibraryQueryError = ErrorType<SessionUnauthorizedResponse | void>
 
 
+export function useGetGiftStudioLibrary<TData = Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGiftStudioLibrary>>,
+          TError,
+          Awaited<ReturnType<typeof getGiftStudioLibrary>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGiftStudioLibrary<TData = Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGiftStudioLibrary>>,
+          TError,
+          Awaited<ReturnType<typeof getGiftStudioLibrary>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGiftStudioLibrary<TData = Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetGiftStudioLibrary<TData = Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+export function useGetGiftStudioLibrary<TData = Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetGiftStudioLibraryQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -5253,7 +5908,7 @@ export const getGetDeveloperContentSyncQueryKey = () => {
     }
 
 
-export const getGetDeveloperContentSyncQueryOptions = <TData = Awaited<ReturnType<typeof getDeveloperContentSync>>, TError = ErrorType<ErrorResponse4b96100 | void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDeveloperContentSync>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetDeveloperContentSyncQueryOptions = <TData = Awaited<ReturnType<typeof getDeveloperContentSync>>, TError = ErrorType<SessionUnauthorizedResponse | void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDeveloperContentSync>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -5268,22 +5923,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDeveloperContentSync>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDeveloperContentSync>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetDeveloperContentSyncQueryResult = NonNullable<Awaited<ReturnType<typeof getDeveloperContentSync>>>
-export type GetDeveloperContentSyncQueryError = ErrorType<ErrorResponse4b96100 | void>
+export type GetDeveloperContentSyncQueryError = ErrorType<SessionUnauthorizedResponse | void>
 
 
+export function useGetDeveloperContentSync<TData = Awaited<ReturnType<typeof getDeveloperContentSync>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDeveloperContentSync>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDeveloperContentSync>>,
+          TError,
+          Awaited<ReturnType<typeof getDeveloperContentSync>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDeveloperContentSync<TData = Awaited<ReturnType<typeof getDeveloperContentSync>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDeveloperContentSync>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDeveloperContentSync>>,
+          TError,
+          Awaited<ReturnType<typeof getDeveloperContentSync>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetDeveloperContentSync<TData = Awaited<ReturnType<typeof getDeveloperContentSync>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDeveloperContentSync>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetDeveloperContentSync<TData = Awaited<ReturnType<typeof getDeveloperContentSync>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDeveloperContentSync>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+export function useGetDeveloperContentSync<TData = Awaited<ReturnType<typeof getDeveloperContentSync>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDeveloperContentSync>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetDeveloperContentSyncQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -5319,7 +5998,7 @@ export const runDeveloperContentSync = async ( options?: Parameters<typeof custo
 
 export const getRunDeveloperContentSyncMutationKey = () => ['runDeveloperContentSync'] as const;
 
-export const getRunDeveloperContentSyncMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getRunDeveloperContentSyncMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runDeveloperContentSync>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof runDeveloperContentSync>>, TError,void, TContext> => {
 
@@ -5348,18 +6027,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type RunDeveloperContentSyncMutationResult = NonNullable<Awaited<ReturnType<typeof runDeveloperContentSync>>>
 
-    export type RunDeveloperContentSyncMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type RunDeveloperContentSyncMutationError = ErrorType<SessionUnauthorizedResponse | void>
 
 
-    export const useRunDeveloperContentSync = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useRunDeveloperContentSync = <TError = ErrorType<SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runDeveloperContentSync>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof runDeveloperContentSync>>,
         TError,
         void,
         TContext
       > => {
-      return useMutation(getRunDeveloperContentSyncMutationOptions(options));
+      return useMutation(getRunDeveloperContentSyncMutationOptions(options), queryClient);
     }
 
 export const getGetHangoutRewardSettingsUrl = () => {
@@ -5392,7 +6071,7 @@ export const getGetHangoutRewardSettingsQueryKey = () => {
     }
 
 
-export const getGetHangoutRewardSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError = ErrorType<ErrorResponse4b96100 | void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetHangoutRewardSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError = ErrorType<SessionUnauthorizedResponse | void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -5407,22 +6086,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetHangoutRewardSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getHangoutRewardSettings>>>
-export type GetHangoutRewardSettingsQueryError = ErrorType<ErrorResponse4b96100 | void>
+export type GetHangoutRewardSettingsQueryError = ErrorType<SessionUnauthorizedResponse | void>
 
 
+export function useGetHangoutRewardSettings<TData = Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getHangoutRewardSettings>>,
+          TError,
+          Awaited<ReturnType<typeof getHangoutRewardSettings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetHangoutRewardSettings<TData = Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getHangoutRewardSettings>>,
+          TError,
+          Awaited<ReturnType<typeof getHangoutRewardSettings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetHangoutRewardSettings<TData = Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetHangoutRewardSettings<TData = Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+export function useGetHangoutRewardSettings<TData = Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetHangoutRewardSettingsQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -5472,7 +6175,7 @@ return customFetch<HangoutRewardSettings>(getSetHangoutRewardIntervalUrl(),
 
 export const getSetHangoutRewardIntervalMutationKey = () => ['setHangoutRewardInterval'] as const;
 
-export const getSetHangoutRewardIntervalMutationOptions = <TError = ErrorType<void | ErrorResponse4b96100>,
+export const getSetHangoutRewardIntervalMutationOptions = <TError = ErrorType<void | SessionUnauthorizedResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setHangoutRewardInterval>>, TError,SetHangoutRewardIntervalMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof setHangoutRewardInterval>>, TError,SetHangoutRewardIntervalMutationVariables, TContext> => {
 
@@ -5501,18 +6204,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SetHangoutRewardIntervalMutationResult = NonNullable<Awaited<ReturnType<typeof setHangoutRewardInterval>>>
     export type SetHangoutRewardIntervalMutationBody = BodyType<SetHangoutRewardIntervalInput>
-    export type SetHangoutRewardIntervalMutationError = ErrorType<void | ErrorResponse4b96100>
+    export type SetHangoutRewardIntervalMutationError = ErrorType<void | SessionUnauthorizedResponse>
     export type SetHangoutRewardIntervalMutationVariables = {data: BodyType<SetHangoutRewardIntervalInput>}
 
-    export const useSetHangoutRewardInterval = <TError = ErrorType<void | ErrorResponse4b96100>,
+    export const useSetHangoutRewardInterval = <TError = ErrorType<void | SessionUnauthorizedResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setHangoutRewardInterval>>, TError,SetHangoutRewardIntervalMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof setHangoutRewardInterval>>,
         TError,
         SetHangoutRewardIntervalMutationVariables,
         TContext
       > => {
-      return useMutation(getSetHangoutRewardIntervalMutationOptions(options));
+      return useMutation(getSetHangoutRewardIntervalMutationOptions(options), queryClient);
     }
 
 export const getGetAdminGiftMotionsUrl = () => {
@@ -5545,7 +6248,7 @@ export const getGetAdminGiftMotionsQueryKey = () => {
     }
 
 
-export const getGetAdminGiftMotionsQueryOptions = <TData = Awaited<ReturnType<typeof getAdminGiftMotions>>, TError = ErrorType<ErrorResponse4b96100 | void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminGiftMotions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetAdminGiftMotionsQueryOptions = <TData = Awaited<ReturnType<typeof getAdminGiftMotions>>, TError = ErrorType<SessionUnauthorizedResponse | void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminGiftMotions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -5560,22 +6263,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminGiftMotions>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminGiftMotions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetAdminGiftMotionsQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminGiftMotions>>>
-export type GetAdminGiftMotionsQueryError = ErrorType<ErrorResponse4b96100 | void>
+export type GetAdminGiftMotionsQueryError = ErrorType<SessionUnauthorizedResponse | void>
 
 
+export function useGetAdminGiftMotions<TData = Awaited<ReturnType<typeof getAdminGiftMotions>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminGiftMotions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminGiftMotions>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminGiftMotions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdminGiftMotions<TData = Awaited<ReturnType<typeof getAdminGiftMotions>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminGiftMotions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminGiftMotions>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminGiftMotions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdminGiftMotions<TData = Awaited<ReturnType<typeof getAdminGiftMotions>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminGiftMotions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetAdminGiftMotions<TData = Awaited<ReturnType<typeof getAdminGiftMotions>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminGiftMotions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+export function useGetAdminGiftMotions<TData = Awaited<ReturnType<typeof getAdminGiftMotions>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminGiftMotions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetAdminGiftMotionsQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -5618,7 +6345,7 @@ formData.append(`model`, developerGiftMotionUploadInput.model);
 
 export const getUploadGiftMotionMutationKey = () => ['uploadGiftMotion'] as const;
 
-export const getUploadGiftMotionMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getUploadGiftMotionMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadGiftMotion>>, TError,UploadGiftMotionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof uploadGiftMotion>>, TError,UploadGiftMotionMutationVariables, TContext> => {
 
@@ -5647,18 +6374,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UploadGiftMotionMutationResult = NonNullable<Awaited<ReturnType<typeof uploadGiftMotion>>>
     export type UploadGiftMotionMutationBody = BodyType<DeveloperGiftMotionUploadInput>
-    export type UploadGiftMotionMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type UploadGiftMotionMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
     export type UploadGiftMotionMutationVariables = {data: BodyType<DeveloperGiftMotionUploadInput>}
 
-    export const useUploadGiftMotion = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useUploadGiftMotion = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadGiftMotion>>, TError,UploadGiftMotionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof uploadGiftMotion>>,
         TError,
         UploadGiftMotionMutationVariables,
         TContext
       > => {
-      return useMutation(getUploadGiftMotionMutationOptions(options));
+      return useMutation(getUploadGiftMotionMutationOptions(options), queryClient);
     }
 
 export const getDeleteGiftMotionUrl = (giftId: SocialGiftCatalogId,) => {
@@ -5686,7 +6413,7 @@ export const deleteGiftMotion = async (giftId: SocialGiftCatalogId, options?: Pa
 
 export const getDeleteGiftMotionMutationKey = () => ['deleteGiftMotion'] as const;
 
-export const getDeleteGiftMotionMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getDeleteGiftMotionMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGiftMotion>>, TError,DeleteGiftMotionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteGiftMotion>>, TError,DeleteGiftMotionMutationVariables, TContext> => {
 
@@ -5715,18 +6442,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteGiftMotionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteGiftMotion>>>
 
-    export type DeleteGiftMotionMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type DeleteGiftMotionMutationError = ErrorType<SessionUnauthorizedResponse | void>
     export type DeleteGiftMotionMutationVariables = {giftId: SocialGiftCatalogId}
 
-    export const useDeleteGiftMotion = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useDeleteGiftMotion = <TError = ErrorType<SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGiftMotion>>, TError,DeleteGiftMotionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteGiftMotion>>,
         TError,
         DeleteGiftMotionMutationVariables,
         TContext
       > => {
-      return useMutation(getDeleteGiftMotionMutationOptions(options));
+      return useMutation(getDeleteGiftMotionMutationOptions(options), queryClient);
     }
 
 export const getGetGiftMotionPlaybackUrl = (giftId: SocialGiftCatalogId,) => {
@@ -5759,7 +6486,7 @@ export const getGetGiftMotionPlaybackQueryKey = (giftId: SocialGiftCatalogId,) =
     }
 
 
-export const getGetGiftMotionPlaybackQueryOptions = <TData = Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError = ErrorType<ErrorResponse4b96100 | void>>(giftId: SocialGiftCatalogId, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetGiftMotionPlaybackQueryOptions = <TData = Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(giftId: SocialGiftCatalogId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -5774,22 +6501,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: giftId !== null && giftId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: giftId !== null && giftId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetGiftMotionPlaybackQueryResult = NonNullable<Awaited<ReturnType<typeof getGiftMotionPlayback>>>
-export type GetGiftMotionPlaybackQueryError = ErrorType<ErrorResponse4b96100 | void>
+export type GetGiftMotionPlaybackQueryError = ErrorType<SessionUnauthorizedResponse | void>
 
 
+export function useGetGiftMotionPlayback<TData = Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ giftId: SocialGiftCatalogId, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGiftMotionPlayback>>,
+          TError,
+          Awaited<ReturnType<typeof getGiftMotionPlayback>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGiftMotionPlayback<TData = Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ giftId: SocialGiftCatalogId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGiftMotionPlayback>>,
+          TError,
+          Awaited<ReturnType<typeof getGiftMotionPlayback>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGiftMotionPlayback<TData = Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ giftId: SocialGiftCatalogId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetGiftMotionPlayback<TData = Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
- giftId: SocialGiftCatalogId, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+export function useGetGiftMotionPlayback<TData = Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ giftId: SocialGiftCatalogId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetGiftMotionPlaybackQueryOptions(giftId,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -5830,7 +6581,7 @@ export const getGetGiftMotionFileQueryKey = (giftId: SocialGiftCatalogId,) => {
     }
 
 
-export const getGetGiftMotionFileQueryOptions = <TData = Awaited<ReturnType<typeof getGiftMotionFile>>, TError = ErrorType<ErrorResponse4b96100 | void>>(giftId: SocialGiftCatalogId, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionFile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetGiftMotionFileQueryOptions = <TData = Awaited<ReturnType<typeof getGiftMotionFile>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(giftId: SocialGiftCatalogId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionFile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -5845,22 +6596,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: giftId !== null && giftId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionFile>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: giftId !== null && giftId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionFile>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetGiftMotionFileQueryResult = NonNullable<Awaited<ReturnType<typeof getGiftMotionFile>>>
-export type GetGiftMotionFileQueryError = ErrorType<ErrorResponse4b96100 | void>
+export type GetGiftMotionFileQueryError = ErrorType<SessionUnauthorizedResponse | void>
 
 
+export function useGetGiftMotionFile<TData = Awaited<ReturnType<typeof getGiftMotionFile>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ giftId: SocialGiftCatalogId, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionFile>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGiftMotionFile>>,
+          TError,
+          Awaited<ReturnType<typeof getGiftMotionFile>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGiftMotionFile<TData = Awaited<ReturnType<typeof getGiftMotionFile>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ giftId: SocialGiftCatalogId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionFile>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGiftMotionFile>>,
+          TError,
+          Awaited<ReturnType<typeof getGiftMotionFile>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGiftMotionFile<TData = Awaited<ReturnType<typeof getGiftMotionFile>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ giftId: SocialGiftCatalogId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionFile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetGiftMotionFile<TData = Awaited<ReturnType<typeof getGiftMotionFile>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
- giftId: SocialGiftCatalogId, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionFile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+export function useGetGiftMotionFile<TData = Awaited<ReturnType<typeof getGiftMotionFile>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ giftId: SocialGiftCatalogId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionFile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetGiftMotionFileQueryOptions(giftId,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -5911,7 +6686,7 @@ return customFetch<GiftStudioCatalogGift>(getUpdateGiftStudioCatalogItemUrl(gift
 
 export const getUpdateGiftStudioCatalogItemMutationKey = () => ['updateGiftStudioCatalogItem'] as const;
 
-export const getUpdateGiftStudioCatalogItemMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getUpdateGiftStudioCatalogItemMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGiftStudioCatalogItem>>, TError,UpdateGiftStudioCatalogItemMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof updateGiftStudioCatalogItem>>, TError,UpdateGiftStudioCatalogItemMutationVariables, TContext> => {
 
@@ -5940,18 +6715,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type UpdateGiftStudioCatalogItemMutationResult = NonNullable<Awaited<ReturnType<typeof updateGiftStudioCatalogItem>>>
     export type UpdateGiftStudioCatalogItemMutationBody = BodyType<GiftStudioCatalogUpdate>
-    export type UpdateGiftStudioCatalogItemMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type UpdateGiftStudioCatalogItemMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
     export type UpdateGiftStudioCatalogItemMutationVariables = {giftId: SocialGiftCatalogId;data: BodyType<GiftStudioCatalogUpdate>}
 
-    export const useUpdateGiftStudioCatalogItem = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useUpdateGiftStudioCatalogItem = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGiftStudioCatalogItem>>, TError,UpdateGiftStudioCatalogItemMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof updateGiftStudioCatalogItem>>,
         TError,
         UpdateGiftStudioCatalogItemMutationVariables,
         TContext
       > => {
-      return useMutation(getUpdateGiftStudioCatalogItemMutationOptions(options));
+      return useMutation(getUpdateGiftStudioCatalogItemMutationOptions(options), queryClient);
     }
 
 export const getProcessGiftStudioClipOnServerUrl = () => {
@@ -5982,7 +6757,7 @@ formData.append(`sourceVideo`, giftStudioProcessInput.sourceVideo);
 
 export const getProcessGiftStudioClipOnServerMutationKey = () => ['processGiftStudioClipOnServer'] as const;
 
-export const getProcessGiftStudioClipOnServerMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getProcessGiftStudioClipOnServerMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof processGiftStudioClipOnServer>>, TError,ProcessGiftStudioClipOnServerMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof processGiftStudioClipOnServer>>, TError,ProcessGiftStudioClipOnServerMutationVariables, TContext> => {
 
@@ -6011,18 +6786,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type ProcessGiftStudioClipOnServerMutationResult = NonNullable<Awaited<ReturnType<typeof processGiftStudioClipOnServer>>>
     export type ProcessGiftStudioClipOnServerMutationBody = BodyType<GiftStudioProcessInput>
-    export type ProcessGiftStudioClipOnServerMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type ProcessGiftStudioClipOnServerMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
     export type ProcessGiftStudioClipOnServerMutationVariables = {data: BodyType<GiftStudioProcessInput>}
 
-    export const useProcessGiftStudioClipOnServer = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useProcessGiftStudioClipOnServer = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof processGiftStudioClipOnServer>>, TError,ProcessGiftStudioClipOnServerMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof processGiftStudioClipOnServer>>,
         TError,
         ProcessGiftStudioClipOnServerMutationVariables,
         TContext
       > => {
-      return useMutation(getProcessGiftStudioClipOnServerMutationOptions(options));
+      return useMutation(getProcessGiftStudioClipOnServerMutationOptions(options), queryClient);
     }
 
 export const getSaveGiftStudioProcessedUrl = () => {
@@ -6064,7 +6839,7 @@ return customFetch<GiftStudioVersion>(getSaveGiftStudioProcessedUrl(),
 
 export const getSaveGiftStudioProcessedMutationKey = () => ['saveGiftStudioProcessed'] as const;
 
-export const getSaveGiftStudioProcessedMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getSaveGiftStudioProcessedMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveGiftStudioProcessed>>, TError,SaveGiftStudioProcessedMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveGiftStudioProcessed>>, TError,SaveGiftStudioProcessedMutationVariables, TContext> => {
 
@@ -6093,18 +6868,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SaveGiftStudioProcessedMutationResult = NonNullable<Awaited<ReturnType<typeof saveGiftStudioProcessed>>>
     export type SaveGiftStudioProcessedMutationBody = BodyType<GiftStudioProcessedSaveInput>
-    export type SaveGiftStudioProcessedMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type SaveGiftStudioProcessedMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
     export type SaveGiftStudioProcessedMutationVariables = {data: BodyType<GiftStudioProcessedSaveInput>}
 
-    export const useSaveGiftStudioProcessed = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useSaveGiftStudioProcessed = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveGiftStudioProcessed>>, TError,SaveGiftStudioProcessedMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof saveGiftStudioProcessed>>,
         TError,
         SaveGiftStudioProcessedMutationVariables,
         TContext
       > => {
-      return useMutation(getSaveGiftStudioProcessedMutationOptions(options));
+      return useMutation(getSaveGiftStudioProcessedMutationOptions(options), queryClient);
     }
 
 export const getCreateGiftStudioVersionUrl = () => {
@@ -6145,7 +6920,7 @@ formData.append(`processedWebm`, giftStudioUploadInput.processedWebm);
 
 export const getCreateGiftStudioVersionMutationKey = () => ['createGiftStudioVersion'] as const;
 
-export const getCreateGiftStudioVersionMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getCreateGiftStudioVersionMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGiftStudioVersion>>, TError,CreateGiftStudioVersionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createGiftStudioVersion>>, TError,CreateGiftStudioVersionMutationVariables, TContext> => {
 
@@ -6174,18 +6949,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateGiftStudioVersionMutationResult = NonNullable<Awaited<ReturnType<typeof createGiftStudioVersion>>>
     export type CreateGiftStudioVersionMutationBody = BodyType<GiftStudioUploadInput>
-    export type CreateGiftStudioVersionMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type CreateGiftStudioVersionMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
     export type CreateGiftStudioVersionMutationVariables = {data: BodyType<GiftStudioUploadInput>}
 
-    export const useCreateGiftStudioVersion = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useCreateGiftStudioVersion = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGiftStudioVersion>>, TError,CreateGiftStudioVersionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createGiftStudioVersion>>,
         TError,
         CreateGiftStudioVersionMutationVariables,
         TContext
       > => {
-      return useMutation(getCreateGiftStudioVersionMutationOptions(options));
+      return useMutation(getCreateGiftStudioVersionMutationOptions(options), queryClient);
     }
 
 export const getSetGiftStudioVersionActiveUrl = (versionId: string,) => {
@@ -6228,7 +7003,7 @@ return customFetch<GiftStudioVersion>(getSetGiftStudioVersionActiveUrl(versionId
 
 export const getSetGiftStudioVersionActiveMutationKey = () => ['setGiftStudioVersionActive'] as const;
 
-export const getSetGiftStudioVersionActiveMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getSetGiftStudioVersionActiveMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setGiftStudioVersionActive>>, TError,SetGiftStudioVersionActiveMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof setGiftStudioVersionActive>>, TError,SetGiftStudioVersionActiveMutationVariables, TContext> => {
 
@@ -6257,18 +7032,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SetGiftStudioVersionActiveMutationResult = NonNullable<Awaited<ReturnType<typeof setGiftStudioVersionActive>>>
     export type SetGiftStudioVersionActiveMutationBody = BodyType<GiftStudioActivationInput>
-    export type SetGiftStudioVersionActiveMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type SetGiftStudioVersionActiveMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
     export type SetGiftStudioVersionActiveMutationVariables = {versionId: string;data: BodyType<GiftStudioActivationInput>}
 
-    export const useSetGiftStudioVersionActive = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useSetGiftStudioVersionActive = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setGiftStudioVersionActive>>, TError,SetGiftStudioVersionActiveMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof setGiftStudioVersionActive>>,
         TError,
         SetGiftStudioVersionActiveMutationVariables,
         TContext
       > => {
-      return useMutation(getSetGiftStudioVersionActiveMutationOptions(options));
+      return useMutation(getSetGiftStudioVersionActiveMutationOptions(options), queryClient);
     }
 
 export const getRenameGiftStudioVersionUrl = (versionId: string,) => {
@@ -6311,7 +7086,7 @@ return customFetch<GiftStudioVersion>(getRenameGiftStudioVersionUrl(versionId),
 
 export const getRenameGiftStudioVersionMutationKey = () => ['renameGiftStudioVersion'] as const;
 
-export const getRenameGiftStudioVersionMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getRenameGiftStudioVersionMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof renameGiftStudioVersion>>, TError,RenameGiftStudioVersionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof renameGiftStudioVersion>>, TError,RenameGiftStudioVersionMutationVariables, TContext> => {
 
@@ -6340,18 +7115,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type RenameGiftStudioVersionMutationResult = NonNullable<Awaited<ReturnType<typeof renameGiftStudioVersion>>>
     export type RenameGiftStudioVersionMutationBody = BodyType<GiftStudioRenameInput>
-    export type RenameGiftStudioVersionMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type RenameGiftStudioVersionMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
     export type RenameGiftStudioVersionMutationVariables = {versionId: string;data: BodyType<GiftStudioRenameInput>}
 
-    export const useRenameGiftStudioVersion = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useRenameGiftStudioVersion = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof renameGiftStudioVersion>>, TError,RenameGiftStudioVersionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof renameGiftStudioVersion>>,
         TError,
         RenameGiftStudioVersionMutationVariables,
         TContext
       > => {
-      return useMutation(getRenameGiftStudioVersionMutationOptions(options));
+      return useMutation(getRenameGiftStudioVersionMutationOptions(options), queryClient);
     }
 
 export const getDeleteGiftStudioVersionUrl = (versionId: string,) => {
@@ -6379,7 +7154,7 @@ export const deleteGiftStudioVersion = async (versionId: string, options?: Param
 
 export const getDeleteGiftStudioVersionMutationKey = () => ['deleteGiftStudioVersion'] as const;
 
-export const getDeleteGiftStudioVersionMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getDeleteGiftStudioVersionMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGiftStudioVersion>>, TError,DeleteGiftStudioVersionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteGiftStudioVersion>>, TError,DeleteGiftStudioVersionMutationVariables, TContext> => {
 
@@ -6408,18 +7183,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteGiftStudioVersionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteGiftStudioVersion>>>
 
-    export type DeleteGiftStudioVersionMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type DeleteGiftStudioVersionMutationError = ErrorType<SessionUnauthorizedResponse | void>
     export type DeleteGiftStudioVersionMutationVariables = {versionId: string}
 
-    export const useDeleteGiftStudioVersion = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useDeleteGiftStudioVersion = <TError = ErrorType<SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGiftStudioVersion>>, TError,DeleteGiftStudioVersionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteGiftStudioVersion>>,
         TError,
         DeleteGiftStudioVersionMutationVariables,
         TContext
       > => {
-      return useMutation(getDeleteGiftStudioVersionMutationOptions(options));
+      return useMutation(getDeleteGiftStudioVersionMutationOptions(options), queryClient);
     }
 
 export const getAssignGiftStudioVersionToGiftUrl = (versionId: string,) => {
@@ -6462,7 +7237,7 @@ return customFetch<GiftStudioVersion>(getAssignGiftStudioVersionToGiftUrl(versio
 
 export const getAssignGiftStudioVersionToGiftMutationKey = () => ['assignGiftStudioVersionToGift'] as const;
 
-export const getAssignGiftStudioVersionToGiftMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getAssignGiftStudioVersionToGiftMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignGiftStudioVersionToGift>>, TError,AssignGiftStudioVersionToGiftMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof assignGiftStudioVersionToGift>>, TError,AssignGiftStudioVersionToGiftMutationVariables, TContext> => {
 
@@ -6491,18 +7266,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type AssignGiftStudioVersionToGiftMutationResult = NonNullable<Awaited<ReturnType<typeof assignGiftStudioVersionToGift>>>
     export type AssignGiftStudioVersionToGiftMutationBody = BodyType<GiftStudioAssignInput>
-    export type AssignGiftStudioVersionToGiftMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type AssignGiftStudioVersionToGiftMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
     export type AssignGiftStudioVersionToGiftMutationVariables = {versionId: string;data: BodyType<GiftStudioAssignInput>}
 
-    export const useAssignGiftStudioVersionToGift = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useAssignGiftStudioVersionToGift = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignGiftStudioVersionToGift>>, TError,AssignGiftStudioVersionToGiftMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof assignGiftStudioVersionToGift>>,
         TError,
         AssignGiftStudioVersionToGiftMutationVariables,
         TContext
       > => {
-      return useMutation(getAssignGiftStudioVersionToGiftMutationOptions(options));
+      return useMutation(getAssignGiftStudioVersionToGiftMutationOptions(options), queryClient);
     }
 
 export const getGetGiftStudioVersionMediaUrl = (versionId: string,
@@ -6538,8 +7313,8 @@ export const getGetGiftStudioVersionMediaQueryKey = (versionId: string,
     }
 
 
-export const getGetGiftStudioVersionMediaQueryOptions = <TData = Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError = ErrorType<ErrorResponse4b96100 | void>>(versionId: string,
-    variant: 'original' | 'webm' | 'safari', options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetGiftStudioVersionMediaQueryOptions = <TData = Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(versionId: string,
+    variant: 'original' | 'webm' | 'safari', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -6554,23 +7329,50 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: versionId !== null && versionId !== undefined && variant !== null && variant !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: versionId !== null && versionId !== undefined && variant !== null && variant !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetGiftStudioVersionMediaQueryResult = NonNullable<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>>
-export type GetGiftStudioVersionMediaQueryError = ErrorType<ErrorResponse4b96100 | void>
+export type GetGiftStudioVersionMediaQueryError = ErrorType<SessionUnauthorizedResponse | void>
 
 
-
-export function useGetGiftStudioVersionMedia<TData = Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
+export function useGetGiftStudioVersionMedia<TData = Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
  versionId: string,
-    variant: 'original' | 'webm' | 'safari', options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+    variant: 'original' | 'webm' | 'safari', options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGiftStudioVersionMedia>>,
+          TError,
+          Awaited<ReturnType<typeof getGiftStudioVersionMedia>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGiftStudioVersionMedia<TData = Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ versionId: string,
+    variant: 'original' | 'webm' | 'safari', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGiftStudioVersionMedia>>,
+          TError,
+          Awaited<ReturnType<typeof getGiftStudioVersionMedia>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGiftStudioVersionMedia<TData = Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ versionId: string,
+    variant: 'original' | 'webm' | 'safari', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+export function useGetGiftStudioVersionMedia<TData = Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ versionId: string,
+    variant: 'original' | 'webm' | 'safari', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetGiftStudioVersionMediaQueryOptions(versionId,variant,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -6614,8 +7416,8 @@ export const getGetActiveGiftStudioVersionMediaQueryKey = (versionId: string,
     }
 
 
-export const getGetActiveGiftStudioVersionMediaQueryOptions = <TData = Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError = ErrorType<ErrorResponse4b96100 | void>>(versionId: string,
-    variant: 'webm' | 'safari', options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetActiveGiftStudioVersionMediaQueryOptions = <TData = Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(versionId: string,
+    variant: 'webm' | 'safari', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -6630,23 +7432,50 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: versionId !== null && versionId !== undefined && variant !== null && variant !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: versionId !== null && versionId !== undefined && variant !== null && variant !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetActiveGiftStudioVersionMediaQueryResult = NonNullable<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>>
-export type GetActiveGiftStudioVersionMediaQueryError = ErrorType<ErrorResponse4b96100 | void>
+export type GetActiveGiftStudioVersionMediaQueryError = ErrorType<SessionUnauthorizedResponse | void>
 
 
-
-export function useGetActiveGiftStudioVersionMedia<TData = Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
+export function useGetActiveGiftStudioVersionMedia<TData = Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
  versionId: string,
-    variant: 'webm' | 'safari', options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+    variant: 'webm' | 'safari', options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>,
+          TError,
+          Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetActiveGiftStudioVersionMedia<TData = Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ versionId: string,
+    variant: 'webm' | 'safari', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>,
+          TError,
+          Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetActiveGiftStudioVersionMedia<TData = Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ versionId: string,
+    variant: 'webm' | 'safari', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+export function useGetActiveGiftStudioVersionMedia<TData = Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
+ versionId: string,
+    variant: 'webm' | 'safari', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetActiveGiftStudioVersionMediaQueryOptions(versionId,variant,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -6687,7 +7516,7 @@ export const getGetActiveGiftStudioMediaQueryKey = (giftId: GiftStudioGiftId,) =
     }
 
 
-export const getGetActiveGiftStudioMediaQueryOptions = <TData = Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError = ErrorType<ErrorResponse4b96100>>(giftId: GiftStudioGiftId, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetActiveGiftStudioMediaQueryOptions = <TData = Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError = ErrorType<SessionUnauthorizedResponse>>(giftId: GiftStudioGiftId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -6702,22 +7531,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: giftId !== null && giftId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: giftId !== null && giftId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetActiveGiftStudioMediaQueryResult = NonNullable<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>>
-export type GetActiveGiftStudioMediaQueryError = ErrorType<ErrorResponse4b96100>
+export type GetActiveGiftStudioMediaQueryError = ErrorType<SessionUnauthorizedResponse>
 
 
+export function useGetActiveGiftStudioMedia<TData = Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+ giftId: GiftStudioGiftId, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getActiveGiftStudioMedia>>,
+          TError,
+          Awaited<ReturnType<typeof getActiveGiftStudioMedia>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetActiveGiftStudioMedia<TData = Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+ giftId: GiftStudioGiftId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getActiveGiftStudioMedia>>,
+          TError,
+          Awaited<ReturnType<typeof getActiveGiftStudioMedia>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetActiveGiftStudioMedia<TData = Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+ giftId: GiftStudioGiftId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetActiveGiftStudioMedia<TData = Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError = ErrorType<ErrorResponse4b96100>>(
- giftId: GiftStudioGiftId, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+export function useGetActiveGiftStudioMedia<TData = Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+ giftId: GiftStudioGiftId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetActiveGiftStudioMediaQueryOptions(giftId,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -6765,7 +7618,7 @@ export const getGetSocialPeopleQueryKey = (params?: GetSocialPeopleParams,) => {
     }
 
 
-export const getGetSocialPeopleQueryOptions = <TData = Awaited<ReturnType<typeof getSocialPeople>>, TError = ErrorType<ErrorResponse4b96100 | void>>(params?: GetSocialPeopleParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialPeople>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetSocialPeopleQueryOptions = <TData = Awaited<ReturnType<typeof getSocialPeople>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(params?: GetSocialPeopleParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPeople>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -6780,22 +7633,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialPeople>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialPeople>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetSocialPeopleQueryResult = NonNullable<Awaited<ReturnType<typeof getSocialPeople>>>
-export type GetSocialPeopleQueryError = ErrorType<ErrorResponse4b96100 | void>
+export type GetSocialPeopleQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
 
 
+export function useGetSocialPeople<TData = Awaited<ReturnType<typeof getSocialPeople>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+ params: undefined |  GetSocialPeopleParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPeople>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSocialPeople>>,
+          TError,
+          Awaited<ReturnType<typeof getSocialPeople>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSocialPeople<TData = Awaited<ReturnType<typeof getSocialPeople>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+ params?: GetSocialPeopleParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPeople>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSocialPeople>>,
+          TError,
+          Awaited<ReturnType<typeof getSocialPeople>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSocialPeople<TData = Awaited<ReturnType<typeof getSocialPeople>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+ params?: GetSocialPeopleParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPeople>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetSocialPeople<TData = Awaited<ReturnType<typeof getSocialPeople>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
- params?: GetSocialPeopleParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialPeople>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+export function useGetSocialPeople<TData = Awaited<ReturnType<typeof getSocialPeople>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+ params?: GetSocialPeopleParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPeople>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetSocialPeopleQueryOptions(params,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -6836,7 +7713,7 @@ export const getGetSocialPersonQueryKey = (username: string,) => {
     }
 
 
-export const getGetSocialPersonQueryOptions = <TData = Awaited<ReturnType<typeof getSocialPerson>>, TError = ErrorType<ErrorResponse4b96100 | void>>(username: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialPerson>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetSocialPersonQueryOptions = <TData = Awaited<ReturnType<typeof getSocialPerson>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(username: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPerson>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -6851,22 +7728,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: username !== null && username !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialPerson>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: username !== null && username !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialPerson>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetSocialPersonQueryResult = NonNullable<Awaited<ReturnType<typeof getSocialPerson>>>
-export type GetSocialPersonQueryError = ErrorType<ErrorResponse4b96100 | void>
+export type GetSocialPersonQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
 
 
+export function useGetSocialPerson<TData = Awaited<ReturnType<typeof getSocialPerson>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+ username: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPerson>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSocialPerson>>,
+          TError,
+          Awaited<ReturnType<typeof getSocialPerson>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSocialPerson<TData = Awaited<ReturnType<typeof getSocialPerson>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+ username: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPerson>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSocialPerson>>,
+          TError,
+          Awaited<ReturnType<typeof getSocialPerson>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSocialPerson<TData = Awaited<ReturnType<typeof getSocialPerson>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+ username: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPerson>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetSocialPerson<TData = Awaited<ReturnType<typeof getSocialPerson>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
- username: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialPerson>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+export function useGetSocialPerson<TData = Awaited<ReturnType<typeof getSocialPerson>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+ username: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPerson>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetSocialPersonQueryOptions(username,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -6917,7 +7818,7 @@ return customFetch<SocialAction>(getSetSocialRelationshipUrl(username),
 
 export const getSetSocialRelationshipMutationKey = () => ['setSocialRelationship'] as const;
 
-export const getSetSocialRelationshipMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getSetSocialRelationshipMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setSocialRelationship>>, TError,SetSocialRelationshipMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof setSocialRelationship>>, TError,SetSocialRelationshipMutationVariables, TContext> => {
 
@@ -6946,18 +7847,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SetSocialRelationshipMutationResult = NonNullable<Awaited<ReturnType<typeof setSocialRelationship>>>
     export type SetSocialRelationshipMutationBody = BodyType<SocialRelationshipInput>
-    export type SetSocialRelationshipMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type SetSocialRelationshipMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
     export type SetSocialRelationshipMutationVariables = {username: string;data: BodyType<SocialRelationshipInput>}
 
-    export const useSetSocialRelationship = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useSetSocialRelationship = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setSocialRelationship>>, TError,SetSocialRelationshipMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof setSocialRelationship>>,
         TError,
         SetSocialRelationshipMutationVariables,
         TContext
       > => {
-      return useMutation(getSetSocialRelationshipMutationOptions(options));
+      return useMutation(getSetSocialRelationshipMutationOptions(options), queryClient);
     }
 
 export const getGetSocialBlocksUrl = () => {
@@ -6990,7 +7891,7 @@ export const getGetSocialBlocksQueryKey = () => {
     }
 
 
-export const getGetSocialBlocksQueryOptions = <TData = Awaited<ReturnType<typeof getSocialBlocks>>, TError = ErrorType<ErrorResponse4b96100 | void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialBlocks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetSocialBlocksQueryOptions = <TData = Awaited<ReturnType<typeof getSocialBlocks>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialBlocks>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -7005,22 +7906,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialBlocks>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialBlocks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetSocialBlocksQueryResult = NonNullable<Awaited<ReturnType<typeof getSocialBlocks>>>
-export type GetSocialBlocksQueryError = ErrorType<ErrorResponse4b96100 | void>
+export type GetSocialBlocksQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
 
 
+export function useGetSocialBlocks<TData = Awaited<ReturnType<typeof getSocialBlocks>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialBlocks>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSocialBlocks>>,
+          TError,
+          Awaited<ReturnType<typeof getSocialBlocks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSocialBlocks<TData = Awaited<ReturnType<typeof getSocialBlocks>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialBlocks>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSocialBlocks>>,
+          TError,
+          Awaited<ReturnType<typeof getSocialBlocks>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSocialBlocks<TData = Awaited<ReturnType<typeof getSocialBlocks>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialBlocks>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetSocialBlocks<TData = Awaited<ReturnType<typeof getSocialBlocks>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialBlocks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+export function useGetSocialBlocks<TData = Awaited<ReturnType<typeof getSocialBlocks>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialBlocks>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetSocialBlocksQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -7056,7 +7981,7 @@ export const claimSocialDailyReward = async ( options?: Parameters<typeof custom
 
 export const getClaimSocialDailyRewardMutationKey = () => ['claimSocialDailyReward'] as const;
 
-export const getClaimSocialDailyRewardMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getClaimSocialDailyRewardMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof claimSocialDailyReward>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof claimSocialDailyReward>>, TError,void, TContext> => {
 
@@ -7085,18 +8010,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type ClaimSocialDailyRewardMutationResult = NonNullable<Awaited<ReturnType<typeof claimSocialDailyReward>>>
 
-    export type ClaimSocialDailyRewardMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type ClaimSocialDailyRewardMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
 
 
-    export const useClaimSocialDailyReward = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useClaimSocialDailyReward = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof claimSocialDailyReward>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof claimSocialDailyReward>>,
         TError,
         void,
         TContext
       > => {
-      return useMutation(getClaimSocialDailyRewardMutationOptions(options));
+      return useMutation(getClaimSocialDailyRewardMutationOptions(options), queryClient);
     }
 
 export const getSendSocialGiftUrl = () => {
@@ -7138,7 +8063,7 @@ return customFetch<SocialWallet>(getSendSocialGiftUrl(),
 
 export const getSendSocialGiftMutationKey = () => ['sendSocialGift'] as const;
 
-export const getSendSocialGiftMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getSendSocialGiftMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendSocialGift>>, TError,SendSocialGiftMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof sendSocialGift>>, TError,SendSocialGiftMutationVariables, TContext> => {
 
@@ -7167,18 +8092,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SendSocialGiftMutationResult = NonNullable<Awaited<ReturnType<typeof sendSocialGift>>>
     export type SendSocialGiftMutationBody = BodyType<SocialGiftInput>
-    export type SendSocialGiftMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type SendSocialGiftMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
     export type SendSocialGiftMutationVariables = {data: BodyType<SocialGiftInput>}
 
-    export const useSendSocialGift = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useSendSocialGift = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendSocialGift>>, TError,SendSocialGiftMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof sendSocialGift>>,
         TError,
         SendSocialGiftMutationVariables,
         TContext
       > => {
-      return useMutation(getSendSocialGiftMutationOptions(options));
+      return useMutation(getSendSocialGiftMutationOptions(options), queryClient);
     }
 
 export const getGetRoomGiftEventsUrl = (roomId: string,
@@ -7222,7 +8147,7 @@ export const getGetRoomGiftEventsQueryKey = (roomId: string,
 
 
 export const getGetRoomGiftEventsQueryOptions = <TData = Awaited<ReturnType<typeof getRoomGiftEvents>>, TError = ErrorType<unknown>>(roomId: string,
-    params?: GetRoomGiftEventsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+    params?: GetRoomGiftEventsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -7237,23 +8162,50 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetRoomGiftEventsQueryResult = NonNullable<Awaited<ReturnType<typeof getRoomGiftEvents>>>
 export type GetRoomGiftEventsQueryError = ErrorType<unknown>
 
 
+export function useGetRoomGiftEvents<TData = Awaited<ReturnType<typeof getRoomGiftEvents>>, TError = ErrorType<unknown>>(
+ roomId: string,
+    params: undefined |  GetRoomGiftEventsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRoomGiftEvents>>,
+          TError,
+          Awaited<ReturnType<typeof getRoomGiftEvents>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRoomGiftEvents<TData = Awaited<ReturnType<typeof getRoomGiftEvents>>, TError = ErrorType<unknown>>(
+ roomId: string,
+    params?: GetRoomGiftEventsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRoomGiftEvents>>,
+          TError,
+          Awaited<ReturnType<typeof getRoomGiftEvents>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRoomGiftEvents<TData = Awaited<ReturnType<typeof getRoomGiftEvents>>, TError = ErrorType<unknown>>(
+ roomId: string,
+    params?: GetRoomGiftEventsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetRoomGiftEvents<TData = Awaited<ReturnType<typeof getRoomGiftEvents>>, TError = ErrorType<unknown>>(
  roomId: string,
-    params?: GetRoomGiftEventsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+    params?: GetRoomGiftEventsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetRoomGiftEventsQueryOptions(roomId,params,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -7303,7 +8255,7 @@ return customFetch<SocialWallet>(getPurchaseSocialProductUrl(),
 
 export const getPurchaseSocialProductMutationKey = () => ['purchaseSocialProduct'] as const;
 
-export const getPurchaseSocialProductMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getPurchaseSocialProductMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purchaseSocialProduct>>, TError,PurchaseSocialProductMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof purchaseSocialProduct>>, TError,PurchaseSocialProductMutationVariables, TContext> => {
 
@@ -7332,18 +8284,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type PurchaseSocialProductMutationResult = NonNullable<Awaited<ReturnType<typeof purchaseSocialProduct>>>
     export type PurchaseSocialProductMutationBody = BodyType<SocialPurchaseInput>
-    export type PurchaseSocialProductMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type PurchaseSocialProductMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
     export type PurchaseSocialProductMutationVariables = {data: BodyType<SocialPurchaseInput>}
 
-    export const usePurchaseSocialProduct = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const usePurchaseSocialProduct = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purchaseSocialProduct>>, TError,PurchaseSocialProductMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof purchaseSocialProduct>>,
         TError,
         PurchaseSocialProductMutationVariables,
         TContext
       > => {
-      return useMutation(getPurchaseSocialProductMutationOptions(options));
+      return useMutation(getPurchaseSocialProductMutationOptions(options), queryClient);
     }
 
 export const getGetSocialLedgerUrl = () => {
@@ -7376,7 +8328,7 @@ export const getGetSocialLedgerQueryKey = () => {
     }
 
 
-export const getGetSocialLedgerQueryOptions = <TData = Awaited<ReturnType<typeof getSocialLedger>>, TError = ErrorType<ErrorResponse4b96100 | void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialLedger>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetSocialLedgerQueryOptions = <TData = Awaited<ReturnType<typeof getSocialLedger>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialLedger>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -7391,22 +8343,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialLedger>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialLedger>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetSocialLedgerQueryResult = NonNullable<Awaited<ReturnType<typeof getSocialLedger>>>
-export type GetSocialLedgerQueryError = ErrorType<ErrorResponse4b96100 | void>
+export type GetSocialLedgerQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
 
 
+export function useGetSocialLedger<TData = Awaited<ReturnType<typeof getSocialLedger>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialLedger>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSocialLedger>>,
+          TError,
+          Awaited<ReturnType<typeof getSocialLedger>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSocialLedger<TData = Awaited<ReturnType<typeof getSocialLedger>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialLedger>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSocialLedger>>,
+          TError,
+          Awaited<ReturnType<typeof getSocialLedger>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSocialLedger<TData = Awaited<ReturnType<typeof getSocialLedger>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialLedger>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetSocialLedger<TData = Awaited<ReturnType<typeof getSocialLedger>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialLedger>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+export function useGetSocialLedger<TData = Awaited<ReturnType<typeof getSocialLedger>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialLedger>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetSocialLedgerQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -7447,7 +8423,7 @@ export const getGetSocialLeaderboardQueryKey = () => {
     }
 
 
-export const getGetSocialLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getSocialLeaderboard>>, TError = ErrorType<ErrorResponse4b96100 | void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetSocialLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getSocialLeaderboard>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialLeaderboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -7462,22 +8438,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialLeaderboard>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialLeaderboard>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetSocialLeaderboardQueryResult = NonNullable<Awaited<ReturnType<typeof getSocialLeaderboard>>>
-export type GetSocialLeaderboardQueryError = ErrorType<ErrorResponse4b96100 | void>
+export type GetSocialLeaderboardQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
 
 
+export function useGetSocialLeaderboard<TData = Awaited<ReturnType<typeof getSocialLeaderboard>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialLeaderboard>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSocialLeaderboard>>,
+          TError,
+          Awaited<ReturnType<typeof getSocialLeaderboard>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSocialLeaderboard<TData = Awaited<ReturnType<typeof getSocialLeaderboard>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialLeaderboard>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSocialLeaderboard>>,
+          TError,
+          Awaited<ReturnType<typeof getSocialLeaderboard>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSocialLeaderboard<TData = Awaited<ReturnType<typeof getSocialLeaderboard>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialLeaderboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetSocialLeaderboard<TData = Awaited<ReturnType<typeof getSocialLeaderboard>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+export function useGetSocialLeaderboard<TData = Awaited<ReturnType<typeof getSocialLeaderboard>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialLeaderboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetSocialLeaderboardQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -7518,7 +8518,7 @@ export const getGetSocialInboxQueryKey = () => {
     }
 
 
-export const getGetSocialInboxQueryOptions = <TData = Awaited<ReturnType<typeof getSocialInbox>>, TError = ErrorType<ErrorResponse4b96100 | void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialInbox>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetSocialInboxQueryOptions = <TData = Awaited<ReturnType<typeof getSocialInbox>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialInbox>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -7533,22 +8533,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialInbox>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialInbox>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetSocialInboxQueryResult = NonNullable<Awaited<ReturnType<typeof getSocialInbox>>>
-export type GetSocialInboxQueryError = ErrorType<ErrorResponse4b96100 | void>
+export type GetSocialInboxQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
 
 
+export function useGetSocialInbox<TData = Awaited<ReturnType<typeof getSocialInbox>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialInbox>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSocialInbox>>,
+          TError,
+          Awaited<ReturnType<typeof getSocialInbox>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSocialInbox<TData = Awaited<ReturnType<typeof getSocialInbox>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialInbox>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSocialInbox>>,
+          TError,
+          Awaited<ReturnType<typeof getSocialInbox>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSocialInbox<TData = Awaited<ReturnType<typeof getSocialInbox>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialInbox>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetSocialInbox<TData = Awaited<ReturnType<typeof getSocialInbox>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialInbox>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+export function useGetSocialInbox<TData = Awaited<ReturnType<typeof getSocialInbox>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialInbox>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetSocialInboxQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -7599,8 +8623,8 @@ export const getGetSocialConversationQueryKey = (username: string,
     }
 
 
-export const getGetSocialConversationQueryOptions = <TData = Awaited<ReturnType<typeof getSocialConversation>>, TError = ErrorType<ErrorResponse4b96100 | void>>(username: string,
-    params?: GetSocialConversationParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialConversation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetSocialConversationQueryOptions = <TData = Awaited<ReturnType<typeof getSocialConversation>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(username: string,
+    params?: GetSocialConversationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialConversation>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -7615,23 +8639,50 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: username !== null && username !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialConversation>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: username !== null && username !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialConversation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetSocialConversationQueryResult = NonNullable<Awaited<ReturnType<typeof getSocialConversation>>>
-export type GetSocialConversationQueryError = ErrorType<ErrorResponse4b96100 | void>
+export type GetSocialConversationQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
 
 
-
-export function useGetSocialConversation<TData = Awaited<ReturnType<typeof getSocialConversation>>, TError = ErrorType<ErrorResponse4b96100 | void>>(
+export function useGetSocialConversation<TData = Awaited<ReturnType<typeof getSocialConversation>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
  username: string,
-    params?: GetSocialConversationParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialConversation>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+    params: undefined |  GetSocialConversationParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialConversation>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSocialConversation>>,
+          TError,
+          Awaited<ReturnType<typeof getSocialConversation>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSocialConversation<TData = Awaited<ReturnType<typeof getSocialConversation>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+ username: string,
+    params?: GetSocialConversationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialConversation>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSocialConversation>>,
+          TError,
+          Awaited<ReturnType<typeof getSocialConversation>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSocialConversation<TData = Awaited<ReturnType<typeof getSocialConversation>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+ username: string,
+    params?: GetSocialConversationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialConversation>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+export function useGetSocialConversation<TData = Awaited<ReturnType<typeof getSocialConversation>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+ username: string,
+    params?: GetSocialConversationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialConversation>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetSocialConversationQueryOptions(username,params,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -7682,7 +8733,7 @@ return customFetch<SocialMessage>(getSendSocialMessageUrl(username),
 
 export const getSendSocialMessageMutationKey = () => ['sendSocialMessage'] as const;
 
-export const getSendSocialMessageMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getSendSocialMessageMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendSocialMessage>>, TError,SendSocialMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof sendSocialMessage>>, TError,SendSocialMessageMutationVariables, TContext> => {
 
@@ -7711,18 +8762,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SendSocialMessageMutationResult = NonNullable<Awaited<ReturnType<typeof sendSocialMessage>>>
     export type SendSocialMessageMutationBody = BodyType<SocialMessageInput>
-    export type SendSocialMessageMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type SendSocialMessageMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
     export type SendSocialMessageMutationVariables = {username: string;data: BodyType<SocialMessageInput>}
 
-    export const useSendSocialMessage = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useSendSocialMessage = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendSocialMessage>>, TError,SendSocialMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof sendSocialMessage>>,
         TError,
         SendSocialMessageMutationVariables,
         TContext
       > => {
-      return useMutation(getSendSocialMessageMutationOptions(options));
+      return useMutation(getSendSocialMessageMutationOptions(options), queryClient);
     }
 
 export const getDeleteSocialConversationUrl = (username: string,) => {
@@ -7750,7 +8801,7 @@ export const deleteSocialConversation = async (username: string, options?: Param
 
 export const getDeleteSocialConversationMutationKey = () => ['deleteSocialConversation'] as const;
 
-export const getDeleteSocialConversationMutationOptions = <TError = ErrorType<ErrorResponse4b96100 | void>,
+export const getDeleteSocialConversationMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSocialConversation>>, TError,DeleteSocialConversationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteSocialConversation>>, TError,DeleteSocialConversationMutationVariables, TContext> => {
 
@@ -7779,18 +8830,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteSocialConversationMutationResult = NonNullable<Awaited<ReturnType<typeof deleteSocialConversation>>>
 
-    export type DeleteSocialConversationMutationError = ErrorType<ErrorResponse4b96100 | void>
+    export type DeleteSocialConversationMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
     export type DeleteSocialConversationMutationVariables = {username: string}
 
-    export const useDeleteSocialConversation = <TError = ErrorType<ErrorResponse4b96100 | void>,
+    export const useDeleteSocialConversation = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSocialConversation>>, TError,DeleteSocialConversationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteSocialConversation>>,
         TError,
         DeleteSocialConversationMutationVariables,
         TContext
       > => {
-      return useMutation(getDeleteSocialConversationMutationOptions(options));
+      return useMutation(getDeleteSocialConversationMutationOptions(options), queryClient);
     }
 
 export const getGetMyProfileUrl = () => {
@@ -7823,7 +8874,7 @@ export const getGetMyProfileQueryKey = () => {
     }
 
 
-export const getGetMyProfileQueryOptions = <TData = Awaited<ReturnType<typeof getMyProfile>>, TError = ErrorType<SessionUnauthorizedResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetMyProfileQueryOptions = <TData = Awaited<ReturnType<typeof getMyProfile>>, TError = ErrorType<SessionUnauthorizedResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyProfile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -7838,22 +8889,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyProfile>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyProfile>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetMyProfileQueryResult = NonNullable<Awaited<ReturnType<typeof getMyProfile>>>
 export type GetMyProfileQueryError = ErrorType<SessionUnauthorizedResponse>
 
 
+export function useGetMyProfile<TData = Awaited<ReturnType<typeof getMyProfile>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyProfile>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyProfile>>,
+          TError,
+          Awaited<ReturnType<typeof getMyProfile>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyProfile<TData = Awaited<ReturnType<typeof getMyProfile>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyProfile>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyProfile>>,
+          TError,
+          Awaited<ReturnType<typeof getMyProfile>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyProfile<TData = Awaited<ReturnType<typeof getMyProfile>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyProfile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetMyProfile<TData = Awaited<ReturnType<typeof getMyProfile>>, TError = ErrorType<SessionUnauthorizedResponse>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyProfile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetMyProfileQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -7937,13 +9012,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export const useSaveMyProfile = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveMyProfile>>, TError,SaveMyProfileMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof saveMyProfile>>,
         TError,
         SaveMyProfileMutationVariables,
         TContext
       > => {
-      return useMutation(getSaveMyProfileMutationOptions(options));
+      return useMutation(getSaveMyProfileMutationOptions(options), queryClient);
     }
 
 export const getGetEmojiCatalogUrl = () => {
@@ -7976,7 +9051,7 @@ export const getGetEmojiCatalogQueryKey = () => {
     }
 
 
-export const getGetEmojiCatalogQueryOptions = <TData = Awaited<ReturnType<typeof getEmojiCatalog>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEmojiCatalog>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetEmojiCatalogQueryOptions = <TData = Awaited<ReturnType<typeof getEmojiCatalog>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEmojiCatalog>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -7991,22 +9066,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEmojiCatalog>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEmojiCatalog>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetEmojiCatalogQueryResult = NonNullable<Awaited<ReturnType<typeof getEmojiCatalog>>>
 export type GetEmojiCatalogQueryError = ErrorType<unknown>
 
 
+export function useGetEmojiCatalog<TData = Awaited<ReturnType<typeof getEmojiCatalog>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEmojiCatalog>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEmojiCatalog>>,
+          TError,
+          Awaited<ReturnType<typeof getEmojiCatalog>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetEmojiCatalog<TData = Awaited<ReturnType<typeof getEmojiCatalog>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEmojiCatalog>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEmojiCatalog>>,
+          TError,
+          Awaited<ReturnType<typeof getEmojiCatalog>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetEmojiCatalog<TData = Awaited<ReturnType<typeof getEmojiCatalog>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEmojiCatalog>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetEmojiCatalog<TData = Awaited<ReturnType<typeof getEmojiCatalog>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEmojiCatalog>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEmojiCatalog>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetEmojiCatalogQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -8051,7 +9150,7 @@ export const getGetEmojiImageQueryKey = (emojiId: string,
 
 
 export const getGetEmojiImageQueryOptions = <TData = Awaited<ReturnType<typeof getEmojiImage>>, TError = ErrorType<InvalidInputResponse | ErrorResponse>>(emojiId: string,
-    color: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEmojiImage>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+    color: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEmojiImage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -8066,23 +9165,50 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: emojiId !== null && emojiId !== undefined && color !== null && color !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEmojiImage>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: emojiId !== null && emojiId !== undefined && color !== null && color !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEmojiImage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetEmojiImageQueryResult = NonNullable<Awaited<ReturnType<typeof getEmojiImage>>>
 export type GetEmojiImageQueryError = ErrorType<InvalidInputResponse | ErrorResponse>
 
 
+export function useGetEmojiImage<TData = Awaited<ReturnType<typeof getEmojiImage>>, TError = ErrorType<InvalidInputResponse | ErrorResponse>>(
+ emojiId: string,
+    color: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEmojiImage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEmojiImage>>,
+          TError,
+          Awaited<ReturnType<typeof getEmojiImage>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetEmojiImage<TData = Awaited<ReturnType<typeof getEmojiImage>>, TError = ErrorType<InvalidInputResponse | ErrorResponse>>(
+ emojiId: string,
+    color: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEmojiImage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEmojiImage>>,
+          TError,
+          Awaited<ReturnType<typeof getEmojiImage>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetEmojiImage<TData = Awaited<ReturnType<typeof getEmojiImage>>, TError = ErrorType<InvalidInputResponse | ErrorResponse>>(
+ emojiId: string,
+    color: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEmojiImage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetEmojiImage<TData = Awaited<ReturnType<typeof getEmojiImage>>, TError = ErrorType<InvalidInputResponse | ErrorResponse>>(
  emojiId: string,
-    color: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEmojiImage>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+    color: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEmojiImage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetEmojiImageQueryOptions(emojiId,color,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -8152,13 +9278,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export const useCreateChessRoom = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChessRoom>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createChessRoom>>,
         TError,
         void,
         TContext
       > => {
-      return useMutation(getCreateChessRoomMutationOptions(options));
+      return useMutation(getCreateChessRoomMutationOptions(options), queryClient);
     }
 
 export const getGetChessRoomUrl = (chessRoomId: string,) => {
@@ -8191,7 +9317,7 @@ export const getGetChessRoomQueryKey = (chessRoomId: string,) => {
     }
 
 
-export const getGetChessRoomQueryOptions = <TData = Awaited<ReturnType<typeof getChessRoom>>, TError = ErrorType<unknown>>(chessRoomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getChessRoom>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetChessRoomQueryOptions = <TData = Awaited<ReturnType<typeof getChessRoom>>, TError = ErrorType<unknown>>(chessRoomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChessRoom>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -8206,22 +9332,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: chessRoomId !== null && chessRoomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getChessRoom>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: chessRoomId !== null && chessRoomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getChessRoom>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetChessRoomQueryResult = NonNullable<Awaited<ReturnType<typeof getChessRoom>>>
 export type GetChessRoomQueryError = ErrorType<unknown>
 
 
+export function useGetChessRoom<TData = Awaited<ReturnType<typeof getChessRoom>>, TError = ErrorType<unknown>>(
+ chessRoomId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChessRoom>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChessRoom>>,
+          TError,
+          Awaited<ReturnType<typeof getChessRoom>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChessRoom<TData = Awaited<ReturnType<typeof getChessRoom>>, TError = ErrorType<unknown>>(
+ chessRoomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChessRoom>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChessRoom>>,
+          TError,
+          Awaited<ReturnType<typeof getChessRoom>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChessRoom<TData = Awaited<ReturnType<typeof getChessRoom>>, TError = ErrorType<unknown>>(
+ chessRoomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChessRoom>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetChessRoom<TData = Awaited<ReturnType<typeof getChessRoom>>, TError = ErrorType<unknown>>(
- chessRoomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getChessRoom>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ chessRoomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChessRoom>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetChessRoomQueryOptions(chessRoomId,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -8291,13 +9441,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export const useJoinChessRoom = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinChessRoom>>, TError,JoinChessRoomMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof joinChessRoom>>,
         TError,
         JoinChessRoomMutationVariables,
         TContext
       > => {
-      return useMutation(getJoinChessRoomMutationOptions(options));
+      return useMutation(getJoinChessRoomMutationOptions(options), queryClient);
     }
 
 export const getActChessRoomUrl = (chessRoomId: string,) => {
@@ -8374,13 +9524,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export const useActChessRoom = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof actChessRoom>>, TError,ActChessRoomMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof actChessRoom>>,
         TError,
         ActChessRoomMutationVariables,
         TContext
       > => {
-      return useMutation(getActChessRoomMutationOptions(options));
+      return useMutation(getActChessRoomMutationOptions(options), queryClient);
     }
 
 export const getConnectChessAudioUrl = (chessRoomId: string,) => {
@@ -8442,13 +9592,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export const useConnectChessAudio = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectChessAudio>>, TError,ConnectChessAudioMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof connectChessAudio>>,
         TError,
         ConnectChessAudioMutationVariables,
         TContext
       > => {
-      return useMutation(getConnectChessAudioMutationOptions(options));
+      return useMutation(getConnectChessAudioMutationOptions(options), queryClient);
     }
 
 export const getCreateAccountRoomUrl = () => {
@@ -8524,13 +9674,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export const useCreateAccountRoom = <TError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAccountRoom>>, TError,CreateAccountRoomMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createAccountRoom>>,
         TError,
         CreateAccountRoomMutationVariables,
         TContext
       > => {
-      return useMutation(getCreateAccountRoomMutationOptions(options));
+      return useMutation(getCreateAccountRoomMutationOptions(options), queryClient);
     }
 
 export const getJoinAccountRoomUrl = (roomId: string,) => {
@@ -8592,13 +9742,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export const useJoinAccountRoom = <TError = ErrorType<SessionUnauthorizedResponse | ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinAccountRoom>>, TError,JoinAccountRoomMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof joinAccountRoom>>,
         TError,
         JoinAccountRoomMutationVariables,
         TContext
       > => {
-      return useMutation(getJoinAccountRoomMutationOptions(options));
+      return useMutation(getJoinAccountRoomMutationOptions(options), queryClient);
     }
 
 export const getHealthCheckUrl = () => {
@@ -8635,7 +9785,7 @@ export const getHealthCheckQueryKey = () => {
     }
 
 
-export const getHealthCheckQueryOptions = <TData = Awaited<ReturnType<typeof healthCheck>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getHealthCheckQueryOptions = <TData = Awaited<ReturnType<typeof healthCheck>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -8650,25 +9800,49 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type HealthCheckQueryResult = NonNullable<Awaited<ReturnType<typeof healthCheck>>>
 export type HealthCheckQueryError = ErrorType<unknown>
 
 
+export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof healthCheck>>,
+          TError,
+          Awaited<ReturnType<typeof healthCheck>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof healthCheck>>,
+          TError,
+          Awaited<ReturnType<typeof healthCheck>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Health check
  */
 
 export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getHealthCheckQueryOptions(options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -8709,7 +9883,7 @@ export const getGetRoomMessagesQueryKey = (roomId: string,) => {
     }
 
 
-export const getGetRoomMessagesQueryOptions = <TData = Awaited<ReturnType<typeof getRoomMessages>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRoomMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetRoomMessagesQueryOptions = <TData = Awaited<ReturnType<typeof getRoomMessages>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>>(roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoomMessages>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -8724,22 +9898,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRoomMessages>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRoomMessages>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetRoomMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof getRoomMessages>>>
 export type GetRoomMessagesQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>
 
 
+export function useGetRoomMessages<TData = Awaited<ReturnType<typeof getRoomMessages>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>>(
+ roomId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoomMessages>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRoomMessages>>,
+          TError,
+          Awaited<ReturnType<typeof getRoomMessages>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRoomMessages<TData = Awaited<ReturnType<typeof getRoomMessages>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoomMessages>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRoomMessages>>,
+          TError,
+          Awaited<ReturnType<typeof getRoomMessages>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRoomMessages<TData = Awaited<ReturnType<typeof getRoomMessages>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoomMessages>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetRoomMessages<TData = Awaited<ReturnType<typeof getRoomMessages>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>>(
- roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRoomMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoomMessages>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetRoomMessagesQueryOptions(roomId,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -8824,13 +10022,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export const useSendRoomMessage = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendRoomMessage>>, TError,SendRoomMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof sendRoomMessage>>,
         TError,
         SendRoomMessageMutationVariables,
         TContext
       > => {
-      return useMutation(getSendRoomMessageMutationOptions(options));
+      return useMutation(getSendRoomMessageMutationOptions(options), queryClient);
     }
 
 export const getStreamAccountRoomEventsUrl = (roomId: string,) => {
@@ -8863,7 +10061,7 @@ export const getStreamAccountRoomEventsQueryKey = (roomId: string,) => {
     }
 
 
-export const getStreamAccountRoomEventsQueryOptions = <TData = Awaited<ReturnType<typeof streamAccountRoomEvents>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse | CapacityErrorResponse>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamAccountRoomEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getStreamAccountRoomEventsQueryOptions = <TData = Awaited<ReturnType<typeof streamAccountRoomEvents>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse | CapacityErrorResponse>>(roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamAccountRoomEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -8878,22 +10076,46 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof streamAccountRoomEvents>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof streamAccountRoomEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type StreamAccountRoomEventsQueryResult = NonNullable<Awaited<ReturnType<typeof streamAccountRoomEvents>>>
 export type StreamAccountRoomEventsQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse | CapacityErrorResponse>
 
 
+export function useStreamAccountRoomEvents<TData = Awaited<ReturnType<typeof streamAccountRoomEvents>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse | CapacityErrorResponse>>(
+ roomId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamAccountRoomEvents>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof streamAccountRoomEvents>>,
+          TError,
+          Awaited<ReturnType<typeof streamAccountRoomEvents>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStreamAccountRoomEvents<TData = Awaited<ReturnType<typeof streamAccountRoomEvents>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse | CapacityErrorResponse>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamAccountRoomEvents>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof streamAccountRoomEvents>>,
+          TError,
+          Awaited<ReturnType<typeof streamAccountRoomEvents>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStreamAccountRoomEvents<TData = Awaited<ReturnType<typeof streamAccountRoomEvents>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse | CapacityErrorResponse>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamAccountRoomEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useStreamAccountRoomEvents<TData = Awaited<ReturnType<typeof streamAccountRoomEvents>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse | CapacityErrorResponse>>(
- roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamAccountRoomEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamAccountRoomEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getStreamAccountRoomEventsQueryOptions(roomId,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -8983,13 +10205,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useCreateRoom = <TError = ErrorType<ErrorResponse | CapacityErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRoom>>, TError,CreateRoomMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof createRoom>>,
         TError,
         CreateRoomMutationVariables,
         TContext
       > => {
-      return useMutation(getCreateRoomMutationOptions(options));
+      return useMutation(getCreateRoomMutationOptions(options), queryClient);
     }
 
 export const getGetRoomUrl = (roomId: string,) => {
@@ -9025,7 +10247,7 @@ export const getGetRoomQueryKey = (roomId: string,) => {
     }
 
 
-export const getGetRoomQueryOptions = <TData = Awaited<ReturnType<typeof getRoom>>, TError = ErrorType<InvalidInputResponse | ErrorResponse>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRoom>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetRoomQueryOptions = <TData = Awaited<ReturnType<typeof getRoom>>, TError = ErrorType<InvalidInputResponse | ErrorResponse>>(roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoom>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -9040,25 +10262,49 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRoom>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRoom>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetRoomQueryResult = NonNullable<Awaited<ReturnType<typeof getRoom>>>
 export type GetRoomQueryError = ErrorType<InvalidInputResponse | ErrorResponse>
 
 
+export function useGetRoom<TData = Awaited<ReturnType<typeof getRoom>>, TError = ErrorType<InvalidInputResponse | ErrorResponse>>(
+ roomId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoom>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRoom>>,
+          TError,
+          Awaited<ReturnType<typeof getRoom>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRoom<TData = Awaited<ReturnType<typeof getRoom>>, TError = ErrorType<InvalidInputResponse | ErrorResponse>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoom>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRoom>>,
+          TError,
+          Awaited<ReturnType<typeof getRoom>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetRoom<TData = Awaited<ReturnType<typeof getRoom>>, TError = ErrorType<InvalidInputResponse | ErrorResponse>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoom>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Get a room and its active participants
  */
 
 export function useGetRoom<TData = Awaited<ReturnType<typeof getRoom>>, TError = ErrorType<InvalidInputResponse | ErrorResponse>>(
- roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRoom>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoom>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetRoomQueryOptions(roomId,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -9149,13 +10395,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useJoinRoom = <TError = ErrorType<ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinRoom>>, TError,JoinRoomMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof joinRoom>>,
         TError,
         JoinRoomMutationVariables,
         TContext
       > => {
-      return useMutation(getJoinRoomMutationOptions(options));
+      return useMutation(getJoinRoomMutationOptions(options), queryClient);
     }
 
 export const getHeartbeatParticipantUrl = (roomId: string,
@@ -9226,13 +10472,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useHeartbeatParticipant = <TError = ErrorType<InvalidInputResponse | ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof heartbeatParticipant>>, TError,HeartbeatParticipantMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof heartbeatParticipant>>,
         TError,
         HeartbeatParticipantMutationVariables,
         TContext
       > => {
-      return useMutation(getHeartbeatParticipantMutationOptions(options));
+      return useMutation(getHeartbeatParticipantMutationOptions(options), queryClient);
     }
 
 export const getLeaveRoomUrl = (roomId: string,
@@ -9302,13 +10548,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useLeaveRoom = <TError = ErrorType<InvalidInputResponse | ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof leaveRoom>>, TError,LeaveRoomMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof leaveRoom>>,
         TError,
         LeaveRoomMutationVariables,
         TContext
       > => {
-      return useMutation(getLeaveRoomMutationOptions(options));
+      return useMutation(getLeaveRoomMutationOptions(options), queryClient);
     }
 
 export const getStreamRoomEventsUrl = (roomId: string,) => {
@@ -9345,7 +10591,7 @@ export const getStreamRoomEventsQueryKey = (roomId: string,) => {
     }
 
 
-export const getStreamRoomEventsQueryOptions = <TData = Awaited<ReturnType<typeof streamRoomEvents>>, TError = ErrorType<InvalidInputResponse | ErrorResponse | CapacityErrorResponse>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamRoomEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getStreamRoomEventsQueryOptions = <TData = Awaited<ReturnType<typeof streamRoomEvents>>, TError = ErrorType<InvalidInputResponse | ErrorResponse | CapacityErrorResponse>>(roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamRoomEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -9360,25 +10606,49 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof streamRoomEvents>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof streamRoomEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type StreamRoomEventsQueryResult = NonNullable<Awaited<ReturnType<typeof streamRoomEvents>>>
 export type StreamRoomEventsQueryError = ErrorType<InvalidInputResponse | ErrorResponse | CapacityErrorResponse>
 
 
+export function useStreamRoomEvents<TData = Awaited<ReturnType<typeof streamRoomEvents>>, TError = ErrorType<InvalidInputResponse | ErrorResponse | CapacityErrorResponse>>(
+ roomId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamRoomEvents>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof streamRoomEvents>>,
+          TError,
+          Awaited<ReturnType<typeof streamRoomEvents>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStreamRoomEvents<TData = Awaited<ReturnType<typeof streamRoomEvents>>, TError = ErrorType<InvalidInputResponse | ErrorResponse | CapacityErrorResponse>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamRoomEvents>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof streamRoomEvents>>,
+          TError,
+          Awaited<ReturnType<typeof streamRoomEvents>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStreamRoomEvents<TData = Awaited<ReturnType<typeof streamRoomEvents>>, TError = ErrorType<InvalidInputResponse | ErrorResponse | CapacityErrorResponse>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamRoomEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Subscribe to live room participant snapshots
  */
 
 export function useStreamRoomEvents<TData = Awaited<ReturnType<typeof streamRoomEvents>>, TError = ErrorType<InvalidInputResponse | ErrorResponse | CapacityErrorResponse>>(
- roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamRoomEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamRoomEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getStreamRoomEventsQueryOptions(roomId,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -9423,7 +10693,7 @@ export const getStreamAudioEventsQueryKey = (roomId: string,) => {
     }
 
 
-export const getStreamAudioEventsQueryOptions = <TData = Awaited<ReturnType<typeof streamAudioEvents>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | CapacityErrorResponse>>(roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamAudioEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getStreamAudioEventsQueryOptions = <TData = Awaited<ReturnType<typeof streamAudioEvents>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | CapacityErrorResponse>>(roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamAudioEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -9438,25 +10708,49 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof streamAudioEvents>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof streamAudioEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type StreamAudioEventsQueryResult = NonNullable<Awaited<ReturnType<typeof streamAudioEvents>>>
 export type StreamAudioEventsQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | CapacityErrorResponse>
 
 
+export function useStreamAudioEvents<TData = Awaited<ReturnType<typeof streamAudioEvents>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | CapacityErrorResponse>>(
+ roomId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamAudioEvents>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof streamAudioEvents>>,
+          TError,
+          Awaited<ReturnType<typeof streamAudioEvents>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStreamAudioEvents<TData = Awaited<ReturnType<typeof streamAudioEvents>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | CapacityErrorResponse>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamAudioEvents>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof streamAudioEvents>>,
+          TError,
+          Awaited<ReturnType<typeof streamAudioEvents>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStreamAudioEvents<TData = Awaited<ReturnType<typeof streamAudioEvents>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | CapacityErrorResponse>>(
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamAudioEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * @summary Connect or reconnect a participant's WebRTC signaling stream
  */
 
 export function useStreamAudioEvents<TData = Awaited<ReturnType<typeof streamAudioEvents>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | CapacityErrorResponse>>(
- roomId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof streamAudioEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+ roomId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof streamAudioEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getStreamAudioEventsQueryOptions(roomId,options)
 
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -9547,13 +10841,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useSendAudioSignal = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendAudioSignal>>, TError,SendAudioSignalMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof sendAudioSignal>>,
         TError,
         SendAudioSignalMutationVariables,
         TContext
       > => {
-      return useMutation(getSendAudioSignalMutationOptions(options));
+      return useMutation(getSendAudioSignalMutationOptions(options), queryClient);
     }
 
 export const getDisconnectAudioUrl = (roomId: string,
@@ -9623,13 +10917,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useDisconnectAudio = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disconnectAudio>>, TError,DisconnectAudioMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof disconnectAudio>>,
         TError,
         DisconnectAudioMutationVariables,
         TContext
       > => {
-      return useMutation(getDisconnectAudioMutationOptions(options));
+      return useMutation(getDisconnectAudioMutationOptions(options), queryClient);
     }
 
 export const getControlRoomMicrophoneUrl = (roomId: string,
@@ -9715,12 +11009,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  */
 export const useControlRoomMicrophone = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof controlRoomMicrophone>>, TError,ControlRoomMicrophoneMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
+ , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof controlRoomMicrophone>>,
         TError,
         ControlRoomMicrophoneMutationVariables,
         TContext
       > => {
-      return useMutation(getControlRoomMicrophoneMutationOptions(options));
+      return useMutation(getControlRoomMicrophoneMutationOptions(options), queryClient);
     }
 

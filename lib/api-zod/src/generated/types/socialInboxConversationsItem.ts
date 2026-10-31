@@ -5,7 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { EmojiIdentity4b96100 } from './emojiIdentity4b96100';
+import type { EmojiIdentity } from './emojiIdentity';
 
 export type SocialInboxConversationsItem = {
   username: string;
@@ -28,7 +28,7 @@ export type SocialInboxConversationsItem = {
   lastMessageFromMe: boolean;
   /** @nullable */
   lastUnreadAt: Date | null;
-  identity: EmojiIdentity4b96100;
+  identity: EmojiIdentity;
   lastMessage: string;
   updatedAt: Date;
   unreadCount: number;
