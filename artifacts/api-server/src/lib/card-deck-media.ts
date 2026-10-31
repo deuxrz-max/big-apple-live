@@ -1,6 +1,7 @@
 import { Storage } from "@google-cloud/storage";
 import type { Request, Response } from "express";
 import { RoomError } from "./room-store";
+import { streamGcsObject } from "./gcs-response-stream";
 import { CARD_DECK_FILENAMES, CARD_DECK_MEDIA_VERSION } from "./card-deck-manifest";
 const storage = new Storage({
   credentials: {
@@ -27,8 +28,5 @@ export async function serveCardDeckFace(req: Request, res: Response) {
   if (!exists) throw new RoomError(404, "Card artwork not found");
   res.set({ "Content-Type": "image/png", "Cache-Control": "public, max-age=86400",
     "X-Content-Type-Options": "nosniff" });
-  file.createReadStream().on("error", () => {
-    if (!res.headersSent) res.status(503).end();
-    else res.destroy();
-  }).pipe(res);
+  streamGcsObject(file.createReadStream(), res, "Card deck artwork", 503);
 }

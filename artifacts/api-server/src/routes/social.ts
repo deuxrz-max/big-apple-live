@@ -55,6 +55,7 @@ import { getDeveloperContentSyncStatus, runDeveloperContentSync } from "../lib/d
 import { getHangoutRewardSettings, setHangoutRewardInterval } from "../lib/community-hangout-rewards";
 import { liveStreamChatHub } from "../lib/live-stream-chat";
 import { getMyEntranceEffectSettings, saveMyEntranceEffectSettings } from "../lib/social/entrance-effect-preferences";
+import { streamGcsObject } from "../lib/gcs-response-stream";
 import { equipEntranceEffect, listEntranceEffectShop, purchaseEntranceEffect } from "../lib/social/entrance-effect-shop";
 import { saveEquippedBadge } from "../lib/social/monthly-credit-badges";
 import { getPkWeeklyLeaderboard } from "../lib/pk-battles";
@@ -271,9 +272,7 @@ async function streamStudioMedia(
     res.end();
     return;
   }
-  const source = file.createReadStream({ start, end });
-  res.on("close", () => source.destroy());
-  source.on("error", () => res.destroy()).pipe(res);
+  streamGcsObject(file.createReadStream({ start, end }), res, "Gift Studio media");
 }
 
 async function streamStudioIcon(req: Request, res: Response, versionId: string): Promise<void> {
@@ -291,9 +290,7 @@ async function streamStudioIcon(req: Request, res: Response, versionId: string):
     res.end();
     return;
   }
-  const source = file.createReadStream();
-  res.on("close", () => source.destroy());
-  source.on("error", () => res.destroy()).pipe(res);
+  streamGcsObject(file.createReadStream(), res, "Gift Studio icon");
 }
 
 router.get("/social/admin/gift-studio/library", ownerOnly, async (req, res): Promise<void> => {
@@ -413,9 +410,7 @@ router.get("/social/gift-motions/:giftId/file", async (req, res): Promise<void> 
     "Cache-Control": "public, max-age=31536000, immutable",
     "X-Content-Type-Options": "nosniff",
   });
-  const stream = model.file.createReadStream();
-  res.on("close", () => stream.destroy());
-  stream.on("error", () => res.destroy()).pipe(res);
+  streamGcsObject(model.file.createReadStream(), res, "3D gift motion");
 });
 
 router.patch("/social/admin/gift-studio/catalog/:giftId", ownerOnly, async (req, res): Promise<void> => {

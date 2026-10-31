@@ -1,5 +1,6 @@
 import { Storage } from "@google-cloud/storage";
 import type { Request, Response } from "express";
+import { streamGcsObject } from "./gcs-response-stream";
 
 export const NYC_BACKGROUND_VIDEO_IDS = [
   "nyc-01", "nyc-02", "nyc-03", "nyc-04", "nyc-05", "nyc-06",
@@ -78,19 +79,7 @@ export async function serveNycBackgroundVideo(req: Request, res: Response) {
     }
     if (req.method === "HEAD") return res.end();
 
-    const stream = file.createReadStream({ start, end });
-    let clientDisconnected = false;
-    res.on("close", () => {
-      if (res.writableFinished) return;
-      clientDisconnected = true;
-      stream.unpipe(res);
-      stream.resume();
-    });
-    stream.on("error", () => {
-      if (clientDisconnected || res.destroyed) return;
-      res.destroy();
-    });
-    return stream.pipe(res);
+    return streamGcsObject(file.createReadStream({ start, end }), res, "NYC background video", 503);
   } catch {
     return res.status(503).end();
   }

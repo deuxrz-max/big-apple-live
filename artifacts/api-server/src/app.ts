@@ -52,9 +52,10 @@ app.use(
 
 app.use("/api", router);
 
-const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
+const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   if (res.headersSent) {
-    next(err);
+    req.log.error({ err }, "API request failed after response headers were sent");
+    res.destroy();
     return;
   }
   if (err instanceof RoomError || err instanceof ChessError) {

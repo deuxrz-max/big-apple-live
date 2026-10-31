@@ -3,6 +3,7 @@ import { UpdatePinkCardEntryBody, GetPinkCardRewardResponse, GetPinkCardEntryRes
 import { accountId } from "./identity";
 import { pinkRewardEntry, pinkRewardStatus, setPinkRewardPreference } from "../lib/pink-card-rewards";
 import { PINK_MEDIA, pinkRewardMediaFile, type PinkMediaVariant } from "../lib/pink-card-media";
+import { streamGcsObject } from "../lib/gcs-response-stream";
 
 const router = Router();
 router.get("/rewards/pink-card", async (_req, res) => {
@@ -25,9 +26,6 @@ router.get("/rewards/pink-card/media/:variant", async (req, res) => {
   if (!exists) { res.sendStatus(404); return; }
   res.setHeader("Content-Type", PINK_MEDIA[variant].type);
   res.setHeader("Cache-Control", "public, max-age=3600");
-  const stream = file.createReadStream();
-  stream.on("error", () => { if (!res.headersSent) res.sendStatus(503); else res.destroy(); });
-  res.on("close", () => stream.destroy());
-  stream.pipe(res);
+  streamGcsObject(file.createReadStream(), res, "Pink card reward media", 503);
 });
 export default router;

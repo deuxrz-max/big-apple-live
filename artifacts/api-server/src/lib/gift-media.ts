@@ -1,6 +1,7 @@
 import { Storage } from '@google-cloud/storage';
 import type { Request, Response } from 'express';
 import { RoomError } from './room-store';
+import { streamGcsObject } from './gcs-response-stream';
 
 const types: Record<string, string> = {
   'icon.png': 'image/png', 'icon-small.png': 'image/png', 'fallback.webp': 'image/webp',
@@ -55,21 +56,7 @@ function giftMediaHandler(product: GiftMediaProduct) {
     }
     res.set('Content-Length', String(end - start + 1));
     if (req.method === 'HEAD') { res.end(); return; }
-    const stream = file.createReadStream({ start, end });
-    let clientDisconnected = false;
-    res.on('close', () => {
-      if (res.writableFinished) return;
-      clientDisconnected = true;
-      stream.unpipe(res);
-      // Drain the small public gift asset instead of destroying a GCS read stream
-      // that may still be waiting for its upstream response to initialize.
-      stream.resume();
-    });
-    stream.on('error', () => {
-      if (clientDisconnected || res.destroyed) return;
-      res.destroy();
-    });
-    stream.pipe(res);
+    streamGcsObject(file.createReadStream({ start, end }), res, 'Gift media', 503);
   };
 }
 export const serveGiftMedia = giftMediaHandler('spirit-pup');

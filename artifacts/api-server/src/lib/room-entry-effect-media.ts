@@ -1,6 +1,7 @@
 import { Storage } from "@google-cloud/storage";
 import type { Request, Response } from "express";
 import { RoomError } from "./room-store";
+import { streamGcsObject } from "./gcs-response-stream";
 
 const mediaTypes: Record<string, string> = {
   "animation.webp": "image/webp",
@@ -70,9 +71,7 @@ async function serveMedia(req: Request, res: Response, file: ReturnType<typeof g
     res.end();
     return;
   }
-  const stream = file.createReadStream({ start, end });
-  res.on("close", () => stream.destroy());
-  stream.on("error", () => res.destroy()).pipe(res);
+  streamGcsObject(file.createReadStream({ start, end }), res, "Room entrance effect media");
 }
 
 /** Serves only the fixed, non-personal Lion effect asset set from App Storage. */

@@ -6,6 +6,7 @@ import { UploadProfilePhotoResponse, GetProfilePhotoParams } from "@workspace/ap
 import { RoomError, roomStore } from "../lib/room-store";
 import { pairBlocked } from "../lib/social/core";
 import { isTestAccountId } from "../lib/account-profiles";
+import { streamGcsObject } from "../lib/gcs-response-stream";
 
 const router = Router();
 router.post("/me/photo", async (req, _res, next) => {
@@ -34,8 +35,6 @@ router.get("/photos/:photoId", async (req, res) => {
   }
   res.set({ "Content-Type": "image/webp", "Cache-Control": "private, no-store",
     "X-Content-Type-Options": "nosniff", "Content-Security-Policy": "default-src 'none'" });
-  file.createReadStream().on("error", () => {
-    if (!res.headersSent) res.status(404).end(); else res.destroy();
-  }).pipe(res);
+  streamGcsObject(file.createReadStream(), res, "Profile photo", 404);
 });
 export default router;
