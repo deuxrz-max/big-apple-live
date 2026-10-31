@@ -96,21 +96,19 @@ function CreditsChip() {
   </Link>;
 }
 
-function TopBar({ signedIn, query, setQuery }: { signedIn: boolean; query: string; setQuery: (v: string) => void }) {
+function TopBar({ signedIn }: { signedIn: boolean }) {
   return (
     <div className="st-topbar">
-      <Wordmark href={signedIn ? '/home' : '/'} className="st-brand" />
-      <input type="search" className="st-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search" aria-label="Search rooms" />
+      <Wordmark href={signedIn ? '/home' : '/'} className="st-brand" transparentLogo />
       {signedIn ? <><GoLiveButton className="st-topbar-live"><Radio size={15} /> Go Live</GoLiveButton><CreditsChip /></> : <Link href="/sign-in" className="bm-btn bm-btn-sm bm-btn-primary">Sign in</Link>}
     </div>
   );
 }
 
 export function PublicChatLanding() {
-  const [query, setQuery] = useState('');
   return (
     <Shell className="dw-landing">
-      <TopBar signedIn={false} query={query} setQuery={setQuery} />
+      <TopBar signedIn={false} />
       <section className="dw-landing-hero" aria-labelledby="dw-landing-title" data-testid="section-landing-hero">
         <span className="dw-landing-kicker"><i aria-hidden="true" /> Live rooms, streams and gifts</span>
         <h1 id="dw-landing-title">Find your people.</h1>
@@ -131,7 +129,7 @@ export function PublicChatLanding() {
       </section>
       <section className="dw-landing-rooms" aria-labelledby="dw-landing-rooms-title">
         <div className="dw-section-head"><span className="dw-overline">Happening now</span><h2 id="dw-landing-rooms-title">Rooms</h2></div>
-        <List preview query={query} />
+        <List preview />
       </section>
       <footer className="dw-landing-foot"><p className="ch-note">{DISCLAIMER}</p></footer>
     </Shell>

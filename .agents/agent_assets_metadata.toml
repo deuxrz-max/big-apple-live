@@ -196,3 +196,17 @@ mtime_ms = 1793470123000
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/d187549d-51c4-473f-86fe-daf88add33d5/4f69f115-0699-4ff2-bb66-82e1d9e9fc72"
 storage_version_token = "1793470227285143"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "IOewWtiHmILHKjwybgzG5"
+uri = "file://generated-artifacts/home-topbar-390x844.jpg"
+type = "image"
+title = "Front-page header — 390 × 844"
+description = "Current preview: larger transparent neon apple, full BIG APPLE LIVE name and Sign in on one row; search box removed."
+logical_id = "904612dc-cb10-4ac1-8dcd-18a4577a730b"
+content_hash = "sha256:9f28ca309486c8eb4c09ebfa5326c70df41dcd8e032dfc9f5993b5a4f71bd8cc"
+size = 43704
+mtime_ms = 1793480631918
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/904612dc-cb10-4ac1-8dcd-18a4577a730b/21371627-00ba-4210-9202-3c8ba49bbee7"
+storage_version_token = "1793480653269049"
+content_type = "image/jpeg"

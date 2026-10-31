@@ -9,12 +9,14 @@ export function LogoImage({
   alt = 'Big Apple Live logo',
   title,
   animated = true,
+  src = BRAND_LOGO_PATH,
 }: {
   size?: number;
   className?: string;
   alt?: string;
   title?: string;
   animated?: boolean;
+  src?: string;
 }) {
   return (
     <span
@@ -23,7 +25,7 @@ export function LogoImage({
       title={title}
       data-animated={animated ? 'true' : 'false'}
     >
-      <img className="dw-logo-glass-image" src={BRAND_LOGO_PATH} alt={alt}
+      <img className="dw-logo-glass-image" src={src} alt={alt}
         width={size} height={size} decoding="async" fetchPriority="high" />
     </span>
   );
@@ -33,10 +35,10 @@ export function AppLogo({ size = 36 }: { size?: number }) {
   return <LogoImage size={size} className="st-shield-logo" />;
 }
 
-export function Wordmark({ href = '/', className = '' }: { href?: string; className?: string }) {
+export function Wordmark({ href = '/', className = '', transparentLogo = false }: { href?: string; className?: string; transparentLogo?: boolean }) {
   return (
     <Link href={href} className={`st-wordmark-lockup ${className}`.trim()} aria-label="Big Apple Live home" data-testid="link-home">
-      <AppLogo />
+      <LogoImage size={36} className="st-shield-logo" src={transparentLogo ? `${import.meta.env.BASE_URL}brand/big-apple-live-header-transparent.png` : undefined} />
       <span className="st-wordmark font-display text-xl font-extrabold">BIG APPLE LIVE</span>
     </Link>
   );

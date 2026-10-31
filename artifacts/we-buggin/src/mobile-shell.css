@@ -580,3 +580,39 @@ body #root nav.app-bottom-nav {
   border-radius: 0 !important;
   box-shadow: 0 -8px 24px rgba(0, 0, 0, .5) !important;
 }
+
+/* Front-page header only: a 3x logo, complete name and accessible sign-in. */
+body #root .app-page .dw-landing .st-topbar {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+}
+body #root .app-page .dw-landing .st-topbar .st-wordmark-lockup {
+  flex: 1 1 0;
+  min-width: 0;
+  gap: 4px;
+}
+body #root .app-page .dw-landing .st-topbar .st-shield-logo {
+  width: 108px !important;
+  height: 108px !important;
+  flex: 0 0 108px;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+body #root .app-page .dw-landing .st-topbar .dw-logo-glass-image {
+  object-fit: contain;
+  mix-blend-mode: screen;
+}
+body #root .app-page .dw-landing .st-topbar .st-wordmark {
+  font-size: clamp(9px, 2.9vw, 13px);
+  letter-spacing: .015em;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+}
+body #root .app-page .dw-landing .st-topbar > a:last-child {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
