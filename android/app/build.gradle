@@ -1,0 +1,43 @@
+plugins {
+    id "com.android.application"
+}
+
+def signingDir = new File(System.getenv("BIG_APPLE_SIGNING_DIR") ?:
+        new File(rootDir.parentFile, ".local/private/android-signing").absolutePath)
+def passwordFile = new File(signingDir, "password.txt")
+
+android {
+    namespace "com.bigapplelive.app"
+    compileSdk 36
+    defaultConfig {
+        applicationId "com.bigapplelive.app"
+        minSdk 24
+        targetSdk 36
+        versionCode 1
+        versionName "1.0.0"
+    }
+    signingConfigs {
+        release {
+            storeFile new File(signingDir, "upload-keystore.p12")
+            storePassword passwordFile.exists() ? passwordFile.text.trim() : null
+            keyAlias "bigapplelive-upload"
+            keyPassword passwordFile.exists() ? passwordFile.text.trim() : null
+            storeType "PKCS12"
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            shrinkResources false
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation "com.google.androidbrowserhelper:androidbrowserhelper:2.7.4"
+}

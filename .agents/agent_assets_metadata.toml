@@ -168,3 +168,31 @@ mtime_ms = 1792859607139
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/8393180d-3764-45e5-b343-65538d08ce3f/931abc97-2e4d-4ab9-a691-1bff3fb4eb2a"
 storage_version_token = "1792859830258983"
 content_type = "text/csv"
+
+[[outputs]]
+id = "ZBjkST9auLCtTIiIo0ypp"
+uri = "file://generated-artifacts/android/Big-Apple-Live-1.0.0.apk"
+type = "unspecified"
+title = "Big Apple Live — Android APK"
+description = "Signed tester install, version 1.0.0. Website verification requires your republish; phone testing remains required."
+logical_id = "bbf9fb09-79be-4db5-9a28-ea8a7aa42c64"
+content_hash = "sha256:1c0351f7b3dd67692cb8e26c06172ada121b5b324774d6d4faf8ade23c8ef690"
+size = 3942123
+mtime_ms = 1793470122980
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/bbf9fb09-79be-4db5-9a28-ea8a7aa42c64/977b9b88-9190-4a52-8230-e92d29f062ff"
+storage_version_token = "1793470226550325"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "uNsXeVX_luwWxIznBkfgE"
+uri = "file://generated-artifacts/android/Big-Apple-Live-1.0.0.aab"
+type = "unspecified"
+title = "Big Apple Live — Google Play bundle"
+description = "Signed release AAB, version 1.0.0, package com.bigapplelive.app. For Play Console upload, not direct installation."
+logical_id = "d187549d-51c4-473f-86fe-daf88add33d5"
+content_hash = "sha256:9078f69648ef72fe094190ba739332bffe4e2854fed41a66dc8cf7dc75366ea4"
+size = 3783411
+mtime_ms = 1793470123000
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/d187549d-51c4-473f-86fe-daf88add33d5/4f69f115-0699-4ff2-bb66-82e1d9e9fc72"
+storage_version_token = "1793470227285143"
+content_type = "application/octet-stream"

@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.bigapplelive.app",
+      "sha256_cert_fingerprints": [
+        "38:EF:B7:71:9A:AD:01:F6:99:E8:77:E7:DF:E6:83:0E:AD:4C:51:9D:82:88:73:32:8B:88:EB:EC:F1:E9:09:09"
+      ]
+    }
+  }
+]

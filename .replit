@@ -21,7 +21,7 @@ timeoutMs = 20000
 
 [nix]
 channel = "stable-25_05"
-packages = ["xorg.xorgserver"]
+packages = ["xorg.xorgserver", "jdk17", "patchelf"]
 
 [userenv]
 

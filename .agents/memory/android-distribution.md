@@ -10,3 +10,9 @@ The wrapper should load the published production site so most web fixes reach te
 **Why:** The owner explicitly requested Android-only distribution, remotely delivered fixes, production rather than development hosting, and no publishing during wrapper setup.
 
 **How to apply:** Inspect current deployment metadata before configuring an origin. Treat a missing production address as a blocker, not permission to publish. Report APK/AAB and signing-key status accurately; do not call a configuration or proposed architecture a working Android app. Keep purchase integration read-only until separately authorized.
+
+The owner explicitly chose a Trusted Web Activity with Google Play App Signing and forbids the agent from publishing or republishing to complete verification.
+
+**Why:** A remotely hosted app should use the real browser for media and social sign-in, while the owner retains control of releases.
+
+**How to apply:** Distinguish the direct-install/upload certificate from Google's app-signing certificate. Website Digital Asset Links must include both for direct and Play installations. Only public certificate fingerprints belong in source. A private backup in the same workspace is not an off-site key backup; instruct the owner to download and protect it. Never present private signing material through Library.
