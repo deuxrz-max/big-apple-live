@@ -173,14 +173,14 @@ content_type = "text/csv"
 id = "ZBjkST9auLCtTIiIo0ypp"
 uri = "file://generated-artifacts/android/Big-Apple-Live-1.0.0.apk"
 type = "unspecified"
-title = "Big Apple Live — signed Android APK"
-description = "Existing signed release APK, version 1.0.0, package com.bigapplelive.app. Signature and SHA-256 checksum verified in this read-only check. Download for Android tester installation; no signing secrets included."
+title = "Download Big Apple Live — signed APK"
+description = "Android installer, version 1.0.0, com.bigapplelive.app, 3,942,123 bytes. Existing APK passed signature and checksum verification. This is the APK file, not the website or source project."
 logical_id = "bbf9fb09-79be-4db5-9a28-ea8a7aa42c64"
 content_hash = "sha256:1c0351f7b3dd67692cb8e26c06172ada121b5b324774d6d4faf8ade23c8ef690"
 size = 3942123
 mtime_ms = 1793470122980
-storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/bbf9fb09-79be-4db5-9a28-ea8a7aa42c64/c9977ae6-29b7-4a39-92d7-e1a5f0aea683"
-storage_version_token = "1793502405047273"
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/bbf9fb09-79be-4db5-9a28-ea8a7aa42c64/7d92877c-0f42-4f3c-88dc-9a64afd9a814"
+storage_version_token = "1793502432449260"
 content_type = "application/octet-stream"
 
 [[outputs]]
