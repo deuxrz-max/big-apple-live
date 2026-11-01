@@ -1,19 +1,24 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { randomUUID } from "node:crypto";
-import { db, accountProfiles, socialWallets, socialLedger, profilePhotos, chatAdmissions } from "@workspace/db";
+import { db, accountProfiles, socialWallets, socialLedger, profilePhotos, chatAdmissions, socialGiftBag, socialGiftEvents } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
 import { getMe, getPerson, listPeople, relationship, saveSocialProfile, blocks } from "./people";
 import { claimDaily, gift, purchase, ledger } from "./rewards";
 import { getGiftCatalogItem } from "../gift-studio-catalog";
 import { sendMessage, thread, inbox, clearThread } from "./messages";
 import { GetSocialMeResponse, GetSocialPeopleResponse, GetSocialConversationResponse, GetSocialInboxResponse } from "@workspace/api-zod";
+import { roomStore } from "../room-store";
 
 test("persistent social privacy, messages, credits and atomic rewards", async t => {
   const token = randomUUID().replaceAll("-", "").slice(0, 8);
   const ids = ["a", "b", "c"].map(s => `social-fixture-${token}-${s}`);
   const names = ["a", "b", "c"].map(s => `Social_${token}_${s}`);
+  const roomId = `SOC-${token}`.toUpperCase();
+  const historyId = `social-history-${token}`;
   t.after(async () => {
+    roomStore.deactivateCommunity(roomId);
+    await db.delete(socialGiftEvents).where(eq(socialGiftEvents.historyId, historyId));
     await db.delete(chatAdmissions).where(inArray(chatAdmissions.accountId, ids));
     await db.delete(profilePhotos).where(inArray(profilePhotos.accountId, ids));
     await db.delete(accountProfiles).where(inArray(accountProfiles.accountId, ids));
@@ -24,6 +29,12 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     isTestAccount: i === 2 })));
   await db.insert(chatAdmissions).values(ids.map(accountId => ({ accountId })));
   const a = ids[0]!, b = ids[1]!, c = ids[2]!;
+  roomStore.registerCommunity({ roomId, historyId, label: "Social test room", createdAt: new Date(), testOnly: true });
+  const identity = { emojiId: "1F600", gender: "Male" as const, color: "#ffffff", hairColor: "#000000" };
+  const aSession = roomStore.join(roomId, names[0]!, { accountId: a, identity });
+  const bSession = roomStore.join(roomId, names[1]!, { accountId: b, identity });
+  const aContext = { roomId, sessionId: aSession.participantSessionId };
+  const bContext = { roomId, sessionId: bSession.participantSessionId };
   const prefs = { bio: "A real community member", country: "US", interests: ["music"], discoverable: true, badgeId: null };
 
   await t.test("new community accounts are private until they opt in; filters and profile clears persist", async () => {
@@ -81,7 +92,29 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     assert.equal((await thread(a, names[1]!)).messages.length, 0);
     assert.equal((await thread(b, names[0]!)).messages.length, 1);
   });
-  await t.test("concurrent gifts cannot overdraw; retired badge purchases do not spend credits", async () => {
+  await t.test("legacy direct/private gift attempts cannot move coins, inventory or XP", async () => {
+    const walletsBefore = await db.select().from(socialWallets).where(inArray(socialWallets.accountId, ids));
+    const ledgerBefore = await db.select().from(socialLedger).where(inArray(socialLedger.accountId, ids));
+    const bagBefore = await db.select().from(socialGiftBag).where(inArray(socialGiftBag.accountId, ids));
+    const key = randomUUID();
+    for (const giftId of ["good-vibes", "spirit-pup"]) {
+      for (const testMode of [false, true]) {
+        await assert.rejects(gift(a, names[1]!, giftId, key, undefined, 10, false, testMode),
+          error => error instanceof Error && /Direct\/private-message gifts are disabled/.test(error.message));
+        await assert.rejects(gift(a, names[1]!, giftId, key, undefined, 1, true, testMode), /Direct\/private-message/);
+      }
+    }
+    await assert.rejects(gift(a, names[1]!, "good-vibes", key, { streamId: " " }), /Direct\/private-message/);
+    await assert.rejects(gift(a, names[1]!, "good-vibes", key, { roomId: roomId, sessionId: "invalid" }), /session|room/i);
+    assert.deepEqual(await db.select().from(socialWallets).where(inArray(socialWallets.accountId, ids)), walletsBefore);
+    assert.deepEqual(await db.select().from(socialLedger).where(inArray(socialLedger.accountId, ids)), ledgerBefore);
+    assert.deepEqual(await db.select().from(socialGiftBag).where(inArray(socialGiftBag.accountId, ids)), bagBefore);
+    assert.deepEqual(await db.select().from(socialGiftEvents).where(eq(socialGiftEvents.historyId, historyId)), []);
+    // Message sending still succeeds after a rejected gift request.
+    await sendMessage(a, names[1]!, "Text still works", randomUUID());
+    assert.equal((await thread(b, names[0]!)).messages.some(message => message.body === "Text still works"), true);
+  });
+  await t.test("concurrent room gifts cannot overdraw; retired badge purchases do not spend credits", async () => {
     const giftCost = (await getGiftCatalogItem("good-vibes"))!.cost;
     const [senderWallet] = await db.select().from(socialWallets).where(eq(socialWallets.accountId, a));
     const fixtureFunding = giftCost * 5 - senderWallet!.balance;
@@ -89,7 +122,7 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     if (fixtureFunding) await db.insert(socialLedger).values({
       accountId: a, delta: fixtureFunding, kind: "reward", description: "Isolated concurrent-gift test funding",
     });
-    const results = await Promise.allSettled(Array.from({ length: 8 }, () => gift(a, names[1]!, "good-vibes", randomUUID())));
+    const results = await Promise.allSettled(Array.from({ length: 8 }, () => gift(a, names[1]!, "good-vibes", randomUUID(), aContext)));
     assert.equal(results.filter(r => r.status === "fulfilled").length, 5);
     assert.equal((await getMe(a)).wallet.balance, 0);
     assert.equal((await getMe(b)).wallet.balance, 25 + giftCost * 5);
@@ -107,11 +140,11 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     assert.deepEqual((await getMe(b)).inventory, ["good-vibes"], "a Store purchase adds a collectible, not a sent gift");
     assert.equal((await getMe(b)).giftQuantities?.["good-vibes"], 1);
     const giftKey = randomUUID();
-    await gift(b, names[0]!, "good-vibes", giftKey);
-    await gift(b, names[0]!, "good-vibes", giftKey);
+    await gift(b, names[0]!, "good-vibes", giftKey, bContext);
+    await gift(b, names[0]!, "good-vibes", giftKey, bContext);
     assert.equal((await getMe(a)).wallet.balance, giftCost);
     assert.equal((await getMe(b)).wallet.balance, 25 + giftCost * 4, "sending the gift already in the bag does not charge its price twice");
-    await assert.rejects(gift(b, names[0]!, "big-love", giftKey), /retry key/);
+    await assert.rejects(gift(b, names[0]!, "big-love", giftKey, bContext), /retry key/);
     const [row] = await db.select().from(socialWallets).where(eq(socialWallets.accountId, b));
     assert.equal(row!.received, giftCost * 5);
     assert.equal(row!.sent, giftCost);
@@ -138,11 +171,11 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     assert.equal((await blocks(b)).people[0]!.username, names[0]);
     assert.equal((await listPeople(a, { search: token })).total, 0);
     await assert.rejects(getPerson(a, names[1]!), /blocked/);
-    await assert.rejects(gift(a, names[1]!, "good-vibes", randomUUID()), /blocked/);
+    await assert.rejects(gift(a, names[1]!, "good-vibes", randomUUID(), aContext), /blocked/);
     await assert.rejects(sendMessage(a, names[1]!, "not allowed", randomUUID()), /blocked/);
     await assert.rejects(relationship(a, names[1]!, "favorite", true), /blocked/);
     assert.equal((await thread(b, names[0]!)).blocked, true);
-    assert.equal((await thread(b, names[0]!)).messages.length, 1);
+    assert.equal((await thread(b, names[0]!)).messages.length, 2);
     await relationship(b, names[0]!, "block", false);
     assert.equal((await listPeople(a, { search: token })).total, 1);
   });

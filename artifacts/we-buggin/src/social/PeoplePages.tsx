@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, Redirect, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
-import { Gift, MessageCircle, Search } from 'lucide-react';
+import { MessageCircle, Search } from 'lucide-react';
 import {
   useGetSocialMe, useGetSocialPeople, useGetSocialPerson, useSetSocialRelationship, useGetSocialBlocks,
-  useSaveSocialProfile, SocialProfileInputExternalPlatform, useSendSocialGift, getGetSocialPeopleQueryKey, getGetSocialPersonQueryKey,
+  useSaveSocialProfile, SocialProfileInputExternalPlatform, getGetSocialPeopleQueryKey, getGetSocialPersonQueryKey,
   useUpdateMyEntranceEffectSettings,
   type GetSocialPeopleParams,
   useGetFavoritesGallery, getGetFavoritesGalleryQueryKey, getFavoriteRoom,
 } from '@workspace/api-client-react';
-import { Avatar, BadgeMark, CoinAmount, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, refreshSocial, useIdemKey } from './common';
+import { Avatar, BadgeMark, Empty, ErrorBox, Loading, Msg, PersonCard, errMsg, refreshSocial } from './common';
 import { BackButton, ProfileView, ProfileMenu } from '@/profile/ProfileView';
 import { useProfileBackHref } from '@/profile/QuickProfile';
 import { FavoritesGallery, type FavoriteEntry } from './FavoritesGallery';
@@ -68,9 +68,6 @@ export function PersonPage({ username }: { username: string }) {
   const me = useGetSocialMe();
   const q = useGetSocialPerson(username, { query: { queryKey: getGetSocialPersonQueryKey(username), refetchInterval: 15000 } });
   const rel = useSetSocialRelationship();
-  const gift = useSendSocialGift();
-  const idem = useIdemKey();
-  const [giftId, setGiftId] = useState('');
   const [msg, setMsg] = useState<{ ok: boolean; t: ReactNode } | null>(null);
   useEffect(() => { setMsg(null); }, [username]);
   const p = q.data;
@@ -79,15 +76,6 @@ export function PersonPage({ username }: { username: string }) {
     setMsg(null);
     rel.mutate({ username, data: { kind, active } }, {
       onSuccess: () => { setMsg({ ok: true, t: kind === 'block' ? (active ? 'Blocked.' : 'Unblocked.') : (active ? 'Added to favorites.' : 'Removed from favorites.') }); refreshSocial(qc); },
-      onError: (e) => setMsg({ ok: false, t: errMsg(e) }),
-    });
-  };
-  const send = () => {
-    const g = me.data?.gifts.find((x) => x.id === giftId);
-    if (!g) return;
-    setMsg(null);
-    gift.mutate({ data: { recipient: username, giftId, testMode: me.data?.wallet.unlimited === true, idempotencyKey: idem.get(`${username}:${giftId}`) } }, {
-      onSuccess: () => { idem.clear(); setGiftId(''); setMsg({ ok: true, t: <>Sent {g.name} for <CoinAmount>{g.cost.toLocaleString()} coins</CoinAmount>.</> }); refreshSocial(qc); },
       onError: (e) => setMsg({ ok: false, t: errMsg(e) }),
     });
   };
@@ -107,22 +95,7 @@ export function PersonPage({ username }: { username: string }) {
         </div>
       )}>
       {msg && <Msg ok={msg.ok}>{msg.t}</Msg>}
-      {!own && (p.blocked ? <p className="sc-sub">Blocked in either direction: no new gifts, messages or follows. Past messages stay readable.</p> : (
-        <div className="sc-panel">
-          <h2>Send a gift</h2>
-          <p className="sc-sub">Coins have no cash value. Balance: <CoinAmount>{me.data?.wallet.unlimited ? 'Unlimited test coins' : `${me.data?.wallet.balance.toLocaleString() ?? '...'} coins`}</CoinAmount></p>
-          <div className="sc-gifts" role="radiogroup" aria-label="Gift">
-            {me.data?.gifts.map((g) => (
-              <button key={g.id} type="button" role="radio" aria-checked={giftId === g.id} className={`sc-gift${giftId === g.id ? ' is-on' : ''}`}
-                disabled={gift.isPending || (!me.data?.wallet.unlimited && (me.data?.wallet.balance ?? 0) < g.cost)} onClick={() => setGiftId(g.id)} data-testid={`button-gift-${g.id}`}>
-                <GiftIcon id={g.id} size={26} /><b>{g.name}</b><CoinAmount>{g.cost.toLocaleString()} coins</CoinAmount>
-                </button>
-            ))}
-          </div>
-          <button type="button" className="bm-btn bm-btn-primary" disabled={!giftId || gift.isPending} onClick={send} data-testid="button-send-gift">
-            <Gift size={16} /> {gift.isPending ? 'Sending...' : 'Send gift'}</button>
-        </div>
-      ))}
+      {!own && p.blocked && <p className="sc-sub">Blocked in either direction: no new messages or follows. Past messages stay readable.</p>}
     </ProfileView>
   );
 }

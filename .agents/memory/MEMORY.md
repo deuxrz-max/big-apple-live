@@ -54,3 +54,4 @@
 - [Canceled GCS media requests](gcs-stream-cancellation.md) — keep pending GCS streams alive on browser disconnect; destroying them can crash outside Express.
 - [Android distribution scope](android-distribution.md) — Android testers only; production-hosted wrapper requested, no publishing without separate permission.
 - [Designated test coins](designated-test-coins.md) — explicit owner grants only; test gifts never create real value or touch paid funds, including after revocation.
+- [Gift channel boundaries](gift-channel-boundaries.md) — room/live gifting only; private/direct gifts are prohibited, including from older clients.

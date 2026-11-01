@@ -90,6 +90,14 @@ test("explicit tester grants isolate every test purchase/send from paid money an
     assert.equal(events[0]!.recipientCredits, 0);
     assert.equal(events[0]!.houseCredits, 0);
   });
+  await t.test("designated testers cannot send direct/private gifts either", async () => {
+    const before = await wallets();
+    const receipts = await paidLedger();
+    await assert.rejects(gift(ids[0]!, names[1]!, giftId, randomUUID(), undefined, 99, false, true),
+      /Direct\/private-message gifts are disabled/);
+    assert.deepEqual(await wallets(), before);
+    assert.deepEqual(await paidLedger(), receipts);
+  });
   await t.test("livestream test gifts return an animation without invoking PK scoring", async () => {
     // Service-level stream context, not a real live camera or browser fixture.
     const before = await wallets();

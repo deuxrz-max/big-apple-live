@@ -775,6 +775,8 @@ router.post("/social/gifts", async (req, res): Promise<void> => {
   const input = SendSocialGiftBody.safeParse(req.body);
   if (!input.success) throw new RoomError(400, "Choose a gift, recipient and valid retry key");
   if (input.data.roomId && input.data.streamId) throw new RoomError(400, "Choose either a room or a livestream.");
+  if (!input.data.roomId && !input.data.streamId)
+    throw new RoomError(403, "Gifts are only available from a room or livestream gift panel. Direct/private-message gifts are disabled.");
   const senderId = accountId(req);
   if (input.data.streamId) {
     sameOrigin(req);

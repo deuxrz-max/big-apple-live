@@ -59,6 +59,10 @@ export async function claimDaily(id: string) {
 }
 export async function gift(id: string, recipient: string, giftId: string, key: string,
   context?: { roomId: string; sessionId: string } | { streamId: string }, quantity = 1, useGiftBagOnly = false, expectedTestMode = false) {
+  // Reject before account/catalog lookups, idempotency replay or any financial writes.
+  // This is enforced here too, not just in the UI, so older DM clients cannot send.
+  if (!context || !("roomId" in context ? context.roomId?.trim() : context.streamId?.trim()))
+    throw new RoomError(403, "Gifts are only available from a room or livestream gift panel. Direct/private-message gifts are disabled.");
   const sender = await requireAccount(id);
   const target = await targetAccount(recipient);
   const item = requireSendableGift(
