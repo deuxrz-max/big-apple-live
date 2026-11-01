@@ -210,3 +210,17 @@ mtime_ms = 1793480631918
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/904612dc-cb10-4ac1-8dcd-18a4577a730b/21371627-00ba-4210-9202-3c8ba49bbee7"
 storage_version_token = "1793480653269049"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "ccG8iq-kJey7CMNxQzPqt"
+uri = "file://generated-artifacts/header-logo-match-390x844.jpg"
+type = "image"
+title = "Compact header logo — 390 × 844"
+description = "Signed-out preview after matching the signed-in Home logo sizing and alignment. Current wording and Sign in remain."
+logical_id = "8c8e7476-e3e1-4e6e-a6b9-852866b24a75"
+content_hash = "sha256:148891f9461a54f70e02410595479fe4a5e6ba03972266f996d1334bae129d16"
+size = 48833
+mtime_ms = 1793501660747
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/8c8e7476-e3e1-4e6e-a6b9-852866b24a75/63ac20f0-0237-46a3-9a66-cbe7b3c61180"
+storage_version_token = "1793501678353031"
+content_type = "image/jpeg"

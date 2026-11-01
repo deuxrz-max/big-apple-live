@@ -3,6 +3,12 @@ name: Deux Wild mobile interface direction
 description: Owner-approved app-wide mobile redesign scope and preserved identity and behavior.
 ---
 
+For header apple-logo size and placement, treat the existing signed-in Home header as the approved reference and leave it unchanged when matching other headers. The earlier threefold enlargement request is superseded.
+
+**Why:** The owner explicitly chose “exactly as the signed in one looks.”
+
+**How to apply:** Match other headers to that reference without enlarging the logo threefold or changing the current wording and unrelated page layouts.
+
 Deux Wild should feel like a polished mobile social broadcasting app, not a website. The owner approved an app-wide interface and interaction redesign covering home, rooms, full-screen broadcasts, profiles, chat, gifting, Store and settings. Preserve recognizable deep black and gold, readable content, comfortable touch targets, consistent back navigation and natural sheets. Seek the premium lively quality of LiveMe without copying its branding. Lighting and motion support the interface, not replace it.
 
 **Why:** The owner explicitly clarified “It's the whole app” and “have it look more ... like an app ... than a website.” This supersedes the older room-only styling restriction for this redesign.
