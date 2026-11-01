@@ -76,6 +76,39 @@ import {
 import { inspectGiftMotionModelFile } from "../lib/gift-motion-model-file";
 
 const router: IRouter = Router();
+import { GetCoinTestersResponse, SetCoinTesterBody } from "@workspace/api-zod";
+import { listCoinTesters, setCoinTester } from "../lib/social/coin-testers";
+import { getTestCoinLaunchStatus, prepareTestCoinLaunchReset, confirmTestCoinLaunchReset } from "../lib/social/coin-test-launch";
+import { GetTestCoinLaunchStatusResponse, PrepareTestCoinLaunchResetResponse,
+  ConfirmTestCoinLaunchResetBody, ConfirmTestCoinLaunchResetResponse } from "@workspace/api-zod";
+
+router.get("/social/admin/coin-testers/launch", ownerOnly, async (req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
+  res.json(GetTestCoinLaunchStatusResponse.parse(await getTestCoinLaunchStatus(accountId(req))));
+});
+router.post("/social/admin/coin-testers/launch/preview", ownerOnly, async (req, res): Promise<void> => {
+  sameOrigin(req);
+  res.set("Cache-Control", "no-store");
+  res.json(PrepareTestCoinLaunchResetResponse.parse(await prepareTestCoinLaunchReset(accountId(req))));
+});
+router.post("/social/admin/coin-testers/launch/confirm", ownerOnly, async (req, res): Promise<void> => {
+  sameOrigin(req);
+  const input = ConfirmTestCoinLaunchResetBody.safeParse(req.body);
+  if (!input.success) throw new RoomError(400, "Preview first, confirm testing is ending, and type END FREE TEST COINS.");
+  res.set("Cache-Control", "no-store");
+  res.json(ConfirmTestCoinLaunchResetResponse.parse(await confirmTestCoinLaunchReset(accountId(req), input.data)));
+});
+
+router.get("/social/admin/coin-testers", ownerOnly, async (req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
+  res.json(GetCoinTestersResponse.parse(await listCoinTesters(accountId(req))));
+});
+router.put("/social/admin/coin-testers", ownerOnly, async (req, res): Promise<void> => {
+  sameOrigin(req);
+  const input = SetCoinTesterBody.safeParse(req.body);
+  if (!input.success) throw new RoomError(400, "Enter an exact username and choose enable or revoke.");
+  res.json(GetCoinTestersResponse.parse(await setCoinTester(accountId(req), input.data.username, input.data.enabled)));
+});
 router.get('/gift-media/spirit-pup/v1/:filename', serveGiftMedia);
 router.get('/gift-media/moonfox/v1/:filename', serveMoonfoxGiftMedia);
 router.get('/gift-media/cosmic-encore/v2/:filename', serveCosmicEncoreGiftMedia);
@@ -683,10 +716,11 @@ router.post("/social/entrance-effects/:effectId/purchase", async (req, res): Pro
   const requestId = req.body?.requestId;
   if (!/^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$/i.test(effectId) || typeof requestId !== "string"
     || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId)
-    || Object.keys(req.body ?? {}).some(key => key !== "requestId")) {
+    || (req.body?.testMode !== undefined && typeof req.body.testMode !== "boolean")
+    || Object.keys(req.body ?? {}).some(key => key !== "requestId" && key !== "testMode")) {
     throw new RoomError(400, "Choose a valid entrance effect and try again.");
   }
-  res.json(await purchaseEntranceEffect(accountId(req), effectId, requestId));
+  res.json(await purchaseEntranceEffect(accountId(req), effectId, requestId, req.body.testMode === true));
 });
 router.patch("/social/entrance-effects/equipped", async (req, res): Promise<void> => {
   sameOrigin(req);
@@ -750,7 +784,7 @@ router.post("/social/gifts", async (req, res): Promise<void> => {
       if (!recipient) throw new RoomError(404, "This livestream is no longer available.");
       await requireLiveStreamGiftAccess(senderId, recipient.accountId, input.data.streamId!);
       return gift(senderId, input.data.recipient, input.data.giftId, input.data.idempotencyKey,
-        { streamId: input.data.streamId! }, input.data.quantity ?? 1, input.data.useGiftBagOnly ?? false);
+        { streamId: input.data.streamId! }, input.data.quantity ?? 1, input.data.useGiftBagOnly ?? false, input.data.testMode ?? false);
     });
     if ("liveGiftEvent" in result && result.liveGiftEvent) {
       const senderNameColor = await nameColorProfileForAccount(senderId);
@@ -772,7 +806,7 @@ router.post("/social/gifts", async (req, res): Promise<void> => {
     ? { roomId: input.data.roomId, sessionId: req.get('X-Room-Session') ?? '' }
     : undefined;
   const operation = () => gift(senderId, input.data.recipient, input.data.giftId, input.data.idempotencyKey,
-    context, input.data.quantity ?? 1, input.data.useGiftBagOnly ?? false);
+    context, input.data.quantity ?? 1, input.data.useGiftBagOnly ?? false, input.data.testMode ?? false);
   res.json(context
     ? await serializeGiftSends(`room:${context.roomId.toUpperCase()}`, operation)
     : await operation());
@@ -780,7 +814,7 @@ router.post("/social/gifts", async (req, res): Promise<void> => {
 router.post("/social/store/purchase", async (req, res): Promise<void> => {
   const input = PurchaseSocialProductBody.safeParse(req.body);
   if (!input.success) throw new RoomError(400, "Choose a product and valid retry key");
-  res.json(await purchase(accountId(req), input.data.itemId, input.data.idempotencyKey));
+  res.json(await purchase(accountId(req), input.data.itemId, input.data.idempotencyKey, input.data.testMode ?? false));
 });
 router.get("/social/wallet/transactions", async (req, res): Promise<void> => { res.json(GetSocialLedgerResponse.parse(await ledger(accountId(req)))); });
 router.get("/social/leaderboard", async (req, res): Promise<void> => { res.json(GetSocialPeopleResponse.parse(await listPeople(accountId(req), {}, true))); });

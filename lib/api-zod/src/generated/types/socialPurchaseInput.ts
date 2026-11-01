@@ -7,6 +7,8 @@
  */
 
 export interface SocialPurchaseInput {
+  /** Expected test-coin mode; cannot grant access. */
+  testMode?: boolean;
   itemId: string;
   idempotencyKey: string;
 }

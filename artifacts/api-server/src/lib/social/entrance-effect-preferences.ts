@@ -1,3 +1,4 @@
+import { testerState } from "./coin-testers";
 import { and, eq } from "drizzle-orm";
 import type { EntranceEffectSettingsInput } from "@workspace/api-zod";
 import { accountRoomEntranceEffects, db, socialSettings } from "@workspace/db";
@@ -37,7 +38,8 @@ export async function getMyEntranceEffectSettings(accountId: string) {
   const badgeState = await accountBadgeState(accountId);
   const ownedEffects = await db.select({ effectId: accountRoomEntranceEffects.effectId })
     .from(accountRoomEntranceEffects).where(eq(accountRoomEntranceEffects.accountId, accountId));
-  const hasPurchasedEffects = ownedEffects.some(row => isCatalogEffectId(row.effectId));
+  const hasPurchasedEffects = ownedEffects.some(row => isCatalogEffectId(row.effectId))
+    || !!(await testerState(accountId))?.effectIds.length;
   const displayedBadge = badgeState.equippedBadge;
   return {
     eligible: ownerTest || badgeState.badges.length > 0 || hasPurchasedEffects,
@@ -61,7 +63,8 @@ export async function saveMyEntranceEffectSettings(accountId: string, input: Ent
   const badgeState = await accountBadgeState(accountId);
   const ownedEffects = await db.select({ effectId: accountRoomEntranceEffects.effectId })
     .from(accountRoomEntranceEffects).where(eq(accountRoomEntranceEffects.accountId, accountId));
-  const hasPurchasedEffects = ownedEffects.some(row => isCatalogEffectId(row.effectId));
+  const hasPurchasedEffects = ownedEffects.some(row => isCatalogEffectId(row.effectId))
+    || !!(await testerState(accountId))?.effectIds.length;
 
   if (input.tierEffectId !== undefined && input.tierEffectEnabled === undefined
     || input.tierEffectId === undefined && input.tierEffectEnabled !== undefined) {
@@ -117,7 +120,7 @@ export async function accountEntranceEffectSelection(accountId: string) {
         eq(accountRoomEntranceEffects.effectId, settings.equippedEffectId),
       ))
       .limit(1);
-    if (owned) {
+    if (owned || (await testerState(accountId))?.effectIds.includes(settings.equippedEffectId)) {
       const { media } = await getActiveGiftStudioMedia(settings.equippedEffectId);
       if (media) return {
         effectId: settings.equippedEffectId,

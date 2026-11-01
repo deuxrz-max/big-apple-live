@@ -6,7 +6,8 @@ import { RoomError } from "../room-store";
 import { publicProfile } from "../account-profiles";
 import { DAILY_REWARD } from "./catalog";
 import { visibleProfilePhotos } from "../photo-visibility";
-import { hasDevelopmentUnlimitedCredits } from "./credits-policy";
+import { testerState } from "./coin-testers";
+import { TEST_COIN_LIFECYCLE_LOCK } from "./credits-policy";
 import { nameColorProfileForAccount } from "./gift-name-color-data";
 import type { NameColorTierSummary } from "./gift-name-color";
 import { visibleMonthlyPurchaseBadgeSummary, type VisibleMonthlyBadgeSummary } from "./monthly-credit-badges";
@@ -32,6 +33,9 @@ export async function ensureSocial(id: string, tx: Tx | typeof db = db) {
   await tx.insert(socialWallets).values({ accountId: id }).onConflictDoNothing();
 }
 export async function lockAccounts(tx: Tx, ids: string[]) {
+  // Always acquire lifecycle before wallet locks, including grants and revocation.
+  // This lets a launch reset wait for in-flight test sends without lock inversion.
+  await tx.execute(sql`SELECT pg_advisory_xact_lock_shared(hashtextextended(${TEST_COIN_LIFECYCLE_LOCK}, 0))`);
   for (const id of [...new Set(ids)].sort()) {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${"social-wallet:" + id}, 0))`);
     await ensureSocial(id, tx);
@@ -121,7 +125,7 @@ export async function wallet(id: string, tx: Tx | typeof db = db, username?: str
   const claimed = await hasClaimedDaily(id, row.lastClaimDay, tx);
   return { balance: row.balance, earned: row.earned, received: row.received, sent: row.sent,
     canClaimDaily: !claimed, dailyReward: DAILY_REWARD,
-    unlimited: hasDevelopmentUnlimitedCredits(username) };
+    unlimited: !!await testerState(id, tx) };
 }
 export async function replay(tx: Tx, id: string, key: string, ref: string) {
   const [row] = await tx.select().from(socialLedger).where(and(eq(socialLedger.accountId, id), eq(socialLedger.requestKey, key)));

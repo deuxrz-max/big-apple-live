@@ -47,7 +47,7 @@ export function EntranceEffectsShop() {
       setNotice({ ok: false, text: 'This browser could not create a secure purchase request. Please try again in Chrome.' });
       return;
     }
-    purchase.mutate({ effectId: item.id, data: { requestId } }, {
+    purchase.mutate({ effectId: item.id, data: { requestId, testMode: me.data?.wallet.unlimited === true } }, {
       onSuccess: async () => {
         setNotice({ ok: true, text: `Added ${item.name} to your effects.` });
         await refresh();

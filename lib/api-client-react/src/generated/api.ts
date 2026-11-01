@@ -41,6 +41,8 @@ import type {
   ChatReportReviewInput,
   ChessActionInput,
   ChessRoomState,
+  CoinTesterDesignation,
+  CoinTesterList,
   ComedyVideoActionInput,
   ComedyVideoCatalogResponse,
   ConnectChessAudio200,
@@ -132,6 +134,10 @@ import type {
   SocialPurchaseInput,
   SocialRelationshipInput,
   SocialWallet,
+  TestCoinLaunchConfirmation,
+  TestCoinLaunchPreview,
+  TestCoinLaunchResult,
+  TestCoinLaunchStatus,
   UniversityActionResult,
   UniversityAudioActionInput,
   UniversityAudioSignalInput,
@@ -5781,6 +5787,428 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getEquipMyBadgeMutationOptions(options), queryClient);
+    }
+
+export const getGetTestCoinLaunchStatusUrl = () => {
+
+
+
+
+  return `/api/social/admin/coin-testers/launch`
+}
+
+export const getTestCoinLaunchStatus = async ( options?: Parameters<typeof customFetch>[1]): Promise<TestCoinLaunchStatus> => {
+
+  return customFetch<TestCoinLaunchStatus>(getGetTestCoinLaunchStatusUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTestCoinLaunchStatusQueryKey = () => {
+    return [
+    `/api/social/admin/coin-testers/launch`
+    ] as const;
+    }
+
+
+export const getGetTestCoinLaunchStatusQueryOptions = <TData = Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTestCoinLaunchStatusQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTestCoinLaunchStatus>>> = ({ signal }) => getTestCoinLaunchStatus({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetTestCoinLaunchStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getTestCoinLaunchStatus>>>
+export type GetTestCoinLaunchStatusQueryError = ErrorType<unknown>
+
+
+export function useGetTestCoinLaunchStatus<TData = Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTestCoinLaunchStatus>>,
+          TError,
+          Awaited<ReturnType<typeof getTestCoinLaunchStatus>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTestCoinLaunchStatus<TData = Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTestCoinLaunchStatus>>,
+          TError,
+          Awaited<ReturnType<typeof getTestCoinLaunchStatus>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTestCoinLaunchStatus<TData = Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetTestCoinLaunchStatus<TData = Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetTestCoinLaunchStatusQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPrepareTestCoinLaunchResetUrl = () => {
+
+
+
+
+  return `/api/social/admin/coin-testers/launch/preview`
+}
+
+export const prepareTestCoinLaunchReset = async ( options?: Parameters<typeof customFetch>[1]): Promise<TestCoinLaunchPreview> => {
+
+  return customFetch<TestCoinLaunchPreview>(getPrepareTestCoinLaunchResetUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getPrepareTestCoinLaunchResetMutationKey = () => ['prepareTestCoinLaunchReset'] as const;
+
+export const getPrepareTestCoinLaunchResetMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof prepareTestCoinLaunchReset>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof prepareTestCoinLaunchReset>>, TError,void, TContext> => {
+
+const mutationKey = getPrepareTestCoinLaunchResetMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof prepareTestCoinLaunchReset>>, void> = () => {
+
+
+          return  prepareTestCoinLaunchReset(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PrepareTestCoinLaunchResetMutationResult = NonNullable<Awaited<ReturnType<typeof prepareTestCoinLaunchReset>>>
+
+    export type PrepareTestCoinLaunchResetMutationError = ErrorType<unknown>
+
+
+    export const usePrepareTestCoinLaunchReset = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof prepareTestCoinLaunchReset>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof prepareTestCoinLaunchReset>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getPrepareTestCoinLaunchResetMutationOptions(options), queryClient);
+    }
+
+export const getConfirmTestCoinLaunchResetUrl = () => {
+
+
+
+
+  return `/api/social/admin/coin-testers/launch/confirm`
+}
+
+export const confirmTestCoinLaunchReset = async (testCoinLaunchConfirmation: TestCoinLaunchConfirmation, options?: Parameters<typeof customFetch>[1]): Promise<TestCoinLaunchResult> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<TestCoinLaunchResult>(getConfirmTestCoinLaunchResetUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(testCoinLaunchConfirmation)
+  }
+);}
+
+
+
+
+
+export const getConfirmTestCoinLaunchResetMutationKey = () => ['confirmTestCoinLaunchReset'] as const;
+
+export const getConfirmTestCoinLaunchResetMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmTestCoinLaunchReset>>, TError,ConfirmTestCoinLaunchResetMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof confirmTestCoinLaunchReset>>, TError,ConfirmTestCoinLaunchResetMutationVariables, TContext> => {
+
+const mutationKey = getConfirmTestCoinLaunchResetMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmTestCoinLaunchReset>>, ConfirmTestCoinLaunchResetMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  confirmTestCoinLaunchReset(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConfirmTestCoinLaunchResetMutationResult = NonNullable<Awaited<ReturnType<typeof confirmTestCoinLaunchReset>>>
+    export type ConfirmTestCoinLaunchResetMutationBody = BodyType<TestCoinLaunchConfirmation>
+    export type ConfirmTestCoinLaunchResetMutationError = ErrorType<unknown>
+    export type ConfirmTestCoinLaunchResetMutationVariables = {data: BodyType<TestCoinLaunchConfirmation>}
+
+    export const useConfirmTestCoinLaunchReset = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmTestCoinLaunchReset>>, TError,ConfirmTestCoinLaunchResetMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof confirmTestCoinLaunchReset>>,
+        TError,
+        ConfirmTestCoinLaunchResetMutationVariables,
+        TContext
+      > => {
+      return useMutation(getConfirmTestCoinLaunchResetMutationOptions(options), queryClient);
+    }
+
+export const getGetCoinTestersUrl = () => {
+
+
+
+
+  return `/api/social/admin/coin-testers`
+}
+
+export const getCoinTesters = async ( options?: Parameters<typeof customFetch>[1]): Promise<CoinTesterList> => {
+
+  return customFetch<CoinTesterList>(getGetCoinTestersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCoinTestersQueryKey = () => {
+    return [
+    `/api/social/admin/coin-testers`
+    ] as const;
+    }
+
+
+export const getGetCoinTestersQueryOptions = <TData = Awaited<ReturnType<typeof getCoinTesters>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCoinTesters>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCoinTestersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCoinTesters>>> = ({ signal }) => getCoinTesters({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCoinTesters>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCoinTestersQueryResult = NonNullable<Awaited<ReturnType<typeof getCoinTesters>>>
+export type GetCoinTestersQueryError = ErrorType<unknown>
+
+
+export function useGetCoinTesters<TData = Awaited<ReturnType<typeof getCoinTesters>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCoinTesters>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCoinTesters>>,
+          TError,
+          Awaited<ReturnType<typeof getCoinTesters>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCoinTesters<TData = Awaited<ReturnType<typeof getCoinTesters>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCoinTesters>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCoinTesters>>,
+          TError,
+          Awaited<ReturnType<typeof getCoinTesters>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCoinTesters<TData = Awaited<ReturnType<typeof getCoinTesters>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCoinTesters>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetCoinTesters<TData = Awaited<ReturnType<typeof getCoinTesters>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCoinTesters>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCoinTestersQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSetCoinTesterUrl = () => {
+
+
+
+
+  return `/api/social/admin/coin-testers`
+}
+
+export const setCoinTester = async (coinTesterDesignation: CoinTesterDesignation, options?: Parameters<typeof customFetch>[1]): Promise<CoinTesterList> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<CoinTesterList>(getSetCoinTesterUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(coinTesterDesignation)
+  }
+);}
+
+
+
+
+
+export const getSetCoinTesterMutationKey = () => ['setCoinTester'] as const;
+
+export const getSetCoinTesterMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setCoinTester>>, TError,SetCoinTesterMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setCoinTester>>, TError,SetCoinTesterMutationVariables, TContext> => {
+
+const mutationKey = getSetCoinTesterMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setCoinTester>>, SetCoinTesterMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  setCoinTester(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetCoinTesterMutationResult = NonNullable<Awaited<ReturnType<typeof setCoinTester>>>
+    export type SetCoinTesterMutationBody = BodyType<CoinTesterDesignation>
+    export type SetCoinTesterMutationError = ErrorType<unknown>
+    export type SetCoinTesterMutationVariables = {data: BodyType<CoinTesterDesignation>}
+
+    export const useSetCoinTester = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setCoinTester>>, TError,SetCoinTesterMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setCoinTester>>,
+        TError,
+        SetCoinTesterMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetCoinTesterMutationOptions(options), queryClient);
     }
 
 export const getGetGiftStudioLibraryUrl = () => {

@@ -86,7 +86,7 @@ export function PersonPage({ username }: { username: string }) {
     const g = me.data?.gifts.find((x) => x.id === giftId);
     if (!g) return;
     setMsg(null);
-    gift.mutate({ data: { recipient: username, giftId, idempotencyKey: idem.get(`${username}:${giftId}`) } }, {
+    gift.mutate({ data: { recipient: username, giftId, testMode: me.data?.wallet.unlimited === true, idempotencyKey: idem.get(`${username}:${giftId}`) } }, {
       onSuccess: () => { idem.clear(); setGiftId(''); setMsg({ ok: true, t: <>Sent {g.name} for <CoinAmount>{g.cost.toLocaleString()} coins</CoinAmount>.</> }); refreshSocial(qc); },
       onError: (e) => setMsg({ ok: false, t: errMsg(e) }),
     });

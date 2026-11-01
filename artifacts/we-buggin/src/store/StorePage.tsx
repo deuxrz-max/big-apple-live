@@ -95,7 +95,7 @@ export function StorePage() {
 
   const buyEffect = (effectId: SocialGiftCatalogId) => {
     setMessage(null);
-    purchase.mutate({ effectId, data: { requestId: requestId() } }, {
+    purchase.mutate({ effectId, data: { requestId: requestId(), testMode: me.data?.wallet.unlimited === true } }, {
       onSuccess: () => {
         setMessage({ ok: true, text: 'Entrance effect added to your collection.' });
         setSelected(null);
@@ -108,7 +108,7 @@ export function StorePage() {
 
   const buyGift = (giftId: string, name: string) => {
     setMessage(null);
-    giftPurchase.mutate({ data: { itemId: giftId, idempotencyKey: requestId() } }, {
+    giftPurchase.mutate({ data: { itemId: giftId, idempotencyKey: requestId(), testMode: me.data?.wallet.unlimited === true } }, {
       onSuccess: () => {
         setMessage({ ok: true, text: `${name} was added to your bag. If unsent, it expires 7 days after purchase.` });
         setSelected(null);
@@ -216,7 +216,7 @@ export function StorePage() {
       <div className="st-store-shell">
         <header className="st-header">
           <Link href="/user-portal" className="st-header-back" aria-label="Back to profile" data-testid="link-store-profile"><ArrowLeft size={20} /></Link>
-          <h1>Store<small className="dw-store-balance-inline" data-testid="text-store-header-balance">{wallet ? (wallet.unlimited ? 'Unlimited coins' : `${formatCredits(wallet.balance)} coins`) : ''}</small></h1>
+          <h1>Store<small className="dw-store-balance-inline" data-testid="text-store-header-balance">{wallet ? (wallet.unlimited ? 'Unlimited test coins' : `${formatCredits(wallet.balance)} coins`) : ''}</small></h1>
           <button type="button" className={`st-header-items${inventory ? ' is-active' : ''}`} onClick={() => { setInventory(!inventory); setListing(null); setSelected(null); }} data-testid="button-my-items">
             <ShoppingBag size={16} /><span>My items</span>
           </button>

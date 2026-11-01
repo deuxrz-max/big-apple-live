@@ -1,13 +1,14 @@
 import { and, eq, sql } from "drizzle-orm";
 import {
-  accountRoomEntranceEffects, db, giftStudioAssets, socialLedger, socialSettings, socialWallets,
+  accountRoomEntranceEffects, coinTesters, db, giftStudioAssets, socialLedger, socialSettings, socialWallets,
 } from "@workspace/db";
 import { RoomError } from "../room-store";
 import { requireAdult } from "../community";
 import { getActiveGiftStudioMedia } from "../gift-studio";
 import { getGiftCatalogItem, listGiftCatalogForOwner } from "../gift-studio-catalog";
-import { hasDevelopmentUnlimitedCredits, planCreditSpend } from "./credits-policy";
-import { ensureSocial, lockAccounts, replay, requireAccount, wallet } from "./core";
+import { planCreditSpend } from "./credits-policy";
+import { testerState, replayTestAction, recordTestAction, assertCoinMode } from "./coin-testers";
+import { ensureSocial, lockAccounts, requireAccount, wallet } from "./core";
 
 const catalogEffectId = /^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$/i;
 
@@ -23,6 +24,7 @@ export async function listEntranceEffectShop(accountId: string) {
       .from(socialSettings).where(eq(socialSettings.accountId, accountId)).limit(1),
   ]);
   const owned = new Set(ownedRows.map((row) => row.effectId));
+  for (const effectId of (await testerState(accountId))?.effectIds ?? []) owned.add(effectId);
   const products = catalog.filter((item) =>
     (item.productType === "entrance-effect" && item.status === "active") || owned.has(item.id),
   );
@@ -46,7 +48,7 @@ export async function listEntranceEffectShop(accountId: string) {
   return { items };
 }
 
-export async function purchaseEntranceEffect(accountId: string, effectId: string, requestId: string) {
+export async function purchaseEntranceEffect(accountId: string, effectId: string, requestId: string, expectedTestMode = false) {
   if (!catalogEffectId.test(effectId)) throw new RoomError(400, "Choose a valid entrance effect.");
   const buyer = await requireAccount(accountId);
   await requireAdult(accountId);
@@ -57,7 +59,7 @@ export async function purchaseEntranceEffect(accountId: string, effectId: string
   const result = await db.transaction(async (tx) => {
     await lockAccounts(tx, [accountId]);
     const reference = `entrance-effect:${effectId}`;
-    if (await replay(tx, accountId, requestId, reference)) {
+    if (await replayTestAction(tx, accountId, requestId, reference)) {
       return { purchased: false, wallet: await wallet(accountId, tx, buyer.username) };
     }
     const [owned] = await tx.select({ effectId: accountRoomEntranceEffects.effectId })
@@ -66,8 +68,16 @@ export async function purchaseEntranceEffect(accountId: string, effectId: string
       .limit(1);
     if (owned) return { purchased: false, wallet: await wallet(accountId, tx, buyer.username) };
 
+    const tester = await testerState(accountId, tx);
+    assertCoinMode(!!tester, expectedTestMode);
+    if (tester) {
+      await tx.update(coinTesters).set({ effectIds: [...new Set([...tester.effectIds, effectId])] })
+        .where(eq(coinTesters.accountId, accountId));
+      await recordTestAction(tx, accountId, requestId, reference);
+      return { purchased: true, wallet: await wallet(accountId, tx, buyer.username) };
+    }
     const current = await wallet(accountId, tx, buyer.username);
-    const unlimited = hasDevelopmentUnlimitedCredits(buyer.username);
+    const unlimited = false;
     const spend = planCreditSpend(current.balance, item.cost, unlimited);
     if (!spend.allowed) throw new RoomError(409, "You need more coins to buy this entrance effect.");
     if (spend.debit > 0) {
@@ -98,7 +108,8 @@ export async function equipEntranceEffect(accountId: string, effectId: string | 
       .from(accountRoomEntranceEffects)
       .where(and(eq(accountRoomEntranceEffects.accountId, accountId), eq(accountRoomEntranceEffects.effectId, effectId)))
       .limit(1);
-    if (!owned) throw new RoomError(403, "Buy this entrance effect before equipping it.");
+    if (!owned && !(await testerState(accountId))?.effectIds.includes(effectId))
+      throw new RoomError(403, "Buy this entrance effect before equipping it.");
     const item = await getGiftCatalogItem(effectId);
     if (!item || !item.animationAvailable) throw new RoomError(404, "This effect has no active animation right now.");
     if (effectId.startsWith("studio-")) {
@@ -112,6 +123,12 @@ export async function equipEntranceEffect(accountId: string, effectId: string | 
   await ensureSocial(accountId);
   await db.transaction(async (tx) => {
     await lockAccounts(tx, [accountId]);
+    if (effectId !== null) {
+      const [paid] = await tx.select().from(accountRoomEntranceEffects).where(and(
+        eq(accountRoomEntranceEffects.accountId, accountId), eq(accountRoomEntranceEffects.effectId, effectId)));
+      if (!paid && !(await testerState(accountId, tx))?.effectIds.includes(effectId))
+        throw new RoomError(403, "Your test access changed. Refresh before equipping this effect.");
+    }
     await tx.update(socialSettings).set({
       equippedEntranceEffectId: effectId,
       updatedAt: new Date(),

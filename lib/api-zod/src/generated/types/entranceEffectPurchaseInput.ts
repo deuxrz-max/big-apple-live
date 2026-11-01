@@ -8,4 +8,6 @@
 
 export interface EntranceEffectPurchaseInput {
   requestId: string;
+  /** Expected test-coin mode; server rejects stale designation. */
+  testMode?: boolean;
 }

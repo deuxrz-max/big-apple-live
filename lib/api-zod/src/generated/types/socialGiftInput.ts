@@ -7,6 +7,8 @@
  */
 
 export interface SocialGiftInput {
+  /** Expected test-coin mode; cannot grant access. */
+  testMode?: boolean;
   recipient: string;
   giftId: string;
   roomId?: string;

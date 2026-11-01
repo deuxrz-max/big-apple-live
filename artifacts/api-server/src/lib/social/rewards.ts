@@ -1,12 +1,13 @@
-import { db, socialWallets, socialLedger, socialGiftEvents } from "@workspace/db";
+import { db, socialWallets, socialLedger, socialGiftEvents, coinTesters } from "@workspace/db";
 import { desc, eq, sql } from "drizzle-orm";
 import { RoomError, roomStore } from "../room-store";
 import { DAILY_REWARD } from "./catalog";
-import { assertContact, hasClaimedDaily, lockAccounts, lockPair, replay, requireAccount, targetAccount, wallet } from "./core";
+import { assertContact, hasClaimedDaily, lockAccounts, lockPair, requireAccount, targetAccount, wallet } from "./core";
 import { SPIRIT_PUP, spiritSplit } from './spirit-pup-policy';
 import { validateGiftRoom } from './room-gifts';
 import { requireAdult } from '../community';
-import { hasDevelopmentUnlimitedCredits, planCreditSpend } from "./credits-policy";
+import { planCreditSpend } from "./credits-policy";
+import { testerState, replayTestAction, recordTestAction, consumeTestBag, assertCoinMode } from "./coin-testers";
 import { addGiftBagLot, consumeGiftBagItems, ensureGiftBagLots, expirePurchasedGiftLots } from "./gift-bag-inventory";
 import { liveStreamIdForAccount, isLiveStreamActiveOrStarting } from "../live-stream-policy";
 import { getSendableGiftCatalogItem } from "../gift-studio-catalog";
@@ -57,7 +58,7 @@ export async function claimDaily(id: string) {
   return result;
 }
 export async function gift(id: string, recipient: string, giftId: string, key: string,
-  context?: { roomId: string; sessionId: string } | { streamId: string }, quantity = 1, useGiftBagOnly = false) {
+  context?: { roomId: string; sessionId: string } | { streamId: string }, quantity = 1, useGiftBagOnly = false, expectedTestMode = false) {
   const sender = await requireAccount(id);
   const target = await targetAccount(recipient);
   const item = requireSendableGift(
@@ -88,21 +89,25 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
     await lockAccounts(tx, [id, target.accountId]);
     const boundHistory = roomContext ? roomStore.getHistoryId(roomContext.roomId.toUpperCase()) : null;
     const ref = `gift:${giftId}:${target.accountId}${boundHistory ? ':' + boundHistory : streamContext ? ':live:' + streamContext.streamId : ''}`;
-    if (await replay(tx, id, key, ref)) return { wallet: await wallet(id, tx, sender.username), liveGiftEvent: null };
+    if (await replayTestAction(tx, id, key, ref)) return { wallet: await wallet(id, tx, sender.username), liveGiftEvent: null };
     await assertGiftingAccess(id, item, tx);
     const historyId = roomContext
       ? validateGiftRoom(roomContext.roomId.toUpperCase(), roomContext.sessionId, id, target.accountId)
       : null;
     if (roomContext && historyId !== boundHistory) throw new RoomError(409, 'This room changed. Re-enter before sending.');
     const now = new Date();
-    const held = await consumeGiftBagItems(tx, id, item.id, quantity, now);
-    if (useGiftBagOnly && held !== quantity) throw new RoomError(409, "That stored gift is no longer available in your bag.");
+    const testing = !!await testerState(id, tx);
+    assertCoinMode(testing, expectedTestMode);
+    if (testing) await consumeTestBag(tx, id, item.id, quantity, useGiftBagOnly);
+    const held = testing ? 0 : await consumeGiftBagItems(tx, id, item.id, quantity, now);
+    if (!testing && useGiftBagOnly && held !== quantity) throw new RoomError(409, "That stored gift is no longer available in your bag.");
     const billableCost = totalCost - held * item.cost;
     const current = await wallet(id, tx, sender.username);
-    const unlimited = hasDevelopmentUnlimitedCredits(sender.username);
+    const unlimited = testing;
     const spend = planCreditSpend(current.balance, billableCost, unlimited);
     if (!spend.allowed) throw new RoomError(409, roomGift ? "Not enough coins. Open the coin store to get more." : "Not enough coins. Claim a daily coin reward first.");
-    const recipientCredits = roomGift ? spiritSplit(totalCost).recipientCredits : totalCost;
+    const recipientCredits = testing ? 0 : roomGift ? spiritSplit(totalCost).recipientCredits : totalCost;
+    if (!testing) {
     if (spend.debit > 0) {
       await tx.update(socialWallets).set({ balance: sql`${socialWallets.balance} - ${spend.debit}`, sent: sql`${socialWallets.sent} + ${totalCost}` }).where(eq(socialWallets.accountId, id));
     } else {
@@ -113,6 +118,9 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
       { accountId: id, delta: -giftLedgerDebit(spend.debit, totalCost, unlimited), kind: "gift_sent", xpUnits: totalCost, description: `${item.name}${quantity > 1 ? ` ×${quantity}` : ""} sent to ${target.username}${unlimited ? " (development unlimited coins)" : ""}`, peer: target.username, requestKey: key, refKey: ref },
       { accountId: target.accountId, delta: recipientCredits, kind: "gift_received", description: `${item.name}${quantity > 1 ? ` ×${quantity}` : ""} from ${sender.username}`, peer: sender.username },
     ]);
+    } else {
+      await recordTestAction(tx, id, key, ref);
+    }
     let liveGiftEvent: {
       streamId: string; senderAccountId: string; senderUsername: string; senderName: string;
       recipientUsername: string; recipientName: string; giftId: string; giftName: string; cost: number; quantity: number;
@@ -122,22 +130,22 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
         historyId: historyId!, senderId: id, recipientId: target.accountId,
         senderUsername: sender.username, recipientUsername: target.username,
         senderName: sender.displayName ?? sender.username, recipientName: target.displayName ?? target.username,
-        giftId: item.id, cost: totalCost, quantity, recipientCredits, houseCredits: totalCost - recipientCredits,
+        giftId: item.id, testMode: testing, cost: testing ? 0 : totalCost, quantity, recipientCredits, houseCredits: testing ? 0 : totalCost - recipientCredits,
       });
     }
-    if (roomGift && roomContext) {
+    if (!testing && roomGift && roomContext) {
       await addGiftBagLot(tx, target.accountId, item.id, quantity, "received", now);
     }
     if (streamContext) {
-      if (roomGift) {
+      if (!testing && roomGift) {
         await addGiftBagLot(tx, target.accountId, item.id, quantity, "received", now);
       }
       liveGiftEvent = {
         streamId: streamContext.streamId, senderAccountId: id, senderUsername: sender.username,
         senderName: sender.displayName ?? sender.username, recipientUsername: target.username,
-        recipientName: target.displayName ?? target.username, giftId: item.id, giftName: item.name, cost: totalCost, quantity,
+        recipientName: target.displayName ?? target.username, giftId: item.id, giftName: testing ? `${item.name} · Test gift` : item.name, cost: testing ? 0 : totalCost, quantity,
       };
-      await recordPkGiftInTransaction(tx, {
+      if (!testing) await recordPkGiftInTransaction(tx, {
         senderAccountId: id, recipientAccountId: target.accountId,
         giftId: item.id, giftName: item.name, coins: totalCost, createdAt: now,
       });
@@ -148,7 +156,7 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
   roomStore.updateAccountNameColor(id, progress.color, progress.tierIndex);
   return streamContext ? { ...result.wallet, liveGiftEvent: result.liveGiftEvent } : result.wallet;
 }
-export async function purchase(id: string, itemId: string, key: string) {
+export async function purchase(id: string, itemId: string, key: string, expectedTestMode = false) {
   const buyer = await requireAccount(id);
   await requireAdult(id);
   const item = await getSendableGiftCatalogItem(itemId);
@@ -158,14 +166,23 @@ export async function purchase(id: string, itemId: string, key: string) {
   const ref = `store-gift:${item.id}`;
   return db.transaction(async tx => {
     await lockAccounts(tx, [id]);
-    if (await replay(tx, id, key, ref)) return wallet(id, tx, buyer.username);
+    if (await replayTestAction(tx, id, key, ref)) return wallet(id, tx, buyer.username);
     await assertGiftingAccess(id, item, tx);
     const purchasedAt = new Date();
+    const tester = await testerState(id, tx);
+    assertCoinMode(!!tester, expectedTestMode);
+    if (tester) {
+      await tx.update(coinTesters).set({ bag: [...tester.bag.filter(lot => new Date(lot.expiresAt) > purchasedAt),
+        { giftId: item.id, quantity: 1, expiresAt: new Date(purchasedAt.getTime() + 7 * 86400000).toISOString() }] })
+        .where(eq(coinTesters.accountId, id));
+      await recordTestAction(tx, id, key, ref);
+      return wallet(id, tx, buyer.username);
+    }
     await ensureGiftBagLots(tx, id);
     await expirePurchasedGiftLots(tx, id, purchasedAt);
     const [current] = await tx.select().from(socialWallets).where(eq(socialWallets.accountId, id));
     if (!current) throw new RoomError(409, "Open Rewards to initialize your wallet");
-    const unlimited = hasDevelopmentUnlimitedCredits(buyer.username);
+    const unlimited = false;
     const spend = planCreditSpend(current.balance, item.cost, unlimited);
     if (!spend.allowed) throw new RoomError(409, `You need ${item.cost} coins to add ${item.name} to your collection.`);
     if (spend.debit > 0) {

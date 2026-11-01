@@ -2348,7 +2348,8 @@ export const PurchaseEntranceEffectParams = zod.object({
 })
 
 export const PurchaseEntranceEffectBody = zod.object({
-  "requestId": zod.uuid()
+  "requestId": zod.uuid(),
+  "testMode": zod.boolean().optional().describe('Expected test-coin mode; server rejects stale designation.')
 })
 
 export const purchaseEntranceEffectResponseEffectIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
@@ -2390,6 +2391,83 @@ export const EquipMyBadgeBody = zod.object({
 
 export const EquipMyBadgeResponse = zod.object({
   "equippedBadgeId": zod.string().nullable()
+})
+
+
+export const getTestCoinLaunchStatusResponseActiveTestersMin = 0;
+
+export const getTestCoinLaunchStatusResponseTestGiftQuantityMin = 0;
+
+export const getTestCoinLaunchStatusResponseTestEffectsMin = 0;
+
+
+
+export const GetTestCoinLaunchStatusResponse = zod.object({
+  "closedAt": zod.coerce.date().nullable(),
+  "activeTesters": zod.int().min(getTestCoinLaunchStatusResponseActiveTestersMin),
+  "testGiftQuantity": zod.int().min(getTestCoinLaunchStatusResponseTestGiftQuantityMin),
+  "testEffects": zod.int().min(getTestCoinLaunchStatusResponseTestEffectsMin),
+  "freeTestCoinBalanceAfterReset": zod.literal(0),
+  "realWalletsPreserved": zod.literal(true),
+  "levelsAndXpPreserved": zod.literal(true)
+})
+
+
+export const prepareTestCoinLaunchResetResponseOneActiveTestersMin = 0;
+
+export const prepareTestCoinLaunchResetResponseOneTestGiftQuantityMin = 0;
+
+export const prepareTestCoinLaunchResetResponseOneTestEffectsMin = 0;
+
+
+
+export const PrepareTestCoinLaunchResetResponse = zod.object({
+  "closedAt": zod.coerce.date().nullable(),
+  "activeTesters": zod.int().min(prepareTestCoinLaunchResetResponseOneActiveTestersMin),
+  "testGiftQuantity": zod.int().min(prepareTestCoinLaunchResetResponseOneTestGiftQuantityMin),
+  "testEffects": zod.int().min(prepareTestCoinLaunchResetResponseOneTestEffectsMin),
+  "freeTestCoinBalanceAfterReset": zod.literal(0),
+  "realWalletsPreserved": zod.literal(true),
+  "levelsAndXpPreserved": zod.literal(true)
+}).and(zod.object({
+  "planId": zod.uuid(),
+  "expiresAt": zod.coerce.date()
+}))
+
+
+export const ConfirmTestCoinLaunchResetBody = zod.object({
+  "planId": zod.uuid(),
+  "confirmation": zod.enum(['END FREE TEST COINS']),
+  "endingTesting": zod.literal(true)
+})
+
+export const ConfirmTestCoinLaunchResetResponse = zod.object({
+  "closedAt": zod.coerce.date(),
+  "alreadyCompleted": zod.boolean()
+})
+
+
+export const GetCoinTestersResponse = zod.object({
+  "testers": zod.array(zod.object({
+  "username": zod.string(),
+  "enabled": zod.boolean()
+}))
+})
+
+
+export const setCoinTesterBodyUsernameRegExp = new RegExp('^[A-Za-z0-9_]{3,24}$');
+
+
+export const SetCoinTesterBody = zod.object({
+  "username": zod.string().regex(setCoinTesterBodyUsernameRegExp),
+  "enabled": zod.boolean()
+})
+
+export const SetCoinTesterResponse = zod.object({
+  "testers": zod.array(zod.object({
+  "username": zod.string(),
+  "enabled": zod.boolean()
+}))
 })
 
 
@@ -3488,6 +3566,7 @@ export const sendSocialGiftBodyQuantityMax = 1314;
 
 
 export const SendSocialGiftBody = zod.object({
+  "testMode": zod.boolean().optional().describe('Expected test-coin mode; cannot grant access.'),
   "recipient": zod.string(),
   "giftId": zod.string(),
   "roomId": zod.string().optional(),
@@ -3577,6 +3656,7 @@ export const GetRoomGiftEventsResponse = zod.object({
 
 
 export const PurchaseSocialProductBody = zod.object({
+  "testMode": zod.boolean().optional().describe('Expected test-coin mode; cannot grant access.'),
   "itemId": zod.string(),
   "idempotencyKey": zod.uuid()
 })

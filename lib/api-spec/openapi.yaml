@@ -955,6 +955,72 @@ paths:
     $ref: './social.openapi.json#/paths/~1social~1entrance-effects~1equipped'
   /social/me/equipped-badge:
     $ref: './social.openapi.json#/paths/~1social~1me~1equipped-badge'
+  /social/admin/coin-testers/launch:
+    get:
+      operationId: getTestCoinLaunchStatus
+      tags: [social]
+      responses:
+        '200':
+          description: Read-only launch retirement status. Never executes a reset.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestCoinLaunchStatus'
+  /social/admin/coin-testers/launch/preview:
+    post:
+      operationId: prepareTestCoinLaunchReset
+      tags: [social]
+      responses:
+        '200':
+          description: Short-lived owner-bound preview; does not clear test coins.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestCoinLaunchPreview'
+  /social/admin/coin-testers/launch/confirm:
+    post:
+      operationId: confirmTestCoinLaunchReset
+      tags: [social]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TestCoinLaunchConfirmation'
+      responses:
+        '200':
+          description: Explicitly confirmed retirement, with paid wallets preserved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestCoinLaunchResult'
+  /social/admin/coin-testers:
+    get:
+      operationId: getCoinTesters
+      tags: [social]
+      responses:
+        '200':
+          description: Owner-only designated coin testers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoinTesterList'
+    put:
+      operationId: setCoinTester
+      tags: [social]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoinTesterDesignation'
+      responses:
+        '200':
+          description: Updated owner-only tester list.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoinTesterList'
   /social/admin/gift-studio/library:
     $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1library'
   /social/admin/content-sync:
@@ -1631,6 +1697,63 @@ components:
         type: string
         pattern: "^[a-f0-9]{32}$"
   schemas:
+    TestCoinLaunchStatus:
+      type: object
+      required: [closedAt, activeTesters, testGiftQuantity, testEffects, freeTestCoinBalanceAfterReset, realWalletsPreserved, levelsAndXpPreserved]
+      properties:
+        closedAt: { type: [string, 'null'], format: date-time }
+        activeTesters: { type: integer, minimum: 0 }
+        testGiftQuantity: { type: integer, minimum: 0 }
+        testEffects: { type: integer, minimum: 0 }
+        freeTestCoinBalanceAfterReset: { type: integer, enum: [0] }
+        realWalletsPreserved: { type: boolean, enum: [true] }
+        levelsAndXpPreserved: { type: boolean, enum: [true] }
+    TestCoinLaunchPreview:
+      allOf:
+        - $ref: '#/components/schemas/TestCoinLaunchStatus'
+        - type: object
+          required: [planId, expiresAt]
+          properties:
+            planId: { type: string, format: uuid }
+            expiresAt: { type: string, format: date-time }
+    TestCoinLaunchConfirmation:
+      type: object
+      additionalProperties: false
+      required: [planId, confirmation, endingTesting]
+      properties:
+        planId: { type: string, format: uuid }
+        confirmation: { type: string, enum: [END FREE TEST COINS] }
+        endingTesting: { type: boolean, enum: [true] }
+    TestCoinLaunchResult:
+      type: object
+      required: [closedAt, alreadyCompleted]
+      properties:
+        closedAt: { type: string, format: date-time }
+        alreadyCompleted: { type: boolean }
+    CoinTesterDesignation:
+      type: object
+      additionalProperties: false
+      required: [username, enabled]
+      properties:
+        username:
+          type: string
+          pattern: '^[A-Za-z0-9_]{3,24}$'
+        enabled:
+          type: boolean
+    CoinTesterList:
+      type: object
+      required: [testers]
+      properties:
+        testers:
+          type: array
+          items:
+            type: object
+            required: [username, enabled]
+            properties:
+              username:
+                type: string
+              enabled:
+                type: boolean
     PinkCardWinner:
       type: object
       required: [id, name, prizeName, drawnAt]

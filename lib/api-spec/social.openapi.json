@@ -1497,7 +1497,7 @@
         "type": "object",
         "additionalProperties": false,
         "required": ["requestId"],
-        "properties": {"requestId": {"type": "string", "format": "uuid"}}
+        "properties": {"requestId": {"type": "string", "format": "uuid"}, "testMode": {"type": "boolean", "description": "Expected test-coin mode; server rejects stale designation."}}
       },
       "EntranceEffectPurchaseResponse": {
         "type": "object",
@@ -2307,6 +2307,7 @@
       "SocialGiftInput": {
         "type": "object",
         "properties": {
+          "testMode": {"type": "boolean", "description": "Expected test-coin mode; cannot grant access."},
           "recipient": {
             "type": "string"
           },
@@ -2335,6 +2336,7 @@
       "SocialPurchaseInput": {
         "type": "object",
         "properties": {
+          "testMode": {"type": "boolean", "description": "Expected test-coin mode; cannot grant access."},
           "itemId": {
             "type": "string"
           },

@@ -16,6 +16,7 @@ import { InboxPage } from './InboxPage';
 import { LeaderboardPage, RewardsPage, ThreadPage } from './MoneyPages';
 import { SafetyReportsPage } from '@/safety/SafetyReportsPage';
 import { GiftStudioPage } from '@/gift-studio/GiftStudioPage';
+import { CoinTestersPanel } from './CoinTestersPanel';
 import { ActionMenu } from '@/components/app-chrome';
 import { ChessRoute } from '@/chess/ChessRoom';
 
@@ -76,6 +77,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
               ))}
               {access.data?.moderator && <Link href="/community/moderation" onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}><Ban size={17} aria-hidden="true" /><span>Moderation</span></Link>}
               {access.data?.owner && <Link href="/community/reports" onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}><Flag size={17} aria-hidden="true" /><span>Safety reports</span></Link>}
+              {access.data?.owner && <Link href="/community/coin-testers" onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}><span>Coin testers</span></Link>}
           </ActionMenu>
         </div>
       </nav>}
@@ -97,6 +99,9 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
             <div className="sc-empty"><h2>Claim your name first</h2><p>Community needs your account identity.</p><Link href="/user-portal" className="bm-btn bm-btn-primary">Set up profile</Link></div>
           ) : me.isError ? <ErrorBox error={me.error} retry={() => me.refetch()} /> : (
             <Switch>
+              <Route path="/community/coin-testers">{() => access.data?.owner
+                ? <CoinTestersPanel />
+                : <div className="sc-empty"><h2>Owner access required</h2><Link href="/community/profile" className="bm-btn">Back to Me</Link></div>}</Route>
               <Route path="/community" component={CommunityPage} />
               <Route path="/community/people/:username" component={PersonRoute} />
               <Route path="/community/bots/:botId" component={BotRoute} />

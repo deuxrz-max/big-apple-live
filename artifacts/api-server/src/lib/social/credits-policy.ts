@@ -1,12 +1,5 @@
-export const DEVELOPMENT_UNLIMITED_CREDITS_USERNAME = "Vampsquad";
-
-export function hasDevelopmentUnlimitedCredits(
-  username: string | null | undefined,
-  nodeEnv: string | undefined = process.env.NODE_ENV,
-): boolean {
-  return nodeEnv === "development"
-    && username?.toLocaleLowerCase("en-US") === DEVELOPMENT_UNLIMITED_CREDITS_USERNAME.toLocaleLowerCase("en-US");
-}
+/** Shared for ordinary wallet actions, exclusive only during explicit launch reset. */
+export const TEST_COIN_LIFECYCLE_LOCK = "coin-test-lifecycle";
 
 export function planCreditSpend(balance: number, cost: number, unlimited: boolean) {
   return {

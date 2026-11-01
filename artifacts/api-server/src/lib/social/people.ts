@@ -13,6 +13,7 @@ import { hasOwnerTierTestAccess } from "./owner-entrance-effects-policy";
 import { getHangoutStreakSummary } from "../community-hangout-rewards";
 import { realGiftingLevel } from "./gifting-access";
 import { expirePurchasedGiftLots } from "./gift-bag-inventory";
+import { testerState } from "./coin-testers";
 
 export async function getMe(id: string) {
   const profile = await requireAccount(id);
@@ -32,7 +33,9 @@ export async function getMe(id: string) {
   }).from(socialGiftBagLots).where(and(eq(socialGiftBagLots.accountId, id),
     or(isNull(socialGiftBagLots.expiresAt), gt(socialGiftBagLots.expiresAt, now))))
     .orderBy(socialGiftBagLots.giftId, socialGiftBagLots.expiresAt);
-  const giftBag = giftBagLots.map(lot => ({ ...lot, expiresAt: lot.expiresAt?.toISOString() ?? null }));
+  const tester = await testerState(id);
+  const testLots = tester?.bag.filter(lot => new Date(lot.expiresAt) > now);
+  const giftBag = testLots ?? giftBagLots.map(lot => ({ ...lot, expiresAt: lot.expiresAt?.toISOString() ?? null }));
   const [[streak], giftsOwned, badgeState, badges] = await Promise.all([
     db.select().from(socialLoginStreaks).where(eq(socialLoginStreaks.accountId, id)),
     db.select().from(socialGiftBag).where(eq(socialGiftBag.accountId, id)),
@@ -45,6 +48,11 @@ export async function getMe(id: string) {
     getHangoutStreakSummary(id),
   ]);
   const [nameColor, gifterAccessLevel] = await Promise.all([nameColorProfileForAccount(id), realGiftingLevel(id)]);
+  const quantities = tester
+    ? (testLots ?? []).reduce<Record<string, number>>((all, lot) => {
+      all[lot.giftId] = (all[lot.giftId] ?? 0) + lot.quantity; return all;
+    }, {})
+    : Object.fromEntries(giftsOwned.map(g => [g.giftId, g.quantity]));
   return { profile: await person(id, profile, undefined, true, undefined, nameColor),
     gifterAccessLevel,
     nameColorProgress: {
@@ -59,8 +67,8 @@ export async function getMe(id: string) {
       enabled: hasOwnerTierTestAccess(profile),
       overrideCoins: hasOwnerTierTestAccess(profile) ? nameColorPurchaseTotalOverride(id) : null,
     },
-    wallet: await wallet(id, db, profile.username), inventory: giftsOwned.map(g => g.giftId),
-    giftQuantities: Object.fromEntries(giftsOwned.map(g => [g.giftId, g.quantity])),
+    wallet: await wallet(id, db, profile.username), inventory: Object.keys(quantities),
+    giftQuantities: quantities,
     giftBagLots: giftBag,
     badges,
     equippedBadgeId: badgeState.equippedBadgeId,

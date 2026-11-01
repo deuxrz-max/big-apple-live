@@ -223,6 +223,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
         const normalized = username.toLowerCase();
         if (attempt.completed.has(normalized)) continue;
         await sendSocialGift({
+          testMode: unlimited,
           recipient: username,
           giftId: sel,
           quantity,
@@ -280,11 +281,11 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
       <div ref={ref} className="gift-framework gift-sheet gift-room-panel" role="dialog" aria-modal="true" aria-labelledby={titleId} onKeyDown={onKey} data-testid="gift-bag">
         <div className="gift-panel-handle" aria-hidden="true"><span /></div>
         <header className="gift-panel-heading">
-          <h2 id={titleId} data-testid="gift-bag-title">Send a gift</h2>
+          <h2 id={titleId} data-testid="gift-bag-title">{unlimited ? 'Send a test gift' : 'Send a gift'}</h2>
           {me.data && <Link href="/community/coins" state={buyCoinsReturnState()} className="gift-panel-balance-pill"
             aria-label={`Balance ${unlimited ? 'unlimited' : me.data.wallet.balance.toLocaleString()} coins. Buy coins`} data-testid="gift-bag-balance">
             <span className="gift-panel-coin" aria-hidden />
-            <span>{unlimited ? 'Unlimited' : abbreviate(me.data.wallet.balance)}</span>
+            <span>{unlimited ? 'Unlimited test' : abbreviate(me.data.wallet.balance)}</span>
             <Plus size={13} strokeWidth={3} aria-hidden />
           </Link>}
           <button type="button" className="gift-panel-icon-button" onClick={onClose} aria-label="Close gift panel" data-testid="gift-bag-close"><X size={18} aria-hidden /></button>

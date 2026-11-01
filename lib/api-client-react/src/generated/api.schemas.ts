@@ -5,6 +5,65 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type TestCoinLaunchStatusFreeTestCoinBalanceAfterReset = typeof TestCoinLaunchStatusFreeTestCoinBalanceAfterReset[keyof typeof TestCoinLaunchStatusFreeTestCoinBalanceAfterReset];
+
+
+export const TestCoinLaunchStatusFreeTestCoinBalanceAfterReset = {
+  NUMBER_0: 0,
+} as const;
+
+export interface TestCoinLaunchStatus {
+  /** @nullable */
+  closedAt: string | null;
+  /** @minimum 0 */
+  activeTesters: number;
+  /** @minimum 0 */
+  testGiftQuantity: number;
+  /** @minimum 0 */
+  testEffects: number;
+  freeTestCoinBalanceAfterReset: TestCoinLaunchStatusFreeTestCoinBalanceAfterReset;
+  realWalletsPreserved: true;
+  levelsAndXpPreserved: true;
+}
+
+export type TestCoinLaunchPreview = TestCoinLaunchStatus & {
+  planId: string;
+  expiresAt: string;
+};
+
+export type TestCoinLaunchConfirmationConfirmation = typeof TestCoinLaunchConfirmationConfirmation[keyof typeof TestCoinLaunchConfirmationConfirmation];
+
+
+export const TestCoinLaunchConfirmationConfirmation = {
+  END_FREE_TEST_COINS: 'END FREE TEST COINS',
+} as const;
+
+export interface TestCoinLaunchConfirmation {
+  planId: string;
+  confirmation: TestCoinLaunchConfirmationConfirmation;
+  endingTesting: true;
+}
+
+export interface TestCoinLaunchResult {
+  closedAt: string;
+  alreadyCompleted: boolean;
+}
+
+export interface CoinTesterDesignation {
+  /** @pattern ^[A-Za-z0-9_]{3,24}$ */
+  username: string;
+  enabled: boolean;
+}
+
+export type CoinTesterListTestersItem = {
+  username: string;
+  enabled: boolean;
+};
+
+export interface CoinTesterList {
+  testers: CoinTesterListTestersItem[];
+}
+
 export interface PinkCardWinner {
   id: string;
   name: string;
@@ -1803,6 +1862,8 @@ export interface EntranceEffectShop {
 
 export interface EntranceEffectPurchaseInput {
   requestId: string;
+  /** Expected test-coin mode; server rejects stale designation. */
+  testMode?: boolean;
 }
 
 export interface SocialWallet {
@@ -2491,6 +2552,8 @@ export interface RoomGiftEvent {
 }
 
 export interface SocialGiftInput {
+  /** Expected test-coin mode; cannot grant access. */
+  testMode?: boolean;
   recipient: string;
   giftId: string;
   roomId?: string;
@@ -2506,6 +2569,8 @@ export interface SocialGiftInput {
 }
 
 export interface SocialPurchaseInput {
+  /** Expected test-coin mode; cannot grant access. */
+  testMode?: boolean;
   itemId: string;
   idempotencyKey: string;
 }

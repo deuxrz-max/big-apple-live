@@ -1,3 +1,5 @@
+export * from "./coin-testers";
+export * from "./coin-test-launch";
 export * from "./pink-card-rewards";
 export * from './social-gift-events';
 export * from './social-gift-bag-lots';
