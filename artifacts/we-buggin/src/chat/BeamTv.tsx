@@ -110,6 +110,7 @@ export type BeamTvHandle = {
 
 type BeamTvProps = {
   roomName: string;
+  showCreatorLink?: boolean;
   tv: UniversityVideoBeamTvState;
   microphoneEnabled: boolean;
   search: (query: string) => Promise<UniversityVideoBeamTvSearchResponse>;
@@ -130,6 +131,7 @@ export function beamTvPropsEqual(previous: BeamTvProps, next: BeamTvProps) {
   const previousMetadata = currentVideoMetadata(a);
   const nextMetadata = currentVideoMetadata(b);
   return previous.roomName === next.roomName
+    && previous.showCreatorLink === next.showCreatorLink
     && previous.search === next.search
     && previous.reportPlaybackFailure === next.reportPlaybackFailure
     && previous.microphoneEnabled === next.microphoneEnabled
@@ -150,6 +152,7 @@ export function beamTvPropsEqual(previous: BeamTvProps, next: BeamTvProps) {
 
 export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv({
   roomName,
+  showCreatorLink = false,
   tv,
   microphoneEnabled,
   search,
@@ -574,6 +577,13 @@ export const BeamTv = memo(forwardRef<BeamTvHandle, BeamTvProps>(function BeamTv
           </div>
         )}
       </div>
+      {showCreatorLink && hasPlayableVideo && tv.currentVideoId && (
+        <a href={`https://www.youtube.com/watch?v=${encodeURIComponent(tv.currentVideoId)}`}
+          target="_blank" rel="noopener noreferrer"
+          style={{ display: 'block', color: '#f5cb8d', background: '#000', fontSize: 12, padding: '4px 8px' }}>
+          {currentVideoMetadata(tv)?.channelTitle || 'Creator'} · Watch on YouTube
+        </a>
+      )}
     </section>
   );
 }), beamTvPropsEqual);

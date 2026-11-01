@@ -46,9 +46,8 @@ export async function initializeCommunities() {
 export async function communityDirectory() {
   const savedRooms = await db.select().from(chatRooms);
   const activeRoomIds = new Set<string>(UNIFIED_VIDEO_CHANNELS.map(channel => channel.roomId));
-  // Keep Harlem's Home tile visually active when the combined channel is in a
-  // TV intermission. Read only its existing Sports/Pro Wrestling pool; this
-  // does not start, seek, or otherwise alter playback inside the room.
+  // Read only Harlem's own saved hashtag pool during TV intermissions.
+  // This never searches YouTube or modifies another room's source pool.
   const arenaFallback = await getCommunityVideoPool("ARENA1", "", roomStore);
   const arenaPreview = arenaFallback[0] ?? null;
   const overflow = savedRooms.filter(room =>

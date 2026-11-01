@@ -10,6 +10,7 @@ import {
   isComedyWeeklyRefreshDue,
   refreshComedyVideoPoolWeekly,
   refreshCommunityVideoPoolIncrementally,
+  refreshHarlemHashtagsIfDue,
 } from "./room-video-rotation";
 
 const REFILL_INTERVAL_MS = 15 * 60_000;
@@ -21,6 +22,14 @@ const REFRESH_AFTER_MS = 6 * 60 * 60_000;
 
 let nextRoomIndex = 0;
 let refillInFlight = false;
+
+async function refreshHarlemSafely() {
+  try {
+    await refreshHarlemHashtagsIfDue(process.env.YOUTUBE_API_KEY?.trim() ?? "");
+  } catch (error) {
+    logger.warn({ message: error instanceof Error ? error.message : "unknown" }, "Harlem daily hashtag refresh deferred; no fallback to old videos");
+  }
+}
 
 async function refreshComedyWeeklyIfDue(rooms: RoomStore, apiKey: string) {
   if (!apiKey || !(await isComedyWeeklyRefreshDue(await getComedyWeeklyRefreshAttemptAtMs()))) return null;
@@ -88,6 +97,7 @@ export function startCommunityVideoPoolRefillScheduler(rooms: RoomStore = roomSt
       if (refillInFlight) return;
       refillInFlight = true;
       try {
+        await refreshHarlemSafely();
         await refreshComedyWeeklyIfDue(rooms, process.env.YOUTUBE_API_KEY?.trim() ?? "");
       } catch (error) {
         logger.warn({ error }, "Comedy weekly refresh failed; the saved video pool remains available");
@@ -109,6 +119,7 @@ export function startCommunityVideoPoolRefillScheduler(rooms: RoomStore = roomSt
     if (stopped || refillInFlight) return;
     refillInFlight = true;
     try {
+      await refreshHarlemSafely();
       await refillNextCommunityVideoPoolOnce(rooms);
     } catch (error) {
       logger.warn({ error }, "Incremental community video pool refill failed; saved pools remain available");

@@ -11,7 +11,7 @@ import {
   startCommunityRoomPlaybackScheduler,
   startWebSeriesDailySelection,
 } from "./routes/university-video-beam";
-import { sanitizeAllSavedCommunityVideoPools } from "./lib/room-video-rotation";
+import { initializeHarlemHashtagPool, sanitizeAllSavedCommunityVideoPools } from "./lib/room-video-rotation";
 import { startCommunityVideoPoolRefillScheduler } from "./lib/community-video-pool-refill";
 import { startDeveloperContentSyncScheduler } from "./lib/developer-content-sync";
 import { startHangoutRewardScheduler } from "./lib/community-hangout-rewards";
@@ -36,6 +36,7 @@ presenceSweep.unref();
 
 const server = createServer(app);
 await initializeCommunities();
+await initializeHarlemHashtagPool();
 try {
   const report = await sanitizeAllSavedCommunityVideoPools(roomStore);
   logger.info(report, "Saved community video pools screened for English, landscape, non-Shorts playback");

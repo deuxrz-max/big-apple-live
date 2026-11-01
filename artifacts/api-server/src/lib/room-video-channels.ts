@@ -2,7 +2,7 @@
 export const UNIFIED_VIDEO_CHANNELS = [
   { roomId: "CAFE01", label: "The Cafe", sourceRoomIds: ["MUSIC1", "COMEDY", "NEWS01"] },
   { roomId: "SCREEN", label: "The Screening Room", sourceRoomIds: ["MOVIES", "WEBSER", "HIST01"] },
-  { roomId: "ARENA1", label: "The Arena", sourceRoomIds: ["SPORTS", "KIDS01"] },
+  { roomId: "ARENA1", label: "The Arena", sourceRoomIds: [] },
 ] as const;
 
 export function unifiedVideoChannel(roomId: string) {

@@ -4,7 +4,7 @@ import { UNIFIED_VIDEO_CHANNELS, combineChannelVideos, unifiedVideoChannel } fro
 
 test("three separate channels contain exactly their approved source rooms", () => {
   assert.deepEqual(UNIFIED_VIDEO_CHANNELS.map(channel => [...channel.sourceRoomIds]), [
-    ["MUSIC1", "COMEDY", "NEWS01"], ["MOVIES", "WEBSER", "HIST01"], ["SPORTS", "KIDS01"],
+    ["MUSIC1", "COMEDY", "NEWS01"], ["MOVIES", "WEBSER", "HIST01"], [],
   ]);
   assert.equal(unifiedVideoChannel("cafe01")?.label, "The Cafe");
   assert.equal(unifiedVideoChannel("SCREEN")?.label, "The Screening Room");

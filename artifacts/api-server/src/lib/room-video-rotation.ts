@@ -1,5 +1,5 @@
 import { randomInt } from "node:crypto";
-import { and, eq, inArray, lt, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import {
   communityVideoPlayHistory,
   communityVideoPools,
@@ -39,6 +39,7 @@ import { isCompleteFeatureFilm, MIN_FEATURE_FILM_DURATION_MS } from "./movies-vi
 import { logger } from "./logger";
 import { mergeUniqueRecordsByKey } from "./developer-content-sync-policy";
 import { combineChannelVideos, unifiedVideoChannel } from "./room-video-channels";
+import { HARLEM_ROOM_ID, HARLEM_HASHTAGS, HARLEM_POLICY_KEY, harlemVideoPlayable, harlemRefreshDue } from "./harlem-video-policy";
 
 const DIRECTORY_COMMUNITY_ROOM_ID_SET = new Set<string>(DIRECTORY_COMMUNITY_ROOM_IDS);
 
@@ -739,6 +740,77 @@ async function loadPoolRow(roomId: string): Promise<PoolRow | null> {
   return row ?? null;
 }
 
+/** Detach Harlem only. Original Sports/Wrestling source pools and media are retained. */
+export async function initializeHarlemHashtagPool(): Promise<void> {
+  const row = await ensurePoolRow(HARLEM_ROOM_ID);
+  if (row.sourceCursors?.[HARLEM_POLICY_KEY] === "1") return;
+  await db.update(communityVideoPools).set({
+    videos: [], sourceCursors: { [HARLEM_POLICY_KEY]: "1" },
+    pageTokens: {}, termIndex: 0, refreshedAt: null, lastAttemptAt: null, updatedAt: new Date(),
+  }).where(eq(communityVideoPools.roomId, HARLEM_ROOM_ID));
+}
+
+let harlemRefreshInFlight: Promise<void> | null = null;
+
+/** Scheduler-only search: opening Home or joining a room never calls YouTube search. */
+export async function refreshHarlemHashtagsIfDue(apiKey: string): Promise<void> {
+  if (harlemRefreshInFlight) return harlemRefreshInFlight;
+  harlemRefreshInFlight = (async () => {
+    await initializeHarlemHashtagPool();
+    const row = await ensurePoolRow(HARLEM_ROOM_ID);
+    if (!harlemRefreshDue(row.refreshedAt, row.lastAttemptAt)) return;
+    if (!apiKey) throw new Error("Harlem refresh needs the YOUTUBE_API_KEY secret.");
+    if (!(await canSpendGeneralYouTubeUnits(303))) {
+      throw new Error("Harlem hashtag refresh is waiting for the shared YouTube quota budget.");
+    }
+    // Atomic lease prevents multiple API instances spending quota on the same refresh.
+    const claimed = await db.update(communityVideoPools).set({ lastAttemptAt: new Date() })
+      .where(and(eq(communityVideoPools.roomId, HARLEM_ROOM_ID),
+        or(isNull(communityVideoPools.lastAttemptAt),
+          lt(communityVideoPools.lastAttemptAt, new Date(Date.now() - 30 * 60_000)))))
+      .returning({ roomId: communityVideoPools.roomId });
+    if (!claimed.length) return;
+    const found = new Map<string, PoolItem>();
+    const sources: Record<string, string[]> = {};
+    for (const hashtag of HARLEM_HASHTAGS) {
+      const search = await youtubeJson("search", new URLSearchParams({
+        part: "snippet", type: "video", videoEmbeddable: "true",
+        safeSearch: "none", regionCode: "US", relevanceLanguage: "en",
+        maxResults: "50", order: "relevance", q: hashtag,
+      }), apiKey, HARLEM_ROOM_ID, 100);
+      const candidates = readSearchCandidates(search);
+      if (!candidates.length) continue;
+      const details = readEligibility(await youtubeJson("videos", new URLSearchParams({
+        part: "snippet,status,contentDetails", id: candidates.map(v => v.videoId).join(","),
+      }), apiKey, HARLEM_ROOM_ID, 1));
+      const byId = new Map(details.map(v => [v.videoId, v]));
+      for (const candidate of candidates) {
+        const detail = byId.get(candidate.videoId);
+        if (!detail || candidate.liveBroadcastContent === "live" || candidate.liveBroadcastContent === "upcoming") continue;
+        const video: PoolItem = {
+          videoId: candidate.videoId, title: candidate.title,
+          channelTitle: candidate.channelTitle ?? null, description: candidate.description ?? null,
+          durationMs: detail.durationMs ?? 0, discoveredAtMs: Date.now(),
+          embeddable: detail.embeddable, ageRestricted: detail.ytRating === "ytAgeRestricted",
+          availableInUS: detail.availableInUS, tags: detail.tags ?? [],
+        };
+        if (!harlemVideoPlayable(video)) continue;
+        found.set(video.videoId, video);
+        (sources[video.videoId] ??= []).push(hashtag);
+      }
+    }
+    // Fail explicitly rather than replacing a working hashtag pool with an empty API response.
+    if (!found.size) throw new Error("YouTube returned no eligible Harlem hashtag videos; keeping the saved hashtag pool.");
+    const current = await ensurePoolRow(HARLEM_ROOM_ID);
+    await savePoolRow(HARLEM_ROOM_ID, current, {
+      videos: [...found.values()], refreshedAt: new Date(),
+      sourceCursors: { ...current.sourceCursors, [HARLEM_POLICY_KEY]: "1", __harlemHashtagSources: JSON.stringify(sources) },
+    });
+    logger.info({ roomId: HARLEM_ROOM_ID, count: found.size, hashtags: HARLEM_HASHTAGS }, "Saved Harlem daily hashtag rotation");
+  })().finally(() => { harlemRefreshInFlight = null; });
+  return harlemRefreshInFlight;
+}
+
 async function ensurePoolRow(roomId: string): Promise<PoolRow> {
   await db.insert(communityVideoPools).values({ roomId }).onConflictDoNothing();
   const row = await loadPoolRow(roomId);
@@ -963,6 +1035,7 @@ export async function sanitizeAllSavedCommunityVideoPools(rooms?: RoomLookup): P
   };
   const now = Date.now();
   for (const row of rows) {
+    if (row.roomId === HARLEM_ROOM_ID) continue; // Harlem has its own hashtag eligibility policy.
     const saved = row.videos ?? [];
     report.entriesScanned += saved.length;
     const screened = screenCommunityVideoPoolItems(saved, now, row.roomId, rooms);
@@ -1244,6 +1317,14 @@ export async function getCommunityVideoPool(
   pageLimit = MAX_SEARCH_PAGES_PER_REFRESH,
 ): Promise<PoolItem[]> {
   const parentId = rooms.communityParentId(roomId.toUpperCase()) ?? roomId.toUpperCase();
+  if (parentId === HARLEM_ROOM_ID) {
+    const saved = await loadPoolRow(HARLEM_ROOM_ID);
+    const provenance = asObject(JSON.parse(saved?.sourceCursors?.__harlemHashtagSources ?? "{}"));
+    return saved?.sourceCursors?.[HARLEM_POLICY_KEY] === "1"
+      ? (saved.videos ?? []).filter(video => harlemVideoPlayable(video)
+        && Array.isArray(provenance?.[video.videoId])
+        && (provenance[video.videoId] as unknown[]).some(tag => HARLEM_HASHTAGS.includes(tag as typeof HARLEM_HASHTAGS[number]))) : [];
+  }
   const channel = unifiedVideoChannel(parentId);
   if (channel) {
     // Read existing sources only: no new searches, no copies, no category-specific

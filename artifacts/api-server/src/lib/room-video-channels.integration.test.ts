@@ -11,6 +11,7 @@ test("development: each combined channel contains all of its existing sources an
   const series = await db.select().from(communityWebSeriesDaily);
   const lookup = { communityParentId: (id: string) => id };
   for (const channel of UNIFIED_VIDEO_CHANNELS) {
+    if (channel.roomId === "ARENA1") continue; // Harlem now owns a separate hashtag rotation.
     const expected = new Set<string>();
     for (const sourceId of channel.sourceRoomIds) {
       const row = before.find(item => item.roomId === sourceId);

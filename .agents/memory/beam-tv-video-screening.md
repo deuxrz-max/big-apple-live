@@ -17,6 +17,12 @@ For this adults-only app, leave YouTube `safeSearch` disabled (`none`) and do no
 
 For nonrepeating topic playback, persist each room's search cursors, candidate pool, and last-played timestamps together; in-memory queues alone reset on server restart. Use a shared daily quota ledger so concurrent refreshes cannot exceed the app's chosen budget.
 
+Harlem is an exception to the former combined Sports/Pro Wrestling feed: use only official YouTube searches for `#BiggJah`, `#ComedySkits` and `#FunnyVideos`, with its own saved rotation refreshed about daily. Never fall back to the old source pools or search on room entry.
+
+**Why:** The owner explicitly replaced Harlem's rotation while requiring every other room and the original video storage to remain untouched.
+
+**How to apply:** Keep Harlem separate from the generic source-pool sanitizer/refiller. Require embeddable, non-age-restricted, region-playable results with valid duration, deduplicate and retain hashtag provenance. Use only the official embedded player, with creator attribution or a YouTube link; never download or re-host videos.
+
 **Why:** Rebuilding only the queue after a restart repeats the same popular results and loses the history needed to avoid them.
 
 **How to apply:** Keep selection and refresh server-side, read durable play history before each pick, and fall back to the saved pool when the YouTube quota budget is exhausted.

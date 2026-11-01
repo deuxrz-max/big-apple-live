@@ -532,6 +532,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                 )}
               </div>
               {!isSocialRoom && <BeamTv ref={beamTvRef} roomName={r.room?.name ?? 'Room'}
+                showCreatorLink={roomId.toUpperCase() === 'ARENA1'}
                 microphoneEnabled={ownMicEnabled}
                 tv={videoBeam.beam.tv} search={videoBeam.searchTv}
                 reportPlaybackFailure={videoBeam.reportTvPlaybackFailure} />}
