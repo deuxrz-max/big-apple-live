@@ -14,6 +14,11 @@ if [[ ! -x "$GRADLE" || ! -d "$ANDROID_HOME/platforms/android-36" ]]; then
   exit 1
 fi
 python3 "$ROOT/android/scripts/prepare.py"
+VERSION="$(sed -n 's/^[[:space:]]*versionName "\([^"]*\)".*/\1/p' "$ROOT/android/app/build.gradle")"
+if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "Expected a numeric Android release version." >&2
+  exit 1
+fi
 mkdir -p "$ROOT/generated-artifacts/android"
 # NixOS needs a patched aapt2 interpreter. Do not modify downloaded artifacts
 # on other hosts; use the normal Maven-provided aapt2 there.
@@ -29,14 +34,14 @@ if [[ -f /etc/NIXOS && -x "$ANDROID_HOME/build-tools/36.0.0/aapt2" ]]; then
   if [[ -n "$libstd" ]]; then patchelf --set-rpath "$(dirname "$libstd")" "$aapt"; fi
   extra+=("-Pandroid.aapt2FromMavenOverride=$aapt")
 fi
-"$GRADLE" -p "$ROOT/android" --no-daemon --max-workers=2 "${extra[@]}" assembleRelease bundleRelease lintRelease
+"$GRADLE" -p "$ROOT/android" --no-daemon --max-workers=2 "${extra[@]}" testReleaseUnitTest assembleRelease bundleRelease lintRelease
 cp "$ROOT/android/app/build/outputs/apk/release/app-release.apk" \
-  "$ROOT/generated-artifacts/android/Big-Apple-Live-1.0.0.apk"
+  "$ROOT/generated-artifacts/android/Big-Apple-Live-$VERSION.apk"
 cp "$ROOT/android/app/build/outputs/bundle/release/app-release.aab" \
-  "$ROOT/generated-artifacts/android/Big-Apple-Live-1.0.0.aab"
+  "$ROOT/generated-artifacts/android/Big-Apple-Live-$VERSION.aab"
 "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs \
-  "$ROOT/generated-artifacts/android/Big-Apple-Live-1.0.0.apk"
-jarsigner -verify "$ROOT/generated-artifacts/android/Big-Apple-Live-1.0.0.aab"
+  "$ROOT/generated-artifacts/android/Big-Apple-Live-$VERSION.apk"
+jarsigner -verify "$ROOT/generated-artifacts/android/Big-Apple-Live-$VERSION.aab"
 sha256sum "$ROOT/generated-artifacts/android/"*.apk "$ROOT/generated-artifacts/android/"*.aab \
   > "$ROOT/generated-artifacts/android/SHA256SUMS.txt"
 echo "Signed APK and AAB are in generated-artifacts/android. Nothing was published."

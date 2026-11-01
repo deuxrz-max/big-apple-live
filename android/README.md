@@ -4,7 +4,7 @@ This is a **Trusted Web Activity**, not a WebView and not a separate copy of the
 
 - Application ID: **`com.bigapplelive.app`**. Keep it for all future updates.
 - Name: Big Apple Live.
-- Version: 1.0.0, version code 1.
+- Version: 1.0.1, version code 2.
 - Android 7.0/API 24 or later; targets Android 16/API 36.
 - Google Android Browser Helper 2.7.4; AGP 8.13.2; Gradle 8.13.
 - Approved neon apple icon, padded rather than cropped, on black; black splash.
@@ -15,13 +15,40 @@ This is a **Trusted Web Activity**, not a WebView and not a separate copy of the
 
 From the workspace Files tree, download:
 
-1. `generated-artifacts/android/Big-Apple-Live-1.0.0.apk` — signed release APK for direct tester installation.
-2. `generated-artifacts/android/Big-Apple-Live-1.0.0.aab` — signed release bundle for Play Console, not directly installable.
+1. `generated-artifacts/android/Big-Apple-Live-1.0.1.apk` — signed release APK for direct tester installation.
+2. `generated-artifacts/android/Big-Apple-Live-1.0.1.aab` — signed release bundle for Play Console, not directly installable.
 3. `generated-artifacts/android/SHA256SUMS.txt` — file checksums.
 
 On a tester's phone: install/update Chrome, download the APK, allow installation from that download source when Android asks, then open Big Apple Live. Revoke the install-from-unknown-sources permission afterward if desired.
 
 No release has been uploaded to Google Play by this work.
+
+## Launch repair in 1.0.1
+
+The original splash `FileProvider` exposed `cache/twa_splash/`, but Android
+Browser Helper 2.7.4 writes `files/twa_splash/splash_image.png`. A Robolectric
+regression test reproduced `IllegalArgumentException: Failed to find configured
+root` with the old configuration. The provider now exposes only that narrow
+files subdirectory; unrelated private files remain inaccessible.
+
+`MainActivity` retains Google's verified TWA launcher and Custom Tabs fallback,
+but catches synchronous browser-launch failures and tries a normal HTTPS browser
+intent. If no browser is enabled, it explains how to enable one rather than
+crashing. It does not bypass Digital Asset Links: failed verification can show a
+browser bar. A supported browser and successful verification are required for
+trusted full-screen display.
+
+The Android tests cover splash sharing, rejection of unrelated files, launcher
+creation, missing-browser feedback, and normal-browser fallback. These are JVM
+Android-framework tests, **not an emulator or Samsung hardware run**. No phone
+was connected and this container has no installed emulator or `/dev/kvm`.
+Do not claim the repaired APK is Samsung-tested until it has been opened there.
+
+For direct downloads, the file should be served with
+`Content-Type: application/vnd.android.package-archive` and
+`Content-Disposition: attachment; filename="Big-Apple-Live-1.0.1.apk"`.
+It is an APK, not a ZIP wrapper; a download service that changes the type or
+filename can still cause a browser to add `.zip`.
 
 ## Required website verification — OWNER must republish
 

@@ -252,3 +252,17 @@ mtime_ms = 1793502038687
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/e375b214-befd-4ab2-9217-215f257258e9/55d118c7-c7c9-488c-931d-a6d994ac5e77"
 storage_version_token = "1793502040271282"
 content_type = "text/csv"
+
+[[outputs]]
+id = "eqOdm26O3FU6uIHxcjC3n"
+uri = "file://generated-artifacts/android/Big-Apple-Live-1.0.1.apk"
+type = "unspecified"
+title = "Big Apple Live 1.0.1 — repaired signed APK"
+description = "Signed Android installer, package com.bigapplelive.app, version code 2. Use the verified direct APK link in my response if your browser adds .zip to Library downloads."
+logical_id = "ccae334f-a375-494b-be17-e5c908c5923e"
+content_hash = "sha256:7113c82183f40d7b3d8196ad36580fc2067a537b8963258dcfb97b72c46ea5ec"
+size = 3944079
+mtime_ms = 1793505755270
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/ccae334f-a375-494b-be17-e5c908c5923e/1b7a3999-367e-4f1d-bbfd-2c7eabb989cb"
+storage_version_token = "1793505846127950"
+content_type = "application/octet-stream"

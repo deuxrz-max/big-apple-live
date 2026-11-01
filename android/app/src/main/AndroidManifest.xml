@@ -13,7 +13,7 @@
         android:theme="@style/AppTheme">
         <meta-data android:name="asset_statements" android:resource="@string/asset_statements" />
         <activity
-            android:name="com.google.androidbrowserhelper.trusted.LauncherActivity"
+            android:name=".MainActivity"
             android:exported="true">
             <meta-data android:name="android.support.customtabs.trusted.DEFAULT_URL"
                 android:value="https://big-apple-live.replit.app/" />
