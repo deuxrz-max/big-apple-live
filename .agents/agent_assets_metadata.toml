@@ -224,3 +224,31 @@ mtime_ms = 1793501660747
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/8c8e7476-e3e1-4e6e-a6b9-852866b24a75/63ac20f0-0237-46a3-9a66-cbe7b3c61180"
 storage_version_token = "1793501678353031"
 content_type = "image/jpeg"
+
+[[outputs]]
+id = "koEi8J9K2WBgyIj477woe"
+uri = "file://generated-artifacts/broadway-video-inventory.html"
+type = "html"
+title = "Broadway — complete saved video list"
+description = "Searchable titles, creators, categories and YouTube links: 490 current eligible videos plus 172 separately labeled historical entries. Published and development match."
+logical_id = "a0117726-4477-4023-99fe-94a1de57c158"
+content_hash = "sha256:fe8244506250de243d7630a15051678caa46f0f7b75e321de8ee11e3ae32fa57"
+size = 167840
+mtime_ms = 1793502038887
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/a0117726-4477-4023-99fe-94a1de57c158/7bda1891-6308-4c3e-9513-4a662e1cf2fd"
+storage_version_token = "1793502039670673"
+content_type = "text/html"
+
+[[outputs]]
+id = "HLFIGp90Am9KAzNUkKBMi"
+uri = "file://generated-artifacts/broadway-video-inventory.csv"
+type = "table"
+title = "Broadway video inventory — spreadsheet"
+description = "Full 662-entry read-only export, labeled current versus historical, with titles, uploading channels, categories and YouTube links."
+logical_id = "e375b214-befd-4ab2-9217-215f257258e9"
+content_hash = "sha256:3a359bf49f1f605d51763e4b8c5a04576375bec900f8d424dffdf6e7cfe31bc5"
+size = 129875
+mtime_ms = 1793502038687
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/e375b214-befd-4ab2-9217-215f257258e9/55d118c7-c7c9-488c-931d-a6d994ac5e77"
+storage_version_token = "1793502040271282"
+content_type = "text/csv"
