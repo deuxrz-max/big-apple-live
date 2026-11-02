@@ -23,6 +23,17 @@ test("owner tier effect switches default to on but honor an explicit off", () =>
   assert.equal(isTierEntranceEffectEnabled({ "monthly-tier-4": false }, "monthly-tier-4"), false);
 });
 
+test("retired recharge tiers cannot trigger entrances even from stale saved preferences", () => {
+  for (const equippedBadgeId of ["monthly-tier-1", "monthly-tier-5"]) {
+    for (const ownerPreview of [false, true]) {
+      assert.equal(chooseAccountEntranceEffect({
+        ownerPreview, enabled: true, equippedBadgeId,
+        lionEnabled: true, enabledTierIds: [equippedBadgeId],
+      }), null);
+    }
+  }
+});
+
 test("only the equipped owner badge's enabled entrance effect can play", () => {
   const allEnabledTierIds = MONTHLY_CREDIT_BADGE_TIERS.map(tier => tier.id);
   for (const tier of MONTHLY_CREDIT_BADGE_TIERS) {

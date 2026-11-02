@@ -1,17 +1,16 @@
 import { useEffect, useState } from 'react';
 
 export const BADGE_ART: Record<string, string> = {
-  'monthly-tier-1': 'monthly-credit-tiers/tier1.svg',
   'monthly-tier-2': 'monthly-credit-tiers/tier2.png',
   'monthly-tier-3': 'monthly-credit-tiers/tier3.png',
   'monthly-tier-4': 'monthly-credit-tiers/tier4.png',
-  'monthly-tier-5': 'monthly-credit-tiers/tier5.svg',
   'lion-entrance': 'monthly-credit-tiers/lion-entrance.svg',
 };
 
 export function BadgeArt({ id, name, imageUrl, size = 80 }: { id: string; name: string; imageUrl?: string | null; size?: number }) {
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [id]);
+  if (id === 'monthly-tier-1' || id === 'monthly-tier-5') return null;
   return (
     <span className="sc-badge-art-slot">
       {failed

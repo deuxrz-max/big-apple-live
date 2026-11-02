@@ -119,13 +119,11 @@ function decodeBadgePng(
   return { width, height, alphaAt, rgbAt, hasAlpha: colorType === 6 };
 }
 
-test('monthly purchase badges use five configured credit thresholds and tier artwork paths', () => {
+test('monthly purchase badges retain only the three named tiers and their unchanged artwork', () => {
   assert.deepEqual(PRODUCTS.map(p => [p.id, p.name, p.cost, p.badgeImage]), [
-    ['monthly-tier-1', 'Tier 1', 1_000, '/badges/monthly-credit-tiers/tier1.svg'],
     ['monthly-tier-2', 'Guardian of the Den', 5_000, '/badges/monthly-credit-tiers/tier2.png'],
     ['monthly-tier-3', 'Guardian of the Night', 10_000, '/badges/monthly-credit-tiers/tier3.png'],
     ['monthly-tier-4', 'King of Beasts', 25_000, '/badges/monthly-credit-tiers/tier4.png'],
-    ['monthly-tier-5', 'Tier 5', 50_000, '/badges/monthly-credit-tiers/tier5.svg'],
   ]);
   assert.equal(PRODUCTS.some(p => ['Good Neighbor', 'Night Owl', 'Marathon Master', 'Peak Presenter'].includes(p.name)), false);
 });

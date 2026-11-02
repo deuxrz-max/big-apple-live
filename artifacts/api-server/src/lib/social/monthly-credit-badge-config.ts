@@ -4,16 +4,6 @@
  */
 export const MONTHLY_CREDIT_BADGE_TIERS = [
   {
-    id: "monthly-tier-1",
-    rank: 1,
-    name: "Tier 1",
-    monthlyCredits: 1_000,
-    badgeImage: "/badges/monthly-credit-tiers/tier1.svg",
-    entranceEffectId: "monthly-tier-1",
-    entranceEffectFolder: "/entrance-effects/monthly-credit-tiers/tier1",
-    durationMs: 6_083,
-  },
-  {
     id: "monthly-tier-2",
     rank: 2,
     name: "Guardian of the Den",
@@ -41,16 +31,6 @@ export const MONTHLY_CREDIT_BADGE_TIERS = [
     badgeImage: "/badges/monthly-credit-tiers/tier4.png",
     entranceEffectId: "monthly-tier-4",
     entranceEffectFolder: "/entrance-effects/monthly-credit-tiers/tier4",
-    durationMs: 6_083,
-  },
-  {
-    id: "monthly-tier-5",
-    rank: 5,
-    name: "Tier 5",
-    monthlyCredits: 50_000,
-    badgeImage: "/badges/monthly-credit-tiers/tier5.svg",
-    entranceEffectId: "monthly-tier-5",
-    entranceEffectFolder: "/entrance-effects/monthly-credit-tiers/tier5",
     durationMs: 6_083,
   },
 ] as const;

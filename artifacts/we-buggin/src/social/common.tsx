@@ -41,7 +41,7 @@ export function BadgeMark({ id, label, imageUrl, size = 14, compact = false }: {
   id: string | null; label?: string | null; imageUrl?: string | null; size?: number; compact?: boolean;
 }) {
   if (!id) return null;
-  const tier = /^monthly-tier-([1-5])$/.exec(id)?.[1];
+  const tier = /^monthly-tier-([2-4])$/.exec(id)?.[1];
   if (!tier && id !== 'lion-entrance') return null;
   const badgeName = label ?? (tier ? `Monthly purchase tier ${tier}` : 'Lion Entrance');
   const fallbackImage = tier

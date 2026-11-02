@@ -165,7 +165,7 @@ async function badgeStatesForAccounts(accountIds: string[], now: Date) {
     const savedBadgeId = settings?.equippedBadgeId ?? null;
     const legacyOwnerTier = settings?.legacyOwnerTier ?? 5;
     const defaultBadgeId = ownerPreview && !hasExplicitChoice
-      ? MONTHLY_CREDIT_BADGE_TIERS.find(tier => tier.rank === legacyOwnerTier)?.id ?? "monthly-tier-5"
+      ? MONTHLY_CREDIT_BADGE_TIERS.find(tier => tier.rank === legacyOwnerTier)?.id ?? highestRankBadge(badges)?.tier.id ?? null
       : highestRankBadge(badges)?.tier.id ?? null;
 
     let selected = hasExplicitChoice
