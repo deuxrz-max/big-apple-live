@@ -76,8 +76,8 @@ export const Avatar = ({ p, size = 56, tap = true }: { p: PhotoPerson; size?: nu
     reviewStatus={p.photoReviews?.find(photo => photo.photoUrl === p.photoUrl)?.status} />
 );
 
-export function PersonCard({ p, extra, showBadgeInName = true, className = '' }: {
-  p: SocialPerson; extra?: ReactNode; showBadgeInName?: boolean; className?: string;
+export function PersonCard({ p, extra, showBadgeInName = true, className = '', publicSearch = false }: {
+  p: SocialPerson; extra?: ReactNode; showBadgeInName?: boolean; className?: string; publicSearch?: boolean;
 }) {
   return (
     <article className={`sc-card${className ? ` ${className}` : ''}`} data-testid={`card-person-${p.username}`}>
@@ -85,12 +85,13 @@ export function PersonCard({ p, extra, showBadgeInName = true, className = '' }:
         <Avatar p={p} size={64} />
         <Link href={`/community/people/${p.username}`} className="sc-card-text" data-testid={`link-person-${p.username}`}>
           <ShinyName className="sc-name" displayNameColor={p.displayNameColor} displayNameTierIndex={p.displayNameTierIndex}>
-            {showBadgeInName && <BadgeMark id={p.badgeId} label={p.badgeName} imageUrl={p.badgeImage} size={18} compact />}
+            {showBadgeInName && !publicSearch && <BadgeMark id={p.badgeId} label={p.badgeName} imageUrl={p.badgeImage} size={18} compact />}
             <span className="sc-name-label">{(p as PhotoPerson).displayName || p.username}</span>
           </ShinyName>
-          <span className="sc-sub">@{p.username}{p.country ? ` / ${p.country}` : ''}</span>
-          {p.bio && <span className="sc-bio">{p.bio}</span>}
-          {p.interests.length > 0 && <span className="sc-tags">{p.interests.slice(0, 4).map((i) => <i key={i}>{i}</i>)}</span>}
+          <span className="sc-sub">@{p.username}{!publicSearch && p.country ? ` / ${p.country}` : ''}</span>
+          {publicSearch && <span className="sc-sub">Level {p.displayNameTierIndex ?? 0}</span>}
+          {!publicSearch && p.bio && <span className="sc-bio">{p.bio}</span>}
+          {!publicSearch && p.interests.length > 0 && <span className="sc-tags">{p.interests.slice(0, 4).map((i) => <i key={i}>{i}</i>)}</span>}
         </Link>
       </div>
       {extra}

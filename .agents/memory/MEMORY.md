@@ -12,6 +12,7 @@
 - [TalkCity reference](talkcity-reference.md) — retain Streamtalk branding; the earlier alongside-Beams scope is superseded by the text-chat pivot.
 - [OpenAPI generation](openapi-generation.md) — modular refs need an allowlist before codegen; combined path/query schemas can collide in Zod barrel exports.
 - [Catalog response validation](catalog-response-validation.md) — catalog removals must update embedded response constraints; validate owner and ordinary profile schemas.
+- [People search visibility](people-search-visibility.md) — search ignores opt-in; preserve bilateral blocks, public-only results and separate contact permissions.
 - [Clerk route middleware](clerk-route-middleware.md) — routes that call `getAuth` must be mounted inside the scoped Clerk middleware or they fail with 500s.
 - [Gift catalog test isolation](gift-catalog-test-isolation.md) — gift tests must use isolated catalog settings, not assume default prices or product types from the shared dev database.
 - [Room and livestream gift receipts](room-gift-display-receipts.md) — all active gifts animate regardless of roomGift classification; payout and inventory remain separate.

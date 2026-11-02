@@ -37,10 +37,10 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
   const bContext = { roomId, sessionId: bSession.participantSessionId };
   const prefs = { bio: "A real community member", country: "US", interests: ["music"], discoverable: true, badgeId: null };
 
-  await t.test("new community accounts are private until they opt in; filters and profile clears persist", async () => {
+  await t.test("People includes accounts without opting in; filters and profile clears persist", async () => {
     GetSocialMeResponse.parse(await getMe(a));
     await getMe(b); await getMe(c);
-    assert.equal((await listPeople(a, { search: token })).total, 0);
+    assert.equal((await listPeople(a, { search: token })).total, 2);
     await saveSocialProfile(a, prefs);
     await saveSocialProfile(b, { ...prefs, country: "CA", bio: "Canada fixture", interests: ["art"] });
     const people = GetSocialPeopleResponse.parse(await listPeople(a, { search: token, country: "CA", gender: "Female" }));
@@ -169,7 +169,7 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     assert.equal((await listPeople(a, { search: token, favorites: true })).total, 1);
     await relationship(b, names[0]!, "block", true);
     assert.equal((await blocks(b)).people[0]!.username, names[0]);
-    assert.equal((await listPeople(a, { search: token })).total, 0);
+    assert.equal((await listPeople(a, { search: token })).total, 1);
     await assert.rejects(getPerson(a, names[1]!), /blocked/);
     await assert.rejects(gift(a, names[1]!, "good-vibes", randomUUID(), aContext), /blocked/);
     await assert.rejects(sendMessage(a, names[1]!, "not allowed", randomUUID()), /blocked/);
@@ -177,7 +177,7 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     assert.equal((await thread(b, names[0]!)).blocked, true);
     assert.equal((await thread(b, names[0]!)).messages.length, 2);
     await relationship(b, names[0]!, "block", false);
-    assert.equal((await listPeople(a, { search: token })).total, 1);
+    assert.equal((await listPeople(a, { search: token })).total, 2);
   });
   await t.test("credit ledger reconciles to balances and only fixture data was touched", async () => {
     const entries = await db.select().from(socialLedger).where(inArray(socialLedger.accountId, ids));

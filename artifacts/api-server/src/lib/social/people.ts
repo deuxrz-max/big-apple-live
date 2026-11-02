@@ -93,31 +93,37 @@ export async function saveSocialProfile(id: string, input: SocialProfileInput) {
 }
 export async function getPerson(id: string, username: string) {
   const target = await targetAccount(username);
-  if (target.accountId !== id) await assertContact(db, id, target.accountId);
+  // Public profile viewing is independent of discovery/contact preferences.
+  // Messaging and following still enforce assertContact in their own paths.
+  if (target.accountId !== id && await pairBlocked(id, target.accountId)) {
+    throw new RoomError(403, "This interaction is not available while either person has blocked the other");
+  }
   return person(id, target, undefined, true);
 }
 export type PeopleQuery = { search?: string; gender?: string; country?: string; favorites?: boolean; offset?: number };
 export async function listPeople(id: string, input: PeopleQuery = {}, leaderboard = false) {
-  const search = input.search?.trim().slice(0, 80).replace(/[\\%_]/g, "\\$&");
+  const peopleSearch = !leaderboard && !input.favorites;
+  const search = input.search?.trim().replace(/^@/, "").slice(0, 80).replace(/[\\%_]/g, "\\$&");
   const conditions = [
     leaderboard ? undefined : ne(accountProfiles.accountId, id),
     leaderboard || process.env.NODE_ENV === "production" ? eq(accountProfiles.isTestAccount, false) : undefined,
-    input.favorites ? undefined : eq(socialSettings.discoverable, true),
+    leaderboard ? eq(socialSettings.discoverable, true) : undefined,
     sql`NOT EXISTS (SELECT 1 FROM social_relations r WHERE r.kind = 'block' AND ((r.owner_id = ${id} AND r.target_id = ${accountProfiles.accountId}) OR (r.owner_id = ${accountProfiles.accountId} AND r.target_id = ${id})))`,
-    search ? or(ilike(accountProfiles.username, `%${search}%`), ilike(socialSettings.bio, `%${search}%`)) : undefined,
+    search ? or(ilike(accountProfiles.username, `%${search}%`),
+      ilike(peopleSearch ? accountProfiles.displayName : socialSettings.bio, `%${search}%`)) : undefined,
     input.gender === "Male" || input.gender === "Female" ? eq(accountProfiles.gender, input.gender) : undefined,
     input.country ? eq(socialSettings.country, input.country) : undefined,
     input.favorites ? sql`EXISTS (SELECT 1 FROM social_relations f WHERE f.kind = 'favorite' AND f.owner_id = ${id} AND f.target_id = ${accountProfiles.accountId})` : undefined,
   ];
   const offset = Math.max(0, Math.min(100000, input.offset ?? 0));
   const rows = await db.select({ profile: accountProfiles, prefs: socialSettings })
-    .from(accountProfiles).innerJoin(socialSettings, eq(accountProfiles.accountId, socialSettings.accountId))
+    .from(accountProfiles).leftJoin(socialSettings, eq(accountProfiles.accountId, socialSettings.accountId))
     .leftJoin(socialWallets, eq(accountProfiles.accountId, socialWallets.accountId))
     .where(and(...conditions))
     .orderBy(...(leaderboard ? [desc(socialWallets.received), accountProfiles.nameKey] : [desc(socialSettings.updatedAt), accountProfiles.nameKey]))
     .limit(leaderboard ? 10 : 24).offset(offset);
   const [count] = await db.select({ total: sql<number>`count(*)::int` }).from(accountProfiles)
-    .innerJoin(socialSettings, eq(accountProfiles.accountId, socialSettings.accountId)).where(and(...conditions));
+    .leftJoin(socialSettings, eq(accountProfiles.accountId, socialSettings.accountId)).where(and(...conditions));
   const badges = await visibleMonthlyPurchaseBadgeSummaries(rows.map(row => row.profile.accountId));
   return { people: await Promise.all(rows.map(row => person(id, row.profile, row.prefs, false,
     badges.get(row.profile.accountId) ?? null))), total: count?.total ?? 0 };

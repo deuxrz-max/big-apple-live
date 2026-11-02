@@ -33,10 +33,10 @@ export function CommunityPage() {
   return (
     <section>
       <h1 className="bm-h1 sc-h1">People</h1>
-      <p className="bm-lede">Only people who opted in appear here.</p>
+      <p className="bm-lede">Find people by display name or @ID.</p>
       <form className="sc-filters" onSubmit={submit} role="search">
         <label className="sc-field sc-grow"><span className="bm-label">Search</span>
-          <input className="bm-input" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Username" maxLength={24} data-testid="input-search" /></label>
+          <input className="bm-input" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Display name or @ID" maxLength={80} data-testid="input-search" /></label>
         <label className="sc-field"><span className="bm-label">Country</span>
           <select className="sc-select" value={country} onChange={(e) => { setCountry(e.target.value); reset(); }} data-testid="select-country">
             <option value="">Anywhere</option>{me.data?.countries.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}</select></label>
@@ -45,14 +45,13 @@ export function CommunityPage() {
       {q.isLoading && <Loading />}
       {q.isError && <ErrorBox error={q.error} retry={() => q.refetch()} />}
       {q.data && (list.length === 0 ? (
-        <Empty title="Nobody here yet">
-          <p>No one matches, or nobody has opted into discovery. Turn yours on in your profile.</p>
-          <Link href="/community/profile" className="bm-btn">Edit my profile</Link>
+        <Empty title="No one matches that search">
+          <p>Try another name, @ID or country.</p>
         </Empty>
       ) : (
         <>
           <p className="sc-count" data-testid="text-total">{total} {total === 1 ? 'person' : 'people'}</p>
-          <div className="sc-grid">{list.map((p) => <PersonCard key={p.username} p={p} />)}</div>
+          <div className="sc-grid">{list.map((p) => <PersonCard key={p.username} p={p} publicSearch />)}</div>
           <div className="sc-pager">
             <button type="button" className="bm-btn bm-btn-sm" disabled={stack.length < 2} onClick={() => setStack((s) => s.slice(0, -1))} data-testid="button-prev">Previous</button>
             <button type="button" className="bm-btn bm-btn-sm" disabled={!hasNext} onClick={() => setStack((s) => [...s, offset + list.length])} data-testid="button-next">Next</button>
