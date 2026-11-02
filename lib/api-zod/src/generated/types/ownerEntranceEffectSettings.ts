@@ -8,10 +8,6 @@
 import type { EntranceEffectTierSetting } from './entranceEffectTierSetting';
 
 export interface OwnerEntranceEffectSettings {
-  /**
-     * @minItems 5
-     * @maxItems 5
-     */
   tiers: EntranceEffectTierSetting[];
   lionEffectEnabled: boolean;
 }

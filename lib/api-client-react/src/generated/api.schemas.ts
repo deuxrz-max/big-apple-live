@@ -2306,10 +2306,6 @@ export interface EntranceEffectTierSetting {
 }
 
 export interface OwnerEntranceEffectSettings {
-  /**
-     * @minItems 5
-     * @maxItems 5
-     */
   tiers: EntranceEffectTierSetting[];
   lionEffectEnabled: boolean;
 }

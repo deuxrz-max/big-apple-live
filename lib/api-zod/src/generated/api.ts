@@ -1919,9 +1919,6 @@ export const getSocialMeResponseNameColorProgressCoinsToNextTierMin = 0;
 export const getSocialMeResponseNameColorTestOverrideCoinsMin = 0;
 
 export const getSocialMeResponseEntranceEffectsEquippedEffectIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
-export const getSocialMeResponseEntranceEffectsOwnerTestOneTiersMin = 5;
-export const getSocialMeResponseEntranceEffectsOwnerTestOneTiersMax = 5;
-
 
 export const getSocialMeResponseLoginStreakMin = 0;
 
@@ -1976,7 +1973,7 @@ export const GetSocialMeResponse = zod.object({
   "badgeId": zod.enum(['monthly-tier-1', 'monthly-tier-2', 'monthly-tier-3', 'monthly-tier-4', 'monthly-tier-5']),
   "name": zod.string(),
   "enabled": zod.boolean()
-})).min(getSocialMeResponseEntranceEffectsOwnerTestOneTiersMin).max(getSocialMeResponseEntranceEffectsOwnerTestOneTiersMax),
+})),
   "lionEffectEnabled": zod.boolean()
 }),zod.null()])
 }),
@@ -2294,9 +2291,6 @@ export const UpdateMyEntranceEffectSettingsBody = zod.object({
 })
 
 export const updateMyEntranceEffectSettingsResponseEquippedEffectIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
-export const updateMyEntranceEffectSettingsResponseOwnerTestOneTiersMin = 5;
-export const updateMyEntranceEffectSettingsResponseOwnerTestOneTiersMax = 5;
-
 
 
 export const UpdateMyEntranceEffectSettingsResponse = zod.object({
@@ -2310,7 +2304,7 @@ export const UpdateMyEntranceEffectSettingsResponse = zod.object({
   "badgeId": zod.enum(['monthly-tier-1', 'monthly-tier-2', 'monthly-tier-3', 'monthly-tier-4', 'monthly-tier-5']),
   "name": zod.string(),
   "enabled": zod.boolean()
-})).min(updateMyEntranceEffectSettingsResponseOwnerTestOneTiersMin).max(updateMyEntranceEffectSettingsResponseOwnerTestOneTiersMax),
+})),
   "lionEffectEnabled": zod.boolean()
 }),zod.null()])
 })

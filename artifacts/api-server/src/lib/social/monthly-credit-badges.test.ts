@@ -2,6 +2,34 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { evaluateMonthlyPurchaseBadges, MONTHLY_BADGE_ACTIVE_DURATION_MS } from "./monthly-credit-badge-policy";
 import { MONTHLY_CREDIT_BADGE_TIERS } from "./monthly-credit-badge-config";
+import { GetSocialMeResponse } from "@workspace/api-zod";
+
+test("signed-in profile response accepts the current owner tier catalog and ordinary accounts", () => {
+  const entranceEffects = {
+    eligible: true,
+    enabled: true,
+    badgeId: "monthly-tier-4",
+    badgeName: "King of Beasts",
+    equippedEffectId: null,
+    ownerTest: {
+      lionEffectEnabled: true,
+      tiers: MONTHLY_CREDIT_BADGE_TIERS.map(tier => ({
+        badgeId: tier.id, name: tier.name, enabled: true,
+      })),
+    },
+  };
+  const response = GetSocialMeResponse.pick({ entranceEffects: true });
+  assert.equal(response.safeParse({ entranceEffects }).success, true);
+  assert.equal(response.safeParse({
+    entranceEffects: { ...entranceEffects, ownerTest: null },
+  }).success, true);
+  assert.equal(response.safeParse({
+    entranceEffects: {
+      ...entranceEffects,
+      ownerTest: { ...entranceEffects.ownerTest, tiers: [{ badgeId: "unknown-tier", name: "Bad tier", enabled: true }] },
+    },
+  }).success, false, "tier item validation must remain enabled");
+});
 
 test("each threshold crossed in a UTC calendar month earns a separate 30-day badge", () => {
   assert.deepEqual(MONTHLY_CREDIT_BADGE_TIERS.map(tier => tier.monthlyCredits),
