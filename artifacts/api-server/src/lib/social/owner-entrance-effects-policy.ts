@@ -1,6 +1,7 @@
 import { MONTHLY_CREDIT_BADGE_TIERS } from "./monthly-credit-badge-config";
 
 export const OWNER_BADGE_TEST_USERNAME = "vampsquad";
+export const OWNER_ACCOUNT_USERNAMES = new Set([OWNER_BADGE_TEST_USERNAME, "vampsquad4"]);
 export type MonthlyTierEntranceEffectId = typeof MONTHLY_CREDIT_BADGE_TIERS[number]["entranceEffectId"];
 export type EntranceEffectChoice = "lion-entrance" | MonthlyTierEntranceEffectId;
 
@@ -12,7 +13,7 @@ export function isTierEntranceEffectEnabled(
 }
 
 export function isOwnerAccount(profile: { username: string; isTestAccount: boolean }) {
-  return !profile.isTestAccount && profile.username.trim().toLowerCase() === OWNER_BADGE_TEST_USERNAME;
+  return !profile.isTestAccount && OWNER_ACCOUNT_USERNAMES.has(profile.username.trim().toLowerCase());
 }
 
 export function hasOwnerTierTestAccess(

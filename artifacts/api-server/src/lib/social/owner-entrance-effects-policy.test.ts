@@ -8,11 +8,15 @@ import {
 } from "./owner-entrance-effects-policy";
 import { MONTHLY_CREDIT_BADGE_TIERS } from "./monthly-credit-badge-config";
 
-test("only the non-test Vampsquad account receives preview badge test access", () => {
+test("only the explicitly allowlisted non-test owner accounts receive owner access", () => {
   assert.equal(isOwnerAccount({ username: "VAMPSQUAD", isTestAccount: false }), true);
+  assert.equal(isOwnerAccount({ username: "Vampsquad4", isTestAccount: false }), true);
   assert.equal(hasOwnerTierTestAccess({ username: "Vampsquad", isTestAccount: false }, "development"), true);
+  assert.equal(hasOwnerTierTestAccess({ username: "VAMPSQUAD4", isTestAccount: false }, "development"), true);
   assert.equal(hasOwnerTierTestAccess({ username: "Vampsquad", isTestAccount: false }, "production"), false);
+  assert.equal(hasOwnerTierTestAccess({ username: "Vampsquad4", isTestAccount: false }, "production"), false);
   assert.equal(hasOwnerTierTestAccess({ username: "Vampsquad", isTestAccount: true }, "development"), false);
+  assert.equal(isOwnerAccount({ username: "Vampsquad4", isTestAccount: true }), false);
   assert.equal(hasOwnerTierTestAccess({ username: "another_user", isTestAccount: false }, "development"), false);
 });
 
