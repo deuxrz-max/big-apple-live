@@ -162,9 +162,10 @@ test("test actor commands exercise isolated university, chat, DM, and gift servi
 
   await t.test("DM privacy, blocks, recipient restrictions, rate limits, and persistence remain enforced", async () => {
     await db.update(socialSettings).set({ discoverable: false }).where(eq(socialSettings.accountId, recipientId));
-    await assert.rejects(executeTestActorCommand({
+    const privatePreferenceMessage = await executeTestActorCommand({
       action: "dm", as: actorName, to: recipientName, text: "Private fixture message",
-    }), /not available in discovery/);
+    }) as { messageId: string };
+    assert.ok(privatePreferenceMessage.messageId, "discovery opt-out does not block a new private message");
 
     await db.insert(socialRelations).values({ ownerId: recipientId, targetId: actorId, kind: "block" });
     await db.update(socialSettings).set({ discoverable: true }).where(eq(socialSettings.accountId, recipientId));
@@ -186,7 +187,7 @@ test("test actor commands exercise isolated university, chat, DM, and gift servi
     assert.equal(saved[0]?.senderId, actorId);
     assert.equal(saved[0]?.recipientId, recipientId);
 
-    for (let i = 1; i < 30; i++) {
+    for (let i = 1; i < 29; i++) {
       await executeTestActorCommand({
         action: "dm", as: actorName, to: recipientName, text: `Fixture DM ${i}`,
       });

@@ -1,10 +1,10 @@
 ---
 name: People search visibility
-description: People search ignores discovery opt-in while retaining blocking and separate contact preferences.
+description: Search, profiles, follows and direct messages do not require discovery opt-in; blocks and gift-contact rules remain separate.
 ---
 
-Signed-in users can find other accounts by partial display name or @ID without discovery opt-in. Country filters still apply; self and bilateral blocks are excluded. Search results show public photo, display name, ID and level only.
+Signed-in users can find other accounts by partial display name or @ID without discovery opt-in. Public profile viewing, following and direct messages also ignore that opt-in. Country filters still apply; self and bilateral blocks remain excluded where relevant. Search results show public photo, display name, ID and level only. Gift sending retains its separate prior discovery/contact restrictions.
 
-**Why:** The owner explicitly requested account-wide People search rather than opt-in discovery.
+**Why:** The owner explicitly requested that discovery opt-in not block finding, viewing, following or messaging accounts, while asking that gifting behavior remain unchanged.
 
-**How to apply:** Keep search/public profile visibility separate from following and messaging permissions. Do not remove discovery restrictions from unrelated contact or leaderboard paths just to make search work. Preserve the production exclusion of development-only fixture accounts.
+**How to apply:** Preserve bilateral blocks, keep discovery opt-in out of search/profile/follow/DM checks, and retain gift-specific restrictions and production exclusion of development-only fixture accounts.

@@ -56,6 +56,11 @@ export async function assertContact(tx: Tx | typeof db, actor: string, target: s
   if (await pairBlocked(actor, target, tx)) throw new RoomError(403, "This interaction is not available while either person has blocked the other");
   const [settings] = await tx.select().from(socialSettings).where(eq(socialSettings.accountId, target));
   if (!settings) throw new RoomError(404, "This person has not joined the community");
+}
+/** Preserve the previous discoverability rule for gift sends only. */
+export async function assertGiftContact(tx: Tx | typeof db, actor: string, target: string) {
+  await assertContact(tx, actor, target);
+  const [settings] = await tx.select().from(socialSettings).where(eq(socialSettings.accountId, target));
   if (!settings.discoverable) {
     const [conversation] = await tx.select({ id: socialMessages.id }).from(socialMessages).where(or(
       and(eq(socialMessages.senderId, actor), eq(socialMessages.recipientId, target)),

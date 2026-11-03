@@ -54,6 +54,7 @@ export function OwnProfile() {
           <Link href="/user-portal/transactions" className="pf-btn" data-testid="link-transaction-history">Transaction History</Link>
           <Link href="/community" className="pf-btn" data-testid="link-community">Community</Link>
           <Link href="/community/profile" className="pf-btn" data-testid="link-platform-bio">Platform and bio</Link>
+          {access.data?.owner && <Link href="/community/coin-testers" className="pf-btn" data-testid="link-owner-tools">Owner tools</Link>}
           {access.data?.owner && access.data.adultConfirmed && <Link href="/user-portal/photo-reviews" className="pf-btn" data-testid="link-profile-photo-review">Review pending photos</Link>}
           {access.data?.moderator && <Link href="/community/moderation" className="pf-btn" data-testid="link-moderation">Moderation</Link>}
           {import.meta.env.DEV && access.data?.owner === true && <Link href="/user-portal/card-finish" className="pf-btn" data-testid="link-card-finish-preview">Card finish preview</Link>}

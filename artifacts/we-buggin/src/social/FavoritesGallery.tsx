@@ -27,6 +27,7 @@ export function FavoritesGallery({ entries, onSelect, busyUsername }: {
                   <UserPhoto username={person.username} displayName={person.displayName} photoUrl={person.photoUrl} size={160} />
                 </span>
               </ProfileTap>
+              <span className="fg-name">{name}<small>@{person.username}</small></span>
               {room && <button type="button" className="fg-room fg-join" disabled={busy}
                 aria-label={`${name}, ${room.label}. Join room`} onClick={() => onSelect(entry)}
                 data-testid={`button-join-following-${person.username}`}>{room.label}</button>}

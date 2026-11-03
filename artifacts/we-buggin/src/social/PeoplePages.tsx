@@ -5,7 +5,7 @@ import { MessageCircle, Search } from 'lucide-react';
 import {
   useGetSocialMe, useGetSocialPeople, useGetSocialPerson, useSetSocialRelationship, useGetSocialBlocks,
   useSaveSocialProfile, SocialProfileInputExternalPlatform, getGetSocialPeopleQueryKey, getGetSocialPersonQueryKey,
-  useUpdateMyEntranceEffectSettings,
+  useUpdateMyEntranceEffectSettings, useGetChatAccess, useGetCoinTesters, useSetCoinTester,
   type GetSocialPeopleParams,
   useGetFavoritesGallery, getGetFavoritesGalleryQueryKey, getFavoriteRoom,
 } from '@workspace/api-client-react';
@@ -67,10 +67,14 @@ export function PersonPage({ username }: { username: string }) {
   const me = useGetSocialMe();
   const q = useGetSocialPerson(username, { query: { queryKey: getGetSocialPersonQueryKey(username), refetchInterval: 15000 } });
   const rel = useSetSocialRelationship();
+  const access = useGetChatAccess();
+  const testers = useGetCoinTesters({ query: { enabled: access.data?.owner === true, refetchInterval: 15000 } });
+  const testerMutation = useSetCoinTester();
   const [msg, setMsg] = useState<{ ok: boolean; t: ReactNode } | null>(null);
   useEffect(() => { setMsg(null); }, [username]);
   const p = q.data;
   const own = me.data?.profile.username === username;
+  const isTester = !!testers.data?.testers.some(tester => tester.enabled && tester.username.toLowerCase() === username.toLowerCase());
   const setRel = (kind: 'favorite' | 'block', active: boolean) => {
     setMsg(null);
     rel.mutate({ username, data: { kind, active } }, {
@@ -79,12 +83,25 @@ export function PersonPage({ username }: { username: string }) {
     });
   };
   const backHref = useProfileBackHref(username, '/community');
+  const setTester = (active: boolean) => {
+    setMsg(null);
+    testerMutation.mutate({ data: { username, enabled: active } }, {
+      onSuccess: () => {
+        setMsg({ ok: true, t: active ? 'Coin tester enabled. Unlimited test coins are active.' : 'Coin tester removed. Real balances are unchanged.' });
+        refreshSocial(qc);
+      },
+      onError: (error) => setMsg({ ok: false, t: errMsg(error) }),
+    });
+  };
   if (q.isLoading) return <><div className="pf-state-back"><BackButton href={backHref} label="Back" /></div><Loading /></>;
   if (q.isError || !p) return <><div className="pf-state-back"><BackButton href={backHref} label="Back" /></div><ErrorBox error={q.error ?? 'Not found'} retry={() => q.refetch()} /></>;
   const countryName = p.country ? (me.data?.countries.find((c) => c.code === p.country)?.name ?? p.country) : undefined;
   return (
-    <ProfileView person={p} own={own} countryName={countryName} products={me.data?.products} backHref={backHref}
-      menu={own ? null : <ProfileMenu name={p.displayName || p.username} username={p.username} blocked={p.blocked} pending={rel.isPending} onBlock={(a) => setRel('block', a)} />}
+    <ProfileView person={p} own={own} tester={!!access.data?.owner && isTester} countryName={countryName} products={me.data?.products} backHref={backHref}
+      menu={own ? null : <ProfileMenu name={p.displayName || p.username} username={p.username} blocked={p.blocked}
+        pending={rel.isPending || testerMutation.isPending} owner={access.data?.owner === true} isTester={isTester}
+        testerLoading={access.data?.owner === true && testers.isLoading}
+        onTester={setTester} onBlock={(a) => setRel('block', a)} />}
       actions={own ? null : (
         <div className="pf-actions">
           <button type="button" className="pf-btn pf-btn-fill" aria-pressed={p.favorite} disabled={rel.isPending || p.blocked} onClick={() => setRel('favorite', !p.favorite)} data-testid="button-favorite">{p.favorite ? 'Following' : 'Follow'}</button>
@@ -236,7 +253,7 @@ export function FavoritesPage() {
     document.addEventListener('visibilitychange', refresh);
     return () => document.removeEventListener('visibilitychange', refresh);
   }, [q.refetch]);
-  const present = q.data?.filter(entry => entry.room !== null && !entry.person.blocked);
+  const present = q.data?.filter(entry => !entry.person.blocked);
   async function select(entry: FavoriteEntry) {
     if (busy.current) return;
     if (!entry.room) {
@@ -270,7 +287,7 @@ export function FavoritesPage() {
       {q.isLoading && <Loading />}
       {q.isError && <ErrorBox error={q.error} retry={() => q.refetch()} />}
       {present && (present.length === 0
-        ? <p className="fg-empty">No one you follow is in a room right now. Check back soon.</p>
+        ? <p className="fg-empty">You aren't following anyone yet.</p>
         : <FavoritesGallery entries={present} busyUsername={busyUsername} onSelect={entry => { void select(entry); }} />)}
     </section>
   );

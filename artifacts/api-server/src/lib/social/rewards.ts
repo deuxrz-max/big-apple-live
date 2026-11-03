@@ -2,7 +2,7 @@ import { db, socialWallets, socialLedger, socialGiftEvents, coinTesters } from "
 import { desc, eq, sql } from "drizzle-orm";
 import { RoomError, roomStore } from "../room-store";
 import { DAILY_REWARD } from "./catalog";
-import { assertContact, hasClaimedDaily, lockAccounts, lockPair, requireAccount, targetAccount, wallet } from "./core";
+import { assertGiftContact, hasClaimedDaily, lockAccounts, lockPair, requireAccount, targetAccount, wallet } from "./core";
 import { SPIRIT_PUP, spiritSplit } from './spirit-pup-policy';
 import { validateGiftRoom } from './room-gifts';
 import { requireAdult } from '../community';
@@ -89,7 +89,7 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
   }
   const result = await db.transaction(async tx => {
     await lockPair(tx, id, target.accountId);
-    if (id !== target.accountId) await assertContact(tx, id, target.accountId);
+    if (id !== target.accountId) await assertGiftContact(tx, id, target.accountId);
     await lockAccounts(tx, [id, target.accountId]);
     const boundHistory = roomContext ? roomStore.getHistoryId(roomContext.roomId.toUpperCase()) : null;
     const ref = `gift:${giftId}:${target.accountId}${boundHistory ? ':' + boundHistory : streamContext ? ':live:' + streamContext.streamId : ''}`;

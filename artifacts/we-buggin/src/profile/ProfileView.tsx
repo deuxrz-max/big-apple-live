@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'wouter';
-import { ArrowLeft, Pencil, MoreVertical, Ban, Flag, Undo2 } from 'lucide-react';
+import { ArrowLeft, Pencil, MoreVertical, Ban, Flag, Undo2, Coins } from 'lucide-react';
 import type { SocialPerson } from '@workspace/api-client-react';
 import { UserPhoto, photoSrc } from '@/components/user-photo';
 import { ShinyName } from '@/components/ShinyName';
@@ -49,7 +49,10 @@ export function BackButton({ href, label }: { href: string; label: string }) {
   return <Link href={href} className="pf-round" aria-label={label} data-testid="link-profile-back"><ArrowLeft size={20} aria-hidden /></Link>;
 }
 
-export function ProfileMenu({ name, username, blocked, pending, onBlock }: { name: string; username: string; blocked: boolean; pending: boolean; onBlock: (active: boolean) => void }) {
+export function ProfileMenu({ name, username, blocked, pending, onBlock, owner = false, isTester = false, testerLoading = false, onTester }: {
+  name: string; username: string; blocked: boolean; pending: boolean; onBlock: (active: boolean) => void;
+  owner?: boolean; isTester?: boolean; testerLoading?: boolean; onTester?: (active: boolean) => void;
+}) {
   const [open, setOpen] = useState(false);
   const [dlg, setDlg] = useState<null | 'block'>(null);
   const [reportOpen, setReportOpen] = useState(false);
@@ -65,6 +68,10 @@ export function ProfileMenu({ name, username, blocked, pending, onBlock }: { nam
       {open && <>
         <button type="button" className="pf-scrim" aria-label="Close menu" tabIndex={-1} onClick={() => setOpen(false)} />
         <div className="pf-menu-list" role="menu">
+          {owner && onTester && <button type="button" role="menuitem" disabled={pending || testerLoading}
+            onClick={() => { setOpen(false); onTester(!isTester); }} data-testid="button-toggle-coin-tester">
+            <Coins size={16} aria-hidden />{testerLoading ? 'Checking tester status…' : isTester ? 'Remove coin tester' : 'Make coin tester (unlimited test coins)'}
+          </button>}
           <button type="button" role="menuitem" autoFocus onClick={() => { setOpen(false); setReportOpen(true); }} data-testid="button-report"><Flag size={16} aria-hidden /> Report</button>
           {blocked
             ? <button type="button" role="menuitem" disabled={pending} onClick={() => { setOpen(false); onBlock(false); }} data-testid="button-unblock"><Undo2 size={16} aria-hidden /> Unblock</button>
@@ -104,9 +111,9 @@ function Shield({ id, name, imageUrl, date, equipped }: { id: string; name: stri
   );
 }
 
-export function ProfileView({ person, own = false, countryName, products, backHref, menu, actions, links, children }: {
+export function ProfileView({ person, own = false, tester = false, countryName, products, backHref, menu, actions, links, children }: {
   person: SocialPerson; own?: boolean; countryName?: string; products?: Product[]; backHref: string;
-  menu?: ReactNode; actions?: ReactNode; links?: ReactNode; children?: ReactNode;
+  tester?: boolean; menu?: ReactNode; actions?: ReactNode; links?: ReactNode; children?: ReactNode;
 }) {
   const p = person;
   const name = p.displayName?.trim() || p.username;
@@ -125,6 +132,7 @@ export function ProfileView({ person, own = false, countryName, products, backHr
         <h1 className="pf-name" data-testid="text-display-name">
           <BadgeMark id={p.badgeId ?? null} label={p.badgeName} imageUrl={p.badgeImage} size={26} />
           <ShinyName className="pf-display-name" displayNameColor={p.displayNameColor} displayNameTierIndex={p.displayNameTierIndex}>{name}</ShinyName>
+          {tester && <span className="pf-tester-tag" data-testid="tag-coin-tester">Tester</span>}
         </h1>
         {own && <Link href="/user-portal/edit" className="pf-edit" data-testid="link-edit-profile">Edit your profile</Link>}
         {actions}
