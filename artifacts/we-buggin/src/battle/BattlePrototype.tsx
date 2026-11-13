@@ -37,21 +37,18 @@ function BattleCard({
   character,
   active,
   isHumanTurn,
-  targetMode,
+  targetable,
   onChooseTarget,
   onActivateSkill,
 }: {
   character: BattleCharacter;
   active: boolean;
   isHumanTurn: boolean;
-  targetMode: TargetMode;
+  targetable: boolean;
   onChooseTarget: (id: string) => void;
   onActivateSkill: (character: BattleCharacter) => void;
 }) {
   const alive = character.hp > 0;
-  const targetable = alive && targetMode !== null &&
-    ((targetMode === "ally" && character.side === "humans") ||
-      (targetMode === "enemy" && character.side === "bots"));
   const canUseSkill = isHumanTurn && active && alive && character.mana >= character.skillCost;
   const hpRatio = Math.max(0, character.hp / character.maxHp);
   const manaRatio = Math.min(1, character.mana / character.skillCost);
@@ -68,7 +65,7 @@ function BattleCard({
           <span className="battle-level">{character.level}</span>
           <span className="battle-portrait" aria-hidden="true">{character.name.slice(0, 1)}</span>
           <span className="battle-job-mark" aria-hidden="true">{character.job.slice(0, 1)}</span>
-          <span className="battle-side-mark" aria-hidden="true">{character.side === "humans" ? "H" : "B"}</span>
+          <span className="battle-side-mark" aria-hidden="true">H</span>
           <span className="battle-card-name">{character.name}</span>
           <span className="battle-card-job">{character.job}</span>
           <div className="battle-card-bars" aria-label={`${character.hp} of ${character.maxHp} health, ${character.mana} of ${character.skillCost} mana`}>
@@ -83,10 +80,11 @@ function BattleCard({
               onClick={() => onChooseTarget(character.id)}
             />
           )}
-          {canUseSkill && (
+          {alive && (
             <button
               type="button"
               className={`battle-skill-orb${character.mana >= character.skillCost ? " is-charged" : ""}`}
+              disabled={!canUseSkill}
               aria-label={`Use ${character.skillName}`}
               title={`${character.skillName} — tap to choose a target`}
               data-testid={`battle-skill-${character.id}`}
@@ -125,7 +123,7 @@ function TeamRow({
   characters,
   active,
   isHumanTurn,
-  targetMode,
+  targetIds,
   onChooseTarget,
   onActivateSkill,
 }: {
@@ -133,7 +131,7 @@ function TeamRow({
   characters: BattleCharacter[];
   active: BattleCharacter;
   isHumanTurn: boolean;
-  targetMode: TargetMode;
+  targetIds: string[];
   onChooseTarget: (id: string) => void;
   onActivateSkill: (character: BattleCharacter) => void;
 }) {
@@ -152,7 +150,7 @@ function TeamRow({
             character={character}
             active={active.id === character.id && character.hp > 0}
             isHumanTurn={isHumanTurn}
-            targetMode={targetMode}
+            targetable={targetIds.includes(character.id)}
             onChooseTarget={onChooseTarget}
             onActivateSkill={onActivateSkill}
           />
@@ -170,7 +168,7 @@ export function BattlePrototype() {
   const boardHost = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<BattleBoardScene | null>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
-  const [battle, setBattle] = useState<BattleState | null>(null);
+  const [battle, setBattle] = useState<BattleState | null>(() => createBattleState());
   const battleRef = useRef<BattleState | null>(null);
   const [selected, setSelected] = useState<Cell | null>(null);
   const [targetMode, setTargetMode] = useState<TargetMode>(null);
@@ -222,10 +220,6 @@ export function BattlePrototype() {
     }
   }, []);
   cellTapRef.current = chooseCell;
-
-  useEffect(() => {
-    setBattle(createBattleState());
-  }, []);
 
   useEffect(() => {
     if (!boardHost.current || gameRef.current) return;
@@ -300,7 +294,9 @@ export function BattlePrototype() {
     setTargetMode(skillMode(character));
     setFeedback(character.skill === "blast"
       ? "Tap any board gem to choose Blast’s center."
-      : `Tap an ${character.skill === "strike" ? "enemy" : "ally"} card to use ${character.skillName}.`);
+      : character.skill === "guard"
+        ? "Tap your healer’s card. The Squire will intercept their next incoming hit."
+        : `Tap an ${character.skill === "strike" ? "enemy" : "injured ally"} card to use ${character.skillName}.`);
   }, []);
 
   const restart = useCallback(() => {
@@ -315,6 +311,11 @@ export function BattlePrototype() {
   }
 
   const active = activeCharacter(battle);
+  const targetIds = targetMode
+    ? [...battle.teams.humans, ...battle.teams.bots]
+      .filter((character) => validSkillTarget(battle, { kind: "character", id: character.id }))
+      .map((character) => character.id)
+    : [];
   const turnText = battle.outcome
     ? battle.outcome === "victory" ? "Victory" : "Defeat"
     : battle.turnSide === "humans"
@@ -335,7 +336,7 @@ export function BattlePrototype() {
           characters={battle.teams.bots}
           active={activeCharacter(battle, "bots")}
           isHumanTurn={false}
-          targetMode={targetMode}
+          targetIds={targetIds}
           onChooseTarget={chooseSkillTarget}
           onActivateSkill={activateSkill}
         />
@@ -355,7 +356,7 @@ export function BattlePrototype() {
           characters={battle.teams.humans}
           active={activeCharacter(battle, "humans")}
           isHumanTurn={battle.turnSide === "humans" && !battle.outcome}
-          targetMode={targetMode}
+          targetIds={targetIds}
           onChooseTarget={chooseSkillTarget}
           onActivateSkill={activateSkill}
         />

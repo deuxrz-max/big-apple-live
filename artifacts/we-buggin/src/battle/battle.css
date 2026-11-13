@@ -159,10 +159,10 @@ body.streamtalk-battle-screen .app-page {
   position: absolute;
   width: 134%;
   height: 120%;
+  max-width: none;
   left: -17%;
   top: -10%;
   object-fit: fill;
-  mix-blend-mode: multiply;
   pointer-events: none;
 }
 
@@ -186,34 +186,32 @@ body.streamtalk-battle-screen .app-page {
   z-index: 2;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(223, 207, 166, .72);
-  border-radius: 50%;
   color: #f4e7c6;
-  background: #1e1a14;
-  box-shadow: 0 1px 3px #000;
-  font: 900 7px/1 'Space Mono', monospace;
+  text-shadow: 0 1px 2px #000;
+  transform: translate(-50%, -50%);
+  font: 900 9px/1 'Space Mono', monospace;
 }
 
 .battle-level {
-  left: 14%;
-  top: 6%;
-  width: 18%;
+  left: 14.5%;
+  top: 7.5%;
+  width: 22%;
   aspect-ratio: 1;
   color: #f4d889;
 }
 
 .battle-side-mark {
-  right: 14%;
-  top: 6%;
-  width: 17%;
+  left: 85%;
+  top: 38.5%;
+  width: 20%;
   aspect-ratio: 1;
   font-size: 6px;
 }
 
 .battle-job-mark {
-  left: 13%;
-  top: 39%;
-  width: 19%;
+  left: 20%;
+  top: 38.5%;
+  width: 20%;
   aspect-ratio: 1;
   color: var(--mana-color);
 }
@@ -223,18 +221,16 @@ body.streamtalk-battle-screen .app-page {
   z-index: 1;
   top: 23%;
   left: 50%;
-  width: 34%;
+  width: 66%;
   aspect-ratio: 1;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
   border: 1px solid color-mix(in srgb, var(--mana-color), #fff 35%);
   border-radius: 50%;
   color: #fff3d1;
-  background:
-    radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--mana-color), #fff 18%), transparent 38%),
-    #15130f;
-  box-shadow: 0 0 9px color-mix(in srgb, var(--mana-color), transparent 42%);
+  background: #15130f;
+  box-shadow: 0 0 3px color-mix(in srgb, var(--mana-color), transparent 42%);
   font: 900 13px/1 'Space Mono', monospace;
 }
 
@@ -263,7 +259,7 @@ body.streamtalk-battle-screen .app-page {
 .battle-card-job {
   top: 77%;
   color: var(--mana-color);
-  font: 700 6px/1.1 'Space Mono', monospace;
+  font: 700 7px/1.1 'Space Mono', monospace;
 }
 
 .battle-card-bars {
@@ -297,16 +293,16 @@ body.streamtalk-battle-screen .app-page {
   inset: 0;
   z-index: 1;
   color: #fff;
-  font: 800 5px/6px 'Space Mono', monospace;
+  font: 800 6px/6px 'Space Mono', monospace;
   text-shadow: 0 1px 2px #000, 0 0 2px #000;
 }
 
 .battle-skill-orb {
   position: absolute;
   z-index: 5;
-  top: 42%;
+  top: 44%;
   left: 50%;
-  width: 22%;
+  width: 20%;
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   padding: 0;
@@ -323,6 +319,26 @@ body.streamtalk-battle-screen .app-page {
   box-shadow: 0 0 8px #5dbfff, inset 0 0 5px #e9faff;
   cursor: pointer;
   animation: battle-orb-pulse 1.5s ease-in-out infinite alternate;
+}
+
+.battle-skill-orb:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+/* The supplied card explicitly uses a circular portrait ring and skill orb.
+   Keep that artwork local to this prototype, without changing app-wide frames. */
+@layer app-shapes {
+  body .battle-prototype .battle-portrait,
+  body .battle-prototype .battle-skill-orb {
+    border-radius: 50% !important;
+  }
+}
+
+.battle-skill-orb::after {
+  content: "";
+  position: absolute;
+  inset: -15px;
 }
 
 @keyframes battle-orb-pulse {

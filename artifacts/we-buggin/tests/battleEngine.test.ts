@@ -7,6 +7,7 @@ import {
   activeCharacter,
   applySkill,
   applySwap,
+  botTurn,
   createBattleState,
   createBoard,
   findLegalSwaps,
@@ -23,6 +24,12 @@ test("the first board is an 8x8 playable grid with no free opening matches", () 
   const board = createBoard();
   assert.equal(board.length, 8);
   assert.ok(board.every((row) => row.length === 8));
+  assert.equal(findMatches(board).length, 0);
+  assert.ok(findLegalSwaps(board).length > 0);
+});
+
+test("even a constant random source falls back to a playable board", () => {
+  const board = createBoard(() => 0);
   assert.equal(findMatches(board).length, 0);
   assert.ok(findLegalSwaps(board).length > 0);
 });
@@ -66,14 +73,14 @@ test("a charged skill needs a target and then consumes the acting hero's turn", 
     activeIndex: { ...state.activeIndex, humans: 1 },
   };
   assert.equal(activeCharacter(ready).job, "Squire");
-  const result = applySkill(ready, { kind: "character", id: "humans-3" });
+  const result = applySkill(ready, { kind: "character", id: "humans-4" });
   assert.equal(result.accepted, true);
-  assert.equal(result.state.teams.humans[2].shield, 1);
+  assert.equal(result.state.teams.humans[3].guardedBy, "humans-2");
   assert.equal(result.state.teams.humans[1].mana, 0);
   assert.equal(result.state.turnSide, "bots");
 });
 
-test("a charged Ranger can defeat the final enemy and end the battle", () => {
+test("a charged Trapper can defeat the final enemy and end the battle", () => {
   const state = createBattleState();
   const humans = state.teams.humans.map((character) => ({ ...character }));
   const bots = state.teams.bots.map((character) => ({ ...character, hp: 0 }));
@@ -87,4 +94,38 @@ test("a charged Ranger can defeat the final enemy and end the battle", () => {
   const result = applySkill(ready, { kind: "character", id: "bots-1" });
   assert.equal(result.accepted, true);
   assert.equal(result.state.outcome, "victory");
+});
+
+test("three swords do not count as a four-sword strike", () => {
+  const state = createBattleState();
+  const board = freshPattern();
+  board[0].splice(0, 4, "sword", "sword", "blue", "brown");
+  board[1][2] = "sword";
+  assert.equal(findMatches(board).length, 0);
+  const result = applySwap({ ...state, board }, { row: 0, col: 2 }, { row: 1, col: 2 }, () => 0.51);
+  assert.equal(result.accepted, true);
+  assert.equal(result.state.teams.bots[0].hp, 75);
+});
+
+test("Squire redirects a hit on the protected healer rather than adding armor", () => {
+  const state = createBattleState();
+  state.teams.humans[3].guardedBy = "humans-2";
+  state.teams.bots[2].mana = state.teams.bots[2].skillCost;
+  state.turnSide = "bots";
+  state.activeIndex.bots = 2;
+  const result = applySkill(state, { kind: "character", id: "humans-4" });
+  assert.equal(result.accepted, true);
+  assert.equal(result.state.teams.humans[3].hp, 75);
+  assert.equal(result.state.teams.humans[1].hp, 55);
+  assert.equal(result.state.teams.humans[3].guardedBy, null);
+});
+
+test("the bot makes a legal turn and returns control to the human team", () => {
+  const state = createBattleState();
+  state.turnSide = "bots";
+  const next = botTurn(state);
+  assert.equal(next.turnSide, "humans");
+  assert.equal(next.turnNumber, 2);
+  assert.equal(findMatches(next.board).length, 0);
+  assert.ok(findLegalSwaps(next.board).length > 0);
 });

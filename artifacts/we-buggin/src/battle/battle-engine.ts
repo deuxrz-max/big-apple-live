@@ -35,7 +35,7 @@ export interface BattleCharacter {
   hp: number;
   maxHp: number;
   mana: number;
-  shield: number;
+  guardedBy: string | null;
 }
 
 export type Board = GemType[][];
@@ -53,6 +53,7 @@ export interface BattleState {
 export interface MatchSummary {
   counts: Record<GemType, number>;
   cascades: number;
+  swordStrikes: number;
 }
 
 export interface TurnResult {
@@ -68,10 +69,10 @@ const DEFAULTS: Array<{
   skillName: string;
   skillCost: number;
 }> = [
-  { job: "Spellbinder", manaGem: "red", skill: "blast", skillName: "Blast", skillCost: 16 },
+  { job: "Apprentice", manaGem: "red", skill: "blast", skillName: "Blast", skillCost: 16 },
   { job: "Squire", manaGem: "yellow", skill: "guard", skillName: "Vanguard’s Resolve", skillCost: 12 },
-  { job: "Ranger", manaGem: "green", skill: "strike", skillName: "Strike", skillCost: 15 },
-  { job: "Priest", manaGem: "blue", skill: "heal", skillName: "Healing Light", skillCost: 12 },
+  { job: "Trapper", manaGem: "green", skill: "strike", skillName: "Strike", skillCost: 15 },
+  { job: "Acolyte", manaGem: "blue", skill: "heal", skillName: "Healing Light", skillCost: 12 },
 ];
 
 function emptyCounts(): Record<GemType, number> {
@@ -140,8 +141,22 @@ export function findLegalSwaps(board: Board): Array<{ from: Cell; to: Cell }> {
 }
 
 function fallbackBoard(): Board {
-  return Array.from({ length: ROWS }, (_, row) =>
+  const board = Array.from({ length: ROWS }, (_, row) =>
     Array.from({ length: COLS }, (_, col) => GEM_TYPES[(row * 3 + col * 2) % GEM_TYPES.length]));
+  board[0].splice(0, 4, "red", "red", "blue", "red");
+  board[1][2] = "red";
+  return board;
+}
+
+function hasFourSwords(board: Board): boolean {
+  for (let row = 0; row < ROWS; row += 1) {
+    for (let col = 0; col < COLS; col += 1) {
+      if (board[row][col] !== "sword") continue;
+      if (col <= COLS - 4 && [1, 2, 3].every((offset) => board[row][col + offset] === "sword")) return true;
+      if (row <= ROWS - 4 && [1, 2, 3].every((offset) => board[row + offset][col] === "sword")) return true;
+    }
+  }
+  return false;
 }
 
 export function createBoard(random: () => number = Math.random): Board {
@@ -157,10 +172,12 @@ function settleBoard(board: Board, random: () => number): { board: Board; summar
   const next = cloneBoard(board);
   const counts = emptyCounts();
   let cascades = 0;
+  let swordStrikes = 0;
   while (cascades < 10) {
     const matches = findMatches(next);
     if (!matches.length) break;
     cascades += 1;
+    if (hasFourSwords(next)) swordStrikes += 1;
     const removed = new Set<string>();
     for (const match of matches) {
       counts[match.type] += match.cells.length;
@@ -176,8 +193,10 @@ function settleBoard(board: Board, random: () => number): { board: Board; summar
       for (let row = ROWS - 1; row >= 0; row -= 1) next[row][col] = remaining[ROWS - 1 - row];
     }
   }
-  if (!findLegalSwaps(next).length) return { board: createBoard(random), summary: { counts, cascades } };
-  return { board: next, summary: { counts, cascades } };
+  if (findMatches(next).length || !findLegalSwaps(next).length) {
+    return { board: createBoard(random), summary: { counts, cascades, swordStrikes } };
+  }
+  return { board: next, summary: { counts, cascades, swordStrikes } };
 }
 
 export function createBattleState(random: () => number = Math.random): BattleState {
@@ -194,7 +213,7 @@ export function createBattleState(random: () => number = Math.random): BattleSta
     hp: 75,
     maxHp: 75,
     mana: 0,
-    shield: 0,
+    guardedBy: null,
   }));
   return {
     board: createBoard(random),
@@ -219,15 +238,20 @@ function applyMana(team: BattleCharacter[], counts: Record<GemType, number>): vo
   }
 }
 
+function damageCharacter(team: BattleCharacter[], target: BattleCharacter, damage: number): string {
+  const guard = team.find((character) => character.id === target.guardedBy && character.hp > 0);
+  target.guardedBy = null;
+  const recipient = guard ?? target;
+  recipient.hp = Math.max(0, recipient.hp - damage);
+  return guard
+    ? `${guard.name} intercepted ${damage} damage for ${target.name}.`
+    : `${target.name} took ${damage} damage.`;
+}
+
 function damageLeader(team: BattleCharacter[], damage: number): string {
   const leader = team.find((character) => character.hp > 0);
   if (!leader) return "No enemy remains.";
-  if (leader.shield > 0) {
-    leader.shield -= 1;
-    return `${leader.name} blocked the hit.`;
-  }
-  leader.hp = Math.max(0, leader.hp - damage);
-  return `${leader.name} took ${damage} damage.`;
+  return damageCharacter(team, leader, damage);
 }
 
 function finishTurn(state: BattleState, side: BattleSide, message: string): BattleState {
@@ -268,8 +292,8 @@ function appendMatchEffects(state: BattleState, side: BattleSide, settled: { boa
   const manaMatches = MANA_GEMS.filter((type) => settled.summary.counts[type] > 0)
     .map((type) => `${type} gems charged ${state.teams[side].find((character) => character.manaGem === type)?.name ?? "a teammate"}`);
   if (manaMatches.length) messages.push(manaMatches.join(" · "));
-  if (settled.summary.counts.sword >= 4) {
-    messages.push(`${actor.name} matched ${settled.summary.counts.sword} swords. ${damageLeader(state.teams[otherSide(side)], actor.level)}`);
+  for (let strike = 0; strike < settled.summary.swordStrikes; strike += 1) {
+    messages.push(`${actor.name} matched four swords. ${damageLeader(state.teams[otherSide(side)], actor.level)}`);
   }
   if (!messages.length) messages.push(`${actor.name} made a match.`);
   return messages;
@@ -295,7 +319,7 @@ function blastBoard(board: Board, target: Cell, random: () => number): { board: 
   const counts = emptyCounts();
   for (let row = target.row - 1; row <= target.row + 1; row += 1) {
     for (let col = target.col - 1; col <= target.col + 1; col += 1) {
-      if (isInside(row, col)) {
+      if (isInside(row, col) && (row !== target.row || col !== target.col)) {
         counts[next[row][col]] += 1;
         next[row][col] = randomGem(random);
       }
@@ -303,7 +327,7 @@ function blastBoard(board: Board, target: Cell, random: () => number): { board: 
   }
   const cascaded = settleBoard(next, random);
   for (const type of GEM_TYPES) counts[type] += cascaded.summary.counts[type];
-  return { board: cascaded.board, summary: { counts, cascades: cascaded.summary.cascades + 1 } };
+  return { board: cascaded.board, summary: { ...cascaded.summary, counts, cascades: cascaded.summary.cascades + 1 } };
 }
 
 export function applySkill(state: BattleState, target: SkillTarget, random: () => number = Math.random): TurnResult {
@@ -324,18 +348,17 @@ export function applySkill(state: BattleState, target: SkillTarget, random: () =
     const result = blastBoard(next.board, target, random);
     next.board = result.board;
     applyMana(allies, result.summary.counts);
-    for (const enemy of enemies) if (enemy.hp > 0) enemy.hp = Math.max(0, enemy.hp - 8);
+    for (const enemy of [...enemies].filter((character) => character.hp > 0)) damageCharacter(enemies, enemy, 8);
     message = `${actor.name} used Blast. All enemies took 8 damage.`;
   } else if (actor.skill === "guard" && target.kind === "character") {
-    const ally = allies.find((character) => character.id === target.id && character.hp > 0);
+    const ally = allies.find((character) => character.id === target.id && character.hp > 0 && character.skill === "heal");
     if (!ally) return { accepted: false, state };
-    ally.shield = Math.min(ally.shield + 1, 1);
-    message = `${actor.name} guarded ${ally.name} against one sword hit.`;
+    ally.guardedBy = actor.id;
+    message = `${actor.name} will intercept the next hit aimed at ${ally.name}.`;
   } else if (actor.skill === "strike" && target.kind === "character") {
     const enemy = enemies.find((character) => character.id === target.id && character.hp > 0);
     if (!enemy) return { accepted: false, state };
-    enemy.hp = Math.max(0, enemy.hp - 20);
-    message = `${actor.name} struck ${enemy.name} for 20 damage.`;
+    message = `${actor.name} used Strike. ${damageCharacter(enemies, enemy, 20)}`;
   } else if (actor.skill === "heal" && target.kind === "character") {
     const ally = allies.find((character) => character.id === target.id && character.hp > 0);
     if (!ally) return { accepted: false, state };
@@ -358,7 +381,8 @@ export function validSkillTarget(state: BattleState, target: SkillTarget): boole
   const character = team?.find((candidate) => candidate.id === target.id && candidate.hp > 0);
   if (!character) return false;
   if (actor.skill === "strike") return character.side !== actor.side;
-  if (actor.skill === "guard" || actor.skill === "heal") return character.side === actor.side;
+  if (actor.skill === "guard") return character.side === actor.side && character.skill === "heal";
+  if (actor.skill === "heal") return character.side === actor.side && character.hp < character.maxHp;
   return false;
 }
 
@@ -373,7 +397,7 @@ export function botTurn(state: BattleState, random: () => number = Math.random):
       if (enemy) target = { kind: "character", id: enemy.id };
     }
     if (actor.skill === "guard") {
-      const ally = state.teams.bots.find((character) => character.hp > 0 && character.shield === 0);
+      const ally = state.teams.bots.find((character) => character.hp > 0 && character.skill === "heal" && !character.guardedBy);
       if (ally) target = { kind: "character", id: ally.id };
     }
     if (actor.skill === "heal") {
