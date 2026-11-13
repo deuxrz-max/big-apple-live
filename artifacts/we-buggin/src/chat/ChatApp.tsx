@@ -237,7 +237,7 @@ export function ChatDirectory() {
           showOtherRoomSigns
           renderRoom={(room) => <DirectoryRoomCard room={room} topic={topicFor(room)} isFeatured={room.roomId === featuredRoom?.roomId} hideDetails />}
           goLive={<CreateRoomButton className="st-home-go-live-button">
-            <span className="st-home-go-live-copy"><strong>Create Room</strong><small>Start a nine-seat audio room</small></span>
+            <span className="st-home-go-live-copy"><strong>Create Room</strong><small>Start a four-player audio room</small></span>
           </CreateRoomButton>}
         />
       </section>

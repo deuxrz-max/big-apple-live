@@ -34,3 +34,27 @@ test("room seats are audio-only and keep nine-seat voice behavior", () => {
   assert.equal(store.connectedSeatOccupants("MUSIC1").length, 0);
   now += 1;
 });
+
+test("social rooms have four explicitly claimed boxes without automatic seating", () => {
+  const rooms = new RoomStore();
+  const identity = { emojiId: "1F600", gender: "Male" as const, color: "#FFFFFF", hairColor: "#000000" };
+  const created = rooms.createSocialRoom("ABCDEF123456", "four-seats", "Test", "Owner", { accountId: "owner", identity });
+  const store = new UniversityVideoBeamStore(rooms);
+  const roomId = created.room.roomId;
+  const members = Array.from({ length: 5 }, (_, i) => rooms.join(roomId, `Guest${i}`, { accountId: `guest-${i}`, identity }));
+  let state = store.getState(roomId);
+  assert.equal(state.slots.length, 4);
+  assert.ok(state.slots.every(slot => slot.participantId === null), "joining a room does not claim a box");
+  state = store.joinSlot(roomId, members[0]!.participantId, "guest-0", 4);
+  assert.equal(state.slots[3]!.participantId, members[0]!.participantId);
+  assert.equal(state.slots[0]!.participantId, null);
+  assert.throws(() => store.joinSlot(roomId, members[1]!.participantId, "guest-1", 4), /unavailable/);
+  assert.throws(() => store.joinSlot(roomId, members[1]!.participantId, "guest-1", 5), /available player box/);
+  for (let i = 1; i < 4; i++) store.joinSlot(roomId, members[i]!.participantId, `guest-${i}`, i);
+  assert.throws(() => store.joinSlot(roomId, members[4]!.participantId, "guest-4"), /unavailable/);
+  state = store.leaveSlot(roomId, members[0]!.participantId);
+  assert.equal(state.slots[3]!.participantId, null);
+  state = store.joinSlot(roomId, members[4]!.participantId, "guest-4", 4);
+  assert.equal(state.slots[3]!.participantId, members[4]!.participantId);
+  assert.ok(state.slots.every(slot => slot.cameraOff && slot.micMuted));
+});

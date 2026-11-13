@@ -357,7 +357,7 @@ export function useUniversityVideoBeam(
     applyBeam(state);
   }, [applyBeam, headers]);
 
-  const joinSpeaker = useCallback(async () => {
+  const joinSpeaker = useCallback(async (targetSlotNumber?: number) => {
     const args = latest.current;
     if (actionRef.current || !args.roomSessionId || !args.participantId) return;
     actionRef.current = true;
@@ -374,14 +374,14 @@ export function useUniversityVideoBeam(
       applyBeam(latestBeam);
       const alreadyOwnsSpot = latestBeam.slots.some(slot => slot.participantId === args.participantId);
       const available = alreadyOwnsSpot || latestBeam.slots.some(slot => !slot.participantId);
-      if (!available) throw new Error("All nine speaker spots are full. You can still watch and chat.");
+      if (!available) throw new Error("All player boxes are full. You can still listen and chat.");
       if (!navigator.mediaDevices?.getUserMedia) {
         throw new Error("This browser cannot access a microphone for room audio.");
       }
 
       // Reserve before the browser prompt, so two people cannot claim the same
       // last spot and a slow permission response cannot be mistaken for a leave.
-      const reserved = await doAction(args, { action: "reserve-slot" });
+      const reserved = await doAction(args, { action: "reserve-slot", targetSlotNumber });
       applyBeam(reserved);
 
       // Capture is requested only inside the explicit speaker-join click.

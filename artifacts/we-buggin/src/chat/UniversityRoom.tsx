@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { LogOut, Mic, MicOff, Send, X } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { RoomChannelBack } from './RoomChannels';
-import { WeatheredStreetSign } from './WeatheredStreetSign';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getGetMyProfileQueryKey, getGetUniversitySessionQueryKey, useAcknowledgeUniversityRules, useGetUniversitySession,
@@ -105,8 +104,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const messageLongPress = useRef<number | null>(null);
   const handledCoinDrops = useRef(new Set<string>());
   const isSocialRoom = r.room?.roomType === 'social';
-  const roomDisplayName = r.room?.name?.trim() ?? '';
-  const hasCreatedStreetSign = isSocialRoom && !!roomDisplayName && !/\s/u.test(roomDisplayName);
 
   useEffect(() => {
     setText(''); setWhisperTo(null); setMenu(null); setDrawer(false); setRulesOpen(false);
@@ -191,7 +188,9 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
     || (isSocialRoom && !!participantId && roomHostParticipantId === participantId);
   const handleOwnSeatTap = () => toggleOwnMic(!ownMicEnabled);
   const menuIsSelf = !!me && menu?.username.toLowerCase() === me.username.toLowerCase();
-  const beamSeatLayout = arrangeAudioSeats(beamSlots, roomHostParticipantId);
+  const beamSeatLayout = isSocialRoom
+    ? beamSlots.slice(0, 4).map((slot, i) => ({ slot, area: 'grid' as const, gridColumn: (i % 2) + 1, gridRow: Math.floor(i / 2) + 1 }))
+    : arrangeAudioSeats(beamSlots, roomHostParticipantId);
   const speakerCount = beamSlots.filter(slot => slot.participantId).length;
   const isSelf = (username: string, authorId?: string) => (!!authorId && authorId === r.creds?.participantId) || me?.username === username;
   const nameOf = (username: string, fallback?: string) => people.find((p) => p.username === username)?.displayName ?? fallback ?? username;
@@ -332,7 +331,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
         <RoomChannelBack roomId={roomId} />
         <div className="ur-head">
           <button type="button" ref={peopleBtn} className="bm-btn bm-btn-sm ur-people-btn" aria-haspopup="dialog" aria-expanded={drawer} onClick={() => setDrawer(true)} data-testid="button-people">People · {people.length}</button>
-          {(!isSocialRoom || !hasCreatedStreetSign) && <div className="ur-titlebox">
+          {!isSocialRoom && <div className="ur-titlebox">
             <h1 className="ch-title ur-title" aria-label={r.room?.name ?? 'Room'} data-testid="text-university-name">
               {(r.room?.name ?? 'Room').split(/\s+/).map((w, i) => (
                 <span className="ch-word" key={`${w}-${i}`} style={{ animationDelay: `${i * 140}ms` }}>{w}</span>
@@ -351,7 +350,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           {drawer && <div className="ur-backdrop" onClick={closeDrawer} aria-hidden="true" />}
           <div className={`ch-room${isSocialRoom ? ' ur-social-room' : ''}`}>
             <section className={`ur-beam${isSocialRoom ? ' is-social-room' : ''}`}
-              aria-label="Nine audio-only seats">
+              aria-label={isSocialRoom ? 'Four audio-only seats' : 'Nine audio-only seats'}>
               <div className="ur-audio-status-row">
                 <span className={`ur-audio-status ur-audio-${videoBeam.connection}`} role="status">
                   <span className="ur-status-dot" aria-hidden="true" />
@@ -364,15 +363,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
               {videoBeam.error && <p className="ur-beam-error" role="alert">{videoBeam.error}</p>}
               {videoBeam.beam.beamActive && !videoBeam.ownSlot && beamSlots.every(slot => slot.participantId)
                 && <p className="ur-beam-full" role="status">Beam is full. You can still watch and chat; an open spot can be joined as soon as someone leaves.</p>}
-              {hasCreatedStreetSign && (
-                <h1 className="ur-social-room-sign" aria-label={`${roomDisplayName} Ave`} data-testid="text-created-room-street-sign">
-                  <WeatheredStreetSign
-                    label={`${roomDisplayName} Ave`}
-                    slug={`created-room-${roomId}`}
-                    testId="image-created-room-street-sign"
-                  />
-                </h1>
-              )}
                   <div className="ur-slots" data-count={speakerCount}>
                 {beamSeatLayout.map(({ slot, area, gridColumn, gridRow }) => {
                   const person = slot.participantId
@@ -432,7 +422,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                             ? openMenu(person.username, person.displayName, person.participantId, person.displayNameColor, person.displayNameTierIndex)
                             : mine
                               ? handleOwnSeatTap()
-                              : void (moveAvailable ? videoBeam.moveToSlot(slot.slotNumber) : videoBeam.joinSpeaker())
+                              : void (moveAvailable ? videoBeam.moveToSlot(slot.slotNumber) : videoBeam.joinSpeaker(slot.slotNumber))
                           : undefined}
                         onKeyDown={seatInteractive && !videoBeam.busy ? (event) => {
                           if (event.key === 'Enter' || event.key === ' ') {
@@ -440,7 +430,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                             if (profileTap && person)
                               openMenu(person.username, person.displayName, person.participantId, person.displayNameColor, person.displayNameTierIndex);
                             else if (mine) handleOwnSeatTap();
-                            else void (moveAvailable ? videoBeam.moveToSlot(slot.slotNumber) : videoBeam.joinSpeaker());
+                            else void (moveAvailable ? videoBeam.moveToSlot(slot.slotNumber) : videoBeam.joinSpeaker(slot.slotNumber));
                           }
                         } : undefined}>
                         {person && <BeamAudioTrack track={media?.audio} />}
@@ -450,6 +440,9 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                             title="Microphone muted">
                             <MicOff size={13} aria-hidden="true" />
                           </span>
+                        )}
+                        {person && isSocialRoom && (
+                          <img className="ur-slot-starter-card" src={`${import.meta.env.BASE_URL}battle-assets/cards/card_frame_grey_starter.jpg`} alt="" aria-hidden="true" />
                         )}
                         {person && (!photoTrigger ? (
                           <div className="ur-slot-portrait-layer">{portrait}</div>

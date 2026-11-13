@@ -14,3 +14,9 @@ The owner subsequently approved a new local Phaser 4v4 match-three fantasy battl
 **Why:** the owner requested the smallest local battle first, while keeping existing social rooms and audio unchanged.
 
 **How to apply:** keep this prototype local and isolated from accounts, coins, saved progression and online matches unless separately requested.
+
+Home uses the supplied world map as a static pink-framed display; map travel/navigation is deferred. User-created social rooms have four explicitly claimable player boxes, showing the claimant's profile picture and the existing grey starter card. Entering a room alone must not claim a box. Battle seating and gameplay are separate and unchanged.
+
+**Why:** the owner requested only a small Home/social-room layout update, not a character system or map feature.
+
+**How to apply:** preserve chat and live audio, and do not introduce automatic seating or map navigation.

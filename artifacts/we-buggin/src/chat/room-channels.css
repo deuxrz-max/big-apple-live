@@ -32,3 +32,11 @@
 .rc-preview-player { position: absolute; top: 50%; left: 50%; width: 203%; height: 100%; transform: translate(-50%, -50%); }
 .rc-preview-player iframe, .rc-preview-player > div { width: 100%; height: 100%; border: 0; pointer-events: none; }
 .rc-preview.is-unavailable .rc-preview-player, .rc-preview.is-blocked .rc-preview-player { visibility: hidden; }
+.rc-map-item { grid-column: 1 / -1; }
+.rc-map-tile { border: 3px solid #ff4fa3; line-height: 0; overflow: hidden; }
+.rc-map-tile img { display: block; width: 100%; height: auto; }
+.rc-grid-signed-in-home > .rc-other-room-item { grid-template-rows: auto; }
+/* Signed-in Home lives under body.streamtalk-directory-screen #root .ch.st-home; scope the map at that specificity. */
+#root .rc-tiles > li.rc-map-item { display: block; grid-column: 1 / -1; min-width: 0; width: 100%; }
+#root .rc-tiles > li.rc-map-item > .rc-map-tile { display: block; width: 100%; aspect-ratio: 1; background: #0b0a08; }
+#root .rc-tiles > li.rc-map-item > .rc-map-tile > img { display: block; width: 100%; height: 100%; object-fit: contain; opacity: 1; visibility: visible; }

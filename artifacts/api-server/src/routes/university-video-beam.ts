@@ -175,7 +175,7 @@ router.post("/account/rooms/:roomId/video-beam/actions", async (req, res) => {
   try {
     switch (input.data.action) {
       case "reserve-slot":
-        state = universityVideoBeamStore.joinSlot(roomId, participant.participantId, id);
+        state = universityVideoBeamStore.joinSlot(roomId, participant.participantId, id, input.data.targetSlotNumber);
         break;
       case "speaker-connected": {
         const connected = await refreshParticipantSnapshot(roomName);

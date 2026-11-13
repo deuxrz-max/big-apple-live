@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link, Redirect, useSearch } from 'wouter';
-import { ROOM_CHANNELS, channelBySlug, channelForDirectoryRoom, roomChannelHref } from './room-channels';
+import { channelBySlug, channelForDirectoryRoom, roomChannelHref } from './room-channels';
 import './room-channels.css';
-import { WeatheredStreetSign } from './WeatheredStreetSign';
 
 export type DirectoryChannelRoom = {
   roomId: string;
@@ -47,29 +46,18 @@ export function RoomChannels<R extends DirectoryChannelRoom>({
   return (
     <div className="rc" data-testid="section-room-channels">
       <ul className="rc-tiles">
-        {ROOM_CHANNELS.map((ch) => {
-          return (
-            <li key={ch.slug} className="rc-channel-item">
-              <WeatheredStreetSign label={ch.title} slug={ch.slug} />
-              <Link href={baseHref === '/' ? '/sign-in' : `/rooms/${ch.roomId}`} className={`rc-tile rc-channel-${ch.slug}`} data-testid={`link-channel-${ch.slug}`} aria-label={`Enter ${ch.title} room`}>
-                <span className="rc-audio-room-art" aria-hidden="true" />
-              </Link>
-            </li>
-          );
-        })}
+        <li className="rc-map-item">
+          <div className="rc-map-tile" data-testid="image-home-map">
+            <img src={`${import.meta.env.BASE_URL}battle-assets/screens/aethelgard_map_starting_screen.jpg`} alt="Aethelgard map" />
+          </div>
+        </li>
         <li className="st-home-go-live">{goLive}</li>
       </ul>
       {!loading && others.length > 0 && (
         <>
-          <h2 className="rc-title rc-other-title">Other rooms</h2>
           <ul className={`rc-grid${showOtherRoomSigns ? ' rc-grid-signed-in-home' : ''}`}>
             {others.map((room) => (
               <li key={room.roomId} className={showOtherRoomSigns ? 'rc-other-room-item' : undefined}>
-                {showOtherRoomSigns && <WeatheredStreetSign
-                  label={room.label}
-                  slug={`room-${room.roomId}`}
-                  testId={`label-room-${room.roomId.toLowerCase()}`}
-                />}
                 {renderRoom(room)}
               </li>
             ))}

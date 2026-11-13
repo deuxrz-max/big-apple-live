@@ -2469,7 +2469,7 @@ components:
         tv: { $ref: "#/components/schemas/UniversityVideoBeamTvState" }
         slots:
           type: array
-          minItems: 9
+          minItems: 4
           maxItems: 9
           items: { $ref: "#/components/schemas/UniversityVideoBeamSlot" }
       required: [roomId, beamActive, hostParticipantId, tv, slots]

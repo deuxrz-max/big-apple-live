@@ -146,13 +146,13 @@ export default function UserPortal({ userId }: { userId: string }) {
                 }
               }}>
                 <h2 className="font-display text-3xl font-extrabold">Start a room</h2>
-                <p className="mt-1 text-sm">Choose a one-word name. “Ave” is added automatically on the room sign.</p>
+                <p className="mt-1 text-sm">Choose a one-word room name.</p>
                 <label htmlFor="portal-room-title" className="label-mono mt-3 block">Room name</label>
                 <input id="portal-room-title" className="field mt-1" value={roomTitle}
                   onChange={event => setRoomTitle(event.target.value)} maxLength={64}
                   autoComplete="off" spellCheck={false} placeholder="For example, Gold"
                   aria-invalid={roomTitleHasWhitespace || roomTitleIsTooLong} data-testid="input-portal-room-title" />
-                {roomTitleHasWhitespace && <p className="mt-1 text-sm font-bold text-destructive" role="alert">Use one word only. Ave is added automatically.</p>}
+                {roomTitleHasWhitespace && <p className="mt-1 text-sm font-bold text-destructive" role="alert">Use one word only.</p>}
                 {roomTitleIsTooLong && <p className="mt-1 text-sm font-bold text-destructive" role="alert">Room names must be 32 characters or fewer.</p>}
                 <button type="submit" className="btn btn-pink mt-4" disabled={!profile || !roomTitleIsValid || create.isPending} data-testid="button-create-room">
                   {create.isPending ? 'Opening...' : 'Create room'}

@@ -267,3 +267,10 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 .ur-social-profile-popup>.ur-profile-popup-head,.ur-social-profile-popup>.ur-profile-popup-cards{grid-column:1/-1}
 .ur-social-profile-popup>button{min-width:0;min-height:34px;padding:4px 6px;text-align:center;font-size:12px;line-height:1.15;overflow-wrap:anywhere}
 @media (max-width:420px){.ur-social-profile-popup{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.ch.ur .ur-social-room .ur-slots{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
+.ur-social-room .ur-slot.has-person :is(.ur-slot-portrait-layer,.ur-slot-photo-action){inset:auto auto 26px 6px;width:38%;height:auto;aspect-ratio:1;border-radius:0;border:1px solid #d6b45d;z-index:3}
+.ur-social-room .ur-slot-photo-fill{object-fit:contain}
+.ur-slot-starter-card{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#0b0a08;z-index:2}
+/* theme.css "#root .ur-slots" forces the 5-column nine-seat grid and 2/1 aspect; override for social rooms only. */
+#root .ch.ur .ur-social-room .ur-slots{flex:1 1 auto;width:100%;height:auto;min-height:0;aspect-ratio:auto;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
+#root .ch.ur .ur-social-room .ur-beam.is-social-room{flex:0 0 66%}

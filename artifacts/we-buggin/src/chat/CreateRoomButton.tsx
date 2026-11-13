@@ -84,17 +84,16 @@ export function CreateRoomButton({ className, children }: { className: string; c
             onChange={event => setRoomTitle(event.target.value)} maxLength={64}
             autoComplete="off" spellCheck={false} aria-invalid={hasWhitespace || tooLong || (attempted && !trimmedTitle)}
             data-testid="input-created-room-title" placeholder="For example, Gold" />
-          <small className="st-room-title-hint">The sign will add “Ave” automatically.</small>
           {(hasWhitespace || tooLong || (attempted && !trimmedTitle)) && <p className="st-room-choice-error" role="alert">
-            {hasWhitespace ? "Use one word only. Ave is added automatically."
+            {hasWhitespace ? "Use one word only."
               : tooLong ? "Room names must be 32 characters or fewer."
-                : "Enter a room name. Ave is added automatically."}
+                : "Enter a room name."}
           </p>}
           <button type="submit" className="st-room-choice-option"
             disabled={!username || !user?.id || createRoom.isPending} data-testid="button-create-social-room">
             <span className="st-room-choice-icon"><Users size={22} /></span>
             <span><strong>{createRoom.isPending ? "Creating room…" : "Create Room"}</strong>
-              <small>Open a nine-seat social room with chat and live audio.</small></span>
+              <small>Open a four-player social room with chat and live audio.</small></span>
           </button>
         </form>
         {!username && (me.isLoading

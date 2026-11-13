@@ -462,7 +462,7 @@ export const getUniversityVideoBeamStateResponseTvSeriesTitleMax = 160;
 
 export const getUniversityVideoBeamStateResponseSlotsItemSlotNumberMax = 9;
 
-export const getUniversityVideoBeamStateResponseSlotsMin = 9;
+export const getUniversityVideoBeamStateResponseSlotsMin = 4;
 export const getUniversityVideoBeamStateResponseSlotsMax = 9;
 
 
@@ -597,7 +597,7 @@ export const performUniversityVideoBeamActionResponseTvSeriesTitleMax = 160;
 
 export const performUniversityVideoBeamActionResponseSlotsItemSlotNumberMax = 9;
 
-export const performUniversityVideoBeamActionResponseSlotsMin = 9;
+export const performUniversityVideoBeamActionResponseSlotsMin = 4;
 export const performUniversityVideoBeamActionResponseSlotsMax = 9;
 
 

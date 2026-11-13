@@ -67,7 +67,7 @@ export class UniversityVideoBeamStore {
     // Persistent room-incarnation kick checks are enforced by the route layer.
   }
 
-  joinSlot(roomId: string, participantId: string, accountId: string): UniversityVideoBeamState {
+  joinSlot(roomId: string, participantId: string, accountId: string, targetSlotNumber?: number): UniversityVideoBeamState {
     const beam = this.ensure(roomId);
     this.assertCanJoin(roomId, accountId);
     if (this.rooms.sessionAccountId(beam.roomId, participantId) !== accountId) {
@@ -78,8 +78,11 @@ export class UniversityVideoBeamStore {
     if (beam.slots.some(slot => slot.accountId === accountId)) {
       throw new RoomError(409, "You already have a speaker spot in this room.");
     }
-    const slot = beam.slots.find(candidate => candidate.participantId === null);
-    if (!slot) throw new RoomError(409, "All nine speaker spots are full. You can still listen and chat.");
+    const slot = targetSlotNumber === undefined
+      ? beam.slots.find(candidate => candidate.participantId === null)
+      : beam.slots.find(candidate => candidate.slotNumber === targetSlotNumber);
+    if (targetSlotNumber !== undefined && !slot) throw new RoomError(400, "Choose an available player box.");
+    if (!slot || slot.participantId) throw new RoomError(409, "That player box is unavailable. You can still listen and chat.");
     slot.participantId = participantId;
     slot.accountId = accountId;
     slot.joinedAt = this.now();
@@ -102,7 +105,7 @@ export class UniversityVideoBeamStore {
     const current = beam.slots.find(slot => slot.participantId === participantId && slot.accountId === accountId);
     if (!current) throw new RoomError(404, "You are not in a speaker spot.");
     const target = beam.slots.find(slot => slot.slotNumber === targetSlotNumber);
-    if (!target) throw new RoomError(400, "Choose one of the nine speaker spots.");
+    if (!target) throw new RoomError(400, "Choose an available player box.");
     if (target === current) return this.toState(beam);
     if (target.participantId !== null) throw new RoomError(409, "That speaker spot is already occupied.");
     Object.assign(target, current);
@@ -223,7 +226,7 @@ export class UniversityVideoBeamStore {
     if (!beam) {
       beam = {
         roomId: id, historyId, hostParticipantId: null,
-        slots: Array.from({ length: VIDEO_BEAM_SLOT_COUNT }, (_, index) => ({
+        slots: Array.from({ length: this.rooms.isSocialRoom(id) ? 4 : VIDEO_BEAM_SLOT_COUNT }, (_, index) => ({
           slotNumber: index + 1, participantId: null, accountId: null, joinedAt: null, connectedAt: null,
           micMuted: true, mutedByHost: false, cameraOff: true, cameraDisabledByHost: false,
         })),
