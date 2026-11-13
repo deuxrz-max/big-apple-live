@@ -1,0 +1,384 @@
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import Phaser from "phaser";
+import { Link } from "wouter";
+import { BattleBoardScene, type BoardView } from "./BattleBoardScene";
+import {
+  activeCharacter,
+  applySkill,
+  applySwap,
+  botTurn,
+  createBattleState,
+  validSkillTarget,
+  type BattleCharacter,
+  type BattleSide,
+  type BattleState,
+  type Cell,
+  type SkillTarget,
+} from "./battle-engine";
+import "./battle.css";
+
+type TargetMode = "board" | "ally" | "enemy" | null;
+
+const skillMode = (character: BattleCharacter): TargetMode =>
+  character.skill === "blast" ? "board" : character.skill === "strike" ? "enemy" : "ally";
+
+function defeatedIcon() {
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="32" cy="26" r="19" fill="none" stroke="currentColor" strokeWidth="4" />
+      <circle cx="25" cy="25" r="2.5" fill="currentColor" />
+      <circle cx="39" cy="25" r="2.5" fill="currentColor" />
+      <path d="M24 37h16M17 51l30-30M47 51 17 21" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function BattleCard({
+  character,
+  active,
+  isHumanTurn,
+  targetMode,
+  onChooseTarget,
+  onActivateSkill,
+}: {
+  character: BattleCharacter;
+  active: boolean;
+  isHumanTurn: boolean;
+  targetMode: TargetMode;
+  onChooseTarget: (id: string) => void;
+  onActivateSkill: (character: BattleCharacter) => void;
+}) {
+  const alive = character.hp > 0;
+  const targetable = alive && targetMode !== null &&
+    ((targetMode === "ally" && character.side === "humans") ||
+      (targetMode === "enemy" && character.side === "bots"));
+  const canUseSkill = isHumanTurn && active && alive && character.mana >= character.skillCost;
+  const hpRatio = Math.max(0, character.hp / character.maxHp);
+  const manaRatio = Math.min(1, character.mana / character.skillCost);
+
+  return (
+    <article
+      className={`battle-card${active ? " is-active" : ""}${targetable ? " is-targetable" : ""}${!alive ? " is-dead" : ""}`}
+      style={{ "--mana-color": manaColor(character.manaGem) } as CSSProperties}
+      data-testid={`battle-character-${character.id}`}
+    >
+      <div className="battle-card-inner">
+        <div className="battle-card-front">
+          <img className="battle-card-art" src={`${import.meta.env.BASE_URL}battle-assets/cards/card_frame_grey_starter.jpg`} alt="" />
+          <span className="battle-level">{character.level}</span>
+          <span className="battle-portrait" aria-hidden="true">{character.name.slice(0, 1)}</span>
+          <span className="battle-job-mark" aria-hidden="true">{character.job.slice(0, 1)}</span>
+          <span className="battle-side-mark" aria-hidden="true">{character.side === "humans" ? "H" : "B"}</span>
+          <span className="battle-card-name">{character.name}</span>
+          <span className="battle-card-job">{character.job}</span>
+          <div className="battle-card-bars" aria-label={`${character.hp} of ${character.maxHp} health, ${character.mana} of ${character.skillCost} mana`}>
+            <span className="battle-stat-track"><i style={{ width: `${hpRatio * 100}%` }} /><b>HP {character.hp}</b></span>
+            <span className="battle-stat-track mana"><i style={{ width: `${manaRatio * 100}%` }} /><b>{character.mana}/{character.skillCost}</b></span>
+          </div>
+          {targetable && (
+            <button
+              type="button"
+              className="battle-card-target"
+              aria-label={`Target ${character.name}`}
+              onClick={() => onChooseTarget(character.id)}
+            />
+          )}
+          {canUseSkill && (
+            <button
+              type="button"
+              className={`battle-skill-orb${character.mana >= character.skillCost ? " is-charged" : ""}`}
+              aria-label={`Use ${character.skillName}`}
+              title={`${character.skillName} — tap to choose a target`}
+              data-testid={`battle-skill-${character.id}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                onActivateSkill(character);
+              }}
+            />
+          )}
+        </div>
+        <div className="battle-card-back">
+          {defeatedIcon()}
+          <strong>DEFEATED</strong>
+          <span>{character.name}</span>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function manaColor(gem: string) {
+  const colors: Record<string, string> = {
+    red: "#ed4d50",
+    blue: "#51a9ff",
+    green: "#59d68d",
+    yellow: "#ffd15b",
+    silver: "#d3e3ee",
+    brown: "#c79968",
+    orange: "#ff9d4d",
+  };
+  return colors[gem] ?? "#d4b15f";
+}
+
+function TeamRow({
+  side,
+  characters,
+  active,
+  isHumanTurn,
+  targetMode,
+  onChooseTarget,
+  onActivateSkill,
+}: {
+  side: BattleSide;
+  characters: BattleCharacter[];
+  active: BattleCharacter;
+  isHumanTurn: boolean;
+  targetMode: TargetMode;
+  onChooseTarget: (id: string) => void;
+  onActivateSkill: (character: BattleCharacter) => void;
+}) {
+  const label = side === "humans" ? "YOUR TEAM · HUMANS" : "OPPONENT · BOTS";
+  const living = characters.filter((character) => character.hp > 0).length;
+  return (
+    <section className={`battle-team battle-team-${side}`} aria-label={label}>
+      <div className="battle-team-heading">
+        <strong>{label}</strong>
+        <span>{living}/4 standing</span>
+      </div>
+      <div className="battle-team-cards">
+        {characters.map((character) => (
+          <BattleCard
+            key={character.id}
+            character={character}
+            active={active.id === character.id && character.hp > 0}
+            isHumanTurn={isHumanTurn}
+            targetMode={targetMode}
+            onChooseTarget={onChooseTarget}
+            onActivateSkill={onActivateSkill}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function battleBoardView(state: BattleState | null, selected: Cell | null, targetMode: TargetMode): BoardView | null {
+  return state ? { board: state.board, selected, targetMode: targetMode === "board" ? "board" : null } : null;
+}
+
+export function BattlePrototype() {
+  const boardHost = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<BattleBoardScene | null>(null);
+  const gameRef = useRef<Phaser.Game | null>(null);
+  const [battle, setBattle] = useState<BattleState | null>(null);
+  const battleRef = useRef<BattleState | null>(null);
+  const [selected, setSelected] = useState<Cell | null>(null);
+  const [targetMode, setTargetMode] = useState<TargetMode>(null);
+  const [feedback, setFeedback] = useState("");
+  const targetModeRef = useRef<TargetMode>(null);
+  const selectedRef = useRef<Cell | null>(null);
+  const latestView = useRef<BoardView | null>(null);
+
+  battleRef.current = battle;
+  targetModeRef.current = targetMode;
+  selectedRef.current = selected;
+  latestView.current = battleBoardView(battle, selected, targetMode);
+
+  const cellTapRef = useRef<(cell: Cell) => void>(() => undefined);
+  const chooseCell = useCallback((cell: Cell) => {
+    const current = battleRef.current;
+    if (!current || current.turnSide !== "humans" || current.outcome) return;
+    if (targetModeRef.current === "board") {
+      const result = applySkill(current, { kind: "cell", ...cell });
+      if (result.accepted) {
+        setBattle(result.state);
+        setTargetMode(null);
+        setSelected(null);
+        setFeedback("");
+      }
+      return;
+    }
+    if (targetModeRef.current) return;
+    const first = selectedRef.current;
+    if (!first) {
+      setSelected(cell);
+      return;
+    }
+    if (first.row === cell.row && first.col === cell.col) {
+      setSelected(null);
+      return;
+    }
+    if (Math.abs(first.row - cell.row) + Math.abs(first.col - cell.col) !== 1) {
+      setSelected(cell);
+      return;
+    }
+    const result = applySwap(current, first, cell);
+    setSelected(null);
+    if (result.accepted) {
+      setBattle(result.state);
+      setFeedback("");
+    } else {
+      setFeedback("That swap does not make a match. Choose another adjacent gem pair.");
+    }
+  }, []);
+  cellTapRef.current = chooseCell;
+
+  useEffect(() => {
+    setBattle(createBattleState());
+  }, []);
+
+  useEffect(() => {
+    if (!boardHost.current || gameRef.current) return;
+    const scene = new BattleBoardScene((cell) => cellTapRef.current(cell));
+    sceneRef.current = scene;
+    const game = new Phaser.Game({
+      type: Phaser.AUTO,
+      parent: boardHost.current,
+      width: 400,
+      height: 400,
+      backgroundColor: "#0a0908",
+      scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+      render: { antialias: true, roundPixels: true, pixelArt: false },
+      audio: { noAudio: true },
+      scene: [scene],
+    });
+    gameRef.current = game;
+    const canvas = game.canvas;
+    if (canvas) {
+      canvas.setAttribute("role", "grid");
+      canvas.setAttribute("aria-label", "Eight by eight match-three board. Tap one gem, then an adjacent gem.");
+      canvas.setAttribute("tabindex", "0");
+      canvas.setAttribute("data-testid", "battle-board-canvas");
+    }
+    let frame = 0;
+    const syncView = () => {
+      if (scene.ready && latestView.current) scene.setView(latestView.current);
+      else frame = requestAnimationFrame(syncView);
+    };
+    frame = requestAnimationFrame(syncView);
+    return () => {
+      cancelAnimationFrame(frame);
+      game.destroy(true);
+      sceneRef.current = null;
+      gameRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (battle && targetMode && battle.turnSide !== "humans") setTargetMode(null);
+  }, [battle?.turnNumber, battle?.turnSide, targetMode]);
+
+  useEffect(() => {
+    const view = battleBoardView(battle, selected, targetMode);
+    if (view) sceneRef.current?.setView(view);
+  }, [battle, selected, targetMode]);
+
+  useEffect(() => {
+    if (!battle || battle.turnSide !== "bots" || battle.outcome) return;
+    const timer = window.setTimeout(() => {
+      setBattle((current) => current ? botTurn(current) : current);
+      setFeedback("");
+    }, 720);
+    return () => window.clearTimeout(timer);
+  }, [battle?.turnNumber, battle?.turnSide, battle?.outcome]);
+
+  const chooseSkillTarget = useCallback((id: string) => {
+    const current = battleRef.current;
+    if (!current || !targetModeRef.current || !validSkillTarget(current, { kind: "character", id })) return;
+    const result = applySkill(current, { kind: "character", id });
+    if (result.accepted) {
+      setBattle(result.state);
+      setTargetMode(null);
+      setSelected(null);
+      setFeedback("");
+    }
+  }, []);
+
+  const activateSkill = useCallback((character: BattleCharacter) => {
+    if (character.hp <= 0 || character.mana < character.skillCost) return;
+    setSelected(null);
+    setTargetMode(skillMode(character));
+    setFeedback(character.skill === "blast"
+      ? "Tap any board gem to choose Blast’s center."
+      : `Tap an ${character.skill === "strike" ? "enemy" : "ally"} card to use ${character.skillName}.`);
+  }, []);
+
+  const restart = useCallback(() => {
+    setBattle(createBattleState());
+    setSelected(null);
+    setTargetMode(null);
+    setFeedback("");
+  }, []);
+
+  if (!battle) {
+    return <main className="battle-prototype"><div className="battle-loading" role="status">Preparing local battle…</div></main>;
+  }
+
+  const active = activeCharacter(battle);
+  const turnText = battle.outcome
+    ? battle.outcome === "victory" ? "Victory" : "Defeat"
+    : battle.turnSide === "humans"
+      ? `Your turn · ${active.name} · ${active.job}`
+      : `Bots’ turn · ${active.name} · ${active.job}`;
+
+  return (
+    <main className="battle-prototype" data-testid="battle-prototype">
+      <div className="battle-shell">
+        <header className="battle-header">
+          <Link href="/" className="battle-back">← Home</Link>
+          <div className="battle-title"><strong>LOCAL BATTLE</strong><span>4 vs 4 · Prototype</span></div>
+          <button type="button" className="battle-reset" onClick={restart} data-testid="battle-restart-top">Restart</button>
+        </header>
+
+        <TeamRow
+          side="bots"
+          characters={battle.teams.bots}
+          active={activeCharacter(battle, "bots")}
+          isHumanTurn={false}
+          targetMode={targetMode}
+          onChooseTarget={chooseSkillTarget}
+          onActivateSkill={activateSkill}
+        />
+
+        <div className={`battle-turn${battle.turnSide === "bots" ? " is-bot-turn" : ""}`} role="status" aria-live="polite" data-testid="battle-turn">
+          <strong>{turnText}</strong>
+          {targetMode && <button type="button" onClick={() => { setTargetMode(null); setFeedback(""); }}>Cancel target</button>}
+        </div>
+
+        <section className={`battle-board-wrap${targetMode === "board" ? " is-targeting" : ""}`} aria-label="Match-three game board">
+          <div className="battle-board" ref={boardHost} />
+          {battle.turnSide === "bots" && <div className="battle-bot-thinking" aria-hidden="true">BOT TURN</div>}
+        </section>
+
+        <TeamRow
+          side="humans"
+          characters={battle.teams.humans}
+          active={activeCharacter(battle, "humans")}
+          isHumanTurn={battle.turnSide === "humans" && !battle.outcome}
+          targetMode={targetMode}
+          onChooseTarget={chooseSkillTarget}
+          onActivateSkill={activateSkill}
+        />
+
+        <div className="battle-footer">
+          <p className="battle-instructions">
+            {feedback || "Tap two adjacent gems to swap. Match 3 to charge a job; match 4 swords to strike the opposing leader."}
+          </p>
+          <p className="battle-log" aria-live="polite">{battle.log[0]}</p>
+        </div>
+      </div>
+
+      {battle.outcome && (
+        <div className="battle-result-backdrop">
+          <section className="battle-result" role="dialog" aria-modal="true" aria-labelledby="battle-result-title">
+            <span className="battle-result-kicker">LOCAL BATTLE COMPLETE</span>
+            <h1 id="battle-result-title">{battle.outcome === "victory" ? "Victory" : "Defeat"}</h1>
+            <p>{battle.outcome === "victory" ? "The opposing team has fallen." : "Your team has fallen."}</p>
+            <button type="button" className="battle-result-restart" onClick={restart} data-testid="battle-restart-result">Play again</button>
+            <Link href="/" className="battle-result-home">Return home</Link>
+          </section>
+        </div>
+      )}
+    </main>
+  );
+}

@@ -34,6 +34,7 @@ import '@/app-shapes.css';
 const DevAudioHarnessPage = import.meta.env.DEV
   ? lazy(() => import('@/dev/AudioHarnessPage'))
   : null;
+const BattlePrototypePage = lazy(() => import('@/battle/BattlePrototype').then((module) => ({ default: module.BattlePrototype })));
 
 const queryClient = new QueryClient();
 
@@ -322,6 +323,7 @@ function ClerkProviderWithRoutes() {
   const isBeamRoomScreen = /^\/rooms\/[^/]+\/?$/.test(currentPath);
   const isModerationScreen = currentPath === '/community/moderation';
   const isDirectoryScreen = currentPath === '/home';
+  const isBattleScreen = currentPath === '/battle';
   useLayoutEffect(() => {
     // New screens start at their header, not at the previous screen's scroll.
     // This never touches the independently scrolling chat or media elements.
@@ -333,10 +335,11 @@ function ClerkProviderWithRoutes() {
     document.body.classList.toggle('streamtalk-beam-screen', isBeamRoomScreen);
     document.body.classList.toggle('streamtalk-light-screen', isLightScreen);
     document.body.classList.toggle('streamtalk-directory-screen', isDirectoryScreen);
+    document.body.classList.toggle('streamtalk-battle-screen', isBattleScreen);
     return () => {
-      document.body.classList.remove('streamtalk-beam-screen', 'streamtalk-light-screen', 'streamtalk-directory-screen');
+      document.body.classList.remove('streamtalk-beam-screen', 'streamtalk-light-screen', 'streamtalk-directory-screen', 'streamtalk-battle-screen');
     };
-  }, [isBeamRoomScreen, isLightScreen, isDirectoryScreen]);
+  }, [isBeamRoomScreen, isLightScreen, isDirectoryScreen, isBattleScreen]);
   const clerkPubKey = publishableKeyFromHost(
     window.location.hostname,
     import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
@@ -362,7 +365,7 @@ function ClerkProviderWithRoutes() {
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
         <QuickProfileProvider>
-        <div className={`app-page ${isLightScreen ? 'is-light-screen' : ''} ${isBeamRoomScreen ? 'is-beam-screen' : ''} ${isModerationScreen ? 'is-moderation-screen' : ''} ${isDirectoryScreen ? 'is-directory-screen' : ''}`}><RoutedErrorBoundary>
+        <div className={`app-page ${isLightScreen ? 'is-light-screen' : ''} ${isBeamRoomScreen ? 'is-beam-screen' : ''} ${isModerationScreen ? 'is-moderation-screen' : ''} ${isDirectoryScreen ? 'is-directory-screen' : ''} ${isBattleScreen ? 'is-battle-screen' : ''}`}><RoutedErrorBoundary>
           <Switch>
             {DevAudioHarnessPage && (
               <Route path="/__dev/audio-harness">
@@ -372,6 +375,11 @@ function ClerkProviderWithRoutes() {
               </Route>
             )}
             <Route path="/" component={HomeRedirect} />
+            <Route path="/battle">
+              <Suspense fallback={<div className="battle-loading" role="status">Loading battle prototype…</div>}>
+                <BattlePrototypePage />
+              </Suspense>
+            </Route>
             <Route path="/beams">{() => <Redirect to="/home" />}</Route>
             <Route path="/beams/*?">{() => <Redirect to="/home" />}</Route>
             <Route path="/legacy" component={HomeRedirect} />

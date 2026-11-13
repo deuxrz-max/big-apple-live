@@ -9,8 +9,10 @@ import './bottom-navigation.css';
 export function BottomNavigation() {
   const [path] = useLocation();
   const { isSignedIn } = useUser();
-  const inbox = useGetSocialInbox({ query: { enabled: !!isSignedIn, queryKey: getGetSocialInboxQueryKey(), refetchInterval: 4_000, refetchOnWindowFocus: true, refetchOnReconnect: 'always', staleTime: 0 } });
+  const isBattleScreen = path === '/battle';
+  const inbox = useGetSocialInbox({ query: { enabled: !!isSignedIn && !isBattleScreen, queryKey: getGetSocialInboxQueryKey(), refetchInterval: 4_000, refetchOnWindowFocus: true, refetchOnReconnect: 'always', staleTime: 0 } });
   const unreadCount = (inbox.data?.conversations ?? []).reduce((total, conversation) => total + Math.max(0, conversation.unreadCount || 0), 0);
+  if (isBattleScreen) return null;
   return <BottomNavigationContent path={path} isSignedIn={!!isSignedIn} unreadCount={unreadCount} />;
 }
 

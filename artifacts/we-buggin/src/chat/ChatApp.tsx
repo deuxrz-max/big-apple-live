@@ -125,6 +125,7 @@ export function PublicChatLanding() {
       <section className="dw-landing-rooms" aria-labelledby="dw-landing-rooms-title">
         <div className="dw-section-head"><span className="dw-overline">Happening now</span><h2 id="dw-landing-rooms-title">Rooms</h2></div>
         <List preview />
+        <p className="dw-landing-battle-entry"><Link href="/battle" className="bm-btn" data-testid="link-public-battle">Battle</Link></p>
       </section>
       <footer className="dw-landing-foot"><p className="ch-note">{DISCLAIMER}</p></footer>
     </Shell>
@@ -176,6 +177,7 @@ export function HomeSections() {
   return <nav className="dw-home-tabs" aria-label="Home sections" data-testid="nav-home-sections">
     <a href="#live-channels" className="is-on" aria-current="location">Rooms</a>
     <Link href="/community/leaderboard" data-testid="link-home-tab-leaderboard">Leaderboard</Link>
+    <Link href="/battle" data-testid="link-home-tab-battle">Battle</Link>
   </nav>;
 }
 
