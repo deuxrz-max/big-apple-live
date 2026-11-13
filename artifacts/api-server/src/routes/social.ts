@@ -76,9 +76,11 @@ router.use((req, res, next) => {
     "/social/entrance-effects", "/social/me/entrance-effects",
     "/social/me/equipped-badge", "/social/admin/content-sync",
     "/social/pk/leaderboard",
+    "/social/gifts", "/social/store", "/social/gift-icons",
+    "/social/gifters", "/social/me/name-color-test-total",
+    "/social/leaderboard", "/social/wallet/transactions", "/gift-media",
   ];
-  const retainedGiftCatalogIcon = req.method === "GET" && req.path.startsWith("/social/gift-icons/");
-  if (!retainedGiftCatalogIcon && retired.some(prefix => req.path === prefix || req.path.startsWith(`${prefix}/`))) {
+  if (retired.some(prefix => req.path === prefix || req.path.startsWith(`${prefix}/`))) {
     res.status(410).json({ error: "This feature has been retired." });
     return;
   }
@@ -668,7 +670,24 @@ router.get("/social/gifters/leaderboard", async (req, res): Promise<void> => {
 });
 router.get("/social/me", async (req, res): Promise<void> => {
   res.set("Cache-Control", "no-store");
-  res.json(GetSocialMeResponse.parse(await getMe(accountId(req))));
+  const current = await getMe(accountId(req));
+  res.json(GetSocialMeResponse.parse({
+    ...current,
+    gifterAccessLevel: 0,
+    nameColorProgress: { tierName: "", tierIndex: 0, lifetimeCoinsPurchased: 0, nextTierName: null, nextTierThreshold: null, coinsToNextTier: 0 },
+    nameColorTest: { enabled: false, overrideCoins: null },
+    entranceEffects: { eligible: false, enabled: false, badgeId: null, badgeName: null, equippedEffectId: null, ownerTest: null },
+    badges: [],
+    equippedBadgeId: null,
+    profile: { ...current.profile, displayNameColor: "#FFFFFF", displayNameTierIndex: 0,
+      sentCredits: 0, receivedCredits: 0, badges: [], badgeId: null, badgeName: null, badgeImage: null },
+    wallet: { ...current.wallet, received: 0, sent: 0 },
+    inventory: [],
+    products: [],
+    gifts: [],
+    giftQuantities: {},
+    giftBagLots: [],
+  }));
 });
 router.put("/social/me/name-color-test-total", async (req, res): Promise<void> => {
   sameOrigin(req);
@@ -739,7 +758,13 @@ router.get("/social/people", async (req, res): Promise<void> => {
   const favorites = req.query.favorites === "true";
   res.json(GetSocialPeopleResponse.parse(await listPeople(accountId(req), { ...input.data, favorites })));
 });
-router.get("/social/people/:username", async (req, res): Promise<void> => { res.json(GetSocialPersonResponse.parse(await getPerson(accountId(req), name(req.params.username)))); });
+router.get("/social/people/:username", async (req, res): Promise<void> => {
+  const person = await getPerson(accountId(req), name(req.params.username));
+  res.json(GetSocialPersonResponse.parse({
+    ...person, displayNameColor: "#FFFFFF", displayNameTierIndex: 0,
+    sentCredits: 0, receivedCredits: 0, badges: [], badgeId: null, badgeName: null, badgeImage: null,
+  }));
+});
 router.put("/social/people/:username/relationship", async (req, res): Promise<void> => {
   const input = SetSocialRelationshipBody.safeParse(req.body);
   if (!input.success) throw new RoomError(400, "Choose favorite or block and an active status");

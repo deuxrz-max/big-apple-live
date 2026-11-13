@@ -8,7 +8,6 @@ import {
   getGetMyProfileQueryKey, getGetUniversitySessionQueryKey, useAcknowledgeUniversityRules, useGetUniversitySession,
   useGetChatAccess, useSendUniversityWhisper, useSetSocialRelationship, useSetUniversityIgnore,
   type ChatMessage,
-  type RoomGiftEvent,
 } from '@workspace/api-client-react';
 import { photoSrc, UserPhoto } from '@/components/user-photo';
 import { useQuickProfile } from '@/profile/QuickProfile';
@@ -21,8 +20,6 @@ import { isRoomMicEnabled } from './room-audio-policy';
 import { arrangeAudioSeats } from './audio-seat-layout';
 import { BotShield } from './BotShield';
 import { BotActivityLine } from './BotActivityLine';
-import { GiftBag, OPEN_ROOM_GIFTS_EVENT } from '@/gifts';
-import { useRoomGifts } from '@/gifts/useRoomGifts';
 import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
 import type { RoomCoinDropEvent } from './useTextRoom';
 import { RoomCoinDropOverlay } from './RoomCoinDropOverlay';
@@ -51,7 +48,6 @@ type ReportTarget = {
 };
 type Item = { kind: 'room'; at: number; id: string; m: ChatMessage }
   | { kind: 'arrival'; at: number; id: string; displayName: string; participantId: string }
-  | { kind: 'gift'; at: number; id: string; gift: RoomGiftEvent }
   | { kind: 'whisper'; at: number; id: string; w: { id: string; username: string; displayName: string;
       displayNameColor?: string; displayNameTierIndex?: number;
       outgoing: boolean; body: string } };
@@ -91,12 +87,10 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const [reporting, setReporting] = useState<ReportTarget | null>(null);
   const [whisperTo, setWhisperTo] = useState<Target | null>(null);
   const [menu, setMenu] = useState<Target | null>(null);
-  const [giftBag, setGiftBag] = useState<{ recipient: Target | null } | null>(null);
   const [drawer, setDrawer] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [ignored, setIgnored] = useState<Set<string>>(new Set());
   const [coinDropQueue, setCoinDropQueue] = useState<RoomCoinDropEvent[]>([]);
-  const gifts = useRoomGifts(roomId, userId, sessionId, ignored);
   const ignoreBusy = useRef(0);
   const idem = useRef<{ username: string; body: string; key: string } | null>(null);
   const autoRules = useRef(false);
@@ -116,7 +110,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
 
   useEffect(() => {
     setText(''); setWhisperTo(null); setMenu(null); setDrawer(false); setRulesOpen(false);
-    setGiftBag(null);
     setCoinDropQueue([]);
     handledCoinDrops.current.clear();
     setIgnored(new Set()); setSendErr(null); setNote(null);
@@ -145,15 +138,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
     setCoinDropQueue(current => current[0]?.eventId === eventId
       ? current.slice(1)
       : current.filter(item => item.eventId !== eventId));
-  }, []);
-  useEffect(() => {
-    const openGifts = () => {
-      setMenu(null);
-      setDrawer(false);
-      setGiftBag({ recipient: null });
-    };
-    window.addEventListener(OPEN_ROOM_GIFTS_EVENT, openGifts);
-    return () => window.removeEventListener(OPEN_ROOM_GIFTS_EVENT, openGifts);
   }, []);
   useEffect(() => {
     if (session && ignoreBusy.current === 0) {
@@ -208,19 +192,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const handleOwnSeatTap = () => toggleOwnMic(!ownMicEnabled);
   const menuIsSelf = !!me && menu?.username.toLowerCase() === me.username.toLowerCase();
   const beamSeatLayout = arrangeAudioSeats(beamSlots, roomHostParticipantId);
-  const peopleByParticipantId = new Map(people.map(person => [person.participantId, person]));
-  const giftRecipients = beamSlots.flatMap(slot => {
-    if (!slot.participantId) return [];
-    const person = peopleByParticipantId.get(slot.participantId);
-    if (!person || person.botId) return [];
-    return [{
-      username: person.username,
-      displayName: person.displayName,
-      displayNameColor: person.displayNameColor,
-      displayNameTierIndex: person.displayNameTierIndex,
-      photoUrl: person.photoUrl,
-    }];
-  });
   const speakerCount = beamSlots.filter(slot => slot.participantId).length;
   const isSelf = (username: string, authorId?: string) => (!!authorId && authorId === r.creds?.participantId) || me?.username === username;
   const nameOf = (username: string, fallback?: string) => people.find((p) => p.username === username)?.displayName ?? fallback ?? username;
@@ -229,11 +200,10 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const items = useMemo<Item[]>(() => {
     const a: Item[] = r.messages.filter((m) => m.botId || !ignored.has(m.username)).map((m) => ({ kind: 'room' as const, at: new Date(m.createdAt).getTime(), id: m.id, m }));
     const b: Item[] = (session?.whispers ?? []).filter((w) => !ignored.has(w.username)).map((w) => ({ kind: 'whisper' as const, at: new Date(w.createdAt).getTime(), id: `w-${w.id}`, w }));
-    const c: Item[] = gifts.events.map(gift => ({ kind: 'gift', at: new Date(gift.createdAt).getTime(), id: `gift-${gift.id}`, gift }));
     const d: Item[] = r.arrivals.map(arrival => ({ kind: 'arrival', at: arrival.at, id: arrival.id,
       displayName: arrival.displayName, participantId: arrival.participantId }));
-    return [...a, ...b, ...c, ...d].sort((x, y) => x.at - y.at || x.id.localeCompare(y.id));
-  }, [r.messages, r.arrivals, session?.whispers, ignored, gifts.events]);
+    return [...a, ...b, ...d].sort((x, y) => x.at - y.at || x.id.localeCompare(y.id));
+  }, [r.messages, r.arrivals, session?.whispers, ignored]);
   useEffect(() => { const el = box.current; if (el && near.current) el.scrollTop = el.scrollHeight; }, [items.length]);
 
   const toggleIgnore = (t: Target) => {
@@ -315,7 +285,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           return (
             <li key={p.participantId}>
               <div className="ur-prow">
-                {<button type="button" className="ur-person-avatar" aria-label={`${isSocialRoom ? 'Profile and cards for' : 'Open profile for'} ${p.displayName}`}
+                {<button type="button" className="ur-person-avatar" aria-label={`Open profile for ${p.displayName}`}
                     aria-haspopup="dialog"
                     onClick={() => isSocialRoom
                       ? openMenu(p.username, p.displayName, p.participantId, p.displayNameColor, p.displayNameTierIndex)
@@ -451,7 +421,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                         aria-pressed={mine && !isSocialRoom ? ownMicEnabled : undefined}
                         aria-disabled={seatInteractive ? videoBeam.busy : undefined}
                         aria-label={profileTap
-                          ? `View ${person?.displayName ?? 'speaker'}'s profile and cards`
+                          ? `View ${person?.displayName ?? 'speaker'}'s profile`
                           : mine
                             ? `Your speaker spot ${slot.slotNumber}, microphone ${ownMicEnabled ? 'on' : 'off'}. Tap to toggle.`
                           : (joinAvailable || moveAvailable) && !videoBeam.busy
@@ -496,7 +466,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                            <span className="ur-slot-name-line">
                               {person.self || isSocialRoom ? <ShinyName className="ur-slot-name" displayNameColor={person.displayNameColor} displayNameTierIndex={person.displayNameTierIndex}>{person.displayName}</ShinyName>
                                 : <button type="button" className="ur-name ur-slot-name"
-                                  aria-label={`${isSocialRoom ? 'Profile and cards for' : 'Actions for'} ${person.displayName}`}
+                                  aria-label={`Actions for ${person.displayName}`}
                                   aria-haspopup={isSocialRoom ? 'dialog' : 'menu'}
                                   onClick={event => { event.stopPropagation(); openMenu(person.username, person.displayName, person.participantId, person.displayNameColor, person.displayNameTierIndex); }}>
                                   <ShinyName className="ur-seat-name-text" displayNameColor={person.displayNameColor} displayNameTierIndex={person.displayNameTierIndex}>{person.displayName}</ShinyName>
@@ -562,11 +532,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
               {r.loading && <p role="status">Loading history...</p>}
               {!r.loading && items.length === 0 && <p className="ch-note">No messages yet.</p>}
               {items.map((it) => {
-                if (it.kind === 'gift') {
-                  return <div className="ch-msg" key={it.id} data-testid={`gift-notice-${it.gift.id}`}>
-                      <div><p><span className="ur-gift-person"><button type="button" className="ur-name" onClick={() => openMenu(it.gift.senderUsername, it.gift.senderName, undefined, it.gift.senderNameColor, it.gift.senderNameTierIndex)}><ShinyName displayNameColor={it.gift.senderNameColor} displayNameTierIndex={it.gift.senderNameTierIndex}>{it.gift.senderName}</ShinyName></button></span> sent <span className="ur-gift-person"><button type="button" className="ur-name" onClick={() => openMenu(it.gift.recipientUsername, it.gift.recipientName, undefined, it.gift.recipientNameColor, it.gift.recipientNameTierIndex)}><ShinyName displayNameColor={it.gift.recipientNameColor} displayNameTierIndex={it.gift.recipientNameTierIndex}>{it.gift.recipientName}</ShinyName></button></span> a {it.gift.giftName}.</p></div>
-                  </div>;
-                }
                 if (it.kind === 'arrival') {
                   const arrivalPerson = session?.people.find(person => person.participantId === it.participantId);
                   return <div className="ch-msg ur-arrival-line" key={it.id} data-testid="room-arrival">
@@ -689,7 +654,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
             {!isSocialRoom && <strong><ShinyName displayNameColor={menu.displayNameColor} displayNameTierIndex={menu.displayNameTierIndex}>{menu.displayName}</ShinyName></strong>}
             {!menuIsSelf && (
               <>
-                <button type="button" role={isSocialRoom ? undefined : 'menuitem'} onClick={() => { setGiftBag({ recipient: menu }); setMenu(null); setDrawer(false); }}>Gift</button>
                 <button type="button" role={isSocialRoom ? undefined : 'menuitem'} onClick={() => { const u = menu.username; setMenu(null); nav(`/community/messages/${encodeURIComponent(u)}`); }}>Message</button>
                 <button type="button" role={isSocialRoom ? undefined : 'menuitem'} onClick={() => {
                   setReporting({ targetType: 'user', targetUsername: menu.username, roomId });
@@ -724,8 +688,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           </div>
         </div>
       )}
-
-      {giftBag && <GiftBag recipient={giftBag.recipient} recipients={giftRecipients} roomId={roomId} sessionId={sessionId} onClose={() => setGiftBag(null)} />}
 
       {rulesOpen && (
         <div className="ur-modal" onClick={dismissRules}>

@@ -2,7 +2,7 @@ import '@/beam/beam.css';
 import '@/social/social.css';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Coins, Flame, Trophy, Users, X } from 'lucide-react';
+import { Coins, Flame, Users, X } from 'lucide-react';
 import { useClerk } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -22,7 +22,6 @@ import { RoomChannels } from './RoomChannels';
 import { CreateRoomButton } from './CreateRoomButton';
 import { ActionMenu, ScreenHeader } from '@/components/app-chrome';
 import { AccessCheckError } from './AccessCheckError';
-import { buyCoinsReturnState } from '@/social/buy-coins-navigation';
 import { ProfilePreferences } from '@/social/PeoplePages';
 import './chat.css';
 
@@ -86,10 +85,10 @@ function List({ preview, query = '' }: { preview?: boolean; query?: string }) {
 function CreditsChip() {
   const me = useGetSocialMe();
   if (!me.data) return null;
-  return <Link href="/community/coins" state={buyCoinsReturnState()} className="st-credits" data-testid="text-credits">
+  return <span className="st-credits" data-testid="text-credits" aria-label="Coin balance">
     <Coins size={13} aria-hidden="true" style={{ color: '#f5cb8d' }} />
     {me.data.wallet.unlimited ? 'Unlimited test coins' : `${me.data.wallet.balance.toLocaleString()} coins`}
-  </Link>;
+  </span>;
 }
 
 function TopBar({ signedIn }: { signedIn: boolean }) {
@@ -106,26 +105,26 @@ export function PublicChatLanding() {
     <Shell className="dw-landing">
       <TopBar signedIn={false} />
       <section className="dw-landing-hero" aria-labelledby="dw-landing-title" data-testid="section-landing-hero">
-        <span className="dw-landing-kicker"><i aria-hidden="true" /> Social audio rooms and gifts</span>
+        <span className="dw-landing-kicker"><i aria-hidden="true" /> Social audio rooms</span>
         <h1 id="dw-landing-title">Find your people.</h1>
         <p>Drop into an audio room. Meet people and join the conversation.</p>
         <div className="dw-landing-cta">
           <Link href="/sign-up" className="bm-btn bm-btn-primary" data-testid="link-landing-sign-up">Create account</Link>
           <Link href="/sign-in" className="bm-btn" data-testid="link-landing-sign-in">Sign in</Link>
+          <Link href="/battle" className="bm-btn bm-btn-primary dw-battle-cta" data-testid="link-public-battle">Battle</Link>
         </div>
         <ul className="dw-landing-points" aria-label="What you can do">
           <li><Users size={16} aria-hidden="true" /> Join audio rooms</li>
-          <li><Coins size={16} aria-hidden="true" /> Send gifts</li>
+          <li><Users size={16} aria-hidden="true" /> Join conversations</li>
         </ul>
         <details className="dw-landing-about">
           <summary>About Big Apple Live</summary>
-          <p>Big Apple Live is a social platform for audio rooms, messaging, and virtual gifts.</p>
+          <p>Big Apple Live is a social platform for audio rooms and messaging.</p>
         </details>
       </section>
       <section className="dw-landing-rooms" aria-labelledby="dw-landing-rooms-title">
         <div className="dw-section-head"><span className="dw-overline">Happening now</span><h2 id="dw-landing-rooms-title">Rooms</h2></div>
         <List preview />
-        <p className="dw-landing-battle-entry"><Link href="/battle" className="bm-btn" data-testid="link-public-battle">Battle</Link></p>
       </section>
       <footer className="dw-landing-foot"><p className="ch-note">{DISCLAIMER}</p></footer>
     </Shell>
@@ -176,8 +175,6 @@ export function AdultGate({ children, keepMountedOnTransientError = false }: {
 export function HomeSections() {
   return <nav className="dw-home-tabs" aria-label="Home sections" data-testid="nav-home-sections">
     <a href="#live-channels" className="is-on" aria-current="location">Rooms</a>
-    <Link href="/community/leaderboard" data-testid="link-home-tab-leaderboard">Leaderboard</Link>
-    <Link href="/battle" data-testid="link-home-tab-battle">Battle</Link>
   </nav>;
 }
 
@@ -207,16 +204,13 @@ export function ChatDirectory() {
             <span className="dw-home-title"><strong>Big Apple Live</strong><small>Audio rooms</small></span>
           </div>
           <div className="st-dir-account">
-            <Link href="/community/leaderboard" className="st-dir-rewards" aria-label="Open leaderboard" data-testid="link-leaderboard">
-              <Trophy size={16} aria-hidden="true" />
-            </Link>
-            <Link href="/community/coins" state={buyCoinsReturnState()} className={`st-dir-wallet${socialMe.data?.wallet.unlimited ? ' is-unlimited' : ''}`} aria-label="Buy coins" data-testid="link-home-wallet">
+            <span className={`st-dir-wallet${socialMe.data?.wallet.unlimited ? ' is-unlimited' : ''}`} aria-label="Coin balance" data-testid="link-home-wallet">
               {socialMe.data?.wallet.unlimited
                 ? <><i aria-hidden="true" />Unlimited</>
                 : socialMe.data
                   ? <><Coins size={13} aria-hidden="true" style={{ color: '#f5cb8d' }} />{socialMe.data.wallet.balance.toLocaleString()} coins</>
                   : socialMe.isLoading ? '…' : 'Coins'}
-            </Link>
+            </span>
             <details className="st-dir-menu st-home-profile-menu">
               <summary className="st-dir-avatar st-home-avatar" aria-label={`Open profile menu${me.data?.profile?.username ? ` for ${me.data.profile.username}` : ''}`} data-testid="button-home-profile-menu">
                 <UserPhoto username={me.data?.profile?.username} displayName={me.data?.profile?.displayName}
@@ -233,6 +227,7 @@ export function ChatDirectory() {
       </header>
 
       <HomeSections />
+      <Link href="/battle" className="bm-btn bm-btn-primary dw-home-battle-cta" data-testid="link-home-battle">Open Battle</Link>
       <section className="st-dir-explore st-home-rooms" id="live-channels" aria-label="Rooms">
         {directory.isError && <div className="st-dir-state st-dir-error" role="alert"><div className="st-dir-state-mark">!</div><h3>Rooms aren’t loading</h3><p>We couldn’t reach the directory. Give it another try.</p><button type="button" onClick={() => directory.refetch()}>Retry directory</button></div>}
         {directory.data && rooms.length === 0 && <div className="st-dir-state"><div className="st-dir-state-mark">—</div><h3>Quiet for a moment</h3><p>There are no rooms in the directory right now. Check back soon.</p></div>}

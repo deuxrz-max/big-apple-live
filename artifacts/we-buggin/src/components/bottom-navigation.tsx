@@ -2,7 +2,6 @@ import { useUser } from '@clerk/react';
 import type { ReactNode } from 'react';
 import { Heart, House, MessageCircle, UserRound } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
-import { GiftControl, OPEN_ROOM_GIFTS_EVENT } from '@/gifts';
 import { getGetSocialInboxQueryKey, useGetSocialInbox } from '@workspace/api-client-react';
 import './bottom-navigation.css';
 
@@ -19,7 +18,6 @@ export function BottomNavigation() {
 export function BottomNavigationContent({ path, isSignedIn, unreadCount }: {
   path: string; isSignedIn: boolean; unreadCount: number;
 }) {
-  const isUniversityRoom = path.startsWith('/rooms/');
   const isHome = path === '/home';
   const protectedHref = (href: string) => isSignedIn ? href : '/sign-in';
   const items = [
@@ -30,7 +28,7 @@ export function BottomNavigationContent({ path, isSignedIn, unreadCount }: {
   ];
   return (
     <nav className="app-bottom-nav" aria-label="Main navigation">
-      <div className={`app-bottom-nav-inner${isUniversityRoom ? ' has-room-gift' : ''}${isHome && isSignedIn ? ' has-home-live' : ''}`}>
+      <div className={`${isHome && isSignedIn ? 'app-bottom-nav-inner has-home-live' : 'app-bottom-nav-inner'}`}>
         {items.slice(0, 2).map(({ label, icon: Icon, href, active }) => (
           <Link key={label} href={href} className={`app-bottom-link${active ? ' is-active' : ''}`}
             aria-current={active ? 'page' : undefined} data-testid={`bottom-nav-${label.toLowerCase()}`}>
@@ -48,12 +46,6 @@ export function BottomNavigationContent({ path, isSignedIn, unreadCount }: {
             <span>{label}</span>
           </Link>
         ))}
-        {isUniversityRoom && (
-          <GiftControl
-            label="Open room gifts"
-            onClick={() => window.dispatchEvent(new Event(OPEN_ROOM_GIFTS_EVENT))}
-          />
-        )}
       </div>
     </nav>
   );

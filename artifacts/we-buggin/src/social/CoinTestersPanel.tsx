@@ -6,7 +6,6 @@ import {
   useSetCoinTester, useGetTestCoinLaunchStatus,
 } from '@workspace/api-client-react';
 import { ErrorBox, Loading, PersonCard, errMsg } from './common';
-import { TestCoinLaunchReset } from './TestCoinLaunchReset';
 
 /** Owner-only management; being on this list grants no moderation/admin access. */
 export function CoinTestersPanel() {
@@ -38,7 +37,7 @@ export function CoinTestersPanel() {
     <Link href="/community/profile" className="bm-btn">Back to Me</Link>
     <h1 className="sc-h2">Owner tools · Coin testers</h1>
     <p className="sc-sub">Only accounts you explicitly enable get unlimited test coins, on the website and Android wrapper. This does not grant admin access.</p>
-    <p className="sc-sub">Test sends use static gift artwork and create no real coins or cash-out value. Test purchases use a separate My Bag (7-day expiry). Paid balances and paid inventory stay untouched.</p>
+    <p className="sc-sub">Tester balances are separate from paid balances and cannot be redeemed or cashed out.</p>
     <form onSubmit={submit} className="sc-form">
       <label>Find an account by name or @ID
         <input value={draft} onChange={event => setDraft(event.target.value)} required autoComplete="off" maxLength={80} placeholder="Name or @ID" />
@@ -65,6 +64,5 @@ export function CoinTestersPanel() {
           {tester.enabled && <button type="button" className="bm-btn" style={{ marginLeft: 12 }} disabled={mutation.isPending} onClick={() => change(tester.username, false)}>Revoke</button>}
         </div>)}
       </div>}
-    <TestCoinLaunchReset />
   </section>;
 }

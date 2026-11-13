@@ -34,8 +34,6 @@ html { scroll-padding-bottom: var(--app-bottom-nav-clearance); }
   max-width: 760px;
   margin: 0 auto;
 }
-.app-bottom-nav-inner.has-room-gift { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-.app-bottom-nav-inner.has-room-gift > .gift-control { justify-self: center; align-self: center; }
 .app-bottom-link {
   display: flex;
   flex-direction: column;

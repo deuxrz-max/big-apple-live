@@ -631,6 +631,8 @@ body.streamtalk-directory-screen #root .ch.st-home .st-home-categories button:af
   right:0;left:0;background:#a64bdb;
 }
 body.streamtalk-directory-screen #root .ch.st-home .st-home-rooms{margin-top:0}
+.dw-home-battle-cta{display:flex;align-items:center;justify-content:center;width:min(100% - 2rem,28rem);margin:0 auto 1rem;min-height:54px;font-size:1.1rem;font-weight:800}
+.dw-battle-cta{min-height:48px}
 body.streamtalk-directory-screen #root .ch.st-home .st-home-grid{
   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:12px;
 }

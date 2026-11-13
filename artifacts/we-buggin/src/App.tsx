@@ -4,11 +4,9 @@ import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { Link, Redirect, Route, Switch, useLocation, useParams, Router as WouterRouter } from 'wouter';
-import { getGetSocialMeQueryKey, useGetSocialMe } from '@workspace/api-client-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { APP_NAME, Wordmark } from '@/components/brand';
 import { BottomNavigation } from '@/components/bottom-navigation';
-import { PinkCardAnnouncement } from '@/chat/PinkCardAnnouncement';
 import NotFound from '@/pages/not-found';
 import { clearAllCreds } from '@/lib/room-creds';
 import { AdultGate, ChatDirectory, ChatProfile, ProfileGate, ProfilePhotoReviewPage, PublicChatLanding, TextChatRoom } from '@/chat/ChatApp';
@@ -17,11 +15,7 @@ import '@/chat/chat.css';
 import { OwnProfile } from '@/profile/OwnProfile';
 import { QuickProfileProvider } from '@/profile/QuickProfile';
 import '@/profile/profile.css';
-import { StorePage } from '@/store/StorePage';
-import { giftingTier } from '@workspace/beam-identity';
-import { ShinyName } from '@/components/ShinyName';
 import SocialApp from '@/social/SocialApp';
-import { TransactionHistoryPage } from '@/social/MoneyPages';
 import { SignInArtwork } from '@/components/sign-in-artwork';
 import '@/theme.css';
 import '@/white-theme.css';
@@ -163,63 +157,6 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
-function NameColorLevelUpToast() {
-  const { isLoaded, isSignedIn, user } = useUser();
-  const userId = user?.id ?? null;
-  const me = useGetSocialMe({
-    query: {
-      queryKey: getGetSocialMeQueryKey(),
-      enabled: isLoaded && Boolean(isSignedIn),
-      refetchInterval: 20_000,
-      refetchOnWindowFocus: true,
-    },
-  });
-  const lastTier = useRef<{ userId: string; tierIndex: number } | null>(null);
-  const [toast, setToast] = useState<{
-    displayName: string;
-    color: string;
-    tierIndex: number;
-    tierName: string;
-  } | null>(null);
-
-  useEffect(() => {
-    if (!userId || !me.data) {
-      lastTier.current = null;
-      return;
-    }
-    const tierIndex = me.data.nameColorProgress.tierIndex;
-    if (lastTier.current?.userId === userId && tierIndex > lastTier.current.tierIndex) {
-      setToast({
-        displayName: me.data.profile.displayName || me.data.profile.username,
-        color: me.data.profile.displayNameColor ?? "#FFFFFF",
-        tierIndex,
-        tierName: me.data.nameColorProgress.tierName,
-      });
-    }
-    lastTier.current = { userId, tierIndex };
-  }, [userId, me.data]);
-
-  useEffect(() => {
-    if (!toast) return;
-    const timeout = window.setTimeout(() => setToast(null), 5_000);
-    return () => window.clearTimeout(timeout);
-  }, [toast]);
-
-  if (!toast) return null;
-  return (
-    <div className={`st-name-tier-toast gifting-levelup-toast gifting-levelup-toast--${giftingTier(toast.tierIndex).key}`} role="status" aria-live="polite"
-      data-testid="toast-gifting-level-up" onClick={() => setToast(null)}>
-      <span>
-        <small>Gifting level up</small>
-        <strong>{giftingTier(toast.tierIndex).name} · Level {toast.tierIndex}</strong>
-        <ShinyName displayNameColor={toast.color} displayNameTierIndex={toast.tierIndex}>
-          {toast.displayName}
-        </ShinyName>
-      </span>
-    </div>
-  );
-}
-
 function HomeRedirect() {
   return (
     <>
@@ -249,32 +186,12 @@ function OwnProfileRoute() {
   );
 }
 
-function TransactionHistoryRoute() {
-  const { user } = useUser();
-  return (
-    <>
-      <Show when="signed-in">{user && <ProfileGate><TransactionHistoryPage key={user.id} /></ProfileGate>}</Show>
-      <Show when="signed-out"><Redirect to="/sign-in?redirect_url=%2Fuser-portal%2Ftransactions" /></Show>
-    </>
-  );
-}
-
 function ProfilePhotoReviewsRoute() {
   const { user } = useUser();
   return (
     <>
       <Show when="signed-in">{user && <ProfileGate><ProfilePhotoReviewPage key={user.id} /></ProfileGate>}</Show>
       <Show when="signed-out"><Redirect to="/sign-in?redirect_url=%2Fuser-portal%2Fphoto-reviews" /></Show>
-    </>
-  );
-}
-
-function StoreRoute() {
-  const { user } = useUser();
-  return (
-    <>
-      <Show when="signed-in">{user && <ProfileGate><StorePage key={user.id} /></ProfileGate>}</Show>
-      <Show when="signed-out"><Redirect to="/sign-in?redirect_url=%2Fuser-portal" /></Show>
     </>
   );
 }
@@ -388,9 +305,9 @@ function ClerkProviderWithRoutes() {
             <Route path="/home" component={DiscoveryRoute} />
             <Route path="/community" component={CommunityRoute} />
             <Route path="/community/*?" component={CommunityRoute} />
-            <Route path="/user-portal/transactions" component={TransactionHistoryRoute} />
+            <Route path="/user-portal/transactions">{() => <Redirect to="/user-portal" />}</Route>
             <Route path="/user-portal/photo-reviews" component={ProfilePhotoReviewsRoute} />
-            <Route path="/user-portal/store" component={StoreRoute} />
+            <Route path="/user-portal/store">{() => <Redirect to="/user-portal" />}</Route>
             <Route path="/user-portal" component={OwnProfileRoute} />
             <Route path="/user-portal/edit" component={Portal} />
             <Route path="/rooms/:roomId" component={RoomRoute} />
@@ -398,8 +315,6 @@ function ClerkProviderWithRoutes() {
           </Switch>
         </RoutedErrorBoundary></div>
         <BottomNavigation />
-        <PinkCardAnnouncement path={currentPath} />
-        <NameColorLevelUpToast />
         </QuickProfileProvider>
       </QueryClientProvider>
     </ClerkProvider>

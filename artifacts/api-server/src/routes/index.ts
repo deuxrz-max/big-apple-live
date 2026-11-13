@@ -17,7 +17,6 @@ import { requireCompletedProfile } from "../lib/account-profiles";
 import { devAudioHarnessEnabled } from "../lib/dev-audio-harness-policy";
 import devAudioHarnessRouter from "./dev-audio-harness";
 
-import pinkCardRewardsRouter from "./pink-card-rewards";
 const router: IRouter = Router();
 
 router.use(healthRouter);
@@ -25,6 +24,9 @@ router.use(communityRouter);
 router.use(moderatorBotRouter);
 router.use(profilePhotosRouter);
 router.use(photoReviewRouter);
+router.use(["/rewards/pink-card", "/social/pink-card"], (_req, res) => {
+  res.status(410).json({ error: "This reward feature has been retired." });
+});
 router.use(["/account/rooms", "/social"], async (req, _res, next) => {
   await requireAdult(accountId(req));
   await requireCompletedProfile(accountId(req));
@@ -32,7 +34,6 @@ router.use(["/account/rooms", "/social"], async (req, _res, next) => {
 });
 router.use(identityRouter);
 router.use(socialRouter);
-router.use(pinkCardRewardsRouter);
 router.use(chatRouter);
 router.use(universityChatRouter);
 router.use(universityAudioRouter);

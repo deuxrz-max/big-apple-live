@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 import { Link, Redirect, useSearch } from 'wouter';
 import { ROOM_CHANNELS, channelBySlug, channelForDirectoryRoom, roomChannelHref } from './room-channels';
 import './room-channels.css';
-import { PinkCardRewardTile } from './PinkCardRewardTile';
 import { WeatheredStreetSign } from './WeatheredStreetSign';
 
 export type DirectoryChannelRoom = {
@@ -58,9 +57,6 @@ export function RoomChannels<R extends DirectoryChannelRoom>({
             </li>
           );
         })}
-        <li className="pc-slot">
-          <PinkCardRewardTile signedIn={baseHref !== '/'} />
-        </li>
         <li className="st-home-go-live">{goLive}</li>
       </ul>
       {!loading && others.length > 0 && (

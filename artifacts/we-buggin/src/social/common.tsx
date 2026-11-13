@@ -1,7 +1,7 @@
 import { useRef, type ReactNode } from 'react';
 import { Link } from 'wouter';
 import type { QueryClient } from '@tanstack/react-query';
-import { Award, Crown, Flame, Gem, Gift, Heart, Rocket, Sparkles, Star, Zap, Coins, type LucideIcon } from 'lucide-react';
+import { Coins } from 'lucide-react';
 import type { SocialPerson } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
 import { ProfileTap } from '@/profile/QuickProfile';
@@ -15,17 +15,6 @@ export const errStatus = (e: unknown): number | undefined => (e as { status?: nu
 
 export function refreshSocial(qc: QueryClient) {
   return qc.invalidateQueries({ predicate: (q) => String(q.queryKey[0]).startsWith('/api/social') });
-}
-
-const ICONS: LucideIcon[] = [Star, Award, Crown, Gem, Heart, Sparkles, Flame, Rocket, Zap];
-export function iconFor(id: string): LucideIcon {
-  let h = 0;
-  for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return ICONS[h % ICONS.length];
-}
-export function GiftIcon({ id, size = 22 }: { id: string; size?: number }) {
-  const I = id.toLowerCase().includes('coin') ? Coins : iconFor(id + 'g') ?? Gift;
-  return <I size={size} aria-hidden />;
 }
 
 export function CoinAmount({ children, size = 14, className }: {

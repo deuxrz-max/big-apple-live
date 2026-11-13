@@ -10,13 +10,6 @@ body.streamtalk-beam-screen #root .app-bottom-nav :is(a, button, .app-bottom-lin
   background: #000 !important;
   background-image: none !important;
 }
-/* Gift sheets are portalled to body; the room route flag keeps other pages intact. */
-body.streamtalk-beam-screen .gift-framework.gift-sheet {
-  background: #000 !important;
-  background-image: none !important;
-  border-color: rgba(255, 255, 255, .16);
-}
-
 #root .ch.ur,
 #root .ch.ur .ur-in,
 #root .ch.ur .ur-body,
@@ -38,7 +31,7 @@ body.streamtalk-beam-screen .gift-framework.gift-sheet {
   border-color: rgba(255, 255, 255, .12) !important;
 }
 #root .ch.ur .ur-bot-chatter { background: #000 !important; }
-#root .ch.ur :is(.ch-comp input, .ur-tv-frame, .ur-tv-player, .ur-tv-placeholder, .ur-slot-media, .ur-slot-join, .gift-framework.gift-sheet) {
+#root .ch.ur :is(.ch-comp input, .ur-tv-frame, .ur-tv-player, .ur-tv-placeholder, .ur-slot-media, .ur-slot-join) {
   background: #000 !important;
   background-image: none !important;
 }
@@ -62,7 +55,7 @@ body.streamtalk-beam-screen .gift-framework.gift-sheet {
 }
 
 /* One black for interface fills, including empty-seat circles and control states.
-   Never target img/video/canvas, gift artwork, profile badges, or status dots. */
+   Never target media, profile images, or status dots. */
 #root .ch.ur :is(
   button, input, select, textarea, option,
   .ur-empty-number, .ur-slot-avatar, .ur-slot-identity-fallback, .ur-slot-initial-fallback,
@@ -90,20 +83,6 @@ body.streamtalk-beam-screen .gift-framework.gift-sheet {
 #root .ch.ur :is(.ur-slot, .ur-tv-frame)::before {
   background: rgba(255, 255, 255, .18) !important;
   animation: none !important;
-}
-body.streamtalk-beam-screen .gift-room-panel :is(
-  button, input, select, option, .gift-panel-recipients, .gift-panel-tabs,
-  .gift-panel-send-zone, .gift-panel-quantity, .gift-panel-message,
-  .gift-panel-wallet, .gift-panel-skeletons > div
-) {
-  background: #000 !important;
-  background-image: none !important;
-}
-body.streamtalk-beam-screen .gift-room-panel button {
-  box-shadow: none;
-}
-body.streamtalk-beam-screen .gift-room-panel :is(.gift-panel-send, .gift-panel-secondary) {
-  border-color: rgba(255, 255, 255, .3);
 }
 @media (max-width: 760px) {
   #root .ch.ur .ur-side.is-open { background: #000 !important; }

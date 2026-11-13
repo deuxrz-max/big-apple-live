@@ -1,14 +1,12 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
-import { Coins, Send, RefreshCw, Trash2, Trophy } from 'lucide-react';
+import { Coins, Send, RefreshCw, Trash2 } from 'lucide-react';
 import {
   useGetSocialMe, useGetSocialConversation, useSendSocialMessage, useDeleteSocialConversation,
-  useClaimSocialDailyReward, useGetSocialLedger, useGetSocialLeaderboard, useGetGifterLeaderboard, getGetGifterLeaderboardQueryKey,
-  getGetSocialMeQueryKey, getGetSocialConversationQueryKey, getGetSocialLedgerQueryKey,
-  getPinkCardEntry,
+  useClaimSocialDailyReward, getGetSocialMeQueryKey, getGetSocialConversationQueryKey,
 } from '@workspace/api-client-react';
-import { CoinAmount, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, fmt, refreshSocial, useIdemKey } from './common';
+import { CoinAmount, ErrorBox, Loading, Msg, errMsg, fmt, refreshSocial, useIdemKey } from './common';
 import { ShinyName } from '@/components/ShinyName';
 import { ActionMenu, ScreenHeader } from '@/components/app-chrome';
 
@@ -93,150 +91,29 @@ export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
   const qc = useQueryClient();
   const me = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), refetchInterval: 10000 } });
   const claim = useClaimSocialDailyReward();
-  const [msg, setMsg] = useState<{ ok: boolean; t: ReactNode } | null>(null);
+  const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null);
   if (me.isLoading) return <Loading />;
   if (me.isError || !me.data) return <ErrorBox error={me.error} retry={() => me.refetch()} />;
-  const { wallet: w, gifts, inventory } = me.data;
+  const { wallet: w } = me.data;
   const doClaim = () => { setMsg(null); claim.mutate(undefined, {
     onSuccess: () => {
-      const base = <>Claimed <CoinAmount>{w.dailyReward.toLocaleString()} coins</CoinAmount>.</>;
-      setMsg({ ok: true, t: base }); refreshSocial(qc);
-      // Only mention the Pink Card draw when the server confirms an active entry.
-      getPinkCardEntry().then((e) => {
-        if (e.entered && !e.optedOut) setMsg({ ok: true, t: <>{base} <span data-testid="text-pink-card-entered">You're in today's Pink Card draw.</span></> });
-      }).catch(() => {});
+       setMsg({ ok: true, t: `Claimed ${w.dailyReward.toLocaleString()} coins.` }); refreshSocial(qc);
     },
     onError: (e) => setMsg({ ok: false, t: errMsg(e) }) }); };
   return (
     <section>
       {embedded ? <h2 className="bm-h1 sc-h1">Rewards</h2> : <h1 className="bm-h1 sc-h1">Rewards</h1>}
-      <p className="bm-lede">Daily reward coins and gifts have no cash value.</p>
+      <p className="bm-lede">Daily reward coins have no cash value.</p>
       <div className="sc-wallet">
         <div className="sc-balance"><Coins size={28} style={{ color: '#f5cb8d' }} /><b data-testid="text-balance">{w.unlimited ? 'Unlimited test' : w.balance.toLocaleString()}</b><span>coins</span></div>
         <dl>
           <div><dt>Coins earned</dt><dd><CoinAmount>{w.earned.toLocaleString()}</CoinAmount></dd></div>
-          <div><dt>Coins received</dt><dd><CoinAmount>{w.received.toLocaleString()}</CoinAmount></dd></div>
-          <div><dt>Coins sent</dt><dd><CoinAmount>{w.sent.toLocaleString()}</CoinAmount></dd></div>
         </dl>
         <button type="button" className="bm-btn bm-btn-primary" disabled={!w.canClaimDaily || claim.isPending} onClick={doClaim} data-testid="button-claim">
           {claim.isPending ? 'Claiming...' : w.canClaimDaily ? <>Claim <CoinAmount>{w.dailyReward.toLocaleString()} daily coins</CoinAmount></> : 'Claimed today, back after 3 AM Eastern'}</button>
       </div>
       {msg && <Msg ok={msg.ok}>{msg.t}</Msg>}
-      <h2 className="sc-h2">Gifts</h2>
-      <p className="sc-sub">Send gifts in social rooms.</p>
-      <div className="sc-gifts">{gifts.map((g) => <div key={g.id} className="sc-gift"><GiftIcon id={g.id} size={26} /><b>{g.name}</b><CoinAmount>{g.cost.toLocaleString()} coins</CoinAmount></div>)}</div>
-       <h2 className="sc-h2">Gift bag</h2>
-       {inventory.length === 0 ? <p className="sc-sub">No gifts in your bag yet.</p> : <p className="sc-tags">{inventory.map((id) => <i key={id}>{gifts.find((g) => g.id === id)?.name ?? id}</i>)}</p>}
     </section>
   );
 }
 
-const transactionKindLabel: Record<string, string> = {
-  credit_purchase: 'Coins purchased',
-  gift_sent: 'Gift sent',
-  gift_received: 'Gift received',
-  reward: 'Coin reward',
-  purchase: 'Purchase',
-};
-
-function transactionLabel(kind: string) {
-  return transactionKindLabel[kind]
-    ?? kind.split('_').filter(Boolean).map((word) => word[0]?.toUpperCase() + word.slice(1)).join(' ');
-}
-
-function transactionDate(value: string) {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-}
-
-export function TransactionHistoryPage() {
-  const transactions = useGetSocialLedger({
-    query: {
-      queryKey: getGetSocialLedgerQueryKey(),
-      staleTime: 0,
-      refetchOnMount: 'always',
-      refetchOnWindowFocus: 'always',
-    },
-  });
-
-  return (
-    <section className="sc-transaction-page" data-testid="page-transaction-history">
-      <ScreenHeader backHref="/user-portal" backLabel="Back to Me" title="Transactions" subtitle="Your 100 most recent coin transactions" testId="header-transactions" />
-      {transactions.isLoading && <Loading />}
-      {transactions.isError && <ErrorBox error={transactions.error} retry={() => transactions.refetch()} />}
-      {transactions.data && (transactions.data.transactions.length === 0
-        ? <p className="sc-transaction-empty" data-testid="state-transactions-empty">No transactions yet.</p>
-        : <ul className="sc-transaction-list" data-testid="list-transaction-history">
-          {transactions.data.transactions.map((transaction) => {
-            const amount = Math.abs(transaction.delta);
-            const amountClass = transaction.delta > 0 ? 'sc-plus' : transaction.delta < 0 ? 'sc-minus' : 'sc-transaction-zero';
-            const sign = transaction.delta > 0 ? '+' : transaction.delta < 0 ? '−' : '';
-            return (
-              <li key={transaction.id} className="sc-transaction" data-testid={`transaction-${transaction.kind}`}>
-                <div className="sc-transaction-copy">
-                  <b className="sc-transaction-kind">{transactionLabel(transaction.kind)}</b>
-                  <span className="sc-transaction-description">{transaction.description}</span>
-                  {transaction.peer && <small className="sc-transaction-peer">With {transaction.peer}</small>}
-                  <time className="sc-transaction-date" dateTime={transaction.createdAt}>{transactionDate(transaction.createdAt)}</time>
-                </div>
-                <b className={`sc-transaction-amount ${amountClass}`}>
-                  <CoinAmount>{sign}{amount.toLocaleString()} coins</CoinAmount>
-                </b>
-              </li>
-            );
-          })}
-        </ul>)}
-    </section>
-  );
-}
-
-export function LeaderboardPage() {
-  const [view, setView] = useState<'givers' | 'receivers'>('receivers');
-  return (
-    <section>
-      <h1 className="bm-h1 sc-h1"><Trophy size={36} /> Leaderboard</h1>
-      <div className="sc-tabs" role="tablist" aria-label="Leaderboard view" style={{ display: 'flex', gap: 8, margin: '4px 0 14px' }}>
-        {(['receivers', 'givers'] as const).map(id => (
-          <button key={id} type="button" role="tab" aria-selected={view === id}
-            className={`bm-btn bm-btn-sm${view === id ? ' bm-btn-primary' : ''}`} style={{ borderRadius: 0 }}
-            onClick={() => setView(id)} data-testid={`tab-leaderboard-${id}`}>
-            {id === 'givers' ? 'Givers' : 'Receivers'}
-          </button>
-        ))}
-      </div>
-      {view === 'receivers' ? <ReceiverLeaderboard /> : <GiverLeaderboard />}
-    </section>
-  );
-}
-
-function ReceiverLeaderboard() {
-  const q = useGetSocialLeaderboard({ query: { queryKey: ['/api/social/leaderboard'], refetchInterval: 15000 } });
-  return <>
-    <p className="bm-lede">Ranked by coins received in gifts.</p>
-    {q.isLoading && <Loading />}
-    {q.isError && <ErrorBox error={q.error} retry={() => q.refetch()} />}
-    {q.data && (q.data.people.length === 0 ? <Empty title="No ranking yet"><p>Gifts sent to opted-in people will show up here.</p></Empty> : (
-      <ol className="sc-rank">{q.data.people.map((p, i) => (
-        <li key={p.username}>
-          <span className="sc-pos" aria-label={`Rank ${i + 1}`}>{i + 1}</span>
-          <PersonCard p={p} className="sc-card-leaderboard"
-            extra={<span className="sc-rank-score"><b className="sc-score"><CoinAmount>{p.receivedCredits.toLocaleString()}</CoinAmount></b></span>} />
-        </li>))}</ol>))}
-  </>;
-}
-
-function GiverLeaderboard() {
-  const q = useGetGifterLeaderboard({ query: { queryKey: getGetGifterLeaderboardQueryKey(), refetchInterval: 15000 } });
-  return <>
-    <p className="bm-lede">Opted-in public gifters, ranked by gift XP from successfully sent gifts. Every Deux Wild gifter (level 91+) is listed, plus the top ten others.</p>
-    {q.isLoading && <Loading />}
-    {q.isError && <ErrorBox error={q.error} retry={() => q.refetch()} />}
-    {q.data && (q.data.people.length === 0 ? <Empty title="No givers yet"><p>Members who send gifts will appear here.</p></Empty> : (
-      <ol className="sc-rank" data-testid="list-gifter-leaderboard">{q.data.people.map((p, i) => (
-        <li key={p.username} data-testid={`row-gifter-${p.username}`}>
-          <span className="sc-pos" aria-label={`Rank ${i + 1}`}>{i + 1}</span>
-          <PersonCard p={p} className="sc-card-leaderboard"
-            extra={<span className="sc-rank-score"><b className="sc-score">{p.giftXp.toLocaleString()} XP</b></span>} />
-        </li>))}</ol>))}
-  </>;
-}

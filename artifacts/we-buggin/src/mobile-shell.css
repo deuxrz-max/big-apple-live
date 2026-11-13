@@ -198,25 +198,10 @@ body.streamtalk-live-screen .app-page { padding-bottom: 0; }
 .ch-top::-webkit-scrollbar { display: none; }
 .ch-top > * { flex: 0 0 auto; }
 
-/* ---------- Store ---------- */
-.st-store .st-header {
-  position: sticky; top: 0; z-index: 15;
-  padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
-  background: linear-gradient(180deg, var(--dw-base) 72%, rgba(11, 10, 8, 0));
-}
-.st-store .st-header-back { min-width: var(--dw-tap); min-height: var(--dw-tap); border-radius: 14px; display: grid; place-items: center; }
-.st-store .st-item-card { border-radius: var(--dw-radius); transition: transform .16s var(--dw-ease); }
-.st-store .st-item-card:active { transform: scale(.98); }
-.st-store .st-launch-tile { min-height: 64px; border-radius: var(--dw-radius); }
-.st-store .st-balance-bar { bottom: calc(var(--app-bottom-nav-height) + 8px); border-radius: 18px; }
-.st-store .st-detail-action, .st-store .st-detail-preview { min-height: 48px; border-radius: 14px; }
-
-/* ---------- Bottom sheets (store, gifts, live actions) ---------- */
+/* ---------- Bottom sheets ---------- */
 @media (max-width: 767px) {
   .st-sheet-backdrop { align-items: flex-end !important; }
-  .st-sheet,
-  .gift-panel,
-  .st-live-action-sheet {
+  .st-sheet, .st-live-action-sheet {
     border-radius: var(--dw-radius-lg) var(--dw-radius-lg) 0 0 !important;
     padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
     max-height: min(86dvh, 720px);
@@ -225,23 +210,15 @@ body.streamtalk-live-screen .app-page { padding-bottom: 0; }
     animation: dw-sheet-in .26s var(--dw-ease) both;
   }
   .st-sheet { width: 100% !important; max-width: none !important; margin: 0 !important; }
-  .st-sheet::before,
-  .gift-panel::before,
-  .st-live-action-sheet::before {
+  .st-sheet::before, .st-live-action-sheet::before {
     content: ''; display: block; width: 40px; height: 4px; border-radius: 2px;
     margin: 8px auto 6px; background: rgba(246, 240, 225, .22);
   }
 }
-.st-sheet-backdrop, .gift-panel-backdrop, .st-live-action-scrim { animation: dw-fade-in .2s ease both; }
+.st-sheet-backdrop, .st-live-action-scrim { animation: dw-fade-in .2s ease both; }
 .st-sheet-close, .st-live-action-close { min-width: var(--dw-tap); min-height: var(--dw-tap); }
 @keyframes dw-sheet-in { from { transform: translateY(24px); opacity: .4; } to { transform: none; opacity: 1; } }
 @keyframes dw-fade-in { from { opacity: 0; } to { opacity: 1; } }
-
-/* ---------- Gifts ---------- */
-.gift-panel-card { min-height: 92px; border-radius: 14px; transition: transform .14s var(--dw-ease); }
-.gift-panel-card:active { transform: scale(.95); }
-.gift-panel-categories { scrollbar-width: none; }
-.gift-panel-category { min-height: 36px; border-radius: 12px; }
 
 /* ---------- Rooms: controls only, perimeter / seats / TV untouched ---------- */
 body.streamtalk-beam-screen .app-bottom-nav-inner { max-width: 560px; }
@@ -257,7 +234,6 @@ body.streamtalk-beam-screen .app-page :is(button, [role=button]) { -webkit-tap-h
 @media (max-width: 380px) {
   :root { --dw-gutter: 12px; }
   .app-bottom-link { font-size: 11px; letter-spacing: .04em; }
-  .app-bottom-nav-inner.has-room-gift .app-bottom-link span:not(.app-bottom-pip) { font-size: 10px; }
   .st-home .st-dir-wallet { padding: 0 9px; font-size: 12px; }
 }
 @media (min-width: 768px) {
@@ -265,8 +241,8 @@ body.streamtalk-beam-screen .app-page :is(button, [role=button]) { -webkit-tap-h
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .app-bottom-link, .app-bottom-pip, .app-home-live, .st-dir-card, .st-item-card, .gift-panel-card,
-  .st-sheet, .gift-panel, .st-live-action-sheet, .st-sheet-backdrop, .gift-panel-backdrop, .st-live-action-scrim,
+  .app-bottom-link, .app-bottom-pip, .app-home-live, .st-dir-card,
+  .st-sheet, .st-live-action-sheet, .st-sheet-backdrop, .st-live-action-scrim,
   .app-page :is(.bm-btn, .pf-btn) {
     animation: none !important; transition: none !important;
   }
@@ -424,15 +400,6 @@ body.streamtalk-beam-screen .app-page :is(button, [role=button]) { -webkit-tap-h
 .dw-home-tabs > a.is-on { background: var(--dw-gold); border-color: var(--dw-gold); color: #1a1406; }
 @media (max-width: 380px) { .dw-home-title small { display: none; } }
 
-/* ================= Store ================= */
-.st-store .st-header h1 { display: grid; text-align: center; line-height: 1.05; }
-.dw-store-balance-inline { font: 700 12px var(--dw-font-body); color: var(--dw-gold); letter-spacing: .02em; }
-.st-store .st-header-items { min-height: var(--dw-tap); padding: 0 12px; }
-.st-store .st-launcher { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
-.st-store .st-launcher::-webkit-scrollbar { display: none; }
-.st-store .st-launch-tile { flex: 1 0 140px; scroll-snap-align: start; }
-@media (max-width: 767px) { .st-store .st-promo { border-radius: var(--dw-radius-lg); } }
-
 /* ================= Rooms: composer only ================= */
 .dw-room-composer { display: grid !important; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 6px; border-radius: 7px; border: 1px solid var(--dw-line-strong); background: var(--dw-surface); }
 .dw-room-composer input { min-height: 42px; border: 0 !important; background: transparent !important; color: var(--dw-ink); padding: 0 10px; }
@@ -460,8 +427,7 @@ html, body { background: #000; background-image: none; }
 #root :is(.ch:not(.ur), .sc-inbox-screen, .sc-following-screen, .pf) { background: #000; }
 #root :is(.sc-card, .sc-panel, .sc-empty, .sc-wallet, .ib-row, .pf-panel,
   .pf-stats > div, .st-dir-card, .st-dir-live-stream, .st-dir-state,
-  .st-store .st-launch-tile, .st-store .st-item-card, .st-store .st-balance-bar,
-  .st-store .st-sheet, .st-store .st-review, .ch-auth .ch-card) {
+  .ch-auth .ch-card) {
   background: var(--dw-surface);
   border-color: var(--dw-line);
   box-shadow: var(--dw-shadow);
@@ -491,16 +457,6 @@ body #root nav.app-bottom-nav .app-bottom-nav-inner .app-bottom-link svg { strok
 }
 #root .dw-landing .st-card-body { background: #0e0d0b; }
 #root .dw-landing .st-cover.is-fallback { background: #191711; }
-#root .gift-framework.gift-sheet {
-  background: #080808; border-color: var(--dw-line-strong);
-  box-shadow: 0 -12px 36px #0007;
-}
-.gift-framework :is(.gift-panel-category, .gift-panel-icon-button, .gift-panel-secondary) {
-  min-height: 44px;
-}
-#root .gift-framework .gift-panel-category.is-active {
-  color: var(--dw-gold-hi); border-color: var(--dw-gold);
-}
 
 /* Discovery comes first even before sign-in, not a full-screen marketing hero. */
 .dw-landing .ch-in { padding-top: 8px; }
@@ -544,16 +500,6 @@ body #root nav.app-bottom-nav .app-bottom-nav-inner .app-bottom-link svg { strok
 #root .st-home .st-home-go-live-button :is(strong, small, span, svg) {
   color: #171106 !important; text-shadow: none;
 }
-#root .st-store {
-  --st-bg: #000; --st-surface: #14130f; --st-raised: #201d15;
-  --st-border: var(--dw-line); --st-text: var(--dw-ink); --st-muted: #c0b9aa;
-  --st-pink: var(--dw-gold); --st-lime: var(--dw-gold-hi);
-  background: #000;
-}
-#root .st-store :is(.st-art-gift, .st-art-effect, .st-art-badge) {
-  background: radial-gradient(ellipse at 50% 40%, #2a2518, #11100d 75%);
-}
-#root .st-store .st-header h1::after { background: var(--dw-gold); }
 body.streamtalk-directory-screen #root .ch.st-home { background: #000; }
 /* Higher specificity retires old per-screen neon overrides, including SVG ink. */
 body #root nav.app-bottom-nav .app-bottom-nav-inner .app-bottom-link.is-active[aria-current="page"] svg {

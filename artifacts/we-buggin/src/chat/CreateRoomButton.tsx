@@ -94,7 +94,7 @@ export function CreateRoomButton({ className, children }: { className: string; c
             disabled={!username || !user?.id || createRoom.isPending} data-testid="button-create-social-room">
             <span className="st-room-choice-icon"><Users size={22} /></span>
             <span><strong>{createRoom.isPending ? "Creating room…" : "Create Room"}</strong>
-              <small>Open a nine-seat social room with chat, gifts, and live audio.</small></span>
+              <small>Open a nine-seat social room with chat and live audio.</small></span>
           </button>
         </form>
         {!username && (me.isLoading

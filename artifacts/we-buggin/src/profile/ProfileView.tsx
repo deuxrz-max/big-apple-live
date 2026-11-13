@@ -124,8 +124,6 @@ export function ProfileView({ person, own = false, tester = false, countryName, 
         <dl className="pf-stats" data-testid="list-profile-stats">
           <div><dd data-testid="text-followers">{num(p.followerCount)}</dd><dt>Followers</dt></div>
           <div><dd data-testid="text-following">{num(p.followingCount)}</dd><dt>Following</dt></div>
-          <div><dd data-testid="text-received"><CoinAmount>{num(p.receivedCredits)}</CoinAmount></dd><dt>Coins received in gifts</dt></div>
-          <div><dd data-testid="text-sent"><CoinAmount>{num(p.sentCredits)}</CoinAmount></dd><dt>Coins sent in gifts</dt></div>
         </dl>
         {!own && children}
         {!own && links}

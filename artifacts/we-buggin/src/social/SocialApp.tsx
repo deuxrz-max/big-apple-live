@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { Link, Route, Switch, useLocation, useParams } from 'wouter';
+import { Link, Redirect, Route, Switch, useLocation, useParams } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
-import { Users, Heart, Ban, Flag, MessageCircle, Coins, Trophy, UserRound, ArrowLeft } from 'lucide-react';
+import { Users, Heart, Ban, Flag, MessageCircle, Coins, UserRound, ArrowLeft } from 'lucide-react';
 import { useGetChatAccess, useGetSocialMe } from '@workspace/api-client-react';
 import '@/beam/beam.css';
 import './social.css';
@@ -11,9 +11,8 @@ import { BlocksPage, CommunityPage, FavoritesPage, MyProfilePage, PersonPage } f
 import { ModerationQueue } from '@/chat/ChatApp';
 import { APP_NAME, Wordmark } from '@/components/brand';
 import { BotProfile } from '@/profile/ProfileView';
-import { BuyCreditsPage } from './BuyCreditsPage';
 import { InboxPage } from './InboxPage';
-import { LeaderboardPage, RewardsPage, ThreadPage } from './MoneyPages';
+import { RewardsPage, ThreadPage } from './MoneyPages';
 import { SafetyReportsPage } from '@/safety/SafetyReportsPage';
 import { CoinTestersPanel } from './CoinTestersPanel';
 import { ActionMenu } from '@/components/app-chrome';
@@ -23,7 +22,6 @@ const NAV = [
   { to: '/community/favorites', label: 'Following', icon: Heart },
   { to: '/community/messages', label: 'Messages', icon: MessageCircle },
   { to: '/community/rewards', label: 'Rewards', icon: Coins },
-  { to: '/community/leaderboard', label: 'Leaderboard', icon: Trophy },
   { to: '/user-portal', label: 'My profile', icon: UserRound },
   { to: '/community/blocks', label: 'Blocked', icon: Ban },
 ];
@@ -106,10 +104,9 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
                 ? <SafetyReportsPage />
                 : <div className="sc-empty" role="status" data-testid="status-reports-access"><h2>Owner access required</h2><p>Safety reports are private to the Big Apple Live owner.</p><Link href="/community" className="bm-btn">Back to People</Link></div>}</Route>
               <Route path="/community/rewards"><RewardsPage /></Route>
-              <Route path="/community/coins" component={BuyCreditsPage} />
-              {/* Keep the old address working for saved links; new links use /coins. */}
-              <Route path="/community/credits" component={BuyCreditsPage} />
-              <Route path="/community/leaderboard" component={LeaderboardPage} />
+              <Route path="/community/coins"><Redirect to="/user-portal" /></Route>
+              <Route path="/community/credits"><Redirect to="/user-portal" /></Route>
+              <Route path="/community/leaderboard"><Redirect to="/home" /></Route>
               <Route><div className="sc-empty"><h2>Not found</h2><Link href="/community" className="bm-btn">People</Link></div></Route>
             </Switch>
           )}

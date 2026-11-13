@@ -8,11 +8,6 @@ body #root .ch.ur .ch-msg p {
   font-size: inherit;
   line-height: inherit;
 }
-#root :is(.ch.ur .ch-msg, .st-live-chat-line, .bm-msgs .bm-msg) .gifting-shield {
-  width: 25px !important;
-  height: 27.5px !important;
-  vertical-align: -0.4em;
-}
 #root :is(.ch.ur .ch-msg, .st-live-chat-line, .bm-msgs .bm-msg) :is(.sc-badge, .sc-badge img, .bs-shield, .st-live-chat-badge) {
   width: 20px !important;
   height: 20px !important;
