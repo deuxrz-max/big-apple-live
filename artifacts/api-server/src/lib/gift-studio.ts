@@ -921,11 +921,7 @@ export async function giftStudioIconFile(input: { versionId: string; ownerId?: s
     throw new RoomError(404, "Gift icon not found.");
   }
   const file = storageFile(row.id, "icon");
-  let [exists] = await file.exists();
-  if (!exists && row.status === "active") {
-    await ensureGiftStudioIcon(row);
-    [exists] = await file.exists();
-  }
+  const [exists] = await file.exists();
   if (!exists) throw new RoomError(404, "Gift icon not found.");
   return { file };
 }

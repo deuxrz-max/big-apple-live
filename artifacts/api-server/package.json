@@ -54,7 +54,6 @@
     "@workspace/beam-identity": "workspace:*",
     "@workspace/db": "workspace:*",
     "@workspace/room-audio": "workspace:*",
-    "chess.js": "^1.4.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "drizzle-orm": "catalog:",

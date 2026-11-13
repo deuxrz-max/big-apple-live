@@ -9,7 +9,7 @@ const BUILTIN_GIFT_EMOJI: Record<string, string> = {
   "standing-ovation": "👏",
 };
 
-/** Gift catalog artwork is static; gift animations and Gift Studio playback are retired. */
+/** Gift catalog artwork remains static. */
 export function GiftArtwork({ gift, size = 52, className = "" }: {
   gift: { id: string; name: string; iconUrl?: string | null };
   size?: number;

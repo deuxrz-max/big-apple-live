@@ -3,16 +3,9 @@ import { MOONFOX } from './moonfox-policy';
 import { SPIRIT_PUP } from './spirit-pup-policy';
 import { COSMIC_ENCORE } from './cosmic-encore-policy';
 import { BIG_TIER_GIFTS } from './big-tier-gifts';
-import { MONTHLY_CREDIT_BADGE_TIERS } from './monthly-credit-badge-config';
 
 export const DAILY_REWARD = 25;
-export const PRODUCTS = MONTHLY_CREDIT_BADGE_TIERS.map(tier => ({
-  id: tier.id,
-  name: tier.name,
-  badgeImage: tier.badgeImage,
-  description: `Complete ${tier.monthlyCredits.toLocaleString("en-US")} coins in confirmed coin purchases during one UTC calendar month. Active through the end of the following month.`,
-  cost: tier.monthlyCredits,
-}));
+export const PRODUCTS: readonly never[] = [];
 export const GIFTS = [
   { id: "good-vibes", name: "Good vibes", cost: 5 },
   { id: "big-love", name: "Big love", cost: 10 },

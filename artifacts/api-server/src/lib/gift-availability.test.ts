@@ -2,19 +2,19 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { filterSendableGifts, isSendableGift, requireSendableGift } from "./gift-availability";
 
-const activeGift = { id: "rose", status: "active", productType: "gift", animationAvailable: true };
+const activeGift = { id: "rose", status: "active", productType: "gift" };
 
-test("only active, available gifts enter the send panel catalog", () => {
+test("only active gifts enter the send panel catalog, even when they have no animation", () => {
   const gifts = [
     activeGift,
     { ...activeGift, id: "inactive", status: "inactive" },
     { ...activeGift, id: "draft", status: "draft" },
     { ...activeGift, id: "retired", status: "deleted" },
     { ...activeGift, id: "entrance", productType: "entrance-effect" },
-    { ...activeGift, id: "missing-media", animationAvailable: false },
+    { ...activeGift, id: "no-animation", animationAvailable: false },
   ];
 
-  assert.deepEqual(filterSendableGifts(gifts).map(gift => gift.id), ["rose"]);
+  assert.deepEqual(filterSendableGifts(gifts).map(gift => gift.id), ["rose", "no-animation"]);
 });
 
 test("turning a gift back on makes it sendable again", () => {

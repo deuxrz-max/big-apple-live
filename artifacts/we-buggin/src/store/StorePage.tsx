@@ -73,7 +73,7 @@ export function StorePage() {
         {gifts.length ? <div className="st-item-grid" data-testid="grid-store-gifts">
           {gifts.map(gift => <article className="st-item-card" key={gift.id} data-testid={`card-store-gift-${gift.id}`}>
             <span className="st-card-art-wrap"><span className="st-art st-art-gift card"><GiftArtwork gift={gift} size={56} /></span>
-              {(me.data?.giftQuantities?.[gift.id] ?? 0) > 0 && <span className="st-card-owned">IN BAG {me.data.giftQuantities[gift.id]}</span>}
+              {(me.data?.giftQuantities?.[gift.id] ?? 0) > 0 && <span className="st-card-owned">IN BAG {me.data?.giftQuantities?.[gift.id] ?? 0}</span>}
             </span>
             <span className="st-card-copy"><strong>{gift.name}</strong>
               <span><Coins size={13} /> {gift.cost.toLocaleString()} coins</span>

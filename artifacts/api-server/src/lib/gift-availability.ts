@@ -1,7 +1,6 @@
 export type SendableGift = {
   status: string;
   productType: string;
-  animationAvailable: boolean;
 };
 
 export function isSendableGift(item: SendableGift | null | undefined): boolean {

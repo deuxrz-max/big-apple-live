@@ -86,7 +86,7 @@ export function useTextRoom(roomId: string, userId: string) {
     let joining = false;
     let knownParticipantIds: Set<string> | null = null;
     const headers = () => ({ "X-Room-Session": credential.current!.participantSessionId });
-    setRoom(null); setMessages([]); setArrivals([]); setEntranceEffects([]); setCoinDrops([]); setStreakReward(null); setLoading(true); setError(null);
+    setRoom(null); setMessages([]); setArrivals([]); setCoinDrops([]); setStreakReward(null); setLoading(true); setError(null);
     setRoomUnavailable(false); setOverflow(null);
     credential.current = null; setCreds(null);
 

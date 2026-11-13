@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { GIFTING_LEVEL_THRESHOLDS, giftingProgress } from '@workspace/beam-identity';
 import {
-  PLATINUM_UNLOCK_LEVEL, giftingPerks, isGiftLocked, levelUpToCelebrate, normalizeGiftingLevel, profileGiftingProgress,
+  giftingPerks, isGiftLocked, levelUpToCelebrate, normalizeGiftingLevel, profileGiftingProgress,
 } from '../src/gifting/gifting';
 
 test('levels clamp to 0..100', () => {
@@ -12,23 +12,14 @@ test('levels clamp to 0..100', () => {
   assert.equal(normalizeGiftingLevel(31.9), 31);
 });
 
-test('platinum unlock is derived from the shared tier function', () => {
-  assert.equal(PLATINUM_UNLOCK_LEVEL, 61);
-});
-
-test('Silver through Deux Wild unlock both name color and animated tier frame', () => {
+test('gifting levels and name colors remain while badge and entrance perks are retired', () => {
   assert.equal(giftingPerks(0).tierNameColor, false);
   assert.equal(giftingPerks(10).tierNameColor, false);
   assert.equal(giftingPerks(11).tierNameColor, true);
   for (let level = 0; level <= 100; level++) {
     assert.equal(giftingPerks(level).tierNameColor, level >= 11);
-    assert.equal(giftingPerks(level).animatedFrame, level >= 11);
-    assert.equal(giftingPerks(level).entranceBanner, level >= 31);
-    assert.equal(giftingPerks(level).neonEntrance, level >= 91);
-    assert.equal('entranceEffect' in giftingPerks(level), false);
-    assert.equal('platinumExclusiveGifts' in giftingPerks(level), false);
+    assert.deepEqual(Object.keys(giftingPerks(level)), ['tierNameColor']);
   }
-  assert.equal(giftingPerks(91).neonEntrance, true);
 });
 
 test('legacy exclusive flags never lock gifts at any level', () => {

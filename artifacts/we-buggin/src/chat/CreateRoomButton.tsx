@@ -7,7 +7,7 @@ import { getGetRoomQueryKey, useCreateAccountRoom, useGetSocialMe } from "@works
 import type { RoomSession } from "@workspace/api-client-react";
 import { saveCreds } from "@/lib/room-creds";
 
-/** Room creation remains available; camera broadcasting and Chess are retired. */
+/** Creates an audio-only social room. */
 export function CreateRoomButton({ className, children }: { className: string; children: ReactNode }) {
   const [, navigate] = useLocation();
   const { user } = useUser();

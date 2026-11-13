@@ -7,7 +7,7 @@ import { COUNTRIES, COUNTRY_CODES, PRODUCTS } from "./catalog";
 import { roomStore } from "../room-store";
 import { giftCatalogWithActiveNames } from "../gift-studio-catalog";
 import { nameColorProfileForAccount, nameColorPurchaseTotalOverride } from "./gift-name-color-data";
-import { hasOwnerTierTestAccess } from "./owner-entrance-effects-policy";
+import { hasOwnerNameColorTestAccess } from "./owner-access-policy";
 import { getHangoutStreakSummary } from "../community-hangout-rewards";
 import { realGiftingLevel } from "./gifting-access";
 import { expirePurchasedGiftLots } from "./gift-bag-inventory";
@@ -59,8 +59,8 @@ export async function getMe(id: string) {
       coinsToNextTier: nameColor.coinsToNextTier,
     },
     nameColorTest: {
-      enabled: hasOwnerTierTestAccess(profile),
-      overrideCoins: hasOwnerTierTestAccess(profile) ? nameColorPurchaseTotalOverride(id) : null,
+      enabled: hasOwnerNameColorTestAccess(profile),
+      overrideCoins: hasOwnerNameColorTestAccess(profile) ? nameColorPurchaseTotalOverride(id) : null,
     },
     wallet: await wallet(id, db, profile.username), inventory: Object.keys(quantities),
     giftQuantities: quantities,

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useUser } from '@clerk/react';
 import { getGetPinkCardRewardQueryKey, useGetPinkCardReward, type PinkCardWinner } from '@workspace/api-client-react';
-import { PINK_CARD_MEDIA, PINK_CARD_POLL_MS, REVEAL_MS, SHUFFLE_MS, hasAnnounced, isAnnouncementRoute, isFreshDraw, markAnnounced, safeSession } from './pinkCardLogic';
+import { PINK_CARD_MEDIA, PINK_CARD_POLL_MS, REVEAL_MS, hasAnnounced, isAnnouncementRoute, isFreshDraw, markAnnounced, safeSession } from './pinkCardLogic';
 import './pink-card.css';
 
 function Overlay({ winner, onDone }: { winner: PinkCardWinner; onDone: () => void }) {

@@ -7,7 +7,7 @@ import {
   DIRECTORY_COMMUNITY_ROOM_IDS,
   DIRECTORY_COMMUNITY_ROOMS,
 } from "./community-config";
-import { isOwnerAccount } from "./social/owner-entrance-effects-policy";
+import { isOwnerAccount } from "./social/owner-access-policy";
 export { COMMUNITY_ROOMS } from "./community-config";
 export async function initializeCommunities() {
   for (const entry of COMMUNITY_ROOMS) {
@@ -58,6 +58,10 @@ export async function communityDirectory() {
       label: room.label,
       headcount: roomStore.get(room.roomId).participants.length,
       headcountSince: roomStore.communityHeadcountSince(room.roomId),
+      // The generated client still consumes this legacy response shape; no video playback is active.
+      nowPlayingVideoId: null,
+      nowPlayingTitle: null,
+      nowPlayingStartedAtMs: null,
     }));
   });
 }

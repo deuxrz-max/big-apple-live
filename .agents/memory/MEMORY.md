@@ -45,6 +45,7 @@
 - [Room playback rendering budget](room-playback-performance.md) — decorative motion must avoid full-screen paints; profile under CPU slowdown and separate rendering from media/network issues.
 - [Personal block boundaries](personal-block-semantics.md) — personal blocks filter text and bilateral DMs/whispers, but never remove room presence, voice, seats or gift effects.
 - [Card-game room scope](card-game-room-scope.md) — the card engine and test mode belong only in user-created no-TV social rooms, never themed/video or livestream rooms.
+- [Current product retirement](current-product-retirement.md) — current direction is audio-only social rooms; retired video/game/effect features must stay unreachable while ordinary gifts and gifting XP remain.
 - [Chess room scope](chess-room-scope.md) — separate two-player audio-only rooms: White above, Black below, no chat, audience, TV or card game.
 - [Recharge economics safeguards](recharge-economics.md) — earned-only $100/30,000 rate; bonus liability includes every coin; unknown fees block real checkout approval.
 - [Room composer regression checks](room-composer-regressions.md) — run room tests with mobile-shell styles; legacy zero-width flex inputs collapse when their parent becomes grid.

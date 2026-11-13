@@ -17,7 +17,7 @@ import { errMessage, errStatus } from '@/lib/errors';
 import { IdentityAvatar } from '@/lib/identity';
 import { useTextRoom } from './useTextRoom';
 import { BeamAudioTrack, useUniversityVideoBeam } from './useUniversityVideoBeam';
-import { isBeamMicEnabled } from './beam-audio-policy';
+import { isRoomMicEnabled } from './room-audio-policy';
 import { arrangeAudioSeats } from './audio-seat-layout';
 import { BotShield } from './BotShield';
 import { BotActivityLine } from './BotActivityLine';
@@ -53,7 +53,7 @@ type Item = { kind: 'room'; at: number; id: string; m: ChatMessage }
   | { kind: 'arrival'; at: number; id: string; displayName: string; participantId: string }
   | { kind: 'gift'; at: number; id: string; gift: RoomGiftEvent }
   | { kind: 'whisper'; at: number; id: string; w: { id: string; username: string; displayName: string;
-      displayNameColor?: string; displayNameTierIndex?: number; badgeId?: string | null; badgeName?: string | null; badgeImage?: string | null;
+      displayNameColor?: string; displayNameTierIndex?: number;
       outgoing: boolean; body: string } };
 
 export function TextChatRoom({ roomId, userId }: { roomId: string; userId: string }) {
@@ -70,7 +70,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   });
   const session = uni.data;
   const videoBeam = useUniversityVideoBeam(roomId, sessionId, participantId);
-  const ownMicEnabled = isBeamMicEnabled(videoBeam.ownSlot);
+  const ownMicEnabled = isRoomMicEnabled(videoBeam.ownSlot);
   const toggleOwnMic = useCallback((enabled: boolean) => {
     void videoBeam.toggleMic(enabled);
   }, [videoBeam.toggleMic]);

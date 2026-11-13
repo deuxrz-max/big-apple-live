@@ -77,7 +77,7 @@ router.use((req, res, next) => {
     "/social/me/equipped-badge", "/social/admin/content-sync",
     "/social/pk/leaderboard",
   ];
-  const retainedGiftCatalogIcon = req.method === "GET" && req.path.startsWith("/social/gift-studio/icons/");
+  const retainedGiftCatalogIcon = req.method === "GET" && req.path.startsWith("/social/gift-icons/");
   if (!retainedGiftCatalogIcon && retired.some(prefix => req.path === prefix || req.path.startsWith(`${prefix}/`))) {
     res.status(410).json({ error: "This feature has been retired." });
     return;
@@ -453,7 +453,7 @@ router.put("/social/admin/gift-studio/catalog/:giftId/icon", ownerOnly, parseGif
   res.set("Cache-Control", "no-store").json(result);
 });
 
-router.get("/social/gift-studio/icons/:versionId", async (req, res): Promise<void> => {
+router.get("/social/gift-icons/:versionId", async (req, res): Promise<void> => {
   const versionId = typeof req.params.versionId === "string" ? req.params.versionId : "";
   await streamStudioIcon(req, res, versionId);
 });

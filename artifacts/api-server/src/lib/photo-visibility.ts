@@ -1,7 +1,7 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db, profilePhotos, accountProfiles, chatModerators } from "@workspace/db";
 import { nameColorProfilesForAccounts } from "./social/gift-name-color-data";
-import { isOwnerAccount } from "./social/owner-entrance-effects-policy";
+import { isOwnerAccount } from "./social/owner-access-policy";
 
 export type PhotoStatus = "pending" | "approved" | "rejected" | "flagged";
 export function photoIdFromUrl(url: string | null | undefined) {

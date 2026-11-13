@@ -2,10 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { hasAnnounced, isAnnouncementRoute, isFreshDraw, markAnnounced } from '../src/chat/pinkCardLogic';
 
-test('announcement routes', () => {
-  assert.equal(isAnnouncementRoute('/rooms/CHESS'), true);
-  assert.equal(isAnnouncementRoute('/community/chess/actual-id'), true);
-  assert.equal(isAnnouncementRoute('/live/abc'), true);
+test('announcement routes are ordinary room pages only', () => {
+  assert.equal(isAnnouncementRoute('/rooms/music-room'), true);
+  assert.equal(isAnnouncementRoute('/community/chess/actual-id'), false);
+  assert.equal(isAnnouncementRoute('/live/abc'), false);
   assert.equal(isAnnouncementRoute('/live/start'), false);
   assert.equal(isAnnouncementRoute('/home'), false);
   assert.equal(isAnnouncementRoute('/live'), false);

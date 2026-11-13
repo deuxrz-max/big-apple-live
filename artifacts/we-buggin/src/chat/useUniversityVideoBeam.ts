@@ -15,7 +15,7 @@ import {
   type RemoteTrack,
 } from "livekit-client";
 import { errMessage, errStatus } from "@/lib/errors";
-import { isBeamMicEnabled, shouldSubscribeToBeamAudio } from "./beam-audio-policy";
+import { isRoomMicEnabled, shouldSubscribeToRoomAudio } from "./room-audio-policy";
 
 function safeBeamError(error: unknown, fallback: string): string {
   const message = errMessage(error, fallback);
@@ -80,9 +80,9 @@ function syncAudioSubscriptions(
   speakerConversationEnabled = false,
 ) {
   const listenerMicEnabled = speakerConversationEnabled
-    && isBeamMicEnabled(state.slots.find(slot => slot.participantId === listenerId));
+    && isRoomMicEnabled(state.slots.find(slot => slot.participantId === listenerId));
   for (const participant of room.remoteParticipants.values()) {
-    const shouldSubscribe = shouldSubscribeToBeamAudio({
+    const shouldSubscribe = shouldSubscribeToRoomAudio({
       listenerId,
       listenerMicEnabled,
       publisherId: participant.identity,

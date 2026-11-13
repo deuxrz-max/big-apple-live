@@ -136,7 +136,7 @@ function QuickProfileSheet({ username, onClose, onFull, opener }: { username: st
   );
 }
 
-/** Tap-vs-swipe handlers for elements that must keep their own layout (e.g. Chess photo track). */
+/** Tap-vs-swipe handlers for photo tracks that must keep their own layout. */
 export function useProfileTapHandlers(username?: string | null) {
   const qp = useQuickProfile();
   const start = useRef<{ x: number; y: number } | null>(null);

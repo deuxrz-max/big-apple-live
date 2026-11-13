@@ -5,7 +5,6 @@ import { and, asc, eq, inArray } from 'drizzle-orm';
 import {
   db, accountProfiles, socialWallets, socialLedger, socialSettings, chatAdmissions, socialGiftEvents,
   socialGiftBag, giftStudioAssets, socialGiftCatalogSettings,
-  liveStreamSessions,
 } from '@workspace/db';
 import { gift, giftLedgerDebit, serializeGiftSends } from './rewards';
 import { getMe } from './people';
@@ -17,8 +16,6 @@ import { SPIRIT_PUP, spiritSplit } from './spirit-pup-policy';
 import { MOONFOX } from './moonfox-policy';
 import { giftCatalogWithActiveNames, listGiftCatalogForOwner, updateGiftCatalogItem } from '../gift-studio-catalog';
 import { giftChargeTotal } from './gift-quantity';
-import { liveStreamIdForAccount } from '../live-stream-policy';
-import { liveStreamChatHub } from '../live-stream-chat';
 
 test('Spirit Pup has one changeable price and an exact 50/50 split', () => {
   assert.equal(SPIRIT_PUP.cost, 100);

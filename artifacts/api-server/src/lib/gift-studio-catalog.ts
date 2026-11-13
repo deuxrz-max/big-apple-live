@@ -63,7 +63,7 @@ function catalogRecord(
     roomGift: (config?.productType ?? "gift") === "gift" && isRoomGift(gift.id),
     animationAvailable: false,
     iconUrl: activeAsset && status !== "deleted"
-      ? `/api/social/gift-studio/icons/${activeAsset.id}?v=${encodeURIComponent(String(activeAsset.settings.iconRevision ?? 1))}`
+      ? `/api/social/gift-icons/${activeAsset.id}?v=${encodeURIComponent(String(activeAsset.settings.iconRevision ?? 1))}`
       : null,
     iconStatus: activeAsset && (iconStatus === "transparent" || iconStatus === "fallback" || iconStatus === "manual-transparent" || iconStatus === "manual-fallback")
       ? iconStatus
@@ -92,7 +92,7 @@ export async function listGiftCatalogForOwner() {
       roomGift: (config.productType ?? "gift") === "gift",
        animationAvailable: false,
       iconUrl: config.status !== "deleted" && data.activeAssets.has(config.giftId)
-        ? `/api/social/gift-studio/icons/${data.activeAssets.get(config.giftId)!.id}?v=${encodeURIComponent(String(data.activeAssets.get(config.giftId)!.settings.iconRevision ?? 1))}`
+        ? `/api/social/gift-icons/${data.activeAssets.get(config.giftId)!.id}?v=${encodeURIComponent(String(data.activeAssets.get(config.giftId)!.settings.iconRevision ?? 1))}`
         : null,
       iconStatus: (() => {
         const activeAsset = data.activeAssets.get(config.giftId);
@@ -149,7 +149,7 @@ export async function getGiftCatalogItem(giftId: string) {
     roomGift: (config.productType ?? "gift") === "gift",
     animationAvailable: false,
     iconUrl: status !== "deleted" && data.activeAssets.has(giftId)
-      ? `/api/social/gift-studio/icons/${data.activeAssets.get(giftId)!.id}?v=${encodeURIComponent(String(data.activeAssets.get(giftId)!.settings.iconRevision ?? 1))}`
+      ? `/api/social/gift-icons/${data.activeAssets.get(giftId)!.id}?v=${encodeURIComponent(String(data.activeAssets.get(giftId)!.settings.iconRevision ?? 1))}`
       : null,
     iconStatus: (() => {
       const activeAsset = data.activeAssets.get(giftId);
