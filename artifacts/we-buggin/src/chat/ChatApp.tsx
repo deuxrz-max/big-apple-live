@@ -74,7 +74,7 @@ function List({ preview, query = '' }: { preview?: boolean; query?: string }) {
       {q.isError && <div className="ch-err" role="alert">{preview ? 'Sign in to see the directory.' : 'Could not load the directory.'} {!preview && <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button>}</div>}
       {q.data && q.data.length === 0 && <p>No entries.</p>}
       {q.data && q.data.length > 0 && rows.length === 0 && <p>No room matches your search.</p>}
-      <RoomChannels rooms={rows} loading={q.isLoading} baseHref={preview ? '/' : '/home'}
+      <RoomChannels rooms={rows} loading={q.isLoading} baseHref={preview ? '/' : '/home'} showMap={!preview}
         renderRoom={room => <DirectoryRoomCard room={room} topic={room.label} isFeatured={false} preview={preview} />}
         goLive={<Link href="/sign-in" className="st-home-go-live-button"><span className="st-home-go-live-copy"><strong>Create Room</strong><small>Start an audio room</small></span></Link>}
       />

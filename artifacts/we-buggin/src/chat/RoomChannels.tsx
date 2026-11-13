@@ -17,6 +17,7 @@ export type RoomChannelsProps<R extends DirectoryChannelRoom> = {
   goLive: ReactNode;
   baseHref?: string;
   showOtherRoomSigns?: boolean;
+  showMap?: boolean;
 };
 
 /** Square "Back to [channel]" link; renders nothing for rooms outside the 8 topic rooms. */
@@ -34,6 +35,7 @@ export function RoomChannels<R extends DirectoryChannelRoom>({
   goLive,
   baseHref = '/home',
   showOtherRoomSigns = false,
+  showMap = true,
 }: RoomChannelsProps<R>) {
   const search = useSearch();
   const selected = channelBySlug(new URLSearchParams(search).get('channel'));
@@ -46,18 +48,19 @@ export function RoomChannels<R extends DirectoryChannelRoom>({
   return (
     <div className="rc" data-testid="section-room-channels">
       <ul className="rc-tiles">
-        <li className="rc-map-item">
-          <div
-            className="rc-map-tile"
-            role="img"
-            aria-label="Aethelgard world map"
-            data-testid="image-home-map"
-            style={{
-              backgroundImage: `url("${import.meta.env.BASE_URL}battle-assets/screens/aethelgard_map_starting_screen.jpg")`,
-            }}
-          >
-          </div>
-        </li>
+        {showMap && (
+          <li className="rc-map-item">
+            <div
+              className="rc-map-tile"
+              role="img"
+              aria-label="Aethelgard world map"
+              data-testid="image-home-map"
+              style={{
+                backgroundImage: `url("${import.meta.env.BASE_URL}battle-assets/screens/aethelgard_map_starting_screen.jpg")`,
+              }}
+            />
+          </li>
+        )}
         <li className="st-home-go-live">{goLive}</li>
       </ul>
       {!loading && others.length > 0 && (
