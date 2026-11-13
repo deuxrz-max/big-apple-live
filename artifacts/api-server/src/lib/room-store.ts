@@ -1,6 +1,5 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import type { Participant, RoomSession, RoomState, EmojiIdentity, ChatAccepted, AccountRoomInput } from "@workspace/api-zod";
-import { MONTHLY_CREDIT_BADGE_TIERS } from "./social/monthly-credit-badge-config";
 
 export const SESSION_TIMEOUT_MS = 90_000;
 export const EMPTY_ROOM_TIMEOUT_MS = 60 * 60 * 1000;
@@ -14,28 +13,12 @@ export class RoomError extends Error {
 type RoomEvent =
   | { type: "chat.accepted"; data: ChatAccepted; senderAccountId?: string }
   | { type: "chat.refresh"; data: { roomId: string } }
-  | { type: "room.entrance-effect"; data: RoomEntranceEffectEvent }
   | { type: "room.coin-drop"; data: RoomCoinDropEvent }
   | { type: "room.hangout-streak-reward"; data: { roomId: string; accountId: string; day: string; coins: number } }
   | { type: "room.snapshot"; data: RoomState }
   | { type: "room.kicked"; data: { roomId: string; accountId: string; message: string } }
   | { type: "room.expired"; data: { roomId: string } };
 type Listener = (event: RoomEvent) => void;
-export type RoomEntranceEffectEvent = {
-  eventId: string;
-  roomId: string;
-  effectId: string;
-  participantId: string;
-  displayName: string;
-  displayNameColor: string;
-  displayNameTierIndex: number;
-  effectName?: string;
-  badgeImage?: string;
-  assetFolder?: string;
-  studioVersionId?: string;
-  startedAt: number;
-  durationMs: number;
-};
 export type RoomCoinDropEvent = {
   eventId: string;
   roomId: string;
@@ -68,14 +51,12 @@ type Room = {
   community?: boolean;
   testOnly?: boolean;
   parentRoomId?: string | null;
-  entranceEffects: RoomEntranceEffectEvent[];
   coinDrops: RoomCoinDropEvent[];
 };
 
 /** Single-process, ephemeral presence store. Session credentials are never in snapshots. */
 export class RoomStore {
   private readonly rooms = new Map<string, Room>();
-  private readonly entranceEffectOwners = new Map<string, { roomId: string; accountId: string }>();
   private communityEndListener: ((roomId: string) => void) | null = null;
   constructor(
     private readonly now: () => number = Date.now,
@@ -97,7 +78,7 @@ export class RoomStore {
       // explicit unlimited value; the eight camera seats are tracked separately.
       name: input.label, capacity: 0, roomType: "topic", createdAt: input.createdAt, hostParticipantId: randomUUID(),
       sessions: new Map(), headcountSince: this.now(), listeners: new Set(), emptySince: null, community: true, testOnly: input.testOnly,
-      parentRoomId: input.parentRoomId, entranceEffects: [], coinDrops: [] });
+      parentRoomId: input.parentRoomId, coinDrops: [] });
   }
   communityParentId(roomId: string) {
     const normalized = roomId.toUpperCase();
@@ -193,7 +174,6 @@ export class RoomStore {
       headcountSince: this.now(),
       listeners: new Set(),
       emptySince: null,
-      entranceEffects: [],
       coinDrops: [],
     };
     this.rooms.set(roomId, room);
@@ -226,7 +206,6 @@ export class RoomStore {
       listeners: new Set(),
       emptySince: null,
       community: true,
-      entranceEffects: [],
       coinDrops: [],
     };
     this.rooms.set(id, room);
@@ -306,41 +285,6 @@ export class RoomStore {
     return [...room.sessions.values()].some(session => session.accountId === accountId);
   }
 
-  publishRoomEntranceEffect(
-    roomId: string,
-    accountId: string,
-    effectId: RoomEntranceEffectEvent["effectId"],
-    durationMs: number,
-    custom?: { studioVersionId?: string; effectName?: string },
-  ): RoomEntranceEffectEvent {
-    const room = this.requireRoom(roomId);
-    const participant = [...room.sessions.values()].find(session => session.accountId === accountId)?.participant;
-    if (!participant) throw new RoomError(409, "The effect owner is no longer in the room");
-    const tier = MONTHLY_CREDIT_BADGE_TIERS.find(item => item.entranceEffectId === effectId);
-    const event: RoomEntranceEffectEvent = {
-      eventId: randomUUID(),
-      roomId: room.roomId,
-      effectId,
-      participantId: participant.participantId,
-      displayName: participant.displayName,
-      displayNameColor: participant.displayNameColor ?? "#FFFFFF",
-      displayNameTierIndex: participant.displayNameTierIndex ?? 0,
-      ...(tier ? { effectName: tier.name, badgeImage: tier.badgeImage, assetFolder: tier.entranceEffectFolder } : {}),
-      ...(custom?.studioVersionId ? { studioVersionId: custom.studioVersionId } : {}),
-      ...(custom?.effectName ? { effectName: custom.effectName } : {}),
-      startedAt: this.now(),
-      durationMs,
-    };
-    this.entranceEffectOwners.set(event.eventId, { roomId: room.roomId, accountId });
-    room.entranceEffects = [...room.entranceEffects.filter(item => this.now() - item.startedAt < 60_000), event].slice(-20);
-    const retained = new Set(room.entranceEffects.map(item => item.eventId));
-    for (const [eventId, owner] of this.entranceEffectOwners) {
-      if (owner.roomId === room.roomId && !retained.has(eventId)) this.entranceEffectOwners.delete(eventId);
-    }
-    this.emit(room, { type: "room.entrance-effect", data: event });
-    return { ...event };
-  }
-
   publishRoomCoinDrop(input: RoomCoinDropEvent): void {
     const room = this.requireRoom(input.roomId);
     const event = { ...input, roomId: room.roomId };
@@ -358,21 +302,6 @@ export class RoomStore {
     this.emit(room, { type: "room.hangout-streak-reward", data: {
       roomId: room.roomId, accountId, day, coins: 100,
     } });
-  }
-
-  entranceEffectOwnerAccountId(eventId: string): string | undefined {
-    return this.entranceEffectOwners.get(eventId)?.accountId;
-  }
-
-  recentRoomEntranceEffects(roomId: string, maxAgeMs = 60_000): RoomEntranceEffectEvent[] {
-    const room = this.requireRoom(roomId);
-    const cutoff = this.now() - maxAgeMs;
-    room.entranceEffects = room.entranceEffects.filter(item => item.startedAt >= cutoff);
-    const retained = new Set(room.entranceEffects.map(item => item.eventId));
-    for (const [eventId, owner] of this.entranceEffectOwners) {
-      if (owner.roomId === room.roomId && !retained.has(eventId)) this.entranceEffectOwners.delete(eventId);
-    }
-    return room.entranceEffects.map(item => ({ ...item }));
   }
 
   /** Private incarnation identifier, never a reusable room-code history key. */

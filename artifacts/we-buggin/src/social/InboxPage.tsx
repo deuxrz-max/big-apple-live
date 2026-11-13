@@ -5,7 +5,7 @@ import {
   useGetSocialInbox, useGetFavoritesGallery,
   getGetSocialInboxQueryKey, getGetFavoritesGalleryQueryKey,
 } from '@workspace/api-client-react';
-import { Avatar, BadgeMark, Empty, ErrorBox } from './common';
+import { Avatar, Empty, ErrorBox } from './common';
 import { ShinyName } from '@/components/ShinyName';
 import './inbox.css';
 
@@ -47,7 +47,7 @@ export function InboxPage() {
                   <b className="ib-count">{c.unreadCount}</b>
                 </span>
                 <Link href={href(c.username)} className="dw-link-contents" aria-label={`${c.displayName || c.username}, active now, ${c.unreadCount} unread`} data-testid={`link-active-${c.username}`}>
-                 <ShinyName className="ib-live-name" displayNameColor={c.displayNameColor} displayNameTierIndex={c.displayNameTierIndex}><BadgeMark id={c.badgeId} label={c.badgeName} imageUrl={c.badgeImage} size={16} compact />{c.displayName || c.username}</ShinyName>
+                  <ShinyName className="ib-live-name" displayNameColor={c.displayNameColor} displayNameTierIndex={c.displayNameTierIndex}>{c.displayName || c.username}</ShinyName>
                 </Link>
               </div>
             </li>
@@ -68,7 +68,6 @@ export function InboxPage() {
                 <span className="ib-mid">
                   <span className="ib-heading">
                     <span className="ib-name">
-                      <BadgeMark id={c.badgeId} label={c.badgeName} imageUrl={c.badgeImage} size={16} compact />
                       <ShinyName className="ib-name-text" displayNameColor={c.displayNameColor} displayNameTierIndex={c.displayNameTierIndex}>{c.displayName?.trim() || c.username}</ShinyName>
                       {c.blocked && <em className="ib-blocked">Blocked</em>}
                     </span>

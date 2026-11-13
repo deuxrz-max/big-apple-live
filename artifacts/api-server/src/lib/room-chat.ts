@@ -8,7 +8,6 @@ import { botSettings, botRotation, botMessageValues } from "./moderator-bots";
 import { BOT_WARNING_COOLDOWN_MS, publicViolation } from "./bot-policy";
 import { censorChatText } from "./chat-filter";
 import { nameColorProfileForAccount, nameColorProfilesForAccounts } from "./social/gift-name-color-data";
-import { visibleMonthlyPurchaseBadgeSummaries, visibleMonthlyPurchaseBadgeSummary } from "./social/monthly-credit-badges";
 
 function publicMessage(row: RoomMessageRow) {
   return GetRoomMessagesResponse.element.parse(row);
@@ -43,14 +42,13 @@ export async function getMessages(roomId: string, store: RoomStore = roomStore, 
     .orderBy(desc(roomMessages.createdAt), desc(roomMessages.id)).limit(60);
   const authorIds = [...new Set(rows.map(row => row.message.authorAccountId).filter((id): id is string => !!id))];
   const nameColors = await nameColorProfilesForAccounts(authorIds);
-  const badgeSummaries = await visibleMonthlyPurchaseBadgeSummaries(authorIds);
   return rows.reverse().map(row => ({
     ...publicMessage({ ...row.message, text: censorChatText(row.message.text, filterSettings.bannedWords) }), photoUrl: null,
     displayNameColor: row.message.authorAccountId ? nameColors.get(row.message.authorAccountId)?.color ?? "#FFFFFF" : "#FFFFFF",
     displayNameTierIndex: row.message.authorAccountId ? nameColors.get(row.message.authorAccountId)?.tierIndex ?? 0 : 0,
-    badgeId: row.message.authorAccountId ? badgeSummaries.get(row.message.authorAccountId)?.tier.id ?? null : null,
-    badgeName: row.message.authorAccountId ? badgeSummaries.get(row.message.authorAccountId)?.tier.name ?? null : null,
-    badgeImage: row.message.authorAccountId ? badgeSummaries.get(row.message.authorAccountId)?.tier.badgeImage ?? null : null,
+    badgeId: null,
+    badgeName: null,
+    badgeImage: null,
   }));
 }
 export async function acceptMessage(
@@ -65,7 +63,6 @@ export async function acceptMessage(
   const filterSettings = await botSettings();
   const filter = store.isCommunity(roomId) ? filterSettings : null;
   const visibleText = censorChatText(text, filterSettings.bannedWords);
-  const senderBadge = await visibleMonthlyPurchaseBadgeSummary(accountId);
   let rateLimited = false;
   const accepted = await db.transaction(async (tx) => {
     // Same lock as profile editing; serialize public sends and their spam checks.
@@ -96,7 +93,6 @@ export async function acceptMessage(
       .where(eq(socialSettings.accountId, accountId));
     const [wallet] = await tx.select({ sent: socialWallets.sent }).from(socialWallets)
       .where(eq(socialWallets.accountId, accountId));
-    const badgeId = senderBadge?.tier.id ?? null;
     profile = { ...profile, bio: settings?.bio ?? "" };
     const [original] = await tx.insert(roomMessages).values({
       roomId: roomId.toUpperCase(), historyId, authorId: sender.participantId, authorAccountId: accountId,
@@ -139,9 +135,9 @@ export async function acceptMessage(
       ? { ...message, text: visibleText } : message), photoUrl: null,
       displayNameColor: message.authorAccountId === accountId ? senderNameColor.color : "#FFFFFF",
       displayNameTierIndex: message.authorAccountId === accountId ? senderNameColor.tierIndex : 0,
-      badgeId: message.authorAccountId === accountId ? badgeId : null,
-      badgeName: message.authorAccountId === accountId ? senderBadge?.tier.name ?? null : null,
-      badgeImage: message.authorAccountId === accountId ? senderBadge?.tier.badgeImage ?? null : null,
+      badgeId: null,
+      badgeName: null,
+      badgeImage: null,
     }, profile };
   });
   // No events or in-memory avatar changes occur before the transaction commits.

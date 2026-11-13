@@ -10,7 +10,6 @@ import { testerState } from "./coin-testers";
 import { TEST_COIN_LIFECYCLE_LOCK } from "./credits-policy";
 import { nameColorProfileForAccount } from "./gift-name-color-data";
 import type { NameColorTierSummary } from "./gift-name-color";
-import { visibleMonthlyPurchaseBadgeSummary, type VisibleMonthlyBadgeSummary } from "./monthly-credit-badges";
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type ProfileRow = typeof accountProfiles.$inferSelect;
@@ -73,7 +72,7 @@ export async function assertGiftContact(tx: Tx | typeof db, actor: string, targe
   }
 }
 export async function person(viewer: string, profile: ProfileRow, settings?: SettingsRow | null, includeStats = false,
-  monthlyBadgeOverride?: VisibleMonthlyBadgeSummary | null, nameColorOverride?: NameColorTierSummary) {
+  nameColorOverride?: NameColorTierSummary) {
   const id = profile.accountId;
   const [prefs] = settings ? [settings] : await db.select().from(socialSettings).where(eq(socialSettings.accountId, id));
   const [[wallet], nameColor] = await Promise.all([
@@ -92,8 +91,6 @@ export async function person(viewer: string, profile: ProfileRow, settings?: Set
   }).from(socialRelations).where(and(eq(socialRelations.kind, "favorite"), or(
     eq(socialRelations.ownerId, id), eq(socialRelations.targetId, id),
   ))) : [];
-  const monthlyBadge = blocked ? null : monthlyBadgeOverride !== undefined
-    ? monthlyBadgeOverride : await visibleMonthlyPurchaseBadgeSummary(id);
   return {
     username: profile.username, displayName: profile.displayName ?? profile.username,
     ...photos, identity: publicProfile(profile).identity,
@@ -104,13 +101,13 @@ export async function person(viewer: string, profile: ProfileRow, settings?: Set
     favorite: !!favorite, blocked: !!ownBlock, receivedCredits: wallet?.received ?? 0,
     displayNameColor: nameColor.color,
     displayNameTierIndex: nameColor.tierIndex,
-    badgeId: monthlyBadge?.tier.id ?? null,
-    badgeName: monthlyBadge?.tier.name ?? null,
-    badgeImage: monthlyBadge?.tier.badgeImage ?? null,
+    badgeId: null,
+    badgeName: null,
+    badgeImage: null,
     ...(includeStats ? {
       followerCount: counts?.followerCount ?? 0, followingCount: counts?.followingCount ?? 0,
       sentCredits: wallet?.sent ?? 0,
-       badges: monthlyBadge ? [{ id: monthlyBadge.tier.id, earnedAt: monthlyBadge.earnedAt.toISOString() }] : [],
+       badges: [],
     } : {}),
   };
 }

@@ -3,17 +3,15 @@ import { ClerkProvider, SignIn, SignUp, Show, useClerk, useUser } from '@clerk/r
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
-import { Link, Redirect, Route, Switch, useLocation, useParams, Router as WouterRouter } from 'wouter';
+import { Link, Redirect, Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 import { getGetSocialMeQueryKey, useGetSocialMe } from '@workspace/api-client-react';
-import { ErrorBoundary, type ErrorFallbackProps } from '@/components/error-boundary';
+import { ErrorBoundary } from '@/components/error-boundary';
 import { APP_NAME, Wordmark } from '@/components/brand';
 import { BottomNavigation } from '@/components/bottom-navigation';
 import { PinkCardAnnouncement } from '@/chat/PinkCardAnnouncement';
 import NotFound from '@/pages/not-found';
 import { clearAllCreds } from '@/lib/room-creds';
-import { AdultGate, ChatDirectory, ChatProfile, LiveProfileGate, ProfileGate, ProfilePhotoReviewPage, PublicChatLanding, TextChatRoom } from '@/chat/ChatApp';
-import { LiveStreamsDirectory, StartLiveStreamPage, WatchLiveStreamPage } from '@/chat/LiveStreamPages';
-import { endHostLiveSessionForRouteChange, leaveViewerLiveSession } from '@/chat/liveSessionController';
+import { AdultGate, ChatDirectory, ChatProfile, ProfileGate, ProfilePhotoReviewPage, PublicChatLanding, TextChatRoom } from '@/chat/ChatApp';
 import { EmailSignUp } from '@/components/email-signup';
 import '@/chat/chat.css';
 import { OwnProfile } from '@/profile/OwnProfile';
@@ -21,7 +19,6 @@ import { QuickProfileProvider } from '@/profile/QuickProfile';
 import '@/profile/profile.css';
 import { StorePage } from '@/store/StorePage';
 import { giftingTier } from '@workspace/beam-identity';
-import { GiftingShield } from '@/gifting/GiftingShield';
 import { ShinyName } from '@/components/ShinyName';
 import SocialApp from '@/social/SocialApp';
 import { TransactionHistoryPage } from '@/social/MoneyPages';
@@ -33,14 +30,9 @@ import '@/depth-ui.css';
 import '@/chat/room-black-gold.css';
 import '@/mobile-shell.css';
 import '@/app-shapes.css';
-import '@/joker-finish.css';
 
 const DevAudioHarnessPage = import.meta.env.DEV
   ? lazy(() => import('@/dev/AudioHarnessPage'))
-  : null;
-
-const DevCardFinishPreview = import.meta.env.DEV
-  ? lazy(() => import('@/profile/CardFinishPreview'))
   : null;
 
 const queryClient = new QueryClient();
@@ -216,11 +208,10 @@ function NameColorLevelUpToast() {
   return (
     <div className={`st-name-tier-toast gifting-levelup-toast gifting-levelup-toast--${giftingTier(toast.tierIndex).key}`} role="status" aria-live="polite"
       data-testid="toast-gifting-level-up" onClick={() => setToast(null)}>
-      <GiftingShield level={toast.tierIndex} size={44} decorative />
       <span>
         <small>Gifting level up</small>
         <strong>{giftingTier(toast.tierIndex).name} · Level {toast.tierIndex}</strong>
-        <ShinyName displayNameColor={toast.color} displayNameTierIndex={toast.tierIndex} showShield={false}>
+        <ShinyName displayNameColor={toast.color} displayNameTierIndex={toast.tierIndex}>
           {toast.displayName}
         </ShinyName>
       </span>
@@ -277,18 +268,6 @@ function ProfilePhotoReviewsRoute() {
   );
 }
 
-function CardFinishPreviewRoute() {
-  const { user } = useUser();
-  return (
-    <>
-      <Show when="signed-in">{user && DevCardFinishPreview && <ProfileGate>
-        <Suspense fallback={<div className="dw-cfp-skel" aria-busy="true" />}><DevCardFinishPreview key={user.id} /></Suspense>
-      </ProfileGate>}</Show>
-      <Show when="signed-out"><Redirect to="/" /></Show>
-    </>
-  );
-}
-
 function StoreRoute() {
   const { user } = useUser();
   return (
@@ -304,37 +283,6 @@ function DiscoveryRoute() {
   return (
     <>
       <Show when="signed-in">{user && <ProfileGate><ChatDirectory key={user.id} /></ProfileGate>}</Show>
-      <Show when="signed-out"><Redirect to="/sign-in" /></Show>
-    </>
-  );
-}
-
-function LiveStreamsRoute() {
-  const { user } = useUser();
-  return (
-    <>
-      <Show when="signed-in">{user && <ProfileGate><LiveStreamsDirectory key={user.id} /></ProfileGate>}</Show>
-      <Show when="signed-out"><Redirect to="/sign-in" /></Show>
-    </>
-  );
-}
-
-function StartLiveStreamRoute() {
-  const { user } = useUser();
-  return (
-    <>
-      <Show when="signed-in">{user && <LiveProfileGate><StartLiveStreamPage key={user.id} /></LiveProfileGate>}</Show>
-      <Show when="signed-out"><Redirect to="/sign-in" /></Show>
-    </>
-  );
-}
-
-function WatchLiveStreamRoute() {
-  const { user } = useUser();
-  const { streamId = '' } = useParams<{ streamId: string }>();
-  return (
-    <>
-      <Show when="signed-in">{user && <LiveProfileGate><WatchLiveStreamPage key={`${user.id}:${streamId}`} streamId={streamId} /></LiveProfileGate>}</Show>
       <Show when="signed-out"><Redirect to="/sign-in" /></Show>
     </>
   );
@@ -365,48 +313,15 @@ function RoomRoute() {
 
 function RoutedErrorBoundary({ children }: { children: ReactNode }) {
   const [location] = useLocation();
-  const isLiveScreen = stripBase(location) === '/live/start' || /^\/live\/[^/]+\/?$/.test(stripBase(location));
-  return <ErrorBoundary resetKey={location}
-    FallbackComponent={isLiveScreen ? LiveRouteErrorFallback : undefined}>{children}</ErrorBoundary>;
-}
-
-function LiveRouteErrorFallback({ resetError }: ErrorFallbackProps) {
-  return (
-    <main className="st-live-page st-live-host-page" style={{
-      display: 'grid', placeItems: 'center', width: '100%', height: '100dvh', minHeight: '100dvh',
-      margin: 0, padding: 24, border: 0, borderRadius: 0, background: '#000', color: '#fff',
-    }}>
-      <section style={{ display: 'grid', justifyItems: 'center', gap: 12, maxWidth: 320, textAlign: 'center' }}>
-        <strong>Live could not load.</strong>
-        <span>Try opening the live screen again.</span>
-        <button type="button" className="st-live-start-button" onClick={resetError}>Try again</button>
-        <Link className="st-live-start-button" href="/home">Back to Big Apple Live</Link>
-      </section>
-    </main>
-  );
+  return <ErrorBoundary resetKey={location}>{children}</ErrorBoundary>;
 }
 
 function ClerkProviderWithRoutes() {
   const [location, setLocation] = useLocation();
   const currentPath = stripBase(location);
-  const previousLiveRoute = useRef<string | null>(null);
-  useEffect(() => {
-    const viewerMatch = currentPath.match(/^\/live\/([^/]+)\/?$/);
-    const nextLiveRoute = currentPath === "/live/start"
-      ? "host"
-      : viewerMatch ? `viewer:${decodeURIComponent(viewerMatch[1])}` : null;
-    const previous = previousLiveRoute.current;
-    if (previous && previous !== nextLiveRoute) {
-      if (previous === "host") endHostLiveSessionForRouteChange();
-      else if (previous.startsWith("viewer:")) leaveViewerLiveSession(previous.slice("viewer:".length));
-    }
-    previousLiveRoute.current = nextLiveRoute;
-  }, [currentPath]);
   const isBeamRoomScreen = /^\/rooms\/[^/]+\/?$/.test(currentPath);
-  const isLiveScreen = currentPath === '/live/start' || /^\/live\/[^/]+\/?$/.test(currentPath);
   const isModerationScreen = currentPath === '/community/moderation';
   const isDirectoryScreen = currentPath === '/home';
-  const isGiftStudioScreen = currentPath === '/community/gift-studio';
   useLayoutEffect(() => {
     // New screens start at their header, not at the previous screen's scroll.
     // This never touches the independently scrolling chat or media elements.
@@ -418,12 +333,10 @@ function ClerkProviderWithRoutes() {
     document.body.classList.toggle('streamtalk-beam-screen', isBeamRoomScreen);
     document.body.classList.toggle('streamtalk-light-screen', isLightScreen);
     document.body.classList.toggle('streamtalk-directory-screen', isDirectoryScreen);
-    document.body.classList.toggle('streamtalk-live-screen', isLiveScreen);
-    document.body.classList.toggle('streamtalk-gift-studio-screen', isGiftStudioScreen);
     return () => {
-      document.body.classList.remove('streamtalk-beam-screen', 'streamtalk-light-screen', 'streamtalk-directory-screen', 'streamtalk-live-screen', 'streamtalk-gift-studio-screen');
+      document.body.classList.remove('streamtalk-beam-screen', 'streamtalk-light-screen', 'streamtalk-directory-screen');
     };
-  }, [isBeamRoomScreen, isLightScreen, isDirectoryScreen, isLiveScreen, isGiftStudioScreen]);
+  }, [isBeamRoomScreen, isLightScreen, isDirectoryScreen]);
   const clerkPubKey = publishableKeyFromHost(
     window.location.hostname,
     import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
@@ -449,7 +362,7 @@ function ClerkProviderWithRoutes() {
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
         <QuickProfileProvider>
-        <div className={`app-page ${isLightScreen ? 'is-light-screen' : ''} ${isLiveScreen ? 'is-live-screen' : ''} ${isBeamRoomScreen ? 'is-beam-screen' : ''} ${isModerationScreen ? 'is-moderation-screen' : ''} ${isDirectoryScreen ? 'is-directory-screen' : ''} ${isGiftStudioScreen ? 'is-gift-studio-screen' : ''}`}><RoutedErrorBoundary>
+        <div className={`app-page ${isLightScreen ? 'is-light-screen' : ''} ${isBeamRoomScreen ? 'is-beam-screen' : ''} ${isModerationScreen ? 'is-moderation-screen' : ''} ${isDirectoryScreen ? 'is-directory-screen' : ''}`}><RoutedErrorBoundary>
           <Switch>
             {DevAudioHarnessPage && (
               <Route path="/__dev/audio-harness">
@@ -465,15 +378,11 @@ function ClerkProviderWithRoutes() {
             <Route path="/sign-in/*?" component={SignInPage} />
             <Route path="/sign-up/*?" component={SignUpPage} />
             <Route path="/home" component={DiscoveryRoute} />
-            <Route path="/live/start" component={StartLiveStreamRoute} />
-            <Route path="/live" component={LiveStreamsRoute} />
-            <Route path="/live/:streamId" component={WatchLiveStreamRoute} />
             <Route path="/community" component={CommunityRoute} />
             <Route path="/community/*?" component={CommunityRoute} />
             <Route path="/user-portal/transactions" component={TransactionHistoryRoute} />
             <Route path="/user-portal/photo-reviews" component={ProfilePhotoReviewsRoute} />
             <Route path="/user-portal/store" component={StoreRoute} />
-            {DevCardFinishPreview && <Route path="/user-portal/card-finish" component={CardFinishPreviewRoute} />}
             <Route path="/user-portal" component={OwnProfileRoute} />
             <Route path="/user-portal/edit" component={Portal} />
             <Route path="/rooms/:roomId" component={RoomRoute} />

@@ -6,11 +6,9 @@ import {
   useGetSocialMe, useGetSocialConversation, useSendSocialMessage, useDeleteSocialConversation,
   useClaimSocialDailyReward, useGetSocialLedger, useGetSocialLeaderboard, useGetGifterLeaderboard, getGetGifterLeaderboardQueryKey,
   getGetSocialMeQueryKey, getGetSocialConversationQueryKey, getGetSocialLedgerQueryKey,
-  useGetPkLeaderboard, getGetPkLeaderboardQueryKey,
   getPinkCardEntry,
 } from '@workspace/api-client-react';
-import { BadgeMark, CoinAmount, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, fmt, refreshSocial, useIdemKey } from './common';
-import { BadgeArt } from './BadgeArt';
+import { CoinAmount, Empty, ErrorBox, GiftIcon, Loading, Msg, PersonCard, errMsg, fmt, refreshSocial, useIdemKey } from './common';
 import { ShinyName } from '@/components/ShinyName';
 import { ActionMenu, ScreenHeader } from '@/components/app-chrome';
 
@@ -52,7 +50,7 @@ export function ThreadPage({ username }: { username: string }) {
   return (
     <section className="sc-thread">
       <ScreenHeader className="sc-thread-bar" backHref="/community/messages" backLabel="Back to My Messages" testId="header-thread"
-        title={<Link href={`/community/people/${username}`} className="sc-thread-person" data-testid="link-thread-person"><ShinyName className="sc-name" displayNameColor={d.person.displayNameColor} displayNameTierIndex={d.person.displayNameTierIndex}><BadgeMark id={d.person.badgeId} label={d.person.badgeName} imageUrl={d.person.badgeImage} size={18} compact />{d.person.username}</ShinyName></Link>}
+        title={<Link href={`/community/people/${username}`} className="sc-thread-person" data-testid="link-thread-person"><ShinyName className="sc-name" displayNameColor={d.person.displayNameColor} displayNameTierIndex={d.person.displayNameTierIndex}>{d.person.username}</ShinyName></Link>}
         subtitle={q.isFetching ? 'Updating' : d.blocked ? 'Read only' : 'Direct message'}
         actions={<ActionMenu label="Conversation actions" testId="menu-thread-actions">
           <button type="button" role="menuitem" onClick={() => q.refetch()} disabled={q.isFetching} data-testid="button-refresh"><RefreshCw size={16} /> Refresh</button>
@@ -98,7 +96,7 @@ export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
   const [msg, setMsg] = useState<{ ok: boolean; t: ReactNode } | null>(null);
   if (me.isLoading) return <Loading />;
   if (me.isError || !me.data) return <ErrorBox error={me.error} retry={() => me.refetch()} />;
-  const { wallet: w, products, gifts, inventory } = me.data;
+  const { wallet: w, gifts, inventory } = me.data;
   const doClaim = () => { setMsg(null); claim.mutate(undefined, {
     onSuccess: () => {
       const base = <>Claimed <CoinAmount>{w.dailyReward.toLocaleString()} coins</CoinAmount>.</>;
@@ -112,7 +110,7 @@ export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
   return (
     <section>
       {embedded ? <h2 className="bm-h1 sc-h1">Rewards</h2> : <h1 className="bm-h1 sc-h1">Rewards</h1>}
-      <p className="bm-lede">Daily reward coins have no cash value. Purchase-tier badges count only completed coin purchases.</p>
+      <p className="bm-lede">Daily reward coins and gifts have no cash value.</p>
       <div className="sc-wallet">
         <div className="sc-balance"><Coins size={28} style={{ color: '#f5cb8d' }} /><b data-testid="text-balance">{w.unlimited ? 'Unlimited test' : w.balance.toLocaleString()}</b><span>coins</span></div>
         <dl>
@@ -124,22 +122,8 @@ export function RewardsPage({ embedded = false }: { embedded?: boolean } = {}) {
           {claim.isPending ? 'Claiming...' : w.canClaimDaily ? <>Claim <CoinAmount>{w.dailyReward.toLocaleString()} daily coins</CoinAmount></> : 'Claimed today, back after 3 AM Eastern'}</button>
       </div>
       {msg && <Msg ok={msg.ok}>{msg.t}</Msg>}
-      <h2 className="sc-h2">Badge store</h2>
-      <p className="sc-sub">Your highest qualifying tier is applied automatically. A tier earned in one UTC calendar month stays active through the end of the next month. Gift coins, daily rewards, and old badge purchases do not count.</p>
-      <p className="sc-sub" role="note">Coin checkout is currently unavailable, so no new purchase-tier badge can be earned in this preview. Only verified, completed real-money coin purchases will count when checkout is connected.</p>
-      <div className="sc-gifts sc-store">{products.map((p) => {
-        const earned = me.data.profile.badgeId === p.id;
-        return (
-        <div key={p.id} className="sc-gift sc-product" data-testid={`card-product-${p.id}`}>
-          <span className="sc-recharge-tag" data-testid={`label-recharge-tier-${p.id}`}>Recharge tier</span>
-          <BadgeArt id={p.id} name={p.name} imageUrl={p.badgeImage} /><b>{p.name}</b><strong>Monthly purchase threshold</strong>
-          <span><CoinAmount>{p.cost.toLocaleString()} coins</CoinAmount> in completed coin purchases during one calendar month</span>
-          {earned
-            ? <span className="sc-tier-active" data-testid={`status-${p.id}`}>Your highest active tier</span>
-            : <span>Not currently active</span>}
-          </div>); })}</div>
       <h2 className="sc-h2">Gifts</h2>
-      <p className="sc-sub">Send these from anyone's profile.</p>
+      <p className="sc-sub">Send gifts in social rooms.</p>
       <div className="sc-gifts">{gifts.map((g) => <div key={g.id} className="sc-gift"><GiftIcon id={g.id} size={26} /><b>{g.name}</b><CoinAmount>{g.cost.toLocaleString()} coins</CoinAmount></div>)}</div>
        <h2 className="sc-h2">Gift bag</h2>
        {inventory.length === 0 ? <p className="sc-sub">No gifts in your bag yet.</p> : <p className="sc-tags">{inventory.map((id) => <i key={id}>{gifts.find((g) => g.id === id)?.name ?? id}</i>)}</p>}
@@ -207,48 +191,22 @@ export function TransactionHistoryPage() {
 }
 
 export function LeaderboardPage() {
-  const [view, setView] = useState<'givers' | 'receivers' | 'pk'>('receivers');
+  const [view, setView] = useState<'givers' | 'receivers'>('receivers');
   return (
     <section>
       <h1 className="bm-h1 sc-h1"><Trophy size={36} /> Leaderboard</h1>
       <div className="sc-tabs" role="tablist" aria-label="Leaderboard view" style={{ display: 'flex', gap: 8, margin: '4px 0 14px' }}>
-        {(['receivers', 'givers', 'pk'] as const).map(id => (
+        {(['receivers', 'givers'] as const).map(id => (
           <button key={id} type="button" role="tab" aria-selected={view === id}
             className={`bm-btn bm-btn-sm${view === id ? ' bm-btn-primary' : ''}`} style={{ borderRadius: 0 }}
             onClick={() => setView(id)} data-testid={`tab-leaderboard-${id}`}>
-            {id === 'pk' ? 'PK' : id === 'givers' ? 'Givers' : 'Receivers'}
+            {id === 'givers' ? 'Givers' : 'Receivers'}
           </button>
         ))}
       </div>
-      {view === 'receivers' ? <ReceiverLeaderboard /> : view === 'givers' ? <GiverLeaderboard /> : <PkLeaderboard />}
+      {view === 'receivers' ? <ReceiverLeaderboard /> : <GiverLeaderboard />}
     </section>
   );
-}
-
-function PkLeaderboard() {
-  const q = useGetPkLeaderboard({
-    query: { queryKey: getGetPkLeaderboardQueryKey(), refetchInterval: 30_000 },
-  });
-  return <>
-    <p className="bm-lede">Weekly PK wins and longest win streak. Resets Monday at 3 AM Eastern.</p>
-    {q.isLoading && <Loading />}
-    {q.isError && <ErrorBox error={q.error} retry={() => q.refetch()} />}
-    {q.data && (q.data.people.length === 0
-      ? <Empty title="No PK results this week"><p>Broadcasters appear after their first completed battle.</p></Empty>
-      : <ol className="sc-rank" data-testid="pk-leaderboard">
-        {q.data.people.map((person, index) => <li key={person.username}>
-          <span className="sc-pos" aria-label={`Rank ${index + 1}`}>{index + 1}</span>
-          <div className="sc-card-leaderboard">
-            <strong>{person.displayName}</strong>
-            <small>@{person.username}</small>
-            <span className="sc-rank-score">
-              <b>{person.wins} {person.wins === 1 ? 'win' : 'wins'}</b>
-              <span>Best streak: {person.longestWinStreak}</span>
-            </span>
-          </div>
-        </li>)}
-      </ol>)}
-  </>;
 }
 
 function ReceiverLeaderboard() {
@@ -261,11 +219,8 @@ function ReceiverLeaderboard() {
       <ol className="sc-rank">{q.data.people.map((p, i) => (
         <li key={p.username}>
           <span className="sc-pos" aria-label={`Rank ${i + 1}`}>{i + 1}</span>
-          <PersonCard p={p} className="sc-card-leaderboard" showBadgeInName={false}
-            extra={<span className="sc-rank-score">
-              <BadgeMark id={p.badgeId} label={p.badgeName} imageUrl={p.badgeImage} size={17} compact />
-              <b className="sc-score"><CoinAmount>{p.receivedCredits.toLocaleString()}</CoinAmount></b>
-            </span>} />
+          <PersonCard p={p} className="sc-card-leaderboard"
+            extra={<span className="sc-rank-score"><b className="sc-score"><CoinAmount>{p.receivedCredits.toLocaleString()}</CoinAmount></b></span>} />
         </li>))}</ol>))}
   </>;
 }
@@ -280,7 +235,7 @@ function GiverLeaderboard() {
       <ol className="sc-rank" data-testid="list-gifter-leaderboard">{q.data.people.map((p, i) => (
         <li key={p.username} data-testid={`row-gifter-${p.username}`}>
           <span className="sc-pos" aria-label={`Rank ${i + 1}`}>{i + 1}</span>
-          <PersonCard p={p} className="sc-card-leaderboard" showBadgeInName={false}
+          <PersonCard p={p} className="sc-card-leaderboard"
             extra={<span className="sc-rank-score"><b className="sc-score">{p.giftXp.toLocaleString()} XP</b></span>} />
         </li>))}</ol>))}
   </>;

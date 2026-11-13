@@ -1,22 +1,17 @@
 const BASE = (import.meta.env?.BASE_URL || '/').replace(/\/?$/, '/');
 export const PINK_CARD_MEDIA = {
   card: `${BASE}api/rewards/pink-card/media/card`,
-  shuffle: `${BASE}api/rewards/pink-card/media/shuffle`,
-  shuffleFallback: `${BASE}api/rewards/pink-card/media/shuffle-fallback`,
 } as const;
 export const PINK_CARD_POLL_MS = 10_000;
 export const FRESH_WINDOW_MS = 20_000;
-export const SHUFFLE_MS = 6_000;
 export const REVEAL_MS = 5_000;
 const KEY = 'pinkCard:announced';
 const memorySeen = new Set<string>();
 
-/** Routes that host the global announcement: rooms and live watcher pages (never /live/start). */
+/** Routes that host the global announcement. */
 export function isAnnouncementRoute(path: string): boolean {
   if (/^\/rooms\/[^/]+\/?$/.test(path)) return true;
-  if (/^\/community\/chess\/[^/]+\/?$/.test(path)) return true;
-  const m = path.match(/^\/live\/([^/]+)\/?$/);
-  return Boolean(m && m[1] !== 'start');
+  return false;
 }
 
 export function isFreshDraw(drawnAt: string, now: number): boolean {

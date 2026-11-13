@@ -8,11 +8,8 @@ import { useGetSocialMe, getGetSocialMeQueryKey, sendSocialGift, getGetRoomGiftE
 import { CoinAmount, refreshSocial, errMsg } from '@/social/common';
 import { UserPhoto } from '@/components/user-photo';
 import { ProfileTap } from '@/profile/QuickProfile';
-import { cosmicEncoreMedia } from './SpiritPup';
 import { GiftArtwork } from './GiftArtwork';
-import { bigTierGiftMedia } from './BigTierGift';
 import { ownedGiftItems } from './gift-items';
-import '@/gifting/gifting-shield.css';
 import './gifts.css';
 import './gift-panel.css';
 import { isSpecialGift } from './gift-catalog-groups';
@@ -36,12 +33,11 @@ function abbreviate(n: number) {
 
 const FOCUSABLE = 'button:not([disabled]),[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
 
-export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamId, onClose }: {
+export function GiftBag({ recipient, recipients = [], roomId, sessionId, onClose }: {
   recipient?: Recipient;
   recipients?: Exclude<Recipient, null>[];
   roomId?: string;
   sessionId?: string;
-  streamId?: string;
   onClose: () => void;
 }) {
   const me = useGetSocialMe({ query: {
@@ -79,27 +75,6 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
   const titleId = useId();
   const quantityId = useId();
   const recipientKey = recipients.map(person => person.username.toLowerCase()).join('|');
-  useEffect(() => {
-    if (!roomId && !streamId) return;
-    const videos = [cosmicEncoreMedia.animation, ...Object.values(bigTierGiftMedia)].map(src => {
-      const video = document.createElement('video');
-      video.preload = 'auto';
-      video.muted = true;
-      video.playsInline = true;
-      video.src = src;
-      video.load();
-      return video;
-    });
-    const still = new Image();
-    still.src = cosmicEncoreMedia.fallback;
-    return () => {
-      for (const video of videos) {
-        video.pause();
-        video.removeAttribute('src');
-        video.load();
-      }
-    };
-  }, [roomId, streamId]);
   const items = useMemo(() => (me.data ? ownedGiftItems(me.data, clockNow) : []), [clockNow, me.data]);
   useEffect(() => {
     if (!items.length) return;
@@ -115,8 +90,8 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
     return days ? `Expires in ${days}d ${hours}h` : hours ? `Expires in ${hours}h ${minutes % 60}m` : `Expires in ${minutes}m`;
   };
   const catalog = useMemo(
-    () => roomId || streamId ? me.data?.gifts ?? [] : [],
-    [me.data?.gifts, roomId, streamId],
+    () => roomId ? me.data?.gifts ?? [] : [],
+    [me.data?.gifts, roomId],
   );
   const categories = useMemo(() => {
     const specialGifts = catalog.filter(isSpecialGift);
@@ -147,7 +122,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
     ?? recipients.find(person => person.isHost)
     ?? recipients[0]
     ?? null;
-  const canSend = selectedRecipients.length > 0 && (!!streamId || (!!roomId && !!sessionId)) && !!sel
+  const canSend = selectedRecipients.length > 0 && !!roomId && !!sessionId && !!sel
     && catalog.some(gift => gift.id === sel);
   const unlimited = me.data?.wallet.unlimited === true;
   const heldQuantity = sel ? items.find(item => item.id === sel)?.quantity ?? 0 : 0;
@@ -194,8 +169,8 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
   }
 
   async function send() {
-    if (!canSend || busy || !enough || !sel || (!streamId && (!roomId || !sessionId))) return;
-    const contextId = streamId ? `live:${streamId}` : roomId!;
+    if (!canSend || busy || !enough || !sel || !roomId || !sessionId) return;
+    const contextId = roomId;
     const targetUsernames = selectedRecipients.map(person => person.username);
     const recipientIntent = recipientSelection.mode === 'all'
       ? 'all'
@@ -228,10 +203,9 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
           giftId: sel,
           quantity,
           ...(bagOnly ? { useGiftBagOnly: true } : {}),
-          ...(roomId ? { roomId } : {}),
-          ...(streamId ? { streamId } : {}),
+          roomId,
           idempotencyKey: attempt.keys.get(normalized)!,
-        }, roomId && sessionId ? { headers: { 'X-Room-Session': sessionId } } : undefined);
+        }, { headers: { 'X-Room-Session': sessionId } });
         attempt.completed.add(normalized);
         setBatchProgress({ done: attempt.completed.size, total: attempt.recipients.length });
       }
@@ -291,7 +265,7 @@ export function GiftBag({ recipient, recipients = [], roomId, sessionId, streamI
           <button type="button" className="gift-panel-icon-button" onClick={onClose} aria-label="Close gift panel" data-testid="gift-bag-close"><X size={18} aria-hidden /></button>
         </header>
 
-        {(roomId || streamId) && <div className="gift-panel-recipients" aria-label="Gift recipients">
+        {roomId && <div className="gift-panel-recipients" aria-label="Gift recipients">
           <button type="button" className={`gift-panel-all${recipientSelection.mode === 'all' ? ' is-selected' : ''}`}
             aria-pressed={recipientSelection.mode === 'all'} disabled={busy}
             onClick={() => { setRecipientSelection({ mode: 'all' }); setError(null); setNotice(null); retry.current = null; }}>

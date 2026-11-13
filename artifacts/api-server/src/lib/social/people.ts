@@ -5,8 +5,6 @@ import { RoomError } from "../room-store";
 import { assertContact, ensureSocial, lockAccounts, lockPair, pairBlocked, person, requireAccount, targetAccount, wallet } from "./core";
 import { COUNTRIES, COUNTRY_CODES, PRODUCTS } from "./catalog";
 import { roomStore } from "../room-store";
-import { accountBadgeState, myBadgeViews, visibleMonthlyPurchaseBadgeSummaries } from "./monthly-credit-badges";
-import { getMyEntranceEffectSettings } from "./entrance-effect-preferences";
 import { giftCatalogWithActiveNames } from "../gift-studio-catalog";
 import { nameColorProfileForAccount, nameColorPurchaseTotalOverride } from "./gift-name-color-data";
 import { hasOwnerTierTestAccess } from "./owner-entrance-effects-policy";
@@ -36,15 +34,12 @@ export async function getMe(id: string) {
   const tester = await testerState(id);
   const testLots = tester?.bag.filter(lot => new Date(lot.expiresAt) > now);
   const giftBag = testLots ?? giftBagLots.map(lot => ({ ...lot, expiresAt: lot.expiresAt?.toISOString() ?? null }));
-  const [[streak], giftsOwned, badgeState, badges] = await Promise.all([
+  const [[streak], giftsOwned] = await Promise.all([
     db.select().from(socialLoginStreaks).where(eq(socialLoginStreaks.accountId, id)),
     db.select().from(socialGiftBag).where(eq(socialGiftBag.accountId, id)),
-    accountBadgeState(id),
-    myBadgeViews(id),
   ]);
-  const [gifts, entranceEffects, hangoutStreak] = await Promise.all([
+  const [gifts, hangoutStreak] = await Promise.all([
     giftCatalogWithActiveNames(),
-    getMyEntranceEffectSettings(id),
     getHangoutStreakSummary(id),
   ]);
   const [nameColor, gifterAccessLevel] = await Promise.all([nameColorProfileForAccount(id), realGiftingLevel(id)]);
@@ -53,7 +48,7 @@ export async function getMe(id: string) {
       all[lot.giftId] = (all[lot.giftId] ?? 0) + lot.quantity; return all;
     }, {})
     : Object.fromEntries(giftsOwned.map(g => [g.giftId, g.quantity]));
-  return { profile: await person(id, profile, undefined, true, undefined, nameColor),
+  return { profile: await person(id, profile, undefined, true, nameColor),
     gifterAccessLevel,
     nameColorProgress: {
       tierName: nameColor.tierName,
@@ -70,12 +65,14 @@ export async function getMe(id: string) {
     wallet: await wallet(id, db, profile.username), inventory: Object.keys(quantities),
     giftQuantities: quantities,
     giftBagLots: giftBag,
-    badges,
-    equippedBadgeId: badgeState.equippedBadgeId,
-    badgeExpirations: Object.fromEntries(badges.filter(badge => badge.expiresAt)
-      .map(badge => [badge.id, badge.expiresAt!])),
+     badges: [],
+     equippedBadgeId: null,
+     badgeExpirations: {},
     loginStreak: streak?.consecutiveDays ?? 0, hangoutStreak, products: PRODUCTS, gifts, countries: COUNTRIES,
-    entranceEffects };
+     entranceEffects: {
+       eligible: false, enabled: false, badgeId: null, badgeName: null,
+       equippedEffectId: null, ownerTest: null,
+     } };
 }
 export async function saveSocialProfile(id: string, input: SocialProfileInput) {
   const profile = await requireAccount(id);
@@ -124,9 +121,8 @@ export async function listPeople(id: string, input: PeopleQuery = {}, leaderboar
     .limit(leaderboard ? 10 : 24).offset(offset);
   const [count] = await db.select({ total: sql<number>`count(*)::int` }).from(accountProfiles)
     .leftJoin(socialSettings, eq(accountProfiles.accountId, socialSettings.accountId)).where(and(...conditions));
-  const badges = await visibleMonthlyPurchaseBadgeSummaries(rows.map(row => row.profile.accountId));
-  return { people: await Promise.all(rows.map(row => person(id, row.profile, row.prefs, false,
-    badges.get(row.profile.accountId) ?? null))), total: count?.total ?? 0 };
+  return { people: await Promise.all(rows.map(row => person(id, row.profile, row.prefs, false))),
+    total: count?.total ?? 0 };
 }
 export async function relationship(id: string, username: string, kind: "favorite" | "block", active: boolean) {
   const target = await targetAccount(username);
@@ -150,7 +146,5 @@ export async function blocks(id: string) {
     .where(and(eq(socialRelations.ownerId, id), eq(socialRelations.kind, "block"),
       process.env.NODE_ENV === "production" ? eq(accountProfiles.isTestAccount, false) : undefined))
     .orderBy(accountProfiles.nameKey);
-  const badges = await visibleMonthlyPurchaseBadgeSummaries(rows.map(row => row.profile.accountId));
-  return { people: await Promise.all(rows.map(r => person(id, r.profile, undefined, false,
-    badges.get(r.profile.accountId) ?? null))), total: rows.length };
+  return { people: await Promise.all(rows.map(r => person(id, r.profile))), total: rows.length };
 }

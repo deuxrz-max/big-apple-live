@@ -1,6 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { giftingTier } from '@workspace/beam-identity';
-import { GiftingShield } from '@/gifting/GiftingShield';
 import { giftingPerks, normalizeGiftingLevel } from '@/gifting/gifting';
 import './shiny-name.css';
 
@@ -9,8 +8,6 @@ export interface ShinyNameProps {
   displayNameColor?: string | null;
   displayNameTierIndex?: number | null;
   className?: string;
-  /** Set false where the numbered shield is rendered separately. */
-  showShield?: boolean;
 }
 
 const LEGACY_NAME_COLORS = ['#FFFFFF', '#E4E4E4', '#C0C0C0', '#FFD700', '#EDEBAD', '#FFFF00',
@@ -19,15 +16,14 @@ const LEGACY_NAME_COLORS = ['#FFFFFF', '#E4E4E4', '#C0C0C0', '#FFD700', '#EDEBAD
 
 /**
  * `displayNameTierIndex` is the gifting level (0..100). The prefixed mark is
- * the numbered gifting shield. A legacy purchased username color always wins;
- * otherwise Silver+ gifters get their tier color as a chat-name perk.
+ * A legacy purchased username color always wins; otherwise Silver+ gifters
+ * get their tier color as a chat-name perk.
  */
 export function ShinyName({
   children,
   displayNameColor,
   displayNameTierIndex = 0,
   className = '',
-  showShield = true,
 }: ShinyNameProps) {
   const level = normalizeGiftingLevel(displayNameTierIndex);
   const tier = Math.max(0, LEGACY_NAME_COLORS.indexOf(displayNameColor?.toUpperCase() ?? '#FFFFFF'));
@@ -39,7 +35,6 @@ export function ShinyName({
 
   return (
     <span className={`shiny-name-label${className ? ` ${className}` : ''}`}>
-      {showShield && level > 0 && <GiftingShield level={level} size={17} />}
       <span className={`shiny-name${perkColor ? ' shiny-name--gifting-perk' : ''}`} data-tier={tier}
         data-gifting-tier={perkColor ? giftingTier(level).key : undefined} style={style}>{children}</span>
     </span>

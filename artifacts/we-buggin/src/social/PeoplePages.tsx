@@ -5,15 +5,14 @@ import { MessageCircle, Search } from 'lucide-react';
 import {
   useGetSocialMe, useGetSocialPeople, useGetSocialPerson, useSetSocialRelationship, useGetSocialBlocks,
   useSaveSocialProfile, SocialProfileInputExternalPlatform, getGetSocialPeopleQueryKey, getGetSocialPersonQueryKey,
-  useUpdateMyEntranceEffectSettings, useGetChatAccess, useGetCoinTesters, useSetCoinTester,
+  useGetChatAccess, useGetCoinTesters, useSetCoinTester,
   type GetSocialPeopleParams,
   useGetFavoritesGallery, getGetFavoritesGalleryQueryKey, getFavoriteRoom,
 } from '@workspace/api-client-react';
-import { Avatar, BadgeMark, Empty, ErrorBox, Loading, Msg, PersonCard, errMsg, refreshSocial } from './common';
+import { Avatar, Empty, ErrorBox, Loading, Msg, PersonCard, errMsg, refreshSocial } from './common';
 import { BackButton, ProfileView, ProfileMenu } from '@/profile/ProfileView';
 import { useProfileBackHref } from '@/profile/QuickProfile';
 import { FavoritesGallery, type FavoriteEntry } from './FavoritesGallery';
-import '@/gifting/gifting-shield.css';
 import { ShinyName } from '@/components/ShinyName';
 
 export function CommunityPage() {
@@ -97,7 +96,7 @@ export function PersonPage({ username }: { username: string }) {
   if (q.isError || !p) return <><div className="pf-state-back"><BackButton href={backHref} label="Back" /></div><ErrorBox error={q.error ?? 'Not found'} retry={() => q.refetch()} /></>;
   const countryName = p.country ? (me.data?.countries.find((c) => c.code === p.country)?.name ?? p.country) : undefined;
   return (
-    <ProfileView person={p} own={own} tester={!!access.data?.owner && isTester} countryName={countryName} products={me.data?.products} backHref={backHref}
+    <ProfileView person={p} own={own} tester={!!access.data?.owner && isTester} countryName={countryName} backHref={backHref}
       menu={own ? null : <ProfileMenu name={p.displayName || p.username} username={p.username} blocked={p.blocked}
         pending={rel.isPending || testerMutation.isPending} owner={access.data?.owner === true} isTester={isTester}
         testerLoading={access.data?.owner === true && testers.isLoading}
@@ -124,7 +123,6 @@ export function ProfilePreferences() {
   const qc = useQueryClient();
   const me = useGetSocialMe();
   const save = useSaveSocialProfile();
-  const saveEntranceSettings = useUpdateMyEntranceEffectSettings();
   const init = useRef(false);
   const [bio, setBio] = useState('');
   const [country, setCountry] = useState('');
@@ -133,7 +131,6 @@ export function ProfilePreferences() {
   const [platform, setPlatform] = useState('');
   const [handle, setHandle] = useState('');
   const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null);
-  const [entranceMsg, setEntranceMsg] = useState<{ ok: boolean; t: string } | null>(null);
   useEffect(() => {
     const p = me.data?.profile;
     if (p && !init.current) {
@@ -152,17 +149,6 @@ export function ProfilePreferences() {
     save.mutate({ data: { bio: bio.trim(), country: country || null, interests: list, discoverable, badgeId: null, externalPlatform: (platform || null) as SocialProfileInputExternalPlatform, externalHandle: platform && handle.trim() ? handle.trim() : null } }, {
       onSuccess: () => { setMsg({ ok: true, t: 'Profile saved.' }); refreshSocial(qc); },
       onError: (er) => setMsg({ ok: false, t: errMsg(er) }),
-    });
-  };
-  const updateEntranceSettings = (data: Parameters<typeof saveEntranceSettings.mutate>[0]["data"]) => {
-    setEntranceMsg(null);
-    saveEntranceSettings.mutate({ data }, {
-      onSuccess: () => {
-        setEntranceMsg({ ok: true, t: 'Entrance effect settings saved.' });
-        refreshSocial(qc);
-        void qc.invalidateQueries();
-      },
-      onError: (er) => setEntranceMsg({ ok: false, t: errMsg(er) }),
     });
   };
   return (
@@ -189,52 +175,11 @@ export function ProfilePreferences() {
         <label className="sc-field"><span className="bm-label">Handle on that platform</span>
           <input className="bm-input" maxLength={64} value={handle} disabled={!platform} onChange={(e) => setHandle(e.target.value)} data-testid="input-handle" />
           <small>Self-listed. Not ownership checked or officially verified.</small></label>
-        <p className="sc-sub">Monthly purchase badges are applied automatically when a confirmed coin purchase qualifies. They cannot be selected manually.</p>
         <label className="sc-check"><input type="checkbox" checked={discoverable} onChange={(e) => setDiscoverable(e.target.checked)} data-testid="checkbox-discoverable" />
           <span>Show me in People discovery. Off by default; only you decide.</span></label>
         {msg && <Msg ok={msg.ok}>{msg.t}</Msg>}
         <button type="submit" className="bm-btn bm-btn-primary" disabled={save.isPending} data-testid="button-save-profile">{save.isPending ? 'Saving...' : 'Save profile'}</button>
       </form>
-      <section className="sc-panel sc-entrance-settings" aria-labelledby="entrance-effects-title">
-        <h2 id="entrance-effects-title" className="sc-h2">Entrance effects</h2>
-        {d.entranceEffects.ownerTest ? (
-          <>
-            <p className="sc-sub">Preview-only owner controls. Equip a tier or Lion badge under My Badges on the profile photo page; only the equipped badge's effect can play.</p>
-            <label className="sc-check sc-entrance-master">
-              <input type="checkbox" checked={d.entranceEffects.enabled} disabled={saveEntranceSettings.isPending}
-                onChange={(e) => updateEntranceSettings({ enabled: e.target.checked })} data-testid="toggle-entrance-effects" />
-              <span><b>Enable entrance effects</b><small>Turn this off to keep the badge but silence all entrance effects.</small></span>
-            </label>
-            <div className="sc-entrance-list" aria-label="Owner entrance effect tests">
-              <label className="sc-check sc-entrance-option">
-                <input type="checkbox" checked={d.entranceEffects.ownerTest.lionEffectEnabled} disabled={saveEntranceSettings.isPending}
-                  onChange={(e) => updateEntranceSettings({ lionEffectEnabled: e.target.checked })} data-testid="toggle-lion-entrance-effect" />
-                <span><b>Lion entrance</b><small>Plays only while the Lion badge is equipped.</small></span>
-              </label>
-              {d.entranceEffects.ownerTest.tiers.map((tier) => (
-                <label className="sc-check sc-entrance-option" key={tier.badgeId}>
-                  <input type="checkbox" checked={tier.enabled} disabled={saveEntranceSettings.isPending}
-                    onChange={(e) => updateEntranceSettings({ tierEffectId: tier.badgeId, tierEffectEnabled: e.target.checked })}
-                    data-testid={`toggle-effect-${tier.badgeId}`} />
-                  <span><b>{tier.name}</b><small>{tier.enabled ? 'Plays when this badge is equipped.' : 'Off.'}</small></span>
-                </label>
-              ))}
-            </div>
-          </>
-        ) : d.entranceEffects.eligible ? (
-          <>
-            <p className="sc-sub">Your equipped badge: <b>{d.entranceEffects.badgeName ?? 'none'}</b>. Choose a badge under My Badges on the profile photo page.</p>
-            <label className="sc-check sc-entrance-master">
-              <input type="checkbox" checked={d.entranceEffects.enabled} disabled={saveEntranceSettings.isPending}
-                onChange={(e) => updateEntranceSettings({ enabled: e.target.checked })} data-testid="toggle-entrance-effects" />
-              <span><b>Play my entrance effect</b><small>Your badge stays visible beside your name when this is off.</small></span>
-            </label>
-          </>
-        ) : (
-          <p className="sc-sub">An active tier badge is needed before an entrance effect can be turned on or off.</p>
-        )}
-        {entranceMsg && <Msg ok={entranceMsg.ok}>{entranceMsg.t}</Msg>}
-      </section>
     </section>
   );
 }

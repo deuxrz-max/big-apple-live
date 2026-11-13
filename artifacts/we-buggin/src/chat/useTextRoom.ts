@@ -18,21 +18,6 @@ const messageError = (error: unknown) => {
 const ordered = (messages: ChatMessage[]) => [...new Map(messages.map(m => [m.id, m])).values()]
   .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() || a.id.localeCompare(b.id));
 
-export type RoomEntranceEffectEvent = {
-  eventId: string;
-  roomId: string;
-  effectId: string;
-  participantId: string;
-  displayName: string;
-  displayNameColor?: string;
-  displayNameTierIndex?: number;
-  effectName?: string;
-  badgeImage?: string;
-  assetFolder?: string;
-  studioVersionId?: string;
-  startedAt: number;
-  durationMs: number;
-};
 export type RoomCoinDropEvent = {
   eventId: string;
   roomId: string;
@@ -51,7 +36,6 @@ export function useTextRoom(roomId: string, userId: string) {
   const [room, setRoom] = useState<RoomState | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [arrivals, setArrivals] = useState<{ id: string; participantId: string; displayName: string; at: number }[]>([]);
-  const [entranceEffects, setEntranceEffects] = useState<RoomEntranceEffectEvent[]>([]);
   const [coinDrops, setCoinDrops] = useState<RoomCoinDropEvent[]>([]);
   const [streakReward, setStreakReward] = useState<RoomHangoutStreakRewardEvent | null>(null);
   const [creds, setCreds] = useState<RoomCreds | null>(null);
@@ -204,13 +188,6 @@ export function useTextRoom(roomId: string, userId: string) {
               setMessages(previous => ordered([...previous, accepted.message]));
             }
             if (type === "chat.refresh") await history();
-            if (type === "room.entrance-effect") {
-              const effect = JSON.parse(data) as RoomEntranceEffectEvent;
-              if (effect.roomId === roomId) {
-                setEntranceEffects(previous => previous.some(item => item.eventId === effect.eventId)
-                  ? previous : [...previous, effect].slice(-20));
-              }
-            }
             if (type === "room.coin-drop") {
               const event = JSON.parse(data) as RoomCoinDropEvent;
               if (event.roomId === roomId) {
@@ -262,6 +239,6 @@ export function useTextRoom(roomId: string, userId: string) {
       // via the existing heartbeat lease; persisted history/membership remains.
     };
   }, [roomId, userId]);
-  return { room, messages, arrivals, entranceEffects, coinDrops, streakReward, creds, loading, connection, error, roomUnavailable,
+  return { room, messages, arrivals, coinDrops, streakReward, creds, loading, connection, error, roomUnavailable,
     overflow, send, refresh, loadOlder, loadingOlder, hasOlder };
 }

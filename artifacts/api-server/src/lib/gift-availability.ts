@@ -8,8 +8,7 @@ export function isSendableGift(item: SendableGift | null | undefined): boolean {
   return Boolean(
     item
       && item.status === "active"
-      && item.productType === "gift"
-      && item.animationAvailable,
+      && item.productType === "gift",
   );
 }
 

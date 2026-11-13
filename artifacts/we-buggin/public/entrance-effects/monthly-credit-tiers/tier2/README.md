@@ -1,1 +1,0 @@
-Guardian of the Den uses the uploaded animation with its black backdrop removed. App Storage serves alpha WebM (VP9) for Chrome/Android and a one-play animated WebP for Safari. Playback is muted; badge artwork is never used as an entrance fallback.

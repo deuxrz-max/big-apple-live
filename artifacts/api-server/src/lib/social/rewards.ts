@@ -9,7 +9,6 @@ import { requireAdult } from '../community';
 import { planCreditSpend } from "./credits-policy";
 import { testerState, replayTestAction, recordTestAction, consumeTestBag, assertCoinMode } from "./coin-testers";
 import { addGiftBagLot, consumeGiftBagItems, ensureGiftBagLots, expirePurchasedGiftLots } from "./gift-bag-inventory";
-import { liveStreamIdForAccount, isLiveStreamActiveOrStarting } from "../live-stream-policy";
 import { getSendableGiftCatalogItem } from "../gift-studio-catalog";
 import { requireSendableGift } from "../gift-availability";
 import { giftChargeTotal } from "./gift-quantity";
@@ -17,11 +16,10 @@ import { assertGiftingAccess } from "./gifting-access";
 import { nameColorProfileForAccount } from "./gift-name-color-data";
 import { enterPinkReward } from "../pink-card-rewards";
 import { rewardCycleBounds } from "../pink-card-policy";
-import { recordPkGiftInTransaction } from "../pk-battles";
 
 const giftSendTails = new Map<string, Promise<void>>();
 
-/** Preserve the accepted order of gift sends within a room or live stream. */
+/** Preserve the accepted order of gift sends within each social room. */
 export async function serializeGiftSends<T>(scope: string, operation: () => Promise<T>): Promise<T> {
   const prior = giftSendTails.get(scope) ?? Promise.resolve();
   let release!: () => void;
@@ -58,11 +56,11 @@ export async function claimDaily(id: string) {
   return result;
 }
 export async function gift(id: string, recipient: string, giftId: string, key: string,
-  context?: { roomId: string; sessionId: string } | { streamId: string }, quantity = 1, useGiftBagOnly = false, expectedTestMode = false) {
+  context?: { roomId: string; sessionId: string }, quantity = 1, useGiftBagOnly = false, expectedTestMode = false) {
   // Reject before account/catalog lookups, idempotency replay or any financial writes.
   // This is enforced here too, not just in the UI, so older DM clients cannot send.
-  if (!context || !("roomId" in context ? context.roomId?.trim() : context.streamId?.trim()))
-    throw new RoomError(403, "Gifts are only available from a room or livestream gift panel. Direct/private-message gifts are disabled.");
+  if (!context?.roomId?.trim() || !context.sessionId?.trim())
+    throw new RoomError(403, "Gifts are only available from a social room gift panel. Direct/private-message gifts are disabled.");
   const sender = await requireAccount(id);
   const target = await targetAccount(recipient);
   const item = requireSendableGift(
@@ -72,33 +70,22 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
   const totalCost = giftChargeTotal(item.cost, quantity);
   if (totalCost === null) throw new RoomError(400, "Choose a valid gift quantity and price.");
   const roomGift = item.roomGift;
-  const roomContext = context && "roomId" in context ? context : null;
-  const streamContext = context && "streamId" in context ? context : null;
+  const roomContext = context;
   if (roomGift) {
-    if (!context) throw new RoomError(400, `Send ${item.name} from a room or livestream gift panel`);
+    if (!context) throw new RoomError(400, `Send ${item.name} from a room gift panel`);
   }
-  if (roomGift || roomContext || streamContext) {
-    await requireAdult(id);
-    await requireAdult(target.accountId);
-  }
-  if (streamContext) {
-    if (target.accountId !== id && (liveStreamIdForAccount(target.accountId) !== streamContext.streamId
-      || !(await isLiveStreamActiveOrStarting(target.accountId)))) {
-      throw new RoomError(404, "This livestream is no longer available.");
-    }
-  }
+  await requireAdult(id);
+  await requireAdult(target.accountId);
   const result = await db.transaction(async tx => {
     await lockPair(tx, id, target.accountId);
     if (id !== target.accountId) await assertGiftContact(tx, id, target.accountId);
     await lockAccounts(tx, [id, target.accountId]);
-    const boundHistory = roomContext ? roomStore.getHistoryId(roomContext.roomId.toUpperCase()) : null;
-    const ref = `gift:${giftId}:${target.accountId}${boundHistory ? ':' + boundHistory : streamContext ? ':live:' + streamContext.streamId : ''}`;
-    if (await replayTestAction(tx, id, key, ref)) return { wallet: await wallet(id, tx, sender.username), liveGiftEvent: null };
+    const boundHistory = roomStore.getHistoryId(roomContext.roomId.toUpperCase());
+    const ref = `gift:${giftId}:${target.accountId}:${boundHistory}`;
+    if (await replayTestAction(tx, id, key, ref)) return { wallet: await wallet(id, tx, sender.username) };
     await assertGiftingAccess(id, item, tx);
-    const historyId = roomContext
-      ? validateGiftRoom(roomContext.roomId.toUpperCase(), roomContext.sessionId, id, target.accountId)
-      : null;
-    if (roomContext && historyId !== boundHistory) throw new RoomError(409, 'This room changed. Re-enter before sending.');
+    const historyId = validateGiftRoom(roomContext.roomId.toUpperCase(), roomContext.sessionId, id, target.accountId);
+    if (historyId !== boundHistory) throw new RoomError(409, 'This room changed. Re-enter before sending.');
     const now = new Date();
     const testing = !!await testerState(id, tx);
     assertCoinMode(testing, expectedTestMode);
@@ -125,47 +112,27 @@ export async function gift(id: string, recipient: string, giftId: string, key: s
     } else {
       await recordTestAction(tx, id, key, ref);
     }
-    let liveGiftEvent: {
-      streamId: string; senderAccountId: string; senderUsername: string; senderName: string;
-      recipientUsername: string; recipientName: string; giftId: string; giftName: string; cost: number; quantity: number;
-    } | null = null;
-    if (roomContext) {
-      await tx.insert(socialGiftEvents).values({
-        historyId: historyId!, senderId: id, recipientId: target.accountId,
-        senderUsername: sender.username, recipientUsername: target.username,
-        senderName: sender.displayName ?? sender.username, recipientName: target.displayName ?? target.username,
-        giftId: item.id, testMode: testing, cost: testing ? 0 : totalCost, quantity, recipientCredits, houseCredits: testing ? 0 : totalCost - recipientCredits,
-      });
-    }
-    if (!testing && roomGift && roomContext) {
+    await tx.insert(socialGiftEvents).values({
+      historyId, senderId: id, recipientId: target.accountId,
+      senderUsername: sender.username, recipientUsername: target.username,
+      senderName: sender.displayName ?? sender.username, recipientName: target.displayName ?? target.username,
+      giftId: item.id, testMode: testing, cost: testing ? 0 : totalCost, quantity, recipientCredits, houseCredits: testing ? 0 : totalCost - recipientCredits,
+    });
+    if (!testing && roomGift) {
       await addGiftBagLot(tx, target.accountId, item.id, quantity, "received", now);
     }
-    if (streamContext) {
-      if (!testing && roomGift) {
-        await addGiftBagLot(tx, target.accountId, item.id, quantity, "received", now);
-      }
-      liveGiftEvent = {
-        streamId: streamContext.streamId, senderAccountId: id, senderUsername: sender.username,
-        senderName: sender.displayName ?? sender.username, recipientUsername: target.username,
-        recipientName: target.displayName ?? target.username, giftId: item.id, giftName: testing ? `${item.name} · Test gift` : item.name, cost: testing ? 0 : totalCost, quantity,
-      };
-      if (!testing) await recordPkGiftInTransaction(tx, {
-        senderAccountId: id, recipientAccountId: target.accountId,
-        giftId: item.id, giftName: item.name, coins: totalCost, createdAt: now,
-      });
-    }
-    return { wallet: await wallet(id, tx, sender.username), liveGiftEvent };
+    return { wallet: await wallet(id, tx, sender.username) };
   });
   const progress = await nameColorProfileForAccount(id);
   roomStore.updateAccountNameColor(id, progress.color, progress.tierIndex);
-  return streamContext ? { ...result.wallet, liveGiftEvent: result.liveGiftEvent } : result.wallet;
+  return result.wallet;
 }
 export async function purchase(id: string, itemId: string, key: string, expectedTestMode = false) {
   const buyer = await requireAccount(id);
   await requireAdult(id);
   const item = await getSendableGiftCatalogItem(itemId);
   if (!item || item.productType !== "gift") {
-    throw new RoomError(410, "Badge tiers are earned through confirmed coin purchases; they cannot be bought with wallet coins.");
+    throw new RoomError(410, "Only gifts can be purchased here.");
   }
   const ref = `store-gift:${item.id}`;
   return db.transaction(async tx => {

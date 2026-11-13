@@ -4,7 +4,6 @@ import { X } from 'lucide-react';
 import { getGetSocialPersonQueryKey, useGetSocialPerson } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
 import { ShinyName } from '@/components/ShinyName';
-import { BadgeMark } from '@/social/common';
 
 /**
  * Shared quick-profile mechanism.
@@ -118,7 +117,6 @@ function QuickProfileSheet({ username, onClose, onFull, opener }: { username: st
           <div className="qp-body">
             <UserPhoto username={p.username} displayName={p.displayName} photoUrl={p.photoUrl} size={96} />
             <strong id="qp-title" className="qp-name" data-testid="text-quick-profile-name">
-              <BadgeMark id={p.badgeId ?? null} label={p.badgeName} imageUrl={p.badgeImage} size={20} />
               <ShinyName displayNameColor={p.displayNameColor} displayNameTierIndex={p.displayNameTierIndex}>{name}</ShinyName>
             </strong>
             <span className="qp-sub" data-testid="text-quick-profile-username">@{p.username}{p.country ? ` / ${p.country}` : ''}</span>

@@ -11,8 +11,6 @@ const storage = new Storage({
 });
 export const PINK_MEDIA = {
   card: { filename: "home-card.png", type: "image/png" },
-  shuffle: { filename: "shuffle.webm", type: "video/webm" },
-  "shuffle-fallback": { filename: "shuffle.apng", type: "image/apng" },
 } as const;
 export type PinkMediaVariant = keyof typeof PINK_MEDIA;
 export function pinkRewardMediaFile(variant: PinkMediaVariant) {

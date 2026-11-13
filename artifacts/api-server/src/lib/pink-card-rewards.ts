@@ -65,7 +65,7 @@ export async function processPinkRewardCycle(tx: Tx, at: Date, available: Awaite
     const bounds = rewardCycleBounds(at);
     const catalog = available.filter(item =>
       item.status === "active" && !isSystemCauldronProduct(item.id)
-      && (item.productType === "gift" || item.productType === "entrance-effect"));
+      && item.productType === "gift");
     await lockPinkRewards(tx);
     const existing = await tx.select().from(pinkRewardDraws).where(eq(pinkRewardDraws.cycle, bounds.cycle));
     if (!existing.length) {

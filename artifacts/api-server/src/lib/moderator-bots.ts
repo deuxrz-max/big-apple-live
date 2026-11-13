@@ -1,11 +1,8 @@
 import { db, accountProfiles, moderatorBotAccounts, moderatorBotSettings, moderatorBotChatterSettings, moderatorBotFlags, roomMessages, chatRooms } from "@workspace/db";
 import { nameColorProfilesForAccounts } from "./social/gift-name-color-data";
 import { and, eq, desc, gt, inArray, isNotNull, isNull } from "drizzle-orm";
-import type { UniversityVideoBeamTvVideoMetadata } from "@workspace/api-zod";
 import { roomStore } from "./room-store";
 import { BOT_ACCOUNTS, BotRotation, DEFAULT_BANNED_WORDS, DEFAULT_BOT_BREAK_SECONDS, publicViolation, type Bot, type BotId } from "./bot-policy";
-import { universityVideoBeamStore } from "./university-video-beam";
-import { beamTvReactionLine } from "./beam-tv-reaction-policy";
 import {
   chooseBotChatterLine, DEFAULT_BOT_CHATTER_SETTINGS, hasRecentHumanRoomActivity,
   nextBotChatterDelayMs, type BotChatterSettings,
@@ -17,19 +14,6 @@ let settingsCache: { bannedWords: string[]; breakSeconds: number; at: number } |
 let chatterCache: { settings: BotChatterSettings; at: number } | null = null;
 let resetChatterSchedule: ((enabled: boolean, frequency: BotChatterSettings["frequency"]) => void) | null = null;
 const BOT_CHATTER_ROW_ID = "streamtalk";
-let beamTvReactionProcessing = false;
-type BeamTvReaction = {
-  videoId: string;
-  metadata: UniversityVideoBeamTvVideoMetadata | null;
-  startDueAt: number;
-  startDeadline: number;
-  followUpAt: number;
-  lastPlaybackAt: number;
-  startSent: boolean;
-  followUpSent: boolean;
-  lastText: string | null;
-};
-const beamTvReactions = new Map<string, BeamTvReaction>();
 export async function botSettings() {
   if (settingsCache && Date.now() - settingsCache.at < 3000) return settingsCache;
   const [row] = await db.select().from(moderatorBotSettings).where(eq(moderatorBotSettings.id, "streamtalk"));
@@ -50,160 +34,6 @@ export function botMessageValues(
 ) {
   return { roomId, historyId, authorId: bot.participantId, authorAccountId: null, botId: bot.id,
     botMessageType, username: bot.name, identity: BOT_MESSAGE_IDENTITY, kind: "text" as const, text };
-}
-export function scheduleBeamTvVideoStart(
-  roomId: string,
-  videoId: string,
-  metadata?: UniversityVideoBeamTvVideoMetadata,
-  force = false,
-) {
-  const key = roomId.toUpperCase();
-  const previous = beamTvReactions.get(key);
-  if (previous?.videoId === videoId && !force) {
-    if (metadata) previous.metadata = metadata;
-    return;
-  }
-  const now = Date.now();
-  beamTvReactions.set(key, {
-    videoId,
-    metadata: metadata ?? null,
-    startDueAt: now + 9_000 + Math.floor(Math.random() * 9_000),
-    startDeadline: now + 120_000,
-    followUpAt: now + 4 * 60_000 + Math.floor(Math.random() * 4 * 60_000),
-    lastPlaybackAt: 0,
-    startSent: false,
-    followUpSent: false,
-    lastText: previous?.lastText ?? null,
-  });
-}
-export function updateBeamTvVideoMetadata(roomId: string, metadata: UniversityVideoBeamTvVideoMetadata) {
-  const pending = beamTvReactions.get(roomId.toUpperCase());
-  if (!pending || pending.videoId !== metadata.videoId) return;
-  pending.metadata = metadata;
-  pending.lastPlaybackAt = Date.now();
-}
-async function roomHasRecentHumanChat(roomId: string, historyId: string, now: number) {
-  const activeAccountIds = roomStore.activeAccountIds(roomId);
-  if (!activeAccountIds.length) return false;
-  const [activeRealAccount] = await db.select({ accountId: accountProfiles.accountId })
-    .from(accountProfiles)
-    .where(and(
-      inArray(accountProfiles.accountId, activeAccountIds),
-      eq(accountProfiles.isTestAccount, false),
-    )).limit(1);
-  if (!activeRealAccount) return false;
-  const [lastHuman] = await db.select({ createdAt: roomMessages.createdAt })
-    .from(roomMessages).innerJoin(accountProfiles, eq(roomMessages.authorAccountId, accountProfiles.accountId))
-    .where(and(
-      eq(roomMessages.roomId, roomId),
-      eq(roomMessages.historyId, historyId),
-      eq(roomMessages.hidden, "false"),
-      eq(roomMessages.kind, "text"),
-      isNull(roomMessages.botId),
-      isNotNull(roomMessages.authorAccountId),
-      inArray(roomMessages.authorAccountId, activeAccountIds),
-      eq(accountProfiles.isTestAccount, false),
-      gt(roomMessages.createdAt, new Date(now - 90_000)),
-    ))
-    .orderBy(desc(roomMessages.createdAt)).limit(1);
-  return Boolean(lastHuman);
-}
-async function roomHasRecentBotMessage(roomId: string, historyId: string, now: number) {
-  const [lastBot] = await db.select({ id: roomMessages.id })
-    .from(roomMessages)
-    .where(and(
-      eq(roomMessages.roomId, roomId),
-      eq(roomMessages.historyId, historyId),
-      eq(roomMessages.hidden, "false"),
-      isNotNull(roomMessages.botId),
-      gt(roomMessages.createdAt, new Date(now - 90_000)),
-    ))
-    .orderBy(desc(roomMessages.createdAt)).limit(1);
-  return Boolean(lastBot);
-}
-async function processBeamTvReactions(settings: BotChatterSettings, now: number): Promise<boolean> {
-  if (beamTvReactionProcessing) return false;
-  beamTvReactionProcessing = true;
-  try {
-  let posted = false;
-  for (const [roomId, pending] of beamTvReactions) {
-    let tv;
-    try { tv = universityVideoBeamStore.getState(roomId).tv; }
-    catch { beamTvReactions.delete(roomId); continue; }
-    if (!tv.enabled || tv.currentVideoId !== pending.videoId) {
-      beamTvReactions.delete(roomId);
-      continue;
-    }
-    if (now - pending.lastPlaybackAt > 45_000) continue;
-
-    const shouldPostStart = !pending.startSent && now >= pending.startDueAt;
-    const shouldPostFollowUp = pending.startSent && !pending.followUpSent && now >= pending.followUpAt;
-    if (!shouldPostStart && !shouldPostFollowUp) continue;
-    if (shouldPostStart && now > pending.startDeadline) {
-      pending.startSent = true;
-      continue;
-    }
-
-    const historyId = roomStore.getHistoryId(roomId);
-    const activeAccountIds = roomStore.activeAccountIds(roomId);
-    const [activeRealAccount] = activeAccountIds.length
-      ? await db.select({ accountId: accountProfiles.accountId }).from(accountProfiles)
-        .where(and(
-          inArray(accountProfiles.accountId, activeAccountIds),
-          eq(accountProfiles.isTestAccount, false),
-        )).limit(1)
-      : [];
-    if (!activeRealAccount) {
-      if (shouldPostStart && now > pending.startDeadline) pending.startSent = true;
-      continue;
-    }
-    if (await roomHasRecentHumanChat(roomId, historyId, now) ||
-        await roomHasRecentBotMessage(roomId, historyId, now)) {
-      if (shouldPostStart) pending.startDueAt = now + 35_000;
-      else pending.followUpAt = now + 45_000;
-      continue;
-    }
-
-    const profiles = settings.bots;
-    const candidates = [...profiles].sort(() => Math.random() - 0.5);
-    let chosen: { profile: BotChatterSettings["bots"][number]; text: string; bot: Bot } | undefined;
-    const bannedWords = (await botSettings()).bannedWords;
-    for (const profile of candidates) {
-      const text = beamTvReactionLine(profile.id, pending.metadata);
-      if (text === pending.lastText || publicViolation(text, bannedWords, [], now)) continue;
-      const bot = botRotation.botById(profile.id);
-      chosen = { profile, text, bot: { ...bot, name: profile.name } };
-      break;
-    }
-    if (!chosen) {
-      if (shouldPostStart) pending.startSent = true;
-      else pending.followUpSent = true;
-      continue;
-    }
-    await db.insert(roomMessages).values(botMessageValues(chosen.bot, roomId, historyId, chosen.text, "chatter"));
-    roomStore.refreshRoomChat(roomId);
-    pending.lastText = chosen.text;
-    if (shouldPostStart) pending.startSent = true;
-    else pending.followUpSent = true;
-    posted = true;
-  }
-  return posted;
-  } finally {
-    beamTvReactionProcessing = false;
-  }
-}
-export async function postBeamTvVoteAnnouncement(roomId: string) {
-  const settings = await botChatterSettings();
-  const profile = settings.bots[Math.floor(Math.random() * settings.bots.length)]!;
-  const bot = botRotation.botById(profile.id);
-  await db.insert(roomMessages).values(botMessageValues(
-    { ...bot, name: profile.name },
-    roomId.toUpperCase(),
-    roomStore.getHistoryId(roomId),
-    "The room voted: next video.",
-    "chatter",
-  ));
-  roomStore.refreshRoomChat(roomId);
 }
 function namesById(settings: BotChatterSettings): Partial<Record<BotId, string>> {
   return Object.fromEntries(settings.bots.map(bot => [bot.id, bot.name])) as Partial<Record<BotId, string>>;
@@ -280,15 +110,7 @@ export function startModeratorBotChatter(onError: (err: unknown, context: { room
     void (async () => {
       const now = Date.now();
       const settings = await botChatterSettings();
-      if (!settings.enabled) {
-        beamTvReactions.clear();
-        nextAt = 0;
-        return;
-      }
-      if (await processBeamTvReactions(settings, now)) {
-        nextAt = now + nextBotChatterDelayMs(settings.frequency);
-        return;
-      }
+      if (!settings.enabled) { nextAt = 0; return; }
       if (!nextAt) { nextAt = now + nextBotChatterDelayMs(settings.frequency); return; }
       if (now < nextAt) return;
 

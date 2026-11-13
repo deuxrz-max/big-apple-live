@@ -6,7 +6,6 @@ import { useGetSocialMe, getGetSocialMeQueryKey } from '@workspace/api-client-re
 import { CoinAmount, ErrorBox, Loading } from './common';
 import { CREDIT_BUNDLES, formatUsd, RECHARGE_PREVIEW_POLICY, type CreditBundle } from './credit-catalog';
 import { profileGiftingProgress, giftingLabel } from '../gifting/gifting';
-import { GiftingShield } from '../gifting/GiftingShield';
 import './buy-credits.css';
 import { ProfileTap } from '@/profile/QuickProfile';
 
@@ -34,7 +33,6 @@ export function BuyCreditsPage() {
         <div className="bc-who">
           <div className="bc-name">
             <span data-testid="text-buy-name">{profile.displayName || profile.username}</span>
-            {g.level > 0 && <GiftingShield level={g.level} size={18} decorative />}
           </div>
           <span className="bc-sub">@{profile.username}</span>
           <div className="bc-lvl" data-testid="text-gifter-level">{giftingLabel(g.level)}</div>

@@ -8,10 +8,8 @@ import {
 import { accountId, sameOrigin } from "./identity";
 import { communityDirectory, accessFor, requireAdult, requireOwner } from "../lib/community";
 import { roomStore, RoomError } from "../lib/room-store";
-import { liveStreamIdForAccount, liveStreamRoomName } from "../lib/live-stream-policy";
-import { liveStreamChatHub } from "../lib/live-stream-chat";
-import { liveKitBeamService } from "../lib/livekit";
 import { universityVideoBeamStore } from "../lib/university-video-beam";
+import { liveKitBeamService } from "../lib/livekit";
 
 const router = Router();
 router.use("/account/chat", (_req, res, next) => { res.set("Cache-Control", "no-store"); next(); });
@@ -41,13 +39,15 @@ router.post("/account/chat/reports", async (req, res) => {
   };
   const input = ReportChatMessageBody.safeParse(normalized);
   if (!input.success) throw new RoomError(400, "Choose what to report and a reason");
+  if (input.data.streamId || input.data.targetType === "stream") {
+    throw new RoomError(410, "Livestreams have been retired.");
+  }
 
   let targetAccountId: string | null = null;
   let reportedUsername = "";
   let roomId: string | null = input.data.roomId?.trim().toUpperCase() ?? null;
   let historyId: string | null = null;
   let messageId: string | null = null;
-  let streamId: string | null = input.data.streamId ?? null;
   let messageText = input.data.messageText?.trim() ?? "";
 
   if (roomId) {
@@ -56,57 +56,22 @@ router.post("/account/chat/reports", async (req, res) => {
     historyId = roomStore.getHistoryId(roomId);
   }
   if (input.data.targetType === "message") {
-    if (input.data.messageId && streamId) {
-      const liveMessage = liveStreamChatHub.find(streamId, input.data.messageId);
-      if (!liveMessage || (input.data.targetUsername
-        && liveMessage.username.toLowerCase() !== input.data.targetUsername.toLowerCase())) {
-        throw new RoomError(404, "Live chat message not found");
-      }
-      targetAccountId = liveMessage.accountId;
-      reportedUsername = liveMessage.username;
-      messageId = liveMessage.id;
-      messageText = liveMessage.text;
-    } else if (input.data.messageId) {
-      if (!roomId || !historyId) throw new RoomError(400, "Choose the room message you want to report");
-      const [message] = await db.select().from(roomMessages).where(and(
-        eq(roomMessages.id, input.data.messageId), eq(roomMessages.historyId, historyId)));
-      if (!message) throw new RoomError(404, "Message not found in this room");
-      if (message.botId || !message.authorAccountId) throw new RoomError(400, "This system message cannot be reported");
-      targetAccountId = message.authorAccountId;
-      reportedUsername = message.username;
-      messageId = message.id;
-      messageText = message.text;
-    } else if (streamId && input.data.targetUsername) {
-      const [target] = await db.select().from(accountProfiles)
-        .where(sql`lower(${accountProfiles.username}) = lower(${input.data.targetUsername})`).limit(1);
-      if (!target || liveStreamIdForAccount(target.accountId) !== streamId) {
-        throw new RoomError(404, "That live message is no longer available");
-      }
-      targetAccountId = target.accountId;
-      reportedUsername = target.username;
-    } else {
-      throw new RoomError(400, "Choose the message you want to report");
-    }
+    if (!input.data.messageId) throw new RoomError(400, "Choose the message you want to report");
+    if (!roomId || !historyId) throw new RoomError(400, "Choose the room message you want to report");
+    const [message] = await db.select().from(roomMessages).where(and(
+      eq(roomMessages.id, input.data.messageId), eq(roomMessages.historyId, historyId)));
+    if (!message) throw new RoomError(404, "Message not found in this room");
+    if (message.botId || !message.authorAccountId) throw new RoomError(400, "This system message cannot be reported");
+    targetAccountId = message.authorAccountId;
+    reportedUsername = message.username;
+    messageId = message.id;
+    messageText = message.text;
   } else {
-    if (input.data.targetType === "stream" && !streamId) throw new RoomError(400, "Choose the live stream");
     if (!input.data.targetUsername) throw new RoomError(400, "Choose the account you want to report");
     const [target] = await db.select().from(accountProfiles)
       .where(sql`lower(${accountProfiles.username}) = lower(${input.data.targetUsername})`).limit(1);
     if (!target) throw new RoomError(404, "Account not found");
     if (target.accountId === id) throw new RoomError(400, "You cannot report your own account");
-    if (input.data.targetType === "stream"
-      && (!streamId || liveStreamIdForAccount(target.accountId) !== streamId)) {
-      throw new RoomError(404, "That livestream is no longer available");
-    }
-    if (streamId) {
-      const targetIdentity = input.data.targetType === "stream" ? "host"
-        : liveStreamIdForAccount(target.accountId) === streamId
-          ? "host" : `viewer-${liveStreamIdForAccount(target.accountId)}`;
-      const activeParticipants = await liveKitBeamService.listParticipants(liveStreamRoomName(streamId));
-      if (!activeParticipants.some(participant => participant.identity === targetIdentity)) {
-        throw new RoomError(404, "That user is not in this live stream");
-      }
-    }
     targetAccountId = target.accountId;
     reportedUsername = target.username;
   }
@@ -131,7 +96,7 @@ router.post("/account/chat/reports", async (req, res) => {
     const [created] = await tx.insert(chatReports).values({
       historyId, roomId, messageId, reporterId: id, reporterUsername: reporter?.username ?? "Account",
       reportedAccountId: targetAccountId, reportedUsername, targetType: input.data.targetType,
-      source: "user", streamId, messageText: messageText.slice(0, 1000),
+      source: "user", streamId: null, messageText: messageText.slice(0, 1000),
       reason: input.data.reason, details: input.data.details?.trim() ?? "",
     }).returning();
     if (targetAccountId) {
@@ -230,15 +195,6 @@ router.patch("/account/chat/reports/:reportId", async (req, res) => {
   });
   roomStore.refreshChatVisibility();
   if (body.data.action === "ban" && targetToRevoke) {
-    const streamId = liveStreamIdForAccount(targetToRevoke);
-    try {
-      const roomName = liveStreamRoomName(streamId);
-      const rooms = await liveKitBeamService.listRooms([roomName]);
-      if (rooms.length) await liveKitBeamService.deleteRoom(roomName);
-      liveStreamChatHub.end(streamId);
-    } catch (error) {
-      req.log.warn({ error }, "Banned account livestream could not be terminated immediately");
-    }
     for (const roomId of roomStore.activeRoomIdsForAccount(targetToRevoke)) {
       const membership = roomStore.accountSession(roomId, targetToRevoke);
       if (!membership) continue;

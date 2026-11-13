@@ -93,9 +93,6 @@ router.get("/account/rooms/:roomId/events", async (req, res): Promise<void> => {
     const qualified = await accountReceivedCoinDrop(id, event.eventId);
     res.write(`event: room.coin-drop\ndata: ${JSON.stringify({ ...event, qualified })}\n\n`);
   }
-  for (const effect of roomStore.recentRoomEntranceEffects(roomId)) {
-    res.write(`event: room.entrance-effect\ndata: ${JSON.stringify(effect)}\n\n`);
-  }
   const keepalive = setInterval(() => {
     void requireAdult(id).catch(() => res.end());
     try { roomStore.requireAccountMember(roomId, sessionId, id); }

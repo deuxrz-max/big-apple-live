@@ -6,7 +6,6 @@ import { sendMessage } from "./social/messages";
 import { visibleProfilePhotos } from "./photo-visibility";
 import { botRotation } from "./moderator-bots";
 import { nameColorProfilesForAccounts } from "./social/gift-name-color-data";
-import { visibleMonthlyPurchaseBadgeSummaries } from "./social/monthly-credit-badges";
 import type { UniversityPerson } from "@workspace/api-zod";
 
 export async function ignoredAccounts(id: string) {
@@ -53,13 +52,12 @@ export async function roomWhispers(id: string, roomId: string) {
       outgoing: row.senderId === id, body: row.body, createdAt: row.createdAt });
   }
   const colors = await nameColorProfilesForAccounts(result.map(row => row.accountId));
-  const badges = await visibleMonthlyPurchaseBadgeSummaries(result.map(row => row.accountId));
   return result.map(({ accountId, ...whisper }) => ({
     ...whisper, displayNameColor: colors.get(accountId)?.color ?? "#FFFFFF",
     displayNameTierIndex: colors.get(accountId)?.tierIndex ?? 0,
-    badgeId: badges.get(accountId)?.tier.id ?? null,
-    badgeName: badges.get(accountId)?.tier.name ?? null,
-    badgeImage: badges.get(accountId)?.tier.badgeImage ?? null,
+    badgeId: null,
+    badgeName: null,
+    badgeImage: null,
   }));
 }
 export async function universitySession(id: string, roomId: string, sessionId: string) {
@@ -77,7 +75,6 @@ export async function universitySession(id: string, roomId: string, sessionId: s
   ));
   const blockedIds = new Set(blockedRelations.map(relation =>
     relation.ownerId === id ? relation.targetId : relation.ownerId));
-  const badgeSummaries = await visibleMonthlyPurchaseBadgeSummaries(presentAccountIds);
   const people: UniversityPerson[] = [];
   const seen = new Set<string>();
   for (const participant of snapshot.participants) {
@@ -98,9 +95,9 @@ export async function universitySession(id: string, roomId: string, sessionId: s
       photoStatus: photos.photoReviews?.find(r => r.photoUrl === photos.photoUrl)?.status ?? null,
       self: ownerId === id, moderator: moderators.has(ownerId), ignored: ignored.includes(ownerId),
       blocked: blockedIds.has(ownerId), botId: null,
-       badgeId: badgeSummaries.get(ownerId)?.tier.id ?? null,
-       badgeName: badgeSummaries.get(ownerId)?.tier.name ?? null,
-       badgeImage: badgeSummaries.get(ownerId)?.tier.badgeImage ?? null,
+        badgeId: null,
+        badgeName: null,
+        badgeImage: null,
     });
   }
   for (const bot of botRotation.people(roomId.toUpperCase())) people.push({

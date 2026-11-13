@@ -10,24 +10,15 @@ function settingsFromEnvironment(env: NodeJS.ProcessEnv = process.env): LiveKitS
   const apiKey = env.LIVEKIT_API_KEY?.trim();
   const apiSecret = env.LIVEKIT_API_SECRET?.trim();
   if (!url || !apiKey || !apiSecret) {
-    throw new RoomError(503, "The video beam is not configured yet. Ask the app owner to check LiveKit setup.");
+    throw new RoomError(503, "Room audio is not configured yet. Ask the app owner to check LiveKit setup.");
   }
   if (!/^wss?:\/\//i.test(url)) {
-    throw new RoomError(503, "The video beam service URL is invalid.");
+    throw new RoomError(503, "The room audio service URL is invalid.");
   }
   return { url, apiKey, apiSecret };
 }
 
 export class LiveKitBeamService {
-  async createChessToken(input: { roomName: string; participantId: string; displayName: string }) {
-    const settings = this.getSettings();
-    const token = new AccessToken(settings.apiKey, settings.apiSecret, {
-      identity: input.participantId, name: input.displayName, ttl: "5m",
-    });
-    token.addGrant({ roomJoin: true, room: input.roomName, canSubscribe: true,
-      canPublish: true, canPublishSources: [TrackSource.MICROPHONE], canPublishData: false });
-    return { url: settings.url, token: await token.toJwt() };
-  }
   constructor(
     private readonly getSettings: () => LiveKitSettings = settingsFromEnvironment,
     private readonly clientFactory = (settings: LiveKitSettings) =>
@@ -70,60 +61,6 @@ export class LiveKitBeamService {
     return client.listParticipants(roomName);
   }
 
-  async createLiveStreamToken(input: {
-    roomName: string;
-    identity: string;
-    displayName: string;
-    username?: string;
-    role: "host" | "viewer";
-  }): Promise<{ url: string; token: string }> {
-    const settings = this.getSettings();
-    const token = new AccessToken(settings.apiKey, settings.apiSecret, {
-      identity: input.identity,
-      name: input.displayName,
-      ...(input.username ? { metadata: JSON.stringify({ username: input.username }) } : {}),
-      ttl: "1h",
-    });
-    token.addGrant({
-      roomJoin: true,
-      room: input.roomName,
-      canSubscribe: true,
-      canPublish: input.role === "host",
-      canPublishSources: input.role === "host"
-        ? [TrackSource.CAMERA, TrackSource.MICROPHONE]
-        : [],
-      // Viewers can send lightweight app data (including live chat) without
-      // gaining permission to publish camera or microphone tracks.
-      canPublishData: input.role === "viewer",
-    });
-    return { url: settings.url, token: await token.toJwt() };
-  }
-
-  async createPkBattleToken(input: {
-    roomName: string;
-    identity: string;
-    displayName: string;
-    role: "host" | "viewer";
-  }): Promise<{ url: string; token: string }> {
-    const settings = this.getSettings();
-    const token = new AccessToken(settings.apiKey, settings.apiSecret, {
-      identity: input.identity,
-      name: input.displayName,
-      ttl: "10m",
-    });
-    token.addGrant({
-      roomJoin: true,
-      room: input.roomName,
-      canSubscribe: true,
-      canPublish: input.role === "host",
-      canPublishSources: input.role === "host"
-        ? [TrackSource.CAMERA, TrackSource.MICROPHONE]
-        : [],
-      canPublishData: false,
-    });
-    return { url: settings.url, token: await token.toJwt() };
-  }
-
   async listRooms(roomNames?: string[]) {
     const settings = this.getSettings();
     return this.clientFactory(settings).listRooms(roomNames);
@@ -137,7 +74,7 @@ export class LiveKitBeamService {
   async disableTrack(
     roomName: string,
     participantId: string,
-    source: "mic" | "camera",
+    source: "mic",
     allowedSources: TrackSource[],
   ): Promise<void> {
     await this.setTrackEnabled(roomName, participantId, source, false, allowedSources);
@@ -146,7 +83,7 @@ export class LiveKitBeamService {
   async setSelfTrackEnabled(
     roomName: string,
     participantId: string,
-    source: "mic" | "camera",
+    source: "mic",
     enabled: boolean,
     allowedSources: TrackSource[],
   ): Promise<void> {
@@ -189,14 +126,13 @@ export class LiveKitBeamService {
   private async setTrackEnabled(
     roomName: string,
     participantId: string,
-    source: "mic" | "camera",
+    source: "mic",
     enabled: boolean,
     allowedSources: TrackSource[],
   ) {
     const client = this.clientFactory(this.getSettings());
     const participant = await client.getParticipant(roomName, participantId);
-    const targetSource = source === "mic" ? TrackSource.MICROPHONE : TrackSource.CAMERA;
-    const track = participant.tracks.find(item => item.source === targetSource);
+    const track = participant.tracks.find(item => item.source === TrackSource.MICROPHONE);
     await client.updateParticipant(roomName, participantId, {
       permission: {
         canPublish: allowedSources.length > 0,
@@ -210,7 +146,7 @@ export class LiveKitBeamService {
 
 export function publicLiveKitFailure(error: unknown): RoomError {
   if (error instanceof RoomError) return error;
-  return new RoomError(503, "Live video is temporarily unavailable. Please try again.");
+  return new RoomError(503, "Room audio is temporarily unavailable. Please try again.");
 }
 
 export const liveKitBeamService = new LiveKitBeamService();

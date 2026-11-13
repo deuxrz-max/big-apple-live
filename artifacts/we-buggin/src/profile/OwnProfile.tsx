@@ -2,7 +2,6 @@ import { Link } from 'wouter';
 import { buyCoinsReturnState } from '@/social/buy-coins-navigation';
 import { useEffect, useState, type CSSProperties } from 'react';
 import { GIFTING_LEVEL_THRESHOLDS, giftingTier } from '@workspace/beam-identity';
-import { GiftingShield } from '@/gifting/GiftingShield';
 import { profileGiftingProgress } from '@/gifting/gifting';
 import { Coins, ShoppingBag } from 'lucide-react';
 import {
@@ -14,7 +13,6 @@ import { ErrorBox, Loading } from '@/social/common';
 import { RewardsPage } from '@/social/MoneyPages';
 import { ProfileView } from './ProfileView';
 import { GiftBag, GiftControl } from '@/gifts';
-import { EntranceEffectsShop } from './EntranceEffectsShop';
 
 export function OwnProfile() {
   const [bagOpen, setBagOpen] = useState(false);
@@ -47,7 +45,7 @@ export function OwnProfile() {
     });
   };
   return (
-    <ProfileView person={p} own countryName={countryName} products={me.data.products} backHref="/home"
+    <ProfileView person={p} own countryName={countryName} backHref="/home"
       links={
         <nav className="pf-links dw-shortcuts" data-testid="nav-profile-shortcuts" aria-label="Profile shortcuts">
           <Link href="/user-portal/store" className="pf-btn pf-btn-store" data-testid="link-profile-store"><ShoppingBag size={17} aria-hidden="true" /> Store</Link>
@@ -57,14 +55,12 @@ export function OwnProfile() {
           {access.data?.owner && <Link href="/community/coin-testers" className="pf-btn" data-testid="link-owner-tools">Owner tools</Link>}
           {access.data?.owner && access.data.adultConfirmed && <Link href="/user-portal/photo-reviews" className="pf-btn" data-testid="link-profile-photo-review">Review pending photos</Link>}
           {access.data?.moderator && <Link href="/community/moderation" className="pf-btn" data-testid="link-moderation">Moderation</Link>}
-          {import.meta.env.DEV && access.data?.owner === true && <Link href="/user-portal/card-finish" className="pf-btn" data-testid="link-card-finish-preview">Card finish preview</Link>}
-          {access.data?.owner && <Link href="/community/gift-studio" className="pf-btn" data-testid="link-gift-studio">Gift Studio</Link>}
         </nav>
       }>
       <section className="pf-name-tier" aria-label="Gifting level" data-testid="section-gifting-level">
         <div className="pf-name-tier-copy pf-gifting-level">
           {gifting.level > 0
-            ? <GiftingShield level={gifting.level} size={52} />
+            ? <span className="pf-gifting-level-number" aria-hidden="true">{gifting.level}</span>
             : <span className="pf-name-tier-kicker" aria-hidden="true">--</span>}
           <div style={{ flex: 1, minWidth: 0 }}>
             <span className="pf-name-tier-kicker">Gifting level</span>
@@ -89,7 +85,7 @@ export function OwnProfile() {
             )}
           </div>
         </div>
-        <small>Every successfully sent gift adds its coin value as XP. Recharges and failed sends do not count. Silver, Gold, Platinum and Deux Wild each unlock a name color and an animated frame matching their tier color. Gold also unlocks an entrance banner, inherited by Platinum and Deux Wild. Deux Wild adds a neon full-screen entrance. Bronze unlocks the badge only. Gifts are available at every gifting level.</small>
+        <small>Every successfully sent gift adds its coin value as XP. Recharges and failed sends do not count.</small>
         {me.data.nameColorTest.enabled && (
           <div className="pf-name-tier-test">
             <label htmlFor="name-color-test-level">Development-only level preview</label>
@@ -134,7 +130,6 @@ export function OwnProfile() {
         <GiftControl onClick={() => setBagOpen(true)} label="Open your gift bag" />
       </div>
       {bagOpen && <GiftBag onClose={() => setBagOpen(false)} />}
-      <EntranceEffectsShop />
       <div className="sc pf-rewards"><RewardsPage embedded /></div>
     </ProfileView>
   );

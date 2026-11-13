@@ -7,7 +7,6 @@ import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
 import { CLERK_PROXY_PATH, clerkProxyMiddleware, getClerkProxyHost } from "./middlewares/clerkProxyMiddleware";
 import { RoomError } from "./lib/room-store";
-import { ChessError } from "./lib/chess-engine";
 
 const app: Express = express();
 
@@ -58,7 +57,7 @@ const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
     res.destroy();
     return;
   }
-  if (err instanceof RoomError || err instanceof ChessError) {
+  if (err instanceof RoomError) {
     res.status(err.status).json({ error: err.message });
     return;
   }

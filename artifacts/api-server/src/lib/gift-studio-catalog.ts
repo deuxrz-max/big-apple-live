@@ -61,7 +61,7 @@ function catalogRecord(
     status,
     platinumExclusive: false,
     roomGift: (config?.productType ?? "gift") === "gift" && isRoomGift(gift.id),
-    animationAvailable: true,
+    animationAvailable: false,
     iconUrl: activeAsset && status !== "deleted"
       ? `/api/social/gift-studio/icons/${activeAsset.id}?v=${encodeURIComponent(String(activeAsset.settings.iconRevision ?? 1))}`
       : null,
@@ -90,7 +90,7 @@ export async function listGiftCatalogForOwner() {
       status: config.status as GiftCatalogStatus,
       platinumExclusive: false,
       roomGift: (config.productType ?? "gift") === "gift",
-      animationAvailable: data.activeNames.has(config.giftId),
+       animationAvailable: false,
       iconUrl: config.status !== "deleted" && data.activeAssets.has(config.giftId)
         ? `/api/social/gift-studio/icons/${data.activeAssets.get(config.giftId)!.id}?v=${encodeURIComponent(String(data.activeAssets.get(config.giftId)!.settings.iconRevision ?? 1))}`
         : null,
@@ -126,7 +126,7 @@ export async function getGiftCatalogItem(giftId: string) {
       status: (config?.status ?? (motionGift.active ? "active" : "deleted")) as GiftCatalogStatus,
       platinumExclusive: false,
       roomGift: true,
-      animationAvailable: true,
+      animationAvailable: false,
       iconUrl: null,
       iconStatus: "builtin" as const,
     };
@@ -147,7 +147,7 @@ export async function getGiftCatalogItem(giftId: string) {
     status,
     platinumExclusive: false,
     roomGift: (config.productType ?? "gift") === "gift",
-    animationAvailable: data.activeNames.has(giftId),
+    animationAvailable: false,
     iconUrl: status !== "deleted" && data.activeAssets.has(giftId)
       ? `/api/social/gift-studio/icons/${data.activeAssets.get(giftId)!.id}?v=${encodeURIComponent(String(data.activeAssets.get(giftId)!.settings.iconRevision ?? 1))}`
       : null,

@@ -15,10 +15,8 @@ import { BuyCreditsPage } from './BuyCreditsPage';
 import { InboxPage } from './InboxPage';
 import { LeaderboardPage, RewardsPage, ThreadPage } from './MoneyPages';
 import { SafetyReportsPage } from '@/safety/SafetyReportsPage';
-import { GiftStudioPage } from '@/gift-studio/GiftStudioPage';
 import { CoinTestersPanel } from './CoinTestersPanel';
 import { ActionMenu } from '@/components/app-chrome';
-import { ChessRoute } from '@/chess/ChessRoom';
 
 const NAV = [
   { to: '/community', label: 'People', icon: Users, exact: true },
@@ -43,7 +41,6 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
     useEffect(() => {
       document.title = path === '/community/moderation' ? `Moderation — ${APP_NAME}`
         : path === '/community/reports' ? `Safety reports — ${APP_NAME}`
-        : path === '/community/gift-studio' ? `Gift Studio — ${APP_NAME}`
         : isMessagesPath ? `Messages — ${APP_NAME}`
           : path === '/community/favorites' ? `Following — ${APP_NAME}`
             : `People — ${APP_NAME}`;
@@ -52,12 +49,6 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
   const access = useGetChatAccess();
   const bare = path.startsWith('/community/people/') || path.startsWith('/community/bots/');
   const needsIdentity = errStatus(me.error) === 409;
-  if (path.startsWith('/community/chess/')) {
-    // Chess is a focused two-player surface: no community header, sidebars or global chrome.
-    return me.isLoading ? <Loading /> : needsIdentity
-      ? <div className="sc-empty"><h2>Claim your name first</h2><p>Chess needs your account identity.</p><Link href="/user-portal" className="bm-btn bm-btn-primary">Set up profile</Link></div>
-      : <Switch><Route path="/community/chess/:chessRoomId" component={ChessRoute} /></Switch>;
-  }
   return (
       <div className={`beam-app sc${bare ? ' sc-profile-screen' : ''}${isMessagesPath ? ' sc-inbox-screen' : path === '/community/favorites' ? ' sc-following-screen' : path === '/community/moderation' ? ' sc-moderation-screen' : path === '/community/reports' ? ' sc-reports-screen' : ''}`}>
       <div className="bm-bg" aria-hidden="true"><i /><i /><i /></div>
@@ -114,17 +105,11 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
               <Route path="/community/reports">{() => access.data?.owner
                 ? <SafetyReportsPage />
                 : <div className="sc-empty" role="status" data-testid="status-reports-access"><h2>Owner access required</h2><p>Safety reports are private to the Big Apple Live owner.</p><Link href="/community" className="bm-btn">Back to People</Link></div>}</Route>
-              <Route path="/community/gift-studio">{() => access.data?.owner
-                ? <GiftStudioPage />
-                : access.isLoading
-                  ? <Loading />
-                  : <div className="sc-empty" role="status" data-testid="status-gift-studio-access"><h2>Owner access required</h2><p>Gift Studio is available only to the Big Apple Live owner.</p><Link href="/community/profile" className="bm-btn">Back to Me</Link></div>}</Route>
               <Route path="/community/rewards"><RewardsPage /></Route>
               <Route path="/community/coins" component={BuyCreditsPage} />
               {/* Keep the old address working for saved links; new links use /coins. */}
               <Route path="/community/credits" component={BuyCreditsPage} />
               <Route path="/community/leaderboard" component={LeaderboardPage} />
-              <Route path="/community/chess/:chessRoomId" component={ChessRoute} />
               <Route><div className="sc-empty"><h2>Not found</h2><Link href="/community" className="bm-btn">People</Link></div></Route>
             </Switch>
           )}

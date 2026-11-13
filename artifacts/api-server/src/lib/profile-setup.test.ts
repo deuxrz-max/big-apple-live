@@ -34,7 +34,7 @@ test("real PostgreSQL profile setup, interruption, edit persistence and request 
     await db.delete(accountProfiles).where(inArray(accountProfiles.accountId, ids));
     await db.$client.end();
   });
-  await t.test("all ordered communities have room-specific default video searches", () => {
+  await t.test("audio community room identities and labels remain available", () => {
     assert.deepEqual(COMMUNITY_ROOMS.map(r => r.label), [
       "Music",
       "Gaming",
@@ -57,12 +57,13 @@ test("real PostgreSQL profile setup, interruption, edit persistence and request 
       "Travel",
       "ASMR",
       "Web Series",
+      "The Cafe",
+      "The Screening Room",
+      "The Arena",
     ]);
     assert.equal(new Set(COMMUNITY_ROOMS.map(r => r.roomId)).size, COMMUNITY_ROOMS.length);
     assert.ok(COMMUNITY_ROOMS.every(r => /^[A-Z0-9]{6}$/.test(r.roomId)),
       "every fixed room code remains joinable through the existing six-character route");
-    assert.equal(new Set(COMMUNITY_ROOMS.map(r => r.defaultVideoSearch)).size, COMMUNITY_ROOMS.length);
-    assert.ok(COMMUNITY_ROOMS.every(r => r.defaultVideoSearch.length > 8));
     assert.ok(COMMUNITY_ROOMS.every(r => r.label.trim().split(/\s+/).length <= 2));
   });
   await t.test("unsaved and invalid setup never becomes complete", async () => {

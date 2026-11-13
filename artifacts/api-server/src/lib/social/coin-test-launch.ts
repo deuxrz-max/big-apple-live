@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { accountRoomEntranceEffects, coinTestLaunchControl, coinTestResetPlans, coinTesters, db, socialSettings } from "@workspace/db";
+import { coinTestLaunchControl, coinTestResetPlans, coinTesters, db } from "@workspace/db";
 import { and, eq, sql } from "drizzle-orm";
 import { RoomError } from "../room-store";
 import { requireOwner } from "../community";
@@ -19,7 +19,7 @@ async function resetContents(tx: Tx | typeof db) {
     summary: {
       activeTesters: rows.filter(row => row.enabled).length,
       testGiftQuantity: rows.reduce((sum, row) => sum + row.bag.reduce((n, lot) => n + lot.quantity, 0), 0),
-      testEffects: rows.reduce((sum, row) => sum + row.effectIds.length, 0),
+      testEffects: 0,
       // Unlimited allowances were never deposited into the real wallet.
       freeTestCoinBalanceAfterReset: 0,
       realWalletsPreserved: true as const,
@@ -65,16 +65,6 @@ export async function applyTestCoinLaunchReset(tx: Tx, ownerId: string, input: C
   const contents = await resetContents(tx);
   if (contents.fingerprint !== plan.fingerprint)
     throw new RoomError(409, "Testers or test inventory changed. Review a fresh preview before resetting.");
-  for (const row of contents.rows) {
-    const [settings] = await tx.select().from(socialSettings).where(eq(socialSettings.accountId, row.accountId));
-    const equipped = settings?.equippedEntranceEffectId;
-    if (equipped && row.effectIds.includes(equipped)) {
-      const [paid] = await tx.select().from(accountRoomEntranceEffects).where(and(
-        eq(accountRoomEntranceEffects.accountId, row.accountId), eq(accountRoomEntranceEffects.effectId, equipped)));
-      if (!paid) await tx.update(socialSettings).set({ equippedEntranceEffectId: null })
-        .where(eq(socialSettings.accountId, row.accountId));
-    }
-  }
   const at = new Date();
   await tx.update(coinTesters).set({ enabled: false, bag: [], effectIds: [], updatedAt: at });
   await tx.insert(coinTestLaunchControl).values({ id: "global", closedAt: at, closedBy: ownerId })

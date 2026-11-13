@@ -17,8 +17,6 @@ import { communityMembership, accessFor } from "../lib/community";
 import { nameColorProfilesForAccounts } from "../lib/social/gift-name-color-data";
 import { universityAudioBeamStore } from "../lib/university-audio-beam";
 import { coloredEmoji, emojiCatalog } from "../lib/emoji-library";
-import { claimRoomEntranceEffect } from "../lib/room-entrance-effects";
-import { accountEntranceEffectSelection } from "../lib/social/entrance-effect-preferences";
 import { normalizeAccountRoomTitle } from "../lib/account-room-title";
 
 const router: IRouter = Router();
@@ -136,20 +134,6 @@ router.post("/account/rooms/:roomId/join", async (req, res) => {
     displayNameTierIndex: nameColors.get(id)?.tierIndex ?? 0,
   });
   roomStore.restoreParticipantId(params.data.roomId, id, member.participantId);
-  try {
-    const selected = await accountEntranceEffectSelection(id);
-    const requestedEntryId = req.get("X-Room-Entry-Id")?.trim();
-    const entryId = requestedEntryId && /^[A-Za-z0-9_-]{8,128}$/.test(requestedEntryId)
-      ? requestedEntryId
-      : randomUUID();
-    const effectId = selected ? await claimRoomEntranceEffect(id, selected.effectId, entryId) : null;
-    if (effectId && selected) roomStore.publishRoomEntranceEffect(
-      params.data.roomId, id, effectId, selected.durationMs,
-      { studioVersionId: selected.studioVersionId, effectName: selected.effectName },
-    );
-  } catch {
-    req.log.warn("Room entrance effect could not be started");
-  }
   res.status(201).json(JoinAccountRoomResponse.parse({ ...session,
     participantId: member.participantId, room: roomStore.get(params.data.roomId) }));
 });

@@ -8,7 +8,6 @@ import path from "node:path";
 import { accountProfiles, db } from "@workspace/db";
 import type { DeveloperGiftMotionPreset } from "@workspace/api-zod";
 import { GetGifterLeaderboardResponse } from "@workspace/api-zod";
-import { GetPkLeaderboardResponse } from "@workspace/api-zod";
 import { gifterLeaderboard } from "../lib/social/gifter-leaderboard";
 import {
   SaveSocialProfileBody, SaveSocialProfileResponse, GetSocialMeResponse, GetSocialPeopleResponse,
@@ -36,7 +35,6 @@ import {
 import { accountId, sameOrigin } from "./identity";
 import { RoomError, roomStore } from "../lib/room-store";
 import { requireAccount } from "../lib/social/core";
-import { CAULDRON_VERSION_ID } from "../lib/system-cauldron-assets";
 import { cauldronStillFrame } from "../lib/cauldron-still-frame";
 import { nameColorProfileForAccount, setNameColorPurchaseTotalOverride } from "../lib/social/gift-name-color-data";
 import { accessFor, requireAdult, requireOwner } from "../lib/community";
@@ -47,18 +45,13 @@ import {
   serveGiftMedia, serveMoonfoxGiftMedia, serveCosmicEncoreGiftMedia,
   serveFireworksGiftMedia, serveRoseShowerGiftMedia, serveWhipGiftMedia,
 } from '../lib/gift-media';
-import { serveMonthlyCreditTierEntranceEffectMedia, serveRoomEntranceEffectMedia } from "../lib/room-entry-effect-media";
 import { clearThread, inbox, sendMessage, thread } from "../lib/social/messages";
 import { favoritesGallery, favoriteRoom } from "../lib/social/favorites";
-import { requireLiveStreamGiftAccess } from "../lib/live-stream-policy";
-import { getDeveloperContentSyncStatus, runDeveloperContentSync } from "../lib/developer-content-sync";
 import { getHangoutRewardSettings, setHangoutRewardInterval } from "../lib/community-hangout-rewards";
-import { liveStreamChatHub } from "../lib/live-stream-chat";
 import { getMyEntranceEffectSettings, saveMyEntranceEffectSettings } from "../lib/social/entrance-effect-preferences";
 import { streamGcsObject } from "../lib/gcs-response-stream";
 import { equipEntranceEffect, listEntranceEffectShop, purchaseEntranceEffect } from "../lib/social/entrance-effect-shop";
 import { saveEquippedBadge } from "../lib/social/monthly-credit-badges";
-import { getPkWeeklyLeaderboard } from "../lib/pk-battles";
 import {
   createGiftStudioVersion, deleteGiftStudioVersion, getActiveGiftStudioMedia, giftStudioMediaFile,
   giftStudioIconFile, overrideGiftStudioIcon, regenerateGiftStudioIcon,
@@ -76,6 +69,21 @@ import {
 import { inspectGiftMotionModelFile } from "../lib/gift-motion-model-file";
 
 const router: IRouter = Router();
+router.use((req, res, next) => {
+  const retired = [
+    "/social/admin/gift-studio", "/social/gift-studio",
+    "/social/admin/gift-motions", "/social/gift-motions",
+    "/social/entrance-effects", "/social/me/entrance-effects",
+    "/social/me/equipped-badge", "/social/admin/content-sync",
+    "/social/pk/leaderboard",
+  ];
+  const retainedGiftCatalogIcon = req.method === "GET" && req.path.startsWith("/social/gift-studio/icons/");
+  if (!retainedGiftCatalogIcon && retired.some(prefix => req.path === prefix || req.path.startsWith(`${prefix}/`))) {
+    res.status(410).json({ error: "This feature has been retired." });
+    return;
+  }
+  next();
+});
 import { GetCoinTestersResponse, SetCoinTesterBody } from "@workspace/api-zod";
 import { listCoinTesters, setCoinTester } from "../lib/social/coin-testers";
 import { getTestCoinLaunchStatus, prepareTestCoinLaunchReset, confirmTestCoinLaunchReset } from "../lib/social/coin-test-launch";
@@ -115,8 +123,6 @@ router.get('/gift-media/cosmic-encore/v2/:filename', serveCosmicEncoreGiftMedia)
 router.get('/gift-media/fireworks/v3/:filename', serveFireworksGiftMedia);
 router.get('/gift-media/rose-shower/v3/:filename', serveRoseShowerGiftMedia);
 router.get('/gift-media/whip/v3/:filename', serveWhipGiftMedia);
-router.get('/room-entry-effects/lion/:filename', serveRoomEntranceEffectMedia);
-router.get('/room-entry-effects/monthly-credit-tiers/:tier/:filename', serveMonthlyCreditTierEntranceEffectMedia);
 // A fixed decorative homepage asset, like the public built-in gift media above.
 // No arbitrary version ID, source file or Overflow media can be requested here.
 router.get("/gift-media/system-cauldron/still/:level", async (req, res): Promise<void> => {
@@ -127,11 +133,6 @@ router.get("/gift-media/system-cauldron/still/:level", async (req, res): Promise
     "X-Content-Type-Options": "nosniff",
     "Cache-Control": "public, max-age=86400",
   }).send(image);
-});
-router.get("/gift-media/system-cauldron/:variant", async (req, res): Promise<void> => {
-  const variant = req.params.variant;
-  if (variant !== "webm" && variant !== "safari") throw new RoomError(404, "Media not found.");
-  await streamStudioMedia(req, res, { versionId: CAULDRON_VERSION_ID, variant, activeOnly: true });
 });
 router.use("/social", async (req, res, next) => {
   const id = accountId(req);
@@ -325,21 +326,6 @@ async function streamStudioIcon(req: Request, res: Response, versionId: string):
   }
   streamGcsObject(file.createReadStream(), res, "Gift Studio icon");
 }
-
-router.get("/social/admin/gift-studio/library", ownerOnly, async (req, res): Promise<void> => {
-  res.json(GetGiftStudioLibraryResponse.parse(await listGiftStudioVersions(accountId(req))));
-});
-
-router.get("/social/admin/content-sync", ownerOnly, async (_req, res): Promise<void> => {
-  res.set("Cache-Control", "no-store");
-  res.json(GetDeveloperContentSyncResponse.parse(await getDeveloperContentSyncStatus()));
-});
-
-router.post("/social/admin/content-sync/run", ownerOnly, async (req, res): Promise<void> => {
-  sameOrigin(req);
-  res.set("Cache-Control", "no-store");
-  res.json(RunDeveloperContentSyncResponse.parse(await runDeveloperContentSync("manual")));
-});
 
 router.get("/social/admin/hangout-rewards", ownerOnly, async (_req, res): Promise<void> => {
   res.set("Cache-Control", "no-store");
@@ -774,36 +760,10 @@ router.get("/social/gifts/rooms/:roomId", async (req, res) => {
 router.post("/social/gifts", async (req, res): Promise<void> => {
   const input = SendSocialGiftBody.safeParse(req.body);
   if (!input.success) throw new RoomError(400, "Choose a gift, recipient and valid retry key");
-  if (input.data.roomId && input.data.streamId) throw new RoomError(400, "Choose either a room or a livestream.");
-  if (!input.data.roomId && !input.data.streamId)
-    throw new RoomError(403, "Gifts are only available from a room or livestream gift panel. Direct/private-message gifts are disabled.");
+  if (input.data.streamId) throw new RoomError(410, "Livestream gifts have been retired. Send gifts in a social room.");
+  if (!input.data.roomId)
+    throw new RoomError(403, "Gifts are only available from a social room gift panel. Direct/private-message gifts are disabled.");
   const senderId = accountId(req);
-  if (input.data.streamId) {
-    sameOrigin(req);
-    const result = await serializeGiftSends(`live:${input.data.streamId}`, async () => {
-      const [recipient] = await db.select({ accountId: accountProfiles.accountId })
-        .from(accountProfiles).where(eq(accountProfiles.username, input.data.recipient));
-      if (!recipient) throw new RoomError(404, "This livestream is no longer available.");
-      await requireLiveStreamGiftAccess(senderId, recipient.accountId, input.data.streamId!);
-      return gift(senderId, input.data.recipient, input.data.giftId, input.data.idempotencyKey,
-        { streamId: input.data.streamId! }, input.data.quantity ?? 1, input.data.useGiftBagOnly ?? false, input.data.testMode ?? false);
-    });
-    if ("liveGiftEvent" in result && result.liveGiftEvent) {
-      const senderNameColor = await nameColorProfileForAccount(senderId);
-      liveStreamChatHub.publishGift({
-        ...result.liveGiftEvent,
-        senderNameColor: senderNameColor.color,
-        senderNameTierIndex: senderNameColor.tierIndex,
-      });
-    }
-    if ("liveGiftEvent" in result) {
-      const { liveGiftEvent: _liveGiftEvent, ...wallet } = result;
-      res.json(wallet);
-    } else {
-      res.json(result);
-    }
-    return;
-  }
   const context = input.data.roomId
     ? { roomId: input.data.roomId, sessionId: req.get('X-Room-Session') ?? '' }
     : undefined;
@@ -820,9 +780,6 @@ router.post("/social/store/purchase", async (req, res): Promise<void> => {
 });
 router.get("/social/wallet/transactions", async (req, res): Promise<void> => { res.json(GetSocialLedgerResponse.parse(await ledger(accountId(req)))); });
 router.get("/social/leaderboard", async (req, res): Promise<void> => { res.json(GetSocialPeopleResponse.parse(await listPeople(accountId(req), {}, true))); });
-router.get("/social/pk/leaderboard", async (req, res): Promise<void> => {
-  res.set("Cache-Control", "no-store").json(GetPkLeaderboardResponse.parse(await getPkWeeklyLeaderboard()));
-});
 router.get("/social/messages", async (req, res): Promise<void> => { res.json(GetSocialInboxResponse.parse(await inbox(accountId(req)))); });
 router.get("/social/messages/:username", async (req, res): Promise<void> => {
   const input = GetSocialConversationQueryParams.safeParse(req.query);

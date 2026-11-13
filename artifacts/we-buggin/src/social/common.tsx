@@ -37,25 +37,6 @@ export function CoinAmount({ children, size = 14, className }: {
   </span>;
 }
 
-export function BadgeMark({ id, label, imageUrl, size = 14, compact = false }: {
-  id: string | null; label?: string | null; imageUrl?: string | null; size?: number; compact?: boolean;
-}) {
-  if (!id) return null;
-  const tier = /^monthly-tier-([2-4])$/.exec(id)?.[1];
-  if (!tier && id !== 'lion-entrance') return null;
-  const badgeName = label ?? (tier ? `Monthly purchase tier ${tier}` : 'Lion Entrance');
-  const fallbackImage = tier
-    ? `badges/monthly-credit-tiers/tier${tier}${['2', '3', '4'].includes(tier) ? '.png' : '.svg'}`
-    : 'badges/monthly-credit-tiers/lion-entrance.svg';
-  return <span className={`sc-badge${compact ? ' sc-badge-compact' : ''}`} title={badgeName}
-    style={{ width: size, height: size }} data-badge-tier={tier ?? 'lion'}>
-    <img src={imageUrl ? `${import.meta.env.BASE_URL}${imageUrl.replace(/^\/+/, '')}`
-      : `${import.meta.env.BASE_URL}${fallbackImage}`}
-      width={size} height={size} alt="" aria-hidden="true" />
-    <span className="sc-sr">{badgeName}</span>
-  </span>;
-}
-
 /** Keeps one idempotency key per identical operation until confirmed. */
 export function useIdemKey() {
   const ref = useRef<{ sig: string; key: string } | null>(null);
@@ -76,8 +57,8 @@ export const Avatar = ({ p, size = 56, tap = true }: { p: PhotoPerson; size?: nu
     reviewStatus={p.photoReviews?.find(photo => photo.photoUrl === p.photoUrl)?.status} />
 );
 
-export function PersonCard({ p, extra, showBadgeInName = true, className = '', publicSearch = false }: {
-  p: SocialPerson; extra?: ReactNode; showBadgeInName?: boolean; className?: string; publicSearch?: boolean;
+export function PersonCard({ p, extra, className = '', publicSearch = false }: {
+  p: SocialPerson; extra?: ReactNode; className?: string; publicSearch?: boolean;
 }) {
   return (
     <article className={`sc-card${className ? ` ${className}` : ''}`} data-testid={`card-person-${p.username}`}>
@@ -85,7 +66,6 @@ export function PersonCard({ p, extra, showBadgeInName = true, className = '', p
         <Avatar p={p} size={64} />
         <Link href={`/community/people/${p.username}`} className="sc-card-text" data-testid={`link-person-${p.username}`}>
           <ShinyName className="sc-name" displayNameColor={p.displayNameColor} displayNameTierIndex={p.displayNameTierIndex}>
-            {showBadgeInName && !publicSearch && <BadgeMark id={p.badgeId} label={p.badgeName} imageUrl={p.badgeImage} size={18} compact />}
             <span className="sc-name-label">{(p as PhotoPerson).displayName || p.username}</span>
           </ShinyName>
           <span className="sc-sub">@{p.username}{!publicSearch && p.country ? ` / ${p.country}` : ''}</span>

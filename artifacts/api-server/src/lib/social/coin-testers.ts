@@ -1,4 +1,4 @@
-import { accountProfiles, accountRoomEntranceEffects, coinTestActions, coinTesters, db, socialLedger, socialSettings } from "@workspace/db";
+import { accountProfiles, coinTestActions, coinTesters, db, socialLedger } from "@workspace/db";
 import { and, eq } from "drizzle-orm";
 import { RoomError } from "../room-store";
 import { requireOwner } from "../community";
@@ -25,17 +25,6 @@ export async function setCoinTester(ownerId: string, username: string, enabled: 
     await lockAccounts(tx, [profile.accountId]);
     if (enabled && await testCoinsClosed(tx))
       throw new RoomError(409, "Free test coins were retired at launch. New tester grants are disabled.");
-    const prior = await testerState(profile.accountId, tx);
-    if (!enabled && prior) {
-      const [settings] = await tx.select().from(socialSettings).where(eq(socialSettings.accountId, profile.accountId));
-      if (settings?.equippedEntranceEffectId && prior.effectIds.includes(settings.equippedEntranceEffectId)) {
-        const [owned] = await tx.select().from(accountRoomEntranceEffects).where(and(
-          eq(accountRoomEntranceEffects.accountId, profile.accountId),
-          eq(accountRoomEntranceEffects.effectId, settings.equippedEntranceEffectId)));
-        if (!owned) await tx.update(socialSettings).set({ equippedEntranceEffectId: null })
-          .where(eq(socialSettings.accountId, profile.accountId));
-      }
-    }
     await tx.insert(coinTesters).values({ accountId: profile.accountId, enabled, designatedBy: ownerId })
       .onConflictDoUpdate({ target: coinTesters.accountId, set: {
         enabled, designatedBy: ownerId, updatedAt: new Date(),

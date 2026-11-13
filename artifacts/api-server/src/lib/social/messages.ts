@@ -2,7 +2,6 @@ import { db, accountProfiles, socialMessages } from "@workspace/db";
 import { and, eq, or, desc, sql, inArray, isNull } from "drizzle-orm";
 import { RoomError } from "../room-store";
 import { assertContact, lockPair, pairBlocked, person, requireAccount, targetAccount } from "./core";
-import { visibleMonthlyPurchaseBadgeSummaries } from "./monthly-credit-badges";
 import { botSettings } from "../moderator-bots";
 import { censorChatText } from "../chat-filter";
 
@@ -77,12 +76,11 @@ export async function inbox(id: string) {
   const entries = [...grouped].slice(0, 100);
   const profiles = entries.length ? await db.select().from(accountProfiles).where(inArray(accountProfiles.accountId, entries.map(([other]) => other))) : [];
   const profileById = new Map(profiles.map(profile => [profile.accountId, profile]));
-  const badgeSummaries = await visibleMonthlyPurchaseBadgeSummaries(profiles.map(profile => profile.accountId));
   const conversations = [];
   for (const [other, entry] of entries) {
     const profile = profileById.get(other);
     if (!profile || (process.env.NODE_ENV === "production" && profile.isTestAccount)) continue;
-    const p = await person(id, profile, undefined, false, badgeSummaries.get(other) ?? null);
+    const p = await person(id, profile);
     conversations.push({ username: p.username, displayName: p.displayName, photoUrl: p.photoUrl,
       displayNameColor: p.displayNameColor,
       displayNameTierIndex: p.displayNameTierIndex,

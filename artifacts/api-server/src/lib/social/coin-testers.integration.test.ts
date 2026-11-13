@@ -2,17 +2,15 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { and, eq, inArray } from "drizzle-orm";
-import { accountProfiles, accountRoomEntranceEffects, chatAdmissions, coinTestActions, coinTesters,
+import { accountProfiles, chatAdmissions, coinTestActions, coinTesters,
   db, giftStudioAssets, socialGiftBag, socialGiftBagLots, socialGiftCatalogSettings,
   socialGiftEvents, socialLedger, socialSettings, socialWallets } from "@workspace/db";
 import { getMe } from "./people";
 import { gift, purchase } from "./rewards";
 import { listCoinTesters, setCoinTester, testerState } from "./coin-testers";
-import { purchaseEntranceEffect, equipEntranceEffect, listEntranceEffectShop } from "./entrance-effect-shop";
 import { requireOwner } from "../community";
 import { nameColorProfileForAccount } from "./gift-name-color-data";
 import { roomStore } from "../room-store";
-import { liveStreamIdForAccount } from "../live-stream-policy";
 import { GetSocialMeResponse } from "@workspace/api-zod";
 
 test("explicit tester grants isolate every test purchase/send from paid money and inventory", async t => {
@@ -21,7 +19,6 @@ test("explicit tester grants isolate every test purchase/send from paid money an
   const ids = [`coin-fixture-${token}-a`, `coin-fixture-${token}-b`];
   const names = [`Coin_${token.slice(0, 8)}_a`, `Coin_${token.slice(0, 8)}_b`];
   const giftId = `studio-${randomUUID()}`;
-  const effectId = `studio-${randomUUID()}`;
   const roomId = `COIN-${token.slice(0, 8)}`.toUpperCase();
   const historyId = `coin-fixture-${token}`;
   const sentTestKey = randomUUID();
@@ -33,7 +30,7 @@ test("explicit tester grants isolate every test purchase/send from paid money an
   t.after(async () => {
     roomStore.deactivateCommunity(roomId);
     await db.delete(socialGiftEvents).where(eq(socialGiftEvents.historyId, historyId));
-    await db.delete(socialGiftCatalogSettings).where(inArray(socialGiftCatalogSettings.giftId, [giftId, effectId]));
+    await db.delete(socialGiftCatalogSettings).where(eq(socialGiftCatalogSettings.giftId, giftId));
     await db.delete(accountProfiles).where(inArray(accountProfiles.accountId, ids));
     await db.$client.end();
   });
@@ -45,14 +42,12 @@ test("explicit tester grants isolate every test purchase/send from paid money an
   for (const id of ids) await getMe(id);
   await db.update(socialSettings).set({ discoverable: true }).where(inArray(socialSettings.accountId, ids));
   await db.update(socialWallets).set({ balance: 1000 }).where(inArray(socialWallets.accountId, ids));
-  for (const [id, type] of [[giftId, "gift"], [effectId, "entrance-effect"]] as const) {
-    await db.insert(socialGiftCatalogSettings).values({ giftId: id, cost: 20, productType: type });
-    await db.insert(giftStudioAssets).values({
-      ownerId: ids[0]!, giftId: id, version: 1, status: "active", originalName: "coin-fixture.webm",
-      originalExtension: "webm", durationMs: 1000, originalBytes: 1, webmBytes: 1, safariBytes: 1,
-      settings: { draftName: `Isolated ${type} fixture` },
-    });
-  }
+  await db.insert(socialGiftCatalogSettings).values({ giftId, cost: 20, productType: "gift" });
+  await db.insert(giftStudioAssets).values({
+    ownerId: ids[0]!, giftId, version: 1, status: "active", originalName: "coin-fixture.webm",
+    originalExtension: "webm", durationMs: 1000, originalBytes: 1, webmBytes: 1, safariBytes: 1,
+    settings: { draftName: "Isolated gift fixture" },
+  });
   roomStore.registerCommunity({ roomId, historyId, label: "Coin fixture", createdAt: new Date(), testOnly: true });
   const identity = { emojiId: "1F600", gender: "Male" as const, color: "#FFFFFF", hairColor: "#000000" };
   const session = roomStore.join(roomId, names[0]!, { accountId: ids[0]!, identity });
@@ -98,16 +93,6 @@ test("explicit tester grants isolate every test purchase/send from paid money an
     assert.deepEqual(await wallets(), before);
     assert.deepEqual(await paidLedger(), receipts);
   });
-  await t.test("livestream test gifts return an animation without invoking PK scoring", async () => {
-    // Service-level stream context, not a real live camera or browser fixture.
-    const before = await wallets();
-    const result = await gift(ids[0]!, names[0]!, giftId, randomUUID(),
-      { streamId: liveStreamIdForAccount(ids[0]!) }, 10, false, true);
-    assert.ok("liveGiftEvent" in result && result.liveGiftEvent);
-    assert.equal(result.liveGiftEvent.cost, 0);
-    assert.equal(result.liveGiftEvent.quantity, 10);
-    assert.deepEqual(await wallets(), before);
-  });
   await t.test("test My Bag purchases and sends are isolated and expire after a week", async () => {
     await db.insert(socialGiftBag).values({ accountId: ids[0]!, giftId, quantity: 2 });
     await db.insert(socialGiftBagLots).values({ accountId: ids[0]!, giftId, quantity: 2, source: "reward" });
@@ -126,18 +111,6 @@ test("explicit tester grants isolate every test purchase/send from paid money an
     await assert.rejects(sendTest(randomUUID(), true), /no longer available/);
     assert.deepEqual(await wallets(), before);
     assert.deepEqual(await paidLedger(), []);
-  });
-  await t.test("test effects stay separate, equip and revoke without minting paid ownership", async () => {
-    const before = await wallets();
-    await purchaseEntranceEffect(ids[0]!, effectId, randomUUID(), true);
-    assert.ok((await listEntranceEffectShop(ids[0]!)).items.find(item => item.id === effectId)?.owned);
-    await equipEntranceEffect(ids[0]!, effectId);
-    assert.deepEqual(await db.select().from(accountRoomEntranceEffects).where(eq(accountRoomEntranceEffects.accountId, ids[0]!)), []);
-    await setCoinTester(owner.accountId, names[0]!, false);
-    const [settings] = await db.select().from(socialSettings).where(eq(socialSettings.accountId, ids[0]!));
-    assert.equal(settings!.equippedEntranceEffectId, null);
-    assert.equal((await listEntranceEffectShop(ids[0]!)).items.find(item => item.id === effectId)?.owned, false);
-    assert.deepEqual(await wallets(), before);
   });
   await t.test("revocation blocks stale test sends; retries never become real charges", async () => {
     const before = await wallets();

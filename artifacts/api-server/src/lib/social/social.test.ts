@@ -104,7 +104,7 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
         await assert.rejects(gift(a, names[1]!, giftId, key, undefined, 1, true, testMode), /Direct\/private-message/);
       }
     }
-    await assert.rejects(gift(a, names[1]!, "good-vibes", key, { streamId: " " }), /Direct\/private-message/);
+    await assert.rejects(gift(a, names[1]!, "good-vibes", key), /Direct\/private-message gifts are disabled/);
     await assert.rejects(gift(a, names[1]!, "good-vibes", key, { roomId: roomId, sessionId: "invalid" }), /session|room/i);
     assert.deepEqual(await db.select().from(socialWallets).where(inArray(socialWallets.accountId, ids)), walletsBefore);
     assert.deepEqual(await db.select().from(socialLedger).where(inArray(socialLedger.accountId, ids)), ledgerBefore);

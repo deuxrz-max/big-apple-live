@@ -3,10 +3,8 @@ import {
   getUniversityVideoBeamState,
   getUniversityVideoBeamToken,
   performUniversityVideoBeamAction,
-  searchYouTubeForVideoBeam,
   type UniversityVideoBeamActionInput,
   type UniversityVideoBeamState,
-  type UniversityVideoBeamTvSearchResponse,
 } from "@workspace/api-client-react";
 import {
   createLocalTracks,
@@ -91,8 +89,7 @@ function syncAudioSubscriptions(
       slots: state.slots,
     });
     for (const publication of participant.trackPublications.values()) {
-      // Never receive seat video, even from an older room client. This hook is
-      // separate from full-screen Go Live and does not affect its camera feed.
+       // Never receive seat video, including from a legacy room client.
       if (publication.kind === Track.Kind.Video) {
         if (publication.isSubscribed) publication.setSubscribed(false);
         continue;
@@ -149,30 +146,6 @@ export function useUniversityVideoBeam(
     headers: headers(args.roomSessionId),
     credentials: "include",
   }), [headers]);
-
-  const searchTv = useCallback(async (query: string): Promise<UniversityVideoBeamTvSearchResponse> => {
-    const args = latest.current;
-    return searchYouTubeForVideoBeam(args.roomId, { query }, {
-      headers: headers(args.roomSessionId),
-      credentials: "include",
-    });
-  }, [headers]);
-
-  const reportTvPlaybackFailure = useCallback(async (videoId: string, errorCode: number) => {
-    const args = latest.current;
-    const response = await fetch(
-      `/api/account/rooms/${encodeURIComponent(args.roomId)}/video-beam/tv/playback-failed`,
-      {
-        method: "POST",
-        credentials: "include",
-        headers: { ...headers(args.roomSessionId), "Content-Type": "application/json" },
-        body: JSON.stringify({ videoId, errorCode }),
-      },
-    );
-    if (!response.ok) return;
-    const nextTv = await response.json() as UniversityVideoBeamState["tv"];
-    applyBeam({ ...beamRef.current, tv: nextTv });
-  }, [applyBeam, headers]);
 
   const clearRoom = useCallback((stopLocal: boolean) => {
     const room = roomRef.current;
@@ -258,7 +231,7 @@ export function useUniversityVideoBeam(
         }
         if (state === "disconnected" && activeRef.current) {
           setConnection("error");
-          setError("The live connection ended. Rejoin an open speaker spot or wait for the room to reconnect.");
+          setError("The room audio connection ended. Rejoin an open speaker spot or wait for the room to reconnect.");
         }
       });
       room.on(RoomEvent.Disconnected, () => {
@@ -268,7 +241,7 @@ export function useUniversityVideoBeam(
         setMedia({});
         setConnection("error");
         if (!accessRejected) {
-          setError("The live connection ended. Rejoin an open speaker spot or wait for the room to reconnect.");
+          setError("The room audio connection ended. Rejoin an open speaker spot or wait for the room to reconnect.");
           const current = latest.current;
           void getUniversityVideoBeamState(current.roomId, {
             headers: headers(current.roomSessionId), credentials: "include",
@@ -346,7 +319,7 @@ export function useUniversityVideoBeam(
         }
       } catch (failure) {
         if (current && (errStatus(failure) ?? 0) < 500) {
-          setError(safeBeamError(failure, "Room video status is reconnecting."));
+          setError(safeBeamError(failure, "Room audio status is reconnecting."));
         }
       } finally {
         refreshing = false;
@@ -403,7 +376,7 @@ export function useUniversityVideoBeam(
       const available = alreadyOwnsSpot || latestBeam.slots.some(slot => !slot.participantId);
       if (!available) throw new Error("All nine speaker spots are full. You can still watch and chat.");
       if (!navigator.mediaDevices?.getUserMedia) {
-        throw new Error("This browser cannot access a microphone for live audio.");
+        throw new Error("This browser cannot access a microphone for room audio.");
       }
 
       // Reserve before the browser prompt, so two people cannot claim the same
@@ -490,7 +463,7 @@ export function useUniversityVideoBeam(
         if (accessRejected) {
           setError("You've been removed from the room");
         } else {
-          setError("Your live connection ended. Your speaker spot was released; tap to rejoin.");
+          setError("Your room audio connection ended. Your speaker spot was released; tap to rejoin.");
           const current = latest.current;
           void getUniversityVideoBeamState(current.roomId, {
             headers: headers(current.roomSessionId), credentials: "include",
@@ -534,7 +507,7 @@ export function useUniversityVideoBeam(
         .includes(failureName ?? "");
       if (!permissionFailure && errStatus(failure) === null) setConnection("error");
       else setConnection("idle");
-      setError(safeBeamError(failure, "Could not start live audio. You remain in the room."));
+      setError(safeBeamError(failure, "Could not start room audio. You remain in the room."));
       try {
         await doAction(args, { action: "leave-slot" });
       } catch { /* the server may already have released a failed reservation */ }
@@ -569,7 +542,7 @@ export function useUniversityVideoBeam(
         setConnection("idle");
       }
     } catch (failure) {
-      setError(safeBeamError(failure, "That video beam action did not complete."));
+      setError(safeBeamError(failure, "That room audio action did not complete."));
     } finally {
       actionRef.current = false;
       setBusy(false);
@@ -659,8 +632,6 @@ export function useUniversityVideoBeam(
     toggleMic,
     hostMuteMic,
     kick,
-    searchTv,
-    reportTvPlaybackFailure,
     resumePlayback,
     refresh,
   };

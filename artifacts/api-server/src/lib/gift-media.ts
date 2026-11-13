@@ -5,8 +5,6 @@ import { streamGcsObject } from './gcs-response-stream';
 
 const types: Record<string, string> = {
   'icon.png': 'image/png', 'icon-small.png': 'image/png', 'fallback.webp': 'image/webp',
-  'animation.webm': 'video/webm', 'animation.webp': 'image/webp', 'animation.png': 'image/png',
-  'animation.mp4': 'video/mp4',
 };
 const productPaths = {
   'spirit-pup': 'gift-media/spirit-pup/v1',

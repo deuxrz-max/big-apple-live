@@ -5,18 +5,13 @@ import type { SocialPerson } from '@workspace/api-client-react';
 import { UserPhoto, photoSrc } from '@/components/user-photo';
 import { ShinyName } from '@/components/ShinyName';
 import { BotShield } from '@/chat/BotShield';
-import { BadgeMark, CoinAmount } from '@/social/common';
-import { BadgeArt } from '@/social/BadgeArt';
+import { CoinAmount } from '@/social/common';
 import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
 import './profile.css';
 import { approvedPhotos } from './profile-model';
 import { useProfileBackHref, useProfileTapHandlers } from './QuickProfile';
 
-type EarnedBadge = { id: string; earnedAt?: string | null };
-type Product = { id: string; name: string };
-
 const num = (n?: number) => (typeof n === 'number' ? n.toLocaleString() : '\u2014');
-const dateOf = (s?: string | null) => (s && !isNaN(Date.parse(s)) ? new Date(s).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' }) : null);
 
 function Slide({ url, name, username }: { url: string | null; name: string; username: string }) {
   const [failed, setFailed] = useState(false);
@@ -97,30 +92,12 @@ export function ProfileMenu({ name, username, blocked, pending, onBlock, owner =
   );
 }
 
-function Shield({ id, name, imageUrl, date, equipped }: { id: string; name: string; imageUrl?: string | null; date: string | null; equipped: boolean }) {
-  return (
-    <li className={`pf-badge${equipped ? ' is-equipped' : ''}`} data-testid={`badge-${id}`}>
-      <span className="pf-shield" aria-hidden="true">
-        <BadgeArt id={id} name={name} imageUrl={imageUrl} size={64} />
-      </span>
-      <b>{name}</b>
-      {equipped && <small className="pf-equipped-label">Equipped</small>}
-      {!equipped && date && <time className="pf-badge-date">{`Acquired ${date}`}</time>}
-      {equipped && date && <time className="pf-badge-date">{date}</time>}
-    </li>
-  );
-}
-
-export function ProfileView({ person, own = false, tester = false, countryName, products, backHref, menu, actions, links, children }: {
-  person: SocialPerson; own?: boolean; countryName?: string; products?: Product[]; backHref: string;
+export function ProfileView({ person, own = false, tester = false, countryName, backHref, menu, actions, links, children }: {
+  person: SocialPerson; own?: boolean; countryName?: string; backHref: string;
   tester?: boolean; menu?: ReactNode; actions?: ReactNode; links?: ReactNode; children?: ReactNode;
 }) {
   const p = person;
   const name = p.displayName?.trim() || p.username;
-  const nameOf = (id: string) => products?.find((x) => x.id === id)?.name ?? 'Badge';
-  const earned: EarnedBadge[] = [...(p.badges ?? [])];
-  if (p.badgeId && !earned.some((b) => b.id === p.badgeId)) earned.push({ id: p.badgeId, earnedAt: null });
-  earned.sort((a, b) => (a.id === p.badgeId ? -1 : 0) - (b.id === p.badgeId ? -1 : 0) || (Date.parse(b.earnedAt ?? '') || 0) - (Date.parse(a.earnedAt ?? '') || 0));
   const bio = p.bio?.trim();
   const back = useProfileBackHref(own ? undefined : p.username, backHref);
   return (
@@ -130,7 +107,6 @@ export function ProfileView({ person, own = false, tester = false, countryName, 
         right={own ? <Link href="/user-portal/edit" className="pf-round" aria-label="Edit your profile" data-testid="link-edit-hero"><Pencil size={18} aria-hidden /></Link> : menu} />
       <section className="pf-panel">
         <h1 className="pf-name" data-testid="text-display-name">
-          <BadgeMark id={p.badgeId ?? null} label={p.badgeName} imageUrl={p.badgeImage} size={26} />
           <ShinyName className="pf-display-name" displayNameColor={p.displayNameColor} displayNameTierIndex={p.displayNameTierIndex}>{name}</ShinyName>
           {tester && <span className="pf-tester-tag" data-testid="tag-coin-tester">Tester</span>}
         </h1>
@@ -141,10 +117,6 @@ export function ProfileView({ person, own = false, tester = false, countryName, 
           {p.country && <span className="pf-chip">{countryName ?? p.country}</span>}
         </div>
         {p.interests.length > 0 && <ul className="pf-chips pf-interests" aria-label="Interests">{p.interests.map((i) => <li key={i} className="pf-chip pf-chip-soft">{i}</li>)}</ul>}
-        {earned.length > 0 && <>
-          <h2 className="pf-h2">Badges</h2>
-          <ul className="pf-badges">{earned.map((b) => <Shield key={b.id} id={b.id} name={nameOf(b.id)} imageUrl={p.badgeImage} date={dateOf(b.earnedAt)} equipped={b.id === p.badgeId} />)}</ul>
-        </>}
         {bio && <p className="pf-bio" data-testid="text-bio">{bio}</p>}
         {/* Own Me page: tools and XP sit above the stats so the panel ends on coin stats. */}
         {own && children}

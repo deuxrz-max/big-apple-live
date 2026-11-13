@@ -3,7 +3,6 @@ import { and, asc, desc, eq, gt, gte, or } from 'drizzle-orm';
 import { requireAdult } from '../community';
 import { roomStore, RoomError } from '../room-store';
 import { nameColorProfilesForAccounts } from './gift-name-color-data';
-import { visibleMonthlyPurchaseBadgeSummaries } from './monthly-credit-badges';
 import { activeGiftNames } from '../gift-studio-catalog';
 
 export function validateGiftRoom(roomId: string, sessionId: string, senderId: string, recipientId: string) {
@@ -75,8 +74,6 @@ export async function roomGiftEvents(
       [row.senderId, row.recipientId].filter((accountId): accountId is string => !!accountId))),
     activeGiftNames(rows.map((row) => row.giftId)),
   ]);
-  const badges = await visibleMonthlyPurchaseBadgeSummaries(rows.flatMap(row =>
-    [row.senderId, row.recipientId].filter((accountId): accountId is string => !!accountId)));
   const testIds = process.env.NODE_ENV === "production"
     ? new Set((await db.select({ id: accountProfiles.accountId }).from(accountProfiles)
       .where(eq(accountProfiles.isTestAccount, true))).map(row => row.id))
@@ -92,12 +89,12 @@ export async function roomGiftEvents(
     senderNameTierIndex: r.senderId ? nameColors.get(r.senderId)?.tierIndex ?? 0 : 0,
     recipientNameColor: r.recipientId ? nameColors.get(r.recipientId)?.color ?? "#FFFFFF" : "#FFFFFF",
     recipientNameTierIndex: r.recipientId ? nameColors.get(r.recipientId)?.tierIndex ?? 0 : 0,
-    senderBadgeId: r.senderId ? badges.get(r.senderId)?.tier.id ?? null : null,
-    recipientBadgeId: r.recipientId ? badges.get(r.recipientId)?.tier.id ?? null : null,
-    senderBadgeName: r.senderId ? badges.get(r.senderId)?.tier.name ?? null : null,
-    recipientBadgeName: r.recipientId ? badges.get(r.recipientId)?.tier.name ?? null : null,
-    senderBadgeImage: r.senderId ? badges.get(r.senderId)?.tier.badgeImage ?? null : null,
-    recipientBadgeImage: r.recipientId ? badges.get(r.recipientId)?.tier.badgeImage ?? null : null,
+    senderBadgeId: null,
+    recipientBadgeId: null,
+    senderBadgeName: null,
+    recipientBadgeName: null,
+    senderBadgeImage: null,
+    recipientBadgeImage: null,
     createdAt: r.createdAt.toISOString(),
     })),
     nextCursor,

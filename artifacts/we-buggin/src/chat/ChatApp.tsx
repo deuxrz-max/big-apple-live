@@ -2,32 +2,28 @@ import '@/beam/beam.css';
 import '@/social/social.css';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Camera, Coins, Flame, Radio, Trophy, Users, X } from 'lucide-react';
+import { Coins, Flame, Trophy, Users, X } from 'lucide-react';
 import { useClerk } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getGetChatAccessQueryKey, getGetMyProfileQueryKey, getGetSocialMeQueryKey,
   useConfirmChatAdult, useGetChatAccess, useGetChatDirectory,
-  useGetMyProfile, useGetSocialMe, useEquipMyBadge, useSaveMyProfile,
-  getGetChatDirectoryQueryKey, getGetLiveStreamsQueryKey, useGetLiveStreams,
+  useGetMyProfile, useGetSocialMe, useSaveMyProfile,
+  getGetChatDirectoryQueryKey,
   getGetSocialInboxQueryKey, useGetSocialInbox,
 } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
-import { ShinyName } from '@/components/ShinyName';
 import { AppLogo, Wordmark } from '@/components/brand';
 import { errMessage } from '@/lib/errors';
 import { PhotoReviewQueue } from './PhotoReviewQueue';
 import { BotModerationPanel } from './BotModerationPanel';
-import { BadgeArt } from '@/social/BadgeArt';
-import { GoLiveButton } from './LiveStreamPages';
 import { selectFeaturedRoom } from './directory-utils';
 import { RoomChannels } from './RoomChannels';
+import { CreateRoomButton } from './CreateRoomButton';
 import { ActionMenu, ScreenHeader } from '@/components/app-chrome';
 import { AccessCheckError } from './AccessCheckError';
 import { buyCoinsReturnState } from '@/social/buy-coins-navigation';
 import { ProfilePreferences } from '@/social/PeoplePages';
-import { useHomeNycBackgroundVideo } from './useNycBackgroundVideo';
-import { NycLoopingVideo } from './NycLoopingVideo';
 import './chat.css';
 
 const DISCLAIMER = 'Big Apple Live is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
@@ -81,7 +77,7 @@ function List({ preview, query = '' }: { preview?: boolean; query?: string }) {
       {q.data && q.data.length > 0 && rows.length === 0 && <p>No room matches your search.</p>}
       <RoomChannels rooms={rows} loading={q.isLoading} baseHref={preview ? '/' : '/home'}
         renderRoom={room => <DirectoryRoomCard room={room} topic={room.label} isFeatured={false} preview={preview} />}
-        goLive={<Link href="/sign-in" className="st-home-go-live-button"><span className="st-home-go-live-copy"><strong>Go Live</strong><small>Start your own room</small></span></Link>}
+        goLive={<Link href="/sign-in" className="st-home-go-live-button"><span className="st-home-go-live-copy"><strong>Create Room</strong><small>Start an audio room</small></span></Link>}
       />
     </>
   );
@@ -100,7 +96,7 @@ function TopBar({ signedIn }: { signedIn: boolean }) {
   return (
     <div className="st-topbar">
       <Wordmark href={signedIn ? '/home' : '/'} className="st-brand" transparentLogo />
-      {signedIn ? <><GoLiveButton className="st-topbar-live"><Radio size={15} /> Go Live</GoLiveButton><CreditsChip /></> : <Link href="/sign-in" className="bm-btn bm-btn-sm bm-btn-primary">Sign in</Link>}
+      {signedIn ? <><CreateRoomButton className="st-topbar-live"><Users size={15} /> Create room</CreateRoomButton><CreditsChip /></> : <Link href="/sign-in" className="bm-btn bm-btn-sm bm-btn-primary">Sign in</Link>}
     </div>
   );
 }
@@ -110,21 +106,20 @@ export function PublicChatLanding() {
     <Shell className="dw-landing">
       <TopBar signedIn={false} />
       <section className="dw-landing-hero" aria-labelledby="dw-landing-title" data-testid="section-landing-hero">
-        <span className="dw-landing-kicker"><i aria-hidden="true" /> Live rooms, streams and gifts</span>
+        <span className="dw-landing-kicker"><i aria-hidden="true" /> Social audio rooms and gifts</span>
         <h1 id="dw-landing-title">Find your people.</h1>
-        <p>Drop into a room. Catch a live. Join the conversation.</p>
+        <p>Drop into an audio room. Meet people and join the conversation.</p>
         <div className="dw-landing-cta">
           <Link href="/sign-up" className="bm-btn bm-btn-primary" data-testid="link-landing-sign-up">Create account</Link>
           <Link href="/sign-in" className="bm-btn" data-testid="link-landing-sign-in">Sign in</Link>
         </div>
         <ul className="dw-landing-points" aria-label="What you can do">
-          <li><Radio size={16} aria-hidden="true" /> Go live full screen</li>
           <li><Users size={16} aria-hidden="true" /> Join audio rooms</li>
           <li><Coins size={16} aria-hidden="true" /> Send gifts</li>
         </ul>
         <details className="dw-landing-about">
           <summary>About Big Apple Live</summary>
-          <p>Big Apple Live is a live-streaming and social media platform where users can broadcast video in real time, watch others, watch categorized videos, chat, and send virtual gifts.</p>
+          <p>Big Apple Live is a social platform for audio rooms, messaging, and virtual gifts.</p>
         </details>
       </section>
       <section className="dw-landing-rooms" aria-labelledby="dw-landing-rooms-title">
@@ -178,33 +173,19 @@ export function AdultGate({ children, keepMountedOnTransientError = false }: {
 }
 
 export function HomeSections() {
-  const [selectedSection, setSelectedSection] = useState<'rooms' | 'creators'>(
-    window.location.hash === '#st-dir-creators-title' ? 'creators' : 'rooms',
-  );
-  useEffect(() => {
-    const sync = () => setSelectedSection(window.location.hash === '#st-dir-creators-title' ? 'creators' : 'rooms');
-    window.addEventListener('hashchange', sync);
-    return () => window.removeEventListener('hashchange', sync);
-  }, []);
   return <nav className="dw-home-tabs" aria-label="Home sections" data-testid="nav-home-sections">
-    <a href="#live-channels" className={selectedSection === 'rooms' ? 'is-on' : undefined} aria-current={selectedSection === 'rooms' ? 'location' : undefined} onClick={() => setSelectedSection('rooms')}>Rooms</a>
-    <a href="#st-dir-creators-title" className={selectedSection === 'creators' ? 'is-on' : undefined} aria-current={selectedSection === 'creators' ? 'location' : undefined} onClick={() => setSelectedSection('creators')}>Creators</a>
-    <Link href="/live" data-testid="link-home-tab-live">All live</Link>
+    <a href="#live-channels" className="is-on" aria-current="location">Rooms</a>
     <Link href="/community/leaderboard" data-testid="link-home-tab-leaderboard">Leaderboard</Link>
   </nav>;
 }
 
 export function ChatDirectory() {
   const { signOut } = useClerk();
-  const nycBackgroundVideos = useHomeNycBackgroundVideo();
   const directory = useGetChatDirectory({ query: { queryKey: getGetChatDirectoryQueryKey(), refetchInterval: 5_000 } });
   const me = useGetMyProfile({ query: { queryKey: getGetMyProfileQueryKey(), refetchInterval: 60_000 } });
   const socialMe = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), refetchInterval: 60_000 } });
-  const liveStreams = useGetLiveStreams({
-    query: { queryKey: getGetLiveStreamsQueryKey(), refetchInterval: 8_000 },
-  });
   const topics = ['Music', 'Movies', 'Comedy', 'Sports', 'Pro Wrestling', 'Web Series', 'History', 'News'];
-  type DirectoryRoom = { roomId: string; label: string; headcount: number; headcountSince: number; nowPlayingVideoId?: string | null; nowPlayingTitle?: string | null; nowPlayingStartedAtMs?: number | null; nowPlayingServerNowMs?: number };
+  type DirectoryRoom = { roomId: string; label: string; headcount: number; headcountSince: number };
   const rooms = (directory.data ?? []) as DirectoryRoom[];
   const featuredRoom = selectFeaturedRoom(rooms);
   const displayedRooms = featuredRoom
@@ -214,23 +195,14 @@ export function ChatDirectory() {
     const source = `${room.label} ${room.roomId}`.toLowerCase().replace(/[^a-z0-9]+/g, ' ');
     return topics.find((topic) => source.includes(topic.toLowerCase())) ?? room.label;
   };
-  const liveCreators = (liveStreams.data?.streams ?? []).filter((stream) =>
-    !!stream.streamId,
-  );
   return (
     <Shell className="st-directory st-home">
-      <div className="st-home-background" aria-hidden="true">
-        <NycLoopingVideo
-          className="st-home-background-video"
-          sources={nycBackgroundVideos}
-          testId="video-home-background"
-        />
-      </div>
+      <div className="st-home-background" aria-hidden="true" />
       <header className="st-dir-header">
         <div className="st-dir-topline">
           <div className="st-dir-lockup">
             <Link href="/home" className="st-home-app-logo" aria-label="Big Apple Live home" data-testid="link-home-logo"><AppLogo size={36} /></Link>
-            <span className="dw-home-title"><strong>Big Apple Live</strong><small>{liveCreators.length ? `${liveCreators.length} creator${liveCreators.length === 1 ? '' : 's'} live` : 'Live rooms'}</small></span>
+            <span className="dw-home-title"><strong>Big Apple Live</strong><small>Audio rooms</small></span>
           </div>
           <div className="st-dir-account">
             <Link href="/community/leaderboard" className="st-dir-rewards" aria-label="Open leaderboard" data-testid="link-leaderboard">
@@ -267,42 +239,10 @@ export function ChatDirectory() {
           loading={directory.isLoading}
           showOtherRoomSigns
           renderRoom={(room) => <DirectoryRoomCard room={room} topic={topicFor(room)} isFeatured={room.roomId === featuredRoom?.roomId} hideDetails />}
-          goLive={<GoLiveButton className="st-home-go-live-button">
-            <span className="st-home-hotel-sign" aria-hidden="true">
-              <span className="st-home-hotel-sign-copy">
-                <span className="st-home-hotel-sign-rooms">ROOMS</span>
-                <span className="st-home-hotel-sign-for-row">
-                  <span className="st-home-hotel-sign-for">FOR</span>
-                  <Camera className="st-home-hotel-sign-camera" size={17} strokeWidth={2} />
-                </span>
-                <span className="st-home-hotel-sign-rent">RENT</span>
-              </span>
-              <span className="st-home-hotel-sign-gap" />
-            </span>
-            <span className="st-home-hotel-sign-sr-only">Open Go Live and Create Room options</span>
-          </GoLiveButton>}
+          goLive={<CreateRoomButton className="st-home-go-live-button">
+            <span className="st-home-go-live-copy"><strong>Create Room</strong><small>Start a nine-seat audio room</small></span>
+          </CreateRoomButton>}
         />
-      </section>
-      <section className="st-dir-explore st-dir-creators st-home-creators" aria-labelledby="st-dir-creators-title" data-testid="section-home-creators">
-          <div className="st-dir-section-head st-dir-explore-heading">
-            <div><span className="st-dir-overline">FROM THE COMMUNITY</span><h2 id="st-dir-creators-title">Creators on air</h2></div>
-            <Link href="/live" className="st-dir-feature-mark">All live</Link>
-          </div>
-          {liveStreams.isError
-            ? <div className="st-dir-state st-dir-error" role="alert"><h3>Streams aren’t loading</h3><p>Creator streams are temporarily unavailable.</p><button type="button" onClick={() => liveStreams.refetch()}>Retry streams</button></div>
-            : liveStreams.isLoading
-              ? <div className="st-dir-stream-loading" role="status">Checking for live creators…</div>
-                : liveCreators.length
-                ? <div className="st-dir-live-streams">
-                  {liveCreators.map((stream) => (
-                    <Link href={`/live/${stream.streamId}`} className="st-dir-live-stream" key={stream.streamId} data-testid={`link-home-live-${stream.streamId}`}>
-                      <span className="st-dir-live-stream-icon"><Radio size={17} /></span>
-                      <span className="st-dir-live-stream-copy"><strong><ShinyName displayNameColor={stream.displayNameColor} displayNameTierIndex={stream.displayNameTierIndex}>{stream.displayName}</ShinyName></strong><small><Users size={13} /> {stream.viewerCount} watching</small></span>
-                      <b>Watch</b>
-                    </Link>
-                  ))}
-                </div>
-                : <div className="st-dir-state"><h3>No creator streams right now</h3><p>When someone goes live, their stream will appear here.</p></div>}
       </section>
       <footer className="st-dir-footer"><span>BIG APPLE LIVE · FIND YOUR PEOPLE</span></footer>
     </Shell>
@@ -310,25 +250,19 @@ export function ChatDirectory() {
 }
 
 export function DirectoryRoomCard({ room, topic, isFeatured, preview = false, hideDetails = false }: {
-  room: { roomId: string; label: string; headcount: number; nowPlayingVideoId?: string | null; nowPlayingTitle?: string | null };
+  room: { roomId: string; label: string; headcount: number };
   topic: string;
   isFeatured: boolean;
   preview?: boolean;
   hideDetails?: boolean;
 }) {
-  const [thumbnailFailed, setThumbnailFailed] = useState(false);
   const [topicPhotoFailed, setTopicPhotoFailed] = useState(false);
-  const videoId = room.nowPlayingVideoId;
-  const hasThumbnail = !!videoId && !thumbnailFailed;
-  const hasTopicPhoto = !hasThumbnail && !topicPhotoFailed;
+  const hasTopicPhoto = !topicPhotoFailed;
   const isWrestling = topic === 'Pro Wrestling';
-  const displayTitle = room.nowPlayingTitle?.trim();
   return (
     <Link href={preview ? '/sign-in' : `/rooms/${encodeURIComponent(room.roomId)}`} className={`st-dir-card${isFeatured ? ' is-featured' : ''}`} aria-label={`Enter ${room.label}, ${room.headcount} ${room.headcount === 1 ? 'person' : 'people'} here${isFeatured ? ', featured room' : ''}`} data-testid={`card-home-room-${room.roomId}`}>
-      <div className={`st-dir-art st-dir-art-${topicClass(topic)}${hasThumbnail ? ' has-video' : ''}`}>
-        {hasThumbnail
-          ? <img src={`https://img.youtube.com/vi/${encodeURIComponent(videoId!)}/hqdefault.jpg`} alt="" loading="lazy" onError={() => setThumbnailFailed(true)} />
-          : isWrestling
+      <div className={`st-dir-art st-dir-art-${topicClass(topic)}`}>
+        {isWrestling
             ? <WrestlingArenaArt />
             : hasTopicPhoto
             ? <img className="st-dir-topic-photo" src={topicPhotoUrl(topic)} alt="" loading="lazy" onError={() => setTopicPhotoFailed(true)} />
@@ -338,10 +272,7 @@ export function DirectoryRoomCard({ room, topic, isFeatured, preview = false, hi
         </span>}
         {!hideDetails && isFeatured && <span className="st-home-featured-badge">Featured</span>}
         <span className="st-dir-art-shade" />
-        {!hideDetails && <div className="st-home-card-copy">
-          <span className="st-home-card-category">{topic}</span>
-          <span className="st-home-card-subtitle" title={displayTitle || topicDescription(topic)}>{displayTitle || topicDescription(topic)}</span>
-        </div>}
+        {!hideDetails && <div className="st-home-card-copy"><span className="st-home-card-category">{topic}</span></div>}
         <span className="st-dir-count" aria-label={`${room.headcount} people in ${room.label}`}>
           <Flame size={12} aria-hidden="true" /><span>{room.headcount}</span>
         </span>
@@ -398,20 +329,6 @@ function WrestlingArenaArt() {
   );
 }
 
-function topicDescription(topic: string) {
-  const descriptions: Record<string, string> = {
-    Music: 'Live sets, new releases and late-night listening.',
-    Movies: 'Trailers, film talk and box-office picks.',
-    Comedy: 'Sketches and stand-up from JkDAnimator, Comedy Central and a shared playlist.',
-    Sports: 'Highlights, big games and fan conversation.',
-    'Pro Wrestling': 'Promos, matches and wrestling talk.',
-    'Web Series': 'Today’s series, episode by episode.',
-    History: 'Documentaries and stories from the past.',
-    News: 'Live headlines and current events.',
-  };
-  return descriptions[topic] ?? `Live conversation about ${topic}.`;
-}
-
 function topicClass(topic: string) {
   return topic.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 }
@@ -449,23 +366,8 @@ export function ProfileGate({ children }: { children: ReactNode }) {
 
 /**
  * Live routes must remain mounted after their profile has passed the gate.
- * A transient background profile refresh error should not destroy a running
- * camera/LiveKit connection.
+ * A transient background refresh error should not destroy the current page.
  */
-export function LiveProfileGate({ children }: { children: ReactNode }) {
-  return <AdultGate keepMountedOnTransientError><LiveProfileGateInner>{children}</LiveProfileGateInner></AdultGate>;
-}
-
-function LiveProfileGateInner({ children }: { children: ReactNode }) {
-  const q = useGetMyProfile({ query: { queryKey: getGetMyProfileQueryKey(), refetchInterval: 15_000 } });
-  const passedGate = useRef(false);
-  if (q.data?.profile) passedGate.current = true;
-  if (passedGate.current) return <>{children}</>;
-  if (q.isLoading) return <Shell><p role="status">Loading your profile...</p></Shell>;
-  if (q.isError) return <Shell><div className="ch-err" role="alert">Could not load your account. <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button></div></Shell>;
-  return <ChatProfile setup />;
-}
-
 function ProfileGateInner({ children }: { children: ReactNode }) {
   const q = useGetMyProfile({ query: { queryKey: getGetMyProfileQueryKey(), refetchInterval: 15_000 } });
   if (q.isLoading) return <Shell><p role="status">Loading your profile...</p></Shell>;
@@ -478,8 +380,6 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
   const qc = useQueryClient();
   const [, nav] = useLocation();
   const q = useGetMyProfile();
-  const me = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), enabled: !!q.data?.profile, refetchInterval: 60_000 } });
-  const equipBadge = useEquipMyBadge();
   const save = useSaveMyProfile();
   const profile = q.data?.profile ?? null;
   const [username, setUsername] = useState('');
@@ -492,7 +392,6 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
   const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [upErr, setUpErr] = useState<string | null>(null);
-  const [badgeMessage, setBadgeMessage] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   const pickPhoto = async (file: File | undefined) => {
@@ -532,17 +431,6 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
   const dn = shownDisplay.trim();
   const dnOk = dn.length >= 1 && dn.length <= 40;
   const bioOk = bio.length <= 280;
-  const setEquippedBadge = (badgeId: string | null) => {
-    setBadgeMessage(null);
-    equipBadge.mutate({ data: { badgeId } }, {
-      onSuccess: () => {
-        invalidateSocial(qc);
-        void me.refetch();
-        setBadgeMessage(badgeId ? 'Badge equipped.' : 'Badge unequipped.');
-      },
-      onError: (error) => setBadgeMessage(errMessage(error)),
-    });
-  };
   const submit = () => {
     setTried(true); setSaved(false);
     if (!nameOk || !dnOk || !bioOk || save.isPending || uploading) return;
@@ -623,32 +511,6 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
             </div>
             <input ref={fileRef} type="file" hidden accept="image/jpeg,image/png,image/webp" aria-label="Upload profile photo" disabled={uploading || save.isPending} onChange={(e) => pickPhoto(e.target.files?.[0])} data-testid="input-photo" />
             <p className="ch-note">Add up to 4 photos and choose one main photo. Only approved photos are visible to others. No sexual or explicit photos; keep your profile professional. JPEG, PNG or WebP, up to 5 MiB each. Save changes to apply.{photoUrls.length >= 4 ? ' At the limit: replace or remove a photo to change your collection.' : ''}</p>
-            {profile && <section className="ch-my-badges" aria-labelledby="my-badges-title" data-testid="section-my-badges">
-              <div className="ch-my-badges-heading">
-                <h2 id="my-badges-title">My Badges</h2>
-                <span>{me.data?.badges.length ?? 0}</span>
-              </div>
-              {me.isLoading ? <p role="status">Loading badges…</p> : me.isError
-                ? <p className="ch-fe" role="alert">Could not load your badges. <button type="button" onClick={() => me.refetch()}>Retry</button></p>
-                : me.data?.badges.length
-                  ? <div className="ch-my-badges-grid">
-                    {me.data.badges.map((badge) => (
-                      <article className={`ch-my-badge${badge.equipped ? ' is-equipped' : ''}`} key={badge.id} data-testid={`my-badge-${badge.id}`}>
-                        <BadgeArt id={badge.id} name={badge.name} imageUrl={badge.badgeImage} size={88} />
-                        <b className="ch-my-badge-name">{badge.name}</b>
-                        <span className="ch-my-badge-time">{badge.permanent ? 'Permanent' : `${badge.daysLeft ?? 1} ${badge.daysLeft === 1 ? 'day' : 'days'} left`}</span>
-                        <button type="button" className={`bm-btn bm-btn-sm${badge.equipped ? '' : ' bm-btn-primary'}`}
-                          aria-pressed={badge.equipped} disabled={equipBadge.isPending}
-                          onClick={() => setEquippedBadge(badge.equipped ? null : badge.id)}
-                          data-testid={`button-equip-${badge.id}`}>
-                          {equipBadge.isPending ? 'Saving…' : badge.equipped ? 'Unequip' : 'Equip'}
-                        </button>
-                      </article>
-                    ))}
-                  </div>
-                  : <p className="ch-my-badges-empty">No badges yet. Buy coins to earn one.</p>}
-              {badgeMessage && <p className={equipBadge.isError ? 'ch-fe' : 'ch-my-badge-status'} role={equipBadge.isError ? 'alert' : 'status'}>{badgeMessage}</p>}
-            </section>}
             {upErr && <div className="ch-err" role="alert">{upErr}</div>}
           </div>
           {save.isError && <div className="ch-err" role="alert">{errMessage(save.error)}</div>}
