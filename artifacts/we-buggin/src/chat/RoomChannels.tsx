@@ -47,8 +47,15 @@ export function RoomChannels<R extends DirectoryChannelRoom>({
     <div className="rc" data-testid="section-room-channels">
       <ul className="rc-tiles">
         <li className="rc-map-item">
-          <div className="rc-map-tile" data-testid="image-home-map">
-            <img src={`${import.meta.env.BASE_URL}battle-assets/screens/aethelgard_map_starting_screen.jpg`} alt="Aethelgard map" />
+          <div
+            className="rc-map-tile"
+            role="img"
+            aria-label="Aethelgard world map"
+            data-testid="image-home-map"
+            style={{
+              backgroundImage: `url("${import.meta.env.BASE_URL}battle-assets/screens/aethelgard_map_starting_screen.jpg")`,
+            }}
+          >
           </div>
         </li>
         <li className="st-home-go-live">{goLive}</li>

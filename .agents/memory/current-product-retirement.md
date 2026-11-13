@@ -20,3 +20,9 @@ Home uses the supplied world map as a static pink-framed display; map travel/nav
 **Why:** the owner requested only a small Home/social-room layout update, not a character system or map feature.
 
 **How to apply:** preserve chat and live audio, and do not introduce automatic seating or map navigation.
+
+Keep Big Apple Live work budget-friendly: implement the full explicit scope in one focused pass, reuse existing assets, avoid speculative polish or unnecessary paid work, and verify the requested behavior before presenting it as done. If any requested part is blocked or unverified, say so plainly and do not imply the whole request is complete.
+
+**Why:** the owner said incomplete or unverified implementation causes avoidable expense and asked to keep this project budget-friendly.
+
+**How to apply:** prioritize complete execution and low-cost verification over repeated partial handoffs.
