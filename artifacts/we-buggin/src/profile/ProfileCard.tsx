@@ -37,7 +37,7 @@ export function ProfileCard({ person, editable = false }: {
             {(name[0] ?? '?').toUpperCase()}
           </div>}
       <div className="profile-card-copy">
-        <ShinyName className="profile-card-name" displayNameColor={person.displayNameColor ?? '#f5f4ef'}
+        <ShinyName className="profile-card-name" fitOneLine displayNameColor={person.displayNameColor ?? '#f5f4ef'}
           displayNameTierIndex={person.displayNameTierIndex ?? 0}>{name}</ShinyName>
         <span>{person.race || 'Human'}</span>
         <span>{person.job || 'No job yet'}</span>

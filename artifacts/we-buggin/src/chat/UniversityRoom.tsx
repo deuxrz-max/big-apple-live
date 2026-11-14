@@ -431,7 +431,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                                   }}
                                   alt="" aria-hidden="true" />
                                 <div className="ur-social-card-info" aria-label={`${person.displayName}, ${person.race ?? 'Human'}, ${person.job ?? 'No job yet'}`}>
-                                  <ShinyName className="ur-social-card-name" displayNameColor={person.displayNameColor} displayNameTierIndex={person.displayNameTierIndex}>{person.displayName}</ShinyName>
+                                  <ShinyName className="ur-social-card-name" fitOneLine displayNameColor={person.displayNameColor} displayNameTierIndex={person.displayNameTierIndex}>{person.displayName}</ShinyName>
                                   <span>{person.race ?? 'Human'}</span>
                                   <span>{person.job ?? 'No job yet'}</span>
                                 </div>
