@@ -26,11 +26,11 @@ async function withServer<T>(
 
 test("GCS response stream sends a normal response", async () => {
   await withServer((_req, res) => {
-    streamGcsObject(Readable.from([Buffer.from("gift-icon")]), res, "test icon");
+    streamGcsObject(Readable.from([Buffer.from("media-icon")]), res, "test icon");
   }, async (baseUrl) => {
     const response = await fetch(baseUrl);
     assert.equal(response.status, 200);
-    assert.equal(await response.text(), "gift-icon");
+    assert.equal(await response.text(), "media-icon");
   });
 });
 

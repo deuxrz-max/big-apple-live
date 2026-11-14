@@ -240,7 +240,6 @@ body.streamtalk-light-screen #root [data-localization-key*="formButtonPrimary"] 
 #root .app-page.is-light-screen .fg-empty { color: #6e6976; }
 #root .app-page.is-light-screen .fg-photo { background: #f0edf4; }
 #root .app-page.is-light-screen .fg-room { color: #211e27; background: rgba(255,255,255,.94); }
-#root .app-page.is-light-screen .bc-note { background: #f4fbf3; border-color: #a8d3a7; }
 #root .app-page.is-light-screen .sc-list .sc-row:hover { background: #f7f5f9; }
 #root .app-page.is-light-screen .sc-msgs { background: #ffffff; }
 #root .app-page.is-light-screen .sc-msg { color: #211e27; background: #f2eff6; }
@@ -643,8 +642,8 @@ body.streamtalk-light-screen #root :is(h1,h2,h3,h4,h5,h6,.ch-title,.bm-logo,.sc-
 body.streamtalk-light-screen #root :is(.ch-note,.sc-sub,.sc-count,.dh-note,.dh-sub,.st-card-body span,.fg-empty,.ib-prev,.ib-time) {
   color: #77727e;
 }
-body.streamtalk-light-screen #root :is(.ch-list li,.sc-card,.sc-panel,.sc-empty,.sc-wallet,.ib-row,.fg-tile,.bc-card,.bc-review,
-  .dh-banner,.dh-card,.pf-dialog,.pf-menu-list,.pf-stats>div,
+body.streamtalk-light-screen #root :is(.ch-list li,.sc-card,.sc-panel,.sc-empty,.ib-row,.fg-tile,
+  .dh-banner,.dh-card,.pf-dialog,.pf-menu-list,
   .sc-msgs,.sc-skel,.ch-photo-card,.ch-auth .ch-card,.ur-side,.ur-slot,.ur-menu,.ur-rules,.ur-tv-dialog,
   .bm-modal,.bm-mic-panel,.bm-tray) {
   border: 1px solid #e7e2ec;

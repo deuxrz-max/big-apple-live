@@ -1049,15 +1049,6 @@ export const PkBattleFinishReason = {
   'opponent-left': 'opponent-left',
 } as const;
 
-export interface PkBattleTopGifter {
-  /** @maxLength 40 */
-  username: string;
-  /** @maxLength 80 */
-  displayName: string;
-  /** @minimum 0 */
-  coins: number;
-}
-
 export interface PkBattle {
   id: string;
   status: PkBattleStatus;
@@ -1082,10 +1073,6 @@ export interface PkBattle {
   winnerUsername: string | null;
   /** @nullable */
   finishReason: PkBattleFinishReason;
-  /** @maxItems 3 */
-  topGiftersA: PkBattleTopGifter[];
-  /** @maxItems 3 */
-  topGiftersB: PkBattleTopGifter[];
 }
 
 export interface PkBattleState {

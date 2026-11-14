@@ -94,7 +94,6 @@ export * from './pkBattlePlayerSide';
 export * from './pkBattleState';
 export * from './pkBattleStateState';
 export * from './pkBattleStatus';
-export * from './pkBattleTopGifter';
 export * from './pkLeaderboard';
 export * from './pkLeaderboardPerson';
 export * from './pkSearchCancellation';

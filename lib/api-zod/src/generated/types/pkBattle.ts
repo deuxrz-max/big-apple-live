@@ -8,7 +8,6 @@
 import type { PkBattleFinishReason } from './pkBattleFinishReason';
 import type { PkBattlePlayer } from './pkBattlePlayer';
 import type { PkBattleStatus } from './pkBattleStatus';
-import type { PkBattleTopGifter } from './pkBattleTopGifter';
 
 export interface PkBattle {
   id: string;
@@ -34,8 +33,4 @@ export interface PkBattle {
   winnerUsername: string | null;
   /** @nullable */
   finishReason: PkBattleFinishReason;
-  /** @maxItems 3 */
-  topGiftersA: PkBattleTopGifter[];
-  /** @maxItems 3 */
-  topGiftersB: PkBattleTopGifter[];
 }

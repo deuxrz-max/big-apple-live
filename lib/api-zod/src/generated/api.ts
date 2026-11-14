@@ -865,22 +865,6 @@ export const searchPkOpponentResponseBattleOneScoreBMin = 0;
 
 export const searchPkOpponentResponseBattleOneWinnerUsernameMax = 40;
 
-export const searchPkOpponentResponseBattleOneTopGiftersAItemUsernameMax = 40;
-
-export const searchPkOpponentResponseBattleOneTopGiftersAItemDisplayNameMax = 80;
-
-export const searchPkOpponentResponseBattleOneTopGiftersAItemCoinsMin = 0;
-
-export const searchPkOpponentResponseBattleOneTopGiftersAMax = 3;
-
-export const searchPkOpponentResponseBattleOneTopGiftersBItemUsernameMax = 40;
-
-export const searchPkOpponentResponseBattleOneTopGiftersBItemDisplayNameMax = 80;
-
-export const searchPkOpponentResponseBattleOneTopGiftersBItemCoinsMin = 0;
-
-export const searchPkOpponentResponseBattleOneTopGiftersBMax = 3;
-
 
 
 export const SearchPkOpponentResponse = zod.object({
@@ -908,17 +892,7 @@ export const SearchPkOpponentResponse = zod.object({
   "scoreA": zod.int().min(searchPkOpponentResponseBattleOneScoreAMin),
   "scoreB": zod.int().min(searchPkOpponentResponseBattleOneScoreBMin),
   "winnerUsername": zod.string().max(searchPkOpponentResponseBattleOneWinnerUsernameMax).nullable(),
-  "finishReason": zod.union([zod.literal('time'),zod.literal('opponent-left'),zod.literal(null)]).nullable(),
-  "topGiftersA": zod.array(zod.object({
-  "username": zod.string().max(searchPkOpponentResponseBattleOneTopGiftersAItemUsernameMax),
-  "displayName": zod.string().max(searchPkOpponentResponseBattleOneTopGiftersAItemDisplayNameMax),
-  "coins": zod.int().min(searchPkOpponentResponseBattleOneTopGiftersAItemCoinsMin)
-})).max(searchPkOpponentResponseBattleOneTopGiftersAMax),
-  "topGiftersB": zod.array(zod.object({
-  "username": zod.string().max(searchPkOpponentResponseBattleOneTopGiftersBItemUsernameMax),
-  "displayName": zod.string().max(searchPkOpponentResponseBattleOneTopGiftersBItemDisplayNameMax),
-  "coins": zod.int().min(searchPkOpponentResponseBattleOneTopGiftersBItemCoinsMin)
-})).max(searchPkOpponentResponseBattleOneTopGiftersBMax)
+  "finishReason": zod.union([zod.literal('time'),zod.literal('opponent-left'),zod.literal(null)]).nullable()
 }),zod.null()])
 })
 
@@ -939,7 +913,7 @@ export const CancelPkOpponentSearchResponse = zod.object({
 
 
 /**
- * @summary Read PK matchmaking, battle timer, score and top gifters
+ * @summary Read PK matchmaking, battle timer and score
  */
 export const getPkBattleStatePathStreamIdRegExp = new RegExp('^[a-f0-9]{32}$');
 
@@ -974,22 +948,6 @@ export const getPkBattleStateResponseBattleOneScoreBMin = 0;
 
 export const getPkBattleStateResponseBattleOneWinnerUsernameMax = 40;
 
-export const getPkBattleStateResponseBattleOneTopGiftersAItemUsernameMax = 40;
-
-export const getPkBattleStateResponseBattleOneTopGiftersAItemDisplayNameMax = 80;
-
-export const getPkBattleStateResponseBattleOneTopGiftersAItemCoinsMin = 0;
-
-export const getPkBattleStateResponseBattleOneTopGiftersAMax = 3;
-
-export const getPkBattleStateResponseBattleOneTopGiftersBItemUsernameMax = 40;
-
-export const getPkBattleStateResponseBattleOneTopGiftersBItemDisplayNameMax = 80;
-
-export const getPkBattleStateResponseBattleOneTopGiftersBItemCoinsMin = 0;
-
-export const getPkBattleStateResponseBattleOneTopGiftersBMax = 3;
-
 
 
 export const GetPkBattleStateResponse = zod.object({
@@ -1017,17 +975,7 @@ export const GetPkBattleStateResponse = zod.object({
   "scoreA": zod.int().min(getPkBattleStateResponseBattleOneScoreAMin),
   "scoreB": zod.int().min(getPkBattleStateResponseBattleOneScoreBMin),
   "winnerUsername": zod.string().max(getPkBattleStateResponseBattleOneWinnerUsernameMax).nullable(),
-  "finishReason": zod.union([zod.literal('time'),zod.literal('opponent-left'),zod.literal(null)]).nullable(),
-  "topGiftersA": zod.array(zod.object({
-  "username": zod.string().max(getPkBattleStateResponseBattleOneTopGiftersAItemUsernameMax),
-  "displayName": zod.string().max(getPkBattleStateResponseBattleOneTopGiftersAItemDisplayNameMax),
-  "coins": zod.int().min(getPkBattleStateResponseBattleOneTopGiftersAItemCoinsMin)
-})).max(getPkBattleStateResponseBattleOneTopGiftersAMax),
-  "topGiftersB": zod.array(zod.object({
-  "username": zod.string().max(getPkBattleStateResponseBattleOneTopGiftersBItemUsernameMax),
-  "displayName": zod.string().max(getPkBattleStateResponseBattleOneTopGiftersBItemDisplayNameMax),
-  "coins": zod.int().min(getPkBattleStateResponseBattleOneTopGiftersBItemCoinsMin)
-})).max(getPkBattleStateResponseBattleOneTopGiftersBMax)
+  "finishReason": zod.union([zod.literal('time'),zod.literal('opponent-left'),zod.literal(null)]).nullable()
 }),zod.null()])
 })
 

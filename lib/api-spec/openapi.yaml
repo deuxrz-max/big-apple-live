@@ -431,7 +431,7 @@ paths:
     get:
       operationId: getPkBattleState
       tags: [video]
-      summary: Read PK matchmaking, battle timer, score and top gifters
+      summary: Read PK matchmaking, battle timer and score
       security:
         - AccountSession: []
       parameters:
@@ -1903,11 +1903,10 @@ components:
           pattern: "^[A-Za-z0-9_]{3,24}$"
         identity: { $ref: "#/components/schemas/EmojiIdentity" }
         displayName: { type: string, minLength: 1, maxLength: 40 }
-        bio: { type: string, maxLength: 280 }
         photoUrl: { type: [string, "null"], maxLength: 200 }
         photoUrls:
           type: array
-          maxItems: 4
+          maxItems: 1
           uniqueItems: true
           items: { type: string, maxLength: 200 }
       required: [username]
@@ -1916,14 +1915,13 @@ components:
       properties:
         username: { type: string }
         displayName: { type: string }
-        bio: { type: string }
         photoUrl: { type: [string, "null"] }
         photoReviews:
           type: array
           items: { $ref: "#/components/schemas/PhotoReviewStatus" }
         photoUrls:
           type: array
-          maxItems: 4
+          maxItems: 1
           items: { type: string }
         identity: { $ref: "#/components/schemas/EmojiIdentity" }
         updatedAt: { type: string, format: date-time }
@@ -2109,7 +2107,7 @@ components:
             - type: "null"
     PkBattle:
       type: object
-      required: [id, status, sideA, sideB, startsAtMs, endsAtMs, bonusStartAtMs, bonusEndAtMs, scoreA, scoreB, winnerUsername, finishReason, topGiftersA, topGiftersB]
+      required: [id, status, sideA, sideB, startsAtMs, endsAtMs, bonusStartAtMs, bonusEndAtMs, scoreA, scoreB, winnerUsername, finishReason]
       properties:
         id: { type: string, format: uuid }
         status: { type: string, enum: [countdown, active, finished] }
@@ -2123,14 +2121,6 @@ components:
         scoreB: { type: integer, minimum: 0 }
         winnerUsername: { type: ["string", "null"], maxLength: 40 }
         finishReason: { type: ["string", "null"], enum: [time, opponent-left, null] }
-        topGiftersA:
-          type: array
-          maxItems: 3
-          items: { $ref: "#/components/schemas/PkBattleTopGifter" }
-        topGiftersB:
-          type: array
-          maxItems: 3
-          items: { $ref: "#/components/schemas/PkBattleTopGifter" }
     PkBattlePlayer:
       type: object
       required: [streamId, username, displayName, side]
@@ -2139,13 +2129,6 @@ components:
         username: { type: string, maxLength: 40 }
         displayName: { type: string, maxLength: 80 }
         side: { type: string, enum: [A, B] }
-    PkBattleTopGifter:
-      type: object
-      required: [username, displayName, coins]
-      properties:
-        username: { type: string, maxLength: 40 }
-        displayName: { type: string, maxLength: 80 }
-        coins: { type: integer, minimum: 0 }
     PkSearchCancellation:
       type: object
       required: [cancelled]

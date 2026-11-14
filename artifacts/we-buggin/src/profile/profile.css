@@ -28,8 +28,6 @@
 .pf-signout-button{margin-top:auto}
 .pf-future-action-space{height:12px}
 .pf-clean-actions{width:min(100%,460px);display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.bc-ph-tap{width:100%;height:100%;align-items:center;justify-content:center}
-.bc-ph-tap img{width:100%;height:100%;object-fit:contain;background:#000}
 .qp-tap{display:inline-flex;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .qp-tap:focus-visible{outline:2px solid #d4af37;outline-offset:2px}
 .qp-root{position:fixed;inset:0;z-index:10100;display:flex;align-items:flex-end;justify-content:center}

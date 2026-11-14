@@ -375,16 +375,6 @@ body {
 #root .ib-msg.is-mine { background: linear-gradient(120deg,#7750d4,#9b65e5); }
 #root .fg-tile { overflow: hidden; }
 #root .fg-room { background: linear-gradient(transparent,rgba(12,9,29,.93)); }
-#root .pf { background: transparent; }
-#root .pf-hero { background: linear-gradient(145deg,#1c1533,#0c0b1d); }
-#root .pf-panel { background: linear-gradient(145deg,rgba(29,22,55,.92),rgba(14,13,34,.92)); border: 1px solid rgba(188,157,255,.38); border-radius: 28px; box-shadow: var(--space-shadow); }
-#root .pf-chip { border-color: rgba(190,159,255,.5); background: rgba(126,94,176,.16); }
-#root .pf-edit,#root .pf-btn { border-color: rgba(191,145,255,.75); color: #d8c1ff; }
-#root .pf-btn-fill { border: 0; color: #fff; }
-#root .pf-stats>div { background: rgba(16,13,37,.72); }
-#root .pf-bio { color: var(--space-lime); }
-#root .bc-card,#root .bc-review { border-radius: 18px; }
-#root .bc-cr,#root .bc-bal b { color: var(--space-lime); }
 /* Floating navigation: distinct, memorable colorway per destination. */
 #root .app-bottom-nav {
   background: rgba(13,10,30,.88);

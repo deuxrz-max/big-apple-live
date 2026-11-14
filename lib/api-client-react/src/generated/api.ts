@@ -2299,7 +2299,7 @@ export const getGetPkBattleStateUrl = (streamId: string,) => {
 }
 
 /**
- * @summary Read PK matchmaking, battle timer, score and top gifters
+ * @summary Read PK matchmaking, battle timer and score
  */
 export const getPkBattleState = async (streamId: string, options?: Parameters<typeof customFetch>[1]): Promise<PkBattleState> => {
 
@@ -2370,7 +2370,7 @@ export function useGetPkBattleState<TData = Awaited<ReturnType<typeof getPkBattl
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Read PK matchmaking, battle timer, score and top gifters
+ * @summary Read PK matchmaking, battle timer and score
  */
 
 export function useGetPkBattleState<TData = Awaited<ReturnType<typeof getPkBattleState>>, TError = ErrorType<void>>(
