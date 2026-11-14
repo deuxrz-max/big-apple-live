@@ -1,148 +1,89 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'wouter';
-import { ArrowLeft, Pencil, MoreVertical, Ban, Flag, Undo2, Coins } from 'lucide-react';
+import { useClerk } from '@clerk/react';
+import { ArrowLeft, MoreVertical, Ban, Flag, Undo2, Store, Pencil } from 'lucide-react';
 import type { SocialPerson } from '@workspace/api-client-react';
-import { UserPhoto, photoSrc } from '@/components/user-photo';
-import { ShinyName } from '@/components/ShinyName';
 import { BotShield } from '@/chat/BotShield';
-import { CoinAmount } from '@/social/common';
 import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
+import { ProfileCard } from './ProfileCard';
 import './profile.css';
-import { approvedPhotos } from './profile-model';
-import { useProfileBackHref, useProfileTapHandlers } from './QuickProfile';
-
-const num = (n?: number) => (typeof n === 'number' ? n.toLocaleString() : '\u2014');
-
-function Slide({ url, name, username }: { url: string | null; name: string; username: string }) {
-  const [failed, setFailed] = useState(false);
-  if (url && !failed) return <div className="pf-slide"><img src={photoSrc(url)} alt={`${name} profile photo`} onError={() => setFailed(true)} /></div>;
-  return <div className="pf-slide pf-slide-empty"><UserPhoto username={username} displayName={name} photoUrl={null} size={132} /></div>;
-}
-
-export function Hero({ urls, name, username, left, right, countryBadge, tapUsername }: { urls: string[]; name: string; username: string; left: ReactNode; right?: ReactNode; countryBadge?: ReactNode; tapUsername?: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [idx, setIdx] = useState(0);
-  const tap = useProfileTapHandlers(tapUsername);
-  const slides: (string | null)[] = urls.length ? urls : [null];
-  return (
-    <div className={`pf-hero${countryBadge ? ' pf-hero-with-country' : ''}`}>
-      <div className="pf-track" ref={ref} {...tap} data-testid={tapUsername ? `tap-profile-hero-${tapUsername}` : undefined} tabIndex={tapUsername || slides.length > 1 ? 0 : -1} aria-label="Profile photos, swipe for more"
-        onScroll={(e) => { const el = e.currentTarget; setIdx(Math.round(el.scrollLeft / Math.max(1, el.clientWidth))); }}>
-        {slides.map((u, i) => <Slide key={u ?? 'none'} url={u} name={name} username={username} />)}
-      </div>
-      <div className="pf-hero-bar">{left}{right}</div>
-      {countryBadge}
-      {slides.length > 1 && <div className="pf-dots" role="tablist" aria-label="Photo position">
-        {slides.map((u, i) => <button key={u ?? i} type="button" role="tab" aria-selected={i === idx} aria-label={`Photo ${i + 1} of ${slides.length}`} className={i === idx ? 'is-on' : ''}
-          onClick={() => ref.current?.scrollTo({ left: i * ref.current.clientWidth, behavior: 'smooth' })} />)}
-      </div>}
-    </div>
-  );
-}
+import './profile-card.css';
+import { useProfileBackHref } from './QuickProfile';
 
 export function BackButton({ href, label }: { href: string; label: string }) {
   return <Link href={href} className="pf-round" aria-label={label} data-testid="link-profile-back"><ArrowLeft size={20} aria-hidden /></Link>;
 }
 
-export function ProfileMenu({ name, username, blocked, pending, onBlock, owner = false, isTester = false, testerLoading = false, onTester }: {
+export function ProfileMenu({ name, username, blocked, pending, onBlock }: {
   name: string; username: string; blocked: boolean; pending: boolean; onBlock: (active: boolean) => void;
-  owner?: boolean; isTester?: boolean; testerLoading?: boolean; onTester?: (active: boolean) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [dlg, setDlg] = useState<null | 'block'>(null);
+  const [dlg, setDlg] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   useEffect(() => {
     if (!open && !dlg && !reportOpen) return;
-    const k = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); setDlg(null); } };
+    const k = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); setDlg(false); setReportOpen(false); } };
     window.addEventListener('keydown', k);
     return () => window.removeEventListener('keydown', k);
   }, [open, dlg, reportOpen]);
   return (
     <div className="pf-menu">
-      <button type="button" className="pf-round" aria-label="More actions" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)} data-testid="button-profile-menu"><MoreVertical size={20} aria-hidden /></button>
+      <button type="button" className="pf-round" aria-label="More actions" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(o => !o)} data-testid="button-profile-menu"><MoreVertical size={20} aria-hidden /></button>
       {open && <>
         <button type="button" className="pf-scrim" aria-label="Close menu" tabIndex={-1} onClick={() => setOpen(false)} />
         <div className="pf-menu-list" role="menu">
-          {owner && onTester && <button type="button" role="menuitem" disabled={pending || testerLoading}
-            onClick={() => { setOpen(false); onTester(!isTester); }} data-testid="button-toggle-coin-tester">
-            <Coins size={16} aria-hidden />{testerLoading ? 'Checking tester status…' : isTester ? 'Remove coin tester' : 'Make coin tester (unlimited test coins)'}
-          </button>}
           <button type="button" role="menuitem" autoFocus onClick={() => { setOpen(false); setReportOpen(true); }} data-testid="button-report"><Flag size={16} aria-hidden /> Report</button>
           {blocked
             ? <button type="button" role="menuitem" disabled={pending} onClick={() => { setOpen(false); onBlock(false); }} data-testid="button-unblock"><Undo2 size={16} aria-hidden /> Unblock</button>
-            : <button type="button" role="menuitem" onClick={() => { setOpen(false); setDlg('block'); }} data-testid="button-block"><Ban size={16} aria-hidden /> Block</button>}
+            : <button type="button" role="menuitem" onClick={() => { setOpen(false); setDlg(true); }} data-testid="button-block"><Ban size={16} aria-hidden /> Block</button>}
         </div>
       </>}
-      {dlg === 'block' && <div className="pf-modal">
-        <button type="button" className="pf-scrim pf-scrim-dim" aria-label="Close dialog" tabIndex={-1} onClick={() => setDlg(null)} />
+      {dlg && <div className="pf-modal">
+        <button type="button" className="pf-scrim pf-scrim-dim" aria-label="Close dialog" tabIndex={-1} onClick={() => setDlg(false)} />
         <div className="pf-dialog" role="dialog" aria-modal="true" aria-labelledby="pf-dlg-t">
-          <>
-            <h2 id="pf-dlg-t">Block {name}?</h2>
-            <p>Blocking stops direct messages and whispers both ways and hides each other’s public room chat. It does not remove or mute either person in a room.</p>
-            <div className="pf-dlg-acts">
-              <button type="button" className="pf-btn pf-btn-fill" autoFocus disabled={pending} onClick={() => { onBlock(true); setDlg(null); }} data-testid="button-confirm-block">Yes, block</button>
-              <button type="button" className="pf-btn" onClick={() => setDlg(null)}>Cancel</button>
-            </div>
-          </>
+          <h2 id="pf-dlg-t">Block {name}?</h2>
+          <p>Blocking stops direct messages and whispers both ways and hides each other’s public room chat. It does not remove or mute either person in a room.</p>
+          <div className="pf-dlg-acts">
+            <button type="button" className="pf-btn pf-btn-fill" autoFocus disabled={pending} onClick={() => { onBlock(true); setDlg(false); }} data-testid="button-confirm-block">Yes, block</button>
+            <button type="button" className="pf-btn" onClick={() => setDlg(false)}>Cancel</button>
+          </div>
         </div>
       </div>}
-      {reportOpen && <SafetyReportDialog targetType="user" targetUsername={username}
-        onClose={() => setReportOpen(false)} />}
+      {reportOpen && <SafetyReportDialog targetType="user" targetUsername={username} onClose={() => setReportOpen(false)} />}
     </div>
   );
 }
 
-export function ProfileView({ person, own = false, tester = false, countryName, backHref, menu, actions, links, children }: {
-  person: SocialPerson; own?: boolean; countryName?: string; backHref: string;
-  tester?: boolean; menu?: ReactNode; actions?: ReactNode; links?: ReactNode; children?: ReactNode;
+export function ProfileView({ person, own = false, backHref, menu, actions }: {
+  person: SocialPerson; own?: boolean; backHref: string; menu?: ReactNode; actions?: ReactNode;
 }) {
-  const p = person;
-  const name = p.displayName?.trim() || p.username;
-  const bio = p.bio?.trim();
-  const back = useProfileBackHref(own ? undefined : p.username, backHref);
+  const { signOut } = useClerk();
+  const name = person.displayName?.trim() || person.username;
   return (
-    <div className="beam-app pf" data-testid="profile-view">
-      <Hero urls={approvedPhotos(p, own)} name={name} username={p.username} tapUsername={p.username}
-        left={<BackButton href={back} label="Back" />}
-        right={own ? <Link href="/user-portal/edit" className="pf-round" aria-label="Edit your profile" data-testid="link-edit-hero"><Pencil size={18} aria-hidden /></Link> : menu} />
-      <section className="pf-panel">
-        <h1 className="pf-name" data-testid="text-display-name">
-          <ShinyName className="pf-display-name" displayNameColor={p.displayNameColor} displayNameTierIndex={p.displayNameTierIndex}>{name}</ShinyName>
-          {tester && <span className="pf-tester-tag" data-testid="tag-coin-tester">Tester</span>}
-        </h1>
-        {own && <Link href="/user-portal/edit" className="pf-edit" data-testid="link-edit-profile">Edit your profile</Link>}
-        {actions}
-        <div className="pf-chips">
-          <span className="pf-chip" data-testid="text-public-id">ID @{p.username}</span>
-          {p.country && <span className="pf-chip">{countryName ?? p.country}</span>}
+    <div className="beam-app pf pf-clean" data-testid="profile-view">
+      <header className="pf-clean-header">
+        <BackButton href={backHref} label="Back" />
+        <strong>{own ? 'Me' : 'Profile'}</strong>
+        {menu ?? (own ? <Link href="/user-portal/edit" className="pf-round" aria-label="Edit profile" data-testid="link-edit-profile">Edit</Link> : <span />)}
+      </header>
+      <div className="pf-clean-card">
+        <ProfileCard person={person} />
+        {own && <Link className="pf-edit-card-link" href="/user-portal/edit" aria-label="Edit profile" data-testid="link-edit-card"><Pencil size={17} aria-hidden /></Link>}
+      </div>
+      {own ? (
+        <div className="pf-own-actions">
+          <Link href="/user-portal/store" className="pf-btn pf-store-button" data-testid="link-profile-store"><Store size={18} aria-hidden /> Store</Link>
+          <div className="pf-future-action-space" aria-hidden="true" />
+          <button type="button" className="pf-btn pf-signout-button" onClick={() => signOut({ redirectUrl: import.meta.env.BASE_URL || '/' })} data-testid="button-profile-sign-out">Sign Out</button>
         </div>
-        {p.interests.length > 0 && <ul className="pf-chips pf-interests" aria-label="Interests">{p.interests.map((i) => <li key={i} className="pf-chip pf-chip-soft">{i}</li>)}</ul>}
-        {bio && <p className="pf-bio" data-testid="text-bio">{bio}</p>}
-        {/* Own Me page: tools and XP sit above the stats so the panel ends on coin stats. */}
-        {own && children}
-        {own && links}
-        <dl className="pf-stats" data-testid="list-profile-stats">
-          <div><dd data-testid="text-followers">{num(p.followerCount)}</dd><dt>Followers</dt></div>
-          <div><dd data-testid="text-following">{num(p.followingCount)}</dd><dt>Following</dt></div>
-        </dl>
-        {!own && children}
-        {!own && links}
-      </section>
+      ) : actions ? <div className="pf-clean-actions">{actions}</div> : null}
     </div>
   );
 }
 
 export const BOTS: Record<string, string> = { ghost: 'Ghost Bot', vampire: 'Vampire Bot', wolf: 'Wolf Bot', zombie: 'Zombie Bot' };
-
 export function BotProfile({ botId }: { botId: string }) {
   const name = Object.prototype.hasOwnProperty.call(BOTS, botId) ? BOTS[botId] : null;
   if (!name) return <div className="pf"><div className="pf-panel pf-panel-solo"><h1 className="pf-name">Bot not found</h1><Link href="/home" className="pf-btn">Back to rooms</Link></div></div>;
-  return (
-    <div className="pf" data-testid={`profile-bot-${botId}`}>
-      <Hero urls={[`/bots/${botId}.webp`]} name={name} username={botId} left={<BackButton href="/home" label="Back" />} />
-      <section className="pf-panel">
-        <h1 className="pf-name">{name} <BotShield botId={botId} /></h1>
-      </section>
-    </div>
-  );
+  return <div className="pf" data-testid={`profile-bot-${botId}`}><BackButton href="/home" label="Back" /><h1 className="pf-name">{name} <BotShield botId={botId} /></h1></div>;
 }

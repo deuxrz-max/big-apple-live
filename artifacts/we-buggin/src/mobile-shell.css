@@ -122,13 +122,12 @@ body.streamtalk-live-screen .app-page { padding-bottom: 0; }
   background: linear-gradient(180deg, var(--dw-base) 70%, rgba(11, 10, 8, 0));
 }
 .st-home .st-dir-account { gap: 8px; }
-.st-home :is(.st-dir-rewards, .st-dir-wallet, .st-dir-avatar) {
+.st-home .st-dir-avatar {
   min-height: 40px; min-width: 40px;
   border-radius: 14px;
   border: 1px solid var(--dw-line);
   background: var(--dw-surface);
 }
-.st-home .st-dir-wallet { padding: 0 12px; font-variant-numeric: tabular-nums; font-weight: 800; }
 .st-home .st-home-grid { gap: 10px; padding: 0 var(--dw-gutter); }
 .st-home .st-home-grid-column { gap: 10px; }
 .st-home .st-dir-card { border-radius: var(--dw-radius); overflow: hidden; transition: transform .18s var(--dw-ease); }
@@ -234,7 +233,6 @@ body.streamtalk-beam-screen .app-page :is(button, [role=button]) { -webkit-tap-h
 @media (max-width: 380px) {
   :root { --dw-gutter: 12px; }
   .app-bottom-link { font-size: 11px; letter-spacing: .04em; }
-  .st-home .st-dir-wallet { padding: 0 9px; font-size: 12px; }
 }
 @media (min-width: 768px) {
   .app-bottom-nav-inner { margin-bottom: 10px; }
@@ -425,8 +423,7 @@ body.streamtalk-beam-screen .app-page :is(button, [role=button]) { -webkit-tap-h
 html, body { background: #000; background-image: none; }
 #root .app-page { background: #000; }
 #root :is(.ch:not(.ur), .sc-inbox-screen, .sc-following-screen, .pf) { background: #000; }
-#root :is(.sc-card, .sc-panel, .sc-empty, .sc-wallet, .ib-row, .pf-panel,
-  .pf-stats > div, .st-dir-card, .st-dir-live-stream, .st-dir-state,
+#root :is(.sc-card, .sc-panel, .sc-empty, .ib-row, .st-dir-card, .st-dir-live-stream, .st-dir-state,
   .ch-auth .ch-card) {
   background: var(--dw-surface);
   border-color: var(--dw-line);

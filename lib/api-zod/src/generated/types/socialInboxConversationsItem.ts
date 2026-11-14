@@ -10,27 +10,17 @@ import type { EmojiIdentity } from './emojiIdentity';
 export type SocialInboxConversationsItem = {
   username: string;
   displayName: string;
-  /** @pattern ^#[0-9A-Fa-f]{6}$ */
-  displayNameColor?: string;
-  /**
-     * @minimum 0
-     * @maximum 100
-     */
-  displayNameTierIndex?: number;
-  /** @nullable */
-  badgeId: string | null;
-  /** @nullable */
-  badgeName: string | null;
-  /** @nullable */
-  badgeImage: string | null;
+  displayNameColor: string;
+  displayNameTierIndex: number;
   /** @nullable */
   photoUrl: string | null;
+  identity: EmojiIdentity;
   lastMessageFromMe: boolean;
   /** @nullable */
   lastUnreadAt: Date | null;
-  identity: EmojiIdentity;
   lastMessage: string;
   updatedAt: Date;
+  /** @minimum 0 */
   unreadCount: number;
   blocked: boolean;
 };

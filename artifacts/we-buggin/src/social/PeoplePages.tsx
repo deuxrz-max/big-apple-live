@@ -4,8 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { MessageCircle, Search } from 'lucide-react';
 import {
   useGetSocialMe, useGetSocialPeople, useGetSocialPerson, useSetSocialRelationship, useGetSocialBlocks,
-  useSaveSocialProfile, SocialProfileInputExternalPlatform, getGetSocialPeopleQueryKey, getGetSocialPersonQueryKey,
-  useGetChatAccess, useGetCoinTesters, useSetCoinTester,
+  getGetSocialPeopleQueryKey, getGetSocialPersonQueryKey,
   type GetSocialPeopleParams,
   useGetFavoritesGallery, getGetFavoritesGalleryQueryKey, getFavoriteRoom,
 } from '@workspace/api-client-react';
@@ -50,7 +49,7 @@ export function CommunityPage() {
       ) : (
         <>
           <p className="sc-count" data-testid="text-total">{total} {total === 1 ? 'person' : 'people'}</p>
-          <div className="sc-grid">{list.map((p) => <PersonCard key={p.username} p={p} publicSearch />)}</div>
+          <div className="sc-grid">{list.map((p) => <PersonCard key={p.username} p={p} />)}</div>
           <div className="sc-pager">
             <button type="button" className="bm-btn bm-btn-sm" disabled={stack.length < 2} onClick={() => setStack((s) => s.slice(0, -1))} data-testid="button-prev">Previous</button>
             <button type="button" className="bm-btn bm-btn-sm" disabled={!hasNext} onClick={() => setStack((s) => [...s, offset + list.length])} data-testid="button-next">Next</button>
@@ -66,14 +65,10 @@ export function PersonPage({ username }: { username: string }) {
   const me = useGetSocialMe();
   const q = useGetSocialPerson(username, { query: { queryKey: getGetSocialPersonQueryKey(username), refetchInterval: 15000 } });
   const rel = useSetSocialRelationship();
-  const access = useGetChatAccess();
-  const testers = useGetCoinTesters({ query: { enabled: access.data?.owner === true, refetchInterval: 15000 } });
-  const testerMutation = useSetCoinTester();
   const [msg, setMsg] = useState<{ ok: boolean; t: ReactNode } | null>(null);
   useEffect(() => { setMsg(null); }, [username]);
   const p = q.data;
   const own = me.data?.profile.username === username;
-  const isTester = !!testers.data?.testers.some(tester => tester.enabled && tester.username.toLowerCase() === username.toLowerCase());
   const setRel = (kind: 'favorite' | 'block', active: boolean) => {
     setMsg(null);
     rel.mutate({ username, data: { kind, active } }, {
@@ -82,106 +77,29 @@ export function PersonPage({ username }: { username: string }) {
     });
   };
   const backHref = useProfileBackHref(username, '/community');
-  const setTester = (active: boolean) => {
-    setMsg(null);
-    testerMutation.mutate({ data: { username, enabled: active } }, {
-      onSuccess: () => {
-        setMsg({ ok: true, t: active ? 'Coin tester enabled. Unlimited test coins are active.' : 'Coin tester removed. Real balances are unchanged.' });
-        refreshSocial(qc);
-      },
-      onError: (error) => setMsg({ ok: false, t: errMsg(error) }),
-    });
-  };
   if (q.isLoading) return <><div className="pf-state-back"><BackButton href={backHref} label="Back" /></div><Loading /></>;
   if (q.isError || !p) return <><div className="pf-state-back"><BackButton href={backHref} label="Back" /></div><ErrorBox error={q.error ?? 'Not found'} retry={() => q.refetch()} /></>;
-  const countryName = p.country ? (me.data?.countries.find((c) => c.code === p.country)?.name ?? p.country) : undefined;
   return (
-    <ProfileView person={p} own={own} tester={!!access.data?.owner && isTester} countryName={countryName} backHref={backHref}
-      menu={own ? null : <ProfileMenu name={p.displayName || p.username} username={p.username} blocked={p.blocked}
-        pending={rel.isPending || testerMutation.isPending} owner={access.data?.owner === true} isTester={isTester}
-        testerLoading={access.data?.owner === true && testers.isLoading}
-        onTester={setTester} onBlock={(a) => setRel('block', a)} />}
-      actions={own ? null : (
-        <div className="pf-actions">
-          <button type="button" className="pf-btn pf-btn-fill" aria-pressed={p.favorite} disabled={rel.isPending || p.blocked} onClick={() => setRel('favorite', !p.favorite)} data-testid="button-favorite">{p.favorite ? 'Following' : 'Follow'}</button>
-          {p.blocked
-            ? <Link href={`/community/messages/${p.username}`} className="pf-btn" data-testid="link-history">Read history</Link>
-            : <Link href={`/community/messages/${p.username}`} className="pf-btn" data-testid="link-message"><MessageCircle size={16} aria-hidden /> Message</Link>}
-        </div>
-      )}>
+    <div className="pf-person-wrap">
+      <ProfileView person={p} own={own} backHref={backHref}
+        menu={own ? null : <ProfileMenu name={p.displayName || p.username} username={p.username} blocked={p.blocked}
+          pending={rel.isPending} onBlock={(a) => setRel('block', a)} />}
+        actions={own ? null : (
+          <div className="pf-actions">
+            <button type="button" className="pf-btn pf-btn-fill" aria-pressed={p.favorite} disabled={rel.isPending || p.blocked} onClick={() => setRel('favorite', !p.favorite)} data-testid="button-favorite">{p.favorite ? 'Following' : 'Follow'}</button>
+            {p.blocked
+              ? <Link href={`/community/messages/${p.username}`} className="pf-btn" data-testid="link-history">Read history</Link>
+              : <Link href={`/community/messages/${p.username}`} className="pf-btn" data-testid="link-message"><MessageCircle size={16} aria-hidden /> Message</Link>}
+          </div>
+        )} />
       {msg && <Msg ok={msg.ok}>{msg.t}</Msg>}
       {!own && p.blocked && <p className="sc-sub">Blocked in either direction: no new messages or follows. Past messages stay readable.</p>}
-    </ProfileView>
+    </div>
   );
 }
 
 export function MyProfilePage() {
-  return <Redirect to="/user-portal/edit" />;
-}
-
-export function ProfilePreferences() {
-  const qc = useQueryClient();
-  const me = useGetSocialMe();
-  const save = useSaveSocialProfile();
-  const init = useRef(false);
-  const [bio, setBio] = useState('');
-  const [country, setCountry] = useState('');
-  const [interests, setInterests] = useState('');
-  const [discoverable, setDiscoverable] = useState(false);
-  const [platform, setPlatform] = useState('');
-  const [handle, setHandle] = useState('');
-  const [msg, setMsg] = useState<{ ok: boolean; t: string } | null>(null);
-  useEffect(() => {
-    const p = me.data?.profile;
-    if (p && !init.current) {
-      init.current = true;
-      setBio(p.bio); setCountry(p.country ?? ''); setInterests(p.interests.join(', ')); setDiscoverable(p.discoverable); setPlatform(p.externalPlatform ?? ''); setHandle(p.externalHandle ?? '');
-    }
-  }, [me.data]);
-  if (me.isLoading) return <Loading />;
-  if (me.isError || !me.data) return <ErrorBox error={me.error} retry={() => me.refetch()} />;
-  const d = me.data;
-  const list = interests.split(',').map((s) => s.trim()).filter(Boolean);
-  const bad = list.length > 8 || list.some((s) => s.length > 24);
-  const submit = (e: FormEvent) => {
-    e.preventDefault(); setMsg(null);
-    if (bad) { setMsg({ ok: false, t: 'Use up to 8 interests, 24 characters each.' }); return; }
-    save.mutate({ data: { bio: bio.trim(), country: country || null, interests: list, discoverable, badgeId: null, externalPlatform: (platform || null) as SocialProfileInputExternalPlatform, externalHandle: platform && handle.trim() ? handle.trim() : null } }, {
-      onSuccess: () => { setMsg({ ok: true, t: 'Profile saved.' }); refreshSocial(qc); },
-      onError: (er) => setMsg({ ok: false, t: errMsg(er) }),
-    });
-  };
-  return (
-    <section className="ep-social-profile" id="profile-preferences">
-      <h2 className="sc-h2">Profile preferences</h2>
-      <p className="sc-sub" data-testid="room-hangout-streak">
-        Room hangout streak: <b>Day {d.hangoutStreak.days}/7</b>
-        {d.hangoutStreak.rewardClaimedToday
-          ? ' · Your 100-coin streak reward was earned today.'
-          : ' · Spend at least a minute in a room each hangout day.'}
-      </p>
-      <p className="sc-sub">Edit your bio and discovery details here. Manage people you have blocked in <Link href="/community/blocks" className="bm-link">Blocked</Link>.</p>
-      <form className="sc-form" onSubmit={submit}>
-        <label className="sc-field"><span className="bm-label">Bio ({bio.length}/200)</span>
-          <textarea className="sc-text" value={bio} maxLength={200} rows={3} onChange={(e) => setBio(e.target.value)} data-testid="input-bio" /></label>
-        <label className="sc-field"><span className="bm-label">Country</span>
-          <select className="sc-select" value={country} onChange={(e) => setCountry(e.target.value)} data-testid="select-profile-country">
-            <option value="">Prefer not to say</option>{d.countries.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}</select></label>
-        <label className="sc-field"><span className="bm-label">Interests, comma separated (max 8)</span>
-          <input className="bm-input" value={interests} onChange={(e) => setInterests(e.target.value)} data-testid="input-interests" /></label>
-        <label className="sc-field"><span className="bm-label">Other platform (optional, self-listed)</span>
-          <select className="sc-select" value={platform} onChange={(e) => setPlatform(e.target.value)} data-testid="select-platform">
-            <option value="">None</option>{Object.values(SocialProfileInputExternalPlatform).map((x) => <option key={x} value={x}>{x}</option>)}</select></label>
-        <label className="sc-field"><span className="bm-label">Handle on that platform</span>
-          <input className="bm-input" maxLength={64} value={handle} disabled={!platform} onChange={(e) => setHandle(e.target.value)} data-testid="input-handle" />
-          <small>Self-listed. Not ownership checked or officially verified.</small></label>
-        <label className="sc-check"><input type="checkbox" checked={discoverable} onChange={(e) => setDiscoverable(e.target.checked)} data-testid="checkbox-discoverable" />
-          <span>Show me in People discovery. Off by default; only you decide.</span></label>
-        {msg && <Msg ok={msg.ok}>{msg.t}</Msg>}
-        <button type="submit" className="bm-btn bm-btn-primary" disabled={save.isPending} data-testid="button-save-profile">{save.isPending ? 'Saving...' : 'Save profile'}</button>
-      </form>
-    </section>
-  );
+  return <Redirect to="/user-portal" />;
 }
 
 export function FavoritesPage() {

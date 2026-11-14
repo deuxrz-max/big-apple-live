@@ -514,7 +514,7 @@ export default function AudioHarnessPage() {
 
         <section className="dev-audio-harness__warning" aria-label="Test boundaries">
           <strong>Safe test mode</strong>
-          <span>Synthetic audio only. No microphone or camera permission is requested. No messages, coin balances, or account data are changed.</span>
+          <span>Synthetic audio only. No microphone or camera permission is requested. No messages or account data are changed.</span>
           <span>Audio uses direct browser-to-browser WebRTC with free STUN only. Some restrictive networks may need a TURN relay to connect.</span>
         </section>
 

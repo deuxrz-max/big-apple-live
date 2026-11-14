@@ -13,6 +13,7 @@ import { AdultGate, BattleLeaderboardPage, ChatDirectory, ChatProfile, ProfileGa
 import { EmailSignUp } from '@/components/email-signup';
 import '@/chat/chat.css';
 import { OwnProfile } from '@/profile/OwnProfile';
+import { StorePage } from '@/profile/StorePage';
 import { QuickProfileProvider } from '@/profile/QuickProfile';
 import '@/profile/profile.css';
 import SocialApp from '@/social/SocialApp';
@@ -186,6 +187,16 @@ function OwnProfileRoute() {
   );
 }
 
+function StoreRoute() {
+  const { user } = useUser();
+  return (
+    <>
+      <Show when="signed-in">{user && <ProfileGate><StorePage /></ProfileGate>}</Show>
+      <Show when="signed-out"><Redirect to="/sign-in" /></Show>
+    </>
+  );
+}
+
 function ProfilePhotoReviewsRoute() {
   const { user } = useUser();
   return (
@@ -306,9 +317,8 @@ function ClerkProviderWithRoutes() {
             <Route path="/home" component={DiscoveryRoute} />
             <Route path="/community" component={CommunityRoute} />
             <Route path="/community/*?" component={CommunityRoute} />
-            <Route path="/user-portal/transactions">{() => <Redirect to="/user-portal" />}</Route>
             <Route path="/user-portal/photo-reviews" component={ProfilePhotoReviewsRoute} />
-            <Route path="/user-portal/store">{() => <Redirect to="/user-portal" />}</Route>
+            <Route path="/user-portal/store" component={StoreRoute} />
             <Route path="/user-portal" component={OwnProfileRoute} />
             <Route path="/user-portal/edit" component={Portal} />
             <Route path="/rooms/:roomId" component={RoomRoute} />

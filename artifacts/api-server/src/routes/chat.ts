@@ -11,7 +11,6 @@ import { pairBlocked } from "../lib/social/core";
 import { requireAdult } from "../lib/community";
 import { isIgnored } from "../lib/university-chat";
 import { isTestAccountId } from "../lib/account-profiles";
-import { accountReceivedCoinDrop, recentCoinDrops } from "../lib/community-hangout-rewards";
 
 const router: IRouter = Router();
 router.get("/account/rooms/:roomId/history/:beforeId", async (req, res) => {
@@ -61,7 +60,6 @@ router.get("/account/rooms/:roomId/events", async (req, res): Promise<void> => {
       return;
     }
     try { await requireAdult(id); } catch { res.end(); return; }
-    if (event.type === "room.hangout-streak-reward" && event.data.accountId !== id) return;
     if (event.type === "chat.accepted" && event.senderAccountId
       && (await pairBlocked(id, event.senderAccountId) || await isIgnored(id, event.senderAccountId))) return;
     if (event.type === "chat.accepted" && event.senderAccountId
@@ -71,11 +69,7 @@ router.get("/account/rooms/:roomId/events", async (req, res): Promise<void> => {
     catch { res.end(); return; }
     const data = event.type === "room.snapshot" ? GetRoomResponse.parse(event.data)
       : event.type === "chat.accepted" ? SendRoomMessageResponse.parse(event.data)
-      : event.type === "room.coin-drop"
-        ? { ...event.data, qualified: await accountReceivedCoinDrop(id, event.data.eventId) }
-        : event.type === "room.hangout-streak-reward"
-          ? { day: event.data.day, coins: event.data.coins }
-          : event.data;
+      : event.data;
     if (!res.write(`event: ${event.type}\ndata: ${JSON.stringify(data)}\n\n`)) res.destroy();
     })().catch(error => { req.log.error({ error }, "Room event delivery failed"); res.destroy(); });
   });
@@ -85,14 +79,6 @@ router.get("/account/rooms/:roomId/events", async (req, res): Promise<void> => {
   });
   res.flushHeaders();
   res.write(`event: room.snapshot\ndata: ${JSON.stringify(GetRoomResponse.parse(roomStore.get(roomId)))}\n\n`);
-  const replayDrops = new Map([
-    ...roomStore.recentRoomCoinDrops(roomId).map(event => [event.eventId, event] as const),
-    ...(await recentCoinDrops(roomId)).map(event => [event.eventId, event] as const),
-  ]);
-  for (const event of replayDrops.values()) {
-    const qualified = await accountReceivedCoinDrop(id, event.eventId);
-    res.write(`event: room.coin-drop\ndata: ${JSON.stringify({ ...event, qualified })}\n\n`);
-  }
   const keepalive = setInterval(() => {
     void requireAdult(id).catch(() => res.end());
     try { roomStore.requireAccountMember(roomId, sessionId, id); }

@@ -18,11 +18,10 @@ test("the public API contract no longer exposes passport operations", () => {
   assert.doesNotMatch(client, /useGetMyStreamerPassport|useSaveMyStreamerPassport|useReviewStreamerPassport|useGetSocialPersonStreamerPassport/);
 });
 
-test("room chat, whispers, participants and gifts no longer fetch or expose passport badges", () => {
+test("room chat, whispers and participants no longer fetch or expose passport data", () => {
   for (const path of [
     "src/lib/room-chat.ts",
     "src/lib/university-chat.ts",
-    "src/lib/social/room-gifts.ts",
   ]) {
     assert.doesNotMatch(read(path), /passport|Passport/, path);
   }

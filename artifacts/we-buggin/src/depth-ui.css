@@ -13,34 +13,28 @@
 
 /* Raised, glass-dark cards and shared panels. Keep the fill opaque enough for text. */
 #root :is(
-  .ch-list li, .sc-card, .sc-panel, .sc-empty, .sc-wallet, .ib-row, .fg-tile,
-  .bc-card, .bc-review, .dh-banner, .dh-card, .ur-side, .ur-slot, .ur-menu,
-  .ur-rules, .ur-tv-dialog, .ur-chip, .pf-panel, .pf-dialog, .pf-menu-list,
-  .pf-stats > div, .pf-name-tier, .sc-msgs, .sc-skel, .ch-photo-card, .ch-auth .ch-card,
+  .ch-list li, .sc-card, .sc-panel, .sc-empty, .ib-row, .fg-tile,
+  .dh-banner, .dh-card, .ur-side, .ur-slot, .ur-menu,
+  .ur-rules, .ur-tv-dialog, .ur-chip, .pf-dialog, .pf-menu-list,
+  .sc-msgs, .sc-skel, .ch-auth .ch-card,
   .depth-auth-card,
   .bm-tile, .bm-modal, .bm-mic-panel, .bm-tray,
   .st-live-action-sheet,
-  .st-dir-card, .st-dir-live-stream, .st-dir-state, .st-store .st-loading-card,
-  .st-store .st-error-card, .st-store .st-empty-state, .st-store .st-query-state,
-  .st-store .sc-empty, .st-store .st-launch-tile, .st-store .st-item-card,
-  .st-store .st-balance-bar, .st-store .st-sheet, .st-store .st-toast
+  .st-dir-card, .st-dir-live-stream, .st-dir-state
 ) {
   border-color: rgba(196, 166, 255, .4);
   box-shadow: var(--st-depth-shadow), var(--st-depth-inset);
 }
 
 #root :is(
-  .ch-list li, .sc-card, .sc-panel, .sc-empty, .sc-wallet, .ib-row, .fg-tile,
-  .bc-card, .bc-review, .dh-banner, .dh-card, .ur-side, .ur-slot, .ur-menu,
-  .ur-rules, .ur-tv-dialog, .pf-panel, .pf-dialog, .pf-menu-list,
-  .pf-stats > div, .pf-name-tier, .sc-msgs, .sc-skel, .ch-photo-card, .ch-auth .ch-card,
+  .ch-list li, .sc-card, .sc-panel, .sc-empty, .ib-row, .fg-tile,
+  .dh-banner, .dh-card, .ur-side, .ur-slot, .ur-menu,
+  .ur-rules, .ur-tv-dialog, .pf-dialog, .pf-menu-list,
+  .sc-msgs, .sc-skel, .ch-auth .ch-card,
   .depth-auth-card,
   .bm-tile, .bm-modal, .bm-mic-panel, .bm-tray,
   .st-live-action-sheet,
-  .st-dir-card, .st-dir-live-stream, .st-dir-state, .st-store .st-loading-card,
-  .st-store .st-error-card, .st-store .st-empty-state, .st-store .st-query-state,
-  .st-store .sc-empty, .st-store .st-launch-tile, .st-store .st-item-card,
-  .st-store .st-balance-bar, .st-store .st-sheet, .st-store .st-toast
+  .st-dir-card, .st-dir-live-stream, .st-dir-state
 ) {
   background-image:
     linear-gradient(145deg, rgba(255, 255, 255, .045), transparent 38%),
@@ -49,10 +43,9 @@
 
 /* A crisp inset lip and upper-left reflection; these never sit above content. */
 #root :is(
-  .sc-panel, .sc-card, .sc-wallet, .ib-row, .fg-tile, .bc-card, .bc-review,
-  .dh-banner, .dh-card, .pf-panel, .pf-dialog, .pf-menu-list, .pf-name-tier, .sc-msgs, .ch-auth .ch-card,
-  .depth-auth-card, .st-dir-card, .st-store .st-item-card,
-  .st-store .st-launch-tile
+  .sc-panel, .sc-card, .ib-row, .fg-tile,
+  .dh-banner, .dh-card, .pf-dialog, .pf-menu-list, .sc-msgs, .ch-auth .ch-card,
+  .depth-auth-card, .st-dir-card
 ) {
   box-shadow:
     0 16px 34px rgba(3, 2, 16, .34),
@@ -61,11 +54,11 @@
     inset 0 -1px 0 rgba(5, 3, 19, .5);
 }
 
-#root :is(.sc-card, .ib-row, .fg-tile, .bc-card, .dh-card, .st-dir-card, .st-store .st-item-card) {
+#root :is(.sc-card, .ib-row, .fg-tile, .dh-card, .st-dir-card) {
   transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
 }
 
-#root :is(.sc-card, .ib-row, .fg-tile, .bc-card, .dh-card, .st-dir-card, .st-store .st-item-card):hover {
+#root :is(.sc-card, .ib-row, .fg-tile, .dh-card, .st-dir-card):hover {
   border-color: rgba(216, 192, 255, .72);
   box-shadow: 0 18px 38px rgba(3, 2, 16, .4), 0 0 17px rgba(153, 101, 238, .12), var(--st-depth-inset);
 }
@@ -75,18 +68,12 @@
 #root .sc-card,
 #root .sc-panel,
 #root .sc-empty,
-#root .sc-wallet,
 #root .ib-row,
 #root .fg-tile,
-#root .bc-card,
-#root .bc-review,
 #root .dh-banner,
 #root .dh-card,
-#root .pf-panel,
 #root .pf-dialog,
 #root .pf-menu-list,
-#root .pf-stats > div,
-#root .pf-name-tier,
 #root .sc-msgs,
 #root .sc-skel,
 #root .ch-photo-card,
@@ -107,9 +94,6 @@
   background-color: rgba(8, 7, 20, .78);
 }
 
-#root .st-store {
-  background-color: rgba(8, 7, 20, .72);
-}
 
 #root .gs {
   background: linear-gradient(155deg, rgba(16, 13, 33, .88), rgba(8, 7, 20, .88) 65%);
@@ -292,7 +276,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #root :is(button, a, [role="button"], .sc-card, .ib-row, .fg-tile, .bc-card, .dh-card, .st-dir-card, .st-store .st-item-card, .app-bottom-link) {
+  #root :is(button, a, [role="button"], .sc-card, .ib-row, .fg-tile, .dh-card, .st-dir-card, .app-bottom-link) {
     transition-duration: .01ms !important;
   }
 }

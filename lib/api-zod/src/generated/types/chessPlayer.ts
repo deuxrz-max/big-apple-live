@@ -12,11 +12,9 @@ export interface ChessPlayer {
   displayName: string;
   /** @nullable */
   photoUrl?: string | null;
-  /** Approved saved profile photos, main photo first. */
-  photoUrls?: string[];
   /**
-     * @minimum 0
-     * @maximum 100
+     * Approved saved profile photos, main photo first.
+     * @maxItems 1
      */
-  giftingLevel?: number;
+  photoUrls?: string[];
 }

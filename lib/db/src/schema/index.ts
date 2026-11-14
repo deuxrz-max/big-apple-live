@@ -29,6 +29,7 @@ export * from "./account-profiles";
 export * from "./account-room-entrance-effects";
 export * from "./profile-photos";
 export * from "./social-settings";
+export * from "./social-profile-cosmetics";
 export * from "./social-wallets";
 export * from "./social-relations";
 export * from "./social-inventory";

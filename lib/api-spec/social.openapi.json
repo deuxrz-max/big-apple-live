@@ -1,2585 +1,274 @@
 {
   "openapi": "3.1.0",
-  "info": {
-    "title": "Social",
-    "version": "1.0.0"
-  },
+  "info": { "title": "Big Apple Live Social", "version": "1.0.0" },
   "paths": {
-    "/social/gifters/leaderboard": {
-      "get": {
-        "operationId": "getGifterLeaderboard",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "responses": {
-          "200": {"description": "Successful outgoing gift XP ranking; opted-in Deux Wild gifters and the top ten other gifters", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GifterLeaderboard"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"}
-        }
-      }
-    },
-    "/social/me/passport": {
-      "get": {
-        "operationId": "getMyStreamerPassport",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "responses": {
-          "200": {"description": "Private platform links and verification codes for the signed-in account", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/MyStreamerPassport"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"}
-        }
-      }
-    },
-    "/social/me/passport/platforms": {
-      "put": {
-        "operationId": "saveMyStreamerPassportPlatform",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/StreamerPassportPlatformInput"}}}},
-        "responses": {
-          "200": {"description": "Saved platform link and private verification code", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/MyStreamerPassportPlatform"}}}},
-          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"}
-        }
-      }
-    },
-    "/social/me/passport/platforms/{entryId}": {
-      "delete": {
-        "operationId": "deleteMyStreamerPassportPlatform",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "parameters": [{"name": "entryId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}],
-        "responses": {
-          "200": {"description": "Platform link removed", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SocialAction"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "404": {"description": "Platform link not found"}
-        }
-      }
-    },
-    "/social/me/passport/platforms/{entryId}/request": {
-      "post": {
-        "operationId": "requestMyStreamerPassportVerification",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "parameters": [{"name": "entryId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}],
-        "responses": {
-          "200": {"description": "Manual review requested", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/MyStreamerPassportPlatform"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "404": {"description": "Platform link not found"},
-          "409": {"description": "Platform is already verified"}
-        }
-      }
-    },
-    "/social/people/{username}/passport": {
-      "get": {
-        "operationId": "getSocialPersonStreamerPassport",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "parameters": [{"name": "username", "in": "path", "required": true, "schema": {"type": "string"}}],
-        "responses": {
-          "200": {"description": "Public profile links and badge data", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/PublicStreamerPassport"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "404": {"description": "Profile unavailable"}
-        }
-      }
-    },
-    "/social/admin/passport/requests": {
-      "get": {
-        "operationId": "getStreamerPassportReviewQueue",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "responses": {
-          "200": {"description": "Manual verification requests; moderator access required", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/StreamerPassportReviewQueue"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Moderator access required"}
-        }
-      }
-    },
-    "/social/admin/passport/requests/{entryId}/review": {
-      "post": {
-        "operationId": "reviewStreamerPassportRequest",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "parameters": [{"name": "entryId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}],
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/StreamerPassportReviewInput"}}}},
-        "responses": {
-          "200": {"description": "Review recorded", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SocialAction"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Moderator access required"},
-          "404": {"description": "Verification request not found"}
-        }
-      }
-    },
-    "/social/admin/passport/founding-league": {
-      "post": {
-        "operationId": "setStreamerPassportFoundingLeague",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/StreamerPassportFoundingInput"}}}},
-        "responses": {
-          "200": {"description": "Founding League stamp updated", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SocialAction"}}}},
-          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Moderator access required"},
-          "404": {"description": "Account not found"}
-        }
-      }
-    },
-    "/social/entrance-effects/shop": {
-      "get": {
-        "operationId": "getEntranceEffectShop",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "responses": {
-          "200": {"description": "Entrance effects for sale and those owned by the signed-in user", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EntranceEffectShop"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"}
-        }
-      }
-    },
-    "/social/entrance-effects/{effectId}/purchase": {
-      "post": {
-        "operationId": "purchaseEntranceEffect",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "parameters": [{"name": "effectId", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/SocialGiftCatalogId"}}],
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EntranceEffectPurchaseInput"}}}},
-        "responses": {
-          "200": {"description": "Owned entrance effect and updated wallet", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EntranceEffectPurchaseResponse"}}}},
-          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "404": {"description": "Entrance effect is not available"},
-          "409": {"description": "Insufficient credits"}
-        }
-      }
-    },
-    "/social/entrance-effects/equipped": {
-      "patch": {
-        "operationId": "equipEntranceEffect",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EntranceEffectEquipInput"}}}},
-        "responses": {
-          "200": {"description": "Equipped entrance effect", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EntranceEffectEquipResponse"}}}},
-          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "The user does not own this entrance effect"},
-          "404": {"description": "Entrance effect is not available"}
-        }
-      }
-    },
-    "/social/admin/gift-motions": {
-      "get": {
-        "operationId": "getAdminGiftMotions",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "responses": {
-          "200": {"description": "Owner-managed 3D gift motions", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DeveloperGiftMotionList"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Owner access required"}
-        }
-      },
-      "post": {
-        "operationId": "uploadGiftMotion",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "requestBody": {"required": true, "content": {"multipart/form-data": {"schema": {"$ref": "#/components/schemas/DeveloperGiftMotionUploadInput"}}}},
-        "responses": {
-          "201": {"description": "3D gift saved and activated", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DeveloperGiftMotion"}}}},
-          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Owner access required"},
-          "413": {"description": "Model exceeds the upload limit"},
-          "415": {"description": "Unsupported or non-self-contained model"}
-        }
-      }
-    },
-    "/social/admin/gift-motions/{giftId}": {
-      "delete": {
-        "operationId": "deleteGiftMotion",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "parameters": [{"name": "giftId", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/SocialGiftCatalogId"}}],
-        "responses": {
-          "200": {"description": "Gift motion removed from the active catalog", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SocialAction"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Owner access required"},
-          "404": {"description": "Gift motion not found"}
-        }
-      }
-    },
-    "/social/gift-motions/{giftId}": {
-      "get": {
-        "operationId": "getGiftMotionPlayback",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "parameters": [{"name": "giftId", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/SocialGiftCatalogId"}}],
-        "responses": {
-          "200": {"description": "Active 3D gift motion playback data", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DeveloperGiftMotion"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "404": {"description": "Gift motion is unavailable"}
-        }
-      }
-    },
-    "/social/gift-motions/{giftId}/file": {
-      "get": {
-        "operationId": "getGiftMotionFile",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "parameters": [{"name": "giftId", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/SocialGiftCatalogId"}}],
-        "responses": {
-          "200": {"description": "Active gift model file", "content": {"model/gltf-binary": {"schema": {"type": "string", "format": "binary"}}, "model/gltf+json": {"schema": {"type": "string", "format": "binary"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "404": {"description": "Gift motion is unavailable"}
-        }
-      }
-    },
-    "/social/admin/gift-studio/library": {
-      "get": {
-        "operationId": "getGiftStudioLibrary",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "responses": {
-          "200": {"description": "Owner's saved gift animation versions", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioLibrary"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Owner access required"}
-        }
-      }
-    },
-    "/social/admin/content-sync": {
-      "get": {
-        "operationId": "getDeveloperContentSync",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "responses": {
-          "200": {"description": "Owner's latest content sync summary", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DeveloperContentSyncStatus"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Owner access required"}
-        }
-      }
-    },
-    "/social/admin/content-sync/run": {
-      "post": {
-        "operationId": "runDeveloperContentSync",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "responses": {
-          "200": {"description": "Content sync completed; individual source failures are included in the summary", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/DeveloperContentSyncStatus"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Owner access required"},
-          "500": {"description": "The sync summary could not be saved"}
-        }
-      }
-    },
-    "/social/admin/hangout-rewards": {
-      "get": {
-        "operationId": "getHangoutRewardSettings",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "responses": {
-          "200": {"description": "Owner's hangout coin-drop schedule", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HangoutRewardSettings"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Owner access required"}
-        }
-      },
-      "patch": {
-        "operationId": "setHangoutRewardInterval",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "requestBody": {
-          "required": true,
-          "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SetHangoutRewardIntervalInput"}}}
-        },
-        "responses": {
-          "200": {"description": "Updated hangout coin-drop schedule", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HangoutRewardSettings"}}}},
-          "400": {"description": "Interval must be a whole number from 15 to 360 minutes"},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Owner access required"}
-        }
-      }
-    },
-    "/social/admin/gift-studio/catalog/{giftId}": {
-      "patch": {
-        "operationId": "updateGiftStudioCatalogItem",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "parameters": [{"name": "giftId", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/SocialGiftCatalogId"}}],
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioCatalogUpdate"}}}},
-        "responses": {
-          "200": {"description": "Gift catalog item updated", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioCatalogGift"}}}},
-          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Owner access required"},
-          "404": {"description": "Gift catalog item not found"}
-        }
-      }
-    },
-    "/social/admin/gift-studio/catalog/{giftId}/icon": {
-      "post": {
-        "operationId": "regenerateGiftStudioCatalogIcon",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "parameters": [{"name": "giftId", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/SocialGiftCatalogId"}}],
-        "responses": {
-          "200": {"description": "Gift picker icon regenerated", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioIconUpdateResponse"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Owner access required"},
-          "404": {"description": "No active saved animation exists"}
-        }
-      },
-      "put": {
-        "operationId": "overrideGiftStudioCatalogIcon",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "parameters": [{"name": "giftId", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/SocialGiftCatalogId"}}],
-        "requestBody": {"required": true, "content": {"multipart/form-data": {"schema": {"type": "object", "required": ["icon"], "properties": {"icon": {"type": "string", "format": "binary"}}}}}},
-        "responses": {
-          "200": {"description": "Gift picker icon replaced", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioIconUpdateResponse"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Owner access required"},
-          "404": {"description": "No active saved animation exists"}
-        }
-      }
-    },
-    "/social/gift-studio/icons/{versionId}": {
-      "get": {
-        "operationId": "getActiveGiftStudioIcon",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "parameters": [{"name": "versionId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}],
-        "responses": {
-          "200": {"description": "Icon for an active gift version", "content": {"image/png": {"schema": {"type": "string", "format": "binary"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "404": {"description": "Active gift icon not found"}
-        }
-      }
-    },
-    "/social/admin/gift-studio/versions": {
-      "post": {
-        "operationId": "createGiftStudioVersion",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {"$ref": "#/components/schemas/GiftStudioUploadInput"}
-            }
-          }
-        },
-        "responses": {
-          "201": {"description": "Transparent animation saved; activated immediately when an existing gift is selected", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioVersion"}}}},
-          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Owner access required"},
-          "413": {"description": "One or more video files exceed the upload limit"},
-          "415": {"description": "Unsupported video format"},
-          "422": {"description": "Transparency or video validation failed"}
-        }
-      }
-    },
-    "/social/admin/gift-studio/process": {
-      "post": {
-        "operationId": "processGiftStudioClipOnServer",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {"$ref": "#/components/schemas/GiftStudioProcessInput"}
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Server-processed VP9 WebM: transparent for See-through video, opaque for Black background",
-            "content": {"video/webm": {"schema": {"type": "string", "format": "binary"}}}
-          },
-          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Owner access required"},
-          "413": {"description": "Source clip exceeds the upload limit"},
-          "415": {"description": "Unsupported video format"},
-          "422": {"description": "The clip could not be processed; See-through video also requires verified transparency"}
-        }
-      }
-    },
-    "/social/admin/gift-studio/save-processed": {
-      "post": {
-        "operationId": "saveGiftStudioProcessed",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {"$ref": "#/components/schemas/GiftStudioProcessedSaveInput"}
-            }
-          }
-        },
-        "responses": {
-          "201": {"description": "Server-processed animation saved; activated immediately when an existing gift is selected", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioVersion"}}}},
-          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Owner access required"},
-          "410": {"description": "The temporary processed clip expired; upload the browser copy instead"}
-        }
-      }
-    },
-    "/social/admin/gift-studio/versions/{versionId}": {
-      "patch": {
-        "operationId": "setGiftStudioVersionActive",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "parameters": [{"name": "versionId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}],
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioActivationInput"}}}},
-        "responses": {
-          "200": {"description": "Gift animation version status updated", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioVersion"}}}},
-          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Owner access required"},
-          "404": {"description": "Gift animation version not found"}
-        }
-      }
-    },
-    "/social/admin/gift-studio/versions/{versionId}/name": {
-      "patch": {
-        "operationId": "renameGiftStudioVersion",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "parameters": [{"name": "versionId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}],
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioRenameInput"}}}},
-        "responses": {
-          "200": {"description": "Saved gift renamed", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioVersion"}}}},
-          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Owner access required"},
-          "404": {"description": "Gift animation version not found"}
-        }
-      }
-    },
-    "/social/admin/gift-studio/versions/{versionId}/delete": {
-      "delete": {
-        "operationId": "deleteGiftStudioVersion",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "parameters": [{"name": "versionId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}],
-        "responses": {
-          "200": {"description": "Saved gift removed", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioDeleteResponse"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Owner access required"},
-          "404": {"description": "Gift animation version not found"}
-        }
-      }
-    },
-    "/social/admin/gift-studio/versions/{versionId}/gift": {
-      "patch": {
-        "operationId": "assignGiftStudioVersionToGift",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "parameters": [{"name": "versionId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}],
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioAssignInput"}}}},
-        "responses": {
-          "200": {"description": "Named standalone draft attached to an existing gift", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioVersion"}}}},
-          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Owner access required"},
-          "404": {"description": "Gift animation version not found"}
-        }
-      }
-    },
-    "/social/admin/gift-studio/versions/{versionId}/media/{variant}": {
-      "get": {
-        "operationId": "getGiftStudioVersionMedia",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "parameters": [
-          {"name": "versionId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}},
-          {"name": "variant", "in": "path", "required": true, "schema": {"type": "string", "enum": ["original", "webm", "safari"]}}
-        ],
-        "responses": {
-          "200": {"description": "Owner-only original or draft animation preview", "content": {"application/octet-stream": {"schema": {"type": "string", "format": "binary"}}}},
-          "206": {"description": "Partial media response"},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Owner access required"},
-          "404": {"description": "Media not found"}
-        }
-      }
-    },
-    "/social/gift-studio/media/{versionId}/{variant}": {
-      "get": {
-        "operationId": "getActiveGiftStudioVersionMedia",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "parameters": [
-          {"name": "versionId", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}},
-          {"name": "variant", "in": "path", "required": true, "schema": {"type": "string", "enum": ["webm", "safari"]}}
-        ],
-        "responses": {
-          "200": {"description": "Active transparent gift animation", "content": {"application/octet-stream": {"schema": {"type": "string", "format": "binary"}}}},
-          "206": {"description": "Partial media response"},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "404": {"description": "Active media not found"}
-        }
-      }
-    },
-    "/social/gift-studio/active/{giftId}": {
-      "get": {
-        "operationId": "getActiveGiftStudioMedia",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "parameters": [{"name": "giftId", "in": "path", "required": true, "schema": {"$ref": "#/components/schemas/GiftStudioGiftId"}}],
-        "responses": {
-          "200": {"description": "Currently active custom animation, if any", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GiftStudioActiveMediaResponse"}}}},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"}
-        }
-      }
-    },
     "/social/me": {
       "get": {
         "operationId": "getSocialMe",
-        "tags": [
-          "social"
-        ],
-        "security": [
-          {
-            "AccountSession": []
-          }
-        ],
-        "parameters": [],
+        "tags": ["social"],
+        "security": [{ "AccountSession": [] }],
         "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SocialMe"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
-          },
-          "401": {
-            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
-          },
-          "403": {
-            "description": "Blocked or not permitted"
-          },
-          "409": {
-            "description": "Already claimed, conflicting retry or insufficient credits"
-          }
+          "200": { "description": "Current profile and country options", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SocialMe" } } } },
+          "401": { "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized" }
         }
       },
       "put": {
         "operationId": "saveSocialProfile",
-        "tags": [
-          "social"
-        ],
-        "security": [
-          {
-            "AccountSession": []
-          }
-        ],
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SocialProfileInput"
-              }
-            }
-          }
-        },
+        "tags": ["social"],
+        "security": [{ "AccountSession": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SocialProfileInput" } } } },
         "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SocialPerson"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
-          },
-          "401": {
-            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
-          },
-          "403": {
-            "description": "Blocked or not permitted"
-          },
-          "409": {
-            "description": "Already claimed, conflicting retry or insufficient credits"
-          }
+          "200": { "description": "Saved Race and Job choices", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SocialPerson" } } } },
+          "400": { "$ref": "./openapi.yaml#/components/responses/InvalidInput" },
+          "401": { "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized" }
         }
       }
     },
-    "/social/me/name-color-test-total": {
-      "put": {
-        "operationId": "setMyNameColorTestTotal",
+    "/social/cosmetics/store": {
+      "get": {
+        "operationId": "getProfileCosmeticsStore",
         "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {"$ref": "#/components/schemas/NameColorTestTotalInput"}
-            }
-          }
-        },
+        "security": [{ "AccountSession": [] }],
         "responses": {
-          "200": {
-            "description": "Saved the owner-only development name-color test override",
-            "content": {
-              "application/json": {
-                "schema": {"$ref": "#/components/schemas/NameColorTestTotalResponse"}
-              }
-            }
-          },
-          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "Owner-only development test control"}
+          "200": { "description": "Owned profile cosmetics and available previews", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProfileCosmeticsStore" } } } },
+          "401": { "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized" }
         }
       }
     },
-    "/social/me/entrance-effects": {
+    "/social/cosmetics/equip": {
       "put": {
-        "operationId": "updateMyEntranceEffectSettings",
+        "operationId": "equipProfileCosmetic",
         "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {"$ref": "#/components/schemas/EntranceEffectSettingsInput"}
-            }
-          }
-        },
+        "security": [{ "AccountSession": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProfileCosmeticEquipInput" } } } },
         "responses": {
-          "200": {
-            "description": "Saved entrance-effect preferences",
-            "content": {
-              "application/json": {
-                "schema": {"$ref": "#/components/schemas/EntranceEffectSettings"}
-              }
-            }
-          },
-          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "An active badge or owner preview access is required"}
-        }
-      }
-    },
-    "/social/me/equipped-badge": {
-      "put": {
-        "operationId": "equipMyBadge",
-        "tags": ["social"],
-        "security": [{"AccountSession": []}],
-        "requestBody": {
-          "required": true,
-          "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EquipMyBadgeInput"}}}
-        },
-        "responses": {
-          "200": {
-            "description": "Saved the account's equipped badge choice",
-            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EquippedBadgeState"}}}
-          },
-          "400": {"$ref": "./openapi.yaml#/components/responses/InvalidInput"},
-          "401": {"$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"},
-          "403": {"description": "The account does not own the requested active badge"}
+          "200": { "description": "Equipped an owned profile cosmetic", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProfileCosmeticsStore" } } } },
+          "400": { "$ref": "./openapi.yaml#/components/responses/InvalidInput" },
+          "401": { "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized" },
+          "403": { "description": "The item is not owned" }
         }
       }
     },
     "/social/people": {
       "get": {
         "operationId": "getSocialPeople",
-        "tags": [
-          "social"
-        ],
-        "security": [
-          {
-            "AccountSession": []
-          }
-        ],
+        "tags": ["social"],
+        "security": [{ "AccountSession": [] }],
         "parameters": [
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "gender",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "Male",
-                "Female"
-              ]
-            }
-          },
-          {
-            "name": "country",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "favorites",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean"
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0
-            }
-          }
+          { "name": "search", "in": "query", "schema": { "type": "string", "maxLength": 80 } },
+          { "name": "gender", "in": "query", "schema": { "type": "string", "enum": ["Male", "Female"] } },
+          { "name": "country", "in": "query", "schema": { "type": "string", "maxLength": 2 } },
+          { "name": "favorites", "in": "query", "schema": { "type": "boolean" } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer", "minimum": 0 } }
         ],
         "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SocialPeople"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
-          },
-          "401": {
-            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
-          },
-          "403": {
-            "description": "Blocked or not permitted"
-          },
-          "409": {
-            "description": "Already claimed, conflicting retry or insufficient credits"
-          }
+          "200": { "description": "Public profiles matching the query", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SocialPeople" } } } },
+          "401": { "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized" }
         }
       }
     },
     "/social/people/{username}": {
       "get": {
         "operationId": "getSocialPerson",
-        "tags": [
-          "social"
-        ],
-        "security": [
-          {
-            "AccountSession": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "username",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "tags": ["social"],
+        "security": [{ "AccountSession": [] }],
+        "parameters": [{ "name": "username", "in": "path", "required": true, "schema": { "type": "string" } }],
         "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SocialPerson"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
-          },
-          "401": {
-            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
-          },
-          "403": {
-            "description": "Blocked or not permitted"
-          },
-          "409": {
-            "description": "Already claimed, conflicting retry or insufficient credits"
-          }
+          "200": { "description": "Public profile", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SocialPerson" } } } },
+          "401": { "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized" },
+          "404": { "description": "Profile unavailable" }
         }
       }
     },
     "/social/people/{username}/relationship": {
       "put": {
         "operationId": "setSocialRelationship",
-        "tags": [
-          "social"
-        ],
-        "security": [
-          {
-            "AccountSession": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "username",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SocialRelationshipInput"
-              }
-            }
-          }
-        },
+        "tags": ["social"],
+        "security": [{ "AccountSession": [] }],
+        "parameters": [{ "name": "username", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SocialRelationshipInput" } } } },
         "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SocialAction"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
-          },
-          "401": {
-            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
-          },
-          "403": {
-            "description": "Blocked or not permitted"
-          },
-          "409": {
-            "description": "Already claimed, conflicting retry or insufficient credits"
-          }
+          "200": { "description": "Updated follow or block relationship", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SocialAction" } } } },
+          "400": { "$ref": "./openapi.yaml#/components/responses/InvalidInput" },
+          "401": { "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized" }
         }
       }
     },
     "/social/blocks": {
       "get": {
         "operationId": "getSocialBlocks",
-        "tags": [
-          "social"
-        ],
-        "security": [
-          {
-            "AccountSession": []
-          }
-        ],
-        "parameters": [],
+        "tags": ["social"],
+        "security": [{ "AccountSession": [] }],
         "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SocialPeople"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
-          },
-          "401": {
-            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
-          },
-          "403": {
-            "description": "Blocked or not permitted"
-          },
-          "409": {
-            "description": "Already claimed, conflicting retry or insufficient credits"
-          }
-        }
-      }
-    },
-    "/social/wallet/claim": {
-      "post": {
-        "operationId": "claimSocialDailyReward",
-        "tags": [
-          "social"
-        ],
-        "security": [
-          {
-            "AccountSession": []
-          }
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SocialWallet"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
-          },
-          "401": {
-            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
-          },
-          "403": {
-            "description": "Blocked or not permitted"
-          },
-          "409": {
-            "description": "Already claimed, conflicting retry or insufficient credits"
-          }
-        }
-      }
-    },
-    "/social/gifts/rooms/{roomId}": {
-      "get": {
-        "operationId": "getRoomGiftEvents",
-        "tags": ["Social"],
-        "parameters": [
-          {"name": "roomId", "in": "path", "required": true, "schema": {"type": "string"}},
-          {"name": "after", "in": "query", "required": false, "schema": {"type": "string"}, "description": "Opaque cursor returned by the previous page"},
-          {"name": "since", "in": "query", "required": false, "schema": {"type": "string", "format": "date-time"}, "description": "Return gift events from this time, in FIFO pages"}
-        ],
-        "responses": {"200": {"description": "Recent or cursor-paged gift notices in the authorized university", "content": {"application/json": {"schema": {"type": "object", "properties": {"events": {"type": "array", "items": {"$ref": "#/components/schemas/RoomGiftEvent"}}, "nextCursor": {"type": ["string", "null"]}, "hasMore": {"type": "boolean"}}, "required": ["events", "nextCursor", "hasMore"]}}}}}
-      }
-    },
-    "/social/gifts": {
-      "post": {
-        "operationId": "sendSocialGift",
-        "tags": [
-          "social"
-        ],
-        "security": [
-          {
-            "AccountSession": []
-          }
-        ],
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SocialGiftInput"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SocialWallet"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
-          },
-          "401": {
-            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
-          },
-          "403": {
-            "description": "Blocked or not permitted"
-          },
-          "409": {
-            "description": "Already claimed, conflicting retry or insufficient credits"
-          }
-        }
-      }
-    },
-    "/social/store/purchase": {
-      "post": {
-        "operationId": "purchaseSocialProduct",
-        "tags": [
-          "social"
-        ],
-        "security": [
-          {
-            "AccountSession": []
-          }
-        ],
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SocialPurchaseInput"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SocialWallet"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
-          },
-          "401": {
-            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
-          },
-          "403": {
-            "description": "Blocked or not permitted"
-          },
-          "409": {
-            "description": "Already claimed, conflicting retry or insufficient credits"
-          }
-        }
-      }
-    },
-    "/social/wallet/transactions": {
-      "get": {
-        "operationId": "getSocialLedger",
-        "tags": [
-          "social"
-        ],
-        "security": [
-          {
-            "AccountSession": []
-          }
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SocialLedger"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
-          },
-          "401": {
-            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
-          },
-          "403": {
-            "description": "Blocked or not permitted"
-          },
-          "409": {
-            "description": "Already claimed, conflicting retry or insufficient credits"
-          }
-        }
-      }
-    },
-    "/social/leaderboard": {
-      "get": {
-        "operationId": "getSocialLeaderboard",
-        "tags": [
-          "social"
-        ],
-        "security": [
-          {
-            "AccountSession": []
-          }
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SocialPeople"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
-          },
-          "401": {
-            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
-          },
-          "403": {
-            "description": "Blocked or not permitted"
-          },
-          "409": {
-            "description": "Already claimed, conflicting retry or insufficient credits"
-          }
+          "200": { "description": "Blocked profiles", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SocialPeople" } } } },
+          "401": { "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized" }
         }
       }
     },
     "/social/messages": {
       "get": {
         "operationId": "getSocialInbox",
-        "tags": [
-          "social"
-        ],
-        "security": [
-          {
-            "AccountSession": []
-          }
-        ],
-        "parameters": [],
+        "tags": ["social"],
+        "security": [{ "AccountSession": [] }],
         "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SocialInbox"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
-          },
-          "401": {
-            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
-          },
-          "403": {
-            "description": "Blocked or not permitted"
-          },
-          "409": {
-            "description": "Already claimed, conflicting retry or insufficient credits"
-          }
+          "200": { "description": "Private-message inbox", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SocialInbox" } } } },
+          "401": { "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized" }
         }
       }
     },
     "/social/messages/{username}": {
       "get": {
         "operationId": "getSocialConversation",
-        "tags": [
-          "social"
-        ],
-        "security": [
-          {
-            "AccountSession": []
-          }
-        ],
+        "tags": ["social"],
+        "security": [{ "AccountSession": [] }],
         "parameters": [
-          {
-            "name": "username",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "cursor",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
+          { "name": "username", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "cursor", "in": "query", "schema": { "type": "string", "format": "uuid" } }
         ],
         "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SocialConversation"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
-          },
-          "401": {
-            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
-          },
-          "403": {
-            "description": "Blocked or not permitted"
-          },
-          "409": {
-            "description": "Already claimed, conflicting retry or insufficient credits"
-          }
+          "200": { "description": "Private conversation", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SocialConversation" } } } },
+          "401": { "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized" }
         }
       },
       "post": {
         "operationId": "sendSocialMessage",
-        "tags": [
-          "social"
-        ],
-        "security": [
-          {
-            "AccountSession": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "username",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SocialMessageInput"
-              }
-            }
-          }
-        },
+        "tags": ["social"],
+        "security": [{ "AccountSession": [] }],
+        "parameters": [{ "name": "username", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SocialMessageInput" } } } },
         "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SocialMessage"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
-          },
-          "401": {
-            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
-          },
-          "403": {
-            "description": "Blocked or not permitted"
-          },
-          "409": {
-            "description": "Already claimed, conflicting retry or insufficient credits"
-          }
+          "200": { "description": "Message sent", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SocialMessage" } } } },
+          "401": { "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized" }
         }
       },
       "delete": {
         "operationId": "deleteSocialConversation",
-        "tags": [
-          "social"
-        ],
-        "security": [
-          {
-            "AccountSession": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "username",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "tags": ["social"],
+        "security": [{ "AccountSession": [] }],
+        "parameters": [{ "name": "username", "in": "path", "required": true, "schema": { "type": "string" } }],
         "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SocialAction"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "./openapi.yaml#/components/responses/InvalidInput"
-          },
-          "401": {
-            "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized"
-          },
-          "403": {
-            "description": "Blocked or not permitted"
-          },
-          "409": {
-            "description": "Already claimed, conflicting retry or insufficient credits"
-          }
+          "200": { "description": "Conversation hidden for the current user", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SocialAction" } } } },
+          "401": { "$ref": "./openapi.yaml#/components/responses/SessionUnauthorized" }
         }
       }
     }
   },
   "components": {
     "schemas": {
-      "GifterLeaderboard": {
-        "type": "object",
-        "required": ["people"],
-        "properties": {
-          "people": {
-            "type": "array",
-            "items": {
-              "allOf": [
-                {"$ref": "#/components/schemas/SocialPerson"},
-                {"type": "object", "required": ["giftXp"], "properties": {"giftXp": {"type": "integer", "minimum": 1}}}
-              ]
-            }
-          }
-        }
-      },
-      "DeveloperGiftMotionPreset": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["version", "durationMs", "category", "entry", "exit", "speed", "spin", "drift", "bounce", "cameraYaw", "cameraPitch", "animationIndex"],
-        "properties": {
-          "version": {"type": "integer", "const": 1},
-          "durationMs": {"type": "integer", "const": 6000},
-          "category": {"type": "string", "enum": ["vehicle", "character", "object", "logo"]},
-          "entry": {"type": "string", "enum": ["left", "right", "top", "bottom", "depth"]},
-          "exit": {"type": "string", "enum": ["left", "right", "top", "bottom", "depth"]},
-          "speed": {"type": "number", "minimum": 0.5, "maximum": 1.5},
-          "spin": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "number", "minimum": -6.3, "maximum": 6.3}},
-          "drift": {"type": "number", "minimum": 0, "maximum": 1},
-          "bounce": {"type": "number", "minimum": 0, "maximum": 1},
-          "cameraYaw": {"type": "number", "minimum": -1.2, "maximum": 1.2},
-          "cameraPitch": {"type": "number", "minimum": -0.8, "maximum": 0.8},
-          "animationIndex": {"type": ["integer", "null"], "minimum": 0, "maximum": 100}
-        }
-      },
-      "DeveloperGiftMotion": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["id", "name", "cost", "format", "category", "animationNames", "motion", "byteSize", "fileUrl", "active", "createdAt"],
-        "properties": {
-          "id": {"$ref": "#/components/schemas/SocialGiftCatalogId"},
-          "name": {"type": "string"},
-          "cost": {"type": "integer", "minimum": 1},
-          "format": {"type": "string", "enum": ["glb", "gltf"]},
-          "category": {"type": "string", "enum": ["vehicle", "character", "object", "logo"]},
-          "animationNames": {"type": "array", "items": {"type": "string"}},
-          "motion": {"$ref": "#/components/schemas/DeveloperGiftMotionPreset"},
-          "byteSize": {"type": "integer", "minimum": 1},
-          "fileUrl": {"type": "string"},
-          "active": {"type": "boolean"},
-          "createdAt": {"type": "string", "format": "date-time"}
-        }
-      },
-      "DeveloperGiftMotionList": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["motions"],
-        "properties": {"motions": {"type": "array", "items": {"$ref": "#/components/schemas/DeveloperGiftMotion"}}}
-      },
-      "DeveloperGiftMotionUploadInput": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["name", "cost", "category", "animationNames", "motion", "model"],
-        "properties": {
-          "name": {"type": "string", "minLength": 1, "maxLength": 60},
-          "cost": {"type": "integer", "minimum": 1},
-          "category": {"type": "string", "enum": ["vehicle", "character", "object", "logo"]},
-          "animationNames": {"type": "string", "description": "JSON array of built-in animation clip names"},
-          "motion": {"type": "string", "description": "JSON-encoded deterministic 6-second motion preset"},
-          "model": {"type": "string", "description": "One self-contained GLB or GLTF model, up to 100 MB"}
-        }
-      },
-      "GiftStudioGiftId": {
-        "type": "string",
-        "pattern": "^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$"
-      },
-      "SocialGiftCatalogId": {
-        "type": "string",
-        "pattern": "^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$"
-      },
-      "GiftStudioCatalogUpdate": {
-        "type": "object",
-        "additionalProperties": false,
-        "minProperties": 1,
-        "properties": {
-          "name": {"type": "string", "minLength": 1, "maxLength": 60},
-          "cost": {"type": "integer", "minimum": 1},
-          "productType": {"$ref": "#/components/schemas/GiftStudioProductType"},
-          "status": {"type": "string", "enum": ["active", "inactive", "deleted"]},
-          "platinumExclusive": {"type": "boolean", "description": "Owner-selected gift restricted to gifter level 61 or higher. Defaults false."}
-        }
-      },
-      "GiftStudioCatalogGift": {
-        "type": "object",
-        "required": ["id", "name", "cost", "productType", "status", "roomGift", "animationAvailable", "iconUrl", "iconStatus"],
-        "properties": {
-          "id": {"$ref": "#/components/schemas/SocialGiftCatalogId"},
-          "name": {"type": "string"},
-          "cost": {"type": "integer", "minimum": 1},
-          "productType": {"$ref": "#/components/schemas/GiftStudioProductType"},
-          "status": {"type": "string", "enum": ["active", "inactive", "deleted"]},
-          "roomGift": {"type": "boolean"},
-          "platinumExclusive": {"type": "boolean"},
-          "animationAvailable": {"type": "boolean"},
-          "iconUrl": {"type": ["string", "null"]},
-          "iconStatus": {"$ref": "#/components/schemas/GiftStudioIconStatus"}
-        }
-      },
-      "GiftStudioIconStatus": {
-        "type": "string",
-        "enum": ["transparent", "fallback", "manual-transparent", "manual-fallback", "builtin"]
-      },
-      "GiftStudioIconUpdateResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["giftId", "iconStatus", "iconUrl"],
-        "properties": {
-          "giftId": {"$ref": "#/components/schemas/SocialGiftCatalogId"},
-          "iconStatus": {"$ref": "#/components/schemas/GiftStudioIconStatus"},
-          "iconUrl": {"type": "string"}
-        }
-      },
-      "GiftStudioProductType": {
-        "type": "string",
-        "enum": ["gift", "entrance-effect"]
-      },
-      "EntranceEffectShopMedia": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["versionId", "webmUrl", "safariUrl", "durationMs"],
-        "properties": {
-          "versionId": {"type": "string", "format": "uuid"},
-          "webmUrl": {"type": "string"},
-          "safariUrl": {"type": "string"},
-          "durationMs": {"type": "integer", "minimum": 1}
-        }
-      },
-      "EntranceEffectShopItem": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["id", "name", "cost", "availableForPurchase", "owned", "equipped", "media"],
-        "properties": {
-          "id": {"$ref": "#/components/schemas/SocialGiftCatalogId"},
-          "name": {"type": "string", "minLength": 1},
-          "cost": {"type": "integer", "minimum": 1},
-          "availableForPurchase": {"type": "boolean"},
-          "owned": {"type": "boolean"},
-          "equipped": {"type": "boolean"},
-          "media": {"anyOf": [{"$ref": "#/components/schemas/EntranceEffectShopMedia"}, {"type": "null"}]}
-        }
-      },
-      "EntranceEffectShop": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["items"],
-        "properties": {"items": {"type": "array", "items": {"$ref": "#/components/schemas/EntranceEffectShopItem"}}}
-      },
-      "EntranceEffectPurchaseInput": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["requestId"],
-        "properties": {"requestId": {"type": "string", "format": "uuid"}, "testMode": {"type": "boolean", "description": "Expected test-coin mode; server rejects stale designation."}}
-      },
-      "EntranceEffectPurchaseResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["effectId", "purchased", "wallet"],
-        "properties": {
-          "effectId": {"$ref": "#/components/schemas/SocialGiftCatalogId"},
-          "purchased": {"type": "boolean"},
-          "wallet": {"$ref": "#/components/schemas/SocialWallet"}
-        }
-      },
-      "EntranceEffectEquipInput": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["effectId"],
-        "properties": {"effectId": {"anyOf": [{"$ref": "#/components/schemas/SocialGiftCatalogId"}, {"type": "null"}]}}
-      },
-      "EntranceEffectEquipResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["effectId"],
-        "properties": {"effectId": {"anyOf": [{"$ref": "#/components/schemas/SocialGiftCatalogId"}, {"type": "null"}]}}
-      },
-      "GiftStudioProcessingSettings": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["preset", "keyColor", "tolerance", "softness", "spill", "maxDimension"],
-        "properties": {
-          "preset": {"type": "string", "enum": ["green", "magenta", "black", "custom"]},
-          "keyColor": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
-          "tolerance": {"type": "number", "minimum": 0.02, "maximum": 0.65},
-          "softness": {"type": "number", "minimum": 0, "maximum": 0.5},
-          "spill": {"type": "number", "minimum": 0, "maximum": 1},
-          "maxDimension": {"anyOf": [{"type": "integer", "enum": [480, 720, 1080]}, {"type": "null"}]},
-          "backgroundMode": {"type": "string", "enum": ["see-through", "black"], "default": "see-through"},
-          "preserveSourceAlpha": {"type": "boolean", "default": false, "description": "The uploaded clip already contains real transparency; do not apply a color key"},
-          "retainOpaqueBackground": {"type": "boolean", "default": false, "description": "New nonblack opaque uploads may keep their background after a warning instead of being rejected"},
-          "draftName": {"type": "string", "minLength": 1, "maxLength": 60, "description": "Owner-provided name shown for this saved Gift Studio draft"},
-          "productType": {"$ref": "#/components/schemas/GiftStudioProductType"}
-        }
-      },
-      "GiftStudioUploadInput": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["settings", "sourceVideo", "processedWebm"],
-        "properties": {
-          "giftId": {"anyOf": [{"$ref": "#/components/schemas/GiftStudioGiftId"}, {"type": "null"}]},
-          "productType": {"$ref": "#/components/schemas/GiftStudioProductType"},
-          "cost": {"type": "integer", "minimum": 1, "description": "Optional updated credit price for an existing catalog gift"},
-          "settings": {"type": "string", "description": "JSON-serialized GiftStudioProcessingSettings"},
-          "sourceVideo": {"type": "string", "description": "Video file part"},
-          "processedWebm": {"type": "string", "description": "Processed WebM file part; transparent for see-through videos and opaque for black-background videos"}
-        }
-      },
-      "GiftStudioProcessInput": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["settings", "sourceVideo"],
-        "properties": {
-          "settings": {"type": "string", "description": "JSON-serialized key settings"},
-          "sourceVideo": {"type": "string", "description": "Source video file part"}
-        }
-      },
-      "GiftStudioProcessedSaveInput": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["processingSession", "draftName"],
-        "properties": {
-          "processingSession": {"type": "string", "format": "uuid"},
-          "draftName": {"type": "string", "minLength": 1, "maxLength": 60},
-          "giftId": {"anyOf": [{"$ref": "#/components/schemas/GiftStudioGiftId"}, {"type": "null"}]},
-          "productType": {"$ref": "#/components/schemas/GiftStudioProductType"},
-          "cost": {"type": "integer", "minimum": 1, "description": "Optional updated credit price for an existing catalog gift"}
-        }
-      },
-      "GiftStudioRenameInput": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["name"],
-        "properties": {"name": {"type": "string", "minLength": 1, "maxLength": 60}}
-      },
-      "GiftStudioDeleteResponse": {
-        "type": "object",
-        "required": ["deleted"],
-        "properties": {"deleted": {"type": "boolean", "const": true}}
-      },
-      "GiftStudioAssignInput": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["giftId"],
-        "properties": {"giftId": {"$ref": "#/components/schemas/GiftStudioGiftId"}}
-      },
-      "GiftStudioActivationInput": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["active"],
-        "properties": {
-          "active": {"type": "boolean"},
-          "productType": {"$ref": "#/components/schemas/GiftStudioProductType"},
-          "cost": {"type": "integer", "minimum": 1}
-        }
-      },
-      "GiftStudioVersion": {
-        "type": "object",
-        "required": ["id", "giftId", "version", "status", "originalName", "durationMs", "settings", "createdAt", "originalUrl", "webmUrl", "safariUrl", "originalBytes", "webmBytes", "safariBytes"],
-        "properties": {
-          "id": {"type": "string", "format": "uuid"},
-          "giftId": {"anyOf": [{"$ref": "#/components/schemas/GiftStudioGiftId"}, {"type": "null"}]},
-          "version": {"type": "integer"},
-          "status": {"type": "string", "enum": ["draft", "active"]},
-          "originalName": {"type": "string"},
-          "durationMs": {"type": "integer"},
-          "settings": {"$ref": "#/components/schemas/GiftStudioProcessingSettings"},
-          "createdAt": {"type": "string", "format": "date-time"},
-          "originalUrl": {"type": "string"},
-          "webmUrl": {"type": "string"},
-          "safariUrl": {"type": "string"},
-          "originalBytes": {"type": "integer"},
-          "webmBytes": {"type": "integer"},
-          "safariBytes": {"type": "integer"}
-        }
-      },
-      "GiftStudioLibrary": {
-        "type": "object",
-        "required": ["items", "catalog"],
-        "properties": {
-          "items": {"type": "array", "items": {"$ref": "#/components/schemas/GiftStudioVersion"}},
-          "catalog": {"type": "array", "items": {"$ref": "#/components/schemas/GiftStudioCatalogGift"}}
-        }
-      },
-      "DeveloperContentSyncPoolResult": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["roomId", "added", "updated", "skipped", "savedCount"],
-        "properties": {
-          "roomId": {"type": "string"},
-          "added": {"type": "integer", "minimum": 0},
-          "updated": {"type": "integer", "minimum": 0},
-          "skipped": {"type": "integer", "minimum": 0},
-          "savedCount": {"type": "integer", "minimum": 0},
-          "message": {"type": "string"}
-        }
-      },
-      "DeveloperContentSyncAssetResult": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["active", "drafts", "skipped"],
-        "properties": {
-          "active": {"type": "integer", "minimum": 0},
-          "drafts": {"type": "integer", "minimum": 0},
-          "skipped": {"type": "integer", "minimum": 0}
-        }
-      },
-      "DeveloperContentSyncSummary": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["trigger", "added", "updated", "skipped", "videoPools", "giftEffects", "entranceEffects"],
-        "properties": {
-          "trigger": {"type": "string", "enum": ["manual", "scheduled", "startup-catchup"]},
-          "added": {"type": "integer", "minimum": 0},
-          "updated": {"type": "integer", "minimum": 0},
-          "skipped": {"type": "integer", "minimum": 0},
-          "videoPools": {"type": "array", "items": {"$ref": "#/components/schemas/DeveloperContentSyncPoolResult"}},
-          "giftEffects": {"$ref": "#/components/schemas/DeveloperContentSyncAssetResult"},
-          "entranceEffects": {"$ref": "#/components/schemas/DeveloperContentSyncAssetResult"}
-        }
-      },
-      "DeveloperContentSyncStatus": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["lastSyncedAt", "lastScheduledEasternDate", "summary", "isRunning"],
-        "properties": {
-          "lastSyncedAt": {"anyOf": [{"type": "string", "format": "date-time"}, {"type": "null"}]},
-          "lastScheduledEasternDate": {"anyOf": [{"type": "string", "format": "date"}, {"type": "null"}]},
-          "summary": {"anyOf": [{"$ref": "#/components/schemas/DeveloperContentSyncSummary"}, {"type": "null"}]},
-          "isRunning": {"type": "boolean"}
-        }
-      },
-      "GiftStudioPlaybackMedia": {
-        "type": "object",
-        "required": ["versionId", "name", "webmUrl", "safariUrl", "durationMs", "backgroundMode"],
-        "properties": {
-          "versionId": {"type": "string", "format": "uuid"},
-          "name": {"type": "string", "minLength": 1, "maxLength": 60},
-          "webmUrl": {"type": "string"},
-          "safariUrl": {"type": "string"},
-          "durationMs": {"type": "integer", "minimum": 1, "maximum": 15000},
-          "backgroundMode": {"type": "string", "enum": ["see-through", "black"]}
-        }
-      },
-      "GiftStudioActiveMediaResponse": {
-        "type": "object",
-        "required": ["media"],
-        "properties": {
-          "media": {"anyOf": [{"$ref": "#/components/schemas/GiftStudioPlaybackMedia"}, {"type": "null"}]}
-        }
-      },
-      "StreamerPassportPlatform": {
-        "type": "object",
-        "required": ["id", "label", "color"],
-        "properties": {
-          "id": {"type": "string", "enum": ["liveme", "tiktok", "bigo", "instagram", "facebook", "youtube", "twitch"]},
-          "label": {"type": "string"},
-          "color": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"}
-        }
-      },
-      "StreamerPassportPlatformInput": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["platform", "handleOrUrl"],
-        "properties": {
-          "platform": {"type": "string", "enum": ["liveme", "tiktok", "bigo", "instagram", "facebook", "youtube", "twitch"]},
-          "handleOrUrl": {"type": "string", "minLength": 1, "maxLength": 300}
-        }
-      },
-      "MyStreamerPassportPlatform": {
-        "allOf": [
-          {"$ref": "#/components/schemas/StreamerPassportPlatform"},
-          {"type": "object", "required": ["id", "entryId", "handle", "profileUrl", "addedAt", "verificationCode", "verificationStatus", "requestedAt", "verifiedAt"], "properties": {
-            "entryId": {"type": "string", "format": "uuid"},
-            "handle": {"type": "string"},
-            "profileUrl": {"type": "string", "format": "uri"},
-            "addedAt": {"type": "string", "format": "date-time"},
-            "verificationCode": {"type": "string"},
-            "verificationStatus": {"type": "string", "enum": ["unverified", "requested", "verified"]},
-            "requestedAt": {"type": ["string", "null"], "format": "date-time"},
-            "verifiedAt": {"type": ["string", "null"], "format": "date-time"}
-          }}
-        ]
-      },
-      "MyStreamerPassport": {
-        "type": "object",
-        "required": ["availablePlatforms", "platforms", "foundingLeague"],
-        "properties": {
-          "availablePlatforms": {"type": "array", "items": {"$ref": "#/components/schemas/StreamerPassportPlatform"}},
-          "platforms": {"type": "array", "items": {"$ref": "#/components/schemas/MyStreamerPassportPlatform"}},
-          "foundingLeague": {"type": "boolean"}
-        }
-      },
-      "StreamerPassportPublicEntry": {
-        "allOf": [
-          {"$ref": "#/components/schemas/StreamerPassportPlatform"},
-          {"type": "object", "required": ["handle", "profileUrl", "addedAt", "verified"], "properties": {
-            "handle": {"type": "string"},
-            "profileUrl": {"type": "string", "format": "uri"},
-            "addedAt": {"type": "string", "format": "date-time"},
-            "verified": {"type": "boolean"}
-          }}
-        ]
-      },
-      "StreamerPassportBadgeSummary": {
-        "type": "object",
-        "required": ["platforms", "verified", "foundingLeague"],
-        "properties": {
-          "platforms": {"type": "array", "items": {"$ref": "#/components/schemas/StreamerPassportPlatform"}},
-          "verified": {"type": "boolean"},
-          "foundingLeague": {"type": "boolean"}
-        }
-      },
-      "PublicStreamerPassport": {
-        "type": "object",
-        "required": ["username", "displayName", "identity", "platforms", "foundingLeague"],
-        "properties": {
-          "username": {"type": "string"},
-          "displayName": {"type": "string"},
-          "identity": {"$ref": "./openapi.yaml#/components/schemas/EmojiIdentity"},
-          "platforms": {"type": "array", "items": {"$ref": "#/components/schemas/StreamerPassportPublicEntry"}},
-          "foundingLeague": {"type": "boolean"}
-        }
-      },
-      "StreamerPassportReviewQueue": {
-        "type": "object",
-        "required": ["requests"],
-        "properties": {
-          "requests": {"type": "array", "items": {"allOf": [
-            {"$ref": "#/components/schemas/MyStreamerPassportPlatform"},
-            {"type": "object", "required": ["username", "displayName"], "properties": {"username": {"type": "string"}, "displayName": {"type": "string"}}}
-          ]}}
-        }
-      },
-      "StreamerPassportReviewInput": {
-        "type": "object",
-        "required": ["action"],
-        "properties": {"action": {"type": "string", "enum": ["approve", "reject"]}}
-      },
-      "StreamerPassportFoundingInput": {
-        "type": "object",
-        "required": ["username", "grant"],
-        "properties": {"username": {"type": "string"}, "grant": {"type": "boolean"}}
-      },
       "SocialPerson": {
         "type": "object",
         "properties": {
-          "externalPlatform": { "type": ["string", "null"], "enum": ["LiveMe", "Bigo Live", "Tango Live", "TikTok", "Instagram Live", "Super Live", null] },
-          "externalHandle": { "type": ["string", "null"], "maxLength": 64 },
-          "username": {
-            "type": "string"
-          },
+          "username": { "type": "string" },
           "displayName": { "type": "string" },
-          "displayNameColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
-          "displayNameTierIndex": { "type": "integer", "minimum": 0, "maximum": 100 },
-          "followerCount": { "type": "integer", "minimum": 0 },
-          "followingCount": { "type": "integer", "minimum": 0 },
-          "sentCredits": { "type": "integer", "minimum": 0 },
-          "badges": { "type": "array", "items": { "type": "object", "required": ["id", "earnedAt"], "properties": { "id": { "type": "string" }, "earnedAt": { "type": "string", "format": "date-time" } } } },
           "photoUrl": { "type": ["string", "null"] },
-          "photoUrls": { "type": "array", "maxItems": 4, "items": { "type": "string" } },
+          "photoUrls": { "type": "array", "maxItems": 1, "items": { "type": "string" } },
           "photoReviews": { "type": "array", "items": { "$ref": "./openapi.yaml#/components/schemas/PhotoReviewStatus" } },
-          "identity": {
-            "$ref": "./openapi.yaml#/components/schemas/EmojiIdentity"
-          },
-          "bio": {
-            "type": "string"
-          },
-          "country": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "interests": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "race": {
-            "type": "string",
-            "enum": ["Human"]
-          },
-          "job": {
-            "type": ["string", "null"],
-            "enum": ["Apprentice", "Squire", "Initiate", "Trapper", "Novice", "Acolyte", "Scoundrel", "Tinker", null]
-          },
-          "discoverable": {
-            "type": "boolean"
-          },
-          "favorite": {
-            "type": "boolean"
-          },
-          "blocked": {
-            "type": "boolean"
-          },
-          "receivedCredits": {
-            "type": "integer"
-          },
-          "badgeId": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "badgeName": {"type": ["string", "null"]},
-          "badgeImage": {"type": ["string", "null"]}
-          ,"passport": {"$ref": "#/components/schemas/StreamerPassportBadgeSummary"}
+          "identity": { "$ref": "./openapi.yaml#/components/schemas/EmojiIdentity" },
+          "race": { "type": "string", "enum": ["Human"] },
+          "job": { "type": ["string", "null"], "enum": ["Apprentice", "Squire", "Initiate", "Trapper", "Novice", "Acolyte", "Scoundrel", "Tinker", null] },
+          "favorite": { "type": "boolean" },
+          "blocked": { "type": "boolean" },
+          "frameId": { "type": "string" },
+          "displayNameColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+          "displayNameTierIndex": { "type": "integer", "minimum": 0, "maximum": 1 },
+          "hasNameShimmer": { "type": "boolean" },
+          "followerCount": { "type": "integer", "minimum": 0 },
+          "followingCount": { "type": "integer", "minimum": 0 }
         },
-        "required": [
-          "username",
-          "identity",
-          "bio",
-          "country",
-          "interests",
-          "discoverable",
-          "favorite",
-          "blocked",
-          "receivedCredits",
-          "badgeId",
-          "badgeName",
-          "badgeImage"
-        ]
+        "required": ["username", "displayName", "photoUrl", "photoUrls", "identity", "race", "job", "favorite", "blocked", "frameId", "displayNameColor", "displayNameTierIndex", "hasNameShimmer"]
       },
       "SocialProfileInput": {
         "type": "object",
-        "properties": {
-          "externalPlatform": { "type": ["string", "null"], "enum": ["LiveMe", "Bigo Live", "Tango Live", "TikTok", "Instagram Live", "Super Live", null] },
-          "externalHandle": { "type": ["string", "null"], "maxLength": 64 },
-          "bio": {
-            "type": "string",
-            "maxLength": 200
-          },
-          "country": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^[A-Z]{2}$"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "interests": {
-            "type": "array",
-            "maxItems": 8,
-            "items": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 24
-            }
-          },
-          "race": {
-            "type": "string",
-            "enum": ["Human"]
-          },
-          "job": {
-            "type": ["string", "null"],
-            "enum": ["Apprentice", "Squire", "Initiate", "Trapper", "Novice", "Acolyte", "Scoundrel", "Tinker", null]
-          },
-          "discoverable": {
-            "type": "boolean"
-          },
-          "badgeId": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "bio",
-          "country",
-          "interests",
-          "discoverable",
-          "badgeId"
-        ]
-      },
-      "SocialWallet": {
-        "type": "object",
-        "properties": {
-          "balance": {
-            "type": "integer"
-          },
-          "earned": {
-            "type": "integer"
-          },
-          "received": {
-            "type": "integer"
-          },
-          "sent": {
-            "type": "integer"
-          },
-          "canClaimDaily": {
-            "type": "boolean"
-          },
-          "dailyReward": {
-            "type": "integer"
-          },
-          "unlimited": {
-            "type": "boolean",
-            "description": "True only for the development-preview owner account; does not alter the stored wallet balance."
-          }
-        },
-        "required": [
-          "balance",
-          "earned",
-          "received",
-          "sent",
-          "canClaimDaily",
-          "dailyReward",
-          "unlimited"
-        ]
-      },
-      "SocialProduct": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "badgeImage": {"type": "string"},
-          "description": {
-            "type": "string"
-          },
-          "cost": {
-            "type": "integer"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "badgeImage",
-          "description",
-          "cost"
-        ]
-      },
-      "SocialGift": {
-        "type": "object",
-        "properties": {
-          "platinumExclusive": {"type": "boolean"},
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "cost": {
-            "type": "integer"
-          },
-          "iconUrl": {"type": ["string", "null"]},
-          "iconStatus": {"$ref": "#/components/schemas/GiftStudioIconStatus"}
-        },
-        "required": [
-          "id",
-          "name",
-          "cost",
-          "iconUrl",
-          "iconStatus"
-        ]
-      },
-      "EntranceEffectSettingsInput": {
-        "type": "object",
         "additionalProperties": false,
         "properties": {
-          "enabled": {"type": "boolean"},
-          "tierEffectId": {"type": "string", "enum": ["monthly-tier-1", "monthly-tier-2", "monthly-tier-3", "monthly-tier-4", "monthly-tier-5"]},
-          "tierEffectEnabled": {"type": "boolean"},
-          "lionEffectEnabled": {"type": "boolean"}
-        }
-      },
-      "EntranceEffectTierSetting": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "badgeId": {"type": "string", "enum": ["monthly-tier-1", "monthly-tier-2", "monthly-tier-3", "monthly-tier-4", "monthly-tier-5"]},
-          "name": {"type": "string"},
-          "enabled": {"type": "boolean"}
+          "race": { "type": "string", "enum": ["Human"] },
+          "job": { "type": ["string", "null"], "enum": ["Apprentice", "Squire", "Initiate", "Trapper", "Novice", "Acolyte", "Scoundrel", "Tinker", null] }
         },
-        "required": ["badgeId", "name", "enabled"]
-      },
-      "OwnerEntranceEffectSettings": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "tiers": {"type": "array", "items": {"$ref": "#/components/schemas/EntranceEffectTierSetting"}},
-          "lionEffectEnabled": {"type": "boolean"}
-        },
-        "required": ["tiers", "lionEffectEnabled"]
-      },
-      "EntranceEffectSettings": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "eligible": {"type": "boolean"},
-          "enabled": {"type": "boolean"},
-          "badgeId": {"type": ["string", "null"], "enum": ["monthly-tier-1", "monthly-tier-2", "monthly-tier-3", "monthly-tier-4", "monthly-tier-5", "lion-entrance", null]},
-          "badgeName": {"type": ["string", "null"]},
-          "equippedEffectId": {"anyOf": [{"$ref": "#/components/schemas/SocialGiftCatalogId"}, {"type": "null"}]},
-          "ownerTest": {"anyOf": [{"$ref": "#/components/schemas/OwnerEntranceEffectSettings"}, {"type": "null"}]}
-        },
-        "required": ["eligible", "enabled", "badgeId", "badgeName", "equippedEffectId", "ownerTest"]
+        "minProperties": 1
       },
       "SocialMe": {
         "type": "object",
         "properties": {
-          "gifterAccessLevel": {"type": "integer", "minimum": 0, "maximum": 100, "description": "Real ledger-earned level; excludes development appearance overrides."},
-          "nameColorProgress": {"$ref": "#/components/schemas/NameColorProgress"},
-          "nameColorTest": {"$ref": "#/components/schemas/NameColorTestState"},
-          "entranceEffects": {"$ref": "#/components/schemas/EntranceEffectSettings"},
-          "badgeExpirations": {
-            "type": "object",
-            "additionalProperties": { "type": "string", "format": "date-time" }
-          },
-          "badges": {
-            "type": "array",
-            "items": {"$ref": "#/components/schemas/MyOwnedBadge"}
-          },
-          "equippedBadgeId": {"type": ["string", "null"]},
-          "loginStreak": { "type": "integer", "minimum": 0 },
-          "hangoutStreak": {"$ref": "#/components/schemas/HangoutStreakSummary"},
-          "profile": {
-            "$ref": "#/components/schemas/SocialPerson"
-          },
-          "wallet": {
-            "$ref": "#/components/schemas/SocialWallet"
-          },
-          "inventory": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "products": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SocialProduct"
-            }
-          },
-          "gifts": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SocialGift"
-            }
-          },
-          "giftQuantities": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 1}},
-          "giftBagLots": {
-            "type": "array",
-            "items": {"$ref": "#/components/schemas/SocialGiftBagLot"}
-          },
-          "countries": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "code": {
-                  "type": "string"
-                },
-                "name": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "code",
-                "name"
-              ]
-            }
-          }
+          "profile": { "$ref": "#/components/schemas/SocialPerson" },
+          "countries": { "type": "array", "items": { "type": "object", "properties": { "code": { "type": "string" }, "name": { "type": "string" } }, "required": ["code", "name"] } }
         },
-        "required": [
-          "profile",
-          "nameColorProgress",
-          "nameColorTest",
-          "wallet",
-          "inventory",
-          "products",
-          "gifts",
-          "countries",
-          "entranceEffects",
-          "badges",
-          "equippedBadgeId",
-          "hangoutStreak"
-        ]
-      },
-      "SocialGiftBagLot": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "giftId": {"type": "string"},
-          "quantity": {"type": "integer", "minimum": 1},
-          "expiresAt": {"type": ["string", "null"], "format": "date-time"}
-        },
-        "required": ["giftId", "quantity", "expiresAt"]
-      },
-      "HangoutStreakSummary": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["days", "rewardClaimedToday"],
-        "properties": {
-          "days": {"type": "integer", "minimum": 0, "maximum": 7},
-          "rewardClaimedToday": {"type": "boolean"}
-        }
-      },
-      "HangoutRewardSettings": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["averageIntervalMinutes", "nextDropAt", "lastDropAt"],
-        "properties": {
-          "averageIntervalMinutes": {"type": "integer", "minimum": 15, "maximum": 360},
-          "nextDropAt": {"type": "string", "format": "date-time"},
-          "lastDropAt": {"type": ["string", "null"], "format": "date-time"}
-        }
-      },
-      "SetHangoutRewardIntervalInput": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["averageIntervalMinutes"],
-        "properties": {
-          "averageIntervalMinutes": {"type": "integer", "minimum": 15, "maximum": 360}
-        }
-      },
-      "NameColorProgress": {
-        "type": "object",
-        "properties": {
-          "tierName": {"type": "string"},
-          "tierIndex": {"type": "integer", "minimum": 0, "maximum": 100},
-          "lifetimeCoinsPurchased": {"type": "integer", "minimum": 0},
-          "nextTierName": {"type": ["string", "null"]},
-          "nextTierThreshold": {"type": ["integer", "null"], "minimum": 0},
-          "coinsToNextTier": {"type": "integer", "minimum": 0}
-        },
-        "required": ["tierName", "tierIndex", "lifetimeCoinsPurchased", "nextTierName", "nextTierThreshold", "coinsToNextTier"]
-      },
-      "NameColorTestState": {
-        "type": "object",
-        "properties": {
-          "enabled": {"type": "boolean"},
-          "overrideCoins": {"type": ["integer", "null"], "minimum": 0}
-        },
-        "required": ["enabled", "overrideCoins"]
-      },
-      "NameColorTestTotalInput": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "totalCoins": {"type": ["integer", "null"], "minimum": 0}
-        },
-        "required": ["totalCoins"]
-      },
-      "NameColorTestTotalResponse": {
-        "type": "object",
-        "properties": {
-          "overrideCoins": {"type": ["integer", "null"], "minimum": 0},
-          "progress": {"$ref": "#/components/schemas/NameColorProgress"}
-        },
-        "required": ["overrideCoins", "progress"]
-      },
-      "MyOwnedBadge": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "id": {"type": "string"},
-          "name": {"type": "string"},
-          "badgeImage": {"type": "string"},
-          "rank": {"type": "integer"},
-          "earnedAt": {"type": "string", "format": "date-time"},
-          "expiresAt": {"type": ["string", "null"], "format": "date-time"},
-          "daysLeft": {"type": ["integer", "null"], "minimum": 1},
-          "permanent": {"type": "boolean"},
-          "equipped": {"type": "boolean"}
-        },
-        "required": ["id", "name", "badgeImage", "rank", "earnedAt", "expiresAt", "daysLeft", "permanent", "equipped"]
-      },
-      "EquipMyBadgeInput": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {"badgeId": {"type": ["string", "null"]}},
-        "required": ["badgeId"]
-      },
-      "EquippedBadgeState": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {"equippedBadgeId": {"type": ["string", "null"]}},
-        "required": ["equippedBadgeId"]
+        "required": ["profile", "countries"]
       },
       "SocialPeople": {
         "type": "object",
         "properties": {
-          "people": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SocialPerson"
-            }
-          },
-          "total": {
-            "type": "integer"
-          }
+          "people": { "type": "array", "items": { "$ref": "#/components/schemas/SocialPerson" } },
+          "total": { "type": "integer", "minimum": 0 }
         },
-        "required": [
-          "people",
-          "total"
-        ]
+        "required": ["people", "total"]
       },
       "SocialRelationshipInput": {
         "type": "object",
-        "properties": {
-          "kind": {
-            "type": "string",
-            "enum": [
-              "favorite",
-              "block"
-            ]
-          },
-          "active": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "kind",
-          "active"
-        ]
+        "additionalProperties": false,
+        "properties": { "kind": { "type": "string", "enum": ["favorite", "block"] }, "active": { "type": "boolean" } },
+        "required": ["kind", "active"]
       },
-      "SocialAction": {
+      "SocialAction": { "type": "object", "properties": { "ok": { "type": "boolean" } }, "required": ["ok"] },
+      "ProfileCosmeticItem": {
         "type": "object",
         "properties": {
-          "ok": {
-            "type": "boolean"
-          }
+          "id": { "type": "string" }, "name": { "type": "string" },
+          "priceCents": { "type": "integer", "minimum": 0 }, "available": { "type": "boolean" },
+          "owned": { "type": "boolean" }, "equipped": { "type": "boolean" },
+          "image": { "type": "string" }, "tint": { "type": "string" }, "color": { "type": "string" }
         },
-        "required": [
-          "ok"
-        ]
+        "required": ["id", "name", "priceCents", "available", "owned", "equipped"]
       },
-      "RoomGiftEvent": {
+      "ProfileCosmeticsStore": {
         "type": "object",
         "properties": {
-          "id": {"type": "string"},
-          "giftId": {"type": "string"},
-          "giftName": {"type": "string"},
-          "quantity": {"type": "integer", "minimum": 1, "maximum": 1314},
-          "senderUsername": {"type": "string"},
-          "recipientUsername": {"type": "string"},
-          "senderName": {"type": "string"},
-          "recipientName": {"type": "string"},
-          "senderNameColor": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
-          "senderNameTierIndex": {"type": "integer", "minimum": 0, "maximum": 100},
-          "recipientNameColor": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
-          "recipientNameTierIndex": {"type": "integer", "minimum": 0, "maximum": 100},
-          "senderBadgeId": {"type": ["string", "null"]},
-          "recipientBadgeId": {"type": ["string", "null"]},
-          "senderBadgeName": {"type": ["string", "null"]},
-          "recipientBadgeName": {"type": ["string", "null"]},
-          "senderBadgeImage": {"type": ["string", "null"]},
-          "recipientBadgeImage": {"type": ["string", "null"]},
-          "senderPassport": {"$ref": "#/components/schemas/StreamerPassportBadgeSummary"},
-          "recipientPassport": {"$ref": "#/components/schemas/StreamerPassportBadgeSummary"},
-          "createdAt": {"type": "string", "format": "date-time"}
+          "sections": { "type": "array", "items": { "type": "object", "properties": { "kind": { "type": "string", "enum": ["frame", "nameColor", "specialName"] }, "title": { "type": "string" }, "items": { "type": "array", "items": { "$ref": "#/components/schemas/ProfileCosmeticItem" } } }, "required": ["kind", "title", "items"] } },
+          "equipped": { "type": "object", "properties": { "frame": { "type": "string" }, "nameColor": { "type": "string" }, "specialName": { "type": ["string", "null"] } }, "required": ["frame", "nameColor", "specialName"] }
         },
-        "required": ["id", "giftId", "giftName", "quantity", "senderUsername", "recipientUsername", "senderName", "recipientName", "senderBadgeId", "recipientBadgeId", "senderBadgeName", "recipientBadgeName", "senderBadgeImage", "recipientBadgeImage", "createdAt"]
+        "required": ["sections", "equipped"]
       },
-      "SocialGiftInput": {
+      "ProfileCosmeticEquipInput": {
         "type": "object",
-        "properties": {
-          "testMode": {"type": "boolean", "description": "Expected test-coin mode; cannot grant access."},
-          "recipient": {
-            "type": "string"
-          },
-          "giftId": {
-            "type": "string"
-          },
-          "roomId": {"type": "string"},
-          "streamId": {"type": "string"},
-          "quantity": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 1314
-          },
-          "useGiftBagOnly": {"type": "boolean", "description": "Do not charge for missing units; reject if held inventory is insufficient."},
-          "idempotencyKey": {
-            "type": "string",
-            "format": "uuid"
-          }
-        },
-        "required": [
-          "recipient",
-          "giftId",
-          "idempotencyKey"
-        ]
-      },
-      "SocialPurchaseInput": {
-        "type": "object",
-        "properties": {
-          "testMode": {"type": "boolean", "description": "Expected test-coin mode; cannot grant access."},
-          "itemId": {
-            "type": "string"
-          },
-          "idempotencyKey": {
-            "type": "string",
-            "format": "uuid"
-          }
-        },
-        "required": [
-          "itemId",
-          "idempotencyKey"
-        ]
-      },
-      "SocialTransaction": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "delta": {
-            "type": "integer"
-          },
-          "kind": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "peer": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "createdAt",
-          "delta",
-          "kind",
-          "description",
-          "peer"
-        ]
-      },
-      "SocialLedger": {
-        "type": "object",
-        "properties": {
-          "transactions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SocialTransaction"
-            }
-          }
-        },
-        "required": [
-          "transactions"
-        ]
+        "additionalProperties": false,
+        "properties": { "kind": { "type": "string", "enum": ["frame", "nameColor", "specialName"] }, "itemId": { "type": "string", "minLength": 1, "maxLength": 40 } },
+        "required": ["kind", "itemId"]
       },
       "SocialMessage": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string"
-          },
-          "sender": {
-            "type": "string"
-          },
-          "recipient": {
-            "type": "string"
-          },
-          "body": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "readAt": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
+          "id": { "type": "string" }, "sender": { "type": "string" }, "recipient": { "type": "string" },
+          "body": { "type": "string" }, "createdAt": { "type": "string", "format": "date-time" },
+          "readAt": { "type": ["string", "null"], "format": "date-time" }
         },
-        "required": [
-          "id",
-          "sender",
-          "recipient",
-          "body",
-          "createdAt",
-          "readAt"
-        ]
+        "required": ["id", "sender", "recipient", "body", "createdAt", "readAt"]
       },
       "SocialMessageInput": {
-        "type": "object",
-        "properties": {
-          "body": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 1000
-          },
-          "idempotencyKey": {
-            "type": "string",
-            "format": "uuid"
-          }
-        },
-        "required": [
-          "body",
-          "idempotencyKey"
-        ]
+        "type": "object", "additionalProperties": false,
+        "properties": { "body": { "type": "string", "minLength": 1, "maxLength": 1000 }, "idempotencyKey": { "type": "string", "format": "uuid" } },
+        "required": ["body", "idempotencyKey"]
       },
       "SocialConversation": {
         "type": "object",
         "properties": {
-          "person": {
-            "$ref": "#/components/schemas/SocialPerson"
-          },
-          "messages": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SocialMessage"
-            }
-          },
-          "nextCursor": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "blocked": {
-            "type": "boolean"
-          }
+          "person": { "$ref": "#/components/schemas/SocialPerson" },
+          "messages": { "type": "array", "items": { "$ref": "#/components/schemas/SocialMessage" } },
+          "nextCursor": { "type": ["string", "null"] }, "blocked": { "type": "boolean" }
         },
-        "required": [
-          "person",
-          "messages",
-          "nextCursor",
-          "blocked"
-        ]
+        "required": ["person", "messages", "nextCursor", "blocked"]
       },
       "SocialInbox": {
         "type": "object",
         "properties": {
-          "conversations": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "username": {
-                  "type": "string"
-                },
-                "displayName": {
-                  "type": "string"
-                },
-                "displayNameColor": {
-                  "type": "string",
-                  "pattern": "^#[0-9A-Fa-f]{6}$"
-                },
-                "displayNameTierIndex": {"type": "integer", "minimum": 0, "maximum": 100},
-                "badgeId": {"type": ["string", "null"]},
-                "badgeName": {"type": ["string", "null"]},
-                "badgeImage": {"type": ["string", "null"]},
-                "photoUrl": {
-                  "type": ["string", "null"]
-                },
-                "lastMessageFromMe": {
-                  "type": "boolean"
-                },
-                "lastUnreadAt": {
-                  "type": ["string", "null"],
-                  "format": "date-time"
-                },
-                "identity": {
-                  "$ref": "./openapi.yaml#/components/schemas/EmojiIdentity"
-                },
-                "lastMessage": {
-                  "type": "string"
-                },
-                "updatedAt": {
-                  "type": "string",
-                  "format": "date-time"
-                },
-                "unreadCount": {
-                  "type": "integer"
-                },
-                "blocked": {
-                  "type": "boolean"
-                }
-              },
-              "required": [
-                "username",
-                "displayName",
-                "badgeId",
-                "badgeName",
-                "badgeImage",
-                "photoUrl",
-                "lastMessageFromMe",
-                "lastUnreadAt",
-                "identity",
-                "lastMessage",
-                "updatedAt",
-                "unreadCount",
-                "blocked"
-              ]
-            }
-          }
+          "conversations": { "type": "array", "items": { "type": "object", "properties": {
+            "username": { "type": "string" }, "displayName": { "type": "string" },
+            "displayNameColor": { "type": "string" }, "displayNameTierIndex": { "type": "integer" },
+            "photoUrl": { "type": ["string", "null"] }, "identity": { "$ref": "./openapi.yaml#/components/schemas/EmojiIdentity" },
+            "lastMessageFromMe": { "type": "boolean" }, "lastUnreadAt": { "type": ["string", "null"], "format": "date-time" },
+            "lastMessage": { "type": "string" }, "updatedAt": { "type": "string", "format": "date-time" },
+            "unreadCount": { "type": "integer", "minimum": 0 }, "blocked": { "type": "boolean" }
+          }, "required": ["username", "displayName", "displayNameColor", "displayNameTierIndex", "photoUrl", "identity", "lastMessageFromMe", "lastUnreadAt", "lastMessage", "updatedAt", "unreadCount", "blocked"] } }
         },
-        "required": [
-          "conversations"
-        ]
+        "required": ["conversations"]
       }
     }
   }

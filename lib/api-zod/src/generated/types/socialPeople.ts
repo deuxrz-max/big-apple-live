@@ -9,5 +9,6 @@ import type { SocialPerson } from './socialPerson';
 
 export interface SocialPeople {
   people: SocialPerson[];
+  /** @minimum 0 */
   total: number;
 }

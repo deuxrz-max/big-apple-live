@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link, Redirect, Route, Switch, useLocation, useParams } from 'wouter';
 import { useQueryClient } from '@tanstack/react-query';
-import { Users, Heart, Ban, Flag, MessageCircle, Coins, UserRound, ArrowLeft, Trophy } from 'lucide-react';
+import { Users, Heart, Ban, Flag, MessageCircle, UserRound, ArrowLeft, Trophy } from 'lucide-react';
 import { useGetChatAccess, useGetSocialMe } from '@workspace/api-client-react';
 import '@/beam/beam.css';
 import './social.css';
@@ -12,16 +12,14 @@ import { ModerationQueue } from '@/chat/ChatApp';
 import { APP_NAME, Wordmark } from '@/components/brand';
 import { BotProfile } from '@/profile/ProfileView';
 import { InboxPage } from './InboxPage';
-import { RewardsPage, ThreadPage } from './MoneyPages';
+import { ThreadPage } from './ThreadPage';
 import { SafetyReportsPage } from '@/safety/SafetyReportsPage';
-import { CoinTestersPanel } from './CoinTestersPanel';
 import { ActionMenu } from '@/components/app-chrome';
 
 const NAV = [
   { to: '/community', label: 'People', icon: Users, exact: true },
   { to: '/community/favorites', label: 'Following', icon: Heart },
   { to: '/community/messages', label: 'Messages', icon: MessageCircle },
-  { to: '/community/rewards', label: 'Rewards', icon: Coins },
   { to: '/user-portal', label: 'My profile', icon: UserRound },
   { to: '/community/blocks', label: 'Blocked', icon: Ban },
 ];
@@ -57,7 +55,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
           <Link href="/leaderboard" className="bm-btn bm-btn-sm sc-header-leaderboard" aria-label="Leaderboard" title="Leaderboard" data-testid="link-header-leaderboard">
             <Trophy size={18} aria-hidden="true" />
           </Link>
-          {!isMessagesPath && path !== '/community/favorites' && path !== '/community/coins' && path !== '/community/credits' && (
+          {!isMessagesPath && path !== '/community/favorites' && (
             <Link href="/home" className="bm-btn bm-btn-sm" aria-label="Back to home" data-testid="link-community-back">
               <ArrowLeft size={17} aria-hidden="true" /><span>Back</span>
             </Link>
@@ -70,7 +68,6 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
               ))}
               {access.data?.moderator && <Link href="/community/moderation" onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}><Ban size={17} aria-hidden="true" /><span>Moderation</span></Link>}
               {access.data?.owner && <Link href="/community/reports" onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}><Flag size={17} aria-hidden="true" /><span>Safety reports</span></Link>}
-              {access.data?.owner && <Link href="/community/coin-testers" onClick={(e) => e.currentTarget.closest('details')?.removeAttribute('open')}><span>Coin testers</span></Link>}
           </ActionMenu>
         </div>
       </nav>}
@@ -92,9 +89,6 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
             <div className="sc-empty"><h2>Claim your name first</h2><p>Community needs your account identity.</p><Link href="/user-portal" className="bm-btn bm-btn-primary">Set up profile</Link></div>
           ) : me.isError ? <ErrorBox error={me.error} retry={() => me.refetch()} /> : (
             <Switch>
-              <Route path="/community/coin-testers">{() => access.data?.owner
-                ? <CoinTestersPanel />
-                : <div className="sc-empty"><h2>Owner access required</h2><Link href="/community/profile" className="bm-btn">Back to Me</Link></div>}</Route>
               <Route path="/community" component={CommunityPage} />
               <Route path="/community/people/:username" component={PersonRoute} />
               <Route path="/community/bots/:botId" component={BotRoute} />
@@ -107,9 +101,6 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
               <Route path="/community/reports">{() => access.data?.owner
                 ? <SafetyReportsPage />
                 : <div className="sc-empty" role="status" data-testid="status-reports-access"><h2>Owner access required</h2><p>Safety reports are private to the Big Apple Live owner.</p><Link href="/community" className="bm-btn">Back to People</Link></div>}</Route>
-              <Route path="/community/rewards"><RewardsPage /></Route>
-              <Route path="/community/coins"><Redirect to="/user-portal" /></Route>
-              <Route path="/community/credits"><Redirect to="/user-portal" /></Route>
               <Route path="/community/leaderboard">{() => <Redirect to="/leaderboard" />}</Route>
               <Route><div className="sc-empty"><h2>Not found</h2><Link href="/community" className="bm-btn">People</Link></div></Route>
             </Switch>

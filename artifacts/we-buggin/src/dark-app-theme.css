@@ -74,12 +74,12 @@ body {
 }
 
 #root :is(.ch-note, .sc-sub, .sc-count, .dh-note, .dh-sub, .ib-prev, .ib-time,
-  .fg-empty, .pf-h2, .pf-badge small) {
+  .fg-empty) {
   color: #c2bbd7;
 }
 
 /* Shared panels across profile, social, moderation, settings and owner tools. */
-#root :is(.ch-list li, .sc-card, .sc-panel, .sc-empty, .sc-wallet, .ib-row, .fg-tile,
+#root :is(.ch-list li, .sc-card, .sc-panel, .sc-empty, .ib-row, .fg-tile,
   .bc-card, .bc-review, .dh-banner, .dh-card, .pf-panel, .pf-dialog, .pf-menu-list,
   .pf-stats > div,
   .sc-msgs, .sc-skel, .ch-photo-card, .ch-auth .ch-card) {

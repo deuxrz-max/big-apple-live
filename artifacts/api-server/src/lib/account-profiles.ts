@@ -3,6 +3,7 @@ import { eq, and, sql } from "drizzle-orm";
 import type { AccountProfile, ProfileInput } from "@workspace/api-zod";
 import { RoomError, roomStore } from "./room-store";
 import { visibleProfilePhotos } from "./photo-visibility";
+import { deleteReplacedProfilePhoto } from "./profile-photo-storage";
 
 export function publicProfile(row: AccountProfileRow): AccountProfile {
   return {
@@ -18,7 +19,7 @@ export function publicProfile(row: AccountProfileRow): AccountProfile {
     updatedAt: row.updatedAt,
   };
 }
-export function profilePhotoUrls(row: { photoUrl: string | null; photoUrls?: string[] }): string[] {
+export function profilePhotoUrls(row: { photoUrl?: string | null; photoUrls?: string[] }): string[] {
   return row.photoUrls?.length ? [...row.photoUrls] : row.photoUrl ? [row.photoUrl] : [];
 }
 export async function isTestAccountId(accountId: string): Promise<boolean> {
@@ -30,9 +31,10 @@ export async function isTestAccountId(accountId: string): Promise<boolean> {
 export async function getProfile(accountId: string): Promise<AccountProfile | null> {
   const [row] = await db.select().from(accountProfiles).where(eq(accountProfiles.accountId, accountId));
   if (!row || (process.env.NODE_ENV === "production" && row.isTestAccount)) return null;
-  const [settings] = await db.select({ bio: socialSettings.bio }).from(socialSettings)
-    .where(eq(socialSettings.accountId, accountId));
-  return { ...publicProfile(row), ...await visibleProfilePhotos(accountId, accountId, row), bio: settings?.bio ?? "" };
+  const photos = await visibleProfilePhotos(accountId, accountId, row);
+  const photoUrl = photos.photoUrl ?? null;
+  return { ...publicProfile(row), photoUrl, photoUrls: photoUrl ? [photoUrl] : [],
+    photoReviews: photos.photoReviews?.filter(photo => photo.photoUrl === photoUrl) ?? [] };
 }
 export async function requireCompletedProfile(accountId: string): Promise<AccountProfile> {
   const profile = await getProfile(accountId);
@@ -53,11 +55,9 @@ export async function saveProfile(accountId: string, input: ProfileInput): Promi
   const displayName = input.displayName?.trim();
   if (displayName !== undefined && (!displayName || displayName.length > 40))
     throw new RoomError(400, "Display name must contain 1–40 characters");
-  if (input.bio !== undefined && input.bio.length > 280)
-    throw new RoomError(400, "Bio must be 280 characters or fewer");
   const nameKey = input.username.toLowerCase();
   try {
-    const profile = await db.transaction(async (tx) => {
+    const saved = await db.transaction(async (tx) => {
       // Serialize first-claim/edit for the same account. The unique name index
       // independently protects concurrent claims by different accounts.
       await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${accountId}))`);
@@ -65,12 +65,12 @@ export async function saveProfile(accountId: string, input: ProfileInput): Promi
       if (existing && existing.nameKey !== nameKey) throw new RoomError(409, "Your dedicated name is permanent");
       const previous = existing ? profilePhotoUrls(existing) : [];
       let selected = input.photoUrls !== undefined ? [...input.photoUrls] : [...previous];
-      // Older clients replace/remove the main photo without discarding secondary photos.
+      // A profile may keep only one photo; selecting or removing it replaces the previous file.
       if (input.photoUrls === undefined && input.photoUrl !== undefined && input.photoUrl !== existing?.photoUrl) {
         selected = selected.filter(url => url !== existing?.photoUrl);
         if (input.photoUrl && !selected.includes(input.photoUrl)) selected.unshift(input.photoUrl);
       }
-      if (selected.length > 4) throw new RoomError(400, "Keep up to 4 profile photos. Remove or replace a photo first");
+      if (selected.length > 1) throw new RoomError(400, "Keep one profile photo. Upload a replacement instead.");
       if (new Set(selected).size !== selected.length) throw new RoomError(400, "Each profile photo must be different");
       let main = input.photoUrl !== undefined ? input.photoUrl : existing?.photoUrl ?? null;
       if (!selected.length) {
@@ -83,7 +83,7 @@ export async function saveProfile(accountId: string, input: ProfileInput): Promi
         main = selected[0]!;
       }
       for (const url of selected) {
-        // Preserve a genuine pre-existing reference on a name/bio-only edit.
+       // Preserve the one existing photo when only the display name changes.
         if (input.photoUrls === undefined && input.photoUrl === undefined && previous.includes(url)) continue;
         const match = /^\/api\/photos\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/.exec(url);
         if (!match) throw new RoomError(400, "Upload a photo here before saving it");
@@ -116,16 +116,19 @@ export async function saveProfile(accountId: string, input: ProfileInput): Promi
           sql`'/api/photos/' || ${profilePhotos.id}::text = ${kept}`,
         ));
       }
-      // Setup is one transaction: a failed bio save cannot leave a completed profile.
-      if (input.bio !== undefined) await tx.insert(socialSettings)
-        .values({ accountId, bio: input.bio.trim() })
-        .onConflictDoUpdate({ target: socialSettings.accountId, set: { bio: input.bio.trim(), updatedAt: new Date() } });
-      const [settings] = await tx.select({ bio: socialSettings.bio }).from(socialSettings)
-        .where(eq(socialSettings.accountId, accountId));
-      return { ...publicProfile(row!), bio: settings?.bio ?? "" };
+      return { profile: publicProfile(row!), previousPhotoUrls: previous };
     });
+    const profile = saved.profile;
+    const currentPhotoUrls = new Set(profilePhotoUrls(profile));
+    const removedUrls = new Set(saved.previousPhotoUrls.filter(url => !currentPhotoUrls.has(url)));
+    for (const url of removedUrls) {
+      try { await deleteReplacedProfilePhoto(accountId, url); }
+      catch (error) { console.error('Could not immediately delete replaced profile photo', error); }
+    }
     roomStore.updateAccountIdentity(accountId, profile.displayName ?? profile.username, profile.identity, null);
-    return { ...profile, ...await visibleProfilePhotos(accountId, accountId, { photoUrl: profile.photoUrl ?? null, photoUrls: profile.photoUrls }) };
+    const photos = await visibleProfilePhotos(accountId, accountId, { photoUrl: profile.photoUrl ?? null, photoUrls: profile.photoUrls });
+    return { ...profile, ...photos, photoUrls: photos.photoUrl ? [photos.photoUrl] : [],
+      photoReviews: photos.photoReviews?.filter(photo => photo.photoUrl === photos.photoUrl) ?? [] };
   } catch (error) {
     const cause = (error as { cause?: { code?: string }; code?: string });
     if (cause.code === "23505" || cause.cause?.code === "23505") {

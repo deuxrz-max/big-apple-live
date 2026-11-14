@@ -1,7 +1,6 @@
 import { useRef, type ReactNode } from 'react';
 import { Link } from 'wouter';
 import type { QueryClient } from '@tanstack/react-query';
-import { Coins } from 'lucide-react';
 import type { SocialPerson } from '@workspace/api-client-react';
 import { UserPhoto } from '@/components/user-photo';
 import { ProfileTap } from '@/profile/QuickProfile';
@@ -15,15 +14,6 @@ export const errStatus = (e: unknown): number | undefined => (e as { status?: nu
 
 export function refreshSocial(qc: QueryClient) {
   return qc.invalidateQueries({ predicate: (q) => String(q.queryKey[0]).startsWith('/api/social') });
-}
-
-export function CoinAmount({ children, size = 14, className }: {
-  children: ReactNode; size?: number; className?: string;
-}) {
-  return <span className={className} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
-    <Coins size={size} aria-hidden="true" style={{ color: '#f5cb8d', flex: '0 0 auto' }} />
-    {children}
-  </span>;
 }
 
 /** Keeps one idempotency key per identical operation until confirmed. */
@@ -46,8 +36,8 @@ export const Avatar = ({ p, size = 56, tap = true }: { p: PhotoPerson; size?: nu
     reviewStatus={p.photoReviews?.find(photo => photo.photoUrl === p.photoUrl)?.status} />
 );
 
-export function PersonCard({ p, extra, className = '', publicSearch = false }: {
-  p: SocialPerson; extra?: ReactNode; className?: string; publicSearch?: boolean;
+export function PersonCard({ p, extra, className = '' }: {
+  p: SocialPerson; extra?: ReactNode; className?: string;
 }) {
   return (
     <article className={`sc-card${className ? ` ${className}` : ''}`} data-testid={`card-person-${p.username}`}>
@@ -57,10 +47,7 @@ export function PersonCard({ p, extra, className = '', publicSearch = false }: {
           <ShinyName className="sc-name" displayNameColor={p.displayNameColor} displayNameTierIndex={p.displayNameTierIndex}>
             <span className="sc-name-label">{(p as PhotoPerson).displayName || p.username}</span>
           </ShinyName>
-          <span className="sc-sub">@{p.username}{!publicSearch && p.country ? ` / ${p.country}` : ''}</span>
-          {publicSearch && <span className="sc-sub">Level {p.displayNameTierIndex ?? 0}</span>}
-          {!publicSearch && p.bio && <span className="sc-bio">{p.bio}</span>}
-          {!publicSearch && p.interests.length > 0 && <span className="sc-tags">{p.interests.slice(0, 4).map((i) => <i key={i}>{i}</i>)}</span>}
+          <span className="sc-sub">@{p.username}</span>
         </Link>
       </div>
       {extra}

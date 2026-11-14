@@ -62,7 +62,6 @@ body.streamtalk-beam-screen #root .app-bottom-nav :is(a, button, .app-bottom-lin
   .ur-slot-empty-copy, .ur-slot-more, .ur-beam-self-controls, .ur-moderation-notice,
   .ur-badge, .ur-ign, .ch-err,
   .ur-slot-portrait, .ur-slot-copy, .ur-slot-mic-icon, .ur-entry-effect-caption,
-  .ur-coin-drop-logo, .ur-coin-drop-amount, .ur-coin-drop-message, .ur-streak-reward-toast,
   .ur-tv-sound-hint, .ur-tv-autoplay-hint
 ) {
   background: #000 !important;

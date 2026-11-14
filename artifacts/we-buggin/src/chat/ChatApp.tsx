@@ -2,13 +2,13 @@ import '@/beam/beam.css';
 import '@/social/social.css';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
-import { ArrowLeft, Coins, Flame, Swords, Trophy, Users, X } from 'lucide-react';
+import { ArrowLeft, Flame, Swords, Trophy, Users, X } from 'lucide-react';
 import { useClerk } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getGetChatAccessQueryKey, getGetMyProfileQueryKey, getGetSocialMeQueryKey,
   useConfirmChatAdult, useGetChatAccess, useGetChatDirectory,
-  useGetMyProfile, useGetSocialMe, useSaveMyProfile,
+  useGetMyProfile, useGetSocialMe, useSaveMyProfile, useSaveSocialProfile,
   getGetChatDirectoryQueryKey,
   getGetSocialInboxQueryKey, useGetSocialInbox,
 } from '@workspace/api-client-react';
@@ -22,9 +22,10 @@ import { RoomChannels } from './RoomChannels';
 import { CreateRoomButton } from './CreateRoomButton';
 import { ActionMenu, ScreenHeader } from '@/components/app-chrome';
 import { AccessCheckError } from './AccessCheckError';
-import { ProfilePreferences } from '@/social/PeoplePages';
 import './chat.css';
 
+const STARTER_JOBS = ['Apprentice', 'Squire', 'Initiate', 'Trapper', 'Novice', 'Acolyte', 'Scoundrel', 'Tinker'] as const;
+type StarterJob = typeof STARTER_JOBS[number];
 const DISCLAIMER = 'Big Apple Live is independent and is not affiliated with, endorsed by, or sponsored by any platform named here.';
 
 function Shell({ children, className = '' }: { children: ReactNode; className?: string }) {
@@ -83,20 +84,11 @@ function List({ preview, query = '' }: { preview?: boolean; query?: string }) {
   );
 }
 
-function CreditsChip() {
-  const me = useGetSocialMe();
-  if (!me.data) return null;
-  return <span className="st-credits" data-testid="text-credits" aria-label="Coin balance">
-    <Coins size={13} aria-hidden="true" style={{ color: '#f5cb8d' }} />
-    {me.data.wallet.unlimited ? 'Unlimited test coins' : `${me.data.wallet.balance.toLocaleString()} coins`}
-  </span>;
-}
-
 function TopBar({ signedIn }: { signedIn: boolean }) {
   return (
     <div className="st-topbar">
       <Wordmark href={signedIn ? '/home' : '/'} className="st-brand" transparentLogo />
-      {signedIn ? <><CreateRoomButton className="st-topbar-live"><Users size={15} /> Create room</CreateRoomButton><CreditsChip /></> : <div className="st-topbar-actions">
+      {signedIn ? <CreateRoomButton className="st-topbar-live"><Users size={15} /> Create room</CreateRoomButton> : <div className="st-topbar-actions">
         <Link href="/leaderboard" className="bm-btn bm-btn-sm st-home-leaderboard" aria-label="Leaderboard" title="Leaderboard" data-testid="link-header-leaderboard"><Trophy size={18} aria-hidden="true" /></Link>
         <Link href="/sign-in" className="bm-btn bm-btn-sm bm-btn-primary">Sign in</Link>
       </div>}
@@ -185,7 +177,6 @@ export function ChatDirectory() {
   const { signOut } = useClerk();
   const directory = useGetChatDirectory({ query: { queryKey: getGetChatDirectoryQueryKey(), refetchInterval: 5_000 } });
   const me = useGetMyProfile({ query: { queryKey: getGetMyProfileQueryKey(), refetchInterval: 60_000 } });
-  const socialMe = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), refetchInterval: 60_000 } });
   const topics = ['Music', 'Movies', 'Comedy', 'Sports', 'Pro Wrestling', 'Web Series', 'History', 'News'];
   type DirectoryRoom = { roomId: string; label: string; headcount: number; headcountSince: number };
   const rooms = (directory.data ?? []) as DirectoryRoom[];
@@ -208,13 +199,6 @@ export function ChatDirectory() {
           </div>
           <div className="st-dir-account">
             <Link href="/leaderboard" className="bm-btn bm-btn-sm st-home-leaderboard" aria-label="Leaderboard" title="Leaderboard" data-testid="link-home-leaderboard"><Trophy size={18} aria-hidden="true" /></Link>
-            <span className={`st-dir-wallet${socialMe.data?.wallet.unlimited ? ' is-unlimited' : ''}`} aria-label="Coin balance" data-testid="link-home-wallet">
-              {socialMe.data?.wallet.unlimited
-                ? <><i aria-hidden="true" />Unlimited</>
-                : socialMe.data
-                  ? <><Coins size={13} aria-hidden="true" style={{ color: '#f5cb8d' }} />{socialMe.data.wallet.balance.toLocaleString()} coins</>
-                  : socialMe.isLoading ? '…' : 'Coins'}
-            </span>
             <details className="st-dir-menu st-home-profile-menu">
               <summary className="st-dir-avatar st-home-avatar" aria-label={`Open profile menu${me.data?.profile?.username ? ` for ${me.data.profile.username}` : ''}`} data-testid="button-home-profile-menu">
                 <UserPhoto username={me.data?.profile?.username} displayName={me.data?.profile?.displayName}
@@ -412,26 +396,26 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
   const qc = useQueryClient();
   const [, nav] = useLocation();
   const q = useGetMyProfile();
+  const social = useGetSocialMe({ query: { queryKey: getGetSocialMeQueryKey(), enabled: !!q.data?.profile } });
   const save = useSaveMyProfile();
+  const saveSocial = useSaveSocialProfile();
   const profile = q.data?.profile ?? null;
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [nameTouched, setNameTouched] = useState(false);
-  const [bio, setBio] = useState('');
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
-  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
-  const replaceTarget = useRef<string | null>(null);
+  const [job, setJob] = useState<StarterJob | ''>('');
+  const [race] = useState('Human');
   const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [upErr, setUpErr] = useState<string | null>(null);
+  const [formErr, setFormErr] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   const pickPhoto = async (file: File | undefined) => {
     if (!file) return;
-    const replacing = replaceTarget.current;
     setUpErr(null);
     if (uploading || save.isPending) return;
-    if (!replacing && photoUrls.length >= 4) { setUpErr('Keep up to 4 photos. Remove or replace one first.'); return; }
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { setUpErr('Choose a JPEG, PNG or WebP image.'); return; }
     if (file.size > 5 * 1024 * 1024) { setUpErr('Photo must be 5 MiB or smaller.'); return; }
     setPreview(URL.createObjectURL(file));
@@ -440,11 +424,22 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
       const res = await fetch(`${import.meta.env.BASE_URL}api/me/photo`, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/octet-stream' }, body: file });
       if (!res.ok) { let m = 'Photo upload failed.'; try { m = (await res.json()).error ?? m; } catch { /* ignore */ } throw new Error(m); }
       const j = (await res.json()) as { photoUrl: string };
-      setPhotoUrls(previous => replacing ? previous.map(url => url === replacing ? j.photoUrl : url) : [...previous, j.photoUrl]);
-      setPhotoUrl(current => !current || current === replacing ? j.photoUrl : current);
-      setPreview(null); setSaved(false);
+      if (profile) {
+        const updated = await save.mutateAsync({ data: {
+          username: profile.username, displayName: (displayName.trim() || profile.displayName || profile.username),
+          photoUrl: j.photoUrl, photoUrls: [j.photoUrl],
+        } });
+        qc.setQueryData(getGetMyProfileQueryKey(), { profile: updated });
+        await invalidateSocial(qc);
+        setPhotoUrl(j.photoUrl);
+        setSaved(true);
+      } else {
+        setPhotoUrl(j.photoUrl);
+        setSaved(false);
+      }
+      setPreview(null);
     } catch (e) { setUpErr(e instanceof Error ? e.message : 'Photo upload failed.'); setPreview(null); }
-    finally { setUploading(false); replaceTarget.current = null; if (fileRef.current) fileRef.current.value = ''; }
+    finally { setUploading(false); if (fileRef.current) fileRef.current.value = ''; }
   };
   const [saved, setSaved] = useState(false);
   const [tried, setTried] = useState(false);
@@ -453,41 +448,35 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
     if (profile && loadedFor.current !== profile.updatedAt) {
       loadedFor.current = profile.updatedAt;
       setPhotoUrl(profile.photoUrl ?? null);
-      setPhotoUrls(profile.photoUrls?.length ? [...profile.photoUrls] : profile.photoUrl ? [profile.photoUrl] : []);
       setDisplayName(profile.displayName ?? profile.username);
-      setBio(profile.bio ?? '');
     }
   }, [profile?.updatedAt]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (social.data?.profile) setJob(social.data.profile.job ?? '');
+  }, [social.data?.profile?.job]);
   const shownDisplay = profile || nameTouched ? displayName : username;
   const nameOk = !!profile || /^[A-Za-z0-9_]{3,24}$/.test(username);
   const dn = shownDisplay.trim();
   const dnOk = dn.length >= 1 && dn.length <= 40;
-  const bioOk = bio.length <= 280;
-  const submit = () => {
-    setTried(true); setSaved(false);
-    if (!nameOk || !dnOk || !bioOk || save.isPending || uploading) return;
-    // Existing accounts edit bio only in the shared preferences form below.
-    // Identity/photo saves must not overwrite a separately saved bio.
-    const data = { username: profile?.username ?? username, displayName: dn, ...(!profile ? { bio: bio.trim() } : {}), photoUrl, photoUrls };
-    save.mutate({ data }, {
-      onSuccess: (p) => {
-        qc.setQueryData(getGetMyProfileQueryKey(), { profile: p });
-        qc.invalidateQueries({ queryKey: getGetMyProfileQueryKey() });
-        invalidateSocial(qc);
-        setSaved(true);
-        if (!profile) nav('/home');
-      },
-    });
+  const submit = async () => {
+    setTried(true); setSaved(false); setFormErr(null);
+    if (!nameOk || !dnOk || save.isPending || saveSocial.isPending || uploading) return;
+    try {
+      const updated = await save.mutateAsync({
+        data: { username: profile?.username ?? username, displayName: dn, photoUrl, photoUrls: photoUrl ? [photoUrl] : [] },
+      });
+      qc.setQueryData(getGetMyProfileQueryKey(), { profile: updated });
+      await saveSocial.mutateAsync({ data: { race: 'Human', job: job || null } });
+      await invalidateSocial(qc);
+      setSaved(true);
+      if (!profile) nav('/home');
+    } catch (error) {
+      setFormErr(errMessage(error));
+    }
   };
   const body = (
     <>
-      <ScreenHeader backHref={setup ? undefined : '/user-portal'} backLabel="Back to profile" testId="header-edit-profile"
-        title={profile ? 'Edit profile' : 'Set up your profile'}
-        actions={!setup && <ActionMenu label="More profile settings" testId="menu-edit-profile">
-          <a href="#profile-preferences" role="menuitem" data-testid="link-edit-platform-bio">Profile preferences</a>
-          <Link href="/community" role="menuitem" data-testid="link-edit-community">Community</Link>
-          <Link href="/home" role="menuitem" data-testid="link-edit-directory">Home</Link>
-        </ActionMenu>} />
+      <ScreenHeader backHref={setup ? undefined : '/user-portal'} backLabel="Back to profile" testId="header-edit-profile" title={profile ? 'Edit profile' : 'Set up your profile'} />
       {profile && <p className="ch-note">Username @{profile.username} is permanent.</p>}
       {q.isLoading && <p role="status">Loading...</p>}
       {q.isError && <div className="ch-err" role="alert">Could not load your account. <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button></div>}
@@ -504,54 +493,45 @@ export function ChatProfile({ setup = false }: { setup?: boolean }) {
             <span className="ch-field-count">{shownDisplay.length}/40</span>
             {tried && !dnOk && <span className="ch-fe" role="alert">Enter a display name.</span>}
           </label>
-          {!profile && <label>Bio
-            <textarea value={bio} maxLength={280} rows={3} onChange={(e) => setBio(e.target.value)} data-testid="input-bio" />
-            <span className="ch-field-count">{bio.length}/280</span>
-          </label>}
-          <div>
-            <div className="ch-photo-heading"><b>Profile photos</b><span>{photoUrls.length}/4</span></div>
-            <div className="ch-photos" aria-label="Saved profile photos">
-              {photoUrls.map((url, i) => {
-                const status = profile?.photoReviews?.find(p => p.photoUrl === url)?.status ?? 'pending';
-                const replacingPreview = !!preview && replaceTarget.current === url;
-                const statusLabel = status === 'approved' ? '✓ Approved' : status === 'pending' ? 'Pending review' : status === 'rejected' ? 'Rejected' : 'Flagged';
-                const statusClass = status === 'approved' ? 'is-approved' : status === 'pending' ? 'is-pending' : 'is-rejected';
-                return (
-                  <div className="ch-photo-card" key={url}>
-                    {photoUrl === url && <span className="ch-photo-main">Main</span>}
-                    <UserPhoto username={profile?.username ?? username} displayName={dn} photoUrl={replacingPreview ? preview : url} size={72} />
-                    <span className={`ch-photo-status ${replacingPreview ? 'is-uploading' : statusClass}`} role="status">{replacingPreview ? 'Uploading…' : statusLabel}</span>
-                    <div className="ch-photo-actions">
-                      <button type="button" className="bm-btn bm-btn-sm" aria-pressed={photoUrl === url} aria-label={`Use photo ${i + 1} as main photo`} disabled={uploading || save.isPending}
-                        onClick={() => { setPhotoUrl(url); setSaved(false); }} data-testid={`button-main-photo-${i}`}>{photoUrl === url ? 'Main' : 'Make main'}</button>
-                      <button type="button" className="bm-btn bm-btn-sm" aria-label={`Replace photo ${i + 1}`} disabled={uploading || save.isPending}
-                        onClick={() => { replaceTarget.current = url; fileRef.current?.click(); }} data-testid={`button-replace-photo-${i}`}>Replace</button>
-                      <button type="button" className="bm-btn bm-btn-sm" aria-label={`Remove photo ${i + 1}`} disabled={uploading || save.isPending}
-                        onClick={() => { const remaining = photoUrls.filter(item => item !== url); setPhotoUrls(remaining); if (photoUrl === url) setPhotoUrl(remaining[0] ?? null); setUpErr(null); setSaved(false); }} data-testid={`button-remove-photo-${i}`}>Remove</button>
-                    </div>
-                  </div>
-                );
-              })}
-              {preview && !replaceTarget.current && <div className="ch-photo-card ch-photo-uploading"><UserPhoto displayName={dn} photoUrl={preview} size={72} /><span className="ch-photo-status is-uploading" role="status">Uploading…</span></div>}
-              {Array.from({ length: Math.max(0, 4 - photoUrls.length - (preview && !replaceTarget.current ? 1 : 0)) }, (_, slot) => (
-                <button type="button" className="ch-photo-card ch-photo-empty" key={`empty-photo-${slot}`} disabled={photoUrls.length >= 4 || uploading || save.isPending}
-                  aria-label="Add photo" onClick={() => { replaceTarget.current = null; fileRef.current?.click(); }}
-                  data-testid={photoUrls.length === 0 && slot === 0 ? 'button-add-photo' : `button-add-photo-${slot}`}>
-                  <span className="ch-add-plus" aria-hidden="true">+</span><span>Add photo</span>
+          <section className="ch-profile-photo-edit" aria-label="Profile picture">
+            <b>Profile picture</b>
+            <div className="ch-profile-photo-row">
+              <UserPhoto username={profile?.username ?? username} displayName={dn} photoUrl={preview ?? photoUrl} size={96} />
+              <div>
+                {photoUrl && <p className="ch-photo-status is-pending" role="status">
+                  {profile?.photoReviews?.find(item => item.photoUrl === photoUrl)?.status === 'approved'
+                    ? 'Approved' : 'Pending review'}
+                </p>}
+                <button type="button" className="bm-btn bm-btn-sm" disabled={uploading || save.isPending} onClick={() => fileRef.current?.click()} data-testid="button-replace-photo">
+                  {photoUrl ? 'Replace picture' : 'Add picture'}
                 </button>
-              ))}
+              </div>
             </div>
-            <input ref={fileRef} type="file" hidden accept="image/jpeg,image/png,image/webp" aria-label="Upload profile photo" disabled={uploading || save.isPending} onChange={(e) => pickPhoto(e.target.files?.[0])} data-testid="input-photo" />
-            <p className="ch-note">Add up to 4 photos and choose one main photo. Only approved photos are visible to others. No sexual or explicit photos; keep your profile professional. JPEG, PNG or WebP, up to 5 MiB each. Save changes to apply.{photoUrls.length >= 4 ? ' At the limit: replace or remove a photo to change your collection.' : ''}</p>
+            <input ref={fileRef} type="file" hidden accept="image/jpeg,image/png,image/webp" aria-label="Upload profile picture" disabled={uploading || save.isPending} onChange={e => pickPhoto(e.target.files?.[0])} data-testid="input-photo" />
+            <p className="ch-note">One JPEG, PNG or WebP image, up to 5 MiB. A new upload replaces the previous picture. New pictures are reviewed before other people can see them.</p>
             {upErr && <div className="ch-err" role="alert">{upErr}</div>}
-          </div>
+          </section>
+          <section className="ch-profile-identity" aria-label="Race and job">
+            <b>Race and Job</b>
+            <label>Race
+              <select value={race} disabled aria-label="Race" data-testid="select-player-race"><option value="Human">Human</option></select>
+            </label>
+            <label>Job
+              <select value={job} onChange={e => { setJob(e.target.value as StarterJob | ''); setSaved(false); }} aria-label="Job" data-testid="select-player-job">
+                <option value="">No job yet</option>
+                {STARTER_JOBS.map(option => <option key={option} value={option}>{option}</option>)}
+              </select>
+            </label>
+            {social.isError && <div className="ch-err" role="alert">{errMessage(social.error)}</div>}
+          </section>
           {save.isError && <div className="ch-err" role="alert">{errMessage(save.error)}</div>}
+          {saveSocial.isError && <div className="ch-err" role="alert">{errMessage(saveSocial.error)}</div>}
+          {formErr && <div className="ch-err" role="alert">{formErr}</div>}
           {saved && <p role="status">Saved.</p>}
-          <p><button type="submit" className="bm-btn bm-btn-primary" disabled={save.isPending || uploading} data-testid="button-save-identity">
-            {save.isPending ? 'Saving...' : profile ? 'Save changes' : 'Create profile'}</button></p>
+          <p><button type="submit" className="bm-btn bm-btn-primary" disabled={save.isPending || saveSocial.isPending || uploading} data-testid="button-save-identity">
+            {save.isPending || saveSocial.isPending ? 'Saving...' : profile ? 'Save changes' : 'Create profile'}</button></p>
         </form>
       )}
-      {profile && <ProfilePreferences />}
       <p className="ch-note">{DISCLAIMER}</p>
     </>
   );

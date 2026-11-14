@@ -96,14 +96,14 @@ body.streamtalk-light-screen .dark {
 }
 
 #root .app-page.is-light-screen :is(.ch-note,.sc-sub,.sc-count,.dh-note,.dh-sub,
-  .st-card-body span,.ib-prev,.ib-time,.fg-empty,.pf-h2,.pf-badge small,
+  .st-card-body span,.ib-prev,.ib-time,.fg-empty,
   .pf-stats dt) {
   color: #6e6976;
 }
 
 /* Shared light cards with a fine violet-to-blue edge and restrained shadow. */
 #root .app-page.is-light-screen :is(.ch-list li,.sc-card,.sc-panel,.sc-empty,
-  .sc-wallet,.ib-row,.fg-tile,.bc-card,.bc-review,.dh-banner,.dh-card,
+  .ib-row,.fg-tile,.dh-banner,.dh-card,
   .pf-dialog,.pf-menu-list,.pf-stats>div,.sc-msgs,.sc-skel,.ch-photo-card,.ch-auth .ch-card) {
   border: 1px solid transparent;
   background:
@@ -116,7 +116,7 @@ body.streamtalk-light-screen .dark {
 }
 
 #root .app-page.is-light-screen :is(.sc-card,.ch-list li,.ib-row,.fg-tile,
-  .bc-card,.dh-card):hover {
+  .dh-card):hover {
   border-color: rgba(157,29,255,.35);
   box-shadow: 0 7px 24px rgba(39,26,62,.11);
 }
@@ -181,15 +181,13 @@ body.streamtalk-light-screen #root [data-localization-key*="formButtonPrimary"] 
   border-color: #e5a3b0;
 }
 
-#root .app-page.is-light-screen :is(.sc-note.is-ok,.pf-bio,.pf-badge.is-equipped small,
-  .pf-shield) {
+#root .app-page.is-light-screen .sc-note.is-ok {
   color: #287b32;
 }
 
 /* Directory, discovery and room-list cards. */
 #root .app-page.is-light-screen :is(.st-topbar,.dh-top) { color: #211e27; }
 #root .app-page.is-light-screen .st-search { background: #ffffff !important; border-color: #ded9e5 !important; }
-#root .app-page.is-light-screen .st-credits { color: #ffffff; }
 #root .app-page.is-light-screen .st-card {
   border: 1px solid transparent !important;
   background:
@@ -222,27 +220,11 @@ body.streamtalk-light-screen #root [data-localization-key*="formButtonPrimary"] 
 #root .app-page.is-light-screen .dh-skel,
 #root .app-page.is-light-screen .sc-skel i { background: #f0eef3; }
 
-/* Profile, Following, inbox, credit store and rewards surfaces. */
-#root .app-page.is-light-screen :is(.pf,.sc-inbox-screen,.sc-following-screen,.ib,.fg-page,.bc) {
+/* Profile, Following and inbox surfaces. */
+#root .app-page.is-light-screen :is(.pf,.sc-inbox-screen,.sc-following-screen,.ib,.fg-page) {
   color: #211e27;
   background: #ffffff;
 }
-#root .app-page.is-light-screen .pf-hero { background: #f1eef6; }
-#root .app-page.is-light-screen .pf-slide-empty { color: #211e27; background: #f3f1f7; }
-#root .app-page.is-light-screen .pf-round { color: #211e27; background: rgba(255,255,255,.88); border-color: #ded9e5; }
-#root .app-page.is-light-screen .pf-panel { background: #ffffff; border-color: #e6e2eb; box-shadow: 0 6px 24px rgba(39,26,62,.1); }
-#root .app-page.is-light-screen .pf-name { color: #211e27 !important; }
-#root .app-page.is-light-screen .pf-h2 { color: #514b59; font-family: 'Montserrat',system-ui,sans-serif !important; font-size: 13px; font-weight: 700; }
-#root .app-page.is-light-screen :is(.pf-chip,.pf-chip-soft) { color: #514b59; border-color: #e2dce9; background: #f7f5f9; }
-#root .app-page.is-light-screen .pf-edit { color: #742cb1; border-color: #9d1dff; }
-#root .app-page.is-light-screen .pf-btn { color: #742cb1; border-color: #9d1dff; background: #ffffff; }
-#root .app-page.is-light-screen .pf-btn-fill { color: #ffffff; background: linear-gradient(120deg,#9d1dff,#5e00ff); }
-#root .app-page.is-light-screen .pf-stats>div { background: #f7f6f9; }
-#root .app-page.is-light-screen .pf-h2,
-#root .app-page.is-light-screen .pf-badge small,
-#root .app-page.is-light-screen .pf-stats dt { color: #6e6976; }
-#root .app-page.is-light-screen .pf-bio { color: #287b32; }
-#root .app-page.is-light-screen .pf-rewards { border-color: #e6e2eb; }
 #root .app-page.is-light-screen .pf-menu-list button { color: #211e27; }
 #root .app-page.is-light-screen .pf-menu-list button:hover { background: #f4f0f8; }
 #root .app-page.is-light-screen .ib { color: #211e27; }
@@ -258,11 +240,6 @@ body.streamtalk-light-screen #root [data-localization-key*="formButtonPrimary"] 
 #root .app-page.is-light-screen .fg-empty { color: #6e6976; }
 #root .app-page.is-light-screen .fg-photo { background: #f0edf4; }
 #root .app-page.is-light-screen .fg-room { color: #211e27; background: rgba(255,255,255,.94); }
-#root .app-page.is-light-screen :is(.bc,.bc-bal,.bc-txt,.bc-dl dt,.bc-dl dd,.bc-note) { color: #211e27; }
-#root .app-page.is-light-screen .bc-cr,
-#root .app-page.is-light-screen .bc-note b { color: #287b32; }
-#root .app-page.is-light-screen .bc-card { background: #ffffff; color: #211e27; border-color: #e6e2eb; }
-#root .app-page.is-light-screen .bc-save { color: #6e6976; }
 #root .app-page.is-light-screen .bc-note { background: #f4fbf3; border-color: #a8d3a7; }
 #root .app-page.is-light-screen .sc-list .sc-row:hover { background: #f7f5f9; }
 #root .app-page.is-light-screen .sc-msgs { background: #ffffff; }

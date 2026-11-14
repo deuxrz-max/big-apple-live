@@ -119,8 +119,7 @@ function QuickProfileSheet({ username, onClose, onFull, opener }: { username: st
             <strong id="qp-title" className="qp-name" data-testid="text-quick-profile-name">
               <ShinyName displayNameColor={p.displayNameColor} displayNameTierIndex={p.displayNameTierIndex}>{name}</ShinyName>
             </strong>
-            <span className="qp-sub" data-testid="text-quick-profile-username">@{p.username}{p.country ? ` / ${p.country}` : ''}</span>
-            {p.bio?.trim() && <p className="qp-bio">{p.bio.trim()}</p>}
+            <span className="qp-sub" data-testid="text-quick-profile-username">@{p.username}</span>
             <dl className="qp-stats">
               <div><dd>{(p.followerCount ?? 0).toLocaleString()}</dd><dt>Followers</dt></div>
               <div><dd>{(p.followingCount ?? 0).toLocaleString()}</dd><dt>Following</dt></div>

@@ -18,9 +18,7 @@
     "test:live": "node --test tests/liveBeam.test.mjs",
     "test:mobile-shell": "esbuild tests/mobileShell.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-mobile-shell-tests.mjs && node --test /tmp/we-buggin-mobile-shell-tests.mjs",
     "test:battle": "esbuild tests/battleEngine.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-battle-tests.mjs && node --test /tmp/we-buggin-battle-tests.mjs",
-    "test:gifting-levels": "esbuild tests/giftingLevels.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-gifting-levels-tests.mjs && node --test /tmp/we-buggin-gifting-levels-tests.mjs",
-    "test:passport-removal": "esbuild tests/passportRemoval.test.ts --bundle --platform=node --format=esm --jsx=automatic --outfile=/tmp/we-buggin-passport-removal-tests.mjs && node --test /tmp/we-buggin-passport-removal-tests.mjs",
-    "test:pink-card": "esbuild tests/pinkCard.test.ts --bundle --platform=node --format=esm --outfile=/tmp/we-buggin-pink-card-tests.mjs && node --test /tmp/we-buggin-pink-card-tests.mjs"
+    "test:passport-removal": "esbuild tests/passportRemoval.test.ts --bundle --platform=node --format=esm --jsx=automatic --outfile=/tmp/we-buggin-passport-removal-tests.mjs && node --test /tmp/we-buggin-passport-removal-tests.mjs"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -5,7 +5,7 @@ for (const width of [320, 390, 430]) {
   test(`unread badge follows every bottom-nav screen and updates at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 844 });
     await page.goto('/tests/browser/harness.html?view=audit-fixes');
-    for (const path of ['/home', '/community/favorites', '/community/messages', '/community/messages/fixture', '/user-portal', '/rooms/MUSIC1', '/live/fixture', '/community/coins']) {
+    for (const path of ['/home', '/community/favorites', '/community/messages', '/community/messages/fixture', '/user-portal', '/rooms/MUSIC1']) {
       await page.getByLabel('Fixture route').fill(path);
       await expect(page.getByTestId('bottom-nav-message').getByTestId('badge-home-unread')).toHaveText('3');
     }

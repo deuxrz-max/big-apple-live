@@ -5,87 +5,6 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-export type TestCoinLaunchStatusFreeTestCoinBalanceAfterReset = typeof TestCoinLaunchStatusFreeTestCoinBalanceAfterReset[keyof typeof TestCoinLaunchStatusFreeTestCoinBalanceAfterReset];
-
-
-export const TestCoinLaunchStatusFreeTestCoinBalanceAfterReset = {
-  NUMBER_0: 0,
-} as const;
-
-export interface TestCoinLaunchStatus {
-  /** @nullable */
-  closedAt: string | null;
-  /** @minimum 0 */
-  activeTesters: number;
-  /** @minimum 0 */
-  testGiftQuantity: number;
-  /** @minimum 0 */
-  testEffects: number;
-  freeTestCoinBalanceAfterReset: TestCoinLaunchStatusFreeTestCoinBalanceAfterReset;
-  realWalletsPreserved: true;
-  levelsAndXpPreserved: true;
-}
-
-export type TestCoinLaunchPreview = TestCoinLaunchStatus & {
-  planId: string;
-  expiresAt: string;
-};
-
-export type TestCoinLaunchConfirmationConfirmation = typeof TestCoinLaunchConfirmationConfirmation[keyof typeof TestCoinLaunchConfirmationConfirmation];
-
-
-export const TestCoinLaunchConfirmationConfirmation = {
-  END_FREE_TEST_COINS: 'END FREE TEST COINS',
-} as const;
-
-export interface TestCoinLaunchConfirmation {
-  planId: string;
-  confirmation: TestCoinLaunchConfirmationConfirmation;
-  endingTesting: true;
-}
-
-export interface TestCoinLaunchResult {
-  closedAt: string;
-  alreadyCompleted: boolean;
-}
-
-export interface CoinTesterDesignation {
-  /** @pattern ^[A-Za-z0-9_]{3,24}$ */
-  username: string;
-  enabled: boolean;
-}
-
-export type CoinTesterListTestersItem = {
-  username: string;
-  enabled: boolean;
-};
-
-export interface CoinTesterList {
-  testers: CoinTesterListTestersItem[];
-}
-
-export interface PinkCardWinner {
-  id: string;
-  name: string;
-  prizeName: string;
-  drawnAt: string;
-}
-
-export interface PinkCardReward {
-  cycle: string;
-  serverTime: string;
-  winner: PinkCardWinner | null;
-}
-
-export interface PinkCardEntry {
-  entered: boolean;
-  optedOut: boolean;
-}
-
-export interface PinkCardPreference {
-  optedOut: boolean;
-}
-
 export interface FavoriteRoom {
   roomId: string;
   label: string;
@@ -94,21 +13,6 @@ export interface FavoriteRoom {
 export interface FavoriteRoomResult {
   room: FavoriteRoom | null;
 }
-
-/**
- * @nullable
- */
-export type SocialPersonExternalPlatform = typeof SocialPersonExternalPlatform[keyof typeof SocialPersonExternalPlatform] | null;
-
-
-export const SocialPersonExternalPlatform = {
-  LiveMe: 'LiveMe',
-  Bigo_Live: 'Bigo Live',
-  Tango_Live: 'Tango Live',
-  TikTok: 'TikTok',
-  Instagram_Live: 'Instagram Live',
-  Super_Live: 'Super Live',
-} as const;
 
 export type PhotoReviewStatusStatus = typeof PhotoReviewStatusStatus[keyof typeof PhotoReviewStatusStatus];
 
@@ -204,83 +108,33 @@ export const SocialPersonJob = {
   Tinker: 'Tinker',
 } as const;
 
-export type StreamerPassportPlatformId = typeof StreamerPassportPlatformId[keyof typeof StreamerPassportPlatformId];
-
-
-export const StreamerPassportPlatformId = {
-  liveme: 'liveme',
-  tiktok: 'tiktok',
-  bigo: 'bigo',
-  instagram: 'instagram',
-  facebook: 'facebook',
-  youtube: 'youtube',
-  twitch: 'twitch',
-} as const;
-
-export interface StreamerPassportPlatform {
-  id: StreamerPassportPlatformId;
-  label: string;
-  /** @pattern ^#[0-9A-Fa-f]{6}$ */
-  color: string;
-}
-
-export interface StreamerPassportBadgeSummary {
-  platforms: StreamerPassportPlatform[];
-  verified: boolean;
-  foundingLeague: boolean;
-}
-
-export type SocialPersonBadgesItem = {
-  id: string;
-  earnedAt: string;
-};
-
 export interface SocialPerson {
-  /** @nullable */
-  externalPlatform?: SocialPersonExternalPlatform;
-  /**
-     * @maxLength 64
-     * @nullable
-     */
-  externalHandle?: string | null;
   username: string;
-  displayName?: string;
+  displayName: string;
+  /** @nullable */
+  photoUrl: string | null;
+  /** @maxItems 1 */
+  photoUrls: string[];
+  photoReviews?: PhotoReviewStatus[];
+  identity: EmojiIdentity;
+  race: SocialPersonRace;
+  /** @nullable */
+  job: SocialPersonJob;
+  favorite: boolean;
+  blocked: boolean;
+  frameId: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
-  displayNameColor?: string;
+  displayNameColor: string;
   /**
      * @minimum 0
-     * @maximum 100
+     * @maximum 1
      */
-  displayNameTierIndex?: number;
+  displayNameTierIndex: number;
+  hasNameShimmer: boolean;
   /** @minimum 0 */
   followerCount?: number;
   /** @minimum 0 */
   followingCount?: number;
-  /** @minimum 0 */
-  sentCredits?: number;
-  badges?: SocialPersonBadgesItem[];
-  /** @nullable */
-  photoUrl?: string | null;
-  /** @maxItems 4 */
-  photoUrls?: string[];
-  photoReviews?: PhotoReviewStatus[];
-  identity: EmojiIdentity;
-  bio: string;
-  country: string | null;
-  interests: string[];
-  race?: SocialPersonRace;
-  /** @nullable */
-  job?: SocialPersonJob;
-  discoverable: boolean;
-  favorite: boolean;
-  blocked: boolean;
-  receivedCredits: number;
-  badgeId: string | null;
-  /** @nullable */
-  badgeName: string | null;
-  /** @nullable */
-  badgeImage: string | null;
-  passport?: StreamerPassportBadgeSummary;
 }
 
 export interface FavoriteGalleryEntry {
@@ -346,31 +200,26 @@ export const UniversityPersonJob = {
 export interface UniversityPerson {
   /** @nullable */
   botId?: UniversityPersonBotId;
-  /** @nullable */
-  badgeId?: string | null;
-  /** @nullable */
-  badgeName?: string | null;
-  /** @nullable */
-  badgeImage?: string | null;
   participantId: string;
   username: string;
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
-  displayNameColor?: string;
+  displayNameColor: string;
   /**
      * @minimum 0
-     * @maximum 100
+     * @maximum 1
      */
-  displayNameTierIndex?: number;
-  passport?: StreamerPassportBadgeSummary;
+  displayNameTierIndex: number;
+  frameId: string;
+  hasNameShimmer: boolean;
   identity?: EmojiIdentity;
   /** @nullable */
   photoUrl: string | null;
   /** @nullable */
   photoStatus: string | null;
-  race?: UniversityPersonRace;
+  race: UniversityPersonRace;
   /** @nullable */
-  job?: UniversityPersonJob;
+  job: UniversityPersonJob;
   self: boolean;
   moderator: boolean;
   ignored: boolean;
@@ -386,16 +235,10 @@ export interface UniversityWhisper {
   displayNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 100
+     * @maximum 1
      */
   displayNameTierIndex?: number;
-  /** @nullable */
-  badgeId: string | null;
-  /** @nullable */
-  badgeName?: string | null;
-  /** @nullable */
-  badgeImage?: string | null;
-  passport?: StreamerPassportBadgeSummary;
+  hasNameShimmer?: boolean;
   outgoing: boolean;
   body: string;
   createdAt: string;
@@ -644,13 +487,11 @@ export interface ChessPlayer {
   displayName: string;
   /** @nullable */
   photoUrl?: string | null;
-  /** Approved saved profile photos, main photo first. */
-  photoUrls?: string[];
   /**
-     * @minimum 0
-     * @maximum 100
+     * Approved saved profile photos, main photo first.
+     * @maxItems 1
      */
-  giftingLevel?: number;
+  photoUrls?: string[];
 }
 
 export type ChessRoomStatePlayers = {
@@ -783,12 +624,6 @@ export interface ChatMessage {
   botId?: ChatMessageBotId;
   /** @nullable */
   botMessageType?: ChatMessageBotMessageType;
-  /** @nullable */
-  badgeId?: string | null;
-  /** @nullable */
-  badgeName?: string | null;
-  /** @nullable */
-  badgeImage?: string | null;
   id: string;
   roomId: string;
   authorId: string;
@@ -802,10 +637,11 @@ export interface ChatMessage {
   displayNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 100
+     * @maximum 1
      */
   displayNameTierIndex?: number;
-  passport?: StreamerPassportBadgeSummary;
+  frameId?: string;
+  hasNameShimmer?: boolean;
   createdAt: string;
 }
 
@@ -1656,635 +1492,6 @@ export interface ErrorResponse {
   error: string;
 }
 
-export type GifterLeaderboardPeopleItem = SocialPerson & {
-  /** @minimum 1 */
-  giftXp: number;
-};
-
-export interface GifterLeaderboard {
-  people: GifterLeaderboardPeopleItem[];
-}
-
-export type DeveloperGiftMotionPresetCategory = typeof DeveloperGiftMotionPresetCategory[keyof typeof DeveloperGiftMotionPresetCategory];
-
-
-export const DeveloperGiftMotionPresetCategory = {
-  vehicle: 'vehicle',
-  character: 'character',
-  object: 'object',
-  logo: 'logo',
-} as const;
-
-export type DeveloperGiftMotionPresetEntry = typeof DeveloperGiftMotionPresetEntry[keyof typeof DeveloperGiftMotionPresetEntry];
-
-
-export const DeveloperGiftMotionPresetEntry = {
-  left: 'left',
-  right: 'right',
-  top: 'top',
-  bottom: 'bottom',
-  depth: 'depth',
-} as const;
-
-export type DeveloperGiftMotionPresetExit = typeof DeveloperGiftMotionPresetExit[keyof typeof DeveloperGiftMotionPresetExit];
-
-
-export const DeveloperGiftMotionPresetExit = {
-  left: 'left',
-  right: 'right',
-  top: 'top',
-  bottom: 'bottom',
-  depth: 'depth',
-} as const;
-
-export interface DeveloperGiftMotionPreset {
-  version: 1;
-  durationMs: 6000;
-  category: DeveloperGiftMotionPresetCategory;
-  entry: DeveloperGiftMotionPresetEntry;
-  exit: DeveloperGiftMotionPresetExit;
-  /**
-     * @minimum 0.5
-     * @maximum 1.5
-     */
-  speed: number;
-  /**
-     * @minItems 3
-     * @maxItems 3
-     * @items.minimum -6.3
-     * @items.maximum 6.3
-     */
-  spin: number[];
-  /**
-     * @minimum 0
-     * @maximum 1
-     */
-  drift: number;
-  /**
-     * @minimum 0
-     * @maximum 1
-     */
-  bounce: number;
-  /**
-     * @minimum -1.2
-     * @maximum 1.2
-     */
-  cameraYaw: number;
-  /**
-     * @minimum -0.8
-     * @maximum 0.8
-     */
-  cameraPitch: number;
-  /**
-     * @minimum 0
-     * @maximum 100
-     * @nullable
-     */
-  animationIndex: number | null;
-}
-
-export type DeveloperGiftMotionFormat = typeof DeveloperGiftMotionFormat[keyof typeof DeveloperGiftMotionFormat];
-
-
-export const DeveloperGiftMotionFormat = {
-  glb: 'glb',
-  gltf: 'gltf',
-} as const;
-
-export type DeveloperGiftMotionCategory = typeof DeveloperGiftMotionCategory[keyof typeof DeveloperGiftMotionCategory];
-
-
-export const DeveloperGiftMotionCategory = {
-  vehicle: 'vehicle',
-  character: 'character',
-  object: 'object',
-  logo: 'logo',
-} as const;
-
-/**
- * @pattern ^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$
- */
-export type SocialGiftCatalogId = string;
-
-export interface DeveloperGiftMotion {
-  id: SocialGiftCatalogId;
-  name: string;
-  /** @minimum 1 */
-  cost: number;
-  format: DeveloperGiftMotionFormat;
-  category: DeveloperGiftMotionCategory;
-  animationNames: string[];
-  motion: DeveloperGiftMotionPreset;
-  /** @minimum 1 */
-  byteSize: number;
-  fileUrl: string;
-  active: boolean;
-  createdAt: string;
-}
-
-export interface DeveloperGiftMotionList {
-  motions: DeveloperGiftMotion[];
-}
-
-export type DeveloperGiftMotionUploadInputCategory = typeof DeveloperGiftMotionUploadInputCategory[keyof typeof DeveloperGiftMotionUploadInputCategory];
-
-
-export const DeveloperGiftMotionUploadInputCategory = {
-  vehicle: 'vehicle',
-  character: 'character',
-  object: 'object',
-  logo: 'logo',
-} as const;
-
-export interface DeveloperGiftMotionUploadInput {
-  /**
-     * @minLength 1
-     * @maxLength 60
-     */
-  name: string;
-  /** @minimum 1 */
-  cost: number;
-  category: DeveloperGiftMotionUploadInputCategory;
-  /** JSON array of built-in animation clip names */
-  animationNames: string;
-  /** JSON-encoded deterministic 6-second motion preset */
-  motion: string;
-  /** One self-contained GLB or GLTF model, up to 100 MB */
-  model: string;
-}
-
-/**
- * @pattern ^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$
- */
-export type GiftStudioGiftId = string;
-
-export type GiftStudioCatalogUpdateStatus = typeof GiftStudioCatalogUpdateStatus[keyof typeof GiftStudioCatalogUpdateStatus];
-
-
-export const GiftStudioCatalogUpdateStatus = {
-  active: 'active',
-  inactive: 'inactive',
-  deleted: 'deleted',
-} as const;
-
-export type GiftStudioProductType = typeof GiftStudioProductType[keyof typeof GiftStudioProductType];
-
-
-export const GiftStudioProductType = {
-  gift: 'gift',
-  'entrance-effect': 'entrance-effect',
-} as const;
-
-export interface GiftStudioCatalogUpdate {
-  /**
-     * @minLength 1
-     * @maxLength 60
-     */
-  name?: string;
-  /** @minimum 1 */
-  cost?: number;
-  productType?: GiftStudioProductType;
-  status?: GiftStudioCatalogUpdateStatus;
-  /** Owner-selected gift restricted to gifter level 61 or higher. Defaults false. */
-  platinumExclusive?: boolean;
-}
-
-export type GiftStudioCatalogGiftStatus = typeof GiftStudioCatalogGiftStatus[keyof typeof GiftStudioCatalogGiftStatus];
-
-
-export const GiftStudioCatalogGiftStatus = {
-  active: 'active',
-  inactive: 'inactive',
-  deleted: 'deleted',
-} as const;
-
-export type GiftStudioIconStatus = typeof GiftStudioIconStatus[keyof typeof GiftStudioIconStatus];
-
-
-export const GiftStudioIconStatus = {
-  transparent: 'transparent',
-  fallback: 'fallback',
-  'manual-transparent': 'manual-transparent',
-  'manual-fallback': 'manual-fallback',
-  builtin: 'builtin',
-} as const;
-
-export interface GiftStudioCatalogGift {
-  id: SocialGiftCatalogId;
-  name: string;
-  /** @minimum 1 */
-  cost: number;
-  productType: GiftStudioProductType;
-  status: GiftStudioCatalogGiftStatus;
-  roomGift: boolean;
-  platinumExclusive?: boolean;
-  animationAvailable: boolean;
-  /** @nullable */
-  iconUrl: string | null;
-  iconStatus: GiftStudioIconStatus;
-}
-
-export interface GiftStudioIconUpdateResponse {
-  giftId: SocialGiftCatalogId;
-  iconStatus: GiftStudioIconStatus;
-  iconUrl: string;
-}
-
-export interface EntranceEffectShopMedia {
-  versionId: string;
-  webmUrl: string;
-  safariUrl: string;
-  /** @minimum 1 */
-  durationMs: number;
-}
-
-export interface EntranceEffectShopItem {
-  id: SocialGiftCatalogId;
-  /** @minLength 1 */
-  name: string;
-  /** @minimum 1 */
-  cost: number;
-  availableForPurchase: boolean;
-  owned: boolean;
-  equipped: boolean;
-  media: EntranceEffectShopMedia | null;
-}
-
-export interface EntranceEffectShop {
-  items: EntranceEffectShopItem[];
-}
-
-export interface EntranceEffectPurchaseInput {
-  requestId: string;
-  /** Expected test-coin mode; server rejects stale designation. */
-  testMode?: boolean;
-}
-
-export interface SocialWallet {
-  balance: number;
-  earned: number;
-  received: number;
-  sent: number;
-  canClaimDaily: boolean;
-  dailyReward: number;
-  /** True only for the development-preview owner account; does not alter the stored wallet balance. */
-  unlimited: boolean;
-}
-
-export interface EntranceEffectPurchaseResponse {
-  effectId: SocialGiftCatalogId;
-  purchased: boolean;
-  wallet: SocialWallet;
-}
-
-export interface EntranceEffectEquipInput {
-  effectId: SocialGiftCatalogId | null;
-}
-
-export interface EntranceEffectEquipResponse {
-  effectId: SocialGiftCatalogId | null;
-}
-
-export type GiftStudioProcessingSettingsPreset = typeof GiftStudioProcessingSettingsPreset[keyof typeof GiftStudioProcessingSettingsPreset];
-
-
-export const GiftStudioProcessingSettingsPreset = {
-  green: 'green',
-  magenta: 'magenta',
-  black: 'black',
-  custom: 'custom',
-} as const;
-
-export type GiftStudioProcessingSettingsMaxDimension = typeof GiftStudioProcessingSettingsMaxDimension[keyof typeof GiftStudioProcessingSettingsMaxDimension] | null;
-
-
-export const GiftStudioProcessingSettingsMaxDimension = {
-  NUMBER_480: 480,
-  NUMBER_720: 720,
-  NUMBER_1080: 1080,
-} as const;
-
-export type GiftStudioProcessingSettingsBackgroundMode = typeof GiftStudioProcessingSettingsBackgroundMode[keyof typeof GiftStudioProcessingSettingsBackgroundMode];
-
-
-export const GiftStudioProcessingSettingsBackgroundMode = {
-  'see-through': 'see-through',
-  black: 'black',
-} as const;
-
-export interface GiftStudioProcessingSettings {
-  preset: GiftStudioProcessingSettingsPreset;
-  /** @pattern ^#[0-9A-Fa-f]{6}$ */
-  keyColor: string;
-  /**
-     * @minimum 0.02
-     * @maximum 0.65
-     */
-  tolerance: number;
-  /**
-     * @minimum 0
-     * @maximum 0.5
-     */
-  softness: number;
-  /**
-     * @minimum 0
-     * @maximum 1
-     */
-  spill: number;
-  maxDimension: GiftStudioProcessingSettingsMaxDimension;
-  backgroundMode?: GiftStudioProcessingSettingsBackgroundMode;
-  /** The uploaded clip already contains real transparency; do not apply a color key */
-  preserveSourceAlpha?: boolean;
-  /** New nonblack opaque uploads may keep their background after a warning instead of being rejected */
-  retainOpaqueBackground?: boolean;
-  /**
-     * Owner-provided name shown for this saved Gift Studio draft
-     * @minLength 1
-     * @maxLength 60
-     */
-  draftName?: string;
-  productType?: GiftStudioProductType;
-}
-
-export interface GiftStudioUploadInput {
-  giftId?: GiftStudioGiftId | null;
-  productType?: GiftStudioProductType;
-  /**
-     * Optional updated credit price for an existing catalog gift
-     * @minimum 1
-     */
-  cost?: number;
-  /** JSON-serialized GiftStudioProcessingSettings */
-  settings: string;
-  /** Video file part */
-  sourceVideo: string;
-  /** Processed WebM file part; transparent for see-through videos and opaque for black-background videos */
-  processedWebm: string;
-}
-
-export interface GiftStudioProcessInput {
-  /** JSON-serialized key settings */
-  settings: string;
-  /** Source video file part */
-  sourceVideo: string;
-}
-
-export interface GiftStudioProcessedSaveInput {
-  processingSession: string;
-  /**
-     * @minLength 1
-     * @maxLength 60
-     */
-  draftName: string;
-  giftId?: GiftStudioGiftId | null;
-  productType?: GiftStudioProductType;
-  /**
-     * Optional updated credit price for an existing catalog gift
-     * @minimum 1
-     */
-  cost?: number;
-}
-
-export interface GiftStudioRenameInput {
-  /**
-     * @minLength 1
-     * @maxLength 60
-     */
-  name: string;
-}
-
-export const GiftStudioDeleteResponseValue = {
-  deleted: true,
-} as const;
-export type GiftStudioDeleteResponse = typeof GiftStudioDeleteResponseValue;
-
-export interface GiftStudioAssignInput {
-  giftId: GiftStudioGiftId;
-}
-
-export interface GiftStudioActivationInput {
-  active: boolean;
-  productType?: GiftStudioProductType;
-  /** @minimum 1 */
-  cost?: number;
-}
-
-export type GiftStudioVersionStatus = typeof GiftStudioVersionStatus[keyof typeof GiftStudioVersionStatus];
-
-
-export const GiftStudioVersionStatus = {
-  draft: 'draft',
-  active: 'active',
-} as const;
-
-export interface GiftStudioVersion {
-  id: string;
-  giftId: GiftStudioGiftId | null;
-  version: number;
-  status: GiftStudioVersionStatus;
-  originalName: string;
-  durationMs: number;
-  settings: GiftStudioProcessingSettings;
-  createdAt: string;
-  originalUrl: string;
-  webmUrl: string;
-  safariUrl: string;
-  originalBytes: number;
-  webmBytes: number;
-  safariBytes: number;
-}
-
-export interface GiftStudioLibrary {
-  items: GiftStudioVersion[];
-  catalog: GiftStudioCatalogGift[];
-}
-
-export interface DeveloperContentSyncPoolResult {
-  roomId: string;
-  /** @minimum 0 */
-  added: number;
-  /** @minimum 0 */
-  updated: number;
-  /** @minimum 0 */
-  skipped: number;
-  /** @minimum 0 */
-  savedCount: number;
-  message?: string;
-}
-
-export interface DeveloperContentSyncAssetResult {
-  /** @minimum 0 */
-  active: number;
-  /** @minimum 0 */
-  drafts: number;
-  /** @minimum 0 */
-  skipped: number;
-}
-
-export type DeveloperContentSyncSummaryTrigger = typeof DeveloperContentSyncSummaryTrigger[keyof typeof DeveloperContentSyncSummaryTrigger];
-
-
-export const DeveloperContentSyncSummaryTrigger = {
-  manual: 'manual',
-  scheduled: 'scheduled',
-  'startup-catchup': 'startup-catchup',
-} as const;
-
-export interface DeveloperContentSyncSummary {
-  trigger: DeveloperContentSyncSummaryTrigger;
-  /** @minimum 0 */
-  added: number;
-  /** @minimum 0 */
-  updated: number;
-  /** @minimum 0 */
-  skipped: number;
-  videoPools: DeveloperContentSyncPoolResult[];
-  giftEffects: DeveloperContentSyncAssetResult;
-  entranceEffects: DeveloperContentSyncAssetResult;
-}
-
-export interface DeveloperContentSyncStatus {
-  lastSyncedAt: string | null;
-  lastScheduledEasternDate: string | null;
-  summary: DeveloperContentSyncSummary | null;
-  isRunning: boolean;
-}
-
-export type GiftStudioPlaybackMediaBackgroundMode = typeof GiftStudioPlaybackMediaBackgroundMode[keyof typeof GiftStudioPlaybackMediaBackgroundMode];
-
-
-export const GiftStudioPlaybackMediaBackgroundMode = {
-  'see-through': 'see-through',
-  black: 'black',
-} as const;
-
-export interface GiftStudioPlaybackMedia {
-  versionId: string;
-  /**
-     * @minLength 1
-     * @maxLength 60
-     */
-  name: string;
-  webmUrl: string;
-  safariUrl: string;
-  /**
-     * @minimum 1
-     * @maximum 15000
-     */
-  durationMs: number;
-  backgroundMode: GiftStudioPlaybackMediaBackgroundMode;
-}
-
-export interface GiftStudioActiveMediaResponse {
-  media: GiftStudioPlaybackMedia | null;
-}
-
-export type StreamerPassportPlatformInputPlatform = typeof StreamerPassportPlatformInputPlatform[keyof typeof StreamerPassportPlatformInputPlatform];
-
-
-export const StreamerPassportPlatformInputPlatform = {
-  liveme: 'liveme',
-  tiktok: 'tiktok',
-  bigo: 'bigo',
-  instagram: 'instagram',
-  facebook: 'facebook',
-  youtube: 'youtube',
-  twitch: 'twitch',
-} as const;
-
-export interface StreamerPassportPlatformInput {
-  platform: StreamerPassportPlatformInputPlatform;
-  /**
-     * @minLength 1
-     * @maxLength 300
-     */
-  handleOrUrl: string;
-}
-
-export type MyStreamerPassportPlatformVerificationStatus = typeof MyStreamerPassportPlatformVerificationStatus[keyof typeof MyStreamerPassportPlatformVerificationStatus];
-
-
-export const MyStreamerPassportPlatformVerificationStatus = {
-  unverified: 'unverified',
-  requested: 'requested',
-  verified: 'verified',
-} as const;
-
-export type MyStreamerPassportPlatform = StreamerPassportPlatform & ({
-  entryId: string;
-  handle: string;
-  profileUrl: string;
-  addedAt: string;
-  verificationCode: string;
-  verificationStatus: MyStreamerPassportPlatformVerificationStatus;
-  /** @nullable */
-  requestedAt: string | null;
-  /** @nullable */
-  verifiedAt: string | null;
-});
-
-export interface MyStreamerPassport {
-  availablePlatforms: StreamerPassportPlatform[];
-  platforms: MyStreamerPassportPlatform[];
-  foundingLeague: boolean;
-}
-
-export type StreamerPassportPublicEntry = StreamerPassportPlatform & {
-  handle: string;
-  profileUrl: string;
-  addedAt: string;
-  verified: boolean;
-};
-
-export interface PublicStreamerPassport {
-  username: string;
-  displayName: string;
-  identity: EmojiIdentity;
-  platforms: StreamerPassportPublicEntry[];
-  foundingLeague: boolean;
-}
-
-export type StreamerPassportReviewQueueRequestsItem = MyStreamerPassportPlatform & {
-  username: string;
-  displayName: string;
-};
-
-export interface StreamerPassportReviewQueue {
-  requests: StreamerPassportReviewQueueRequestsItem[];
-}
-
-export type StreamerPassportReviewInputAction = typeof StreamerPassportReviewInputAction[keyof typeof StreamerPassportReviewInputAction];
-
-
-export const StreamerPassportReviewInputAction = {
-  approve: 'approve',
-  reject: 'reject',
-} as const;
-
-export interface StreamerPassportReviewInput {
-  action: StreamerPassportReviewInputAction;
-}
-
-export interface StreamerPassportFoundingInput {
-  username: string;
-  grant: boolean;
-}
-
-/**
- * @nullable
- */
-export type SocialProfileInputExternalPlatform = typeof SocialProfileInputExternalPlatform[keyof typeof SocialProfileInputExternalPlatform] | null;
-
-
-export const SocialProfileInputExternalPlatform = {
-  LiveMe: 'LiveMe',
-  Bigo_Live: 'Bigo Live',
-  Tango_Live: 'Tango Live',
-  TikTok: 'TikTok',
-  Instagram_Live: 'Instagram Live',
-  Super_Live: 'Super Live',
-} as const;
-
 export type SocialProfileInputRace = typeof SocialProfileInputRace[keyof typeof SocialProfileInputRace];
 
 
@@ -2310,260 +1517,24 @@ export const SocialProfileInputJob = {
 } as const;
 
 export interface SocialProfileInput {
-  /** @nullable */
-  externalPlatform?: SocialProfileInputExternalPlatform;
-  /**
-     * @maxLength 64
-     * @nullable
-     */
-  externalHandle?: string | null;
-  /** @maxLength 200 */
-  bio: string;
-  country: string | null;
-  /**
-     * @maxItems 8
-     * @items.minLength 1
-     * @items.maxLength 24
-     */
-  interests: string[];
   race?: SocialProfileInputRace;
   /** @nullable */
   job?: SocialProfileInputJob;
-  discoverable: boolean;
-  badgeId: string | null;
 }
-
-export interface SocialProduct {
-  id: string;
-  name: string;
-  badgeImage: string;
-  description: string;
-  cost: number;
-}
-
-export interface SocialGift {
-  platinumExclusive?: boolean;
-  id: string;
-  name: string;
-  cost: number;
-  /** @nullable */
-  iconUrl: string | null;
-  iconStatus: GiftStudioIconStatus;
-}
-
-export type EntranceEffectSettingsInputTierEffectId = typeof EntranceEffectSettingsInputTierEffectId[keyof typeof EntranceEffectSettingsInputTierEffectId];
-
-
-export const EntranceEffectSettingsInputTierEffectId = {
-  'monthly-tier-1': 'monthly-tier-1',
-  'monthly-tier-2': 'monthly-tier-2',
-  'monthly-tier-3': 'monthly-tier-3',
-  'monthly-tier-4': 'monthly-tier-4',
-  'monthly-tier-5': 'monthly-tier-5',
-} as const;
-
-export interface EntranceEffectSettingsInput {
-  enabled?: boolean;
-  tierEffectId?: EntranceEffectSettingsInputTierEffectId;
-  tierEffectEnabled?: boolean;
-  lionEffectEnabled?: boolean;
-}
-
-export type EntranceEffectTierSettingBadgeId = typeof EntranceEffectTierSettingBadgeId[keyof typeof EntranceEffectTierSettingBadgeId];
-
-
-export const EntranceEffectTierSettingBadgeId = {
-  'monthly-tier-1': 'monthly-tier-1',
-  'monthly-tier-2': 'monthly-tier-2',
-  'monthly-tier-3': 'monthly-tier-3',
-  'monthly-tier-4': 'monthly-tier-4',
-  'monthly-tier-5': 'monthly-tier-5',
-} as const;
-
-export interface EntranceEffectTierSetting {
-  badgeId: EntranceEffectTierSettingBadgeId;
-  name: string;
-  enabled: boolean;
-}
-
-export interface OwnerEntranceEffectSettings {
-  tiers: EntranceEffectTierSetting[];
-  lionEffectEnabled: boolean;
-}
-
-/**
- * @nullable
- */
-export type EntranceEffectSettingsBadgeId = typeof EntranceEffectSettingsBadgeId[keyof typeof EntranceEffectSettingsBadgeId] | null;
-
-
-export const EntranceEffectSettingsBadgeId = {
-  'monthly-tier-1': 'monthly-tier-1',
-  'monthly-tier-2': 'monthly-tier-2',
-  'monthly-tier-3': 'monthly-tier-3',
-  'monthly-tier-4': 'monthly-tier-4',
-  'monthly-tier-5': 'monthly-tier-5',
-  'lion-entrance': 'lion-entrance',
-} as const;
-
-export interface EntranceEffectSettings {
-  eligible: boolean;
-  enabled: boolean;
-  /** @nullable */
-  badgeId: EntranceEffectSettingsBadgeId;
-  /** @nullable */
-  badgeName: string | null;
-  equippedEffectId: SocialGiftCatalogId | null;
-  ownerTest: OwnerEntranceEffectSettings | null;
-}
-
-export type SocialMeBadgeExpirations = {[key: string]: string};
-
-export type SocialMeGiftQuantities = {[key: string]: number};
 
 export type SocialMeCountriesItem = {
   code: string;
   name: string;
 };
 
-export interface NameColorProgress {
-  tierName: string;
-  /**
-     * @minimum 0
-     * @maximum 100
-     */
-  tierIndex: number;
-  /** @minimum 0 */
-  lifetimeCoinsPurchased: number;
-  /** @nullable */
-  nextTierName: string | null;
-  /**
-     * @minimum 0
-     * @nullable
-     */
-  nextTierThreshold: number | null;
-  /** @minimum 0 */
-  coinsToNextTier: number;
-}
-
-export interface NameColorTestState {
-  enabled: boolean;
-  /**
-     * @minimum 0
-     * @nullable
-     */
-  overrideCoins: number | null;
-}
-
-export interface MyOwnedBadge {
-  id: string;
-  name: string;
-  badgeImage: string;
-  rank: number;
-  earnedAt: string;
-  /** @nullable */
-  expiresAt: string | null;
-  /**
-     * @minimum 1
-     * @nullable
-     */
-  daysLeft: number | null;
-  permanent: boolean;
-  equipped: boolean;
-}
-
-export interface HangoutStreakSummary {
-  /**
-     * @minimum 0
-     * @maximum 7
-     */
-  days: number;
-  rewardClaimedToday: boolean;
-}
-
-export interface SocialGiftBagLot {
-  giftId: string;
-  /** @minimum 1 */
-  quantity: number;
-  /** @nullable */
-  expiresAt: string | null;
-}
-
 export interface SocialMe {
-  /**
-     * Real ledger-earned level; excludes development appearance overrides.
-     * @minimum 0
-     * @maximum 100
-     */
-  gifterAccessLevel?: number;
-  nameColorProgress: NameColorProgress;
-  nameColorTest: NameColorTestState;
-  entranceEffects: EntranceEffectSettings;
-  badgeExpirations?: SocialMeBadgeExpirations;
-  badges: MyOwnedBadge[];
-  /** @nullable */
-  equippedBadgeId: string | null;
-  /** @minimum 0 */
-  loginStreak?: number;
-  hangoutStreak: HangoutStreakSummary;
   profile: SocialPerson;
-  wallet: SocialWallet;
-  inventory: string[];
-  products: SocialProduct[];
-  gifts: SocialGift[];
-  giftQuantities?: SocialMeGiftQuantities;
-  giftBagLots?: SocialGiftBagLot[];
   countries: SocialMeCountriesItem[];
-}
-
-export interface HangoutRewardSettings {
-  /**
-     * @minimum 15
-     * @maximum 360
-     */
-  averageIntervalMinutes: number;
-  nextDropAt: string;
-  /** @nullable */
-  lastDropAt: string | null;
-}
-
-export interface SetHangoutRewardIntervalInput {
-  /**
-     * @minimum 15
-     * @maximum 360
-     */
-  averageIntervalMinutes: number;
-}
-
-export interface NameColorTestTotalInput {
-  /**
-     * @minimum 0
-     * @nullable
-     */
-  totalCoins: number | null;
-}
-
-export interface NameColorTestTotalResponse {
-  /**
-     * @minimum 0
-     * @nullable
-     */
-  overrideCoins: number | null;
-  progress: NameColorProgress;
-}
-
-export interface EquipMyBadgeInput {
-  /** @nullable */
-  badgeId: string | null;
-}
-
-export interface EquippedBadgeState {
-  /** @nullable */
-  equippedBadgeId: string | null;
 }
 
 export interface SocialPeople {
   people: SocialPerson[];
+  /** @minimum 0 */
   total: number;
 }
 
@@ -2584,85 +1555,62 @@ export interface SocialAction {
   ok: boolean;
 }
 
-export interface RoomGiftEvent {
+export interface ProfileCosmeticItem {
   id: string;
-  giftId: string;
-  giftName: string;
-  /**
-     * @minimum 1
-     * @maximum 1314
-     */
-  quantity: number;
-  senderUsername: string;
-  recipientUsername: string;
-  senderName: string;
-  recipientName: string;
-  /** @pattern ^#[0-9A-Fa-f]{6}$ */
-  senderNameColor?: string;
-  /**
-     * @minimum 0
-     * @maximum 100
-     */
-  senderNameTierIndex?: number;
-  /** @pattern ^#[0-9A-Fa-f]{6}$ */
-  recipientNameColor?: string;
-  /**
-     * @minimum 0
-     * @maximum 100
-     */
-  recipientNameTierIndex?: number;
-  /** @nullable */
-  senderBadgeId: string | null;
-  /** @nullable */
-  recipientBadgeId: string | null;
-  /** @nullable */
-  senderBadgeName: string | null;
-  /** @nullable */
-  recipientBadgeName: string | null;
-  /** @nullable */
-  senderBadgeImage: string | null;
-  /** @nullable */
-  recipientBadgeImage: string | null;
-  senderPassport?: StreamerPassportBadgeSummary;
-  recipientPassport?: StreamerPassportBadgeSummary;
-  createdAt: string;
+  name: string;
+  /** @minimum 0 */
+  priceCents: number;
+  available: boolean;
+  owned: boolean;
+  equipped: boolean;
+  image?: string;
+  tint?: string;
+  color?: string;
 }
 
-export interface SocialGiftInput {
-  /** Expected test-coin mode; cannot grant access. */
-  testMode?: boolean;
-  recipient: string;
-  giftId: string;
-  roomId?: string;
-  streamId?: string;
-  /**
-     * @minimum 1
-     * @maximum 1314
-     */
-  quantity?: number;
-  /** Do not charge for missing units; reject if held inventory is insufficient. */
-  useGiftBagOnly?: boolean;
-  idempotencyKey: string;
+export type ProfileCosmeticsStoreSectionsItemKind = typeof ProfileCosmeticsStoreSectionsItemKind[keyof typeof ProfileCosmeticsStoreSectionsItemKind];
+
+
+export const ProfileCosmeticsStoreSectionsItemKind = {
+  frame: 'frame',
+  nameColor: 'nameColor',
+  specialName: 'specialName',
+} as const;
+
+export type ProfileCosmeticsStoreSectionsItem = {
+  kind: ProfileCosmeticsStoreSectionsItemKind;
+  title: string;
+  items: ProfileCosmeticItem[];
+};
+
+export type ProfileCosmeticsStoreEquipped = {
+  frame: string;
+  nameColor: string;
+  /** @nullable */
+  specialName: string | null;
+};
+
+export interface ProfileCosmeticsStore {
+  sections: ProfileCosmeticsStoreSectionsItem[];
+  equipped: ProfileCosmeticsStoreEquipped;
 }
 
-export interface SocialPurchaseInput {
-  /** Expected test-coin mode; cannot grant access. */
-  testMode?: boolean;
+export type ProfileCosmeticEquipInputKind = typeof ProfileCosmeticEquipInputKind[keyof typeof ProfileCosmeticEquipInputKind];
+
+
+export const ProfileCosmeticEquipInputKind = {
+  frame: 'frame',
+  nameColor: 'nameColor',
+  specialName: 'specialName',
+} as const;
+
+export interface ProfileCosmeticEquipInput {
+  kind: ProfileCosmeticEquipInputKind;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
   itemId: string;
-  idempotencyKey: string;
-}
-
-export interface SocialTransaction {
-  id: string;
-  createdAt: string;
-  delta: number;
-  kind: string;
-  description: string;
-  peer: string | null;
-}
-
-export interface SocialLedger {
-  transactions: SocialTransaction[];
 }
 
 export interface SocialMessage {
@@ -2671,6 +1619,7 @@ export interface SocialMessage {
   recipient: string;
   body: string;
   createdAt: string;
+  /** @nullable */
   readAt: string | null;
 }
 
@@ -2686,6 +1635,7 @@ export interface SocialMessageInput {
 export interface SocialConversation {
   person: SocialPerson;
   messages: SocialMessage[];
+  /** @nullable */
   nextCursor: string | null;
   blocked: boolean;
 }
@@ -2693,27 +1643,17 @@ export interface SocialConversation {
 export type SocialInboxConversationsItem = {
   username: string;
   displayName: string;
-  /** @pattern ^#[0-9A-Fa-f]{6}$ */
-  displayNameColor?: string;
-  /**
-     * @minimum 0
-     * @maximum 100
-     */
-  displayNameTierIndex?: number;
-  /** @nullable */
-  badgeId: string | null;
-  /** @nullable */
-  badgeName: string | null;
-  /** @nullable */
-  badgeImage: string | null;
+  displayNameColor: string;
+  displayNameTierIndex: number;
   /** @nullable */
   photoUrl: string | null;
+  identity: EmojiIdentity;
   lastMessageFromMe: boolean;
   /** @nullable */
   lastUnreadAt: string | null;
-  identity: EmojiIdentity;
   lastMessage: string;
   updatedAt: string;
+  /** @minimum 0 */
   unreadCount: number;
   blocked: boolean;
 };
@@ -2768,8 +1708,10 @@ export type ReviewProfilePhoto200 = {
 };
 
 export type GetSocialPeopleParams = {
+  /** @maxLength 80 */
   search?: string;
   gender?: GetSocialPeopleGender;
+  /** @maxLength 2 */
   country?: string;
   favorites?: boolean;
   /** @minimum 0 */
@@ -2783,20 +1725,6 @@ export const GetSocialPeopleGender = {
   Male: 'Male',
   Female: 'Female',
 } as const;
-
-export type GetRoomGiftEventsParams = {
-  /** Opaque cursor returned by the previous page */
-  after?: string;
-  /** Return gift events from this time, in FIFO pages */
-  since?: string;
-};
-
-export type GetRoomGiftEvents200 = {
-  events: RoomGiftEvent[];
-  /** @nullable */
-  nextCursor: string | null;
-  hasMore: boolean;
-};
 
 export type GetSocialConversationParams = {
   cursor?: string;

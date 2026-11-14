@@ -1,4 +1,4 @@
-import { db, accountProfiles, roomMessages, socialRelations, socialSettings, socialWallets, chatAdmissions, chatMemberships, chatReports, moderatorBotFlags, type RoomMessageRow } from "@workspace/db";
+import { db, accountProfiles, roomMessages, socialRelations, chatAdmissions, chatMemberships, chatReports, moderatorBotFlags, type RoomMessageRow } from "@workspace/db";
 import { eq, desc, sql, and, or, gte, notInArray, isNull, lt, inArray } from "drizzle-orm";
 import { GetRoomMessagesResponse, type ChatInput, type ChatAccepted } from "@workspace/api-zod";
 import { publicProfile } from "./account-profiles";
@@ -7,7 +7,7 @@ import { ignoredAccounts } from "./university-chat";
 import { botSettings, botRotation, botMessageValues } from "./moderator-bots";
 import { BOT_WARNING_COOLDOWN_MS, publicViolation } from "./bot-policy";
 import { censorChatText } from "./chat-filter";
-import { nameColorProfileForAccount, nameColorProfilesForAccounts } from "./social/gift-name-color-data";
+import { getProfileCosmeticStyle } from "./social/profile-cosmetics";
 
 function publicMessage(row: RoomMessageRow) {
   return GetRoomMessagesResponse.element.parse(row);
@@ -41,14 +41,12 @@ export async function getMessages(roomId: string, store: RoomStore = roomStore, 
     .leftJoin(accountProfiles, eq(accountProfiles.accountId, roomMessages.authorAccountId)).where(and(...conditions))
     .orderBy(desc(roomMessages.createdAt), desc(roomMessages.id)).limit(60);
   const authorIds = [...new Set(rows.map(row => row.message.authorAccountId).filter((id): id is string => !!id))];
-  const nameColors = await nameColorProfilesForAccounts(authorIds);
+  const nameStyles = new Map(await Promise.all(authorIds.map(async id => [id, await getProfileCosmeticStyle(id)] as const)));
   return rows.reverse().map(row => ({
     ...publicMessage({ ...row.message, text: censorChatText(row.message.text, filterSettings.bannedWords) }), photoUrl: null,
-    displayNameColor: row.message.authorAccountId ? nameColors.get(row.message.authorAccountId)?.color ?? "#FFFFFF" : "#FFFFFF",
-    displayNameTierIndex: row.message.authorAccountId ? nameColors.get(row.message.authorAccountId)?.tierIndex ?? 0 : 0,
-    badgeId: null,
-    badgeName: null,
-    badgeImage: null,
+    displayNameColor: row.message.authorAccountId ? nameStyles.get(row.message.authorAccountId)?.displayNameColor ?? "#FFFFFF" : "#FFFFFF",
+    displayNameTierIndex: row.message.authorAccountId ? nameStyles.get(row.message.authorAccountId)?.displayNameTierIndex ?? 0 : 0,
+    hasNameShimmer: row.message.authorAccountId ? nameStyles.get(row.message.authorAccountId)?.specialNameId === 'shimmer' : false,
   }));
 }
 export async function acceptMessage(
@@ -58,7 +56,7 @@ export async function acceptMessage(
   const text = input.text.trim();
   if (!text || text.length > 280) throw new RoomError(400, "Write 1–280 characters");
   const sender = store.requireAccountMember(roomId, sessionId, accountId);
-  const senderNameColor = await nameColorProfileForAccount(accountId);
+  const senderNameColor = await getProfileCosmeticStyle(accountId);
   const historyId = store.getHistoryId(roomId);
   const filterSettings = await botSettings();
   const filter = store.isCommunity(roomId) ? filterSettings : null;
@@ -89,11 +87,6 @@ export async function acceptMessage(
     }
     // Emoji text never mutates a saved photo or obsolete avatar fields.
     let profile = { ...publicProfile(row), photoUrl: null, photoUrls: [] };
-    const [settings] = await tx.select({ bio: socialSettings.bio }).from(socialSettings)
-      .where(eq(socialSettings.accountId, accountId));
-    const [wallet] = await tx.select({ sent: socialWallets.sent }).from(socialWallets)
-      .where(eq(socialWallets.accountId, accountId));
-    profile = { ...profile, bio: settings?.bio ?? "" };
     const [original] = await tx.insert(roomMessages).values({
       roomId: roomId.toUpperCase(), historyId, authorId: sender.participantId, authorAccountId: accountId,
       username: profile.username, identity: profile.identity, kind: input.kind,
@@ -133,11 +126,9 @@ export async function acceptMessage(
     store.requireAccountMember(roomId, sessionId, accountId);
     return { message: { ...publicMessage(message.authorAccountId === accountId && !violation
       ? { ...message, text: visibleText } : message), photoUrl: null,
-      displayNameColor: message.authorAccountId === accountId ? senderNameColor.color : "#FFFFFF",
-      displayNameTierIndex: message.authorAccountId === accountId ? senderNameColor.tierIndex : 0,
-      badgeId: null,
-      badgeName: null,
-      badgeImage: null,
+       displayNameColor: message.authorAccountId === accountId ? senderNameColor.displayNameColor : "#FFFFFF",
+       displayNameTierIndex: message.authorAccountId === accountId ? senderNameColor.displayNameTierIndex : 0,
+       hasNameShimmer: message.authorAccountId === accountId ? senderNameColor.specialNameId === 'shimmer' : false,
     }, profile };
   });
   // No events or in-memory avatar changes occur before the transaction commits.

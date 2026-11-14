@@ -12,5 +12,6 @@ export interface SocialMessage {
   recipient: string;
   body: string;
   createdAt: Date;
+  /** @nullable */
   readAt: Date | null;
 }

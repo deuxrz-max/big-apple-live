@@ -24,9 +24,6 @@ router.use(communityRouter);
 router.use(moderatorBotRouter);
 router.use(profilePhotosRouter);
 router.use(photoReviewRouter);
-router.use(["/rewards/pink-card", "/social/pink-card"], (_req, res) => {
-  res.status(410).json({ error: "This reward feature has been retired." });
-});
 router.use(["/account/rooms", "/social"], async (req, _res, next) => {
   await requireAdult(accountId(req));
   await requireCompletedProfile(accountId(req));

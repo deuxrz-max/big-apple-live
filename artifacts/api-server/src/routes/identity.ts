@@ -14,7 +14,7 @@ import { recordDailyLogin } from '../lib/social/marathon';
 import { roomStore, RoomError } from "../lib/room-store";
 import { getClerkProxyHost } from "../middlewares/clerkProxyMiddleware";
 import { communityMembership, accessFor } from "../lib/community";
-import { nameColorProfilesForAccounts } from "../lib/social/gift-name-color-data";
+import { getProfileCosmeticStyle } from "../lib/social/profile-cosmetics";
 import { universityAudioBeamStore } from "../lib/university-audio-beam";
 import { coloredEmoji, emojiCatalog } from "../lib/emoji-library";
 import { normalizeAccountRoomTitle } from "../lib/account-room-title";
@@ -58,11 +58,11 @@ router.get("/me", async (req, res) => {
 router.put("/me", async (req, res) => {
   sameOrigin(req);
   const id = accountId(req);
-  if (Array.isArray(req.body?.photoUrls) && req.body.photoUrls.length > 4)
-    throw new RoomError(400, "Keep up to 4 profile photos. Remove or replace a photo first");
+  if (Array.isArray(req.body?.photoUrls) && req.body.photoUrls.length > 1)
+    throw new RoomError(400, "Keep one profile photo. Upload a replacement instead.");
   const body = SaveMyProfileBody.safeParse(req.body);
   if (!body.success || Object.keys(req.body ?? {}).some(key => !["username", "displayName", "bio", "photoUrl", "photoUrls"].includes(key)))
-    throw new RoomError(400, "Use a valid username, display name, photo and short bio; account ownership is set by the server");
+    throw new RoomError(400, "Use a valid name and one uploaded profile photo; account ownership is set by the server.");
   res.set("Cache-Control", "no-store");
   res.json(SaveMyProfileResponse.parse(await saveProfile(id, body.data)));
 });
@@ -79,7 +79,7 @@ router.post("/account/rooms", async (req, res) => {
   if (!title.ok) throw new RoomError(400, title.message);
   const name = title.name;
   const access = await accessFor(id);
-  const nameColors = await nameColorProfilesForAccounts([id]);
+  const nameColors = await getProfileCosmeticStyle(id);
 
   for (let attempt = 0; attempt < 5; attempt++) {
     const roomId = randomBytes(6).toString("hex").toUpperCase();
@@ -96,8 +96,8 @@ router.post("/account/rooms", async (req, res) => {
           accountId: id,
           identity: profile.identity,
           capExempt: access.moderator,
-          displayNameColor: nameColors.get(id)?.color ?? "#FFFFFF",
-          displayNameTierIndex: nameColors.get(id)?.tierIndex ?? 0,
+          displayNameColor: nameColors.displayNameColor,
+          displayNameTierIndex: nameColors.displayNameTierIndex,
         });
       roomCreated = true;
       const member = await communityMembership(roomId, id);
@@ -127,11 +127,11 @@ router.post("/account/rooms/:roomId/join", async (req, res) => {
   const profile = await requireCompletedProfile(id);
   const access = await accessFor(id);
   const member = await communityMembership(params.data.roomId, id);
-  const nameColors = await nameColorProfilesForAccounts([id]);
+  const nameColors = await getProfileCosmeticStyle(id);
   const session = roomStore.join(params.data.roomId, profile.displayName ?? profile.username, {
     accountId: id, identity: profile.identity, capExempt: access.moderator,
-    displayNameColor: nameColors.get(id)?.color ?? "#FFFFFF",
-    displayNameTierIndex: nameColors.get(id)?.tierIndex ?? 0,
+     displayNameColor: nameColors.displayNameColor,
+     displayNameTierIndex: nameColors.displayNameTierIndex,
   });
   roomStore.restoreParticipantId(params.data.roomId, id, member.participantId);
   res.status(201).json(JoinAccountRoomResponse.parse({ ...session,

@@ -5,43 +5,10 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { EntranceEffectSettings } from './entranceEffectSettings';
-import type { HangoutStreakSummary } from './hangoutStreakSummary';
-import type { MyOwnedBadge } from './myOwnedBadge';
-import type { NameColorProgress } from './nameColorProgress';
-import type { NameColorTestState } from './nameColorTestState';
-import type { SocialGift } from './socialGift';
-import type { SocialGiftBagLot } from './socialGiftBagLot';
-import type { SocialMeBadgeExpirations } from './socialMeBadgeExpirations';
 import type { SocialMeCountriesItem } from './socialMeCountriesItem';
-import type { SocialMeGiftQuantities } from './socialMeGiftQuantities';
 import type { SocialPerson } from './socialPerson';
-import type { SocialProduct } from './socialProduct';
-import type { SocialWallet } from './socialWallet';
 
 export interface SocialMe {
-  /**
-     * Real ledger-earned level; excludes development appearance overrides.
-     * @minimum 0
-     * @maximum 100
-     */
-  gifterAccessLevel?: number;
-  nameColorProgress: NameColorProgress;
-  nameColorTest: NameColorTestState;
-  entranceEffects: EntranceEffectSettings;
-  badgeExpirations?: SocialMeBadgeExpirations;
-  badges: MyOwnedBadge[];
-  /** @nullable */
-  equippedBadgeId: string | null;
-  /** @minimum 0 */
-  loginStreak?: number;
-  hangoutStreak: HangoutStreakSummary;
   profile: SocialPerson;
-  wallet: SocialWallet;
-  inventory: string[];
-  products: SocialProduct[];
-  gifts: SocialGift[];
-  giftQuantities?: SocialMeGiftQuantities;
-  giftBagLots?: SocialGiftBagLot[];
   countries: SocialMeCountriesItem[];
 }

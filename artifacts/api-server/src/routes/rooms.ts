@@ -10,8 +10,6 @@ import { roomStore, RoomError } from "../lib/room-store";
 import { ensureGuestNameAvailable, requireCompletedProfile } from "../lib/account-profiles";
 import { accountId } from "./identity";
 import { requireAdult } from "../lib/community";
-import { recordHangoutRoomActivity } from "../lib/community-hangout-rewards";
-import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 
@@ -76,17 +74,6 @@ router.post("/rooms/:roomId/participants/:sessionId/heartbeat", async (req, res)
     return;
   }
   const participant = roomStore.heartbeat(params.data.roomId, params.data.sessionId);
-  if (roomStore.isCommunity(params.data.roomId) && !roomStore.isTestOnly(params.data.roomId)) {
-    const id = accountId(req);
-    try {
-      const activity = await recordHangoutRoomActivity(id, params.data.roomId, participant.joinedAt);
-      if (activity?.rewardedNow) {
-        roomStore.publishHangoutStreakReward(params.data.roomId, id, activity.day);
-      }
-    } catch (error) {
-      logger.warn({ roomId: params.data.roomId, error }, "Could not record a hangout streak heartbeat");
-    }
-  }
   res.json(HeartbeatParticipantResponse.parse(participant));
 });
 

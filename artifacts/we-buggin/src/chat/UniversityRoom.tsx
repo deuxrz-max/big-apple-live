@@ -20,8 +20,6 @@ import { arrangeAudioSeats } from './audio-seat-layout';
 import { BotShield } from './BotShield';
 import { BotActivityLine } from './BotActivityLine';
 import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
-import type { RoomCoinDropEvent } from './useTextRoom';
-import { RoomCoinDropOverlay } from './RoomCoinDropOverlay';
 import './university-room.css';
 import { RoomPerimeter } from './RoomPerimeter';
 import './bot-moderation.css';
@@ -89,7 +87,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const [drawer, setDrawer] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [ignored, setIgnored] = useState<Set<string>>(new Set());
-  const [coinDropQueue, setCoinDropQueue] = useState<RoomCoinDropEvent[]>([]);
   const ignoreBusy = useRef(0);
   const idem = useRef<{ username: string; body: string; key: string } | null>(null);
   const autoRules = useRef(false);
@@ -102,40 +99,16 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const box = useRef<HTMLDivElement>(null);
   const near = useRef(true);
   const messageLongPress = useRef<number | null>(null);
-  const handledCoinDrops = useRef(new Set<string>());
   const isSocialRoom = r.room?.roomType === 'social';
 
   useEffect(() => {
     setText(''); setWhisperTo(null); setMenu(null); setDrawer(false); setRulesOpen(false);
-    setCoinDropQueue([]);
-    handledCoinDrops.current.clear();
     setIgnored(new Set()); setSendErr(null); setNote(null);
     autoRules.current = false; ignoreVersion.current = null; idem.current = null;
   }, [roomId, userId]);
   useEffect(() => {
     if (r.roomUnavailable) nav('/community');
   }, [r.roomUnavailable, nav]);
-  useEffect(() => {
-    for (const event of r.coinDrops) {
-      if (handledCoinDrops.current.has(event.eventId)) continue;
-      handledCoinDrops.current.add(event.eventId);
-      const storageKey = `deux-wild-coin-drop:${userId}:${event.eventId}`;
-      try {
-        if (window.localStorage.getItem(storageKey)) continue;
-        window.localStorage.setItem(storageKey, 'seen');
-      } catch {
-        // In-memory event de-duplication still protects this page session.
-      }
-      if (Date.now() - event.startedAt <= 30_000) {
-        setCoinDropQueue(previous => [...previous, event]);
-      }
-    }
-  }, [r.coinDrops, userId]);
-  const finishCoinDrop = useCallback((eventId: string) => {
-    setCoinDropQueue(current => current[0]?.eventId === eventId
-      ? current.slice(1)
-      : current.filter(item => item.eventId !== eventId));
-  }, []);
   useEffect(() => {
     if (session && ignoreBusy.current === 0) {
       setIgnored(new Set(session.ignoredUsernames));
@@ -448,15 +421,17 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                                 <div className="ur-social-card-portrait">
                                   {person.photoUrl
                                     ? <img src={photoSrc(person.photoUrl)} alt="" onError={event => { event.currentTarget.style.display = 'none'; }} />
-                                    : person.identity
-                                      ? <IdentityAvatar identity={person.identity} name={fallbackName} size="100%" fill />
-                                      : <span>{initials}</span>}
+                                    : <span>{initials}</span>}
                                 </div>
                                 <img className="ur-slot-starter-card"
-                                  src={`${import.meta.env.BASE_URL}battle-assets/cards/card_frame_grey_starter.png`}
+                                  src={`${import.meta.env.BASE_URL}battle-assets/cards/card_frame_${(person.frameId ?? 'grey-starter').replace(/[^a-z-]/g, '')}.png`}
+                                  onError={event => {
+                                    const starter = `${import.meta.env.BASE_URL}battle-assets/cards/card_frame_grey_starter.png`;
+                                    if (!event.currentTarget.src.endsWith('/card_frame_grey_starter.png')) event.currentTarget.src = starter;
+                                  }}
                                   alt="" aria-hidden="true" />
                                 <div className="ur-social-card-info" aria-label={`${person.displayName}, ${person.race ?? 'Human'}, ${person.job ?? 'No job yet'}`}>
-                                  <span className="ur-social-card-name">{person.displayName}</span>
+                                  <ShinyName className="ur-social-card-name" displayNameColor={person.displayNameColor} displayNameTierIndex={person.displayNameTierIndex}>{person.displayName}</ShinyName>
                                   <span>{person.race ?? 'Human'}</span>
                                   <span>{person.job ?? 'No job yet'}</span>
                                 </div>
@@ -730,12 +705,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                 onClick={dismissRules}>{ack.isPending ? 'Saving...' : 'Got it'}</button>
             </div>
           </div>
-        </div>
-      )}
-      <RoomCoinDropOverlay event={coinDropQueue[0] ?? null} onFinish={finishCoinDrop} />
-      {r.streakReward && (
-        <div className="ur-streak-reward-toast" role="status">
-          Seven-day room streak! +{r.streakReward.coins} coins
         </div>
       )}
     </div>

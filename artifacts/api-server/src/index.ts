@@ -6,8 +6,6 @@ import { initializeCommunities } from "./lib/community";
 import { startPhotoRetentionScheduler } from "./lib/profile-photo-retention";
 import { initializeModeratorBots, startModeratorBotChatter, startModeratorBotRotation } from "./lib/moderator-bots";
 import { startTestActorControl } from "./lib/test-actor-control";
-import { startHangoutRewardScheduler } from "./lib/community-hangout-rewards";
-import { startPinkRewardScheduler } from "./lib/pink-card-rewards";
 
 const rawPort = process.env["PORT"];
 
@@ -28,8 +26,6 @@ presenceSweep.unref();
 
 const server = createServer(app);
 await initializeCommunities();
-await startHangoutRewardScheduler();
-startPinkRewardScheduler();
 await initializeModeratorBots();
 startModeratorBotRotation((err, context) => logger.error({ err, ...context }, "Bot rotation failed"));
 startModeratorBotChatter((err, context) => logger.error({ err, ...context }, "Bot chatter failed"));

@@ -8,34 +8,6 @@
 import * as zod from 'zod';
 
 
-export const GetPinkCardRewardResponse = zod.object({
-  "cycle": zod.string(),
-  "serverTime": zod.string(),
-  "winner": zod.union([zod.object({
-  "id": zod.string(),
-  "name": zod.string(),
-  "prizeName": zod.string(),
-  "drawnAt": zod.string()
-}),zod.null()])
-})
-
-
-export const GetPinkCardEntryResponse = zod.object({
-  "entered": zod.boolean(),
-  "optedOut": zod.boolean()
-})
-
-
-export const UpdatePinkCardEntryBody = zod.object({
-  "optedOut": zod.boolean()
-})
-
-export const UpdatePinkCardEntryResponse = zod.object({
-  "entered": zod.boolean(),
-  "optedOut": zod.boolean()
-})
-
-
 export const getModeratorBotSettingsResponseBannedWordsItemMin = 2;
 export const getModeratorBotSettingsResponseBannedWordsItemMax = 80;
 
@@ -209,44 +181,28 @@ export const AcknowledgeModeratorBotFlagResponse = zod.object({
 })
 
 
-export const getFavoritesGalleryResponsePersonExternalHandleMax = 64;
-
-export const getFavoritesGalleryResponsePersonDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-export const getFavoritesGalleryResponsePersonDisplayNameTierIndexMin = 0;
-export const getFavoritesGalleryResponsePersonDisplayNameTierIndexMax = 100;
-
-export const getFavoritesGalleryResponsePersonFollowerCountMin = 0;
-
-export const getFavoritesGalleryResponsePersonFollowingCountMin = 0;
-
-export const getFavoritesGalleryResponsePersonSentCreditsMin = 0;
-
-export const getFavoritesGalleryResponsePersonPhotoUrlsMax = 4;
+export const getFavoritesGalleryResponsePersonPhotoUrlsMax = 1;
 
 export const getFavoritesGalleryResponsePersonIdentityEmojiIdMax = 100;
 
 export const getFavoritesGalleryResponsePersonIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getFavoritesGalleryResponsePersonIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
-export const getFavoritesGalleryResponsePersonPassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getFavoritesGalleryResponsePersonDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getFavoritesGalleryResponsePersonDisplayNameTierIndexMin = 0;
+export const getFavoritesGalleryResponsePersonDisplayNameTierIndexMax = 1;
+
+export const getFavoritesGalleryResponsePersonFollowerCountMin = 0;
+
+export const getFavoritesGalleryResponsePersonFollowingCountMin = 0;
+
 
 
 export const GetFavoritesGalleryResponseItem = zod.object({
   "person": zod.object({
-  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
-  "externalHandle": zod.string().max(getFavoritesGalleryResponsePersonExternalHandleMax).nullish(),
   "username": zod.string(),
-  "displayName": zod.string().optional(),
-  "displayNameColor": zod.string().regex(getFavoritesGalleryResponsePersonDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.int().min(getFavoritesGalleryResponsePersonDisplayNameTierIndexMin).max(getFavoritesGalleryResponsePersonDisplayNameTierIndexMax).optional(),
-  "followerCount": zod.int().min(getFavoritesGalleryResponsePersonFollowerCountMin).optional(),
-  "followingCount": zod.int().min(getFavoritesGalleryResponsePersonFollowingCountMin).optional(),
-  "sentCredits": zod.int().min(getFavoritesGalleryResponsePersonSentCreditsMin).optional(),
-  "badges": zod.array(zod.object({
-  "id": zod.string(),
-  "earnedAt": zod.coerce.date()
-})).optional(),
-  "photoUrl": zod.string().nullish(),
-  "photoUrls": zod.array(zod.string()).max(getFavoritesGalleryResponsePersonPhotoUrlsMax).optional(),
+  "displayName": zod.string(),
+  "photoUrl": zod.string().nullable(),
+  "photoUrls": zod.array(zod.string()).max(getFavoritesGalleryResponsePersonPhotoUrlsMax),
   "photoReviews": zod.array(zod.object({
   "photoUrl": zod.string(),
   "status": zod.enum(['pending', 'approved', 'rejected', 'flagged'])
@@ -259,27 +215,16 @@ export const GetFavoritesGalleryResponseItem = zod.object({
   "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
   "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
 }),
-  "bio": zod.string(),
-  "country": zod.union([zod.string(),zod.null()]),
-  "interests": zod.array(zod.string()),
-  "race": zod.enum(['Human']).optional(),
-  "job": zod.union([zod.literal('Apprentice'),zod.literal('Squire'),zod.literal('Initiate'),zod.literal('Trapper'),zod.literal('Novice'),zod.literal('Acolyte'),zod.literal('Scoundrel'),zod.literal('Tinker'),zod.literal(null)]).nullish(),
-  "discoverable": zod.boolean(),
+  "race": zod.enum(['Human']),
+  "job": zod.union([zod.literal('Apprentice'),zod.literal('Squire'),zod.literal('Initiate'),zod.literal('Trapper'),zod.literal('Novice'),zod.literal('Acolyte'),zod.literal('Scoundrel'),zod.literal('Tinker'),zod.literal(null)]).nullable(),
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
-  "receivedCredits": zod.int(),
-  "badgeId": zod.union([zod.string(),zod.null()]),
-  "badgeName": zod.string().nullable(),
-  "badgeImage": zod.string().nullable(),
-  "passport": zod.object({
-  "platforms": zod.array(zod.object({
-  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
-  "label": zod.string(),
-  "color": zod.string().regex(getFavoritesGalleryResponsePersonPassportPlatformsItemColorRegExp)
-})),
-  "verified": zod.boolean(),
-  "foundingLeague": zod.boolean()
-}).optional()
+  "frameId": zod.string(),
+  "displayNameColor": zod.string().regex(getFavoritesGalleryResponsePersonDisplayNameColorRegExp),
+  "displayNameTierIndex": zod.int().min(getFavoritesGalleryResponsePersonDisplayNameTierIndexMin).max(getFavoritesGalleryResponsePersonDisplayNameTierIndexMax),
+  "hasNameShimmer": zod.boolean(),
+  "followerCount": zod.int().min(getFavoritesGalleryResponsePersonFollowerCountMin).optional(),
+  "followingCount": zod.int().min(getFavoritesGalleryResponsePersonFollowingCountMin).optional()
 }),
   "room": zod.union([zod.object({
   "roomId": zod.string(),
@@ -307,40 +252,28 @@ export const GetUniversitySessionParams = zod.object({
 
 export const getUniversitySessionResponsePeopleItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getUniversitySessionResponsePeopleItemDisplayNameTierIndexMin = 0;
-export const getUniversitySessionResponsePeopleItemDisplayNameTierIndexMax = 100;
+export const getUniversitySessionResponsePeopleItemDisplayNameTierIndexMax = 1;
 
-export const getUniversitySessionResponsePeopleItemPassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getUniversitySessionResponsePeopleItemIdentityEmojiIdMax = 100;
 
 export const getUniversitySessionResponsePeopleItemIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getUniversitySessionResponsePeopleItemIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getUniversitySessionResponseWhispersItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getUniversitySessionResponseWhispersItemDisplayNameTierIndexMin = 0;
-export const getUniversitySessionResponseWhispersItemDisplayNameTierIndexMax = 100;
+export const getUniversitySessionResponseWhispersItemDisplayNameTierIndexMax = 1;
 
-export const getUniversitySessionResponseWhispersItemPassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const GetUniversitySessionResponse = zod.object({
   "people": zod.array(zod.object({
   "botId": zod.union([zod.literal('ghost'),zod.literal('vampire'),zod.literal('wolf'),zod.literal('zombie'),zod.literal(null)]).nullish(),
-  "badgeId": zod.string().nullish(),
-  "badgeName": zod.string().nullish(),
-  "badgeImage": zod.string().nullish(),
   "participantId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
-  "displayNameColor": zod.string().regex(getUniversitySessionResponsePeopleItemDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.int().min(getUniversitySessionResponsePeopleItemDisplayNameTierIndexMin).max(getUniversitySessionResponsePeopleItemDisplayNameTierIndexMax).optional(),
-  "passport": zod.object({
-  "platforms": zod.array(zod.object({
-  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
-  "label": zod.string(),
-  "color": zod.string().regex(getUniversitySessionResponsePeopleItemPassportPlatformsItemColorRegExp)
-})),
-  "verified": zod.boolean(),
-  "foundingLeague": zod.boolean()
-}).optional(),
+  "displayNameColor": zod.string().regex(getUniversitySessionResponsePeopleItemDisplayNameColorRegExp),
+  "displayNameTierIndex": zod.int().min(getUniversitySessionResponsePeopleItemDisplayNameTierIndexMin).max(getUniversitySessionResponsePeopleItemDisplayNameTierIndexMax),
+  "frameId": zod.string(),
+  "hasNameShimmer": zod.boolean(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getUniversitySessionResponsePeopleItemIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -351,8 +284,8 @@ export const GetUniversitySessionResponse = zod.object({
 }).optional(),
   "photoUrl": zod.string().nullable(),
   "photoStatus": zod.string().nullable(),
-  "race": zod.enum(['Human']).optional(),
-  "job": zod.union([zod.literal('Apprentice'),zod.literal('Squire'),zod.literal('Initiate'),zod.literal('Trapper'),zod.literal('Novice'),zod.literal('Acolyte'),zod.literal('Scoundrel'),zod.literal('Tinker'),zod.literal(null)]).nullish(),
+  "race": zod.enum(['Human']),
+  "job": zod.union([zod.literal('Apprentice'),zod.literal('Squire'),zod.literal('Initiate'),zod.literal('Trapper'),zod.literal('Novice'),zod.literal('Acolyte'),zod.literal('Scoundrel'),zod.literal('Tinker'),zod.literal(null)]).nullable(),
   "self": zod.boolean(),
   "moderator": zod.boolean(),
   "ignored": zod.boolean(),
@@ -367,18 +300,7 @@ export const GetUniversitySessionResponse = zod.object({
   "displayName": zod.string(),
   "displayNameColor": zod.string().regex(getUniversitySessionResponseWhispersItemDisplayNameColorRegExp).optional(),
   "displayNameTierIndex": zod.int().min(getUniversitySessionResponseWhispersItemDisplayNameTierIndexMin).max(getUniversitySessionResponseWhispersItemDisplayNameTierIndexMax).optional(),
-  "badgeId": zod.string().nullable(),
-  "badgeName": zod.string().nullish(),
-  "badgeImage": zod.string().nullish(),
-  "passport": zod.object({
-  "platforms": zod.array(zod.object({
-  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
-  "label": zod.string(),
-  "color": zod.string().regex(getUniversitySessionResponseWhispersItemPassportPlatformsItemColorRegExp)
-})),
-  "verified": zod.boolean(),
-  "foundingLeague": zod.boolean()
-}).optional(),
+  "hasNameShimmer": zod.boolean().optional(),
   "outgoing": zod.boolean(),
   "body": zod.string(),
   "createdAt": zod.coerce.date()
@@ -1749,17 +1671,13 @@ export const getOlderRoomMessagesResponseIdentityColorRegExp = new RegExp('^#[0-
 export const getOlderRoomMessagesResponseIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getOlderRoomMessagesResponseDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getOlderRoomMessagesResponseDisplayNameTierIndexMin = 0;
-export const getOlderRoomMessagesResponseDisplayNameTierIndexMax = 100;
+export const getOlderRoomMessagesResponseDisplayNameTierIndexMax = 1;
 
-export const getOlderRoomMessagesResponsePassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const GetOlderRoomMessagesResponseItem = zod.object({
   "botId": zod.union([zod.literal('ghost'),zod.literal('vampire'),zod.literal('wolf'),zod.literal('zombie'),zod.literal(null)]).nullish(),
   "botMessageType": zod.union([zod.literal('chatter'),zod.literal('moderation'),zod.literal('visit'),zod.literal(null)]).nullish(),
-  "badgeId": zod.string().nullish(),
-  "badgeName": zod.string().nullish(),
-  "badgeImage": zod.string().nullish(),
   "id": zod.uuid(),
   "roomId": zod.string(),
   "authorId": zod.uuid(),
@@ -1777,15 +1695,8 @@ export const GetOlderRoomMessagesResponseItem = zod.object({
   "text": zod.string(),
   "displayNameColor": zod.string().regex(getOlderRoomMessagesResponseDisplayNameColorRegExp).optional(),
   "displayNameTierIndex": zod.int().min(getOlderRoomMessagesResponseDisplayNameTierIndexMin).max(getOlderRoomMessagesResponseDisplayNameTierIndexMax).optional(),
-  "passport": zod.object({
-  "platforms": zod.array(zod.object({
-  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
-  "label": zod.string(),
-  "color": zod.string().regex(getOlderRoomMessagesResponsePassportPlatformsItemColorRegExp)
-})),
-  "verified": zod.boolean(),
-  "foundingLeague": zod.boolean()
-}).optional(),
+  "frameId": zod.string().optional(),
+  "hasNameShimmer": zod.boolean().optional(),
   "createdAt": zod.coerce.date()
 })
 export const GetOlderRoomMessagesResponse = zod.array(GetOlderRoomMessagesResponseItem)
@@ -1908,113 +1819,28 @@ export const ReviewChatReportResponse = zod.object({
 })
 
 
-export const getSocialMeResponseGifterAccessLevelMin = 0;
-export const getSocialMeResponseGifterAccessLevelMax = 100;
-
-export const getSocialMeResponseNameColorProgressTierIndexMin = 0;
-export const getSocialMeResponseNameColorProgressTierIndexMax = 100;
-
-export const getSocialMeResponseNameColorProgressLifetimeCoinsPurchasedMin = 0;
-
-export const getSocialMeResponseNameColorProgressNextTierThresholdMin = 0;
-
-export const getSocialMeResponseNameColorProgressCoinsToNextTierMin = 0;
-
-export const getSocialMeResponseNameColorTestOverrideCoinsMin = 0;
-
-export const getSocialMeResponseEntranceEffectsEquippedEffectIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
-
-export const getSocialMeResponseLoginStreakMin = 0;
-
-export const getSocialMeResponseHangoutStreakDaysMin = 0;
-export const getSocialMeResponseHangoutStreakDaysMax = 7;
-
-export const getSocialMeResponseProfileExternalHandleMax = 64;
-
-export const getSocialMeResponseProfileDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-export const getSocialMeResponseProfileDisplayNameTierIndexMin = 0;
-export const getSocialMeResponseProfileDisplayNameTierIndexMax = 100;
-
-export const getSocialMeResponseProfileFollowerCountMin = 0;
-
-export const getSocialMeResponseProfileFollowingCountMin = 0;
-
-export const getSocialMeResponseProfileSentCreditsMin = 0;
-
-export const getSocialMeResponseProfilePhotoUrlsMax = 4;
+export const getSocialMeResponseProfilePhotoUrlsMax = 1;
 
 export const getSocialMeResponseProfileIdentityEmojiIdMax = 100;
 
 export const getSocialMeResponseProfileIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getSocialMeResponseProfileIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
-export const getSocialMeResponseProfilePassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getSocialMeResponseProfileDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getSocialMeResponseProfileDisplayNameTierIndexMin = 0;
+export const getSocialMeResponseProfileDisplayNameTierIndexMax = 1;
 
+export const getSocialMeResponseProfileFollowerCountMin = 0;
+
+export const getSocialMeResponseProfileFollowingCountMin = 0;
 
 
 
 export const GetSocialMeResponse = zod.object({
-  "gifterAccessLevel": zod.int().min(getSocialMeResponseGifterAccessLevelMin).max(getSocialMeResponseGifterAccessLevelMax).optional().describe('Real ledger-earned level; excludes development appearance overrides.'),
-  "nameColorProgress": zod.object({
-  "tierName": zod.string(),
-  "tierIndex": zod.int().min(getSocialMeResponseNameColorProgressTierIndexMin).max(getSocialMeResponseNameColorProgressTierIndexMax),
-  "lifetimeCoinsPurchased": zod.int().min(getSocialMeResponseNameColorProgressLifetimeCoinsPurchasedMin),
-  "nextTierName": zod.string().nullable(),
-  "nextTierThreshold": zod.int().min(getSocialMeResponseNameColorProgressNextTierThresholdMin).nullable(),
-  "coinsToNextTier": zod.int().min(getSocialMeResponseNameColorProgressCoinsToNextTierMin)
-}),
-  "nameColorTest": zod.object({
-  "enabled": zod.boolean(),
-  "overrideCoins": zod.int().min(getSocialMeResponseNameColorTestOverrideCoinsMin).nullable()
-}),
-  "entranceEffects": zod.object({
-  "eligible": zod.boolean(),
-  "enabled": zod.boolean(),
-  "badgeId": zod.union([zod.literal('monthly-tier-1'),zod.literal('monthly-tier-2'),zod.literal('monthly-tier-3'),zod.literal('monthly-tier-4'),zod.literal('monthly-tier-5'),zod.literal('lion-entrance'),zod.literal(null)]).nullable(),
-  "badgeName": zod.string().nullable(),
-  "equippedEffectId": zod.union([zod.string().regex(getSocialMeResponseEntranceEffectsEquippedEffectIdOneRegExp),zod.null()]),
-  "ownerTest": zod.union([zod.object({
-  "tiers": zod.array(zod.object({
-  "badgeId": zod.enum(['monthly-tier-1', 'monthly-tier-2', 'monthly-tier-3', 'monthly-tier-4', 'monthly-tier-5']),
-  "name": zod.string(),
-  "enabled": zod.boolean()
-})),
-  "lionEffectEnabled": zod.boolean()
-}),zod.null()])
-}),
-  "badgeExpirations": zod.record(zod.string(), zod.coerce.date()).optional(),
-  "badges": zod.array(zod.object({
-  "id": zod.string(),
-  "name": zod.string(),
-  "badgeImage": zod.string(),
-  "rank": zod.int(),
-  "earnedAt": zod.coerce.date(),
-  "expiresAt": zod.coerce.date().nullable(),
-  "daysLeft": zod.int().min(1).nullable(),
-  "permanent": zod.boolean(),
-  "equipped": zod.boolean()
-})),
-  "equippedBadgeId": zod.string().nullable(),
-  "loginStreak": zod.int().min(getSocialMeResponseLoginStreakMin).optional(),
-  "hangoutStreak": zod.object({
-  "days": zod.int().min(getSocialMeResponseHangoutStreakDaysMin).max(getSocialMeResponseHangoutStreakDaysMax),
-  "rewardClaimedToday": zod.boolean()
-}),
   "profile": zod.object({
-  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
-  "externalHandle": zod.string().max(getSocialMeResponseProfileExternalHandleMax).nullish(),
   "username": zod.string(),
-  "displayName": zod.string().optional(),
-  "displayNameColor": zod.string().regex(getSocialMeResponseProfileDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.int().min(getSocialMeResponseProfileDisplayNameTierIndexMin).max(getSocialMeResponseProfileDisplayNameTierIndexMax).optional(),
-  "followerCount": zod.int().min(getSocialMeResponseProfileFollowerCountMin).optional(),
-  "followingCount": zod.int().min(getSocialMeResponseProfileFollowingCountMin).optional(),
-  "sentCredits": zod.int().min(getSocialMeResponseProfileSentCreditsMin).optional(),
-  "badges": zod.array(zod.object({
-  "id": zod.string(),
-  "earnedAt": zod.coerce.date()
-})).optional(),
-  "photoUrl": zod.string().nullish(),
-  "photoUrls": zod.array(zod.string()).max(getSocialMeResponseProfilePhotoUrlsMax).optional(),
+  "displayName": zod.string(),
+  "photoUrl": zod.string().nullable(),
+  "photoUrls": zod.array(zod.string()).max(getSocialMeResponseProfilePhotoUrlsMax),
   "photoReviews": zod.array(zod.object({
   "photoUrl": zod.string(),
   "status": zod.enum(['pending', 'approved', 'rejected', 'flagged'])
@@ -2027,59 +1853,17 @@ export const GetSocialMeResponse = zod.object({
   "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
   "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
 }),
-  "bio": zod.string(),
-  "country": zod.union([zod.string(),zod.null()]),
-  "interests": zod.array(zod.string()),
-  "race": zod.enum(['Human']).optional(),
-  "job": zod.union([zod.literal('Apprentice'),zod.literal('Squire'),zod.literal('Initiate'),zod.literal('Trapper'),zod.literal('Novice'),zod.literal('Acolyte'),zod.literal('Scoundrel'),zod.literal('Tinker'),zod.literal(null)]).nullish(),
-  "discoverable": zod.boolean(),
+  "race": zod.enum(['Human']),
+  "job": zod.union([zod.literal('Apprentice'),zod.literal('Squire'),zod.literal('Initiate'),zod.literal('Trapper'),zod.literal('Novice'),zod.literal('Acolyte'),zod.literal('Scoundrel'),zod.literal('Tinker'),zod.literal(null)]).nullable(),
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
-  "receivedCredits": zod.int(),
-  "badgeId": zod.union([zod.string(),zod.null()]),
-  "badgeName": zod.string().nullable(),
-  "badgeImage": zod.string().nullable(),
-  "passport": zod.object({
-  "platforms": zod.array(zod.object({
-  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
-  "label": zod.string(),
-  "color": zod.string().regex(getSocialMeResponseProfilePassportPlatformsItemColorRegExp)
-})),
-  "verified": zod.boolean(),
-  "foundingLeague": zod.boolean()
-}).optional()
+  "frameId": zod.string(),
+  "displayNameColor": zod.string().regex(getSocialMeResponseProfileDisplayNameColorRegExp),
+  "displayNameTierIndex": zod.int().min(getSocialMeResponseProfileDisplayNameTierIndexMin).max(getSocialMeResponseProfileDisplayNameTierIndexMax),
+  "hasNameShimmer": zod.boolean(),
+  "followerCount": zod.int().min(getSocialMeResponseProfileFollowerCountMin).optional(),
+  "followingCount": zod.int().min(getSocialMeResponseProfileFollowingCountMin).optional()
 }),
-  "wallet": zod.object({
-  "balance": zod.int(),
-  "earned": zod.int(),
-  "received": zod.int(),
-  "sent": zod.int(),
-  "canClaimDaily": zod.boolean(),
-  "dailyReward": zod.int(),
-  "unlimited": zod.boolean().describe('True only for the development-preview owner account; does not alter the stored wallet balance.')
-}),
-  "inventory": zod.array(zod.string()),
-  "products": zod.array(zod.object({
-  "id": zod.string(),
-  "name": zod.string(),
-  "badgeImage": zod.string(),
-  "description": zod.string(),
-  "cost": zod.int()
-})),
-  "gifts": zod.array(zod.object({
-  "platinumExclusive": zod.boolean().optional(),
-  "id": zod.string(),
-  "name": zod.string(),
-  "cost": zod.int(),
-  "iconUrl": zod.string().nullable(),
-  "iconStatus": zod.enum(['transparent', 'fallback', 'manual-transparent', 'manual-fallback', 'builtin'])
-})),
-  "giftQuantities": zod.record(zod.string(), zod.int().min(1)).optional(),
-  "giftBagLots": zod.array(zod.object({
-  "giftId": zod.string(),
-  "quantity": zod.int().min(1),
-  "expiresAt": zod.coerce.date().nullable()
-})).optional(),
   "countries": zod.array(zod.object({
   "code": zod.string(),
   "name": zod.string()
@@ -2087,66 +1871,32 @@ export const GetSocialMeResponse = zod.object({
 })
 
 
-export const saveSocialProfileBodyExternalHandleMax = 64;
-
-export const saveSocialProfileBodyBioMax = 200;
-
-export const saveSocialProfileBodyCountryOneRegExp = new RegExp('^[A-Z]{2}$');
-export const saveSocialProfileBodyInterestsItemMax = 24;
-
-export const saveSocialProfileBodyInterestsMax = 8;
-
-
-
 export const SaveSocialProfileBody = zod.object({
-  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
-  "externalHandle": zod.string().max(saveSocialProfileBodyExternalHandleMax).nullish(),
-  "bio": zod.string().max(saveSocialProfileBodyBioMax),
-  "country": zod.union([zod.string().regex(saveSocialProfileBodyCountryOneRegExp),zod.null()]),
-  "interests": zod.array(zod.string().min(1).max(saveSocialProfileBodyInterestsItemMax)).max(saveSocialProfileBodyInterestsMax),
   "race": zod.enum(['Human']).optional(),
-  "job": zod.union([zod.literal('Apprentice'),zod.literal('Squire'),zod.literal('Initiate'),zod.literal('Trapper'),zod.literal('Novice'),zod.literal('Acolyte'),zod.literal('Scoundrel'),zod.literal('Tinker'),zod.literal(null)]).nullish(),
-  "discoverable": zod.boolean(),
-  "badgeId": zod.union([zod.string(),zod.null()])
+  "job": zod.union([zod.literal('Apprentice'),zod.literal('Squire'),zod.literal('Initiate'),zod.literal('Trapper'),zod.literal('Novice'),zod.literal('Acolyte'),zod.literal('Scoundrel'),zod.literal('Tinker'),zod.literal(null)]).nullish()
 })
 
-export const saveSocialProfileResponseExternalHandleMax = 64;
-
-export const saveSocialProfileResponseDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-export const saveSocialProfileResponseDisplayNameTierIndexMin = 0;
-export const saveSocialProfileResponseDisplayNameTierIndexMax = 100;
-
-export const saveSocialProfileResponseFollowerCountMin = 0;
-
-export const saveSocialProfileResponseFollowingCountMin = 0;
-
-export const saveSocialProfileResponseSentCreditsMin = 0;
-
-export const saveSocialProfileResponsePhotoUrlsMax = 4;
+export const saveSocialProfileResponsePhotoUrlsMax = 1;
 
 export const saveSocialProfileResponseIdentityEmojiIdMax = 100;
 
 export const saveSocialProfileResponseIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const saveSocialProfileResponseIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
-export const saveSocialProfileResponsePassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const saveSocialProfileResponseDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const saveSocialProfileResponseDisplayNameTierIndexMin = 0;
+export const saveSocialProfileResponseDisplayNameTierIndexMax = 1;
+
+export const saveSocialProfileResponseFollowerCountMin = 0;
+
+export const saveSocialProfileResponseFollowingCountMin = 0;
+
 
 
 export const SaveSocialProfileResponse = zod.object({
-  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
-  "externalHandle": zod.string().max(saveSocialProfileResponseExternalHandleMax).nullish(),
   "username": zod.string(),
-  "displayName": zod.string().optional(),
-  "displayNameColor": zod.string().regex(saveSocialProfileResponseDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.int().min(saveSocialProfileResponseDisplayNameTierIndexMin).max(saveSocialProfileResponseDisplayNameTierIndexMax).optional(),
-  "followerCount": zod.int().min(saveSocialProfileResponseFollowerCountMin).optional(),
-  "followingCount": zod.int().min(saveSocialProfileResponseFollowingCountMin).optional(),
-  "sentCredits": zod.int().min(saveSocialProfileResponseSentCreditsMin).optional(),
-  "badges": zod.array(zod.object({
-  "id": zod.string(),
-  "earnedAt": zod.coerce.date()
-})).optional(),
-  "photoUrl": zod.string().nullish(),
-  "photoUrls": zod.array(zod.string()).max(saveSocialProfileResponsePhotoUrlsMax).optional(),
+  "displayName": zod.string(),
+  "photoUrl": zod.string().nullable(),
+  "photoUrls": zod.array(zod.string()).max(saveSocialProfileResponsePhotoUrlsMax),
   "photoReviews": zod.array(zod.object({
   "photoUrl": zod.string(),
   "status": zod.enum(['pending', 'approved', 'rejected', 'flagged'])
@@ -2159,1204 +1909,124 @@ export const SaveSocialProfileResponse = zod.object({
   "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
   "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
 }),
-  "bio": zod.string(),
-  "country": zod.union([zod.string(),zod.null()]),
-  "interests": zod.array(zod.string()),
-  "race": zod.enum(['Human']).optional(),
-  "job": zod.union([zod.literal('Apprentice'),zod.literal('Squire'),zod.literal('Initiate'),zod.literal('Trapper'),zod.literal('Novice'),zod.literal('Acolyte'),zod.literal('Scoundrel'),zod.literal('Tinker'),zod.literal(null)]).nullish(),
-  "discoverable": zod.boolean(),
+  "race": zod.enum(['Human']),
+  "job": zod.union([zod.literal('Apprentice'),zod.literal('Squire'),zod.literal('Initiate'),zod.literal('Trapper'),zod.literal('Novice'),zod.literal('Acolyte'),zod.literal('Scoundrel'),zod.literal('Tinker'),zod.literal(null)]).nullable(),
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
-  "receivedCredits": zod.int(),
-  "badgeId": zod.union([zod.string(),zod.null()]),
-  "badgeName": zod.string().nullable(),
-  "badgeImage": zod.string().nullable(),
-  "passport": zod.object({
-  "platforms": zod.array(zod.object({
-  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
-  "label": zod.string(),
-  "color": zod.string().regex(saveSocialProfileResponsePassportPlatformsItemColorRegExp)
-})),
-  "verified": zod.boolean(),
-  "foundingLeague": zod.boolean()
-}).optional()
+  "frameId": zod.string(),
+  "displayNameColor": zod.string().regex(saveSocialProfileResponseDisplayNameColorRegExp),
+  "displayNameTierIndex": zod.int().min(saveSocialProfileResponseDisplayNameTierIndexMin).max(saveSocialProfileResponseDisplayNameTierIndexMax),
+  "hasNameShimmer": zod.boolean(),
+  "followerCount": zod.int().min(saveSocialProfileResponseFollowerCountMin).optional(),
+  "followingCount": zod.int().min(saveSocialProfileResponseFollowingCountMin).optional()
 })
 
 
-export const getGifterLeaderboardResponsePeopleItemOneExternalHandleMax = 64;
-
-export const getGifterLeaderboardResponsePeopleItemOneDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-export const getGifterLeaderboardResponsePeopleItemOneDisplayNameTierIndexMin = 0;
-export const getGifterLeaderboardResponsePeopleItemOneDisplayNameTierIndexMax = 100;
-
-export const getGifterLeaderboardResponsePeopleItemOneFollowerCountMin = 0;
-
-export const getGifterLeaderboardResponsePeopleItemOneFollowingCountMin = 0;
-
-export const getGifterLeaderboardResponsePeopleItemOneSentCreditsMin = 0;
-
-export const getGifterLeaderboardResponsePeopleItemOnePhotoUrlsMax = 4;
-
-export const getGifterLeaderboardResponsePeopleItemOneIdentityEmojiIdMax = 100;
-
-export const getGifterLeaderboardResponsePeopleItemOneIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
-export const getGifterLeaderboardResponsePeopleItemOneIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
-export const getGifterLeaderboardResponsePeopleItemOnePassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getProfileCosmeticsStoreResponseSectionsItemItemsItemPriceCentsMin = 0;
 
 
 
-export const GetGifterLeaderboardResponse = zod.object({
-  "people": zod.array(zod.object({
-  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
-  "externalHandle": zod.string().max(getGifterLeaderboardResponsePeopleItemOneExternalHandleMax).nullish(),
-  "username": zod.string(),
-  "displayName": zod.string().optional(),
-  "displayNameColor": zod.string().regex(getGifterLeaderboardResponsePeopleItemOneDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.int().min(getGifterLeaderboardResponsePeopleItemOneDisplayNameTierIndexMin).max(getGifterLeaderboardResponsePeopleItemOneDisplayNameTierIndexMax).optional(),
-  "followerCount": zod.int().min(getGifterLeaderboardResponsePeopleItemOneFollowerCountMin).optional(),
-  "followingCount": zod.int().min(getGifterLeaderboardResponsePeopleItemOneFollowingCountMin).optional(),
-  "sentCredits": zod.int().min(getGifterLeaderboardResponsePeopleItemOneSentCreditsMin).optional(),
-  "badges": zod.array(zod.object({
-  "id": zod.string(),
-  "earnedAt": zod.coerce.date()
-})).optional(),
-  "photoUrl": zod.string().nullish(),
-  "photoUrls": zod.array(zod.string()).max(getGifterLeaderboardResponsePeopleItemOnePhotoUrlsMax).optional(),
-  "photoReviews": zod.array(zod.object({
-  "photoUrl": zod.string(),
-  "status": zod.enum(['pending', 'approved', 'rejected', 'flagged'])
-})).optional(),
-  "identity": zod.object({
-  "emojiId": zod.string().min(1).max(getGifterLeaderboardResponsePeopleItemOneIdentityEmojiIdMax),
-  "gender": zod.enum(['Male', 'Female']),
-  "color": zod.string().regex(getGifterLeaderboardResponsePeopleItemOneIdentityColorRegExp),
-  "hairColor": zod.string().regex(getGifterLeaderboardResponsePeopleItemOneIdentityHairColorRegExp),
-  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
-  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
-}),
-  "bio": zod.string(),
-  "country": zod.union([zod.string(),zod.null()]),
-  "interests": zod.array(zod.string()),
-  "race": zod.enum(['Human']).optional(),
-  "job": zod.union([zod.literal('Apprentice'),zod.literal('Squire'),zod.literal('Initiate'),zod.literal('Trapper'),zod.literal('Novice'),zod.literal('Acolyte'),zod.literal('Scoundrel'),zod.literal('Tinker'),zod.literal(null)]).nullish(),
-  "discoverable": zod.boolean(),
-  "favorite": zod.boolean(),
-  "blocked": zod.boolean(),
-  "receivedCredits": zod.int(),
-  "badgeId": zod.union([zod.string(),zod.null()]),
-  "badgeName": zod.string().nullable(),
-  "badgeImage": zod.string().nullable(),
-  "passport": zod.object({
-  "platforms": zod.array(zod.object({
-  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
-  "label": zod.string(),
-  "color": zod.string().regex(getGifterLeaderboardResponsePeopleItemOnePassportPlatformsItemColorRegExp)
-})),
-  "verified": zod.boolean(),
-  "foundingLeague": zod.boolean()
-}).optional()
-}).and(zod.object({
-  "giftXp": zod.int().min(1)
-})))
-})
-
-
-export const setMyNameColorTestTotalBodyTotalCoinsMin = 0;
-
-
-
-export const SetMyNameColorTestTotalBody = zod.object({
-  "totalCoins": zod.int().min(setMyNameColorTestTotalBodyTotalCoinsMin).nullable()
-})
-
-export const setMyNameColorTestTotalResponseOverrideCoinsMin = 0;
-
-export const setMyNameColorTestTotalResponseProgressTierIndexMin = 0;
-export const setMyNameColorTestTotalResponseProgressTierIndexMax = 100;
-
-export const setMyNameColorTestTotalResponseProgressLifetimeCoinsPurchasedMin = 0;
-
-export const setMyNameColorTestTotalResponseProgressNextTierThresholdMin = 0;
-
-export const setMyNameColorTestTotalResponseProgressCoinsToNextTierMin = 0;
-
-
-
-export const SetMyNameColorTestTotalResponse = zod.object({
-  "overrideCoins": zod.int().min(setMyNameColorTestTotalResponseOverrideCoinsMin).nullable(),
-  "progress": zod.object({
-  "tierName": zod.string(),
-  "tierIndex": zod.int().min(setMyNameColorTestTotalResponseProgressTierIndexMin).max(setMyNameColorTestTotalResponseProgressTierIndexMax),
-  "lifetimeCoinsPurchased": zod.int().min(setMyNameColorTestTotalResponseProgressLifetimeCoinsPurchasedMin),
-  "nextTierName": zod.string().nullable(),
-  "nextTierThreshold": zod.int().min(setMyNameColorTestTotalResponseProgressNextTierThresholdMin).nullable(),
-  "coinsToNextTier": zod.int().min(setMyNameColorTestTotalResponseProgressCoinsToNextTierMin)
-})
-})
-
-
-export const UpdateMyEntranceEffectSettingsBody = zod.object({
-  "enabled": zod.boolean().optional(),
-  "tierEffectId": zod.enum(['monthly-tier-1', 'monthly-tier-2', 'monthly-tier-3', 'monthly-tier-4', 'monthly-tier-5']).optional(),
-  "tierEffectEnabled": zod.boolean().optional(),
-  "lionEffectEnabled": zod.boolean().optional()
-})
-
-export const updateMyEntranceEffectSettingsResponseEquippedEffectIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
-
-
-export const UpdateMyEntranceEffectSettingsResponse = zod.object({
-  "eligible": zod.boolean(),
-  "enabled": zod.boolean(),
-  "badgeId": zod.union([zod.literal('monthly-tier-1'),zod.literal('monthly-tier-2'),zod.literal('monthly-tier-3'),zod.literal('monthly-tier-4'),zod.literal('monthly-tier-5'),zod.literal('lion-entrance'),zod.literal(null)]).nullable(),
-  "badgeName": zod.string().nullable(),
-  "equippedEffectId": zod.union([zod.string().regex(updateMyEntranceEffectSettingsResponseEquippedEffectIdOneRegExp),zod.null()]),
-  "ownerTest": zod.union([zod.object({
-  "tiers": zod.array(zod.object({
-  "badgeId": zod.enum(['monthly-tier-1', 'monthly-tier-2', 'monthly-tier-3', 'monthly-tier-4', 'monthly-tier-5']),
-  "name": zod.string(),
-  "enabled": zod.boolean()
-})),
-  "lionEffectEnabled": zod.boolean()
-}),zod.null()])
-})
-
-
-export const getEntranceEffectShopResponseItemsItemIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
-
-
-
-
-
-export const GetEntranceEffectShopResponse = zod.object({
+export const GetProfileCosmeticsStoreResponse = zod.object({
+  "sections": zod.array(zod.object({
+  "kind": zod.enum(['frame', 'nameColor', 'specialName']),
+  "title": zod.string(),
   "items": zod.array(zod.object({
-  "id": zod.string().regex(getEntranceEffectShopResponseItemsItemIdRegExp),
-  "name": zod.string().min(1),
-  "cost": zod.int().min(1),
-  "availableForPurchase": zod.boolean(),
+  "id": zod.string(),
+  "name": zod.string(),
+  "priceCents": zod.int().min(getProfileCosmeticsStoreResponseSectionsItemItemsItemPriceCentsMin),
+  "available": zod.boolean(),
   "owned": zod.boolean(),
   "equipped": zod.boolean(),
-  "media": zod.union([zod.object({
-  "versionId": zod.uuid(),
-  "webmUrl": zod.string(),
-  "safariUrl": zod.string(),
-  "durationMs": zod.int().min(1)
-}),zod.null()])
+  "image": zod.string().optional(),
+  "tint": zod.string().optional(),
+  "color": zod.string().optional()
 }))
-})
-
-
-export const purchaseEntranceEffectPathEffectIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
-
-
-export const PurchaseEntranceEffectParams = zod.object({
-  "effectId": zod.coerce.string().regex(purchaseEntranceEffectPathEffectIdRegExp)
-})
-
-export const PurchaseEntranceEffectBody = zod.object({
-  "requestId": zod.uuid(),
-  "testMode": zod.boolean().optional().describe('Expected test-coin mode; server rejects stale designation.')
-})
-
-export const purchaseEntranceEffectResponseEffectIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
-
-
-export const PurchaseEntranceEffectResponse = zod.object({
-  "effectId": zod.string().regex(purchaseEntranceEffectResponseEffectIdRegExp),
-  "purchased": zod.boolean(),
-  "wallet": zod.object({
-  "balance": zod.int(),
-  "earned": zod.int(),
-  "received": zod.int(),
-  "sent": zod.int(),
-  "canClaimDaily": zod.boolean(),
-  "dailyReward": zod.int(),
-  "unlimited": zod.boolean().describe('True only for the development-preview owner account; does not alter the stored wallet balance.')
+})),
+  "equipped": zod.object({
+  "frame": zod.string(),
+  "nameColor": zod.string(),
+  "specialName": zod.string().nullable()
 })
 })
 
 
-export const equipEntranceEffectBodyEffectIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
+export const equipProfileCosmeticBodyItemIdMax = 40;
 
 
-export const EquipEntranceEffectBody = zod.object({
-  "effectId": zod.union([zod.string().regex(equipEntranceEffectBodyEffectIdOneRegExp),zod.null()])
+
+export const EquipProfileCosmeticBody = zod.object({
+  "kind": zod.enum(['frame', 'nameColor', 'specialName']),
+  "itemId": zod.string().min(1).max(equipProfileCosmeticBodyItemIdMax)
 })
 
-export const equipEntranceEffectResponseEffectIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
-
-
-export const EquipEntranceEffectResponse = zod.object({
-  "effectId": zod.union([zod.string().regex(equipEntranceEffectResponseEffectIdOneRegExp),zod.null()])
-})
-
-
-export const EquipMyBadgeBody = zod.object({
-  "badgeId": zod.string().nullable()
-})
-
-export const EquipMyBadgeResponse = zod.object({
-  "equippedBadgeId": zod.string().nullable()
-})
-
-
-export const getTestCoinLaunchStatusResponseActiveTestersMin = 0;
-
-export const getTestCoinLaunchStatusResponseTestGiftQuantityMin = 0;
-
-export const getTestCoinLaunchStatusResponseTestEffectsMin = 0;
+export const equipProfileCosmeticResponseSectionsItemItemsItemPriceCentsMin = 0;
 
 
 
-export const GetTestCoinLaunchStatusResponse = zod.object({
-  "closedAt": zod.coerce.date().nullable(),
-  "activeTesters": zod.int().min(getTestCoinLaunchStatusResponseActiveTestersMin),
-  "testGiftQuantity": zod.int().min(getTestCoinLaunchStatusResponseTestGiftQuantityMin),
-  "testEffects": zod.int().min(getTestCoinLaunchStatusResponseTestEffectsMin),
-  "freeTestCoinBalanceAfterReset": zod.literal(0),
-  "realWalletsPreserved": zod.literal(true),
-  "levelsAndXpPreserved": zod.literal(true)
-})
-
-
-export const prepareTestCoinLaunchResetResponseOneActiveTestersMin = 0;
-
-export const prepareTestCoinLaunchResetResponseOneTestGiftQuantityMin = 0;
-
-export const prepareTestCoinLaunchResetResponseOneTestEffectsMin = 0;
-
-
-
-export const PrepareTestCoinLaunchResetResponse = zod.object({
-  "closedAt": zod.coerce.date().nullable(),
-  "activeTesters": zod.int().min(prepareTestCoinLaunchResetResponseOneActiveTestersMin),
-  "testGiftQuantity": zod.int().min(prepareTestCoinLaunchResetResponseOneTestGiftQuantityMin),
-  "testEffects": zod.int().min(prepareTestCoinLaunchResetResponseOneTestEffectsMin),
-  "freeTestCoinBalanceAfterReset": zod.literal(0),
-  "realWalletsPreserved": zod.literal(true),
-  "levelsAndXpPreserved": zod.literal(true)
-}).and(zod.object({
-  "planId": zod.uuid(),
-  "expiresAt": zod.coerce.date()
-}))
-
-
-export const ConfirmTestCoinLaunchResetBody = zod.object({
-  "planId": zod.uuid(),
-  "confirmation": zod.enum(['END FREE TEST COINS']),
-  "endingTesting": zod.literal(true)
-})
-
-export const ConfirmTestCoinLaunchResetResponse = zod.object({
-  "closedAt": zod.coerce.date(),
-  "alreadyCompleted": zod.boolean()
-})
-
-
-export const GetCoinTestersResponse = zod.object({
-  "testers": zod.array(zod.object({
-  "username": zod.string(),
-  "enabled": zod.boolean()
-}))
-})
-
-
-export const setCoinTesterBodyUsernameRegExp = new RegExp('^[A-Za-z0-9_]{3,24}$');
-
-
-export const SetCoinTesterBody = zod.object({
-  "username": zod.string().regex(setCoinTesterBodyUsernameRegExp),
-  "enabled": zod.boolean()
-})
-
-export const SetCoinTesterResponse = zod.object({
-  "testers": zod.array(zod.object({
-  "username": zod.string(),
-  "enabled": zod.boolean()
-}))
-})
-
-
-export const getGiftStudioLibraryResponseItemsItemGiftIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
-export const getGiftStudioLibraryResponseItemsItemSettingsKeyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-export const getGiftStudioLibraryResponseItemsItemSettingsToleranceMin = 0.02;
-export const getGiftStudioLibraryResponseItemsItemSettingsToleranceMax = 0.65;
-
-export const getGiftStudioLibraryResponseItemsItemSettingsSoftnessMin = 0;
-export const getGiftStudioLibraryResponseItemsItemSettingsSoftnessMax = 0.5;
-
-export const getGiftStudioLibraryResponseItemsItemSettingsSpillMin = 0;
-export const getGiftStudioLibraryResponseItemsItemSettingsSpillMax = 1;
-
-export const getGiftStudioLibraryResponseItemsItemSettingsBackgroundModeDefault = `see-through`;
-export const getGiftStudioLibraryResponseItemsItemSettingsPreserveSourceAlphaDefault = false;
-export const getGiftStudioLibraryResponseItemsItemSettingsRetainOpaqueBackgroundDefault = false;
-export const getGiftStudioLibraryResponseItemsItemSettingsDraftNameMax = 60;
-
-export const getGiftStudioLibraryResponseCatalogItemIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
-
-
-
-export const GetGiftStudioLibraryResponse = zod.object({
+export const EquipProfileCosmeticResponse = zod.object({
+  "sections": zod.array(zod.object({
+  "kind": zod.enum(['frame', 'nameColor', 'specialName']),
+  "title": zod.string(),
   "items": zod.array(zod.object({
-  "id": zod.uuid(),
-  "giftId": zod.union([zod.string().regex(getGiftStudioLibraryResponseItemsItemGiftIdOneRegExp),zod.null()]),
-  "version": zod.int(),
-  "status": zod.enum(['draft', 'active']),
-  "originalName": zod.string(),
-  "durationMs": zod.int(),
-  "settings": zod.object({
-  "preset": zod.enum(['green', 'magenta', 'black', 'custom']),
-  "keyColor": zod.string().regex(getGiftStudioLibraryResponseItemsItemSettingsKeyColorRegExp),
-  "tolerance": zod.number().min(getGiftStudioLibraryResponseItemsItemSettingsToleranceMin).max(getGiftStudioLibraryResponseItemsItemSettingsToleranceMax),
-  "softness": zod.number().min(getGiftStudioLibraryResponseItemsItemSettingsSoftnessMin).max(getGiftStudioLibraryResponseItemsItemSettingsSoftnessMax),
-  "spill": zod.number().min(getGiftStudioLibraryResponseItemsItemSettingsSpillMin).max(getGiftStudioLibraryResponseItemsItemSettingsSpillMax),
-  "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
-  "backgroundMode": zod.enum(['see-through', 'black']).default(getGiftStudioLibraryResponseItemsItemSettingsBackgroundModeDefault),
-  "preserveSourceAlpha": zod.boolean().default(getGiftStudioLibraryResponseItemsItemSettingsPreserveSourceAlphaDefault).describe('The uploaded clip already contains real transparency; do not apply a color key'),
-  "retainOpaqueBackground": zod.boolean().default(getGiftStudioLibraryResponseItemsItemSettingsRetainOpaqueBackgroundDefault).describe('New nonblack opaque uploads may keep their background after a warning instead of being rejected'),
-  "draftName": zod.string().min(1).max(getGiftStudioLibraryResponseItemsItemSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft'),
-  "productType": zod.enum(['gift', 'entrance-effect']).optional()
-}),
-  "createdAt": zod.coerce.date(),
-  "originalUrl": zod.string(),
-  "webmUrl": zod.string(),
-  "safariUrl": zod.string(),
-  "originalBytes": zod.int(),
-  "webmBytes": zod.int(),
-  "safariBytes": zod.int()
-})),
-  "catalog": zod.array(zod.object({
-  "id": zod.string().regex(getGiftStudioLibraryResponseCatalogItemIdRegExp),
+  "id": zod.string(),
   "name": zod.string(),
-  "cost": zod.int().min(1),
-  "productType": zod.enum(['gift', 'entrance-effect']),
-  "status": zod.enum(['active', 'inactive', 'deleted']),
-  "roomGift": zod.boolean(),
-  "platinumExclusive": zod.boolean().optional(),
-  "animationAvailable": zod.boolean(),
-  "iconUrl": zod.string().nullable(),
-  "iconStatus": zod.enum(['transparent', 'fallback', 'manual-transparent', 'manual-fallback', 'builtin'])
+  "priceCents": zod.int().min(equipProfileCosmeticResponseSectionsItemItemsItemPriceCentsMin),
+  "available": zod.boolean(),
+  "owned": zod.boolean(),
+  "equipped": zod.boolean(),
+  "image": zod.string().optional(),
+  "tint": zod.string().optional(),
+  "color": zod.string().optional()
 }))
-})
-
-
-export const getDeveloperContentSyncResponseSummaryOneAddedMin = 0;
-
-export const getDeveloperContentSyncResponseSummaryOneUpdatedMin = 0;
-
-export const getDeveloperContentSyncResponseSummaryOneSkippedMin = 0;
-
-export const getDeveloperContentSyncResponseSummaryOneVideoPoolsItemAddedMin = 0;
-
-export const getDeveloperContentSyncResponseSummaryOneVideoPoolsItemUpdatedMin = 0;
-
-export const getDeveloperContentSyncResponseSummaryOneVideoPoolsItemSkippedMin = 0;
-
-export const getDeveloperContentSyncResponseSummaryOneVideoPoolsItemSavedCountMin = 0;
-
-export const getDeveloperContentSyncResponseSummaryOneGiftEffectsActiveMin = 0;
-
-export const getDeveloperContentSyncResponseSummaryOneGiftEffectsDraftsMin = 0;
-
-export const getDeveloperContentSyncResponseSummaryOneGiftEffectsSkippedMin = 0;
-
-export const getDeveloperContentSyncResponseSummaryOneEntranceEffectsActiveMin = 0;
-
-export const getDeveloperContentSyncResponseSummaryOneEntranceEffectsDraftsMin = 0;
-
-export const getDeveloperContentSyncResponseSummaryOneEntranceEffectsSkippedMin = 0;
-
-
-
-export const GetDeveloperContentSyncResponse = zod.object({
-  "lastSyncedAt": zod.union([zod.coerce.date(),zod.null()]),
-  "lastScheduledEasternDate": zod.union([zod.coerce.date(),zod.null()]),
-  "summary": zod.union([zod.object({
-  "trigger": zod.enum(['manual', 'scheduled', 'startup-catchup']),
-  "added": zod.int().min(getDeveloperContentSyncResponseSummaryOneAddedMin),
-  "updated": zod.int().min(getDeveloperContentSyncResponseSummaryOneUpdatedMin),
-  "skipped": zod.int().min(getDeveloperContentSyncResponseSummaryOneSkippedMin),
-  "videoPools": zod.array(zod.object({
-  "roomId": zod.string(),
-  "added": zod.int().min(getDeveloperContentSyncResponseSummaryOneVideoPoolsItemAddedMin),
-  "updated": zod.int().min(getDeveloperContentSyncResponseSummaryOneVideoPoolsItemUpdatedMin),
-  "skipped": zod.int().min(getDeveloperContentSyncResponseSummaryOneVideoPoolsItemSkippedMin),
-  "savedCount": zod.int().min(getDeveloperContentSyncResponseSummaryOneVideoPoolsItemSavedCountMin),
-  "message": zod.string().optional()
 })),
-  "giftEffects": zod.object({
-  "active": zod.int().min(getDeveloperContentSyncResponseSummaryOneGiftEffectsActiveMin),
-  "drafts": zod.int().min(getDeveloperContentSyncResponseSummaryOneGiftEffectsDraftsMin),
-  "skipped": zod.int().min(getDeveloperContentSyncResponseSummaryOneGiftEffectsSkippedMin)
-}),
-  "entranceEffects": zod.object({
-  "active": zod.int().min(getDeveloperContentSyncResponseSummaryOneEntranceEffectsActiveMin),
-  "drafts": zod.int().min(getDeveloperContentSyncResponseSummaryOneEntranceEffectsDraftsMin),
-  "skipped": zod.int().min(getDeveloperContentSyncResponseSummaryOneEntranceEffectsSkippedMin)
+  "equipped": zod.object({
+  "frame": zod.string(),
+  "nameColor": zod.string(),
+  "specialName": zod.string().nullable()
 })
-}),zod.null()]),
-  "isRunning": zod.boolean()
 })
 
 
-export const runDeveloperContentSyncResponseSummaryOneAddedMin = 0;
+export const getSocialPeopleQuerySearchMax = 80;
 
-export const runDeveloperContentSyncResponseSummaryOneUpdatedMin = 0;
-
-export const runDeveloperContentSyncResponseSummaryOneSkippedMin = 0;
-
-export const runDeveloperContentSyncResponseSummaryOneVideoPoolsItemAddedMin = 0;
-
-export const runDeveloperContentSyncResponseSummaryOneVideoPoolsItemUpdatedMin = 0;
-
-export const runDeveloperContentSyncResponseSummaryOneVideoPoolsItemSkippedMin = 0;
-
-export const runDeveloperContentSyncResponseSummaryOneVideoPoolsItemSavedCountMin = 0;
-
-export const runDeveloperContentSyncResponseSummaryOneGiftEffectsActiveMin = 0;
-
-export const runDeveloperContentSyncResponseSummaryOneGiftEffectsDraftsMin = 0;
-
-export const runDeveloperContentSyncResponseSummaryOneGiftEffectsSkippedMin = 0;
-
-export const runDeveloperContentSyncResponseSummaryOneEntranceEffectsActiveMin = 0;
-
-export const runDeveloperContentSyncResponseSummaryOneEntranceEffectsDraftsMin = 0;
-
-export const runDeveloperContentSyncResponseSummaryOneEntranceEffectsSkippedMin = 0;
-
-
-
-export const RunDeveloperContentSyncResponse = zod.object({
-  "lastSyncedAt": zod.union([zod.coerce.date(),zod.null()]),
-  "lastScheduledEasternDate": zod.union([zod.coerce.date(),zod.null()]),
-  "summary": zod.union([zod.object({
-  "trigger": zod.enum(['manual', 'scheduled', 'startup-catchup']),
-  "added": zod.int().min(runDeveloperContentSyncResponseSummaryOneAddedMin),
-  "updated": zod.int().min(runDeveloperContentSyncResponseSummaryOneUpdatedMin),
-  "skipped": zod.int().min(runDeveloperContentSyncResponseSummaryOneSkippedMin),
-  "videoPools": zod.array(zod.object({
-  "roomId": zod.string(),
-  "added": zod.int().min(runDeveloperContentSyncResponseSummaryOneVideoPoolsItemAddedMin),
-  "updated": zod.int().min(runDeveloperContentSyncResponseSummaryOneVideoPoolsItemUpdatedMin),
-  "skipped": zod.int().min(runDeveloperContentSyncResponseSummaryOneVideoPoolsItemSkippedMin),
-  "savedCount": zod.int().min(runDeveloperContentSyncResponseSummaryOneVideoPoolsItemSavedCountMin),
-  "message": zod.string().optional()
-})),
-  "giftEffects": zod.object({
-  "active": zod.int().min(runDeveloperContentSyncResponseSummaryOneGiftEffectsActiveMin),
-  "drafts": zod.int().min(runDeveloperContentSyncResponseSummaryOneGiftEffectsDraftsMin),
-  "skipped": zod.int().min(runDeveloperContentSyncResponseSummaryOneGiftEffectsSkippedMin)
-}),
-  "entranceEffects": zod.object({
-  "active": zod.int().min(runDeveloperContentSyncResponseSummaryOneEntranceEffectsActiveMin),
-  "drafts": zod.int().min(runDeveloperContentSyncResponseSummaryOneEntranceEffectsDraftsMin),
-  "skipped": zod.int().min(runDeveloperContentSyncResponseSummaryOneEntranceEffectsSkippedMin)
-})
-}),zod.null()]),
-  "isRunning": zod.boolean()
-})
-
-
-export const getHangoutRewardSettingsResponseAverageIntervalMinutesMin = 15;
-export const getHangoutRewardSettingsResponseAverageIntervalMinutesMax = 360;
-
-
-
-export const GetHangoutRewardSettingsResponse = zod.object({
-  "averageIntervalMinutes": zod.int().min(getHangoutRewardSettingsResponseAverageIntervalMinutesMin).max(getHangoutRewardSettingsResponseAverageIntervalMinutesMax),
-  "nextDropAt": zod.coerce.date(),
-  "lastDropAt": zod.coerce.date().nullable()
-})
-
-
-export const setHangoutRewardIntervalBodyAverageIntervalMinutesMin = 15;
-export const setHangoutRewardIntervalBodyAverageIntervalMinutesMax = 360;
-
-
-
-export const SetHangoutRewardIntervalBody = zod.object({
-  "averageIntervalMinutes": zod.int().min(setHangoutRewardIntervalBodyAverageIntervalMinutesMin).max(setHangoutRewardIntervalBodyAverageIntervalMinutesMax)
-})
-
-export const setHangoutRewardIntervalResponseAverageIntervalMinutesMin = 15;
-export const setHangoutRewardIntervalResponseAverageIntervalMinutesMax = 360;
-
-
-
-export const SetHangoutRewardIntervalResponse = zod.object({
-  "averageIntervalMinutes": zod.int().min(setHangoutRewardIntervalResponseAverageIntervalMinutesMin).max(setHangoutRewardIntervalResponseAverageIntervalMinutesMax),
-  "nextDropAt": zod.coerce.date(),
-  "lastDropAt": zod.coerce.date().nullable()
-})
-
-
-export const getAdminGiftMotionsResponseMotionsItemIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
-
-export const getAdminGiftMotionsResponseMotionsItemMotionSpeedMin = 0.5;
-export const getAdminGiftMotionsResponseMotionsItemMotionSpeedMax = 1.5;
-
-export const getAdminGiftMotionsResponseMotionsItemMotionSpinItemMin = -6.3;
-export const getAdminGiftMotionsResponseMotionsItemMotionSpinItemMax = 6.3;
-
-export const getAdminGiftMotionsResponseMotionsItemMotionSpinMin = 3;
-export const getAdminGiftMotionsResponseMotionsItemMotionSpinMax = 3;
-
-export const getAdminGiftMotionsResponseMotionsItemMotionDriftMin = 0;
-export const getAdminGiftMotionsResponseMotionsItemMotionDriftMax = 1;
-
-export const getAdminGiftMotionsResponseMotionsItemMotionBounceMin = 0;
-export const getAdminGiftMotionsResponseMotionsItemMotionBounceMax = 1;
-
-export const getAdminGiftMotionsResponseMotionsItemMotionCameraYawMin = -1.2;
-export const getAdminGiftMotionsResponseMotionsItemMotionCameraYawMax = 1.2;
-
-export const getAdminGiftMotionsResponseMotionsItemMotionCameraPitchMin = -0.8;
-export const getAdminGiftMotionsResponseMotionsItemMotionCameraPitchMax = 0.8;
-
-export const getAdminGiftMotionsResponseMotionsItemMotionAnimationIndexMin = 0;
-export const getAdminGiftMotionsResponseMotionsItemMotionAnimationIndexMax = 100;
-
-
-
-
-export const GetAdminGiftMotionsResponse = zod.object({
-  "motions": zod.array(zod.object({
-  "id": zod.string().regex(getAdminGiftMotionsResponseMotionsItemIdRegExp),
-  "name": zod.string(),
-  "cost": zod.int().min(1),
-  "format": zod.enum(['glb', 'gltf']),
-  "category": zod.enum(['vehicle', 'character', 'object', 'logo']),
-  "animationNames": zod.array(zod.string()),
-  "motion": zod.object({
-  "version": zod.literal(1),
-  "durationMs": zod.literal(6000),
-  "category": zod.enum(['vehicle', 'character', 'object', 'logo']),
-  "entry": zod.enum(['left', 'right', 'top', 'bottom', 'depth']),
-  "exit": zod.enum(['left', 'right', 'top', 'bottom', 'depth']),
-  "speed": zod.number().min(getAdminGiftMotionsResponseMotionsItemMotionSpeedMin).max(getAdminGiftMotionsResponseMotionsItemMotionSpeedMax),
-  "spin": zod.array(zod.number().min(getAdminGiftMotionsResponseMotionsItemMotionSpinItemMin).max(getAdminGiftMotionsResponseMotionsItemMotionSpinItemMax)).min(getAdminGiftMotionsResponseMotionsItemMotionSpinMin).max(getAdminGiftMotionsResponseMotionsItemMotionSpinMax),
-  "drift": zod.number().min(getAdminGiftMotionsResponseMotionsItemMotionDriftMin).max(getAdminGiftMotionsResponseMotionsItemMotionDriftMax),
-  "bounce": zod.number().min(getAdminGiftMotionsResponseMotionsItemMotionBounceMin).max(getAdminGiftMotionsResponseMotionsItemMotionBounceMax),
-  "cameraYaw": zod.number().min(getAdminGiftMotionsResponseMotionsItemMotionCameraYawMin).max(getAdminGiftMotionsResponseMotionsItemMotionCameraYawMax),
-  "cameraPitch": zod.number().min(getAdminGiftMotionsResponseMotionsItemMotionCameraPitchMin).max(getAdminGiftMotionsResponseMotionsItemMotionCameraPitchMax),
-  "animationIndex": zod.int().min(getAdminGiftMotionsResponseMotionsItemMotionAnimationIndexMin).max(getAdminGiftMotionsResponseMotionsItemMotionAnimationIndexMax).nullable()
-}),
-  "byteSize": zod.int().min(1),
-  "fileUrl": zod.string(),
-  "active": zod.boolean(),
-  "createdAt": zod.coerce.date()
-}))
-})
-
-
-export const uploadGiftMotionBodyNameMax = 60;
-
-
-
-
-export const UploadGiftMotionBody = zod.object({
-  "name": zod.string().min(1).max(uploadGiftMotionBodyNameMax),
-  "cost": zod.int().min(1),
-  "category": zod.enum(['vehicle', 'character', 'object', 'logo']),
-  "animationNames": zod.string().describe('JSON array of built-in animation clip names'),
-  "motion": zod.string().describe('JSON-encoded deterministic 6-second motion preset'),
-  "model": zod.string().describe('One self-contained GLB or GLTF model, up to 100 MB')
-})
-
-export const uploadGiftMotionResponseIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
-
-export const uploadGiftMotionResponseMotionSpeedMin = 0.5;
-export const uploadGiftMotionResponseMotionSpeedMax = 1.5;
-
-export const uploadGiftMotionResponseMotionSpinItemMin = -6.3;
-export const uploadGiftMotionResponseMotionSpinItemMax = 6.3;
-
-export const uploadGiftMotionResponseMotionSpinMin = 3;
-export const uploadGiftMotionResponseMotionSpinMax = 3;
-
-export const uploadGiftMotionResponseMotionDriftMin = 0;
-export const uploadGiftMotionResponseMotionDriftMax = 1;
-
-export const uploadGiftMotionResponseMotionBounceMin = 0;
-export const uploadGiftMotionResponseMotionBounceMax = 1;
-
-export const uploadGiftMotionResponseMotionCameraYawMin = -1.2;
-export const uploadGiftMotionResponseMotionCameraYawMax = 1.2;
-
-export const uploadGiftMotionResponseMotionCameraPitchMin = -0.8;
-export const uploadGiftMotionResponseMotionCameraPitchMax = 0.8;
-
-export const uploadGiftMotionResponseMotionAnimationIndexMin = 0;
-export const uploadGiftMotionResponseMotionAnimationIndexMax = 100;
-
-
-
-
-export const UploadGiftMotionResponse = zod.object({
-  "id": zod.string().regex(uploadGiftMotionResponseIdRegExp),
-  "name": zod.string(),
-  "cost": zod.int().min(1),
-  "format": zod.enum(['glb', 'gltf']),
-  "category": zod.enum(['vehicle', 'character', 'object', 'logo']),
-  "animationNames": zod.array(zod.string()),
-  "motion": zod.object({
-  "version": zod.literal(1),
-  "durationMs": zod.literal(6000),
-  "category": zod.enum(['vehicle', 'character', 'object', 'logo']),
-  "entry": zod.enum(['left', 'right', 'top', 'bottom', 'depth']),
-  "exit": zod.enum(['left', 'right', 'top', 'bottom', 'depth']),
-  "speed": zod.number().min(uploadGiftMotionResponseMotionSpeedMin).max(uploadGiftMotionResponseMotionSpeedMax),
-  "spin": zod.array(zod.number().min(uploadGiftMotionResponseMotionSpinItemMin).max(uploadGiftMotionResponseMotionSpinItemMax)).min(uploadGiftMotionResponseMotionSpinMin).max(uploadGiftMotionResponseMotionSpinMax),
-  "drift": zod.number().min(uploadGiftMotionResponseMotionDriftMin).max(uploadGiftMotionResponseMotionDriftMax),
-  "bounce": zod.number().min(uploadGiftMotionResponseMotionBounceMin).max(uploadGiftMotionResponseMotionBounceMax),
-  "cameraYaw": zod.number().min(uploadGiftMotionResponseMotionCameraYawMin).max(uploadGiftMotionResponseMotionCameraYawMax),
-  "cameraPitch": zod.number().min(uploadGiftMotionResponseMotionCameraPitchMin).max(uploadGiftMotionResponseMotionCameraPitchMax),
-  "animationIndex": zod.int().min(uploadGiftMotionResponseMotionAnimationIndexMin).max(uploadGiftMotionResponseMotionAnimationIndexMax).nullable()
-}),
-  "byteSize": zod.int().min(1),
-  "fileUrl": zod.string(),
-  "active": zod.boolean(),
-  "createdAt": zod.coerce.date()
-})
-
-
-export const deleteGiftMotionPathGiftIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
-
-
-export const DeleteGiftMotionParams = zod.object({
-  "giftId": zod.coerce.string().regex(deleteGiftMotionPathGiftIdRegExp)
-})
-
-export const DeleteGiftMotionResponse = zod.object({
-  "ok": zod.boolean()
-})
-
-
-export const getGiftMotionPlaybackPathGiftIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
-
-
-export const GetGiftMotionPlaybackParams = zod.object({
-  "giftId": zod.coerce.string().regex(getGiftMotionPlaybackPathGiftIdRegExp)
-})
-
-export const getGiftMotionPlaybackResponseIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
-
-export const getGiftMotionPlaybackResponseMotionSpeedMin = 0.5;
-export const getGiftMotionPlaybackResponseMotionSpeedMax = 1.5;
-
-export const getGiftMotionPlaybackResponseMotionSpinItemMin = -6.3;
-export const getGiftMotionPlaybackResponseMotionSpinItemMax = 6.3;
-
-export const getGiftMotionPlaybackResponseMotionSpinMin = 3;
-export const getGiftMotionPlaybackResponseMotionSpinMax = 3;
-
-export const getGiftMotionPlaybackResponseMotionDriftMin = 0;
-export const getGiftMotionPlaybackResponseMotionDriftMax = 1;
-
-export const getGiftMotionPlaybackResponseMotionBounceMin = 0;
-export const getGiftMotionPlaybackResponseMotionBounceMax = 1;
-
-export const getGiftMotionPlaybackResponseMotionCameraYawMin = -1.2;
-export const getGiftMotionPlaybackResponseMotionCameraYawMax = 1.2;
-
-export const getGiftMotionPlaybackResponseMotionCameraPitchMin = -0.8;
-export const getGiftMotionPlaybackResponseMotionCameraPitchMax = 0.8;
-
-export const getGiftMotionPlaybackResponseMotionAnimationIndexMin = 0;
-export const getGiftMotionPlaybackResponseMotionAnimationIndexMax = 100;
-
-
-
-
-export const GetGiftMotionPlaybackResponse = zod.object({
-  "id": zod.string().regex(getGiftMotionPlaybackResponseIdRegExp),
-  "name": zod.string(),
-  "cost": zod.int().min(1),
-  "format": zod.enum(['glb', 'gltf']),
-  "category": zod.enum(['vehicle', 'character', 'object', 'logo']),
-  "animationNames": zod.array(zod.string()),
-  "motion": zod.object({
-  "version": zod.literal(1),
-  "durationMs": zod.literal(6000),
-  "category": zod.enum(['vehicle', 'character', 'object', 'logo']),
-  "entry": zod.enum(['left', 'right', 'top', 'bottom', 'depth']),
-  "exit": zod.enum(['left', 'right', 'top', 'bottom', 'depth']),
-  "speed": zod.number().min(getGiftMotionPlaybackResponseMotionSpeedMin).max(getGiftMotionPlaybackResponseMotionSpeedMax),
-  "spin": zod.array(zod.number().min(getGiftMotionPlaybackResponseMotionSpinItemMin).max(getGiftMotionPlaybackResponseMotionSpinItemMax)).min(getGiftMotionPlaybackResponseMotionSpinMin).max(getGiftMotionPlaybackResponseMotionSpinMax),
-  "drift": zod.number().min(getGiftMotionPlaybackResponseMotionDriftMin).max(getGiftMotionPlaybackResponseMotionDriftMax),
-  "bounce": zod.number().min(getGiftMotionPlaybackResponseMotionBounceMin).max(getGiftMotionPlaybackResponseMotionBounceMax),
-  "cameraYaw": zod.number().min(getGiftMotionPlaybackResponseMotionCameraYawMin).max(getGiftMotionPlaybackResponseMotionCameraYawMax),
-  "cameraPitch": zod.number().min(getGiftMotionPlaybackResponseMotionCameraPitchMin).max(getGiftMotionPlaybackResponseMotionCameraPitchMax),
-  "animationIndex": zod.int().min(getGiftMotionPlaybackResponseMotionAnimationIndexMin).max(getGiftMotionPlaybackResponseMotionAnimationIndexMax).nullable()
-}),
-  "byteSize": zod.int().min(1),
-  "fileUrl": zod.string(),
-  "active": zod.boolean(),
-  "createdAt": zod.coerce.date()
-})
-
-
-export const getGiftMotionFilePathGiftIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
-
-
-export const GetGiftMotionFileParams = zod.object({
-  "giftId": zod.coerce.string().regex(getGiftMotionFilePathGiftIdRegExp)
-})
-
-export const GetGiftMotionFileResponse = zod.unknown()
-
-
-export const updateGiftStudioCatalogItemPathGiftIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
-
-
-export const UpdateGiftStudioCatalogItemParams = zod.object({
-  "giftId": zod.coerce.string().regex(updateGiftStudioCatalogItemPathGiftIdRegExp)
-})
-
-export const updateGiftStudioCatalogItemBodyNameMax = 60;
-
-
-
-
-export const UpdateGiftStudioCatalogItemBody = zod.object({
-  "name": zod.string().min(1).max(updateGiftStudioCatalogItemBodyNameMax).optional(),
-  "cost": zod.int().min(1).optional(),
-  "productType": zod.enum(['gift', 'entrance-effect']).optional(),
-  "status": zod.enum(['active', 'inactive', 'deleted']).optional(),
-  "platinumExclusive": zod.boolean().optional().describe('Owner-selected gift restricted to gifter level 61 or higher. Defaults false.')
-})
-
-export const updateGiftStudioCatalogItemResponseIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36}|motion-[0-9a-f-]{36})$');
-
-
-
-export const UpdateGiftStudioCatalogItemResponse = zod.object({
-  "id": zod.string().regex(updateGiftStudioCatalogItemResponseIdRegExp),
-  "name": zod.string(),
-  "cost": zod.int().min(1),
-  "productType": zod.enum(['gift', 'entrance-effect']),
-  "status": zod.enum(['active', 'inactive', 'deleted']),
-  "roomGift": zod.boolean(),
-  "platinumExclusive": zod.boolean().optional(),
-  "animationAvailable": zod.boolean(),
-  "iconUrl": zod.string().nullable(),
-  "iconStatus": zod.enum(['transparent', 'fallback', 'manual-transparent', 'manual-fallback', 'builtin'])
-})
-
-
-export const ProcessGiftStudioClipOnServerBody = zod.object({
-  "settings": zod.string().describe('JSON-serialized key settings'),
-  "sourceVideo": zod.string().describe('Source video file part')
-})
-
-export const ProcessGiftStudioClipOnServerResponse = zod.unknown()
-
-
-export const saveGiftStudioProcessedBodyDraftNameMax = 60;
-
-export const saveGiftStudioProcessedBodyGiftIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
-
-
-
-export const SaveGiftStudioProcessedBody = zod.object({
-  "processingSession": zod.uuid(),
-  "draftName": zod.string().min(1).max(saveGiftStudioProcessedBodyDraftNameMax),
-  "giftId": zod.union([zod.string().regex(saveGiftStudioProcessedBodyGiftIdOneRegExp),zod.null()]).optional(),
-  "productType": zod.enum(['gift', 'entrance-effect']).optional(),
-  "cost": zod.int().min(1).optional().describe('Optional updated credit price for an existing catalog gift')
-})
-
-export const saveGiftStudioProcessedResponseGiftIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
-export const saveGiftStudioProcessedResponseSettingsKeyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-export const saveGiftStudioProcessedResponseSettingsToleranceMin = 0.02;
-export const saveGiftStudioProcessedResponseSettingsToleranceMax = 0.65;
-
-export const saveGiftStudioProcessedResponseSettingsSoftnessMin = 0;
-export const saveGiftStudioProcessedResponseSettingsSoftnessMax = 0.5;
-
-export const saveGiftStudioProcessedResponseSettingsSpillMin = 0;
-export const saveGiftStudioProcessedResponseSettingsSpillMax = 1;
-
-export const saveGiftStudioProcessedResponseSettingsBackgroundModeDefault = `see-through`;
-export const saveGiftStudioProcessedResponseSettingsPreserveSourceAlphaDefault = false;
-export const saveGiftStudioProcessedResponseSettingsRetainOpaqueBackgroundDefault = false;
-export const saveGiftStudioProcessedResponseSettingsDraftNameMax = 60;
-
-
-
-export const SaveGiftStudioProcessedResponse = zod.object({
-  "id": zod.uuid(),
-  "giftId": zod.union([zod.string().regex(saveGiftStudioProcessedResponseGiftIdOneRegExp),zod.null()]),
-  "version": zod.int(),
-  "status": zod.enum(['draft', 'active']),
-  "originalName": zod.string(),
-  "durationMs": zod.int(),
-  "settings": zod.object({
-  "preset": zod.enum(['green', 'magenta', 'black', 'custom']),
-  "keyColor": zod.string().regex(saveGiftStudioProcessedResponseSettingsKeyColorRegExp),
-  "tolerance": zod.number().min(saveGiftStudioProcessedResponseSettingsToleranceMin).max(saveGiftStudioProcessedResponseSettingsToleranceMax),
-  "softness": zod.number().min(saveGiftStudioProcessedResponseSettingsSoftnessMin).max(saveGiftStudioProcessedResponseSettingsSoftnessMax),
-  "spill": zod.number().min(saveGiftStudioProcessedResponseSettingsSpillMin).max(saveGiftStudioProcessedResponseSettingsSpillMax),
-  "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
-  "backgroundMode": zod.enum(['see-through', 'black']).default(saveGiftStudioProcessedResponseSettingsBackgroundModeDefault),
-  "preserveSourceAlpha": zod.boolean().default(saveGiftStudioProcessedResponseSettingsPreserveSourceAlphaDefault).describe('The uploaded clip already contains real transparency; do not apply a color key'),
-  "retainOpaqueBackground": zod.boolean().default(saveGiftStudioProcessedResponseSettingsRetainOpaqueBackgroundDefault).describe('New nonblack opaque uploads may keep their background after a warning instead of being rejected'),
-  "draftName": zod.string().min(1).max(saveGiftStudioProcessedResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft'),
-  "productType": zod.enum(['gift', 'entrance-effect']).optional()
-}),
-  "createdAt": zod.coerce.date(),
-  "originalUrl": zod.string(),
-  "webmUrl": zod.string(),
-  "safariUrl": zod.string(),
-  "originalBytes": zod.int(),
-  "webmBytes": zod.int(),
-  "safariBytes": zod.int()
-})
-
-
-export const createGiftStudioVersionBodyGiftIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
-
-
-
-export const CreateGiftStudioVersionBody = zod.object({
-  "giftId": zod.union([zod.string().regex(createGiftStudioVersionBodyGiftIdOneRegExp),zod.null()]).optional(),
-  "productType": zod.enum(['gift', 'entrance-effect']).optional(),
-  "cost": zod.int().min(1).optional().describe('Optional updated credit price for an existing catalog gift'),
-  "settings": zod.string().describe('JSON-serialized GiftStudioProcessingSettings'),
-  "sourceVideo": zod.string().describe('Video file part'),
-  "processedWebm": zod.string().describe('Processed WebM file part; transparent for see-through videos and opaque for black-background videos')
-})
-
-export const createGiftStudioVersionResponseGiftIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
-export const createGiftStudioVersionResponseSettingsKeyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-export const createGiftStudioVersionResponseSettingsToleranceMin = 0.02;
-export const createGiftStudioVersionResponseSettingsToleranceMax = 0.65;
-
-export const createGiftStudioVersionResponseSettingsSoftnessMin = 0;
-export const createGiftStudioVersionResponseSettingsSoftnessMax = 0.5;
-
-export const createGiftStudioVersionResponseSettingsSpillMin = 0;
-export const createGiftStudioVersionResponseSettingsSpillMax = 1;
-
-export const createGiftStudioVersionResponseSettingsBackgroundModeDefault = `see-through`;
-export const createGiftStudioVersionResponseSettingsPreserveSourceAlphaDefault = false;
-export const createGiftStudioVersionResponseSettingsRetainOpaqueBackgroundDefault = false;
-export const createGiftStudioVersionResponseSettingsDraftNameMax = 60;
-
-
-
-export const CreateGiftStudioVersionResponse = zod.object({
-  "id": zod.uuid(),
-  "giftId": zod.union([zod.string().regex(createGiftStudioVersionResponseGiftIdOneRegExp),zod.null()]),
-  "version": zod.int(),
-  "status": zod.enum(['draft', 'active']),
-  "originalName": zod.string(),
-  "durationMs": zod.int(),
-  "settings": zod.object({
-  "preset": zod.enum(['green', 'magenta', 'black', 'custom']),
-  "keyColor": zod.string().regex(createGiftStudioVersionResponseSettingsKeyColorRegExp),
-  "tolerance": zod.number().min(createGiftStudioVersionResponseSettingsToleranceMin).max(createGiftStudioVersionResponseSettingsToleranceMax),
-  "softness": zod.number().min(createGiftStudioVersionResponseSettingsSoftnessMin).max(createGiftStudioVersionResponseSettingsSoftnessMax),
-  "spill": zod.number().min(createGiftStudioVersionResponseSettingsSpillMin).max(createGiftStudioVersionResponseSettingsSpillMax),
-  "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
-  "backgroundMode": zod.enum(['see-through', 'black']).default(createGiftStudioVersionResponseSettingsBackgroundModeDefault),
-  "preserveSourceAlpha": zod.boolean().default(createGiftStudioVersionResponseSettingsPreserveSourceAlphaDefault).describe('The uploaded clip already contains real transparency; do not apply a color key'),
-  "retainOpaqueBackground": zod.boolean().default(createGiftStudioVersionResponseSettingsRetainOpaqueBackgroundDefault).describe('New nonblack opaque uploads may keep their background after a warning instead of being rejected'),
-  "draftName": zod.string().min(1).max(createGiftStudioVersionResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft'),
-  "productType": zod.enum(['gift', 'entrance-effect']).optional()
-}),
-  "createdAt": zod.coerce.date(),
-  "originalUrl": zod.string(),
-  "webmUrl": zod.string(),
-  "safariUrl": zod.string(),
-  "originalBytes": zod.int(),
-  "webmBytes": zod.int(),
-  "safariBytes": zod.int()
-})
-
-
-export const SetGiftStudioVersionActiveParams = zod.object({
-  "versionId": zod.uuid()
-})
-
-
-
-
-export const SetGiftStudioVersionActiveBody = zod.object({
-  "active": zod.boolean(),
-  "productType": zod.enum(['gift', 'entrance-effect']).optional(),
-  "cost": zod.int().min(1).optional()
-})
-
-export const setGiftStudioVersionActiveResponseGiftIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
-export const setGiftStudioVersionActiveResponseSettingsKeyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-export const setGiftStudioVersionActiveResponseSettingsToleranceMin = 0.02;
-export const setGiftStudioVersionActiveResponseSettingsToleranceMax = 0.65;
-
-export const setGiftStudioVersionActiveResponseSettingsSoftnessMin = 0;
-export const setGiftStudioVersionActiveResponseSettingsSoftnessMax = 0.5;
-
-export const setGiftStudioVersionActiveResponseSettingsSpillMin = 0;
-export const setGiftStudioVersionActiveResponseSettingsSpillMax = 1;
-
-export const setGiftStudioVersionActiveResponseSettingsBackgroundModeDefault = `see-through`;
-export const setGiftStudioVersionActiveResponseSettingsPreserveSourceAlphaDefault = false;
-export const setGiftStudioVersionActiveResponseSettingsRetainOpaqueBackgroundDefault = false;
-export const setGiftStudioVersionActiveResponseSettingsDraftNameMax = 60;
-
-
-
-export const SetGiftStudioVersionActiveResponse = zod.object({
-  "id": zod.uuid(),
-  "giftId": zod.union([zod.string().regex(setGiftStudioVersionActiveResponseGiftIdOneRegExp),zod.null()]),
-  "version": zod.int(),
-  "status": zod.enum(['draft', 'active']),
-  "originalName": zod.string(),
-  "durationMs": zod.int(),
-  "settings": zod.object({
-  "preset": zod.enum(['green', 'magenta', 'black', 'custom']),
-  "keyColor": zod.string().regex(setGiftStudioVersionActiveResponseSettingsKeyColorRegExp),
-  "tolerance": zod.number().min(setGiftStudioVersionActiveResponseSettingsToleranceMin).max(setGiftStudioVersionActiveResponseSettingsToleranceMax),
-  "softness": zod.number().min(setGiftStudioVersionActiveResponseSettingsSoftnessMin).max(setGiftStudioVersionActiveResponseSettingsSoftnessMax),
-  "spill": zod.number().min(setGiftStudioVersionActiveResponseSettingsSpillMin).max(setGiftStudioVersionActiveResponseSettingsSpillMax),
-  "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
-  "backgroundMode": zod.enum(['see-through', 'black']).default(setGiftStudioVersionActiveResponseSettingsBackgroundModeDefault),
-  "preserveSourceAlpha": zod.boolean().default(setGiftStudioVersionActiveResponseSettingsPreserveSourceAlphaDefault).describe('The uploaded clip already contains real transparency; do not apply a color key'),
-  "retainOpaqueBackground": zod.boolean().default(setGiftStudioVersionActiveResponseSettingsRetainOpaqueBackgroundDefault).describe('New nonblack opaque uploads may keep their background after a warning instead of being rejected'),
-  "draftName": zod.string().min(1).max(setGiftStudioVersionActiveResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft'),
-  "productType": zod.enum(['gift', 'entrance-effect']).optional()
-}),
-  "createdAt": zod.coerce.date(),
-  "originalUrl": zod.string(),
-  "webmUrl": zod.string(),
-  "safariUrl": zod.string(),
-  "originalBytes": zod.int(),
-  "webmBytes": zod.int(),
-  "safariBytes": zod.int()
-})
-
-
-export const RenameGiftStudioVersionParams = zod.object({
-  "versionId": zod.uuid()
-})
-
-export const renameGiftStudioVersionBodyNameMax = 60;
-
-
-
-export const RenameGiftStudioVersionBody = zod.object({
-  "name": zod.string().min(1).max(renameGiftStudioVersionBodyNameMax)
-})
-
-export const renameGiftStudioVersionResponseGiftIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
-export const renameGiftStudioVersionResponseSettingsKeyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-export const renameGiftStudioVersionResponseSettingsToleranceMin = 0.02;
-export const renameGiftStudioVersionResponseSettingsToleranceMax = 0.65;
-
-export const renameGiftStudioVersionResponseSettingsSoftnessMin = 0;
-export const renameGiftStudioVersionResponseSettingsSoftnessMax = 0.5;
-
-export const renameGiftStudioVersionResponseSettingsSpillMin = 0;
-export const renameGiftStudioVersionResponseSettingsSpillMax = 1;
-
-export const renameGiftStudioVersionResponseSettingsBackgroundModeDefault = `see-through`;
-export const renameGiftStudioVersionResponseSettingsPreserveSourceAlphaDefault = false;
-export const renameGiftStudioVersionResponseSettingsRetainOpaqueBackgroundDefault = false;
-export const renameGiftStudioVersionResponseSettingsDraftNameMax = 60;
-
-
-
-export const RenameGiftStudioVersionResponse = zod.object({
-  "id": zod.uuid(),
-  "giftId": zod.union([zod.string().regex(renameGiftStudioVersionResponseGiftIdOneRegExp),zod.null()]),
-  "version": zod.int(),
-  "status": zod.enum(['draft', 'active']),
-  "originalName": zod.string(),
-  "durationMs": zod.int(),
-  "settings": zod.object({
-  "preset": zod.enum(['green', 'magenta', 'black', 'custom']),
-  "keyColor": zod.string().regex(renameGiftStudioVersionResponseSettingsKeyColorRegExp),
-  "tolerance": zod.number().min(renameGiftStudioVersionResponseSettingsToleranceMin).max(renameGiftStudioVersionResponseSettingsToleranceMax),
-  "softness": zod.number().min(renameGiftStudioVersionResponseSettingsSoftnessMin).max(renameGiftStudioVersionResponseSettingsSoftnessMax),
-  "spill": zod.number().min(renameGiftStudioVersionResponseSettingsSpillMin).max(renameGiftStudioVersionResponseSettingsSpillMax),
-  "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
-  "backgroundMode": zod.enum(['see-through', 'black']).default(renameGiftStudioVersionResponseSettingsBackgroundModeDefault),
-  "preserveSourceAlpha": zod.boolean().default(renameGiftStudioVersionResponseSettingsPreserveSourceAlphaDefault).describe('The uploaded clip already contains real transparency; do not apply a color key'),
-  "retainOpaqueBackground": zod.boolean().default(renameGiftStudioVersionResponseSettingsRetainOpaqueBackgroundDefault).describe('New nonblack opaque uploads may keep their background after a warning instead of being rejected'),
-  "draftName": zod.string().min(1).max(renameGiftStudioVersionResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft'),
-  "productType": zod.enum(['gift', 'entrance-effect']).optional()
-}),
-  "createdAt": zod.coerce.date(),
-  "originalUrl": zod.string(),
-  "webmUrl": zod.string(),
-  "safariUrl": zod.string(),
-  "originalBytes": zod.int(),
-  "webmBytes": zod.int(),
-  "safariBytes": zod.int()
-})
-
-
-export const DeleteGiftStudioVersionParams = zod.object({
-  "versionId": zod.uuid()
-})
-
-export const DeleteGiftStudioVersionResponse = zod.object({
-  "deleted": zod.literal(true)
-})
-
-
-export const AssignGiftStudioVersionToGiftParams = zod.object({
-  "versionId": zod.uuid()
-})
-
-export const assignGiftStudioVersionToGiftBodyGiftIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
-
-
-export const AssignGiftStudioVersionToGiftBody = zod.object({
-  "giftId": zod.string().regex(assignGiftStudioVersionToGiftBodyGiftIdRegExp)
-})
-
-export const assignGiftStudioVersionToGiftResponseGiftIdOneRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
-export const assignGiftStudioVersionToGiftResponseSettingsKeyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-export const assignGiftStudioVersionToGiftResponseSettingsToleranceMin = 0.02;
-export const assignGiftStudioVersionToGiftResponseSettingsToleranceMax = 0.65;
-
-export const assignGiftStudioVersionToGiftResponseSettingsSoftnessMin = 0;
-export const assignGiftStudioVersionToGiftResponseSettingsSoftnessMax = 0.5;
-
-export const assignGiftStudioVersionToGiftResponseSettingsSpillMin = 0;
-export const assignGiftStudioVersionToGiftResponseSettingsSpillMax = 1;
-
-export const assignGiftStudioVersionToGiftResponseSettingsBackgroundModeDefault = `see-through`;
-export const assignGiftStudioVersionToGiftResponseSettingsPreserveSourceAlphaDefault = false;
-export const assignGiftStudioVersionToGiftResponseSettingsRetainOpaqueBackgroundDefault = false;
-export const assignGiftStudioVersionToGiftResponseSettingsDraftNameMax = 60;
-
-
-
-export const AssignGiftStudioVersionToGiftResponse = zod.object({
-  "id": zod.uuid(),
-  "giftId": zod.union([zod.string().regex(assignGiftStudioVersionToGiftResponseGiftIdOneRegExp),zod.null()]),
-  "version": zod.int(),
-  "status": zod.enum(['draft', 'active']),
-  "originalName": zod.string(),
-  "durationMs": zod.int(),
-  "settings": zod.object({
-  "preset": zod.enum(['green', 'magenta', 'black', 'custom']),
-  "keyColor": zod.string().regex(assignGiftStudioVersionToGiftResponseSettingsKeyColorRegExp),
-  "tolerance": zod.number().min(assignGiftStudioVersionToGiftResponseSettingsToleranceMin).max(assignGiftStudioVersionToGiftResponseSettingsToleranceMax),
-  "softness": zod.number().min(assignGiftStudioVersionToGiftResponseSettingsSoftnessMin).max(assignGiftStudioVersionToGiftResponseSettingsSoftnessMax),
-  "spill": zod.number().min(assignGiftStudioVersionToGiftResponseSettingsSpillMin).max(assignGiftStudioVersionToGiftResponseSettingsSpillMax),
-  "maxDimension": zod.union([zod.union([zod.literal(480),zod.literal(720),zod.literal(1080)]),zod.null()]),
-  "backgroundMode": zod.enum(['see-through', 'black']).default(assignGiftStudioVersionToGiftResponseSettingsBackgroundModeDefault),
-  "preserveSourceAlpha": zod.boolean().default(assignGiftStudioVersionToGiftResponseSettingsPreserveSourceAlphaDefault).describe('The uploaded clip already contains real transparency; do not apply a color key'),
-  "retainOpaqueBackground": zod.boolean().default(assignGiftStudioVersionToGiftResponseSettingsRetainOpaqueBackgroundDefault).describe('New nonblack opaque uploads may keep their background after a warning instead of being rejected'),
-  "draftName": zod.string().min(1).max(assignGiftStudioVersionToGiftResponseSettingsDraftNameMax).optional().describe('Owner-provided name shown for this saved Gift Studio draft'),
-  "productType": zod.enum(['gift', 'entrance-effect']).optional()
-}),
-  "createdAt": zod.coerce.date(),
-  "originalUrl": zod.string(),
-  "webmUrl": zod.string(),
-  "safariUrl": zod.string(),
-  "originalBytes": zod.int(),
-  "webmBytes": zod.int(),
-  "safariBytes": zod.int()
-})
-
-
-export const GetGiftStudioVersionMediaParams = zod.object({
-  "versionId": zod.uuid(),
-  "variant": zod.enum(['original', 'webm', 'safari'])
-})
-
-export const GetGiftStudioVersionMediaResponse = zod.unknown()
-
-
-export const GetActiveGiftStudioVersionMediaParams = zod.object({
-  "versionId": zod.uuid(),
-  "variant": zod.enum(['webm', 'safari'])
-})
-
-export const GetActiveGiftStudioVersionMediaResponse = zod.unknown()
-
-
-export const getActiveGiftStudioMediaPathGiftIdRegExp = new RegExp('^(good-vibes|big-love|standing-ovation|heart|spirit-pup|moonfox|cosmic-encore|fireworks|rose-shower|whip|studio-[0-9a-f-]{36})$');
-
-
-export const GetActiveGiftStudioMediaParams = zod.object({
-  "giftId": zod.coerce.string().regex(getActiveGiftStudioMediaPathGiftIdRegExp)
-})
-
-export const getActiveGiftStudioMediaResponseMediaOneNameMax = 60;
-
-export const getActiveGiftStudioMediaResponseMediaOneDurationMsMax = 15000;
-
-
-
-export const GetActiveGiftStudioMediaResponse = zod.object({
-  "media": zod.union([zod.object({
-  "versionId": zod.uuid(),
-  "name": zod.string().min(1).max(getActiveGiftStudioMediaResponseMediaOneNameMax),
-  "webmUrl": zod.string(),
-  "safariUrl": zod.string(),
-  "durationMs": zod.int().min(1).max(getActiveGiftStudioMediaResponseMediaOneDurationMsMax),
-  "backgroundMode": zod.enum(['see-through', 'black'])
-}),zod.null()])
-})
-
+export const getSocialPeopleQueryCountryMax = 2;
 
 export const getSocialPeopleQueryOffsetMin = 0;
 
 
 
 export const GetSocialPeopleQueryParams = zod.object({
-  "search": zod.coerce.string().optional(),
+  "search": zod.coerce.string().max(getSocialPeopleQuerySearchMax).optional(),
   "gender": zod.enum(['Male', 'Female']).optional(),
-  "country": zod.coerce.string().optional(),
+  "country": zod.coerce.string().max(getSocialPeopleQueryCountryMax).optional(),
   "favorites": zod.coerce.boolean().optional(),
   "offset": zod.coerce.number().int().min(getSocialPeopleQueryOffsetMin).optional()
 })
 
-export const getSocialPeopleResponsePeopleItemExternalHandleMax = 64;
-
-export const getSocialPeopleResponsePeopleItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-export const getSocialPeopleResponsePeopleItemDisplayNameTierIndexMin = 0;
-export const getSocialPeopleResponsePeopleItemDisplayNameTierIndexMax = 100;
-
-export const getSocialPeopleResponsePeopleItemFollowerCountMin = 0;
-
-export const getSocialPeopleResponsePeopleItemFollowingCountMin = 0;
-
-export const getSocialPeopleResponsePeopleItemSentCreditsMin = 0;
-
-export const getSocialPeopleResponsePeopleItemPhotoUrlsMax = 4;
+export const getSocialPeopleResponsePeopleItemPhotoUrlsMax = 1;
 
 export const getSocialPeopleResponsePeopleItemIdentityEmojiIdMax = 100;
 
 export const getSocialPeopleResponsePeopleItemIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getSocialPeopleResponsePeopleItemIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
-export const getSocialPeopleResponsePeopleItemPassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getSocialPeopleResponsePeopleItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getSocialPeopleResponsePeopleItemDisplayNameTierIndexMin = 0;
+export const getSocialPeopleResponsePeopleItemDisplayNameTierIndexMax = 1;
+
+export const getSocialPeopleResponsePeopleItemFollowerCountMin = 0;
+
+export const getSocialPeopleResponsePeopleItemFollowingCountMin = 0;
+
+export const getSocialPeopleResponseTotalMin = 0;
+
 
 
 export const GetSocialPeopleResponse = zod.object({
   "people": zod.array(zod.object({
-  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
-  "externalHandle": zod.string().max(getSocialPeopleResponsePeopleItemExternalHandleMax).nullish(),
   "username": zod.string(),
-  "displayName": zod.string().optional(),
-  "displayNameColor": zod.string().regex(getSocialPeopleResponsePeopleItemDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.int().min(getSocialPeopleResponsePeopleItemDisplayNameTierIndexMin).max(getSocialPeopleResponsePeopleItemDisplayNameTierIndexMax).optional(),
-  "followerCount": zod.int().min(getSocialPeopleResponsePeopleItemFollowerCountMin).optional(),
-  "followingCount": zod.int().min(getSocialPeopleResponsePeopleItemFollowingCountMin).optional(),
-  "sentCredits": zod.int().min(getSocialPeopleResponsePeopleItemSentCreditsMin).optional(),
-  "badges": zod.array(zod.object({
-  "id": zod.string(),
-  "earnedAt": zod.coerce.date()
-})).optional(),
-  "photoUrl": zod.string().nullish(),
-  "photoUrls": zod.array(zod.string()).max(getSocialPeopleResponsePeopleItemPhotoUrlsMax).optional(),
+  "displayName": zod.string(),
+  "photoUrl": zod.string().nullable(),
+  "photoUrls": zod.array(zod.string()).max(getSocialPeopleResponsePeopleItemPhotoUrlsMax),
   "photoReviews": zod.array(zod.object({
   "photoUrl": zod.string(),
   "status": zod.enum(['pending', 'approved', 'rejected', 'flagged'])
@@ -3369,29 +2039,18 @@ export const GetSocialPeopleResponse = zod.object({
   "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
   "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
 }),
-  "bio": zod.string(),
-  "country": zod.union([zod.string(),zod.null()]),
-  "interests": zod.array(zod.string()),
-  "race": zod.enum(['Human']).optional(),
-  "job": zod.union([zod.literal('Apprentice'),zod.literal('Squire'),zod.literal('Initiate'),zod.literal('Trapper'),zod.literal('Novice'),zod.literal('Acolyte'),zod.literal('Scoundrel'),zod.literal('Tinker'),zod.literal(null)]).nullish(),
-  "discoverable": zod.boolean(),
+  "race": zod.enum(['Human']),
+  "job": zod.union([zod.literal('Apprentice'),zod.literal('Squire'),zod.literal('Initiate'),zod.literal('Trapper'),zod.literal('Novice'),zod.literal('Acolyte'),zod.literal('Scoundrel'),zod.literal('Tinker'),zod.literal(null)]).nullable(),
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
-  "receivedCredits": zod.int(),
-  "badgeId": zod.union([zod.string(),zod.null()]),
-  "badgeName": zod.string().nullable(),
-  "badgeImage": zod.string().nullable(),
-  "passport": zod.object({
-  "platforms": zod.array(zod.object({
-  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
-  "label": zod.string(),
-  "color": zod.string().regex(getSocialPeopleResponsePeopleItemPassportPlatformsItemColorRegExp)
+  "frameId": zod.string(),
+  "displayNameColor": zod.string().regex(getSocialPeopleResponsePeopleItemDisplayNameColorRegExp),
+  "displayNameTierIndex": zod.int().min(getSocialPeopleResponsePeopleItemDisplayNameTierIndexMin).max(getSocialPeopleResponsePeopleItemDisplayNameTierIndexMax),
+  "hasNameShimmer": zod.boolean(),
+  "followerCount": zod.int().min(getSocialPeopleResponsePeopleItemFollowerCountMin).optional(),
+  "followingCount": zod.int().min(getSocialPeopleResponsePeopleItemFollowingCountMin).optional()
 })),
-  "verified": zod.boolean(),
-  "foundingLeague": zod.boolean()
-}).optional()
-})),
-  "total": zod.int()
+  "total": zod.int().min(getSocialPeopleResponseTotalMin)
 })
 
 
@@ -3399,43 +2058,27 @@ export const GetSocialPersonParams = zod.object({
   "username": zod.coerce.string()
 })
 
-export const getSocialPersonResponseExternalHandleMax = 64;
-
-export const getSocialPersonResponseDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-export const getSocialPersonResponseDisplayNameTierIndexMin = 0;
-export const getSocialPersonResponseDisplayNameTierIndexMax = 100;
-
-export const getSocialPersonResponseFollowerCountMin = 0;
-
-export const getSocialPersonResponseFollowingCountMin = 0;
-
-export const getSocialPersonResponseSentCreditsMin = 0;
-
-export const getSocialPersonResponsePhotoUrlsMax = 4;
+export const getSocialPersonResponsePhotoUrlsMax = 1;
 
 export const getSocialPersonResponseIdentityEmojiIdMax = 100;
 
 export const getSocialPersonResponseIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getSocialPersonResponseIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
-export const getSocialPersonResponsePassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getSocialPersonResponseDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getSocialPersonResponseDisplayNameTierIndexMin = 0;
+export const getSocialPersonResponseDisplayNameTierIndexMax = 1;
+
+export const getSocialPersonResponseFollowerCountMin = 0;
+
+export const getSocialPersonResponseFollowingCountMin = 0;
+
 
 
 export const GetSocialPersonResponse = zod.object({
-  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
-  "externalHandle": zod.string().max(getSocialPersonResponseExternalHandleMax).nullish(),
   "username": zod.string(),
-  "displayName": zod.string().optional(),
-  "displayNameColor": zod.string().regex(getSocialPersonResponseDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.int().min(getSocialPersonResponseDisplayNameTierIndexMin).max(getSocialPersonResponseDisplayNameTierIndexMax).optional(),
-  "followerCount": zod.int().min(getSocialPersonResponseFollowerCountMin).optional(),
-  "followingCount": zod.int().min(getSocialPersonResponseFollowingCountMin).optional(),
-  "sentCredits": zod.int().min(getSocialPersonResponseSentCreditsMin).optional(),
-  "badges": zod.array(zod.object({
-  "id": zod.string(),
-  "earnedAt": zod.coerce.date()
-})).optional(),
-  "photoUrl": zod.string().nullish(),
-  "photoUrls": zod.array(zod.string()).max(getSocialPersonResponsePhotoUrlsMax).optional(),
+  "displayName": zod.string(),
+  "photoUrl": zod.string().nullable(),
+  "photoUrls": zod.array(zod.string()).max(getSocialPersonResponsePhotoUrlsMax),
   "photoReviews": zod.array(zod.object({
   "photoUrl": zod.string(),
   "status": zod.enum(['pending', 'approved', 'rejected', 'flagged'])
@@ -3448,27 +2091,16 @@ export const GetSocialPersonResponse = zod.object({
   "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
   "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
 }),
-  "bio": zod.string(),
-  "country": zod.union([zod.string(),zod.null()]),
-  "interests": zod.array(zod.string()),
-  "race": zod.enum(['Human']).optional(),
-  "job": zod.union([zod.literal('Apprentice'),zod.literal('Squire'),zod.literal('Initiate'),zod.literal('Trapper'),zod.literal('Novice'),zod.literal('Acolyte'),zod.literal('Scoundrel'),zod.literal('Tinker'),zod.literal(null)]).nullish(),
-  "discoverable": zod.boolean(),
+  "race": zod.enum(['Human']),
+  "job": zod.union([zod.literal('Apprentice'),zod.literal('Squire'),zod.literal('Initiate'),zod.literal('Trapper'),zod.literal('Novice'),zod.literal('Acolyte'),zod.literal('Scoundrel'),zod.literal('Tinker'),zod.literal(null)]).nullable(),
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
-  "receivedCredits": zod.int(),
-  "badgeId": zod.union([zod.string(),zod.null()]),
-  "badgeName": zod.string().nullable(),
-  "badgeImage": zod.string().nullable(),
-  "passport": zod.object({
-  "platforms": zod.array(zod.object({
-  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
-  "label": zod.string(),
-  "color": zod.string().regex(getSocialPersonResponsePassportPlatformsItemColorRegExp)
-})),
-  "verified": zod.boolean(),
-  "foundingLeague": zod.boolean()
-}).optional()
+  "frameId": zod.string(),
+  "displayNameColor": zod.string().regex(getSocialPersonResponseDisplayNameColorRegExp),
+  "displayNameTierIndex": zod.int().min(getSocialPersonResponseDisplayNameTierIndexMin).max(getSocialPersonResponseDisplayNameTierIndexMax),
+  "hasNameShimmer": zod.boolean(),
+  "followerCount": zod.int().min(getSocialPersonResponseFollowerCountMin).optional(),
+  "followingCount": zod.int().min(getSocialPersonResponseFollowingCountMin).optional()
 })
 
 
@@ -3486,44 +2118,30 @@ export const SetSocialRelationshipResponse = zod.object({
 })
 
 
-export const getSocialBlocksResponsePeopleItemExternalHandleMax = 64;
-
-export const getSocialBlocksResponsePeopleItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-export const getSocialBlocksResponsePeopleItemDisplayNameTierIndexMin = 0;
-export const getSocialBlocksResponsePeopleItemDisplayNameTierIndexMax = 100;
-
-export const getSocialBlocksResponsePeopleItemFollowerCountMin = 0;
-
-export const getSocialBlocksResponsePeopleItemFollowingCountMin = 0;
-
-export const getSocialBlocksResponsePeopleItemSentCreditsMin = 0;
-
-export const getSocialBlocksResponsePeopleItemPhotoUrlsMax = 4;
+export const getSocialBlocksResponsePeopleItemPhotoUrlsMax = 1;
 
 export const getSocialBlocksResponsePeopleItemIdentityEmojiIdMax = 100;
 
 export const getSocialBlocksResponsePeopleItemIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getSocialBlocksResponsePeopleItemIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
-export const getSocialBlocksResponsePeopleItemPassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getSocialBlocksResponsePeopleItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getSocialBlocksResponsePeopleItemDisplayNameTierIndexMin = 0;
+export const getSocialBlocksResponsePeopleItemDisplayNameTierIndexMax = 1;
+
+export const getSocialBlocksResponsePeopleItemFollowerCountMin = 0;
+
+export const getSocialBlocksResponsePeopleItemFollowingCountMin = 0;
+
+export const getSocialBlocksResponseTotalMin = 0;
+
 
 
 export const GetSocialBlocksResponse = zod.object({
   "people": zod.array(zod.object({
-  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
-  "externalHandle": zod.string().max(getSocialBlocksResponsePeopleItemExternalHandleMax).nullish(),
   "username": zod.string(),
-  "displayName": zod.string().optional(),
-  "displayNameColor": zod.string().regex(getSocialBlocksResponsePeopleItemDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.int().min(getSocialBlocksResponsePeopleItemDisplayNameTierIndexMin).max(getSocialBlocksResponsePeopleItemDisplayNameTierIndexMax).optional(),
-  "followerCount": zod.int().min(getSocialBlocksResponsePeopleItemFollowerCountMin).optional(),
-  "followingCount": zod.int().min(getSocialBlocksResponsePeopleItemFollowingCountMin).optional(),
-  "sentCredits": zod.int().min(getSocialBlocksResponsePeopleItemSentCreditsMin).optional(),
-  "badges": zod.array(zod.object({
-  "id": zod.string(),
-  "earnedAt": zod.coerce.date()
-})).optional(),
-  "photoUrl": zod.string().nullish(),
-  "photoUrls": zod.array(zod.string()).max(getSocialBlocksResponsePeopleItemPhotoUrlsMax).optional(),
+  "displayName": zod.string(),
+  "photoUrl": zod.string().nullable(),
+  "photoUrls": zod.array(zod.string()).max(getSocialBlocksResponsePeopleItemPhotoUrlsMax),
   "photoReviews": zod.array(zod.object({
   "photoUrl": zod.string(),
   "status": zod.enum(['pending', 'approved', 'rejected', 'flagged'])
@@ -3536,264 +2154,36 @@ export const GetSocialBlocksResponse = zod.object({
   "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
   "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
 }),
-  "bio": zod.string(),
-  "country": zod.union([zod.string(),zod.null()]),
-  "interests": zod.array(zod.string()),
-  "race": zod.enum(['Human']).optional(),
-  "job": zod.union([zod.literal('Apprentice'),zod.literal('Squire'),zod.literal('Initiate'),zod.literal('Trapper'),zod.literal('Novice'),zod.literal('Acolyte'),zod.literal('Scoundrel'),zod.literal('Tinker'),zod.literal(null)]).nullish(),
-  "discoverable": zod.boolean(),
+  "race": zod.enum(['Human']),
+  "job": zod.union([zod.literal('Apprentice'),zod.literal('Squire'),zod.literal('Initiate'),zod.literal('Trapper'),zod.literal('Novice'),zod.literal('Acolyte'),zod.literal('Scoundrel'),zod.literal('Tinker'),zod.literal(null)]).nullable(),
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
-  "receivedCredits": zod.int(),
-  "badgeId": zod.union([zod.string(),zod.null()]),
-  "badgeName": zod.string().nullable(),
-  "badgeImage": zod.string().nullable(),
-  "passport": zod.object({
-  "platforms": zod.array(zod.object({
-  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
-  "label": zod.string(),
-  "color": zod.string().regex(getSocialBlocksResponsePeopleItemPassportPlatformsItemColorRegExp)
+  "frameId": zod.string(),
+  "displayNameColor": zod.string().regex(getSocialBlocksResponsePeopleItemDisplayNameColorRegExp),
+  "displayNameTierIndex": zod.int().min(getSocialBlocksResponsePeopleItemDisplayNameTierIndexMin).max(getSocialBlocksResponsePeopleItemDisplayNameTierIndexMax),
+  "hasNameShimmer": zod.boolean(),
+  "followerCount": zod.int().min(getSocialBlocksResponsePeopleItemFollowerCountMin).optional(),
+  "followingCount": zod.int().min(getSocialBlocksResponsePeopleItemFollowingCountMin).optional()
 })),
-  "verified": zod.boolean(),
-  "foundingLeague": zod.boolean()
-}).optional()
-})),
-  "total": zod.int()
+  "total": zod.int().min(getSocialBlocksResponseTotalMin)
 })
 
-
-export const ClaimSocialDailyRewardResponse = zod.object({
-  "balance": zod.int(),
-  "earned": zod.int(),
-  "received": zod.int(),
-  "sent": zod.int(),
-  "canClaimDaily": zod.boolean(),
-  "dailyReward": zod.int(),
-  "unlimited": zod.boolean().describe('True only for the development-preview owner account; does not alter the stored wallet balance.')
-})
-
-
-export const sendSocialGiftBodyQuantityMax = 1314;
-
-
-
-export const SendSocialGiftBody = zod.object({
-  "testMode": zod.boolean().optional().describe('Expected test-coin mode; cannot grant access.'),
-  "recipient": zod.string(),
-  "giftId": zod.string(),
-  "roomId": zod.string().optional(),
-  "streamId": zod.string().optional(),
-  "quantity": zod.int().min(1).max(sendSocialGiftBodyQuantityMax).optional(),
-  "useGiftBagOnly": zod.boolean().optional().describe('Do not charge for missing units; reject if held inventory is insufficient.'),
-  "idempotencyKey": zod.uuid()
-})
-
-export const SendSocialGiftResponse = zod.object({
-  "balance": zod.int(),
-  "earned": zod.int(),
-  "received": zod.int(),
-  "sent": zod.int(),
-  "canClaimDaily": zod.boolean(),
-  "dailyReward": zod.int(),
-  "unlimited": zod.boolean().describe('True only for the development-preview owner account; does not alter the stored wallet balance.')
-})
-
-
-export const GetRoomGiftEventsParams = zod.object({
-  "roomId": zod.coerce.string()
-})
-
-export const GetRoomGiftEventsQueryParams = zod.object({
-  "after": zod.coerce.string().optional().describe('Opaque cursor returned by the previous page'),
-  "since": zod.date().optional().describe('Return gift events from this time, in FIFO pages')
-})
-
-export const getRoomGiftEventsResponseEventsItemQuantityMax = 1314;
-
-export const getRoomGiftEventsResponseEventsItemSenderNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-export const getRoomGiftEventsResponseEventsItemSenderNameTierIndexMin = 0;
-export const getRoomGiftEventsResponseEventsItemSenderNameTierIndexMax = 100;
-
-export const getRoomGiftEventsResponseEventsItemRecipientNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-export const getRoomGiftEventsResponseEventsItemRecipientNameTierIndexMin = 0;
-export const getRoomGiftEventsResponseEventsItemRecipientNameTierIndexMax = 100;
-
-export const getRoomGiftEventsResponseEventsItemSenderPassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-export const getRoomGiftEventsResponseEventsItemRecipientPassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-
-
-export const GetRoomGiftEventsResponse = zod.object({
-  "events": zod.array(zod.object({
-  "id": zod.string(),
-  "giftId": zod.string(),
-  "giftName": zod.string(),
-  "quantity": zod.int().min(1).max(getRoomGiftEventsResponseEventsItemQuantityMax),
-  "senderUsername": zod.string(),
-  "recipientUsername": zod.string(),
-  "senderName": zod.string(),
-  "recipientName": zod.string(),
-  "senderNameColor": zod.string().regex(getRoomGiftEventsResponseEventsItemSenderNameColorRegExp).optional(),
-  "senderNameTierIndex": zod.int().min(getRoomGiftEventsResponseEventsItemSenderNameTierIndexMin).max(getRoomGiftEventsResponseEventsItemSenderNameTierIndexMax).optional(),
-  "recipientNameColor": zod.string().regex(getRoomGiftEventsResponseEventsItemRecipientNameColorRegExp).optional(),
-  "recipientNameTierIndex": zod.int().min(getRoomGiftEventsResponseEventsItemRecipientNameTierIndexMin).max(getRoomGiftEventsResponseEventsItemRecipientNameTierIndexMax).optional(),
-  "senderBadgeId": zod.string().nullable(),
-  "recipientBadgeId": zod.string().nullable(),
-  "senderBadgeName": zod.string().nullable(),
-  "recipientBadgeName": zod.string().nullable(),
-  "senderBadgeImage": zod.string().nullable(),
-  "recipientBadgeImage": zod.string().nullable(),
-  "senderPassport": zod.object({
-  "platforms": zod.array(zod.object({
-  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
-  "label": zod.string(),
-  "color": zod.string().regex(getRoomGiftEventsResponseEventsItemSenderPassportPlatformsItemColorRegExp)
-})),
-  "verified": zod.boolean(),
-  "foundingLeague": zod.boolean()
-}).optional(),
-  "recipientPassport": zod.object({
-  "platforms": zod.array(zod.object({
-  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
-  "label": zod.string(),
-  "color": zod.string().regex(getRoomGiftEventsResponseEventsItemRecipientPassportPlatformsItemColorRegExp)
-})),
-  "verified": zod.boolean(),
-  "foundingLeague": zod.boolean()
-}).optional(),
-  "createdAt": zod.coerce.date()
-})),
-  "nextCursor": zod.string().nullable(),
-  "hasMore": zod.boolean()
-})
-
-
-export const PurchaseSocialProductBody = zod.object({
-  "testMode": zod.boolean().optional().describe('Expected test-coin mode; cannot grant access.'),
-  "itemId": zod.string(),
-  "idempotencyKey": zod.uuid()
-})
-
-export const PurchaseSocialProductResponse = zod.object({
-  "balance": zod.int(),
-  "earned": zod.int(),
-  "received": zod.int(),
-  "sent": zod.int(),
-  "canClaimDaily": zod.boolean(),
-  "dailyReward": zod.int(),
-  "unlimited": zod.boolean().describe('True only for the development-preview owner account; does not alter the stored wallet balance.')
-})
-
-
-export const GetSocialLedgerResponse = zod.object({
-  "transactions": zod.array(zod.object({
-  "id": zod.string(),
-  "createdAt": zod.coerce.date(),
-  "delta": zod.int(),
-  "kind": zod.string(),
-  "description": zod.string(),
-  "peer": zod.union([zod.string(),zod.null()])
-}))
-})
-
-
-export const getSocialLeaderboardResponsePeopleItemExternalHandleMax = 64;
-
-export const getSocialLeaderboardResponsePeopleItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-export const getSocialLeaderboardResponsePeopleItemDisplayNameTierIndexMin = 0;
-export const getSocialLeaderboardResponsePeopleItemDisplayNameTierIndexMax = 100;
-
-export const getSocialLeaderboardResponsePeopleItemFollowerCountMin = 0;
-
-export const getSocialLeaderboardResponsePeopleItemFollowingCountMin = 0;
-
-export const getSocialLeaderboardResponsePeopleItemSentCreditsMin = 0;
-
-export const getSocialLeaderboardResponsePeopleItemPhotoUrlsMax = 4;
-
-export const getSocialLeaderboardResponsePeopleItemIdentityEmojiIdMax = 100;
-
-export const getSocialLeaderboardResponsePeopleItemIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
-export const getSocialLeaderboardResponsePeopleItemIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
-export const getSocialLeaderboardResponsePeopleItemPassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-
-
-export const GetSocialLeaderboardResponse = zod.object({
-  "people": zod.array(zod.object({
-  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
-  "externalHandle": zod.string().max(getSocialLeaderboardResponsePeopleItemExternalHandleMax).nullish(),
-  "username": zod.string(),
-  "displayName": zod.string().optional(),
-  "displayNameColor": zod.string().regex(getSocialLeaderboardResponsePeopleItemDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.int().min(getSocialLeaderboardResponsePeopleItemDisplayNameTierIndexMin).max(getSocialLeaderboardResponsePeopleItemDisplayNameTierIndexMax).optional(),
-  "followerCount": zod.int().min(getSocialLeaderboardResponsePeopleItemFollowerCountMin).optional(),
-  "followingCount": zod.int().min(getSocialLeaderboardResponsePeopleItemFollowingCountMin).optional(),
-  "sentCredits": zod.int().min(getSocialLeaderboardResponsePeopleItemSentCreditsMin).optional(),
-  "badges": zod.array(zod.object({
-  "id": zod.string(),
-  "earnedAt": zod.coerce.date()
-})).optional(),
-  "photoUrl": zod.string().nullish(),
-  "photoUrls": zod.array(zod.string()).max(getSocialLeaderboardResponsePeopleItemPhotoUrlsMax).optional(),
-  "photoReviews": zod.array(zod.object({
-  "photoUrl": zod.string(),
-  "status": zod.enum(['pending', 'approved', 'rejected', 'flagged'])
-})).optional(),
-  "identity": zod.object({
-  "emojiId": zod.string().min(1).max(getSocialLeaderboardResponsePeopleItemIdentityEmojiIdMax),
-  "gender": zod.enum(['Male', 'Female']),
-  "color": zod.string().regex(getSocialLeaderboardResponsePeopleItemIdentityColorRegExp),
-  "hairColor": zod.string().regex(getSocialLeaderboardResponsePeopleItemIdentityHairColorRegExp),
-  "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
-  "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
-}),
-  "bio": zod.string(),
-  "country": zod.union([zod.string(),zod.null()]),
-  "interests": zod.array(zod.string()),
-  "race": zod.enum(['Human']).optional(),
-  "job": zod.union([zod.literal('Apprentice'),zod.literal('Squire'),zod.literal('Initiate'),zod.literal('Trapper'),zod.literal('Novice'),zod.literal('Acolyte'),zod.literal('Scoundrel'),zod.literal('Tinker'),zod.literal(null)]).nullish(),
-  "discoverable": zod.boolean(),
-  "favorite": zod.boolean(),
-  "blocked": zod.boolean(),
-  "receivedCredits": zod.int(),
-  "badgeId": zod.union([zod.string(),zod.null()]),
-  "badgeName": zod.string().nullable(),
-  "badgeImage": zod.string().nullable(),
-  "passport": zod.object({
-  "platforms": zod.array(zod.object({
-  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
-  "label": zod.string(),
-  "color": zod.string().regex(getSocialLeaderboardResponsePeopleItemPassportPlatformsItemColorRegExp)
-})),
-  "verified": zod.boolean(),
-  "foundingLeague": zod.boolean()
-}).optional()
-})),
-  "total": zod.int()
-})
-
-
-export const getSocialInboxResponseConversationsItemDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-export const getSocialInboxResponseConversationsItemDisplayNameTierIndexMin = 0;
-export const getSocialInboxResponseConversationsItemDisplayNameTierIndexMax = 100;
 
 export const getSocialInboxResponseConversationsItemIdentityEmojiIdMax = 100;
 
 export const getSocialInboxResponseConversationsItemIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getSocialInboxResponseConversationsItemIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+export const getSocialInboxResponseConversationsItemUnreadCountMin = 0;
+
 
 
 export const GetSocialInboxResponse = zod.object({
   "conversations": zod.array(zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
-  "displayNameColor": zod.string().regex(getSocialInboxResponseConversationsItemDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.int().min(getSocialInboxResponseConversationsItemDisplayNameTierIndexMin).max(getSocialInboxResponseConversationsItemDisplayNameTierIndexMax).optional(),
-  "badgeId": zod.string().nullable(),
-  "badgeName": zod.string().nullable(),
-  "badgeImage": zod.string().nullable(),
+  "displayNameColor": zod.string(),
+  "displayNameTierIndex": zod.int(),
   "photoUrl": zod.string().nullable(),
-  "lastMessageFromMe": zod.boolean(),
-  "lastUnreadAt": zod.coerce.date().nullable(),
   "identity": zod.object({
   "emojiId": zod.string().min(1).max(getSocialInboxResponseConversationsItemIdentityEmojiIdMax),
   "gender": zod.enum(['Male', 'Female']),
@@ -3802,9 +2192,11 @@ export const GetSocialInboxResponse = zod.object({
   "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
   "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
 }),
+  "lastMessageFromMe": zod.boolean(),
+  "lastUnreadAt": zod.coerce.date().nullable(),
   "lastMessage": zod.string(),
   "updatedAt": zod.coerce.date(),
-  "unreadCount": zod.int(),
+  "unreadCount": zod.int().min(getSocialInboxResponseConversationsItemUnreadCountMin),
   "blocked": zod.boolean()
 }))
 })
@@ -3818,44 +2210,28 @@ export const GetSocialConversationQueryParams = zod.object({
   "cursor": zod.uuid().optional()
 })
 
-export const getSocialConversationResponsePersonExternalHandleMax = 64;
-
-export const getSocialConversationResponsePersonDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
-export const getSocialConversationResponsePersonDisplayNameTierIndexMin = 0;
-export const getSocialConversationResponsePersonDisplayNameTierIndexMax = 100;
-
-export const getSocialConversationResponsePersonFollowerCountMin = 0;
-
-export const getSocialConversationResponsePersonFollowingCountMin = 0;
-
-export const getSocialConversationResponsePersonSentCreditsMin = 0;
-
-export const getSocialConversationResponsePersonPhotoUrlsMax = 4;
+export const getSocialConversationResponsePersonPhotoUrlsMax = 1;
 
 export const getSocialConversationResponsePersonIdentityEmojiIdMax = 100;
 
 export const getSocialConversationResponsePersonIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getSocialConversationResponsePersonIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
-export const getSocialConversationResponsePersonPassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getSocialConversationResponsePersonDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+export const getSocialConversationResponsePersonDisplayNameTierIndexMin = 0;
+export const getSocialConversationResponsePersonDisplayNameTierIndexMax = 1;
+
+export const getSocialConversationResponsePersonFollowerCountMin = 0;
+
+export const getSocialConversationResponsePersonFollowingCountMin = 0;
+
 
 
 export const GetSocialConversationResponse = zod.object({
   "person": zod.object({
-  "externalPlatform": zod.union([zod.literal('LiveMe'),zod.literal('Bigo Live'),zod.literal('Tango Live'),zod.literal('TikTok'),zod.literal('Instagram Live'),zod.literal('Super Live'),zod.literal(null)]).nullish(),
-  "externalHandle": zod.string().max(getSocialConversationResponsePersonExternalHandleMax).nullish(),
   "username": zod.string(),
-  "displayName": zod.string().optional(),
-  "displayNameColor": zod.string().regex(getSocialConversationResponsePersonDisplayNameColorRegExp).optional(),
-  "displayNameTierIndex": zod.int().min(getSocialConversationResponsePersonDisplayNameTierIndexMin).max(getSocialConversationResponsePersonDisplayNameTierIndexMax).optional(),
-  "followerCount": zod.int().min(getSocialConversationResponsePersonFollowerCountMin).optional(),
-  "followingCount": zod.int().min(getSocialConversationResponsePersonFollowingCountMin).optional(),
-  "sentCredits": zod.int().min(getSocialConversationResponsePersonSentCreditsMin).optional(),
-  "badges": zod.array(zod.object({
-  "id": zod.string(),
-  "earnedAt": zod.coerce.date()
-})).optional(),
-  "photoUrl": zod.string().nullish(),
-  "photoUrls": zod.array(zod.string()).max(getSocialConversationResponsePersonPhotoUrlsMax).optional(),
+  "displayName": zod.string(),
+  "photoUrl": zod.string().nullable(),
+  "photoUrls": zod.array(zod.string()).max(getSocialConversationResponsePersonPhotoUrlsMax),
   "photoReviews": zod.array(zod.object({
   "photoUrl": zod.string(),
   "status": zod.enum(['pending', 'approved', 'rejected', 'flagged'])
@@ -3868,27 +2244,16 @@ export const GetSocialConversationResponse = zod.object({
   "portraitId": zod.string().nullish().describe('Omitted preserves old artwork; null clears it on explicit manual identity edits'),
   "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
 }),
-  "bio": zod.string(),
-  "country": zod.union([zod.string(),zod.null()]),
-  "interests": zod.array(zod.string()),
-  "race": zod.enum(['Human']).optional(),
-  "job": zod.union([zod.literal('Apprentice'),zod.literal('Squire'),zod.literal('Initiate'),zod.literal('Trapper'),zod.literal('Novice'),zod.literal('Acolyte'),zod.literal('Scoundrel'),zod.literal('Tinker'),zod.literal(null)]).nullish(),
-  "discoverable": zod.boolean(),
+  "race": zod.enum(['Human']),
+  "job": zod.union([zod.literal('Apprentice'),zod.literal('Squire'),zod.literal('Initiate'),zod.literal('Trapper'),zod.literal('Novice'),zod.literal('Acolyte'),zod.literal('Scoundrel'),zod.literal('Tinker'),zod.literal(null)]).nullable(),
   "favorite": zod.boolean(),
   "blocked": zod.boolean(),
-  "receivedCredits": zod.int(),
-  "badgeId": zod.union([zod.string(),zod.null()]),
-  "badgeName": zod.string().nullable(),
-  "badgeImage": zod.string().nullable(),
-  "passport": zod.object({
-  "platforms": zod.array(zod.object({
-  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
-  "label": zod.string(),
-  "color": zod.string().regex(getSocialConversationResponsePersonPassportPlatformsItemColorRegExp)
-})),
-  "verified": zod.boolean(),
-  "foundingLeague": zod.boolean()
-}).optional()
+  "frameId": zod.string(),
+  "displayNameColor": zod.string().regex(getSocialConversationResponsePersonDisplayNameColorRegExp),
+  "displayNameTierIndex": zod.int().min(getSocialConversationResponsePersonDisplayNameTierIndexMin).max(getSocialConversationResponsePersonDisplayNameTierIndexMax),
+  "hasNameShimmer": zod.boolean(),
+  "followerCount": zod.int().min(getSocialConversationResponsePersonFollowerCountMin).optional(),
+  "followingCount": zod.int().min(getSocialConversationResponsePersonFollowingCountMin).optional()
 }),
   "messages": zod.array(zod.object({
   "id": zod.string(),
@@ -3896,9 +2261,9 @@ export const GetSocialConversationResponse = zod.object({
   "recipient": zod.string(),
   "body": zod.string(),
   "createdAt": zod.coerce.date(),
-  "readAt": zod.union([zod.coerce.date(),zod.null()])
+  "readAt": zod.coerce.date().nullable()
 })),
-  "nextCursor": zod.union([zod.string(),zod.null()]),
+  "nextCursor": zod.string().nullable(),
   "blocked": zod.boolean()
 })
 
@@ -3922,7 +2287,7 @@ export const SendSocialMessageResponse = zod.object({
   "recipient": zod.string(),
   "body": zod.string(),
   "createdAt": zod.coerce.date(),
-  "readAt": zod.union([zod.coerce.date(),zod.null()])
+  "readAt": zod.coerce.date().nullable()
 })
 
 
@@ -4050,11 +2415,9 @@ export const GetEmojiImageParams = zod.object({
 export const GetEmojiImageResponse = zod.unknown()
 
 
-export const createChessRoomResponsePlayersWhiteGiftingLevelMin = 0;
-export const createChessRoomResponsePlayersWhiteGiftingLevelMax = 100;
+export const createChessRoomResponsePlayersWhitePhotoUrlsMax = 1;
 
-export const createChessRoomResponsePlayersBlackOneGiftingLevelMin = 0;
-export const createChessRoomResponsePlayersBlackOneGiftingLevelMax = 100;
+export const createChessRoomResponsePlayersBlackOnePhotoUrlsMax = 1;
 
 
 
@@ -4067,16 +2430,14 @@ export const CreateChessRoomResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
-  "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
-  "giftingLevel": zod.int().min(createChessRoomResponsePlayersWhiteGiftingLevelMin).max(createChessRoomResponsePlayersWhiteGiftingLevelMax).optional()
+  "photoUrls": zod.array(zod.string()).max(createChessRoomResponsePlayersWhitePhotoUrlsMax).optional().describe('Approved saved profile photos, main photo first.')
 }),
   "black": zod.union([zod.object({
   "accountId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
-  "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
-  "giftingLevel": zod.int().min(createChessRoomResponsePlayersBlackOneGiftingLevelMin).max(createChessRoomResponsePlayersBlackOneGiftingLevelMax).optional()
+  "photoUrls": zod.array(zod.string()).max(createChessRoomResponsePlayersBlackOnePhotoUrlsMax).optional().describe('Approved saved profile photos, main photo first.')
 }),zod.null()])
 }),
   "turn": zod.enum(['w', 'b']),
@@ -4098,11 +2459,9 @@ export const GetChessRoomParams = zod.object({
   "chessRoomId": zod.coerce.string()
 })
 
-export const getChessRoomResponsePlayersWhiteGiftingLevelMin = 0;
-export const getChessRoomResponsePlayersWhiteGiftingLevelMax = 100;
+export const getChessRoomResponsePlayersWhitePhotoUrlsMax = 1;
 
-export const getChessRoomResponsePlayersBlackOneGiftingLevelMin = 0;
-export const getChessRoomResponsePlayersBlackOneGiftingLevelMax = 100;
+export const getChessRoomResponsePlayersBlackOnePhotoUrlsMax = 1;
 
 
 
@@ -4115,16 +2474,14 @@ export const GetChessRoomResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
-  "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
-  "giftingLevel": zod.int().min(getChessRoomResponsePlayersWhiteGiftingLevelMin).max(getChessRoomResponsePlayersWhiteGiftingLevelMax).optional()
+  "photoUrls": zod.array(zod.string()).max(getChessRoomResponsePlayersWhitePhotoUrlsMax).optional().describe('Approved saved profile photos, main photo first.')
 }),
   "black": zod.union([zod.object({
   "accountId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
-  "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
-  "giftingLevel": zod.int().min(getChessRoomResponsePlayersBlackOneGiftingLevelMin).max(getChessRoomResponsePlayersBlackOneGiftingLevelMax).optional()
+  "photoUrls": zod.array(zod.string()).max(getChessRoomResponsePlayersBlackOnePhotoUrlsMax).optional().describe('Approved saved profile photos, main photo first.')
 }),zod.null()])
 }),
   "turn": zod.enum(['w', 'b']),
@@ -4146,11 +2503,9 @@ export const JoinChessRoomParams = zod.object({
   "chessRoomId": zod.coerce.string()
 })
 
-export const joinChessRoomResponsePlayersWhiteGiftingLevelMin = 0;
-export const joinChessRoomResponsePlayersWhiteGiftingLevelMax = 100;
+export const joinChessRoomResponsePlayersWhitePhotoUrlsMax = 1;
 
-export const joinChessRoomResponsePlayersBlackOneGiftingLevelMin = 0;
-export const joinChessRoomResponsePlayersBlackOneGiftingLevelMax = 100;
+export const joinChessRoomResponsePlayersBlackOnePhotoUrlsMax = 1;
 
 
 
@@ -4163,16 +2518,14 @@ export const JoinChessRoomResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
-  "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
-  "giftingLevel": zod.int().min(joinChessRoomResponsePlayersWhiteGiftingLevelMin).max(joinChessRoomResponsePlayersWhiteGiftingLevelMax).optional()
+  "photoUrls": zod.array(zod.string()).max(joinChessRoomResponsePlayersWhitePhotoUrlsMax).optional().describe('Approved saved profile photos, main photo first.')
 }),
   "black": zod.union([zod.object({
   "accountId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
-  "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
-  "giftingLevel": zod.int().min(joinChessRoomResponsePlayersBlackOneGiftingLevelMin).max(joinChessRoomResponsePlayersBlackOneGiftingLevelMax).optional()
+  "photoUrls": zod.array(zod.string()).max(joinChessRoomResponsePlayersBlackOnePhotoUrlsMax).optional().describe('Approved saved profile photos, main photo first.')
 }),zod.null()])
 }),
   "turn": zod.enum(['w', 'b']),
@@ -4206,11 +2559,9 @@ export const ActChessRoomBody = zod.object({
   "promotion": zod.enum(['q', 'r', 'b', 'n']).optional()
 })
 
-export const actChessRoomResponsePlayersWhiteGiftingLevelMin = 0;
-export const actChessRoomResponsePlayersWhiteGiftingLevelMax = 100;
+export const actChessRoomResponsePlayersWhitePhotoUrlsMax = 1;
 
-export const actChessRoomResponsePlayersBlackOneGiftingLevelMin = 0;
-export const actChessRoomResponsePlayersBlackOneGiftingLevelMax = 100;
+export const actChessRoomResponsePlayersBlackOnePhotoUrlsMax = 1;
 
 
 
@@ -4223,16 +2574,14 @@ export const ActChessRoomResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
-  "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
-  "giftingLevel": zod.int().min(actChessRoomResponsePlayersWhiteGiftingLevelMin).max(actChessRoomResponsePlayersWhiteGiftingLevelMax).optional()
+  "photoUrls": zod.array(zod.string()).max(actChessRoomResponsePlayersWhitePhotoUrlsMax).optional().describe('Approved saved profile photos, main photo first.')
 }),
   "black": zod.union([zod.object({
   "accountId": zod.string(),
   "username": zod.string(),
   "displayName": zod.string(),
   "photoUrl": zod.string().nullish(),
-  "photoUrls": zod.array(zod.string()).optional().describe('Approved saved profile photos, main photo first.'),
-  "giftingLevel": zod.int().min(actChessRoomResponsePlayersBlackOneGiftingLevelMin).max(actChessRoomResponsePlayersBlackOneGiftingLevelMax).optional()
+  "photoUrls": zod.array(zod.string()).max(actChessRoomResponsePlayersBlackOnePhotoUrlsMax).optional().describe('Approved saved profile photos, main photo first.')
 }),zod.null()])
 }),
   "turn": zod.enum(['w', 'b']),
@@ -4390,17 +2739,13 @@ export const getRoomMessagesResponseIdentityColorRegExp = new RegExp('^#[0-9a-fA
 export const getRoomMessagesResponseIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const getRoomMessagesResponseDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const getRoomMessagesResponseDisplayNameTierIndexMin = 0;
-export const getRoomMessagesResponseDisplayNameTierIndexMax = 100;
+export const getRoomMessagesResponseDisplayNameTierIndexMax = 1;
 
-export const getRoomMessagesResponsePassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const GetRoomMessagesResponseItem = zod.object({
   "botId": zod.union([zod.literal('ghost'),zod.literal('vampire'),zod.literal('wolf'),zod.literal('zombie'),zod.literal(null)]).nullish(),
   "botMessageType": zod.union([zod.literal('chatter'),zod.literal('moderation'),zod.literal('visit'),zod.literal(null)]).nullish(),
-  "badgeId": zod.string().nullish(),
-  "badgeName": zod.string().nullish(),
-  "badgeImage": zod.string().nullish(),
   "id": zod.uuid(),
   "roomId": zod.string(),
   "authorId": zod.uuid(),
@@ -4418,15 +2763,8 @@ export const GetRoomMessagesResponseItem = zod.object({
   "text": zod.string(),
   "displayNameColor": zod.string().regex(getRoomMessagesResponseDisplayNameColorRegExp).optional(),
   "displayNameTierIndex": zod.int().min(getRoomMessagesResponseDisplayNameTierIndexMin).max(getRoomMessagesResponseDisplayNameTierIndexMax).optional(),
-  "passport": zod.object({
-  "platforms": zod.array(zod.object({
-  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
-  "label": zod.string(),
-  "color": zod.string().regex(getRoomMessagesResponsePassportPlatformsItemColorRegExp)
-})),
-  "verified": zod.boolean(),
-  "foundingLeague": zod.boolean()
-}).optional(),
+  "frameId": zod.string().optional(),
+  "hasNameShimmer": zod.boolean().optional(),
   "createdAt": zod.coerce.date()
 })
 export const GetRoomMessagesResponse = zod.array(GetRoomMessagesResponseItem)
@@ -4458,9 +2796,8 @@ export const sendRoomMessageResponseMessageIdentityColorRegExp = new RegExp('^#[
 export const sendRoomMessageResponseMessageIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const sendRoomMessageResponseMessageDisplayNameColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const sendRoomMessageResponseMessageDisplayNameTierIndexMin = 0;
-export const sendRoomMessageResponseMessageDisplayNameTierIndexMax = 100;
+export const sendRoomMessageResponseMessageDisplayNameTierIndexMax = 1;
 
-export const sendRoomMessageResponseMessagePassportPlatformsItemColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 export const sendRoomMessageResponseProfilePhotoUrlsMax = 4;
 
 export const sendRoomMessageResponseProfileIdentityEmojiIdMax = 100;
@@ -4473,9 +2810,6 @@ export const SendRoomMessageResponse = zod.object({
   "message": zod.object({
   "botId": zod.union([zod.literal('ghost'),zod.literal('vampire'),zod.literal('wolf'),zod.literal('zombie'),zod.literal(null)]).nullish(),
   "botMessageType": zod.union([zod.literal('chatter'),zod.literal('moderation'),zod.literal('visit'),zod.literal(null)]).nullish(),
-  "badgeId": zod.string().nullish(),
-  "badgeName": zod.string().nullish(),
-  "badgeImage": zod.string().nullish(),
   "id": zod.uuid(),
   "roomId": zod.string(),
   "authorId": zod.uuid(),
@@ -4493,15 +2827,8 @@ export const SendRoomMessageResponse = zod.object({
   "text": zod.string(),
   "displayNameColor": zod.string().regex(sendRoomMessageResponseMessageDisplayNameColorRegExp).optional(),
   "displayNameTierIndex": zod.int().min(sendRoomMessageResponseMessageDisplayNameTierIndexMin).max(sendRoomMessageResponseMessageDisplayNameTierIndexMax).optional(),
-  "passport": zod.object({
-  "platforms": zod.array(zod.object({
-  "id": zod.enum(['liveme', 'tiktok', 'bigo', 'instagram', 'facebook', 'youtube', 'twitch']),
-  "label": zod.string(),
-  "color": zod.string().regex(sendRoomMessageResponseMessagePassportPlatformsItemColorRegExp)
-})),
-  "verified": zod.boolean(),
-  "foundingLeague": zod.boolean()
-}).optional(),
+  "frameId": zod.string().optional(),
+  "hasNameShimmer": zod.boolean().optional(),
   "createdAt": zod.coerce.date()
 }),
   "profile": zod.object({

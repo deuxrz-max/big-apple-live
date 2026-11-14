@@ -41,47 +41,15 @@ import type {
   ChatReportReviewInput,
   ChessActionInput,
   ChessRoomState,
-  CoinTesterDesignation,
-  CoinTesterList,
   ComedyVideoActionInput,
   ComedyVideoCatalogResponse,
   ConnectChessAudio200,
-  DeveloperContentSyncStatus,
-  DeveloperGiftMotion,
-  DeveloperGiftMotionList,
-  DeveloperGiftMotionUploadInput,
   EmojiOption,
-  EntranceEffectEquipInput,
-  EntranceEffectEquipResponse,
-  EntranceEffectPurchaseInput,
-  EntranceEffectPurchaseResponse,
-  EntranceEffectSettings,
-  EntranceEffectSettingsInput,
-  EntranceEffectShop,
-  EquipMyBadgeInput,
-  EquippedBadgeState,
   ErrorResponse,
   FavoriteGalleryEntry,
   FavoriteRoomResult,
-  GetRoomGiftEvents200,
-  GetRoomGiftEventsParams,
   GetSocialConversationParams,
   GetSocialPeopleParams,
-  GiftStudioActivationInput,
-  GiftStudioActiveMediaResponse,
-  GiftStudioAssignInput,
-  GiftStudioCatalogGift,
-  GiftStudioCatalogUpdate,
-  GiftStudioDeleteResponse,
-  GiftStudioGiftId,
-  GiftStudioLibrary,
-  GiftStudioProcessInput,
-  GiftStudioProcessedSaveInput,
-  GiftStudioRenameInput,
-  GiftStudioUploadInput,
-  GiftStudioVersion,
-  GifterLeaderboard,
-  HangoutRewardSettings,
   HealthStatus,
   InvalidInputResponse,
   LiveStreamChatInput,
@@ -97,17 +65,14 @@ import type {
   ModeratorBotChatterSettings,
   ModeratorBotFlag,
   ModeratorBotSettings,
-  NameColorTestTotalInput,
-  NameColorTestTotalResponse,
   Participant,
   PhotoReviewEntry,
-  PinkCardEntry,
-  PinkCardPreference,
-  PinkCardReward,
   PkBattleMediaSession,
   PkBattleState,
   PkLeaderboard,
   PkSearchCancellation,
+  ProfileCosmeticEquipInput,
+  ProfileCosmeticsStore,
   ProfileEnvelope,
   ProfileInput,
   ProfilePhotoResult,
@@ -118,26 +83,16 @@ import type {
   RoomSession,
   RoomState,
   SessionUnauthorizedResponse,
-  SetHangoutRewardIntervalInput,
   SocialAction,
   SocialConversation,
-  SocialGiftCatalogId,
-  SocialGiftInput,
   SocialInbox,
-  SocialLedger,
   SocialMe,
   SocialMessage,
   SocialMessageInput,
   SocialPeople,
   SocialPerson,
   SocialProfileInput,
-  SocialPurchaseInput,
   SocialRelationshipInput,
-  SocialWallet,
-  TestCoinLaunchConfirmation,
-  TestCoinLaunchPreview,
-  TestCoinLaunchResult,
-  TestCoinLaunchStatus,
   UniversityActionResult,
   UniversityAudioActionInput,
   UniversityAudioSignalInput,
@@ -181,278 +136,6 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
-
-export const getGetPinkCardRewardUrl = () => {
-
-
-
-
-  return `/api/rewards/pink-card`
-}
-
-export const getPinkCardReward = async ( options?: Parameters<typeof customFetch>[1]): Promise<PinkCardReward> => {
-
-  return customFetch<PinkCardReward>(getGetPinkCardRewardUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetPinkCardRewardQueryKey = () => {
-    return [
-    `/api/rewards/pink-card`
-    ] as const;
-    }
-
-
-export const getGetPinkCardRewardQueryOptions = <TData = Awaited<ReturnType<typeof getPinkCardReward>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPinkCardReward>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetPinkCardRewardQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPinkCardReward>>> = ({ signal }) => getPinkCardReward({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPinkCardReward>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetPinkCardRewardQueryResult = NonNullable<Awaited<ReturnType<typeof getPinkCardReward>>>
-export type GetPinkCardRewardQueryError = ErrorType<unknown>
-
-
-export function useGetPinkCardReward<TData = Awaited<ReturnType<typeof getPinkCardReward>>, TError = ErrorType<unknown>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPinkCardReward>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getPinkCardReward>>,
-          TError,
-          Awaited<ReturnType<typeof getPinkCardReward>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetPinkCardReward<TData = Awaited<ReturnType<typeof getPinkCardReward>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPinkCardReward>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getPinkCardReward>>,
-          TError,
-          Awaited<ReturnType<typeof getPinkCardReward>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetPinkCardReward<TData = Awaited<ReturnType<typeof getPinkCardReward>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPinkCardReward>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useGetPinkCardReward<TData = Awaited<ReturnType<typeof getPinkCardReward>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPinkCardReward>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetPinkCardRewardQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getGetPinkCardEntryUrl = () => {
-
-
-
-
-  return `/api/social/pink-card/entry`
-}
-
-export const getPinkCardEntry = async ( options?: Parameters<typeof customFetch>[1]): Promise<PinkCardEntry> => {
-
-  return customFetch<PinkCardEntry>(getGetPinkCardEntryUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetPinkCardEntryQueryKey = () => {
-    return [
-    `/api/social/pink-card/entry`
-    ] as const;
-    }
-
-
-export const getGetPinkCardEntryQueryOptions = <TData = Awaited<ReturnType<typeof getPinkCardEntry>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPinkCardEntry>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetPinkCardEntryQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPinkCardEntry>>> = ({ signal }) => getPinkCardEntry({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPinkCardEntry>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetPinkCardEntryQueryResult = NonNullable<Awaited<ReturnType<typeof getPinkCardEntry>>>
-export type GetPinkCardEntryQueryError = ErrorType<unknown>
-
-
-export function useGetPinkCardEntry<TData = Awaited<ReturnType<typeof getPinkCardEntry>>, TError = ErrorType<unknown>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPinkCardEntry>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getPinkCardEntry>>,
-          TError,
-          Awaited<ReturnType<typeof getPinkCardEntry>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetPinkCardEntry<TData = Awaited<ReturnType<typeof getPinkCardEntry>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPinkCardEntry>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getPinkCardEntry>>,
-          TError,
-          Awaited<ReturnType<typeof getPinkCardEntry>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetPinkCardEntry<TData = Awaited<ReturnType<typeof getPinkCardEntry>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPinkCardEntry>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useGetPinkCardEntry<TData = Awaited<ReturnType<typeof getPinkCardEntry>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPinkCardEntry>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetPinkCardEntryQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getUpdatePinkCardEntryUrl = () => {
-
-
-
-
-  return `/api/social/pink-card/entry`
-}
-
-export const updatePinkCardEntry = async (pinkCardPreference: PinkCardPreference, options?: Parameters<typeof customFetch>[1]): Promise<PinkCardEntry> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<PinkCardEntry>(getUpdatePinkCardEntryUrl(),
-  {
-    ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(pinkCardPreference)
-  }
-);}
-
-
-
-
-
-export const getUpdatePinkCardEntryMutationKey = () => ['updatePinkCardEntry'] as const;
-
-export const getUpdatePinkCardEntryMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePinkCardEntry>>, TError,UpdatePinkCardEntryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof updatePinkCardEntry>>, TError,UpdatePinkCardEntryMutationVariables, TContext> => {
-
-const mutationKey = getUpdatePinkCardEntryMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePinkCardEntry>>, UpdatePinkCardEntryMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  updatePinkCardEntry(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdatePinkCardEntryMutationResult = NonNullable<Awaited<ReturnType<typeof updatePinkCardEntry>>>
-    export type UpdatePinkCardEntryMutationBody = BodyType<PinkCardPreference>
-    export type UpdatePinkCardEntryMutationError = ErrorType<unknown>
-    export type UpdatePinkCardEntryMutationVariables = {data: BodyType<PinkCardPreference>}
-
-    export const useUpdatePinkCardEntry = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePinkCardEntry>>, TError,UpdatePinkCardEntryMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updatePinkCardEntry>>,
-        TError,
-        UpdatePinkCardEntryMutationVariables,
-        TContext
-      > => {
-      return useMutation(getUpdatePinkCardEntryMutationOptions(options), queryClient);
-    }
 
 export const getGetModeratorBotSettingsUrl = () => {
 
@@ -5041,7 +4724,7 @@ export const getGetSocialMeQueryKey = () => {
     }
 
 
-export const getGetSocialMeQueryOptions = <TData = Awaited<ReturnType<typeof getSocialMe>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialMe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getGetSocialMeQueryOptions = <TData = Awaited<ReturnType<typeof getSocialMe>>, TError = ErrorType<SessionUnauthorizedResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialMe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -5060,10 +4743,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetSocialMeQueryResult = NonNullable<Awaited<ReturnType<typeof getSocialMe>>>
-export type GetSocialMeQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
+export type GetSocialMeQueryError = ErrorType<SessionUnauthorizedResponse>
 
 
-export function useGetSocialMe<TData = Awaited<ReturnType<typeof getSocialMe>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialMe<TData = Awaited<ReturnType<typeof getSocialMe>>, TError = ErrorType<SessionUnauthorizedResponse>>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialMe>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getSocialMe>>,
@@ -5073,7 +4756,7 @@ export function useGetSocialMe<TData = Awaited<ReturnType<typeof getSocialMe>>, 
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSocialMe<TData = Awaited<ReturnType<typeof getSocialMe>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialMe<TData = Awaited<ReturnType<typeof getSocialMe>>, TError = ErrorType<SessionUnauthorizedResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialMe>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getSocialMe>>,
@@ -5083,12 +4766,12 @@ export function useGetSocialMe<TData = Awaited<ReturnType<typeof getSocialMe>>, 
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSocialMe<TData = Awaited<ReturnType<typeof getSocialMe>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialMe<TData = Awaited<ReturnType<typeof getSocialMe>>, TError = ErrorType<SessionUnauthorizedResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialMe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetSocialMe<TData = Awaited<ReturnType<typeof getSocialMe>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialMe<TData = Awaited<ReturnType<typeof getSocialMe>>, TError = ErrorType<SessionUnauthorizedResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialMe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -5145,7 +4828,7 @@ return customFetch<SocialPerson>(getSaveSocialProfileUrl(),
 
 export const getSaveSocialProfileMutationKey = () => ['saveSocialProfile'] as const;
 
-export const getSaveSocialProfileMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+export const getSaveSocialProfileMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveSocialProfile>>, TError,SaveSocialProfileMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof saveSocialProfile>>, TError,SaveSocialProfileMutationVariables, TContext> => {
 
@@ -5174,10 +4857,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SaveSocialProfileMutationResult = NonNullable<Awaited<ReturnType<typeof saveSocialProfile>>>
     export type SaveSocialProfileMutationBody = BodyType<SocialProfileInput>
-    export type SaveSocialProfileMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
+    export type SaveSocialProfileMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse>
     export type SaveSocialProfileMutationVariables = {data: BodyType<SocialProfileInput>}
 
-    export const useSaveSocialProfile = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+    export const useSaveSocialProfile = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveSocialProfile>>, TError,SaveSocialProfileMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof saveSocialProfile>>,
@@ -5188,17 +4871,17 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getSaveSocialProfileMutationOptions(options), queryClient);
     }
 
-export const getGetGifterLeaderboardUrl = () => {
+export const getGetProfileCosmeticsStoreUrl = () => {
 
 
 
 
-  return `/api/social/gifters/leaderboard`
+  return `/api/social/cosmetics/store`
 }
 
-export const getGifterLeaderboard = async ( options?: Parameters<typeof customFetch>[1]): Promise<GifterLeaderboard> => {
+export const getProfileCosmeticsStore = async ( options?: Parameters<typeof customFetch>[1]): Promise<ProfileCosmeticsStore> => {
 
-  return customFetch<GifterLeaderboard>(getGetGifterLeaderboardUrl(),
+  return customFetch<ProfileCosmeticsStore>(getGetProfileCosmeticsStoreUrl(),
   {
     ...options,
     method: 'GET'
@@ -5211,66 +4894,66 @@ export const getGifterLeaderboard = async ( options?: Parameters<typeof customFe
 
 
 
-export const getGetGifterLeaderboardQueryKey = () => {
+export const getGetProfileCosmeticsStoreQueryKey = () => {
     return [
-    `/api/social/gifters/leaderboard`
+    `/api/social/cosmetics/store`
     ] as const;
     }
 
 
-export const getGetGifterLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getGifterLeaderboard>>, TError = ErrorType<SessionUnauthorizedResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGifterLeaderboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getGetProfileCosmeticsStoreQueryOptions = <TData = Awaited<ReturnType<typeof getProfileCosmeticsStore>>, TError = ErrorType<SessionUnauthorizedResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfileCosmeticsStore>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetGifterLeaderboardQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetProfileCosmeticsStoreQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGifterLeaderboard>>> = ({ signal }) => getGifterLeaderboard({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProfileCosmeticsStore>>> = ({ signal }) => getProfileCosmeticsStore({ signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGifterLeaderboard>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProfileCosmeticsStore>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetGifterLeaderboardQueryResult = NonNullable<Awaited<ReturnType<typeof getGifterLeaderboard>>>
-export type GetGifterLeaderboardQueryError = ErrorType<SessionUnauthorizedResponse>
+export type GetProfileCosmeticsStoreQueryResult = NonNullable<Awaited<ReturnType<typeof getProfileCosmeticsStore>>>
+export type GetProfileCosmeticsStoreQueryError = ErrorType<SessionUnauthorizedResponse>
 
 
-export function useGetGifterLeaderboard<TData = Awaited<ReturnType<typeof getGifterLeaderboard>>, TError = ErrorType<SessionUnauthorizedResponse>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGifterLeaderboard>>, TError, TData>> & Pick<
+export function useGetProfileCosmeticsStore<TData = Awaited<ReturnType<typeof getProfileCosmeticsStore>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfileCosmeticsStore>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getGifterLeaderboard>>,
+          Awaited<ReturnType<typeof getProfileCosmeticsStore>>,
           TError,
-          Awaited<ReturnType<typeof getGifterLeaderboard>>
+          Awaited<ReturnType<typeof getProfileCosmeticsStore>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetGifterLeaderboard<TData = Awaited<ReturnType<typeof getGifterLeaderboard>>, TError = ErrorType<SessionUnauthorizedResponse>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGifterLeaderboard>>, TError, TData>> & Pick<
+export function useGetProfileCosmeticsStore<TData = Awaited<ReturnType<typeof getProfileCosmeticsStore>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfileCosmeticsStore>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getGifterLeaderboard>>,
+          Awaited<ReturnType<typeof getProfileCosmeticsStore>>,
           TError,
-          Awaited<ReturnType<typeof getGifterLeaderboard>>
+          Awaited<ReturnType<typeof getProfileCosmeticsStore>>
         > , 'initialData'
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetGifterLeaderboard<TData = Awaited<ReturnType<typeof getGifterLeaderboard>>, TError = ErrorType<SessionUnauthorizedResponse>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGifterLeaderboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export function useGetProfileCosmeticsStore<TData = Awaited<ReturnType<typeof getProfileCosmeticsStore>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfileCosmeticsStore>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetGifterLeaderboard<TData = Awaited<ReturnType<typeof getGifterLeaderboard>>, TError = ErrorType<SessionUnauthorizedResponse>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGifterLeaderboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export function useGetProfileCosmeticsStore<TData = Awaited<ReturnType<typeof getProfileCosmeticsStore>>, TError = ErrorType<SessionUnauthorizedResponse>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProfileCosmeticsStore>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetGifterLeaderboardQueryOptions(options)
+  const queryOptions = getGetProfileCosmeticsStoreQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -5283,15 +4966,15 @@ export function useGetGifterLeaderboard<TData = Awaited<ReturnType<typeof getGif
 
 
 
-export const getSetMyNameColorTestTotalUrl = () => {
+export const getEquipProfileCosmeticUrl = () => {
 
 
 
 
-  return `/api/social/me/name-color-test-total`
+  return `/api/social/cosmetics/equip`
 }
 
-export const setMyNameColorTestTotal = async (nameColorTestTotalInput: NameColorTestTotalInput, options?: Parameters<typeof customFetch>[1]): Promise<NameColorTestTotalResponse> => {
+export const equipProfileCosmetic = async (profileCosmeticEquipInput: ProfileCosmeticEquipInput, options?: Parameters<typeof customFetch>[1]): Promise<ProfileCosmeticsStore> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -5307,12 +4990,12 @@ export const setMyNameColorTestTotal = async (nameColorTestTotalInput: NameColor
     }
     return headers;
   };
-return customFetch<NameColorTestTotalResponse>(getSetMyNameColorTestTotalUrl(),
+return customFetch<ProfileCosmeticsStore>(getEquipProfileCosmeticUrl(),
   {
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(nameColorTestTotalInput)
+    body: JSON.stringify(profileCosmeticEquipInput)
   }
 );}
 
@@ -5320,13 +5003,13 @@ return customFetch<NameColorTestTotalResponse>(getSetMyNameColorTestTotalUrl(),
 
 
 
-export const getSetMyNameColorTestTotalMutationKey = () => ['setMyNameColorTestTotal'] as const;
+export const getEquipProfileCosmeticMutationKey = () => ['equipProfileCosmetic'] as const;
 
-export const getSetMyNameColorTestTotalMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setMyNameColorTestTotal>>, TError,SetMyNameColorTestTotalMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof setMyNameColorTestTotal>>, TError,SetMyNameColorTestTotalMutationVariables, TContext> => {
+export const getEquipProfileCosmeticMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof equipProfileCosmetic>>, TError,EquipProfileCosmeticMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof equipProfileCosmetic>>, TError,EquipProfileCosmeticMutationVariables, TContext> => {
 
-const mutationKey = getSetMyNameColorTestTotalMutationKey();
+const mutationKey = getEquipProfileCosmeticMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -5336,10 +5019,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setMyNameColorTestTotal>>, SetMyNameColorTestTotalMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof equipProfileCosmetic>>, EquipProfileCosmeticMutationVariables> = (props) => {
           const {data} = props ?? {};
 
-          return  setMyNameColorTestTotal(data,requestOptions)
+          return  equipProfileCosmetic(data,requestOptions)
         }
 
 
@@ -5349,2665 +5032,21 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type SetMyNameColorTestTotalMutationResult = NonNullable<Awaited<ReturnType<typeof setMyNameColorTestTotal>>>
-    export type SetMyNameColorTestTotalMutationBody = BodyType<NameColorTestTotalInput>
-    export type SetMyNameColorTestTotalMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
-    export type SetMyNameColorTestTotalMutationVariables = {data: BodyType<NameColorTestTotalInput>}
+    export type EquipProfileCosmeticMutationResult = NonNullable<Awaited<ReturnType<typeof equipProfileCosmetic>>>
+    export type EquipProfileCosmeticMutationBody = BodyType<ProfileCosmeticEquipInput>
+    export type EquipProfileCosmeticMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
+    export type EquipProfileCosmeticMutationVariables = {data: BodyType<ProfileCosmeticEquipInput>}
 
-    export const useSetMyNameColorTestTotal = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setMyNameColorTestTotal>>, TError,SetMyNameColorTestTotalMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+    export const useEquipProfileCosmetic = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof equipProfileCosmetic>>, TError,EquipProfileCosmeticMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof setMyNameColorTestTotal>>,
+        Awaited<ReturnType<typeof equipProfileCosmetic>>,
         TError,
-        SetMyNameColorTestTotalMutationVariables,
+        EquipProfileCosmeticMutationVariables,
         TContext
       > => {
-      return useMutation(getSetMyNameColorTestTotalMutationOptions(options), queryClient);
+      return useMutation(getEquipProfileCosmeticMutationOptions(options), queryClient);
     }
-
-export const getUpdateMyEntranceEffectSettingsUrl = () => {
-
-
-
-
-  return `/api/social/me/entrance-effects`
-}
-
-export const updateMyEntranceEffectSettings = async (entranceEffectSettingsInput: EntranceEffectSettingsInput, options?: Parameters<typeof customFetch>[1]): Promise<EntranceEffectSettings> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<EntranceEffectSettings>(getUpdateMyEntranceEffectSettingsUrl(),
-  {
-    ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(entranceEffectSettingsInput)
-  }
-);}
-
-
-
-
-
-export const getUpdateMyEntranceEffectSettingsMutationKey = () => ['updateMyEntranceEffectSettings'] as const;
-
-export const getUpdateMyEntranceEffectSettingsMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMyEntranceEffectSettings>>, TError,UpdateMyEntranceEffectSettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateMyEntranceEffectSettings>>, TError,UpdateMyEntranceEffectSettingsMutationVariables, TContext> => {
-
-const mutationKey = getUpdateMyEntranceEffectSettingsMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMyEntranceEffectSettings>>, UpdateMyEntranceEffectSettingsMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  updateMyEntranceEffectSettings(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateMyEntranceEffectSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateMyEntranceEffectSettings>>>
-    export type UpdateMyEntranceEffectSettingsMutationBody = BodyType<EntranceEffectSettingsInput>
-    export type UpdateMyEntranceEffectSettingsMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
-    export type UpdateMyEntranceEffectSettingsMutationVariables = {data: BodyType<EntranceEffectSettingsInput>}
-
-    export const useUpdateMyEntranceEffectSettings = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMyEntranceEffectSettings>>, TError,UpdateMyEntranceEffectSettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateMyEntranceEffectSettings>>,
-        TError,
-        UpdateMyEntranceEffectSettingsMutationVariables,
-        TContext
-      > => {
-      return useMutation(getUpdateMyEntranceEffectSettingsMutationOptions(options), queryClient);
-    }
-
-export const getGetEntranceEffectShopUrl = () => {
-
-
-
-
-  return `/api/social/entrance-effects/shop`
-}
-
-export const getEntranceEffectShop = async ( options?: Parameters<typeof customFetch>[1]): Promise<EntranceEffectShop> => {
-
-  return customFetch<EntranceEffectShop>(getGetEntranceEffectShopUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetEntranceEffectShopQueryKey = () => {
-    return [
-    `/api/social/entrance-effects/shop`
-    ] as const;
-    }
-
-
-export const getGetEntranceEffectShopQueryOptions = <TData = Awaited<ReturnType<typeof getEntranceEffectShop>>, TError = ErrorType<SessionUnauthorizedResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntranceEffectShop>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetEntranceEffectShopQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEntranceEffectShop>>> = ({ signal }) => getEntranceEffectShop({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEntranceEffectShop>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetEntranceEffectShopQueryResult = NonNullable<Awaited<ReturnType<typeof getEntranceEffectShop>>>
-export type GetEntranceEffectShopQueryError = ErrorType<SessionUnauthorizedResponse>
-
-
-export function useGetEntranceEffectShop<TData = Awaited<ReturnType<typeof getEntranceEffectShop>>, TError = ErrorType<SessionUnauthorizedResponse>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntranceEffectShop>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getEntranceEffectShop>>,
-          TError,
-          Awaited<ReturnType<typeof getEntranceEffectShop>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetEntranceEffectShop<TData = Awaited<ReturnType<typeof getEntranceEffectShop>>, TError = ErrorType<SessionUnauthorizedResponse>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntranceEffectShop>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getEntranceEffectShop>>,
-          TError,
-          Awaited<ReturnType<typeof getEntranceEffectShop>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetEntranceEffectShop<TData = Awaited<ReturnType<typeof getEntranceEffectShop>>, TError = ErrorType<SessionUnauthorizedResponse>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntranceEffectShop>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useGetEntranceEffectShop<TData = Awaited<ReturnType<typeof getEntranceEffectShop>>, TError = ErrorType<SessionUnauthorizedResponse>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getEntranceEffectShop>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetEntranceEffectShopQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getPurchaseEntranceEffectUrl = (effectId: SocialGiftCatalogId,) => {
-
-
-
-
-  return `/api/social/entrance-effects/${effectId}/purchase`
-}
-
-export const purchaseEntranceEffect = async (effectId: SocialGiftCatalogId,
-    entranceEffectPurchaseInput: EntranceEffectPurchaseInput, options?: Parameters<typeof customFetch>[1]): Promise<EntranceEffectPurchaseResponse> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<EntranceEffectPurchaseResponse>(getPurchaseEntranceEffectUrl(effectId),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(entranceEffectPurchaseInput)
-  }
-);}
-
-
-
-
-
-export const getPurchaseEntranceEffectMutationKey = () => ['purchaseEntranceEffect'] as const;
-
-export const getPurchaseEntranceEffectMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purchaseEntranceEffect>>, TError,PurchaseEntranceEffectMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof purchaseEntranceEffect>>, TError,PurchaseEntranceEffectMutationVariables, TContext> => {
-
-const mutationKey = getPurchaseEntranceEffectMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof purchaseEntranceEffect>>, PurchaseEntranceEffectMutationVariables> = (props) => {
-          const {effectId,data} = props ?? {};
-
-          return  purchaseEntranceEffect(effectId,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PurchaseEntranceEffectMutationResult = NonNullable<Awaited<ReturnType<typeof purchaseEntranceEffect>>>
-    export type PurchaseEntranceEffectMutationBody = BodyType<EntranceEffectPurchaseInput>
-    export type PurchaseEntranceEffectMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
-    export type PurchaseEntranceEffectMutationVariables = {effectId: SocialGiftCatalogId;data: BodyType<EntranceEffectPurchaseInput>}
-
-    export const usePurchaseEntranceEffect = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purchaseEntranceEffect>>, TError,PurchaseEntranceEffectMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof purchaseEntranceEffect>>,
-        TError,
-        PurchaseEntranceEffectMutationVariables,
-        TContext
-      > => {
-      return useMutation(getPurchaseEntranceEffectMutationOptions(options), queryClient);
-    }
-
-export const getEquipEntranceEffectUrl = () => {
-
-
-
-
-  return `/api/social/entrance-effects/equipped`
-}
-
-export const equipEntranceEffect = async (entranceEffectEquipInput: EntranceEffectEquipInput, options?: Parameters<typeof customFetch>[1]): Promise<EntranceEffectEquipResponse> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<EntranceEffectEquipResponse>(getEquipEntranceEffectUrl(),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(entranceEffectEquipInput)
-  }
-);}
-
-
-
-
-
-export const getEquipEntranceEffectMutationKey = () => ['equipEntranceEffect'] as const;
-
-export const getEquipEntranceEffectMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof equipEntranceEffect>>, TError,EquipEntranceEffectMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof equipEntranceEffect>>, TError,EquipEntranceEffectMutationVariables, TContext> => {
-
-const mutationKey = getEquipEntranceEffectMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof equipEntranceEffect>>, EquipEntranceEffectMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  equipEntranceEffect(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type EquipEntranceEffectMutationResult = NonNullable<Awaited<ReturnType<typeof equipEntranceEffect>>>
-    export type EquipEntranceEffectMutationBody = BodyType<EntranceEffectEquipInput>
-    export type EquipEntranceEffectMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
-    export type EquipEntranceEffectMutationVariables = {data: BodyType<EntranceEffectEquipInput>}
-
-    export const useEquipEntranceEffect = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof equipEntranceEffect>>, TError,EquipEntranceEffectMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof equipEntranceEffect>>,
-        TError,
-        EquipEntranceEffectMutationVariables,
-        TContext
-      > => {
-      return useMutation(getEquipEntranceEffectMutationOptions(options), queryClient);
-    }
-
-export const getEquipMyBadgeUrl = () => {
-
-
-
-
-  return `/api/social/me/equipped-badge`
-}
-
-export const equipMyBadge = async (equipMyBadgeInput: EquipMyBadgeInput, options?: Parameters<typeof customFetch>[1]): Promise<EquippedBadgeState> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<EquippedBadgeState>(getEquipMyBadgeUrl(),
-  {
-    ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(equipMyBadgeInput)
-  }
-);}
-
-
-
-
-
-export const getEquipMyBadgeMutationKey = () => ['equipMyBadge'] as const;
-
-export const getEquipMyBadgeMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof equipMyBadge>>, TError,EquipMyBadgeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof equipMyBadge>>, TError,EquipMyBadgeMutationVariables, TContext> => {
-
-const mutationKey = getEquipMyBadgeMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof equipMyBadge>>, EquipMyBadgeMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  equipMyBadge(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type EquipMyBadgeMutationResult = NonNullable<Awaited<ReturnType<typeof equipMyBadge>>>
-    export type EquipMyBadgeMutationBody = BodyType<EquipMyBadgeInput>
-    export type EquipMyBadgeMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
-    export type EquipMyBadgeMutationVariables = {data: BodyType<EquipMyBadgeInput>}
-
-    export const useEquipMyBadge = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof equipMyBadge>>, TError,EquipMyBadgeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof equipMyBadge>>,
-        TError,
-        EquipMyBadgeMutationVariables,
-        TContext
-      > => {
-      return useMutation(getEquipMyBadgeMutationOptions(options), queryClient);
-    }
-
-export const getGetTestCoinLaunchStatusUrl = () => {
-
-
-
-
-  return `/api/social/admin/coin-testers/launch`
-}
-
-export const getTestCoinLaunchStatus = async ( options?: Parameters<typeof customFetch>[1]): Promise<TestCoinLaunchStatus> => {
-
-  return customFetch<TestCoinLaunchStatus>(getGetTestCoinLaunchStatusUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetTestCoinLaunchStatusQueryKey = () => {
-    return [
-    `/api/social/admin/coin-testers/launch`
-    ] as const;
-    }
-
-
-export const getGetTestCoinLaunchStatusQueryOptions = <TData = Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetTestCoinLaunchStatusQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTestCoinLaunchStatus>>> = ({ signal }) => getTestCoinLaunchStatus({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetTestCoinLaunchStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getTestCoinLaunchStatus>>>
-export type GetTestCoinLaunchStatusQueryError = ErrorType<unknown>
-
-
-export function useGetTestCoinLaunchStatus<TData = Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError = ErrorType<unknown>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getTestCoinLaunchStatus>>,
-          TError,
-          Awaited<ReturnType<typeof getTestCoinLaunchStatus>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetTestCoinLaunchStatus<TData = Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getTestCoinLaunchStatus>>,
-          TError,
-          Awaited<ReturnType<typeof getTestCoinLaunchStatus>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetTestCoinLaunchStatus<TData = Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useGetTestCoinLaunchStatus<TData = Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTestCoinLaunchStatus>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetTestCoinLaunchStatusQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getPrepareTestCoinLaunchResetUrl = () => {
-
-
-
-
-  return `/api/social/admin/coin-testers/launch/preview`
-}
-
-export const prepareTestCoinLaunchReset = async ( options?: Parameters<typeof customFetch>[1]): Promise<TestCoinLaunchPreview> => {
-
-  return customFetch<TestCoinLaunchPreview>(getPrepareTestCoinLaunchResetUrl(),
-  {
-    ...options,
-    method: 'POST'
-
-
-  }
-);}
-
-
-
-
-
-export const getPrepareTestCoinLaunchResetMutationKey = () => ['prepareTestCoinLaunchReset'] as const;
-
-export const getPrepareTestCoinLaunchResetMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof prepareTestCoinLaunchReset>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof prepareTestCoinLaunchReset>>, TError,void, TContext> => {
-
-const mutationKey = getPrepareTestCoinLaunchResetMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof prepareTestCoinLaunchReset>>, void> = () => {
-
-
-          return  prepareTestCoinLaunchReset(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PrepareTestCoinLaunchResetMutationResult = NonNullable<Awaited<ReturnType<typeof prepareTestCoinLaunchReset>>>
-
-    export type PrepareTestCoinLaunchResetMutationError = ErrorType<unknown>
-
-
-    export const usePrepareTestCoinLaunchReset = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof prepareTestCoinLaunchReset>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof prepareTestCoinLaunchReset>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getPrepareTestCoinLaunchResetMutationOptions(options), queryClient);
-    }
-
-export const getConfirmTestCoinLaunchResetUrl = () => {
-
-
-
-
-  return `/api/social/admin/coin-testers/launch/confirm`
-}
-
-export const confirmTestCoinLaunchReset = async (testCoinLaunchConfirmation: TestCoinLaunchConfirmation, options?: Parameters<typeof customFetch>[1]): Promise<TestCoinLaunchResult> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<TestCoinLaunchResult>(getConfirmTestCoinLaunchResetUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(testCoinLaunchConfirmation)
-  }
-);}
-
-
-
-
-
-export const getConfirmTestCoinLaunchResetMutationKey = () => ['confirmTestCoinLaunchReset'] as const;
-
-export const getConfirmTestCoinLaunchResetMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmTestCoinLaunchReset>>, TError,ConfirmTestCoinLaunchResetMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof confirmTestCoinLaunchReset>>, TError,ConfirmTestCoinLaunchResetMutationVariables, TContext> => {
-
-const mutationKey = getConfirmTestCoinLaunchResetMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmTestCoinLaunchReset>>, ConfirmTestCoinLaunchResetMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  confirmTestCoinLaunchReset(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ConfirmTestCoinLaunchResetMutationResult = NonNullable<Awaited<ReturnType<typeof confirmTestCoinLaunchReset>>>
-    export type ConfirmTestCoinLaunchResetMutationBody = BodyType<TestCoinLaunchConfirmation>
-    export type ConfirmTestCoinLaunchResetMutationError = ErrorType<unknown>
-    export type ConfirmTestCoinLaunchResetMutationVariables = {data: BodyType<TestCoinLaunchConfirmation>}
-
-    export const useConfirmTestCoinLaunchReset = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmTestCoinLaunchReset>>, TError,ConfirmTestCoinLaunchResetMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof confirmTestCoinLaunchReset>>,
-        TError,
-        ConfirmTestCoinLaunchResetMutationVariables,
-        TContext
-      > => {
-      return useMutation(getConfirmTestCoinLaunchResetMutationOptions(options), queryClient);
-    }
-
-export const getGetCoinTestersUrl = () => {
-
-
-
-
-  return `/api/social/admin/coin-testers`
-}
-
-export const getCoinTesters = async ( options?: Parameters<typeof customFetch>[1]): Promise<CoinTesterList> => {
-
-  return customFetch<CoinTesterList>(getGetCoinTestersUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetCoinTestersQueryKey = () => {
-    return [
-    `/api/social/admin/coin-testers`
-    ] as const;
-    }
-
-
-export const getGetCoinTestersQueryOptions = <TData = Awaited<ReturnType<typeof getCoinTesters>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCoinTesters>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetCoinTestersQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCoinTesters>>> = ({ signal }) => getCoinTesters({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCoinTesters>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetCoinTestersQueryResult = NonNullable<Awaited<ReturnType<typeof getCoinTesters>>>
-export type GetCoinTestersQueryError = ErrorType<unknown>
-
-
-export function useGetCoinTesters<TData = Awaited<ReturnType<typeof getCoinTesters>>, TError = ErrorType<unknown>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCoinTesters>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getCoinTesters>>,
-          TError,
-          Awaited<ReturnType<typeof getCoinTesters>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetCoinTesters<TData = Awaited<ReturnType<typeof getCoinTesters>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCoinTesters>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getCoinTesters>>,
-          TError,
-          Awaited<ReturnType<typeof getCoinTesters>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetCoinTesters<TData = Awaited<ReturnType<typeof getCoinTesters>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCoinTesters>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useGetCoinTesters<TData = Awaited<ReturnType<typeof getCoinTesters>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCoinTesters>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetCoinTestersQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getSetCoinTesterUrl = () => {
-
-
-
-
-  return `/api/social/admin/coin-testers`
-}
-
-export const setCoinTester = async (coinTesterDesignation: CoinTesterDesignation, options?: Parameters<typeof customFetch>[1]): Promise<CoinTesterList> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<CoinTesterList>(getSetCoinTesterUrl(),
-  {
-    ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(coinTesterDesignation)
-  }
-);}
-
-
-
-
-
-export const getSetCoinTesterMutationKey = () => ['setCoinTester'] as const;
-
-export const getSetCoinTesterMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setCoinTester>>, TError,SetCoinTesterMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof setCoinTester>>, TError,SetCoinTesterMutationVariables, TContext> => {
-
-const mutationKey = getSetCoinTesterMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setCoinTester>>, SetCoinTesterMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  setCoinTester(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SetCoinTesterMutationResult = NonNullable<Awaited<ReturnType<typeof setCoinTester>>>
-    export type SetCoinTesterMutationBody = BodyType<CoinTesterDesignation>
-    export type SetCoinTesterMutationError = ErrorType<unknown>
-    export type SetCoinTesterMutationVariables = {data: BodyType<CoinTesterDesignation>}
-
-    export const useSetCoinTester = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setCoinTester>>, TError,SetCoinTesterMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof setCoinTester>>,
-        TError,
-        SetCoinTesterMutationVariables,
-        TContext
-      > => {
-      return useMutation(getSetCoinTesterMutationOptions(options), queryClient);
-    }
-
-export const getGetGiftStudioLibraryUrl = () => {
-
-
-
-
-  return `/api/social/admin/gift-studio/library`
-}
-
-export const getGiftStudioLibrary = async ( options?: Parameters<typeof customFetch>[1]): Promise<GiftStudioLibrary> => {
-
-  return customFetch<GiftStudioLibrary>(getGetGiftStudioLibraryUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetGiftStudioLibraryQueryKey = () => {
-    return [
-    `/api/social/admin/gift-studio/library`
-    ] as const;
-    }
-
-
-export const getGetGiftStudioLibraryQueryOptions = <TData = Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError = ErrorType<SessionUnauthorizedResponse | void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetGiftStudioLibraryQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGiftStudioLibrary>>> = ({ signal }) => getGiftStudioLibrary({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetGiftStudioLibraryQueryResult = NonNullable<Awaited<ReturnType<typeof getGiftStudioLibrary>>>
-export type GetGiftStudioLibraryQueryError = ErrorType<SessionUnauthorizedResponse | void>
-
-
-export function useGetGiftStudioLibrary<TData = Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getGiftStudioLibrary>>,
-          TError,
-          Awaited<ReturnType<typeof getGiftStudioLibrary>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetGiftStudioLibrary<TData = Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getGiftStudioLibrary>>,
-          TError,
-          Awaited<ReturnType<typeof getGiftStudioLibrary>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetGiftStudioLibrary<TData = Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useGetGiftStudioLibrary<TData = Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioLibrary>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetGiftStudioLibraryQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getGetDeveloperContentSyncUrl = () => {
-
-
-
-
-  return `/api/social/admin/content-sync`
-}
-
-export const getDeveloperContentSync = async ( options?: Parameters<typeof customFetch>[1]): Promise<DeveloperContentSyncStatus> => {
-
-  return customFetch<DeveloperContentSyncStatus>(getGetDeveloperContentSyncUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetDeveloperContentSyncQueryKey = () => {
-    return [
-    `/api/social/admin/content-sync`
-    ] as const;
-    }
-
-
-export const getGetDeveloperContentSyncQueryOptions = <TData = Awaited<ReturnType<typeof getDeveloperContentSync>>, TError = ErrorType<SessionUnauthorizedResponse | void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDeveloperContentSync>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetDeveloperContentSyncQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDeveloperContentSync>>> = ({ signal }) => getDeveloperContentSync({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDeveloperContentSync>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetDeveloperContentSyncQueryResult = NonNullable<Awaited<ReturnType<typeof getDeveloperContentSync>>>
-export type GetDeveloperContentSyncQueryError = ErrorType<SessionUnauthorizedResponse | void>
-
-
-export function useGetDeveloperContentSync<TData = Awaited<ReturnType<typeof getDeveloperContentSync>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDeveloperContentSync>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getDeveloperContentSync>>,
-          TError,
-          Awaited<ReturnType<typeof getDeveloperContentSync>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetDeveloperContentSync<TData = Awaited<ReturnType<typeof getDeveloperContentSync>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDeveloperContentSync>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getDeveloperContentSync>>,
-          TError,
-          Awaited<ReturnType<typeof getDeveloperContentSync>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetDeveloperContentSync<TData = Awaited<ReturnType<typeof getDeveloperContentSync>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDeveloperContentSync>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useGetDeveloperContentSync<TData = Awaited<ReturnType<typeof getDeveloperContentSync>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getDeveloperContentSync>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetDeveloperContentSyncQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getRunDeveloperContentSyncUrl = () => {
-
-
-
-
-  return `/api/social/admin/content-sync/run`
-}
-
-export const runDeveloperContentSync = async ( options?: Parameters<typeof customFetch>[1]): Promise<DeveloperContentSyncStatus> => {
-
-  return customFetch<DeveloperContentSyncStatus>(getRunDeveloperContentSyncUrl(),
-  {
-    ...options,
-    method: 'POST'
-
-
-  }
-);}
-
-
-
-
-
-export const getRunDeveloperContentSyncMutationKey = () => ['runDeveloperContentSync'] as const;
-
-export const getRunDeveloperContentSyncMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runDeveloperContentSync>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof runDeveloperContentSync>>, TError,void, TContext> => {
-
-const mutationKey = getRunDeveloperContentSyncMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runDeveloperContentSync>>, void> = () => {
-
-
-          return  runDeveloperContentSync(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type RunDeveloperContentSyncMutationResult = NonNullable<Awaited<ReturnType<typeof runDeveloperContentSync>>>
-
-    export type RunDeveloperContentSyncMutationError = ErrorType<SessionUnauthorizedResponse | void>
-
-
-    export const useRunDeveloperContentSync = <TError = ErrorType<SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runDeveloperContentSync>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof runDeveloperContentSync>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getRunDeveloperContentSyncMutationOptions(options), queryClient);
-    }
-
-export const getGetHangoutRewardSettingsUrl = () => {
-
-
-
-
-  return `/api/social/admin/hangout-rewards`
-}
-
-export const getHangoutRewardSettings = async ( options?: Parameters<typeof customFetch>[1]): Promise<HangoutRewardSettings> => {
-
-  return customFetch<HangoutRewardSettings>(getGetHangoutRewardSettingsUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetHangoutRewardSettingsQueryKey = () => {
-    return [
-    `/api/social/admin/hangout-rewards`
-    ] as const;
-    }
-
-
-export const getGetHangoutRewardSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError = ErrorType<SessionUnauthorizedResponse | void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetHangoutRewardSettingsQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getHangoutRewardSettings>>> = ({ signal }) => getHangoutRewardSettings({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetHangoutRewardSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getHangoutRewardSettings>>>
-export type GetHangoutRewardSettingsQueryError = ErrorType<SessionUnauthorizedResponse | void>
-
-
-export function useGetHangoutRewardSettings<TData = Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getHangoutRewardSettings>>,
-          TError,
-          Awaited<ReturnType<typeof getHangoutRewardSettings>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetHangoutRewardSettings<TData = Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getHangoutRewardSettings>>,
-          TError,
-          Awaited<ReturnType<typeof getHangoutRewardSettings>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetHangoutRewardSettings<TData = Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useGetHangoutRewardSettings<TData = Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getHangoutRewardSettings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetHangoutRewardSettingsQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getSetHangoutRewardIntervalUrl = () => {
-
-
-
-
-  return `/api/social/admin/hangout-rewards`
-}
-
-export const setHangoutRewardInterval = async (setHangoutRewardIntervalInput: SetHangoutRewardIntervalInput, options?: Parameters<typeof customFetch>[1]): Promise<HangoutRewardSettings> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<HangoutRewardSettings>(getSetHangoutRewardIntervalUrl(),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(setHangoutRewardIntervalInput)
-  }
-);}
-
-
-
-
-
-export const getSetHangoutRewardIntervalMutationKey = () => ['setHangoutRewardInterval'] as const;
-
-export const getSetHangoutRewardIntervalMutationOptions = <TError = ErrorType<void | SessionUnauthorizedResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setHangoutRewardInterval>>, TError,SetHangoutRewardIntervalMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof setHangoutRewardInterval>>, TError,SetHangoutRewardIntervalMutationVariables, TContext> => {
-
-const mutationKey = getSetHangoutRewardIntervalMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setHangoutRewardInterval>>, SetHangoutRewardIntervalMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  setHangoutRewardInterval(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SetHangoutRewardIntervalMutationResult = NonNullable<Awaited<ReturnType<typeof setHangoutRewardInterval>>>
-    export type SetHangoutRewardIntervalMutationBody = BodyType<SetHangoutRewardIntervalInput>
-    export type SetHangoutRewardIntervalMutationError = ErrorType<void | SessionUnauthorizedResponse>
-    export type SetHangoutRewardIntervalMutationVariables = {data: BodyType<SetHangoutRewardIntervalInput>}
-
-    export const useSetHangoutRewardInterval = <TError = ErrorType<void | SessionUnauthorizedResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setHangoutRewardInterval>>, TError,SetHangoutRewardIntervalMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof setHangoutRewardInterval>>,
-        TError,
-        SetHangoutRewardIntervalMutationVariables,
-        TContext
-      > => {
-      return useMutation(getSetHangoutRewardIntervalMutationOptions(options), queryClient);
-    }
-
-export const getGetAdminGiftMotionsUrl = () => {
-
-
-
-
-  return `/api/social/admin/gift-motions`
-}
-
-export const getAdminGiftMotions = async ( options?: Parameters<typeof customFetch>[1]): Promise<DeveloperGiftMotionList> => {
-
-  return customFetch<DeveloperGiftMotionList>(getGetAdminGiftMotionsUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetAdminGiftMotionsQueryKey = () => {
-    return [
-    `/api/social/admin/gift-motions`
-    ] as const;
-    }
-
-
-export const getGetAdminGiftMotionsQueryOptions = <TData = Awaited<ReturnType<typeof getAdminGiftMotions>>, TError = ErrorType<SessionUnauthorizedResponse | void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminGiftMotions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetAdminGiftMotionsQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminGiftMotions>>> = ({ signal }) => getAdminGiftMotions({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminGiftMotions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetAdminGiftMotionsQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminGiftMotions>>>
-export type GetAdminGiftMotionsQueryError = ErrorType<SessionUnauthorizedResponse | void>
-
-
-export function useGetAdminGiftMotions<TData = Awaited<ReturnType<typeof getAdminGiftMotions>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminGiftMotions>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getAdminGiftMotions>>,
-          TError,
-          Awaited<ReturnType<typeof getAdminGiftMotions>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetAdminGiftMotions<TData = Awaited<ReturnType<typeof getAdminGiftMotions>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminGiftMotions>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getAdminGiftMotions>>,
-          TError,
-          Awaited<ReturnType<typeof getAdminGiftMotions>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetAdminGiftMotions<TData = Awaited<ReturnType<typeof getAdminGiftMotions>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminGiftMotions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useGetAdminGiftMotions<TData = Awaited<ReturnType<typeof getAdminGiftMotions>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminGiftMotions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetAdminGiftMotionsQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getUploadGiftMotionUrl = () => {
-
-
-
-
-  return `/api/social/admin/gift-motions`
-}
-
-export const uploadGiftMotion = async (developerGiftMotionUploadInput: DeveloperGiftMotionUploadInput, options?: Parameters<typeof customFetch>[1]): Promise<DeveloperGiftMotion> => {
-    const formData = new FormData();
-formData.append(`name`, developerGiftMotionUploadInput.name);
-formData.append(`cost`, developerGiftMotionUploadInput.cost.toString())
-formData.append(`category`, developerGiftMotionUploadInput.category);
-formData.append(`animationNames`, developerGiftMotionUploadInput.animationNames);
-formData.append(`motion`, developerGiftMotionUploadInput.motion);
-formData.append(`model`, developerGiftMotionUploadInput.model);
-
-  return customFetch<DeveloperGiftMotion>(getUploadGiftMotionUrl(),
-  {
-    ...options,
-    method: 'POST'
-    ,
-    body: formData
-  }
-);}
-
-
-
-
-
-export const getUploadGiftMotionMutationKey = () => ['uploadGiftMotion'] as const;
-
-export const getUploadGiftMotionMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadGiftMotion>>, TError,UploadGiftMotionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof uploadGiftMotion>>, TError,UploadGiftMotionMutationVariables, TContext> => {
-
-const mutationKey = getUploadGiftMotionMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadGiftMotion>>, UploadGiftMotionMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  uploadGiftMotion(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UploadGiftMotionMutationResult = NonNullable<Awaited<ReturnType<typeof uploadGiftMotion>>>
-    export type UploadGiftMotionMutationBody = BodyType<DeveloperGiftMotionUploadInput>
-    export type UploadGiftMotionMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
-    export type UploadGiftMotionMutationVariables = {data: BodyType<DeveloperGiftMotionUploadInput>}
-
-    export const useUploadGiftMotion = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadGiftMotion>>, TError,UploadGiftMotionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof uploadGiftMotion>>,
-        TError,
-        UploadGiftMotionMutationVariables,
-        TContext
-      > => {
-      return useMutation(getUploadGiftMotionMutationOptions(options), queryClient);
-    }
-
-export const getDeleteGiftMotionUrl = (giftId: SocialGiftCatalogId,) => {
-
-
-
-
-  return `/api/social/admin/gift-motions/${giftId}`
-}
-
-export const deleteGiftMotion = async (giftId: SocialGiftCatalogId, options?: Parameters<typeof customFetch>[1]): Promise<SocialAction> => {
-
-  return customFetch<SocialAction>(getDeleteGiftMotionUrl(giftId),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-
-export const getDeleteGiftMotionMutationKey = () => ['deleteGiftMotion'] as const;
-
-export const getDeleteGiftMotionMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGiftMotion>>, TError,DeleteGiftMotionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteGiftMotion>>, TError,DeleteGiftMotionMutationVariables, TContext> => {
-
-const mutationKey = getDeleteGiftMotionMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteGiftMotion>>, DeleteGiftMotionMutationVariables> = (props) => {
-          const {giftId} = props ?? {};
-
-          return  deleteGiftMotion(giftId,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteGiftMotionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteGiftMotion>>>
-
-    export type DeleteGiftMotionMutationError = ErrorType<SessionUnauthorizedResponse | void>
-    export type DeleteGiftMotionMutationVariables = {giftId: SocialGiftCatalogId}
-
-    export const useDeleteGiftMotion = <TError = ErrorType<SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGiftMotion>>, TError,DeleteGiftMotionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof deleteGiftMotion>>,
-        TError,
-        DeleteGiftMotionMutationVariables,
-        TContext
-      > => {
-      return useMutation(getDeleteGiftMotionMutationOptions(options), queryClient);
-    }
-
-export const getGetGiftMotionPlaybackUrl = (giftId: SocialGiftCatalogId,) => {
-
-
-
-
-  return `/api/social/gift-motions/${giftId}`
-}
-
-export const getGiftMotionPlayback = async (giftId: SocialGiftCatalogId, options?: Parameters<typeof customFetch>[1]): Promise<DeveloperGiftMotion> => {
-
-  return customFetch<DeveloperGiftMotion>(getGetGiftMotionPlaybackUrl(giftId),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetGiftMotionPlaybackQueryKey = (giftId: SocialGiftCatalogId,) => {
-    return [
-    `/api/social/gift-motions/${giftId}`
-    ] as const;
-    }
-
-
-export const getGetGiftMotionPlaybackQueryOptions = <TData = Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(giftId: SocialGiftCatalogId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetGiftMotionPlaybackQueryKey(giftId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGiftMotionPlayback>>> = ({ signal }) => getGiftMotionPlayback(giftId, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: giftId !== null && giftId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetGiftMotionPlaybackQueryResult = NonNullable<Awaited<ReturnType<typeof getGiftMotionPlayback>>>
-export type GetGiftMotionPlaybackQueryError = ErrorType<SessionUnauthorizedResponse | void>
-
-
-export function useGetGiftMotionPlayback<TData = Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
- giftId: SocialGiftCatalogId, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getGiftMotionPlayback>>,
-          TError,
-          Awaited<ReturnType<typeof getGiftMotionPlayback>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetGiftMotionPlayback<TData = Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
- giftId: SocialGiftCatalogId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getGiftMotionPlayback>>,
-          TError,
-          Awaited<ReturnType<typeof getGiftMotionPlayback>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetGiftMotionPlayback<TData = Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
- giftId: SocialGiftCatalogId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useGetGiftMotionPlayback<TData = Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
- giftId: SocialGiftCatalogId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionPlayback>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetGiftMotionPlaybackQueryOptions(giftId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getGetGiftMotionFileUrl = (giftId: SocialGiftCatalogId,) => {
-
-
-
-
-  return `/api/social/gift-motions/${giftId}/file`
-}
-
-export const getGiftMotionFile = async (giftId: SocialGiftCatalogId, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
-
-  return customFetch<Blob>(getGetGiftMotionFileUrl(giftId),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetGiftMotionFileQueryKey = (giftId: SocialGiftCatalogId,) => {
-    return [
-    `/api/social/gift-motions/${giftId}/file`
-    ] as const;
-    }
-
-
-export const getGetGiftMotionFileQueryOptions = <TData = Awaited<ReturnType<typeof getGiftMotionFile>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(giftId: SocialGiftCatalogId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionFile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetGiftMotionFileQueryKey(giftId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGiftMotionFile>>> = ({ signal }) => getGiftMotionFile(giftId, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: giftId !== null && giftId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionFile>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetGiftMotionFileQueryResult = NonNullable<Awaited<ReturnType<typeof getGiftMotionFile>>>
-export type GetGiftMotionFileQueryError = ErrorType<SessionUnauthorizedResponse | void>
-
-
-export function useGetGiftMotionFile<TData = Awaited<ReturnType<typeof getGiftMotionFile>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
- giftId: SocialGiftCatalogId, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionFile>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getGiftMotionFile>>,
-          TError,
-          Awaited<ReturnType<typeof getGiftMotionFile>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetGiftMotionFile<TData = Awaited<ReturnType<typeof getGiftMotionFile>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
- giftId: SocialGiftCatalogId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionFile>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getGiftMotionFile>>,
-          TError,
-          Awaited<ReturnType<typeof getGiftMotionFile>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetGiftMotionFile<TData = Awaited<ReturnType<typeof getGiftMotionFile>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
- giftId: SocialGiftCatalogId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionFile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useGetGiftMotionFile<TData = Awaited<ReturnType<typeof getGiftMotionFile>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
- giftId: SocialGiftCatalogId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftMotionFile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetGiftMotionFileQueryOptions(giftId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getUpdateGiftStudioCatalogItemUrl = (giftId: SocialGiftCatalogId,) => {
-
-
-
-
-  return `/api/social/admin/gift-studio/catalog/${giftId}`
-}
-
-export const updateGiftStudioCatalogItem = async (giftId: SocialGiftCatalogId,
-    giftStudioCatalogUpdate: GiftStudioCatalogUpdate, options?: Parameters<typeof customFetch>[1]): Promise<GiftStudioCatalogGift> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<GiftStudioCatalogGift>(getUpdateGiftStudioCatalogItemUrl(giftId),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(giftStudioCatalogUpdate)
-  }
-);}
-
-
-
-
-
-export const getUpdateGiftStudioCatalogItemMutationKey = () => ['updateGiftStudioCatalogItem'] as const;
-
-export const getUpdateGiftStudioCatalogItemMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGiftStudioCatalogItem>>, TError,UpdateGiftStudioCatalogItemMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateGiftStudioCatalogItem>>, TError,UpdateGiftStudioCatalogItemMutationVariables, TContext> => {
-
-const mutationKey = getUpdateGiftStudioCatalogItemMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateGiftStudioCatalogItem>>, UpdateGiftStudioCatalogItemMutationVariables> = (props) => {
-          const {giftId,data} = props ?? {};
-
-          return  updateGiftStudioCatalogItem(giftId,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateGiftStudioCatalogItemMutationResult = NonNullable<Awaited<ReturnType<typeof updateGiftStudioCatalogItem>>>
-    export type UpdateGiftStudioCatalogItemMutationBody = BodyType<GiftStudioCatalogUpdate>
-    export type UpdateGiftStudioCatalogItemMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
-    export type UpdateGiftStudioCatalogItemMutationVariables = {giftId: SocialGiftCatalogId;data: BodyType<GiftStudioCatalogUpdate>}
-
-    export const useUpdateGiftStudioCatalogItem = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGiftStudioCatalogItem>>, TError,UpdateGiftStudioCatalogItemMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof updateGiftStudioCatalogItem>>,
-        TError,
-        UpdateGiftStudioCatalogItemMutationVariables,
-        TContext
-      > => {
-      return useMutation(getUpdateGiftStudioCatalogItemMutationOptions(options), queryClient);
-    }
-
-export const getProcessGiftStudioClipOnServerUrl = () => {
-
-
-
-
-  return `/api/social/admin/gift-studio/process`
-}
-
-export const processGiftStudioClipOnServer = async (giftStudioProcessInput: GiftStudioProcessInput, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
-    const formData = new FormData();
-formData.append(`settings`, giftStudioProcessInput.settings);
-formData.append(`sourceVideo`, giftStudioProcessInput.sourceVideo);
-
-  return customFetch<Blob>(getProcessGiftStudioClipOnServerUrl(),
-  {
-    ...options,
-    method: 'POST'
-    ,
-    body: formData
-  }
-);}
-
-
-
-
-
-export const getProcessGiftStudioClipOnServerMutationKey = () => ['processGiftStudioClipOnServer'] as const;
-
-export const getProcessGiftStudioClipOnServerMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof processGiftStudioClipOnServer>>, TError,ProcessGiftStudioClipOnServerMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof processGiftStudioClipOnServer>>, TError,ProcessGiftStudioClipOnServerMutationVariables, TContext> => {
-
-const mutationKey = getProcessGiftStudioClipOnServerMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof processGiftStudioClipOnServer>>, ProcessGiftStudioClipOnServerMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  processGiftStudioClipOnServer(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ProcessGiftStudioClipOnServerMutationResult = NonNullable<Awaited<ReturnType<typeof processGiftStudioClipOnServer>>>
-    export type ProcessGiftStudioClipOnServerMutationBody = BodyType<GiftStudioProcessInput>
-    export type ProcessGiftStudioClipOnServerMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
-    export type ProcessGiftStudioClipOnServerMutationVariables = {data: BodyType<GiftStudioProcessInput>}
-
-    export const useProcessGiftStudioClipOnServer = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof processGiftStudioClipOnServer>>, TError,ProcessGiftStudioClipOnServerMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof processGiftStudioClipOnServer>>,
-        TError,
-        ProcessGiftStudioClipOnServerMutationVariables,
-        TContext
-      > => {
-      return useMutation(getProcessGiftStudioClipOnServerMutationOptions(options), queryClient);
-    }
-
-export const getSaveGiftStudioProcessedUrl = () => {
-
-
-
-
-  return `/api/social/admin/gift-studio/save-processed`
-}
-
-export const saveGiftStudioProcessed = async (giftStudioProcessedSaveInput: GiftStudioProcessedSaveInput, options?: Parameters<typeof customFetch>[1]): Promise<GiftStudioVersion> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<GiftStudioVersion>(getSaveGiftStudioProcessedUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(giftStudioProcessedSaveInput)
-  }
-);}
-
-
-
-
-
-export const getSaveGiftStudioProcessedMutationKey = () => ['saveGiftStudioProcessed'] as const;
-
-export const getSaveGiftStudioProcessedMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveGiftStudioProcessed>>, TError,SaveGiftStudioProcessedMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof saveGiftStudioProcessed>>, TError,SaveGiftStudioProcessedMutationVariables, TContext> => {
-
-const mutationKey = getSaveGiftStudioProcessedMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveGiftStudioProcessed>>, SaveGiftStudioProcessedMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  saveGiftStudioProcessed(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SaveGiftStudioProcessedMutationResult = NonNullable<Awaited<ReturnType<typeof saveGiftStudioProcessed>>>
-    export type SaveGiftStudioProcessedMutationBody = BodyType<GiftStudioProcessedSaveInput>
-    export type SaveGiftStudioProcessedMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
-    export type SaveGiftStudioProcessedMutationVariables = {data: BodyType<GiftStudioProcessedSaveInput>}
-
-    export const useSaveGiftStudioProcessed = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveGiftStudioProcessed>>, TError,SaveGiftStudioProcessedMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof saveGiftStudioProcessed>>,
-        TError,
-        SaveGiftStudioProcessedMutationVariables,
-        TContext
-      > => {
-      return useMutation(getSaveGiftStudioProcessedMutationOptions(options), queryClient);
-    }
-
-export const getCreateGiftStudioVersionUrl = () => {
-
-
-
-
-  return `/api/social/admin/gift-studio/versions`
-}
-
-export const createGiftStudioVersion = async (giftStudioUploadInput: GiftStudioUploadInput, options?: Parameters<typeof customFetch>[1]): Promise<GiftStudioVersion> => {
-    const formData = new FormData();
-if(giftStudioUploadInput.giftId !== undefined && giftStudioUploadInput.giftId !== null) {
- formData.append(`giftId`, giftStudioUploadInput.giftId);
- }
-if(giftStudioUploadInput.productType !== undefined) {
- formData.append(`productType`, giftStudioUploadInput.productType);
- }
-if(giftStudioUploadInput.cost !== undefined) {
- formData.append(`cost`, giftStudioUploadInput.cost.toString())
- }
-formData.append(`settings`, giftStudioUploadInput.settings);
-formData.append(`sourceVideo`, giftStudioUploadInput.sourceVideo);
-formData.append(`processedWebm`, giftStudioUploadInput.processedWebm);
-
-  return customFetch<GiftStudioVersion>(getCreateGiftStudioVersionUrl(),
-  {
-    ...options,
-    method: 'POST'
-    ,
-    body: formData
-  }
-);}
-
-
-
-
-
-export const getCreateGiftStudioVersionMutationKey = () => ['createGiftStudioVersion'] as const;
-
-export const getCreateGiftStudioVersionMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGiftStudioVersion>>, TError,CreateGiftStudioVersionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createGiftStudioVersion>>, TError,CreateGiftStudioVersionMutationVariables, TContext> => {
-
-const mutationKey = getCreateGiftStudioVersionMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGiftStudioVersion>>, CreateGiftStudioVersionMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  createGiftStudioVersion(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CreateGiftStudioVersionMutationResult = NonNullable<Awaited<ReturnType<typeof createGiftStudioVersion>>>
-    export type CreateGiftStudioVersionMutationBody = BodyType<GiftStudioUploadInput>
-    export type CreateGiftStudioVersionMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
-    export type CreateGiftStudioVersionMutationVariables = {data: BodyType<GiftStudioUploadInput>}
-
-    export const useCreateGiftStudioVersion = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGiftStudioVersion>>, TError,CreateGiftStudioVersionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof createGiftStudioVersion>>,
-        TError,
-        CreateGiftStudioVersionMutationVariables,
-        TContext
-      > => {
-      return useMutation(getCreateGiftStudioVersionMutationOptions(options), queryClient);
-    }
-
-export const getSetGiftStudioVersionActiveUrl = (versionId: string,) => {
-
-
-
-
-  return `/api/social/admin/gift-studio/versions/${versionId}`
-}
-
-export const setGiftStudioVersionActive = async (versionId: string,
-    giftStudioActivationInput: GiftStudioActivationInput, options?: Parameters<typeof customFetch>[1]): Promise<GiftStudioVersion> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<GiftStudioVersion>(getSetGiftStudioVersionActiveUrl(versionId),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(giftStudioActivationInput)
-  }
-);}
-
-
-
-
-
-export const getSetGiftStudioVersionActiveMutationKey = () => ['setGiftStudioVersionActive'] as const;
-
-export const getSetGiftStudioVersionActiveMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setGiftStudioVersionActive>>, TError,SetGiftStudioVersionActiveMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof setGiftStudioVersionActive>>, TError,SetGiftStudioVersionActiveMutationVariables, TContext> => {
-
-const mutationKey = getSetGiftStudioVersionActiveMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setGiftStudioVersionActive>>, SetGiftStudioVersionActiveMutationVariables> = (props) => {
-          const {versionId,data} = props ?? {};
-
-          return  setGiftStudioVersionActive(versionId,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SetGiftStudioVersionActiveMutationResult = NonNullable<Awaited<ReturnType<typeof setGiftStudioVersionActive>>>
-    export type SetGiftStudioVersionActiveMutationBody = BodyType<GiftStudioActivationInput>
-    export type SetGiftStudioVersionActiveMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
-    export type SetGiftStudioVersionActiveMutationVariables = {versionId: string;data: BodyType<GiftStudioActivationInput>}
-
-    export const useSetGiftStudioVersionActive = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setGiftStudioVersionActive>>, TError,SetGiftStudioVersionActiveMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof setGiftStudioVersionActive>>,
-        TError,
-        SetGiftStudioVersionActiveMutationVariables,
-        TContext
-      > => {
-      return useMutation(getSetGiftStudioVersionActiveMutationOptions(options), queryClient);
-    }
-
-export const getRenameGiftStudioVersionUrl = (versionId: string,) => {
-
-
-
-
-  return `/api/social/admin/gift-studio/versions/${versionId}/name`
-}
-
-export const renameGiftStudioVersion = async (versionId: string,
-    giftStudioRenameInput: GiftStudioRenameInput, options?: Parameters<typeof customFetch>[1]): Promise<GiftStudioVersion> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<GiftStudioVersion>(getRenameGiftStudioVersionUrl(versionId),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(giftStudioRenameInput)
-  }
-);}
-
-
-
-
-
-export const getRenameGiftStudioVersionMutationKey = () => ['renameGiftStudioVersion'] as const;
-
-export const getRenameGiftStudioVersionMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof renameGiftStudioVersion>>, TError,RenameGiftStudioVersionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof renameGiftStudioVersion>>, TError,RenameGiftStudioVersionMutationVariables, TContext> => {
-
-const mutationKey = getRenameGiftStudioVersionMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof renameGiftStudioVersion>>, RenameGiftStudioVersionMutationVariables> = (props) => {
-          const {versionId,data} = props ?? {};
-
-          return  renameGiftStudioVersion(versionId,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type RenameGiftStudioVersionMutationResult = NonNullable<Awaited<ReturnType<typeof renameGiftStudioVersion>>>
-    export type RenameGiftStudioVersionMutationBody = BodyType<GiftStudioRenameInput>
-    export type RenameGiftStudioVersionMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
-    export type RenameGiftStudioVersionMutationVariables = {versionId: string;data: BodyType<GiftStudioRenameInput>}
-
-    export const useRenameGiftStudioVersion = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof renameGiftStudioVersion>>, TError,RenameGiftStudioVersionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof renameGiftStudioVersion>>,
-        TError,
-        RenameGiftStudioVersionMutationVariables,
-        TContext
-      > => {
-      return useMutation(getRenameGiftStudioVersionMutationOptions(options), queryClient);
-    }
-
-export const getDeleteGiftStudioVersionUrl = (versionId: string,) => {
-
-
-
-
-  return `/api/social/admin/gift-studio/versions/${versionId}/delete`
-}
-
-export const deleteGiftStudioVersion = async (versionId: string, options?: Parameters<typeof customFetch>[1]): Promise<GiftStudioDeleteResponse> => {
-
-  return customFetch<GiftStudioDeleteResponse>(getDeleteGiftStudioVersionUrl(versionId),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-
-export const getDeleteGiftStudioVersionMutationKey = () => ['deleteGiftStudioVersion'] as const;
-
-export const getDeleteGiftStudioVersionMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGiftStudioVersion>>, TError,DeleteGiftStudioVersionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteGiftStudioVersion>>, TError,DeleteGiftStudioVersionMutationVariables, TContext> => {
-
-const mutationKey = getDeleteGiftStudioVersionMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteGiftStudioVersion>>, DeleteGiftStudioVersionMutationVariables> = (props) => {
-          const {versionId} = props ?? {};
-
-          return  deleteGiftStudioVersion(versionId,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type DeleteGiftStudioVersionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteGiftStudioVersion>>>
-
-    export type DeleteGiftStudioVersionMutationError = ErrorType<SessionUnauthorizedResponse | void>
-    export type DeleteGiftStudioVersionMutationVariables = {versionId: string}
-
-    export const useDeleteGiftStudioVersion = <TError = ErrorType<SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGiftStudioVersion>>, TError,DeleteGiftStudioVersionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof deleteGiftStudioVersion>>,
-        TError,
-        DeleteGiftStudioVersionMutationVariables,
-        TContext
-      > => {
-      return useMutation(getDeleteGiftStudioVersionMutationOptions(options), queryClient);
-    }
-
-export const getAssignGiftStudioVersionToGiftUrl = (versionId: string,) => {
-
-
-
-
-  return `/api/social/admin/gift-studio/versions/${versionId}/gift`
-}
-
-export const assignGiftStudioVersionToGift = async (versionId: string,
-    giftStudioAssignInput: GiftStudioAssignInput, options?: Parameters<typeof customFetch>[1]): Promise<GiftStudioVersion> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<GiftStudioVersion>(getAssignGiftStudioVersionToGiftUrl(versionId),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(giftStudioAssignInput)
-  }
-);}
-
-
-
-
-
-export const getAssignGiftStudioVersionToGiftMutationKey = () => ['assignGiftStudioVersionToGift'] as const;
-
-export const getAssignGiftStudioVersionToGiftMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignGiftStudioVersionToGift>>, TError,AssignGiftStudioVersionToGiftMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof assignGiftStudioVersionToGift>>, TError,AssignGiftStudioVersionToGiftMutationVariables, TContext> => {
-
-const mutationKey = getAssignGiftStudioVersionToGiftMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignGiftStudioVersionToGift>>, AssignGiftStudioVersionToGiftMutationVariables> = (props) => {
-          const {versionId,data} = props ?? {};
-
-          return  assignGiftStudioVersionToGift(versionId,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AssignGiftStudioVersionToGiftMutationResult = NonNullable<Awaited<ReturnType<typeof assignGiftStudioVersionToGift>>>
-    export type AssignGiftStudioVersionToGiftMutationBody = BodyType<GiftStudioAssignInput>
-    export type AssignGiftStudioVersionToGiftMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
-    export type AssignGiftStudioVersionToGiftMutationVariables = {versionId: string;data: BodyType<GiftStudioAssignInput>}
-
-    export const useAssignGiftStudioVersionToGift = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignGiftStudioVersionToGift>>, TError,AssignGiftStudioVersionToGiftMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof assignGiftStudioVersionToGift>>,
-        TError,
-        AssignGiftStudioVersionToGiftMutationVariables,
-        TContext
-      > => {
-      return useMutation(getAssignGiftStudioVersionToGiftMutationOptions(options), queryClient);
-    }
-
-export const getGetGiftStudioVersionMediaUrl = (versionId: string,
-    variant: 'original' | 'webm' | 'safari',) => {
-
-
-
-
-  return `/api/social/admin/gift-studio/versions/${versionId}/media/${variant}`
-}
-
-export const getGiftStudioVersionMedia = async (versionId: string,
-    variant: 'original' | 'webm' | 'safari', options?: Parameters<typeof customFetch>[1]): Promise<Blob | void> => {
-
-  return customFetch<Blob | void>(getGetGiftStudioVersionMediaUrl(versionId,variant),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetGiftStudioVersionMediaQueryKey = (versionId: string,
-    variant: 'original' | 'webm' | 'safari',) => {
-    return [
-    `/api/social/admin/gift-studio/versions/${versionId}/media/${variant}`
-    ] as const;
-    }
-
-
-export const getGetGiftStudioVersionMediaQueryOptions = <TData = Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(versionId: string,
-    variant: 'original' | 'webm' | 'safari', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetGiftStudioVersionMediaQueryKey(versionId,variant);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>> = ({ signal }) => getGiftStudioVersionMedia(versionId,variant, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: versionId !== null && versionId !== undefined && variant !== null && variant !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetGiftStudioVersionMediaQueryResult = NonNullable<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>>
-export type GetGiftStudioVersionMediaQueryError = ErrorType<SessionUnauthorizedResponse | void>
-
-
-export function useGetGiftStudioVersionMedia<TData = Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
- versionId: string,
-    variant: 'original' | 'webm' | 'safari', options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getGiftStudioVersionMedia>>,
-          TError,
-          Awaited<ReturnType<typeof getGiftStudioVersionMedia>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetGiftStudioVersionMedia<TData = Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
- versionId: string,
-    variant: 'original' | 'webm' | 'safari', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getGiftStudioVersionMedia>>,
-          TError,
-          Awaited<ReturnType<typeof getGiftStudioVersionMedia>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetGiftStudioVersionMedia<TData = Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
- versionId: string,
-    variant: 'original' | 'webm' | 'safari', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useGetGiftStudioVersionMedia<TData = Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
- versionId: string,
-    variant: 'original' | 'webm' | 'safari', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGiftStudioVersionMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetGiftStudioVersionMediaQueryOptions(versionId,variant,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getGetActiveGiftStudioVersionMediaUrl = (versionId: string,
-    variant: 'webm' | 'safari',) => {
-
-
-
-
-  return `/api/social/gift-studio/media/${versionId}/${variant}`
-}
-
-export const getActiveGiftStudioVersionMedia = async (versionId: string,
-    variant: 'webm' | 'safari', options?: Parameters<typeof customFetch>[1]): Promise<Blob | void> => {
-
-  return customFetch<Blob | void>(getGetActiveGiftStudioVersionMediaUrl(versionId,variant),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetActiveGiftStudioVersionMediaQueryKey = (versionId: string,
-    variant: 'webm' | 'safari',) => {
-    return [
-    `/api/social/gift-studio/media/${versionId}/${variant}`
-    ] as const;
-    }
-
-
-export const getGetActiveGiftStudioVersionMediaQueryOptions = <TData = Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(versionId: string,
-    variant: 'webm' | 'safari', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetActiveGiftStudioVersionMediaQueryKey(versionId,variant);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>> = ({ signal }) => getActiveGiftStudioVersionMedia(versionId,variant, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: versionId !== null && versionId !== undefined && variant !== null && variant !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetActiveGiftStudioVersionMediaQueryResult = NonNullable<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>>
-export type GetActiveGiftStudioVersionMediaQueryError = ErrorType<SessionUnauthorizedResponse | void>
-
-
-export function useGetActiveGiftStudioVersionMedia<TData = Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
- versionId: string,
-    variant: 'webm' | 'safari', options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>,
-          TError,
-          Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetActiveGiftStudioVersionMedia<TData = Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
- versionId: string,
-    variant: 'webm' | 'safari', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>,
-          TError,
-          Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetActiveGiftStudioVersionMedia<TData = Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
- versionId: string,
-    variant: 'webm' | 'safari', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useGetActiveGiftStudioVersionMedia<TData = Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
- versionId: string,
-    variant: 'webm' | 'safari', options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioVersionMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetActiveGiftStudioVersionMediaQueryOptions(versionId,variant,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getGetActiveGiftStudioMediaUrl = (giftId: GiftStudioGiftId,) => {
-
-
-
-
-  return `/api/social/gift-studio/active/${giftId}`
-}
-
-export const getActiveGiftStudioMedia = async (giftId: GiftStudioGiftId, options?: Parameters<typeof customFetch>[1]): Promise<GiftStudioActiveMediaResponse> => {
-
-  return customFetch<GiftStudioActiveMediaResponse>(getGetActiveGiftStudioMediaUrl(giftId),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetActiveGiftStudioMediaQueryKey = (giftId: GiftStudioGiftId,) => {
-    return [
-    `/api/social/gift-studio/active/${giftId}`
-    ] as const;
-    }
-
-
-export const getGetActiveGiftStudioMediaQueryOptions = <TData = Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError = ErrorType<SessionUnauthorizedResponse>>(giftId: GiftStudioGiftId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetActiveGiftStudioMediaQueryKey(giftId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>> = ({ signal }) => getActiveGiftStudioMedia(giftId, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: giftId !== null && giftId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetActiveGiftStudioMediaQueryResult = NonNullable<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>>
-export type GetActiveGiftStudioMediaQueryError = ErrorType<SessionUnauthorizedResponse>
-
-
-export function useGetActiveGiftStudioMedia<TData = Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError = ErrorType<SessionUnauthorizedResponse>>(
- giftId: GiftStudioGiftId, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getActiveGiftStudioMedia>>,
-          TError,
-          Awaited<ReturnType<typeof getActiveGiftStudioMedia>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetActiveGiftStudioMedia<TData = Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError = ErrorType<SessionUnauthorizedResponse>>(
- giftId: GiftStudioGiftId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getActiveGiftStudioMedia>>,
-          TError,
-          Awaited<ReturnType<typeof getActiveGiftStudioMedia>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetActiveGiftStudioMedia<TData = Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError = ErrorType<SessionUnauthorizedResponse>>(
- giftId: GiftStudioGiftId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useGetActiveGiftStudioMedia<TData = Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError = ErrorType<SessionUnauthorizedResponse>>(
- giftId: GiftStudioGiftId, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getActiveGiftStudioMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetActiveGiftStudioMediaQueryOptions(giftId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
 
 export const getGetSocialPeopleUrl = (params?: GetSocialPeopleParams,) => {
   const normalizedParams = new URLSearchParams();
@@ -8046,7 +5085,7 @@ export const getGetSocialPeopleQueryKey = (params?: GetSocialPeopleParams,) => {
     }
 
 
-export const getGetSocialPeopleQueryOptions = <TData = Awaited<ReturnType<typeof getSocialPeople>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(params?: GetSocialPeopleParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPeople>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getGetSocialPeopleQueryOptions = <TData = Awaited<ReturnType<typeof getSocialPeople>>, TError = ErrorType<SessionUnauthorizedResponse>>(params?: GetSocialPeopleParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPeople>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -8065,10 +5104,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetSocialPeopleQueryResult = NonNullable<Awaited<ReturnType<typeof getSocialPeople>>>
-export type GetSocialPeopleQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
+export type GetSocialPeopleQueryError = ErrorType<SessionUnauthorizedResponse>
 
 
-export function useGetSocialPeople<TData = Awaited<ReturnType<typeof getSocialPeople>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialPeople<TData = Awaited<ReturnType<typeof getSocialPeople>>, TError = ErrorType<SessionUnauthorizedResponse>>(
  params: undefined |  GetSocialPeopleParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPeople>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getSocialPeople>>,
@@ -8078,7 +5117,7 @@ export function useGetSocialPeople<TData = Awaited<ReturnType<typeof getSocialPe
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSocialPeople<TData = Awaited<ReturnType<typeof getSocialPeople>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialPeople<TData = Awaited<ReturnType<typeof getSocialPeople>>, TError = ErrorType<SessionUnauthorizedResponse>>(
  params?: GetSocialPeopleParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPeople>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getSocialPeople>>,
@@ -8088,12 +5127,12 @@ export function useGetSocialPeople<TData = Awaited<ReturnType<typeof getSocialPe
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSocialPeople<TData = Awaited<ReturnType<typeof getSocialPeople>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialPeople<TData = Awaited<ReturnType<typeof getSocialPeople>>, TError = ErrorType<SessionUnauthorizedResponse>>(
  params?: GetSocialPeopleParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPeople>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetSocialPeople<TData = Awaited<ReturnType<typeof getSocialPeople>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialPeople<TData = Awaited<ReturnType<typeof getSocialPeople>>, TError = ErrorType<SessionUnauthorizedResponse>>(
  params?: GetSocialPeopleParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPeople>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -8141,7 +5180,7 @@ export const getGetSocialPersonQueryKey = (username: string,) => {
     }
 
 
-export const getGetSocialPersonQueryOptions = <TData = Awaited<ReturnType<typeof getSocialPerson>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(username: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPerson>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getGetSocialPersonQueryOptions = <TData = Awaited<ReturnType<typeof getSocialPerson>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(username: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPerson>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -8160,10 +5199,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetSocialPersonQueryResult = NonNullable<Awaited<ReturnType<typeof getSocialPerson>>>
-export type GetSocialPersonQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
+export type GetSocialPersonQueryError = ErrorType<SessionUnauthorizedResponse | void>
 
 
-export function useGetSocialPerson<TData = Awaited<ReturnType<typeof getSocialPerson>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialPerson<TData = Awaited<ReturnType<typeof getSocialPerson>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
  username: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPerson>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getSocialPerson>>,
@@ -8173,7 +5212,7 @@ export function useGetSocialPerson<TData = Awaited<ReturnType<typeof getSocialPe
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSocialPerson<TData = Awaited<ReturnType<typeof getSocialPerson>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialPerson<TData = Awaited<ReturnType<typeof getSocialPerson>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
  username: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPerson>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getSocialPerson>>,
@@ -8183,12 +5222,12 @@ export function useGetSocialPerson<TData = Awaited<ReturnType<typeof getSocialPe
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSocialPerson<TData = Awaited<ReturnType<typeof getSocialPerson>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialPerson<TData = Awaited<ReturnType<typeof getSocialPerson>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
  username: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPerson>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetSocialPerson<TData = Awaited<ReturnType<typeof getSocialPerson>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialPerson<TData = Awaited<ReturnType<typeof getSocialPerson>>, TError = ErrorType<SessionUnauthorizedResponse | void>>(
  username: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialPerson>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -8246,7 +5285,7 @@ return customFetch<SocialAction>(getSetSocialRelationshipUrl(username),
 
 export const getSetSocialRelationshipMutationKey = () => ['setSocialRelationship'] as const;
 
-export const getSetSocialRelationshipMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+export const getSetSocialRelationshipMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setSocialRelationship>>, TError,SetSocialRelationshipMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof setSocialRelationship>>, TError,SetSocialRelationshipMutationVariables, TContext> => {
 
@@ -8275,10 +5314,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SetSocialRelationshipMutationResult = NonNullable<Awaited<ReturnType<typeof setSocialRelationship>>>
     export type SetSocialRelationshipMutationBody = BodyType<SocialRelationshipInput>
-    export type SetSocialRelationshipMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
+    export type SetSocialRelationshipMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse>
     export type SetSocialRelationshipMutationVariables = {username: string;data: BodyType<SocialRelationshipInput>}
 
-    export const useSetSocialRelationship = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+    export const useSetSocialRelationship = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setSocialRelationship>>, TError,SetSocialRelationshipMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof setSocialRelationship>>,
@@ -8319,7 +5358,7 @@ export const getGetSocialBlocksQueryKey = () => {
     }
 
 
-export const getGetSocialBlocksQueryOptions = <TData = Awaited<ReturnType<typeof getSocialBlocks>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialBlocks>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getGetSocialBlocksQueryOptions = <TData = Awaited<ReturnType<typeof getSocialBlocks>>, TError = ErrorType<SessionUnauthorizedResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialBlocks>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -8338,10 +5377,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetSocialBlocksQueryResult = NonNullable<Awaited<ReturnType<typeof getSocialBlocks>>>
-export type GetSocialBlocksQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
+export type GetSocialBlocksQueryError = ErrorType<SessionUnauthorizedResponse>
 
 
-export function useGetSocialBlocks<TData = Awaited<ReturnType<typeof getSocialBlocks>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialBlocks<TData = Awaited<ReturnType<typeof getSocialBlocks>>, TError = ErrorType<SessionUnauthorizedResponse>>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialBlocks>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getSocialBlocks>>,
@@ -8351,7 +5390,7 @@ export function useGetSocialBlocks<TData = Awaited<ReturnType<typeof getSocialBl
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSocialBlocks<TData = Awaited<ReturnType<typeof getSocialBlocks>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialBlocks<TData = Awaited<ReturnType<typeof getSocialBlocks>>, TError = ErrorType<SessionUnauthorizedResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialBlocks>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getSocialBlocks>>,
@@ -8361,549 +5400,17 @@ export function useGetSocialBlocks<TData = Awaited<ReturnType<typeof getSocialBl
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSocialBlocks<TData = Awaited<ReturnType<typeof getSocialBlocks>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialBlocks<TData = Awaited<ReturnType<typeof getSocialBlocks>>, TError = ErrorType<SessionUnauthorizedResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialBlocks>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetSocialBlocks<TData = Awaited<ReturnType<typeof getSocialBlocks>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialBlocks<TData = Awaited<ReturnType<typeof getSocialBlocks>>, TError = ErrorType<SessionUnauthorizedResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialBlocks>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetSocialBlocksQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getClaimSocialDailyRewardUrl = () => {
-
-
-
-
-  return `/api/social/wallet/claim`
-}
-
-export const claimSocialDailyReward = async ( options?: Parameters<typeof customFetch>[1]): Promise<SocialWallet> => {
-
-  return customFetch<SocialWallet>(getClaimSocialDailyRewardUrl(),
-  {
-    ...options,
-    method: 'POST'
-
-
-  }
-);}
-
-
-
-
-
-export const getClaimSocialDailyRewardMutationKey = () => ['claimSocialDailyReward'] as const;
-
-export const getClaimSocialDailyRewardMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof claimSocialDailyReward>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof claimSocialDailyReward>>, TError,void, TContext> => {
-
-const mutationKey = getClaimSocialDailyRewardMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof claimSocialDailyReward>>, void> = () => {
-
-
-          return  claimSocialDailyReward(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ClaimSocialDailyRewardMutationResult = NonNullable<Awaited<ReturnType<typeof claimSocialDailyReward>>>
-
-    export type ClaimSocialDailyRewardMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
-
-
-    export const useClaimSocialDailyReward = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof claimSocialDailyReward>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof claimSocialDailyReward>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getClaimSocialDailyRewardMutationOptions(options), queryClient);
-    }
-
-export const getSendSocialGiftUrl = () => {
-
-
-
-
-  return `/api/social/gifts`
-}
-
-export const sendSocialGift = async (socialGiftInput: SocialGiftInput, options?: Parameters<typeof customFetch>[1]): Promise<SocialWallet> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<SocialWallet>(getSendSocialGiftUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(socialGiftInput)
-  }
-);}
-
-
-
-
-
-export const getSendSocialGiftMutationKey = () => ['sendSocialGift'] as const;
-
-export const getSendSocialGiftMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendSocialGift>>, TError,SendSocialGiftMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof sendSocialGift>>, TError,SendSocialGiftMutationVariables, TContext> => {
-
-const mutationKey = getSendSocialGiftMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendSocialGift>>, SendSocialGiftMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  sendSocialGift(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SendSocialGiftMutationResult = NonNullable<Awaited<ReturnType<typeof sendSocialGift>>>
-    export type SendSocialGiftMutationBody = BodyType<SocialGiftInput>
-    export type SendSocialGiftMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
-    export type SendSocialGiftMutationVariables = {data: BodyType<SocialGiftInput>}
-
-    export const useSendSocialGift = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendSocialGift>>, TError,SendSocialGiftMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof sendSocialGift>>,
-        TError,
-        SendSocialGiftMutationVariables,
-        TContext
-      > => {
-      return useMutation(getSendSocialGiftMutationOptions(options), queryClient);
-    }
-
-export const getGetRoomGiftEventsUrl = (roomId: string,
-    params?: GetRoomGiftEventsParams,) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0 ? `/api/social/gifts/rooms/${roomId}?${stringifiedParams}` : `/api/social/gifts/rooms/${roomId}`
-}
-
-export const getRoomGiftEvents = async (roomId: string,
-    params?: GetRoomGiftEventsParams, options?: Parameters<typeof customFetch>[1]): Promise<GetRoomGiftEvents200> => {
-
-  return customFetch<GetRoomGiftEvents200>(getGetRoomGiftEventsUrl(roomId,params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetRoomGiftEventsQueryKey = (roomId: string,
-    params?: GetRoomGiftEventsParams,) => {
-    return [
-    `/api/social/gifts/rooms/${roomId}`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getGetRoomGiftEventsQueryOptions = <TData = Awaited<ReturnType<typeof getRoomGiftEvents>>, TError = ErrorType<unknown>>(roomId: string,
-    params?: GetRoomGiftEventsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetRoomGiftEventsQueryKey(roomId,params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRoomGiftEvents>>> = ({ signal }) => getRoomGiftEvents(roomId,params, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: roomId !== null && roomId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetRoomGiftEventsQueryResult = NonNullable<Awaited<ReturnType<typeof getRoomGiftEvents>>>
-export type GetRoomGiftEventsQueryError = ErrorType<unknown>
-
-
-export function useGetRoomGiftEvents<TData = Awaited<ReturnType<typeof getRoomGiftEvents>>, TError = ErrorType<unknown>>(
- roomId: string,
-    params: undefined |  GetRoomGiftEventsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getRoomGiftEvents>>,
-          TError,
-          Awaited<ReturnType<typeof getRoomGiftEvents>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetRoomGiftEvents<TData = Awaited<ReturnType<typeof getRoomGiftEvents>>, TError = ErrorType<unknown>>(
- roomId: string,
-    params?: GetRoomGiftEventsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getRoomGiftEvents>>,
-          TError,
-          Awaited<ReturnType<typeof getRoomGiftEvents>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetRoomGiftEvents<TData = Awaited<ReturnType<typeof getRoomGiftEvents>>, TError = ErrorType<unknown>>(
- roomId: string,
-    params?: GetRoomGiftEventsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useGetRoomGiftEvents<TData = Awaited<ReturnType<typeof getRoomGiftEvents>>, TError = ErrorType<unknown>>(
- roomId: string,
-    params?: GetRoomGiftEventsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRoomGiftEvents>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetRoomGiftEventsQueryOptions(roomId,params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getPurchaseSocialProductUrl = () => {
-
-
-
-
-  return `/api/social/store/purchase`
-}
-
-export const purchaseSocialProduct = async (socialPurchaseInput: SocialPurchaseInput, options?: Parameters<typeof customFetch>[1]): Promise<SocialWallet> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<SocialWallet>(getPurchaseSocialProductUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(socialPurchaseInput)
-  }
-);}
-
-
-
-
-
-export const getPurchaseSocialProductMutationKey = () => ['purchaseSocialProduct'] as const;
-
-export const getPurchaseSocialProductMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purchaseSocialProduct>>, TError,PurchaseSocialProductMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof purchaseSocialProduct>>, TError,PurchaseSocialProductMutationVariables, TContext> => {
-
-const mutationKey = getPurchaseSocialProductMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof purchaseSocialProduct>>, PurchaseSocialProductMutationVariables> = (props) => {
-          const {data} = props ?? {};
-
-          return  purchaseSocialProduct(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PurchaseSocialProductMutationResult = NonNullable<Awaited<ReturnType<typeof purchaseSocialProduct>>>
-    export type PurchaseSocialProductMutationBody = BodyType<SocialPurchaseInput>
-    export type PurchaseSocialProductMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
-    export type PurchaseSocialProductMutationVariables = {data: BodyType<SocialPurchaseInput>}
-
-    export const usePurchaseSocialProduct = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof purchaseSocialProduct>>, TError,PurchaseSocialProductMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof purchaseSocialProduct>>,
-        TError,
-        PurchaseSocialProductMutationVariables,
-        TContext
-      > => {
-      return useMutation(getPurchaseSocialProductMutationOptions(options), queryClient);
-    }
-
-export const getGetSocialLedgerUrl = () => {
-
-
-
-
-  return `/api/social/wallet/transactions`
-}
-
-export const getSocialLedger = async ( options?: Parameters<typeof customFetch>[1]): Promise<SocialLedger> => {
-
-  return customFetch<SocialLedger>(getGetSocialLedgerUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetSocialLedgerQueryKey = () => {
-    return [
-    `/api/social/wallet/transactions`
-    ] as const;
-    }
-
-
-export const getGetSocialLedgerQueryOptions = <TData = Awaited<ReturnType<typeof getSocialLedger>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialLedger>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetSocialLedgerQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSocialLedger>>> = ({ signal }) => getSocialLedger({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialLedger>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetSocialLedgerQueryResult = NonNullable<Awaited<ReturnType<typeof getSocialLedger>>>
-export type GetSocialLedgerQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
-
-
-export function useGetSocialLedger<TData = Awaited<ReturnType<typeof getSocialLedger>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialLedger>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getSocialLedger>>,
-          TError,
-          Awaited<ReturnType<typeof getSocialLedger>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSocialLedger<TData = Awaited<ReturnType<typeof getSocialLedger>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialLedger>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getSocialLedger>>,
-          TError,
-          Awaited<ReturnType<typeof getSocialLedger>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSocialLedger<TData = Awaited<ReturnType<typeof getSocialLedger>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialLedger>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useGetSocialLedger<TData = Awaited<ReturnType<typeof getSocialLedger>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialLedger>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetSocialLedgerQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getGetSocialLeaderboardUrl = () => {
-
-
-
-
-  return `/api/social/leaderboard`
-}
-
-export const getSocialLeaderboard = async ( options?: Parameters<typeof customFetch>[1]): Promise<SocialPeople> => {
-
-  return customFetch<SocialPeople>(getGetSocialLeaderboardUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetSocialLeaderboardQueryKey = () => {
-    return [
-    `/api/social/leaderboard`
-    ] as const;
-    }
-
-
-export const getGetSocialLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getSocialLeaderboard>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialLeaderboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetSocialLeaderboardQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSocialLeaderboard>>> = ({ signal }) => getSocialLeaderboard({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialLeaderboard>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetSocialLeaderboardQueryResult = NonNullable<Awaited<ReturnType<typeof getSocialLeaderboard>>>
-export type GetSocialLeaderboardQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
-
-
-export function useGetSocialLeaderboard<TData = Awaited<ReturnType<typeof getSocialLeaderboard>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialLeaderboard>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getSocialLeaderboard>>,
-          TError,
-          Awaited<ReturnType<typeof getSocialLeaderboard>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSocialLeaderboard<TData = Awaited<ReturnType<typeof getSocialLeaderboard>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialLeaderboard>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getSocialLeaderboard>>,
-          TError,
-          Awaited<ReturnType<typeof getSocialLeaderboard>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSocialLeaderboard<TData = Awaited<ReturnType<typeof getSocialLeaderboard>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialLeaderboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useGetSocialLeaderboard<TData = Awaited<ReturnType<typeof getSocialLeaderboard>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialLeaderboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetSocialLeaderboardQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -8946,7 +5453,7 @@ export const getGetSocialInboxQueryKey = () => {
     }
 
 
-export const getGetSocialInboxQueryOptions = <TData = Awaited<ReturnType<typeof getSocialInbox>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialInbox>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getGetSocialInboxQueryOptions = <TData = Awaited<ReturnType<typeof getSocialInbox>>, TError = ErrorType<SessionUnauthorizedResponse>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialInbox>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -8965,10 +5472,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetSocialInboxQueryResult = NonNullable<Awaited<ReturnType<typeof getSocialInbox>>>
-export type GetSocialInboxQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
+export type GetSocialInboxQueryError = ErrorType<SessionUnauthorizedResponse>
 
 
-export function useGetSocialInbox<TData = Awaited<ReturnType<typeof getSocialInbox>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialInbox<TData = Awaited<ReturnType<typeof getSocialInbox>>, TError = ErrorType<SessionUnauthorizedResponse>>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialInbox>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getSocialInbox>>,
@@ -8978,7 +5485,7 @@ export function useGetSocialInbox<TData = Awaited<ReturnType<typeof getSocialInb
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSocialInbox<TData = Awaited<ReturnType<typeof getSocialInbox>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialInbox<TData = Awaited<ReturnType<typeof getSocialInbox>>, TError = ErrorType<SessionUnauthorizedResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialInbox>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getSocialInbox>>,
@@ -8988,12 +5495,12 @@ export function useGetSocialInbox<TData = Awaited<ReturnType<typeof getSocialInb
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSocialInbox<TData = Awaited<ReturnType<typeof getSocialInbox>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialInbox<TData = Awaited<ReturnType<typeof getSocialInbox>>, TError = ErrorType<SessionUnauthorizedResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialInbox>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetSocialInbox<TData = Awaited<ReturnType<typeof getSocialInbox>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialInbox<TData = Awaited<ReturnType<typeof getSocialInbox>>, TError = ErrorType<SessionUnauthorizedResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialInbox>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
@@ -9051,7 +5558,7 @@ export const getGetSocialConversationQueryKey = (username: string,
     }
 
 
-export const getGetSocialConversationQueryOptions = <TData = Awaited<ReturnType<typeof getSocialConversation>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(username: string,
+export const getGetSocialConversationQueryOptions = <TData = Awaited<ReturnType<typeof getSocialConversation>>, TError = ErrorType<SessionUnauthorizedResponse>>(username: string,
     params?: GetSocialConversationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialConversation>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
@@ -9071,10 +5578,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetSocialConversationQueryResult = NonNullable<Awaited<ReturnType<typeof getSocialConversation>>>
-export type GetSocialConversationQueryError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
+export type GetSocialConversationQueryError = ErrorType<SessionUnauthorizedResponse>
 
 
-export function useGetSocialConversation<TData = Awaited<ReturnType<typeof getSocialConversation>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialConversation<TData = Awaited<ReturnType<typeof getSocialConversation>>, TError = ErrorType<SessionUnauthorizedResponse>>(
  username: string,
     params: undefined |  GetSocialConversationParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialConversation>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -9085,7 +5592,7 @@ export function useGetSocialConversation<TData = Awaited<ReturnType<typeof getSo
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSocialConversation<TData = Awaited<ReturnType<typeof getSocialConversation>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialConversation<TData = Awaited<ReturnType<typeof getSocialConversation>>, TError = ErrorType<SessionUnauthorizedResponse>>(
  username: string,
     params?: GetSocialConversationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialConversation>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -9096,13 +5603,13 @@ export function useGetSocialConversation<TData = Awaited<ReturnType<typeof getSo
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSocialConversation<TData = Awaited<ReturnType<typeof getSocialConversation>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialConversation<TData = Awaited<ReturnType<typeof getSocialConversation>>, TError = ErrorType<SessionUnauthorizedResponse>>(
  username: string,
     params?: GetSocialConversationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialConversation>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetSocialConversation<TData = Awaited<ReturnType<typeof getSocialConversation>>, TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>>(
+export function useGetSocialConversation<TData = Awaited<ReturnType<typeof getSocialConversation>>, TError = ErrorType<SessionUnauthorizedResponse>>(
  username: string,
     params?: GetSocialConversationParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSocialConversation>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -9161,7 +5668,7 @@ return customFetch<SocialMessage>(getSendSocialMessageUrl(username),
 
 export const getSendSocialMessageMutationKey = () => ['sendSocialMessage'] as const;
 
-export const getSendSocialMessageMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+export const getSendSocialMessageMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendSocialMessage>>, TError,SendSocialMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof sendSocialMessage>>, TError,SendSocialMessageMutationVariables, TContext> => {
 
@@ -9190,10 +5697,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type SendSocialMessageMutationResult = NonNullable<Awaited<ReturnType<typeof sendSocialMessage>>>
     export type SendSocialMessageMutationBody = BodyType<SocialMessageInput>
-    export type SendSocialMessageMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
+    export type SendSocialMessageMutationError = ErrorType<SessionUnauthorizedResponse>
     export type SendSocialMessageMutationVariables = {username: string;data: BodyType<SocialMessageInput>}
 
-    export const useSendSocialMessage = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+    export const useSendSocialMessage = <TError = ErrorType<SessionUnauthorizedResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendSocialMessage>>, TError,SendSocialMessageMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof sendSocialMessage>>,
@@ -9229,7 +5736,7 @@ export const deleteSocialConversation = async (username: string, options?: Param
 
 export const getDeleteSocialConversationMutationKey = () => ['deleteSocialConversation'] as const;
 
-export const getDeleteSocialConversationMutationOptions = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+export const getDeleteSocialConversationMutationOptions = <TError = ErrorType<SessionUnauthorizedResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSocialConversation>>, TError,DeleteSocialConversationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteSocialConversation>>, TError,DeleteSocialConversationMutationVariables, TContext> => {
 
@@ -9258,10 +5765,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteSocialConversationMutationResult = NonNullable<Awaited<ReturnType<typeof deleteSocialConversation>>>
 
-    export type DeleteSocialConversationMutationError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>
+    export type DeleteSocialConversationMutationError = ErrorType<SessionUnauthorizedResponse>
     export type DeleteSocialConversationMutationVariables = {username: string}
 
-    export const useDeleteSocialConversation = <TError = ErrorType<InvalidInputResponse | SessionUnauthorizedResponse | void>,
+    export const useDeleteSocialConversation = <TError = ErrorType<SessionUnauthorizedResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSocialConversation>>, TError,DeleteSocialConversationMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof deleteSocialConversation>>,

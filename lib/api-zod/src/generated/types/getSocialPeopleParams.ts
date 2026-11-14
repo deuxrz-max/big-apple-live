@@ -8,8 +8,10 @@
 import type { GetSocialPeopleGender } from './getSocialPeopleGender';
 
 export type GetSocialPeopleParams = {
+  /** @maxLength 80 */
   search?: string;
   gender?: GetSocialPeopleGender;
+  /** @maxLength 2 */
   country?: string;
   favorites?: boolean;
   /** @minimum 0 */

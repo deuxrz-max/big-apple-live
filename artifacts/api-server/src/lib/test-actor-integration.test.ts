@@ -4,8 +4,7 @@ import { test } from "node:test";
 import { and, eq, inArray, or } from "drizzle-orm";
 import {
   accountProfiles, chatAdmissions, chatMemberships, chatRooms, db, moderatorBotFlags,
-  roomMessages, socialGiftBag, socialGiftEvents, socialLedger, socialMessages,
-  socialRelations, socialSettings, socialWallets,
+  roomMessages, socialMessages, socialRelations, socialSettings,
 } from "@workspace/db";
 import { getMessages } from "./room-chat";
 import { roomStore } from "./room-store";
@@ -15,7 +14,7 @@ const testIdentity = {
   emojiId: "1F600", gender: "Female" as const, color: "#FFFFFF", hairColor: "#000000",
 };
 
-test("test actor commands exercise isolated university, chat, DM, and gift services", async t => {
+test("test actor commands exercise isolated university, chat, and DM services", async t => {
   const previousNodeEnv = process.env.NODE_ENV;
   process.env.NODE_ENV = "development";
   const token = randomUUID().replaceAll("-", "").slice(0, 12);
@@ -48,7 +47,6 @@ test("test actor commands exercise isolated university, chat, DM, and gift servi
       } finally {
         await db.delete(moderatorBotFlags).where(inArray(moderatorBotFlags.accountId, ids));
         await db.delete(roomMessages).where(eq(roomMessages.historyId, historyId));
-        await db.delete(socialGiftEvents).where(eq(socialGiftEvents.historyId, historyId));
         await db.delete(socialMessages).where(or(
           inArray(socialMessages.senderId, ids), inArray(socialMessages.recipientId, ids),
         ));
@@ -87,9 +85,6 @@ test("test actor commands exercise isolated university, chat, DM, and gift servi
   })));
   await db.insert(socialSettings).values(ids.map(accountId => ({
     accountId, discoverable: true,
-  })));
-  await db.insert(socialWallets).values(ids.map(accountId => ({
-    accountId, balance: 1000, earned: 1000, received: 0, sent: 0,
   })));
   await db.insert(chatAdmissions).values([
     ...eligibleIds.map(accountId => ({ accountId })),
@@ -200,42 +195,4 @@ test("test actor commands exercise isolated university, chat, DM, and gift servi
     assert.ok(persisted.every(message => message.recipientId === recipientId));
   });
 
-  await t.test("a test gift debits the marked wallet once and applies the existing credit split", async () => {
-    const result = await executeTestActorCommand({
-      action: "gift", as: actorName, to: recipientName, room: roomId, gift: "spirit-pup",
-    }) as { testCreditsRemaining: number };
-    assert.equal(result.testCreditsRemaining, 900);
-
-    const wallets = await db.select().from(socialWallets).where(inArray(socialWallets.accountId, [actorId, recipientId, unmarkedId]));
-    const senderWallet = wallets.find(wallet => wallet.accountId === actorId)!;
-    const recipientWallet = wallets.find(wallet => wallet.accountId === recipientId)!;
-    const unmarkedWallet = wallets.find(wallet => wallet.accountId === unmarkedId)!;
-    assert.equal(senderWallet.balance, 900);
-    assert.equal(senderWallet.sent, 100);
-    assert.equal(recipientWallet.balance, 1050);
-    assert.equal(recipientWallet.received, 50);
-    assert.equal(unmarkedWallet.balance, 1000);
-    assert.equal(unmarkedWallet.received, 0);
-
-    const [bag] = await db.select().from(socialGiftBag).where(and(
-      eq(socialGiftBag.accountId, recipientId), eq(socialGiftBag.giftId, "spirit-pup"),
-    ));
-    assert.equal(bag?.quantity, 1);
-    const receipts = await db.select().from(socialGiftEvents).where(eq(socialGiftEvents.historyId, historyId));
-    assert.equal(receipts.length, 1);
-    assert.equal(receipts[0]?.senderId, actorId);
-    assert.equal(receipts[0]?.recipientId, recipientId);
-    assert.equal(receipts[0]?.cost, 100);
-    assert.equal(receipts[0]?.recipientCredits, 50);
-    assert.equal(receipts[0]?.houseCredits, 50);
-    const ledgerRows = await db.select().from(socialLedger).where(inArray(socialLedger.accountId, [actorId, recipientId]));
-    assert.equal(ledgerRows.filter(row => row.kind === "gift_sent").length, 1);
-    assert.equal(ledgerRows.filter(row => row.kind === "gift_received").length, 1);
-
-    await assert.rejects(executeTestActorCommand({
-      action: "gift", as: actorName, to: unmarkedName, room: roomId, gift: "spirit-pup",
-    }), { status: 403 });
-    const unchanged = await db.select().from(socialWallets).where(eq(socialWallets.accountId, unmarkedId));
-    assert.equal(unchanged[0]?.balance, 1000);
-  });
 });

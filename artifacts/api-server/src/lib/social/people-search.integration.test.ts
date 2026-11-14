@@ -5,7 +5,6 @@ import { db, accountProfiles, socialSettings, socialRelations } from "@workspace
 import { eq, inArray } from "drizzle-orm";
 import { GetSocialPeopleResponse } from "@workspace/api-zod";
 import { getPerson, listPeople, relationship } from "./people";
-import { assertContact, assertGiftContact } from "./core";
 
 test("People searches all accounts by partial display name and ID, preserving privacy and blocks", async t => {
   const token = randomUUID().replaceAll("-", "").slice(0, 10);
@@ -30,10 +29,8 @@ test("People searches all accounts by partial display name and ID, preserving pr
     const result = GetSocialPeopleResponse.parse(await listPeople(actor, { search: `ml${token}` }));
     assert.deepEqual(result.people.map(p => p.username), [usernames[1]]);
     assert.equal(result.total, 1);
-    assert.equal(result.people[0]!.discoverable, false);
+    assert.equal("discoverable" in result.people[0]!, false);
     assert.equal((await getPerson(actor, usernames[1]!)).username, usernames[1]);
-    await assert.doesNotReject(assertContact(db, actor, target));
-    await assert.rejects(assertGiftContact(db, actor, target), /discovery/);
     await relationship(actor, usernames[1]!, "favorite", true);
     assert.equal((await getPerson(actor, usernames[1]!)).favorite, true);
     await relationship(actor, usernames[1]!, "favorite", false);

@@ -11,6 +11,7 @@ import type { SocialPerson } from './socialPerson';
 export interface SocialConversation {
   person: SocialPerson;
   messages: SocialMessage[];
+  /** @nullable */
   nextCursor: string | null;
   blocked: boolean;
 }

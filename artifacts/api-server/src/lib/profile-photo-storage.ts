@@ -37,6 +37,16 @@ export async function removeRetiredPhotoObject(id: string, key: string) {
     if (timeout) clearTimeout(timeout);
   }
 }
+export async function deleteReplacedProfilePhoto(accountId: string, url: string) {
+  const match = /^\/api\/photos\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/.exec(url);
+  if (!match) return;
+  const id = match[1]!;
+  const [photo] = await db.select({ id: profilePhotos.id, objectKey: profilePhotos.objectKey })
+    .from(profilePhotos).where(and(eq(profilePhotos.id, id), eq(profilePhotos.accountId, accountId)));
+  if (!photo) return;
+  await removeRetiredPhotoObject(photo.id, photo.objectKey);
+  await db.delete(profilePhotos).where(and(eq(profilePhotos.id, id), eq(profilePhotos.accountId, accountId)));
+}
 export async function normalizePhoto(bytes: Buffer): Promise<Buffer> {
   if (!bytes.length) throw new RoomError(400, "Choose a JPEG, PNG or WebP photo");
   if (bytes.length > PHOTO_LIMIT) throw new RoomError(413, "Photo must be 5 MiB or smaller");

@@ -87,7 +87,6 @@ body { background-color: #151518; background-image: none; font-family: 'Montserr
   line-height: 1;
 }
 .st-search { flex: 1; min-width: 0; border-radius: 999px !important; padding: 10px 16px !important; background: #1D1D23 !important; }
-.st-credits { font-weight: 700; font-size: 13px; padding: 8px 14px; border-radius: 999px; background: var(--st-pink); color: #fff; white-space: nowrap; }
 .st-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-top: 12px; }
 @media (min-width: 700px) { .st-grid { grid-template-columns: repeat(3, minmax(0,1fr)); } }
 @media (min-width: 960px) { .st-grid { grid-template-columns: repeat(4, minmax(0,1fr)); } }
@@ -184,11 +183,11 @@ body {
   letter-spacing: -.035em;
 }
 #root :is(.ch h1,.sc-h1,.sc-h2,.ib-title,.fg-title,.pf-name) { color: var(--space-ink); }
-#root :is(.ch-note,.sc-sub,.sc-count,.fg-empty,.ib-prev,.pf-h2,.pf-badge small) { color: var(--space-muted); }
+#root :is(.ch-note,.sc-sub,.sc-count,.fg-empty,.ib-prev) { color: var(--space-muted); }
 #root .ch:not(.ch-university) { background: transparent; }
 
 /* Glass surfaces use layered backgrounds so the violet-blue edge stays crisp. */
-#root :is(.ch-list li,.sc-card,.sc-panel,.sc-empty,.sc-wallet,.ib-row,.fg-tile,
+#root :is(.ch-list li,.sc-card,.sc-panel,.sc-empty,.ib-row,.fg-tile,
   .bc-card,.bc-review,.dh-banner,.dh-card,.ur-side,.ur-slot,.ur-menu,.ur-rules,
   .ur-chip,.ur-modal > section,.pf-dialog,.pf-menu-list,.pf-stats>div,.sc-msgs) {
   border: 1px solid transparent;
@@ -241,7 +240,6 @@ body {
 /* Landing, home directory and topic universities. */
 #root .st-topbar { padding-block: 16px 9px; }
 #root .st-search { border: 1px solid var(--space-edge) !important; background: rgba(27, 22, 51, .78) !important; }
-#root .st-credits { background: linear-gradient(120deg,#a64fdb,#ec6aaa); }
 #root .st-card { border: 1px solid rgba(190,159,255,.48) !important; background: rgba(20,16,43,.82) !important; box-shadow: var(--space-shadow); }
 #root .st-cover { background: linear-gradient(145deg,#523581,#273a73); }
 #root .st-live, #root .st-count { background: rgba(14,11,31,.84); backdrop-filter: blur(10px); }

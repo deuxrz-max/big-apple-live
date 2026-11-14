@@ -5,7 +5,7 @@ import '../../src/profile/profile.css';
 import '../../src/social/favorites-gallery.css';
 
 const portrait = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="160"><rect width="80" height="160" fill="white"/><rect x="1" y="1" width="78" height="158" fill="none" stroke="red" stroke-width="4"/><text x="8" y="80">WHOLE</text></svg>')}`;
-const wrappers = ['pf-slide', 'bc-ph-tap', 'fg-photo', 'ur-slot-photo-fill', 'st-live-avatar', 'st-live-creator-avatar', 'st-live-gifter-avatar', 'gift-panel-avatar'];
+const wrappers = ['pf-slide', 'bc-ph-tap', 'ur-slot-photo-fill', 'st-live-avatar', 'st-live-creator-avatar'];
 
 export function AuditFixesFixture() {
   const [path, setPath] = useState('/home');

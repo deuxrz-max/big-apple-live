@@ -5,7 +5,7 @@ import { targetAccount, pairBlocked } from "./social/core";
 import { sendMessage } from "./social/messages";
 import { visibleProfilePhotos } from "./photo-visibility";
 import { botRotation } from "./moderator-bots";
-import { nameColorProfilesForAccounts } from "./social/gift-name-color-data";
+import { getProfileCosmeticStyle } from "./social/profile-cosmetics";
 import type { UniversityPerson } from "@workspace/api-zod";
 
 export async function ignoredAccounts(id: string) {
@@ -51,13 +51,12 @@ export async function roomWhispers(id: string, roomId: string) {
     if (peer) result.push({ accountId: peerId, id: row.id, username: peer.username, displayName: peer.displayName ?? peer.username,
       outgoing: row.senderId === id, body: row.body, createdAt: row.createdAt });
   }
-  const colors = await nameColorProfilesForAccounts(result.map(row => row.accountId));
+  const styles = new Map(await Promise.all(result.map(async row => [row.accountId, await getProfileCosmeticStyle(row.accountId)] as const)));
   return result.map(({ accountId, ...whisper }) => ({
-    ...whisper, displayNameColor: colors.get(accountId)?.color ?? "#FFFFFF",
-    displayNameTierIndex: colors.get(accountId)?.tierIndex ?? 0,
-    badgeId: null,
-    badgeName: null,
-    badgeImage: null,
+    ...whisper,
+    displayNameColor: styles.get(accountId)?.displayNameColor ?? "#FFFFFF",
+    displayNameTierIndex: styles.get(accountId)?.displayNameTierIndex ?? 0,
+    hasNameShimmer: styles.get(accountId)?.specialNameId === 'shimmer',
   }));
 }
 export async function universitySession(id: string, roomId: string, sessionId: string) {
@@ -68,7 +67,8 @@ export async function universitySession(id: string, roomId: string, sessionId: s
   const presentAccountIds = [...new Set(snapshot.participants
     .map(participant => roomStore.sessionAccountId(roomId, participant.participantId))
     .filter((accountId): accountId is string => !!accountId))];
-  const nameColors = await nameColorProfilesForAccounts(presentAccountIds);
+  const nameStyles = new Map(await Promise.all(presentAccountIds.map(async accountId =>
+    [accountId, await getProfileCosmeticStyle(accountId)] as const)));
   const blockedRelations = await db.select().from(socialRelations).where(and(
     eq(socialRelations.kind, "block"),
     or(eq(socialRelations.ownerId, id), eq(socialRelations.targetId, id)),
@@ -93,22 +93,20 @@ export async function universitySession(id: string, roomId: string, sessionId: s
         emojiId: profile.emojiId, gender: profile.gender, color: profile.color,
         hairColor: profile.hairColor, portraitId: profile.portraitId ?? null,
       },
-      displayNameColor: nameColors.get(ownerId)?.color ?? "#FFFFFF",
-      displayNameTierIndex: nameColors.get(ownerId)?.tierIndex ?? 0,
+       displayNameColor: nameStyles.get(ownerId)?.displayNameColor ?? "#FFFFFF",
+       displayNameTierIndex: nameStyles.get(ownerId)?.displayNameTierIndex ?? 0,
+       frameId: nameStyles.get(ownerId)?.frameId ?? 'grey-starter',
+       hasNameShimmer: nameStyles.get(ownerId)?.specialNameId === 'shimmer',
       photoStatus: photos.photoReviews?.find(r => r.photoUrl === photos.photoUrl)?.status ?? null,
       self: ownerId === id, moderator: moderators.has(ownerId), ignored: ignored.includes(ownerId),
-      blocked: blockedIds.has(ownerId), botId: null,
-        badgeId: null,
-        badgeName: null,
-        badgeImage: null,
+       blocked: blockedIds.has(ownerId), botId: null,
     });
   }
   for (const bot of botRotation.people(roomId.toUpperCase())) people.push({
     participantId: bot.participantId, username: bot.name, displayName: bot.name, photoUrl: bot.avatarUrl,
     race: "Human", job: null,
-    displayNameColor: "#FFFFFF", displayNameTierIndex: 0,
+    displayNameColor: "#FFFFFF", displayNameTierIndex: 0, frameId: 'grey-starter', hasNameShimmer: false,
     photoStatus: "approved", self: false, moderator: true, ignored: false, blocked: false, botId: bot.id,
-    badgeId: null, badgeName: null, badgeImage: null,
   });
   const [prefs] = await db.select().from(universityPreferences).where(eq(universityPreferences.accountId, id));
   const ignoredNames = ignored.length

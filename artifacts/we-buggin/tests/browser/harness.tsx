@@ -1,21 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { RoomChannelsFixture, CauldronHoldFixture } from './room-channels-fixture';
+import { RoomChannelsFixture } from './room-channels-fixture';
 import { createRoot } from 'react-dom/client';
 import { ChessRoom } from '../../src/chess/ChessRoom';
 import { QuickProfileProvider } from '../../src/profile/QuickProfile';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PromoBackground } from '../../src/chat/PromoBackground';
 import { TextChatRoom } from '../../src/chat/UniversityRoom';
-import { BuyCreditsPage } from '../../src/social/BuyCreditsPage';
-import { StorePage } from '../../src/store/StorePage';
-import { GiftBag, GiftControl, OPEN_ROOM_GIFTS_EVENT } from '../../src/gifts';
-import { GiftComboPlayer } from '../../src/gifts/GiftComboPlayer';
-import { GiftArtwork } from '../../src/gifts/GiftArtwork';
-import { RewardsPage } from '../../src/social/MoneyPages';
 import { ShinyName } from '../../src/components/ShinyName';
-import { giftingTier } from '@workspace/beam-identity';
-import { giftingPerks } from '../../src/gifting/gifting';
-import { GiftingEntranceOverlay } from '../../src/gifting/GiftingCelebrations';
 import { RoomFeedFixture } from './room-feed-fixture';
 import { LiveLayoutFixture } from './live-layout-fixture';
 import { ProfileNavigationFixture } from './profile-navigation-fixture';
@@ -27,7 +18,7 @@ import { RoomPerimeter } from '../../src/chat/RoomPerimeter';
 import { OwnProfile } from '../../src/profile/OwnProfile';
 import { ChatProfile, ProfilePhotoReviewPage, HomeSections, DirectoryRoomCard, PublicChatLanding } from '../../src/chat/ChatApp';
 import { MyProfilePage } from '../../src/social/PeoplePages';
-import { VisualCleanupFixture } from './visual-cleanup-fixture';
+import { StorePage } from '../../src/profile/StorePage';
 import type { UniversityVideoBeamTvState } from '@workspace/api-client-react';
 import '../../src/social/social.css';
 import '../../src/index.css';
@@ -70,79 +61,6 @@ function HomePolishFixture() {
   </div>;
 }
 
-function GiftingLevelsFixture() {
-  const levels = [0, 1, 10, 11, 30, 31, 60, 61, 90, 91, 100];
-  const entranceLevel = Number(new URLSearchParams(location.search).get('entrance'));
-  return <section style={{ background: '#14100A', color: '#F6E6C0', padding: 20 }}>
-    {entranceLevel > 0 && <GiftingEntranceOverlay arrival={{ id: 'fixture', at: Date.now(), displayName: 'Test gifter', level: entranceLevel }} onFinish={() => {}} />}
-    {levels.map(level => (
-      <p key={level} data-testid={`gifting-level-${level}`}>
-        <ShinyName displayNameColor="#FFFFFF" displayNameTierIndex={level}>VAMPSQUAD</ShinyName>
-        <span className="ur-slot" data-testid={`frame-level-${level}`}
-          data-gifting-frame={giftingPerks(level).animatedFrame ? giftingTier(level).key : undefined}
-          style={{ display: 'block', width: 100, height: 64, borderRadius: 0 }}>
-          <span className="ur-slot-media" style={{ display: 'block', width: '100%', height: '100%', borderRadius: 0, background: '#000' }} />
-        </span>
-      </p>
-    ))}
-    <p data-testid="gifting-preserves-username">
-      <ShinyName displayNameColor="#C0C0C0" displayNameTierIndex={40}>SilverUsername</ShinyName>
-    </p>
-  </section>;
-}
-
-function GiftFixture() {
-  const [open, setOpen] = useState(false);
-  return <><GiftControl onClick={() => setOpen(true)} />
-    {open && <GiftBag recipient={{ username: 'test-recipient', displayName: 'Test Recipient' }} onClose={() => setOpen(false)} />}</>;
-}
-
-function GiftSendFixture() {
-  const [open, setOpen] = useState(false);
-  const params = new URLSearchParams(location.search);
-  const multi = params.get('multi') === '1';
-  const people = [{ username: 'test-recipient', displayName: 'Test Recipient' },
-    ...(multi ? [{ username: 'second-recipient', displayName: 'Second Recipient' }] : [])];
-  return <><GiftControl onClick={() => setOpen(true)} />
-    {open && <GiftBag recipient={multi ? undefined : people[0]} recipients={people}
-      {...(params.get('context') === 'live'
-        ? { streamId: 'fixture-stream' }
-        : { roomId: 'fixture-room', sessionId: 'fixture-session' })}
-      onClose={() => setOpen(false)} />}</>;
-}
-
-function GiftCatalogFixture() {
-  return <GiftBag
-    recipient={{ username: 'fixture-recipient', displayName: 'Fixture Recipient' }}
-    recipients={[{ username: 'fixture-recipient', displayName: 'Fixture Recipient' }]}
-    roomId="gift-artwork-test-room"
-    sessionId="gift-artwork-test-session"
-    onClose={() => undefined}
-  />;
-}
-
-function GiftArtworkFixture() {
-  const gifts = [
-    { id: 'good-vibes', name: 'Good vibes', iconUrl: null },
-    { id: 'studio-no-icon-fixture', name: 'Studio sample', iconUrl: null },
-    { id: 'heart', name: 'Heart', iconUrl: `${import.meta.env.BASE_URL}gift-icons/heart.svg` },
-  ];
-  return <div style={{ display: 'flex', gap: 12 }}>
-    {gifts.map(gift => <div key={gift.id} data-testid={`artwork-${gift.id}`}><GiftArtwork gift={gift} size={64} /></div>)}
-  </div>;
-}
-
-function GiftAnimationFixture() {
-  const params = new URLSearchParams(location.search);
-  return <GiftComboPlayer gift={{
-    id: 'custom-gift-animation-fixture',
-    giftId: params.get('giftId') ?? 'studio-11111111-1111-4111-8111-111111111111',
-    giftName: params.get('giftName') ?? 'Custom car animation',
-    senderName: 'Fixture',
-    quantity: Number(params.get('quantity') ?? 99),
-  }} waitingCount={0} onFinish={() => undefined} />;
-}
-
 const playbackSearch = async () => ({ videoIds: [] }) as never;
 const playbackFailure = async () => {};
 function RoomPlaybackFixture() {
@@ -152,7 +70,6 @@ function RoomPlaybackFixture() {
   const [present, setPresent] = useState(true);
   const [mic, setMic] = useState(false);
   const [chat, setChat] = useState(0);
-  const [combos, setCombos] = useState<Array<{ id: number; quantity: number }>>([]);
   useEffect(() => {
     const timer = setInterval(() => setServerNow(Date.now()), 3000);
     return () => clearInterval(timer);
@@ -174,14 +91,8 @@ function RoomPlaybackFixture() {
       <button onClick={() => setPresent(value => !value)}>{present ? 'Leave fixture room' : 'Join fixture room'}</button>
       <button onClick={() => { player.current?.setMicrophoneAudioMode(!mic); setMic(!mic); }}>Toggle fixture mic</button>
       <button onClick={() => setChat(value => value + 1)}>Add fixture chat</button>
-      <button onClick={() => setCombos(value => [...value, { id: Date.now(), quantity: 10 }])}>Queue fixture gift x10</button>
-      <button onClick={() => setCombos(value => [...value, { id: Date.now(), quantity: 1 }])}>Queue fixture gift x1</button>
       <p data-testid="playback-fixture-chat"><ShinyName displayNameColor="#FFFFFF" displayNameTierIndex={3}>Fixture</ShinyName>: message {chat}</p>
     </div>
-    {combos[0] && <GiftComboPlayer key={combos[0].id} gift={{
-      id: `playback-gift-${combos[0].id}`, giftId: 'studio-11111111-1111-4111-8111-111111111111',
-      giftName: 'Playback fixture gift', senderName: 'Fixture', quantity: combos[0].quantity,
-    }} waitingCount={combos.length - 1} onFinish={() => setCombos(value => value.slice(1))} />}
   </section>;
 }
 
@@ -191,32 +102,20 @@ createRoot(document.getElementById('root')!).render(
   new URLSearchParams(location.search).get('view') === 'player' ? <PlayerFixture /> :
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
       <main className={`app-page${roomThemeFixture ? ' is-beam-screen' : ''}`}>
-        {new URLSearchParams(location.search).get('view') === 'credits'
-          ? <BuyCreditsPage />
-          : new URLSearchParams(location.search).get('view') === 'store' ? <StorePage />
-          : new URLSearchParams(location.search).get('view') === 'gift-catalog' ? <GiftCatalogFixture />
-          : new URLSearchParams(location.search).get('view') === 'gift-artwork' ? <GiftArtworkFixture />
+        {new URLSearchParams(location.search).get('view') === 'store' ? <StorePage />
           : new URLSearchParams(location.search).get('view') === 'public-channels' ? <PublicChatLanding />
           : new URLSearchParams(location.search).get('view') === 'room-channels' ? <RoomChannelsFixture />
-          : new URLSearchParams(location.search).get('view') === 'cauldron-hold' ? <CauldronHoldFixture />
-          : new URLSearchParams(location.search).get('view') === 'gift-send' ? <GiftSendFixture />
-          : new URLSearchParams(location.search).get('view') === 'gifting-levels' ? <GiftingLevelsFixture />
           : new URLSearchParams(location.search).get('view') === 'room-feed' ? <RoomFeedFixture />
           : new URLSearchParams(location.search).get('view') === 'live-layout' ? <LiveLayoutFixture />
           : new URLSearchParams(location.search).get('view') === 'profile-navigation' ? <ProfileNavigationFixture />
           : new URLSearchParams(location.search).get('view') === 'access-error' ? <AccessErrorFixture />
           : new URLSearchParams(location.search).get('view') === 'audit-fixes' ? <AuditFixesFixture />
-          : new URLSearchParams(location.search).get('view') === 'visual-cleanup' ? <VisualCleanupFixture />
           : new URLSearchParams(location.search).get('view') === 'edit-profile' ? <ChatProfile />
           : new URLSearchParams(location.search).get('view') === 'home-polish' ? <HomePolishFixture />
           : new URLSearchParams(location.search).get('view') === 'chess-polish' ? <QuickProfileProvider><ChessRoom roomId="polish" accountKey="fixture" onExit={() => undefined} /></QuickProfileProvider>
           : new URLSearchParams(location.search).get('view') === 'edit-social-profile' ? <MyProfilePage />
-          : new URLSearchParams(location.search).get('view') === 'profile-cleanup' ? <OwnProfile />
           : new URLSearchParams(location.search).get('view') === 'photo-review' ? <ProfilePhotoReviewPage />
           : new URLSearchParams(location.search).get('view') === 'room-playback' ? <RoomPlaybackFixture />
-          : new URLSearchParams(location.search).get('view') === 'gifts' ? <GiftFixture />
-          : new URLSearchParams(location.search).get('view') === 'gift-animation' ? <GiftAnimationFixture />
-          : new URLSearchParams(location.search).get('view') === 'badges' ? <RewardsPage />
           : <TextChatRoom roomId="promo-regression-room" userId="synthetic-browser-user" />}
       </main>
       {/* Layout-only nav shell uses the original app's navigation stylesheet. */}
@@ -224,9 +123,6 @@ createRoot(document.getElementById('root')!).render(
         <div className="app-bottom-nav-inner">
           {['Home', 'Follow', 'Message', 'Me'].map(label =>
             <span key={label} className="app-bottom-link">{label}</span>)}
-          {new URLSearchParams(location.search).get('view') !== 'gifts' && (
-            <GiftControl onClick={() => window.dispatchEvent(new Event(OPEN_ROOM_GIFTS_EVENT))} label="Open room gifts" />
-          )}
         </div>
       </nav>}
     </QueryClientProvider>,

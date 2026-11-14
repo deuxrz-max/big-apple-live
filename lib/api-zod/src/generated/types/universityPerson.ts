@@ -6,7 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { EmojiIdentity } from './emojiIdentity';
-import type { StreamerPassportBadgeSummary } from './streamerPassportBadgeSummary';
 import type { UniversityPersonBotId } from './universityPersonBotId';
 import type { UniversityPersonJob } from './universityPersonJob';
 import type { UniversityPersonRace } from './universityPersonRace';
@@ -14,31 +13,26 @@ import type { UniversityPersonRace } from './universityPersonRace';
 export interface UniversityPerson {
   /** @nullable */
   botId?: UniversityPersonBotId;
-  /** @nullable */
-  badgeId?: string | null;
-  /** @nullable */
-  badgeName?: string | null;
-  /** @nullable */
-  badgeImage?: string | null;
   participantId: string;
   username: string;
   displayName: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
-  displayNameColor?: string;
+  displayNameColor: string;
   /**
      * @minimum 0
-     * @maximum 100
+     * @maximum 1
      */
-  displayNameTierIndex?: number;
-  passport?: StreamerPassportBadgeSummary;
+  displayNameTierIndex: number;
+  frameId: string;
+  hasNameShimmer: boolean;
   identity?: EmojiIdentity;
   /** @nullable */
   photoUrl: string | null;
   /** @nullable */
   photoStatus: string | null;
-  race?: UniversityPersonRace;
+  race: UniversityPersonRace;
   /** @nullable */
-  job?: UniversityPersonJob;
+  job: UniversityPersonJob;
   self: boolean;
   moderator: boolean;
   ignored: boolean;

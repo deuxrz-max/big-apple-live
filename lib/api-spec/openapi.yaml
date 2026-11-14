@@ -17,37 +17,6 @@ tags:
   - name: video
     description: Authenticated university video beam management and LiveKit access
 paths:
-  /rewards/pink-card:
-    get:
-      operationId: getPinkCardReward
-      responses:
-        "200":
-          description: Latest public pink-card draw, never future draw times
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/PinkCardReward" }
-  /social/pink-card/entry:
-    get:
-      operationId: getPinkCardEntry
-      responses:
-        "200":
-          description: Current daily reward entry
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/PinkCardEntry" }
-    put:
-      operationId: updatePinkCardEntry
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/PinkCardPreference" }
-      responses:
-        "200":
-          description: Updated opt-out preference
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/PinkCardEntry" }
   /account/chat/bots/settings:
     get:
       operationId: getModeratorBotSettings
@@ -941,124 +910,10 @@ paths:
               schema: { $ref: "#/components/schemas/ChatReportReceipt" }
   /social/me:
     $ref: './social.openapi.json#/paths/~1social~1me'
-  /social/gifters/leaderboard:
-    $ref: './social.openapi.json#/paths/~1social~1gifters~1leaderboard'
-  /social/me/name-color-test-total:
-    $ref: './social.openapi.json#/paths/~1social~1me~1name-color-test-total'
-  /social/me/entrance-effects:
-    $ref: './social.openapi.json#/paths/~1social~1me~1entrance-effects'
-  /social/entrance-effects/shop:
-    $ref: './social.openapi.json#/paths/~1social~1entrance-effects~1shop'
-  /social/entrance-effects/{effectId}/purchase:
-    $ref: './social.openapi.json#/paths/~1social~1entrance-effects~1{effectId}~1purchase'
-  /social/entrance-effects/equipped:
-    $ref: './social.openapi.json#/paths/~1social~1entrance-effects~1equipped'
-  /social/me/equipped-badge:
-    $ref: './social.openapi.json#/paths/~1social~1me~1equipped-badge'
-  /social/admin/coin-testers/launch:
-    get:
-      operationId: getTestCoinLaunchStatus
-      tags: [social]
-      responses:
-        '200':
-          description: Read-only launch retirement status. Never executes a reset.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TestCoinLaunchStatus'
-  /social/admin/coin-testers/launch/preview:
-    post:
-      operationId: prepareTestCoinLaunchReset
-      tags: [social]
-      responses:
-        '200':
-          description: Short-lived owner-bound preview; does not clear test coins.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TestCoinLaunchPreview'
-  /social/admin/coin-testers/launch/confirm:
-    post:
-      operationId: confirmTestCoinLaunchReset
-      tags: [social]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TestCoinLaunchConfirmation'
-      responses:
-        '200':
-          description: Explicitly confirmed retirement, with paid wallets preserved.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TestCoinLaunchResult'
-  /social/admin/coin-testers:
-    get:
-      operationId: getCoinTesters
-      tags: [social]
-      responses:
-        '200':
-          description: Owner-only designated coin testers.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CoinTesterList'
-    put:
-      operationId: setCoinTester
-      tags: [social]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CoinTesterDesignation'
-      responses:
-        '200':
-          description: Updated owner-only tester list.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CoinTesterList'
-  /social/admin/gift-studio/library:
-    $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1library'
-  /social/admin/content-sync:
-    $ref: './social.openapi.json#/paths/~1social~1admin~1content-sync'
-  /social/admin/content-sync/run:
-    $ref: './social.openapi.json#/paths/~1social~1admin~1content-sync~1run'
-  /social/admin/hangout-rewards:
-    $ref: './social.openapi.json#/paths/~1social~1admin~1hangout-rewards'
-  /social/admin/gift-motions:
-    $ref: './social.openapi.json#/paths/~1social~1admin~1gift-motions'
-  /social/admin/gift-motions/{giftId}:
-    $ref: './social.openapi.json#/paths/~1social~1admin~1gift-motions~1{giftId}'
-  /social/gift-motions/{giftId}:
-    $ref: './social.openapi.json#/paths/~1social~1gift-motions~1{giftId}'
-  /social/gift-motions/{giftId}/file:
-    $ref: './social.openapi.json#/paths/~1social~1gift-motions~1{giftId}~1file'
-  /social/admin/gift-studio/catalog/{giftId}:
-    $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1catalog~1{giftId}'
-  /social/admin/gift-studio/process:
-    $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1process'
-  /social/admin/gift-studio/save-processed:
-    $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1save-processed'
-  /social/admin/gift-studio/versions:
-    $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1versions'
-  /social/admin/gift-studio/versions/{versionId}:
-    $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1versions~1{versionId}'
-  /social/admin/gift-studio/versions/{versionId}/name:
-    $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1versions~1{versionId}~1name'
-  /social/admin/gift-studio/versions/{versionId}/delete:
-    $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1versions~1{versionId}~1delete'
-  /social/admin/gift-studio/versions/{versionId}/gift:
-    $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1versions~1{versionId}~1gift'
-  /social/admin/gift-studio/versions/{versionId}/media/{variant}:
-    $ref: './social.openapi.json#/paths/~1social~1admin~1gift-studio~1versions~1{versionId}~1media~1{variant}'
-  /social/gift-studio/media/{versionId}/{variant}:
-    $ref: './social.openapi.json#/paths/~1social~1gift-studio~1media~1{versionId}~1{variant}'
-  /social/gift-studio/active/{giftId}:
-    $ref: './social.openapi.json#/paths/~1social~1gift-studio~1active~1{giftId}'
+  /social/cosmetics/store:
+    $ref: './social.openapi.json#/paths/~1social~1cosmetics~1store'
+  /social/cosmetics/equip:
+    $ref: './social.openapi.json#/paths/~1social~1cosmetics~1equip'
   /social/people:
     $ref: './social.openapi.json#/paths/~1social~1people'
   /social/people/{username}:
@@ -1067,18 +922,6 @@ paths:
     $ref: './social.openapi.json#/paths/~1social~1people~1{username}~1relationship'
   /social/blocks:
     $ref: './social.openapi.json#/paths/~1social~1blocks'
-  /social/wallet/claim:
-    $ref: './social.openapi.json#/paths/~1social~1wallet~1claim'
-  /social/gifts:
-    $ref: './social.openapi.json#/paths/~1social~1gifts'
-  /social/gifts/rooms/{roomId}:
-    $ref: './social.openapi.json#/paths/~1social~1gifts~1rooms~1{roomId}'
-  /social/store/purchase:
-    $ref: './social.openapi.json#/paths/~1social~1store~1purchase'
-  /social/wallet/transactions:
-    $ref: './social.openapi.json#/paths/~1social~1wallet~1transactions'
-  /social/leaderboard:
-    $ref: './social.openapi.json#/paths/~1social~1leaderboard'
   /social/messages:
     $ref: './social.openapi.json#/paths/~1social~1messages'
   /social/messages/{username}:
@@ -1697,92 +1540,6 @@ components:
         type: string
         pattern: "^[a-f0-9]{32}$"
   schemas:
-    TestCoinLaunchStatus:
-      type: object
-      required: [closedAt, activeTesters, testGiftQuantity, testEffects, freeTestCoinBalanceAfterReset, realWalletsPreserved, levelsAndXpPreserved]
-      properties:
-        closedAt: { type: [string, 'null'], format: date-time }
-        activeTesters: { type: integer, minimum: 0 }
-        testGiftQuantity: { type: integer, minimum: 0 }
-        testEffects: { type: integer, minimum: 0 }
-        freeTestCoinBalanceAfterReset: { type: integer, enum: [0] }
-        realWalletsPreserved: { type: boolean, enum: [true] }
-        levelsAndXpPreserved: { type: boolean, enum: [true] }
-    TestCoinLaunchPreview:
-      allOf:
-        - $ref: '#/components/schemas/TestCoinLaunchStatus'
-        - type: object
-          required: [planId, expiresAt]
-          properties:
-            planId: { type: string, format: uuid }
-            expiresAt: { type: string, format: date-time }
-    TestCoinLaunchConfirmation:
-      type: object
-      additionalProperties: false
-      required: [planId, confirmation, endingTesting]
-      properties:
-        planId: { type: string, format: uuid }
-        confirmation: { type: string, enum: [END FREE TEST COINS] }
-        endingTesting: { type: boolean, enum: [true] }
-    TestCoinLaunchResult:
-      type: object
-      required: [closedAt, alreadyCompleted]
-      properties:
-        closedAt: { type: string, format: date-time }
-        alreadyCompleted: { type: boolean }
-    CoinTesterDesignation:
-      type: object
-      additionalProperties: false
-      required: [username, enabled]
-      properties:
-        username:
-          type: string
-          pattern: '^[A-Za-z0-9_]{3,24}$'
-        enabled:
-          type: boolean
-    CoinTesterList:
-      type: object
-      required: [testers]
-      properties:
-        testers:
-          type: array
-          items:
-            type: object
-            required: [username, enabled]
-            properties:
-              username:
-                type: string
-              enabled:
-                type: boolean
-    PinkCardWinner:
-      type: object
-      required: [id, name, prizeName, drawnAt]
-      properties:
-        id: { type: string }
-        name: { type: string }
-        prizeName: { type: string }
-        drawnAt: { type: string }
-    PinkCardReward:
-      type: object
-      required: [cycle, serverTime, winner]
-      properties:
-        cycle: { type: string }
-        serverTime: { type: string }
-        winner:
-          anyOf:
-            - { $ref: "#/components/schemas/PinkCardWinner" }
-            - { type: "null" }
-    PinkCardEntry:
-      type: object
-      required: [entered, optedOut]
-      properties:
-        entered: { type: boolean }
-        optedOut: { type: boolean }
-    PinkCardPreference:
-      type: object
-      required: [optedOut]
-      properties:
-        optedOut: { type: boolean }
     FavoriteRoom:
       type: object
       required: [roomId, label]
@@ -1825,18 +1582,16 @@ components:
         idempotencyKey: { type: string, format: uuid }
     UniversityPerson:
       type: object
-      required: [participantId, username, displayName, photoUrl, photoStatus, self, moderator, ignored, blocked]
+      required: [participantId, username, displayName, photoUrl, photoStatus, self, moderator, ignored, blocked, frameId, displayNameColor, displayNameTierIndex, hasNameShimmer, race, job]
       properties:
         botId: { type: [string, "null"], enum: [ghost, vampire, wolf, zombie, null] }
-        badgeId: { type: [string, "null"] }
-        badgeName: { type: [string, "null"] }
-        badgeImage: { type: [string, "null"] }
         participantId: { type: string }
         username: { type: string }
         displayName: { type: string }
         displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
-        displayNameTierIndex: { type: integer, minimum: 0, maximum: 100 }
-        passport: { $ref: "./social.openapi.json#/components/schemas/StreamerPassportBadgeSummary" }
+        displayNameTierIndex: { type: integer, minimum: 0, maximum: 1 }
+        frameId: { type: string }
+        hasNameShimmer: { type: boolean }
         identity: { $ref: "#/components/schemas/EmojiIdentity" }
         photoUrl: { type: [string, "null"] }
         photoStatus: { type: [string, "null"] }
@@ -1848,17 +1603,14 @@ components:
         blocked: { type: boolean, description: Hidden from this viewer because either account has blocked the other }
     UniversityWhisper:
       type: object
-      required: [id, username, displayName, badgeId, outgoing, body, createdAt]
+      required: [id, username, displayName, outgoing, body, createdAt]
       properties:
         id: { type: string }
         username: { type: string }
         displayName: { type: string }
         displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
-        displayNameTierIndex: { type: integer, minimum: 0, maximum: 100 }
-        badgeId: { type: [string, "null"] }
-        badgeName: { type: [string, "null"] }
-        badgeImage: { type: [string, "null"] }
-        passport: { $ref: "./social.openapi.json#/components/schemas/StreamerPassportBadgeSummary" }
+        displayNameTierIndex: { type: integer, minimum: 0, maximum: 1 }
+        hasNameShimmer: { type: boolean }
         outgoing: { type: boolean }
         body: { type: string }
         createdAt: { type: string, format: date-time }
@@ -1999,9 +1751,9 @@ components:
         photoUrl: { type: string, nullable: true }
         photoUrls:
           type: array
+          maxItems: 1
           items: { type: string }
           description: Approved saved profile photos, main photo first.
-        giftingLevel: { type: integer, minimum: 0, maximum: 100 }
     ChessRoomState:
       type: object
       required: [roomId, fen, players, turn, status, revision, legalMoves, yourColor, rematchRequestedBy, result]
@@ -2050,9 +1802,6 @@ components:
       properties:
         botId: { type: [string, "null"], enum: [ghost, vampire, wolf, zombie, null] }
         botMessageType: { type: [string, "null"], enum: [chatter, moderation, visit, null] }
-        badgeId: { type: [string, "null"] }
-        badgeName: { type: [string, "null"] }
-        badgeImage: { type: [string, "null"] }
         id: { type: string, format: uuid }
         roomId: { type: string }
         authorId: { type: string, format: uuid }
@@ -2062,8 +1811,9 @@ components:
         kind: { type: string, enum: [text, reaction] }
         text: { type: string }
         displayNameColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
-        displayNameTierIndex: { type: integer, minimum: 0, maximum: 100 }
-        passport: { $ref: "./social.openapi.json#/components/schemas/StreamerPassportBadgeSummary" }
+        displayNameTierIndex: { type: integer, minimum: 0, maximum: 1 }
+        frameId: { type: string }
+        hasNameShimmer: { type: boolean }
         createdAt: { type: string, format: date-time }
       required: [id, roomId, authorId, username, identity, kind, text, createdAt]
     ChatAccepted:

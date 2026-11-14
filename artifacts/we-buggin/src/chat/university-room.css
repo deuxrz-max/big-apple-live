@@ -156,17 +156,6 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 .ur-beam-full{flex:0 0 auto;margin:0;color:#e3d7f2;font-size:11px;text-align:right}
 .ur-audio-connecting .ur-status-dot{background:#edbe53}
 .ur-audio-error .ur-status-dot{background:#ff6b88}
-.ur-coin-drop{position:fixed;inset:0;z-index:120;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;pointer-events:none;text-align:center;background:transparent;animation:ur-coin-drop-in .28s ease-out both}
-.ur-coin-drop.is-fading{animation:ur-coin-drop-out .6s ease-in both}
-.ur-coin-drop-logo{display:grid;place-items:center;width:118px;height:118px;border:2px solid rgba(190,153,255,.75);border-radius:50%;background:rgba(18,12,30,.86);box-shadow:0 0 32px rgba(164,94,255,.55),inset 0 0 20px rgba(255,255,255,.14);animation:ur-coin-drop-spin 1.5s cubic-bezier(.15,.65,.25,1) both}
-.ur-coin-drop-amount{min-width:180px;padding:10px 20px;border:1px solid rgba(255,211,81,.75);border-radius:999px;background:rgba(23,15,32,.94);color:#ffdb67;font-size:clamp(24px,7vw,36px);font-weight:900;letter-spacing:.04em;text-shadow:0 2px 12px rgba(255,177,32,.45);opacity:.65;transform:scale(.88);transition:opacity .3s ease,transform .3s ease}
-.ur-coin-drop-amount.is-revealed{opacity:1;transform:scale(1)}
-.ur-coin-drop-message{max-width:320px;padding:8px 14px;border-radius:12px;background:rgba(12,10,18,.88);color:#fff;font-size:14px;font-weight:700;text-shadow:0 1px 3px #000}
-.ur-streak-reward-toast{position:fixed;z-index:121;top:calc(env(safe-area-inset-top,0px) + 76px);left:50%;transform:translateX(-50%);max-width:min(90vw,380px);padding:10px 16px;border:1px solid rgba(185,141,255,.65);border-radius:999px;background:rgba(27,15,42,.94);color:#fff;font-weight:800;text-align:center;box-shadow:0 8px 28px rgba(0,0,0,.4);pointer-events:none}
-@keyframes ur-coin-drop-spin{0%{opacity:0;transform:translateY(24px) rotate(-180deg) scale(.4)}45%{opacity:1;transform:translateY(-8px) rotate(25deg) scale(1.12)}100%{transform:translateY(0) rotate(360deg) scale(1)}}
-@keyframes ur-coin-drop-in{from{opacity:0}to{opacity:1}}
-@keyframes ur-coin-drop-out{to{opacity:0;visibility:hidden}}
-@media(prefers-reduced-motion:reduce){.ur-coin-drop-logo{animation-duration:.2s;animation-timing-function:ease-out}.ur-coin-drop-amount{transition:none}}
 .ur-mic-state{font-size:9px;color:#a9abb5;white-space:nowrap}
 .ur-mic-state.is-live{color:#8ee5c2}
 .ur-slot-action,.ur-slot-join,.ur-resume-audio{border:1px solid #4a4c56;border-radius:7px;background:#30323a;color:#f3f2f6;padding:5px 7px;font:inherit;font-size:10px;font-weight:700;white-space:nowrap;cursor:pointer}
@@ -280,7 +269,7 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 #root .ch.ur .ur-social-room .ur-slot-media{display:grid;place-items:center;overflow:visible;border-radius:0;background:transparent}
 .ur-social-card{--ur-social-name-color:#fff;position:relative;width:auto;height:100%;max-width:100%;max-height:100%;aspect-ratio:9/16;margin:auto;isolation:isolate}
 .ur-social-card-portrait,.ur-social-card-empty{position:absolute;z-index:1;left:26.2%;top:12.4%;width:47.6%;height:28.6%;border-radius:50%;overflow:hidden;background:#111;display:grid;place-items:center}
-.ur-social-card-portrait img{display:block;width:100%;height:100%;object-fit:cover}
+.ur-social-card-portrait img{display:block;width:100%;height:100%;object-fit:contain}
 .ur-social-card-portrait span{display:grid;place-items:center;width:100%;height:100%;background:#121212;color:#d7d7d7;font:700 clamp(10px,3vw,18px) system-ui,sans-serif}
 .ur-social-card-empty{background:#090909;border:1px solid rgba(255,255,255,.18)}
 .ur-social-card-empty span{max-width:80%;color:#fff;text-align:center;font:clamp(8px,2.5vw,12px)/1.1 'Pirata One',Georgia,serif;text-shadow:0 1px 3px #000}

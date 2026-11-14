@@ -1,5 +1,5 @@
 import { db, accountProfiles, moderatorBotAccounts, moderatorBotSettings, moderatorBotChatterSettings, moderatorBotFlags, roomMessages, chatRooms } from "@workspace/db";
-import { nameColorProfilesForAccounts } from "./social/gift-name-color-data";
+import { getProfileCosmeticStyle } from "./social/profile-cosmetics";
 import { and, eq, desc, gt, inArray, isNotNull, isNull } from "drizzle-orm";
 import { roomStore } from "./room-store";
 import { BOT_ACCOUNTS, BotRotation, DEFAULT_BANNED_WORDS, DEFAULT_BOT_BREAK_SECONDS, publicViolation, type Bot, type BotId } from "./bot-policy";
@@ -168,10 +168,10 @@ export async function getBotFlags() {
     .from(moderatorBotFlags).innerJoin(roomMessages, eq(roomMessages.id, moderatorBotFlags.messageId))
     .innerJoin(chatRooms, eq(chatRooms.roomId, moderatorBotFlags.roomId))
     .where(isNull(moderatorBotFlags.reviewedAt)).orderBy(desc(moderatorBotFlags.createdAt)).limit(100);
-  const colors = await nameColorProfilesForAccounts(rows.map(row => row.accountId));
+  const styles = new Map(await Promise.all(rows.map(async row => [row.accountId, await getProfileCosmeticStyle(row.accountId)] as const)));
   return rows.map(({ accountId, ...flag }) => ({
-    ...flag, displayNameColor: colors.get(accountId)?.color ?? "#FFFFFF",
-    displayNameTierIndex: colors.get(accountId)?.tierIndex ?? 0,
+    ...flag, displayNameColor: styles.get(accountId)?.displayNameColor ?? "#FFFFFF",
+    displayNameTierIndex: styles.get(accountId)?.displayNameTierIndex ?? 0,
   }));
 }
 export async function reviewBotFlag(id: string, reviewer: string) {

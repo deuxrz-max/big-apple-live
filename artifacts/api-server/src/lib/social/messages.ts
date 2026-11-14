@@ -84,9 +84,6 @@ export async function inbox(id: string) {
     conversations.push({ username: p.username, displayName: p.displayName, photoUrl: p.photoUrl,
       displayNameColor: p.displayNameColor,
       displayNameTierIndex: p.displayNameTierIndex,
-      badgeId: p.badgeId,
-      badgeName: p.badgeName,
-      badgeImage: p.badgeImage,
       lastMessageFromMe: entry.message.senderId === id, lastUnreadAt: entry.lastUnreadAt,
        identity: p.identity, lastMessage: censorChatText(entry.message.body, filterSettings.bannedWords),
       updatedAt: entry.message.createdAt, unreadCount: entry.unread, blocked: p.blocked });

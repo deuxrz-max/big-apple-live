@@ -36,16 +36,8 @@
     box-shadow:inset 0 1px rgba(255,255,255,.45),0 6px 18px rgba(0,0,0,.45) !important;
   }
   :is(.ch-profile-screen, .ep-social-profile) .bm-btn:disabled { opacity:.5 !important; }
-  .ch-profile-screen :is(.ch-photo-card, .ch-my-badges, .ch-my-badge), .ep-social-profile :is(.sc-entrance-settings, .sc-entrance-option, .sc-entrance-master) {
-    background:linear-gradient(160deg,#16120c,#0b0907) !important; border:1px solid var(--ep-line) !important; border-radius:0 !important; color:var(--ep-ink) !important; box-shadow:none !important;
-  }
-  .ch-profile-screen .ch-my-badge.is-equipped, .ch-profile-screen .ch-photo-card [aria-pressed=true] { border-color:var(--ep-gold) !important; background:#2a2010 !important; }
-  .ch-profile-screen :is(.ch-my-badges-heading>span, .ch-my-badge-time) { background:transparent !important; color:var(--ep-mute) !important; }
-  .ch-profile-screen .ch-photo-card { padding:10px !important; }
-  .ch-profile-screen :is(.ch-photo-card img, .ch-photo-main img) { width:100% !important; height:auto !important; aspect-ratio:auto !important; object-fit:contain !important; background:#000 !important; border-radius:0 !important; }
-  .ch-profile-screen .ch-photo-actions { display:grid !important; grid-template-columns:1fr !important; gap:8px !important; width:100% !important; }
-  .ch-profile-screen .ch-photo-empty { border-style:dashed !important; color:var(--ep-mute) !important; }
-  .ep-social-profile .sc-check { display:flex !important; gap:12px !important; align-items:flex-start !important; padding:12px !important; font-size:15px !important; }
+  .ch-profile-screen .ch-profile-photo-edit { padding:12px !important; border:1px solid var(--ep-line) !important; background:linear-gradient(160deg,#16120c,#0b0907) !important; color:var(--ep-ink) !important; }
+  .ch-profile-screen .ch-profile-photo-row img { object-fit:contain !important; background:#000 !important; border-radius:0 !important; }
   :is(.ch-profile-screen, .ep-social-profile) input[type=checkbox] { width:22px !important; height:22px !important; flex:0 0 22px !important; accent-color:#d6ad5c !important; border-radius:0 !important; }
   .ch-profile-screen .ch-err { border-color:#b5483a !important; background:#1c0c09 !important; color:#ffd2c8 !important; }
   .ch-profile-screen .ch-fe { color:#ff9f8a !important; }

@@ -9,19 +9,12 @@ import type { ChatMessageBotId } from './chatMessageBotId';
 import type { ChatMessageBotMessageType } from './chatMessageBotMessageType';
 import type { ChatMessageKind } from './chatMessageKind';
 import type { EmojiIdentity } from './emojiIdentity';
-import type { StreamerPassportBadgeSummary } from './streamerPassportBadgeSummary';
 
 export interface ChatMessage {
   /** @nullable */
   botId?: ChatMessageBotId;
   /** @nullable */
   botMessageType?: ChatMessageBotMessageType;
-  /** @nullable */
-  badgeId?: string | null;
-  /** @nullable */
-  badgeName?: string | null;
-  /** @nullable */
-  badgeImage?: string | null;
   id: string;
   roomId: string;
   authorId: string;
@@ -35,9 +28,10 @@ export interface ChatMessage {
   displayNameColor?: string;
   /**
      * @minimum 0
-     * @maximum 100
+     * @maximum 1
      */
   displayNameTierIndex?: number;
-  passport?: StreamerPassportBadgeSummary;
+  frameId?: string;
+  hasNameShimmer?: boolean;
   createdAt: Date;
 }

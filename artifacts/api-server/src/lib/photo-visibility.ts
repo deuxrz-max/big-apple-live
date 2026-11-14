@@ -1,6 +1,6 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db, profilePhotos, accountProfiles, chatModerators } from "@workspace/db";
-import { nameColorProfilesForAccounts } from "./social/gift-name-color-data";
+import { getProfileCosmeticStyle } from "./social/profile-cosmetics";
 import { isOwnerAccount } from "./social/owner-access-policy";
 
 export type PhotoStatus = "pending" | "approved" | "rejected" | "flagged";
@@ -52,9 +52,11 @@ export async function pendingPhotoQueue() {
     .where(and(eq(profilePhotos.status, "pending"), sql`${profilePhotos.deletionStartedAt} IS NULL`,
       process.env.NODE_ENV === "production" ? eq(accountProfiles.isTestAccount, false) : undefined))
     .orderBy(profilePhotos.createdAt).limit(100);
-  const colors = await nameColorProfilesForAccounts(rows.map(row => row.accountId).filter((id): id is string => !!id));
+  const styles = new Map(await Promise.all(rows.map(async row => row.accountId
+    ? [row.accountId, await getProfileCosmeticStyle(row.accountId)] as const
+    : [null, null] as const)));
   return rows.map(({ accountId, ...photo }) => ({
-    ...photo, displayNameColor: accountId ? colors.get(accountId)?.color ?? "#FFFFFF" : "#FFFFFF",
-    displayNameTierIndex: accountId ? colors.get(accountId)?.tierIndex ?? 0 : 0,
+    ...photo, displayNameColor: accountId ? styles.get(accountId)?.displayNameColor ?? "#FFFFFF" : "#FFFFFF",
+    displayNameTierIndex: accountId ? styles.get(accountId)?.displayNameTierIndex ?? 0 : 0,
   }));
 }

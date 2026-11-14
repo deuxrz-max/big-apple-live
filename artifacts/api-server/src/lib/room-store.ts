@@ -13,18 +13,10 @@ export class RoomError extends Error {
 type RoomEvent =
   | { type: "chat.accepted"; data: ChatAccepted; senderAccountId?: string }
   | { type: "chat.refresh"; data: { roomId: string } }
-  | { type: "room.coin-drop"; data: RoomCoinDropEvent }
-  | { type: "room.hangout-streak-reward"; data: { roomId: string; accountId: string; day: string; coins: number } }
   | { type: "room.snapshot"; data: RoomState }
   | { type: "room.kicked"; data: { roomId: string; accountId: string; message: string } }
   | { type: "room.expired"; data: { roomId: string } };
 type Listener = (event: RoomEvent) => void;
-export type RoomCoinDropEvent = {
-  eventId: string;
-  roomId: string;
-  amount: number;
-  startedAt: number;
-};
 type ActiveSession = { participant: Participant; lastSeenAt: number; accountId?: string; capExempt?: boolean };
 type AccountIdentity = { accountId: string; identity: EmojiIdentity; photoUrl?: string | null; capExempt?: boolean; displayNameColor?: string; displayNameTierIndex?: number };
 function copyParticipant(participant: Participant): Participant {
@@ -51,7 +43,6 @@ type Room = {
   community?: boolean;
   testOnly?: boolean;
   parentRoomId?: string | null;
-  coinDrops: RoomCoinDropEvent[];
 };
 
 /** Single-process, ephemeral presence store. Session credentials are never in snapshots. */
@@ -78,7 +69,7 @@ export class RoomStore {
       // explicit unlimited value; the eight camera seats are tracked separately.
       name: input.label, capacity: 0, roomType: "topic", createdAt: input.createdAt, hostParticipantId: randomUUID(),
       sessions: new Map(), headcountSince: this.now(), listeners: new Set(), emptySince: null, community: true, testOnly: input.testOnly,
-      parentRoomId: input.parentRoomId, coinDrops: [] });
+       parentRoomId: input.parentRoomId });
   }
   communityParentId(roomId: string) {
     const normalized = roomId.toUpperCase();
@@ -173,8 +164,7 @@ export class RoomStore {
       sessions: new Map(),
       headcountSince: this.now(),
       listeners: new Set(),
-      emptySince: null,
-      coinDrops: [],
+       emptySince: null,
     };
     this.rooms.set(roomId, room);
     return this.addSession(room, displayName, account);
@@ -205,8 +195,7 @@ export class RoomStore {
       headcountSince: this.now(),
       listeners: new Set(),
       emptySince: null,
-      community: true,
-      coinDrops: [],
+       community: true,
     };
     this.rooms.set(id, room);
     return this.addSession(room, displayName, account);
@@ -283,25 +272,6 @@ export class RoomStore {
   hasAccountParticipant(roomId: string, accountId: string): boolean {
     const room = this.requireRoom(roomId);
     return [...room.sessions.values()].some(session => session.accountId === accountId);
-  }
-
-  publishRoomCoinDrop(input: RoomCoinDropEvent): void {
-    const room = this.requireRoom(input.roomId);
-    const event = { ...input, roomId: room.roomId };
-    room.coinDrops = [...room.coinDrops.filter(item => this.now() - item.startedAt < 60_000), event].slice(-20);
-    this.emit(room, { type: "room.coin-drop", data: event });
-  }
-
-  recentRoomCoinDrops(roomId: string, maxAgeMs = 30_000): RoomCoinDropEvent[] {
-    const room = this.requireRoom(roomId);
-    return room.coinDrops.filter(item => this.now() - item.startedAt <= maxAgeMs).map(item => ({ ...item }));
-  }
-
-  publishHangoutStreakReward(roomId: string, accountId: string, day: string): void {
-    const room = this.requireRoom(roomId);
-    this.emit(room, { type: "room.hangout-streak-reward", data: {
-      roomId: room.roomId, accountId, day, coins: 100,
-    } });
   }
 
   /** Private incarnation identifier, never a reusable room-code history key. */

@@ -7,56 +7,34 @@
  */
 import type { EmojiIdentity } from './emojiIdentity';
 import type { PhotoReviewStatus } from './photoReviewStatus';
-import type { SocialPersonBadgesItem } from './socialPersonBadgesItem';
-import type { SocialPersonExternalPlatform } from './socialPersonExternalPlatform';
 import type { SocialPersonJob } from './socialPersonJob';
 import type { SocialPersonRace } from './socialPersonRace';
-import type { StreamerPassportBadgeSummary } from './streamerPassportBadgeSummary';
 
 export interface SocialPerson {
-  /** @nullable */
-  externalPlatform?: SocialPersonExternalPlatform;
-  /**
-     * @maxLength 64
-     * @nullable
-     */
-  externalHandle?: string | null;
   username: string;
-  displayName?: string;
+  displayName: string;
+  /** @nullable */
+  photoUrl: string | null;
+  /** @maxItems 1 */
+  photoUrls: string[];
+  photoReviews?: PhotoReviewStatus[];
+  identity: EmojiIdentity;
+  race: SocialPersonRace;
+  /** @nullable */
+  job: SocialPersonJob;
+  favorite: boolean;
+  blocked: boolean;
+  frameId: string;
   /** @pattern ^#[0-9A-Fa-f]{6}$ */
-  displayNameColor?: string;
+  displayNameColor: string;
   /**
      * @minimum 0
-     * @maximum 100
+     * @maximum 1
      */
-  displayNameTierIndex?: number;
+  displayNameTierIndex: number;
+  hasNameShimmer: boolean;
   /** @minimum 0 */
   followerCount?: number;
   /** @minimum 0 */
   followingCount?: number;
-  /** @minimum 0 */
-  sentCredits?: number;
-  badges?: SocialPersonBadgesItem[];
-  /** @nullable */
-  photoUrl?: string | null;
-  /** @maxItems 4 */
-  photoUrls?: string[];
-  photoReviews?: PhotoReviewStatus[];
-  identity: EmojiIdentity;
-  bio: string;
-  country: string | null;
-  interests: string[];
-  race?: SocialPersonRace;
-  /** @nullable */
-  job?: SocialPersonJob;
-  discoverable: boolean;
-  favorite: boolean;
-  blocked: boolean;
-  receivedCredits: number;
-  badgeId: string | null;
-  /** @nullable */
-  badgeName: string | null;
-  /** @nullable */
-  badgeImage: string | null;
-  passport?: StreamerPassportBadgeSummary;
 }
