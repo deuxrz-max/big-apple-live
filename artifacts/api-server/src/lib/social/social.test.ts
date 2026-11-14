@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { randomUUID } from "node:crypto";
-import { db, accountProfiles, socialMessages, socialRelations } from "@workspace/db";
+import { db, accountProfiles, socialMessages, socialRelations, socialProfileCosmetics } from "@workspace/db";
 import { eq, inArray } from "drizzle-orm";
 import { getMe, getPerson, listPeople, relationship, saveSocialProfile, blocks } from "./people";
 import { sendMessage, thread, inbox, clearThread } from "./messages";
 import { GetSocialMeResponse, GetSocialPeopleResponse, GetSocialConversationResponse, GetSocialInboxResponse } from "@workspace/api-zod";
+import { equipProfileCosmetic, getProfileCosmeticStore } from "./profile-cosmetics";
 
 test("profiles, public search, follows, blocking and private messages work without discovery opt-in", async t => {
   const token = randomUUID().replaceAll("-", "").slice(0, 8);
@@ -23,6 +24,18 @@ test("profiles, public search, follows, blocking and private messages work witho
     color: "#ffffff", hairColor: "#000000", isTestAccount: i === 2,
   })));
   const [a, b, c] = ids as [string, string, string];
+  await t.test("default cosmetics are owned, re-equippable and persist; unowned items are rejected", async () => {
+    const store = await getProfileCosmeticStore(a);
+    assert.deepEqual(store.sections.map(s => s.title), ["Frames", "Name Colors", "Special Names"]);
+    assert.equal(store.sections[0]!.items[0]!.owned, true);
+    assert.equal((await equipProfileCosmetic(a, "frame", "grey-starter")).equipped.frame, "grey-starter");
+    assert.equal((await equipProfileCosmetic(a, "nameColor", "white")).equipped.nameColor, "white");
+    await assert.rejects(equipProfileCosmetic(a, "frame", "gold"), /not owned/);
+    await db.insert(socialProfileCosmetics).values({ accountId: a, cosmeticId: "nameColor:pink" });
+    assert.equal((await equipProfileCosmetic(a, "nameColor", "pink")).equipped.nameColor, "pink");
+    assert.equal((await getProfileCosmeticStore(a)).equipped.nameColor, "pink");
+    assert.equal((await equipProfileCosmetic(a, "nameColor", "white")).equipped.nameColor, "white");
+  });
   await t.test("profile Race and Job are editable, and search includes people without opting in", async () => {
     GetSocialMeResponse.parse(await getMe(a));
     await getMe(b); await getMe(c);

@@ -2248,7 +2248,7 @@ export const DeleteSocialConversationResponse = zod.object({
 })
 
 
-export const getMyProfileResponseProfileOnePhotoUrlsMax = 4;
+export const getMyProfileResponseProfileOnePhotoUrlsMax = 1;
 
 export const getMyProfileResponseProfileOneIdentityEmojiIdMax = 100;
 
@@ -2260,7 +2260,6 @@ export const GetMyProfileResponse = zod.object({
   "profile": zod.union([zod.object({
   "username": zod.string(),
   "displayName": zod.string().optional(),
-  "bio": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
   "photoReviews": zod.array(zod.object({
   "photoUrl": zod.string(),
@@ -2287,13 +2286,11 @@ export const saveMyProfileBodyIdentityColorRegExp = new RegExp('^#[0-9a-fA-F]{6}
 export const saveMyProfileBodyIdentityHairColorRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const saveMyProfileBodyDisplayNameMax = 40;
 
-export const saveMyProfileBodyBioMax = 280;
-
 export const saveMyProfileBodyPhotoUrlMax = 200;
 
 export const saveMyProfileBodyPhotoUrlsItemMax = 200;
 
-export const saveMyProfileBodyPhotoUrlsMax = 4;
+export const saveMyProfileBodyPhotoUrlsMax = 1;
 
 
 
@@ -2308,12 +2305,11 @@ export const SaveMyProfileBody = zod.object({
   "currentMood": zod.union([zod.literal('laughing'),zod.literal('tears_of_joy'),zod.literal('crying'),zod.literal('rofl'),zod.literal('heart_eyes'),zod.literal('affectionate'),zod.literal('melting'),zod.literal('grateful'),zod.literal('thinking'),zod.literal('winking'),zod.literal('neutral'),zod.literal('smiling_eyes'),zod.literal('delighted'),zod.literal('grinning'),zod.literal('smiling'),zod.literal('kissing'),zod.literal('playful_wink'),zod.literal('skeptical'),zod.literal(null)]).nullish()
 }).optional(),
   "displayName": zod.string().min(1).max(saveMyProfileBodyDisplayNameMax).optional(),
-  "bio": zod.string().max(saveMyProfileBodyBioMax).optional(),
   "photoUrl": zod.string().max(saveMyProfileBodyPhotoUrlMax).nullish(),
   "photoUrls": zod.array(zod.string().max(saveMyProfileBodyPhotoUrlsItemMax)).max(saveMyProfileBodyPhotoUrlsMax).optional()
 })
 
-export const saveMyProfileResponsePhotoUrlsMax = 4;
+export const saveMyProfileResponsePhotoUrlsMax = 1;
 
 export const saveMyProfileResponseIdentityEmojiIdMax = 100;
 
@@ -2324,7 +2320,6 @@ export const saveMyProfileResponseIdentityHairColorRegExp = new RegExp('^#[0-9a-
 export const SaveMyProfileResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().optional(),
-  "bio": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
   "photoReviews": zod.array(zod.object({
   "photoUrl": zod.string(),
@@ -2746,7 +2741,7 @@ export const sendRoomMessageResponseMessageDisplayNameColorRegExp = new RegExp('
 export const sendRoomMessageResponseMessageDisplayNameTierIndexMin = 0;
 export const sendRoomMessageResponseMessageDisplayNameTierIndexMax = 1;
 
-export const sendRoomMessageResponseProfilePhotoUrlsMax = 4;
+export const sendRoomMessageResponseProfilePhotoUrlsMax = 1;
 
 export const sendRoomMessageResponseProfileIdentityEmojiIdMax = 100;
 
@@ -2782,7 +2777,6 @@ export const SendRoomMessageResponse = zod.object({
   "profile": zod.object({
   "username": zod.string(),
   "displayName": zod.string().optional(),
-  "bio": zod.string().optional(),
   "photoUrl": zod.string().nullish(),
   "photoReviews": zod.array(zod.object({
   "photoUrl": zod.string(),

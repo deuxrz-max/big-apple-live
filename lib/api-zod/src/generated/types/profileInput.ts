@@ -16,15 +16,13 @@ export interface ProfileInput {
      * @maxLength 40
      */
   displayName?: string;
-  /** @maxLength 280 */
-  bio?: string;
   /**
      * @maxLength 200
      * @nullable
      */
   photoUrl?: string | null;
   /**
-     * @maxItems 4
+     * @maxItems 1
      * @items.maxLength 200
      */
   photoUrls?: string[];

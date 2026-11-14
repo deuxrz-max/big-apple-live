@@ -89,7 +89,7 @@ test("real HTTP, PostgreSQL and App Storage upload, replacement, privacy and emo
   await assert.rejects(saveProfile(ids[1]!, { username: names[1]!, photoUrl: result.photoUrl }), /only your own/);
   assert.equal(await getProfile(ids[1]!), null);
   await assert.rejects(saveProfile(ids[0]!, { username: names[0]!, photoUrl: "https://example.com/fake.jpg" }), /Upload a photo/);
-  const profile = await saveProfile(ids[0]!, { username: names[0]!, displayName: "Photo tester", bio: "Persistent", photoUrl: result.photoUrl });
+  const profile = await saveProfile(ids[0]!, { username: names[0]!, displayName: "Photo tester", photoUrl: result.photoUrl });
   assert.equal((await getProfile(ids[0]!))!.photoUrl, result.photoUrl);
   actor = ids[1]!;
   assert.equal((await fetch(`${base}${urlPath}`)).status, 404, "Saving does not bypass human review");
@@ -117,7 +117,8 @@ test("real HTTP, PostgreSQL and App Storage upload, replacement, privacy and emo
   assert.notEqual(replacement.photoUrl, result.photoUrl);
   await saveProfile(ids[0]!, { username: names[0]!, photoUrl: replacement.photoUrl });
   assert.equal((await getProfile(ids[0]!))!.photoUrl, replacement.photoUrl);
-  assert.equal((await getProfile(ids[0]!))!.bio, "Persistent");
+  assert.equal((await getProfile(ids[0]!))!.displayName, "Photo tester");
+  assert.equal((await db.select().from(profilePhotos).where(eq(profilePhotos.id, uploaded[0]!))).length, 0);
   assert.equal((await getMessages(codes[0]!, store))[0]!.photoUrl, null);
   actor = ids[1]!;
   assert.equal((await fetch(`${base}${urlPath}`)).status, 404);
@@ -130,30 +131,10 @@ test("real HTTP, PostgreSQL and App Storage upload, replacement, privacy and emo
     gallery.push(photo.photoUrl);
     uploaded.push(photo.photoUrl.split("/").at(-1)!);
   }
-  const four = await saveProfile(ids[0]!, { username: names[0]!, photoUrls: gallery, photoUrl: gallery[1]! });
-  assert.deepEqual(four.photoUrls, gallery);
-  assert.equal((await getProfile(ids[0]!))!.photoUrl, gallery[1]);
-  assert.deepEqual((await getProfile(ids[0]!))!.photoUrls, gallery);
-  await assert.rejects(saveProfile(ids[0]!, { username: names[0]!, photoUrls: [...gallery, result.photoUrl] }), /up to 4/);
-  await assert.rejects(saveProfile(ids[0]!, { username: names[0]!, photoUrls: [gallery[0]!, gallery[0]!] }), /different/);
-  await assert.rejects(saveProfile(ids[0]!, { username: names[0]!, photoUrls: gallery, photoUrl: result.photoUrl }), /main photo/);
+  await assert.rejects(saveProfile(ids[0]!, { username: names[0]!, photoUrls: gallery }), /one profile photo/);
   await assert.rejects(saveProfile(ids[1]!, { username: names[1]!, photoUrls: [gallery[2]!] }), /only your own/);
-  assert.deepEqual((await getProfile(ids[0]!))!.photoUrls, gallery);
-  // Secondary pending images are owner-readable and cannot be deleted by retention.
-  const secondaryId = gallery[3]!.split("/").at(-1)!;
-  await db.update(profilePhotos).set({ unusedSince: new Date(Date.now() - PHOTO_GRACE_MS - 60_000) }).where(eq(profilePhotos.id, secondaryId));
-  assert.equal((await cleanupProfilePhotos({ dryRun: false, onlyIds: [secondaryId] })).deleted, 0);
-  actor = ids[1]!;
-  assert.equal((await fetch(`${base}${gallery[2]!.replace("/api", "")}`)).status, 404);
-  actor = ids[0]!;
-  assert.equal((await fetch(`${base}${gallery[2]!.replace("/api", "")}`)).status, 200);
-  // A main-only compatibility edit must retain the other saved photos.
-  await saveProfile(ids[0]!, { username: names[0]!, bio: "Three photos retained" });
-  assert.deepEqual((await getProfile(ids[0]!))!.photoUrls, gallery);
-  await saveProfile(ids[0]!, { username: names[0]!, photoUrls: [gallery[0]!, result.photoUrl, gallery[2]!], photoUrl: result.photoUrl });
-  const [removed] = await db.select().from(profilePhotos).where(eq(profilePhotos.id, gallery[1]!.split("/").at(-1)!));
-  assert.ok(removed!.unusedSince);
-  assert.ok(removed!.unusedSince!.getTime() > Date.now() - 60_000);
+  await saveProfile(ids[0]!, { username: names[0]!, displayName: "Renamed" });
+  assert.deepEqual((await getProfile(ids[0]!))!.photoUrls, [replacement.photoUrl]);
   await saveProfile(ids[0]!, { username: names[0]!, photoUrls: [], photoUrl: null });
   assert.equal((await getProfile(ids[0]!))!.photoUrl, null);
   assert.deepEqual((await getProfile(ids[0]!))!.photoUrls, []);

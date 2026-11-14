@@ -33,9 +33,9 @@ const itemSets: Record<CosmeticKind, readonly { id: string }[]> = {
   specialName: PROFILE_COSMETICS.specialNames,
 };
 const settingColumn = {
-  frame: socialSettings.equippedFrameId,
-  nameColor: socialSettings.equippedNameColorId,
-  specialName: socialSettings.equippedSpecialNameId,
+  frame: 'equippedFrameId',
+  nameColor: 'equippedNameColorId',
+  specialName: 'equippedSpecialNameId',
 } as const;
 
 export async function getProfileCosmeticStyle(accountId: string) {
@@ -97,7 +97,7 @@ export async function equipProfileCosmetic(accountId: string, kind: CosmeticKind
     )).limit(1)).length > 0;
   if (!owned) throw new RoomError(403, 'That item is not owned yet.');
   const column = settingColumn[kind];
-  await db.update(socialSettings).set({ [column.name]: itemId, updatedAt: new Date() })
+  await db.update(socialSettings).set({ [column]: itemId, updatedAt: new Date() })
     .where(eq(socialSettings.accountId, accountId));
   return getProfileCosmeticStore(accountId);
 }

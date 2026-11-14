@@ -11,11 +11,10 @@ import type { PhotoReviewStatus } from './photoReviewStatus';
 export interface AccountProfile {
   username: string;
   displayName?: string;
-  bio?: string;
   /** @nullable */
   photoUrl?: string | null;
   photoReviews?: PhotoReviewStatus[];
-  /** @maxItems 4 */
+  /** @maxItems 1 */
   photoUrls?: string[];
   identity: EmojiIdentity;
   updatedAt: Date;

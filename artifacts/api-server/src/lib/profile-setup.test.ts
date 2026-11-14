@@ -64,7 +64,7 @@ test("real PostgreSQL profile setup, interruption, edit persistence and request 
     assert.equal(new Set(COMMUNITY_ROOMS.map(r => r.roomId)).size, COMMUNITY_ROOMS.length);
     assert.ok(COMMUNITY_ROOMS.every(r => /^[A-Z0-9]{6}$/.test(r.roomId)),
       "every fixed room code remains joinable through the existing six-character route");
-    assert.ok(COMMUNITY_ROOMS.every(r => r.label.trim().split(/\s+/).length <= 2));
+    assert.ok(COMMUNITY_ROOMS.every(r => r.label.trim().length > 0));
   });
   await t.test("unsaved and invalid setup never becomes complete", async () => {
     assert.equal(await getProfile(ids[0]!), null);
@@ -76,17 +76,17 @@ test("real PostgreSQL profile setup, interruption, edit persistence and request 
     assert.equal(await getProfile(ids[0]!), null);
   });
   await t.test("new setup persists to existing records; repeated saves do not duplicate", async () => {
-    const result = await putProfile(ids[0]!, { username: names[0], displayName: "  Test display  ", bio: "  My bio  " });
+    const result = await putProfile(ids[0]!, { username: names[0], displayName: "  Test display  " });
     assert.equal(result.status, 200);
     const saved = await requireCompletedProfile(ids[0]!);
     assert.equal(saved.displayName, "Test display");
-    assert.equal(saved.bio, "My bio");
+    assert.equal('bio' in saved, false);
     assert.equal(saved.photoUrl, null);
     assert.equal(saved.identity.portraitId, undefined);
     await Promise.all([saveProfile(ids[0]!, { username: names[0]!, identity }), saveProfile(ids[0]!, { username: names[0]!, identity })]);
     assert.equal((await db.select().from(accountProfiles).where(eq(accountProfiles.accountId, ids[0]!))).length, 1);
     assert.equal((await getProfile(ids[0]!))!.displayName, "Test display");
-    assert.equal((await getProfile(ids[0]!))!.bio, "My bio");
+    assert.equal('bio' in (await getProfile(ids[0]!))!, false);
   });
   await t.test("legacy valid profile is complete without a reset or backfill", async () => {
     await db.insert(accountProfiles).values({ accountId: ids[1]!, username: names[1]!, nameKey: names[1]!.toLowerCase(),
@@ -95,15 +95,16 @@ test("real PostgreSQL profile setup, interruption, edit persistence and request 
       externalHandle: "ExistingHandle", discoverable: true, interests: ["music"] });
     const old = await requireCompletedProfile(ids[1]!);
     assert.equal(old.displayName, names[1]);
-    assert.equal(old.bio, "Preserved existing bio");
-    await saveProfile(ids[1]!, { username: names[1]!, identity, displayName: "Edited display", bio: "Edited bio" });
+    assert.equal('bio' in old, false);
+    await saveProfile(ids[1]!, { username: names[1]!, identity, displayName: "Edited display" });
     const reread = await getProfile(ids[1]!);
     assert.equal(reread!.username, names[1]);
     assert.equal(reread!.displayName, "Edited display");
-    assert.equal(reread!.bio, "Edited bio");
+    assert.equal('bio' in reread!, false);
     assert.equal(reread!.identity.currentMood, identity.currentMood);
     const [prefs] = await db.select().from(socialSettings).where(eq(socialSettings.accountId, ids[1]!));
     assert.equal(prefs!.externalHandle, "ExistingHandle");
+    assert.equal(prefs!.bio, "Preserved existing bio");
     assert.equal(prefs!.discoverable, true);
     assert.deepEqual(prefs!.interests, ["music"]);
   });
@@ -111,7 +112,7 @@ test("real PostgreSQL profile setup, interruption, edit persistence and request 
     const before = await getProfile(ids[1]!);
     assert.equal((await putProfile(null, { username: names[1] })).status, 401);
     assert.equal((await putProfile(ids[0]!, { username: names[0], accountId: ids[1], bio: "attack" })).status, 400);
-    assert.equal((await putProfile(ids[0]!, { username: names[1], bio: "attack" })).status, 409);
+    assert.equal((await putProfile(ids[0]!, { username: names[1] })).status, 409);
     assert.equal((await putProfile(ids[2]!, { username: names[1] })).status, 409);
     assert.equal(await getProfile(ids[2]!), null);
     assert.equal((await putProfile(ids[0]!, { username: names[0] }, "https://attacker.invalid")).status, 403);

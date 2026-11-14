@@ -61,7 +61,7 @@ router.put("/me", async (req, res) => {
   if (Array.isArray(req.body?.photoUrls) && req.body.photoUrls.length > 1)
     throw new RoomError(400, "Keep one profile photo. Upload a replacement instead.");
   const body = SaveMyProfileBody.safeParse(req.body);
-  if (!body.success || Object.keys(req.body ?? {}).some(key => !["username", "displayName", "bio", "photoUrl", "photoUrls"].includes(key)))
+   if (!body.success || Object.keys(req.body ?? {}).some(key => !["username", "displayName", "photoUrl", "photoUrls"].includes(key)))
     throw new RoomError(400, "Use a valid name and one uploaded profile photo; account ownership is set by the server.");
   res.set("Cache-Control", "no-store");
   res.json(SaveMyProfileResponse.parse(await saveProfile(id, body.data)));

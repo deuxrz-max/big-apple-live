@@ -64,7 +64,7 @@ export async function saveProfile(accountId: string, input: ProfileInput): Promi
       const [existing] = await tx.select().from(accountProfiles).where(eq(accountProfiles.accountId, accountId));
       if (existing && existing.nameKey !== nameKey) throw new RoomError(409, "Your dedicated name is permanent");
       const previous = existing ? profilePhotoUrls(existing) : [];
-      let selected = input.photoUrls !== undefined ? [...input.photoUrls] : [...previous];
+      let selected = input.photoUrls !== undefined ? [...input.photoUrls] : previous.slice(0, 1);
       // A profile may keep only one photo; selecting or removing it replaces the previous file.
       if (input.photoUrls === undefined && input.photoUrl !== undefined && input.photoUrl !== existing?.photoUrl) {
         selected = selected.filter(url => url !== existing?.photoUrl);

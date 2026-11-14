@@ -3,9 +3,9 @@ name: Current product retirement
 description: Current Big Apple Live scope after retiring video and game features.
 ---
 
-Keep Big Apple Live focused on social rooms with audio, messaging and the separate local Battle prototype. Do not reintroduce gifts, the pink-card draw, camera/video broadcasting, TV/video playback, PK battles, the old card game, Chess, Gift Studio, badges or entrance effects. Keep coin balances and old records; coin purchases must remain disabled until coins are usable.
+Keep Big Apple Live focused on social rooms with audio, messaging and the separate local Battle prototype. Do not reintroduce coins, gifts, the pink-card draw, camera/video broadcasting, TV/video playback, PK battles, the old card game, Chess, Gift Studio, badges or entrance effects. Preserve historical database rows, but no active coin balances, purchases, tester controls or financial/gift UI.
 
-**Why:** the owner explicitly expanded retirement to gifts and pink-card draw references, chose to preserve coins and old records, and chose to disable purchases until usable.
+**Why:** the owner superseded the earlier keep-coins decision with complete coin/gift feature retirement, explicitly retaining database rows for reversibility.
 
 **How to apply:** remove active entry points and reject old API paths; preserve shared LiveKit audio. Do not destructively delete production rows or uploaded media without a separate explicit request.
 

@@ -30,12 +30,11 @@ test('shell respects reduced motion, safe areas and touch targets', () => {
 test('bottom nav keeps its routes and test ids', () => {
   for (const href of ['/community/favorites', '/community/messages', '/user-portal']) assert.ok(nav.includes(href));
   assert.ok(nav.includes('bottom-nav-${label.toLowerCase()}'));
-  assert.ok(nav.includes('OPEN_ROOM_GIFTS_EVENT'));
 });
 
 const read = (p: string) => readFileSync(p, 'utf8');
 
-test('Following menu My profile opens Me while the bio editor remains available', () => {
+test('Following menu My profile opens Me while Edit profile remains available', () => {
   const social = read('src/social/SocialApp.tsx');
   assert.match(social, /\{ to: '\/user-portal', label: 'My profile', icon: UserRound \}/);
   assert.doesNotMatch(social, /\{ to: '\/community\/profile', label: 'My profile'/);
@@ -43,49 +42,30 @@ test('Following menu My profile opens Me while the bio editor remains available'
   assert.match(social, /<Route path="\/community\/profile" component=\{MyProfilePage\}/);
 });
 
-test('Home coin balances open Buy Coins without enabling payment', () => {
-  const home = read('src/chat/ChatApp.tsx');
-  assert.match(home, /<Link href="\/community\/coins" state=\{buyCoinsReturnState\(\)\} className="st-credits" data-testid="text-credits"/);
-  assert.match(home, /<Link href="\/community\/coins" state=\{buyCoinsReturnState\(\)\} className=\{`st-dir-wallet[^>]+aria-label="Buy coins" data-testid="link-home-wallet"/);
-  const social = read('src/social/SocialApp.tsx');
-  assert.match(social, /<Route path="\/community\/coins" component=\{BuyCreditsPage\}/);
-  const buyCoins = read('src/social/BuyCreditsPage.tsx');
-  assert.match(buyCoins, /<button[^>]*disabled aria-disabled="true" data-testid="button-pay-disabled"/);
-});
-
-test('all existing recharge links remember their origin and Buy Coins reads it', () => {
-  for (const path of ['src/chat/ChatApp.tsx', 'src/profile/OwnProfile.tsx', 'src/gifts/GiftBag.tsx']) {
-    const links = read(path).match(/<Link href="\/community\/coins"[^>]*>/g) ?? [];
-    assert.ok(links.length > 0, path);
-    for (const link of links) assert.ok(link.includes('state={buyCoinsReturnState()}'), link);
-  }
-  const page = read('src/social/BuyCreditsPage.tsx');
-  assert.ok(page.includes('buyCoinsBackTarget(useHistoryState())'));
-  assert.match(page, /<Link href=\{backTarget\} className="bm-back" data-testid="link-credits-back">Back<\/Link>/);
+test('profile offers Store and a direct sign-out action', () => {
+  const profile = read('src/profile/ProfileView.tsx');
+  assert.ok(profile.includes('<ProfileCard person={person}'));
+  assert.ok(profile.includes('href="/user-portal/store"'));
+  assert.ok(profile.includes('button-profile-sign-out'));
+  assert.ok(profile.includes('onClick={() => signOut('));
 });
 
 test('thread keeps refresh, clear-history, older/latest and send actions', () => {
-  const t = read('src/social/MoneyPages.tsx');
+  const t = read('src/social/ThreadPage.tsx');
   for (const id of ['button-refresh', 'button-clear-history', 'button-confirm-clear', 'button-older', 'button-latest', 'button-send-message', 'link-my-messages', 'menu-thread-actions']) assert.ok(t.includes(id), id);
-  assert.ok(t.includes("backHref=\"/user-portal\""), 'transactions back routes to Me');
+  assert.ok(t.includes('backHref="/community/messages"'));
 });
 
-test('landing and home keep sign-in, sign-up, go-live and wallet entries', () => {
+test('landing and home keep account, battle and room entries', () => {
   const c = read('src/chat/ChatApp.tsx');
-  for (const id of ['link-landing-sign-in', 'link-landing-sign-up', 'section-landing-hero', 'link-home-wallet', 'link-leaderboard', 'button-home-sign-out', 'nav-home-sections', 'button-save-identity', 'menu-edit-profile']) assert.ok(c.includes(id), id);
+  for (const id of ['link-landing-sign-in', 'link-landing-sign-up', 'section-landing-hero', 'link-leaderboard', 'button-home-sign-out', 'nav-home-sections', 'button-save-identity', 'link-home-battle']) assert.ok(c.includes(id), id);
   assert.ok(c.includes('st-home-go-live-button'));
 });
 
-test('owner card finish link stays dev and owner gated', () => {
-  const o = read('src/profile/OwnProfile.tsx');
-  assert.match(o, /import\.meta\.env\.DEV && access\.data\?\.owner === true && <Link href="\/user-portal\/card-finish"/);
-});
-
-test('live dock keeps host controls, gifts and leave', () => {
-  const g = read('src/chat/GoLiveScreens.tsx');
-  for (const s of ['flipCamera', 'toggleMicrophone', 'Open live gifts', 'live-leave', 'live-end-stream', 'dock-live-controls']) assert.ok(g.includes(s), s);
+test('social rooms keep the message composer and audio controls', () => {
   const r = read('src/chat/UniversityRoom.tsx');
-  assert.ok(r.includes('button-send') && r.includes('<BeamTv ref={beamTvRef}'));
+  assert.ok(r.includes('button-send'));
+  assert.ok(r.includes('microphone') || r.includes('Microphone'));
 });
 
 test('mobile headers and route transitions prevent inherited scroll and overflow', () => {
