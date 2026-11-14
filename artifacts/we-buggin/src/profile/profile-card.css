@@ -112,11 +112,11 @@
   text-overflow:ellipsis;
 }
 .pf-clean-card .profile-card-name{
-  top:63%;
+  top:59%;
   font-size:clamp(20px,8cqw,34px);
 }
-.pf-clean-card .profile-card-copy > :nth-child(2){top:82.7%}
-.pf-clean-card .profile-card-copy > :nth-child(3){top:92.5%}
+.pf-clean-card .profile-card-copy > :nth-child(2){top:68%}
+.pf-clean-card .profile-card-copy > :nth-child(3){top:77%}
 @media(min-width:700px){
   .profile-card{width:min(34vw,340px,25.3svh)}
 }
