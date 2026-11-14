@@ -407,15 +407,15 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                           }
                         } : undefined}>
                         {person && <BeamAudioTrack track={media?.audio} />}
-                        {person && (slot.micMuted || slot.mutedByHost) && (
-                          <span className="ur-slot-mic-icon" role="img"
-                            aria-label="Microphone muted"
-                            title="Microphone muted">
-                            <MicOff size={13} aria-hidden="true" />
-                          </span>
-                        )}
                         {isSocialRoom ? (
                           <div className="ur-social-card" data-testid={`social-seat-card-${slot.slotNumber}`}>
+                            {person && (slot.micMuted || slot.mutedByHost) && (
+                              <span className="ur-slot-mic-icon" role="img"
+                                aria-label="Microphone muted"
+                                title="Microphone muted">
+                                <MicOff size={13} aria-hidden="true" />
+                              </span>
+                            )}
                             {person ? (
                               <>
                                 <div className="ur-social-card-portrait">

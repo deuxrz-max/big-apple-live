@@ -267,16 +267,20 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 #root .ch.ur .ur-social-room .ur-slot::before,
 #root .ch.ur .ur-social-room .ur-slot::after{display:none}
 #root .ch.ur .ur-social-room .ur-slot-media{display:grid;place-items:center;overflow:visible;border-radius:0;background:transparent}
-.ur-social-card{--ur-social-name-color:#fff;position:relative;width:auto;height:100%;max-width:100%;max-height:100%;aspect-ratio:9/16;margin:auto;isolation:isolate}
-.ur-social-card-portrait,.ur-social-card-empty{position:absolute;z-index:1;left:26.2%;top:12.4%;width:47.6%;height:28.6%;border-radius:50%;overflow:hidden;background:#111;display:grid;place-items:center}
+.ur-social-card{--ur-social-name-color:#fff;position:relative;width:auto;height:100%;max-width:100%;max-height:100%;aspect-ratio:436/851;margin:auto;isolation:isolate;container-type:inline-size}
+.ur-social-card .ur-slot-starter-card{inset:auto;left:-16.514%;top:-9.401%;width:132.11%;height:120.329%;max-width:none;object-fit:fill}
+.ur-social-card-portrait,.ur-social-card-empty{position:absolute;z-index:1;left:15.19%;top:3.47%;width:68.7%;aspect-ratio:1;border-radius:50%;overflow:hidden;background:#111;display:grid;place-items:center}
 .ur-social-card-portrait img{display:block;width:100%;height:100%;object-fit:contain}
 .ur-social-card-portrait span{display:grid;place-items:center;width:100%;height:100%;background:#121212;color:#d7d7d7;font:700 clamp(10px,3vw,18px) system-ui,sans-serif}
 .ur-social-card-empty{background:#090909;border:1px solid rgba(255,255,255,.18)}
 .ur-social-card-empty span{max-width:80%;color:#fff;text-align:center;font:clamp(8px,2.5vw,12px)/1.1 'Pirata One',Georgia,serif;text-shadow:0 1px 3px #000}
-.ur-social-card-info{position:absolute;z-index:3;left:13%;right:13%;top:47%;bottom:8%;display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;overflow:hidden;background:#191919;color:var(--ur-social-name-color);text-align:center;font:clamp(8px,2.3vw,12px)/1.05 'Pirata One',Georgia,serif;text-shadow:0 1px 2px #000}
-.ur-social-card-info span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ur-social-card-info .ur-social-card-name{font-size:clamp(9px,2.7vw,14px);font-weight:700}
+.ur-social-card-info{position:absolute;z-index:3;inset:0;overflow:visible;background:transparent;color:var(--ur-social-name-color);text-align:center;font:clamp(8px,2.4vw,11px)/1.05 'Pirata One',Georgia,serif;text-shadow:0 1px 2px #000}
+.ur-social-card-info span{position:absolute;left:9%;width:82%;max-width:82%;transform:translateY(-50%);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ur-social-card-info .ur-social-card-name{top:59%;font-size:clamp(9px,2.8vw,13px);font-weight:700}
+.ur-social-card-info span:nth-child(2){top:82.7%}
+.ur-social-card-info span:nth-child(3){top:92.5%}
+.ur-social-card .ur-slot-mic-icon{top:4%;left:auto;right:4%}
 @media(max-width:420px){
-  .ur-social-card-info{left:9%;right:9%;font-size:clamp(7px,2vw,10px)}
-  .ur-social-card-info .ur-social-card-name{font-size:clamp(8px,2.3vw,12px)}
+  .ur-social-card-info{font-size:clamp(7px,2vw,10px)}
+  .ur-social-card-info .ur-social-card-name{font-size:clamp(8px,2.4vw,11px)}
 }
