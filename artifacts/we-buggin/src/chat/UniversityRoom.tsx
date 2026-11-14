@@ -1,30 +1,28 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { LogOut, Mic, MicOff, Send, X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { LogOut, Mic, MicOff, X } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { RoomChannelBack } from './RoomChannels';
 import { useQueryClient } from '@tanstack/react-query';
 import {
-  getGetMyProfileQueryKey, getGetUniversitySessionQueryKey, useAcknowledgeUniversityRules, useGetUniversitySession,
-  useGetChatAccess, useSendUniversityWhisper, useSetSocialRelationship, useSetUniversityIgnore,
-  type ChatMessage,
+  getGetUniversitySessionQueryKey, useAcknowledgeUniversityRules, useGetUniversitySession,
+  useSetSocialRelationship, useSetUniversityIgnore,
 } from '@workspace/api-client-react';
 import { photoSrc, UserPhoto } from '@/components/user-photo';
 import { useQuickProfile } from '@/profile/QuickProfile';
 import { ShinyName } from '@/components/ShinyName';
-import { errMessage, errStatus } from '@/lib/errors';
+import { errMessage } from '@/lib/errors';
 import { IdentityAvatar } from '@/lib/identity';
 import { useTextRoom } from './useTextRoom';
 import { BeamAudioTrack, useUniversityVideoBeam } from './useUniversityVideoBeam';
 import { isRoomMicEnabled } from './room-audio-policy';
 import { arrangeAudioSeats } from './audio-seat-layout';
 import { BotShield } from './BotShield';
-import { BotActivityLine } from './BotActivityLine';
 import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
 import './university-room.css';
 import { RoomPerimeter } from './RoomPerimeter';
 import './bot-moderation.css';
 
-const RULES = "Stick to the room's topic. Be kind — no harassment or hate. Nothing sexual or explicit, in chat, names or photos. Don't share real names, phone numbers, addresses or other contact details. Don't hog the screen, no ALL CAPS, no ads or spam. Use Ignore on anyone bothering you, or Block and Report for anything serious. Public room chat is moderated by Big Apple Live bots. Whispers and direct messages are private and are not scanned by these bots.";
+const RULES = "Stick to the room's topic. Be kind — no harassment or hate. Nothing sexual or explicit in room conversation, names or photos. Don't share real names, phone numbers, addresses or other contact details. Use Ignore on anyone bothering you, or Block and Report for anything serious. Help keep the room welcoming for everyone.";
 
 type Target = {
   username: string;
@@ -37,17 +35,10 @@ type Target = {
   isHost?: boolean;
 };
 type ReportTarget = {
-  targetType: 'user' | 'message';
+  targetType: 'user';
   targetUsername: string;
   roomId: string;
-  messageId?: string;
-  messageText?: string;
 };
-type Item = { kind: 'room'; at: number; id: string; m: ChatMessage }
-  | { kind: 'arrival'; at: number; id: string; displayName: string; participantId: string }
-  | { kind: 'whisper'; at: number; id: string; w: { id: string; username: string; displayName: string;
-      displayNameColor?: string; displayNameTierIndex?: number;
-      outgoing: boolean; body: string } };
 
 export function TextChatRoom({ roomId, userId }: { roomId: string; userId: string }) {
   const qc = useQueryClient();
@@ -71,24 +62,17 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
     void videoBeam.leaveSlot();
   }, [videoBeam.leaveSlot]);
   const ignoreMut = useSetUniversityIgnore({ request: { headers } });
-  const whisperMut = useSendUniversityWhisper({ request: { headers } });
   const ack = useAcknowledgeUniversityRules();
   const block = useSetSocialRelationship();
-  const chatAccess = useGetChatAccess();
   const quickProfile = useQuickProfile();
 
-  const [text, setText] = useState('');
-  const [pending, setPending] = useState(false);
-  const [sendErr, setSendErr] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [reporting, setReporting] = useState<ReportTarget | null>(null);
-  const [whisperTo, setWhisperTo] = useState<Target | null>(null);
   const [menu, setMenu] = useState<Target | null>(null);
   const [drawer, setDrawer] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [ignored, setIgnored] = useState<Set<string>>(new Set());
   const ignoreBusy = useRef(0);
-  const idem = useRef<{ username: string; body: string; key: string } | null>(null);
   const autoRules = useRef(false);
   const ignoreVersion = useRef<string | null>(null);
   const peopleBtn = useRef<HTMLButtonElement>(null);
@@ -96,15 +80,12 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const drawerBox = useRef<HTMLElement>(null);
   const menuBox = useRef<HTMLDivElement>(null);
   const rulesBox = useRef<HTMLDivElement>(null);
-  const box = useRef<HTMLDivElement>(null);
-  const near = useRef(true);
-  const messageLongPress = useRef<number | null>(null);
   const isSocialRoom = r.room?.roomType === 'social';
 
   useEffect(() => {
-    setText(''); setWhisperTo(null); setMenu(null); setDrawer(false); setRulesOpen(false);
-    setIgnored(new Set()); setSendErr(null); setNote(null);
-    autoRules.current = false; ignoreVersion.current = null; idem.current = null;
+    setMenu(null); setDrawer(false); setRulesOpen(false);
+    setIgnored(new Set()); setNote(null);
+    autoRules.current = false; ignoreVersion.current = null;
   }, [roomId, userId]);
   useEffect(() => {
     if (r.roomUnavailable) nav('/community');
@@ -166,17 +147,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
     : arrangeAudioSeats(beamSlots, roomHostParticipantId);
   const speakerCount = beamSlots.filter(slot => slot.participantId).length;
   const isSelf = (username: string, authorId?: string) => (!!authorId && authorId === r.creds?.participantId) || me?.username === username;
-  const nameOf = (username: string, fallback?: string) => people.find((p) => p.username === username)?.displayName ?? fallback ?? username;
   const nameColorOf = (username: string, fallback?: string) => people.find((p) => p.username === username)?.displayNameColor ?? fallback ?? '#FFFFFF';
-
-  const items = useMemo<Item[]>(() => {
-    const a: Item[] = r.messages.filter((m) => m.botId || !ignored.has(m.username)).map((m) => ({ kind: 'room' as const, at: new Date(m.createdAt).getTime(), id: m.id, m }));
-    const b: Item[] = (session?.whispers ?? []).filter((w) => !ignored.has(w.username)).map((w) => ({ kind: 'whisper' as const, at: new Date(w.createdAt).getTime(), id: `w-${w.id}`, w }));
-    const d: Item[] = r.arrivals.map(arrival => ({ kind: 'arrival', at: arrival.at, id: arrival.id,
-      displayName: arrival.displayName, participantId: arrival.participantId }));
-    return [...a, ...b, ...d].sort((x, y) => x.at - y.at || x.id.localeCompare(y.id));
-  }, [r.messages, r.arrivals, session?.whispers, ignored]);
-  useEffect(() => { const el = box.current; if (el && near.current) el.scrollTop = el.scrollHeight; }, [items.length]);
 
   const toggleIgnore = (t: Target) => {
     const next = !ignored.has(t.username);
@@ -208,33 +179,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
       displayNameTierIndex: displayNameTierIndex ?? person?.displayNameTierIndex ?? 0,
     });
   };
-
-  const doSend = async (t: string, kind: 'text' | 'reaction' = 'text') => {
-    const v = t.trim();
-    if (!v || v.length > 280) return;
-    setPending(true); setSendErr(null);
-    try { await r.send(v, kind); if (kind === 'text') setText(''); qc.invalidateQueries({ queryKey: getGetMyProfileQueryKey() }); }
-    catch (e) { setSendErr(errStatus(e) === 409 ? 'Create your profile first.' : errMessage(e)); }
-    finally { setPending(false); }
-  };
-  const doWhisper = () => {
-    const body = text.trim();
-    if (!whisperTo || !body || body.length > 1000 || !sessionId || whisperMut.isPending) return;
-    if (!idem.current || idem.current.username !== whisperTo.username || idem.current.body !== body) {
-      idem.current = { username: whisperTo.username, body, key: crypto.randomUUID() };
-    }
-    setSendErr(null);
-    whisperMut.mutate({ roomId, data: { username: whisperTo.username, body, idempotencyKey: idem.current.key } }, {
-      onSuccess: () => {
-        idem.current = null; setText('');
-        qc.invalidateQueries({ queryKey: getGetUniversitySessionQueryKey(roomId) });
-        qc.invalidateQueries({ predicate: (q) => typeof q.queryKey[0] === 'string' && (q.queryKey[0] as string).startsWith('/api/social') });
-      },
-      onError: (e) => setSendErr(errMessage(e)),
-    });
-  };
-  const whispering = !!whisperTo;
-  const limit = whispering ? 1000 : 280;
 
   const peopleList = (
     <>
@@ -297,10 +241,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
     <div className="ch ch-university ur">
       <RoomPerimeter />
       <div className="ch-in ur-in">
-        {chatAccess.data?.warning && <p className="ur-moderation-notice" role="alert">{chatAccess.data.warning}</p>}
-        {(chatAccess.data?.chatMuted || chatAccess.data?.reportsMuted) && (
-          <p className="ur-moderation-notice" role="status">Chat is temporarily muted while a moderator reviews reports.</p>
-        )}
         <RoomChannelBack roomId={roomId} />
         <div className="ur-head">
           <button type="button" ref={peopleBtn} className="bm-btn bm-btn-sm ur-people-btn" aria-haspopup="dialog" aria-expanded={drawer} onClick={() => setDrawer(true)} data-testid="button-people">People · {people.length}</button>
@@ -335,7 +275,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
               </div>
               {videoBeam.error && <p className="ur-beam-error" role="alert">{videoBeam.error}</p>}
               {videoBeam.beam.beamActive && !videoBeam.ownSlot && beamSlots.every(slot => slot.participantId)
-                && <p className="ur-beam-full" role="status">Beam is full. You can still watch and chat; an open spot can be joined as soon as someone leaves.</p>}
+                && <p className="ur-beam-full" role="status">All audio seats are occupied. You can still listen; an open seat can be joined when someone leaves.</p>}
                   <div className="ur-slots" data-count={speakerCount}>
                 {beamSeatLayout.map(({ slot, area, gridColumn, gridRow }) => {
                   const person = slot.participantId
@@ -526,112 +466,9 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                 </div>
               )}
             </section>
-            <div className="ch-msgs" ref={box} role="log" aria-live="polite" aria-label="Room messages" tabIndex={0} onScroll={(e) => { const el = e.currentTarget; near.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }} data-testid="list-messages">
-              {r.hasOlder && <button type="button" className="bm-btn bm-btn-sm" disabled={r.loadingOlder}
-                onClick={async () => {
-                  const el = box.current; const height = el?.scrollHeight ?? 0; const top = el?.scrollTop ?? 0;
-                  near.current = false; await r.loadOlder();
-                  requestAnimationFrame(() => { if (el) el.scrollTop = top + el.scrollHeight - height; });
-                }}>{r.loadingOlder ? 'Loading older messages…' : 'Load older messages'}</button>}
-              {r.loading && <p role="status">Loading history...</p>}
-              {!r.loading && items.length === 0 && <p className="ch-note">No messages yet.</p>}
-              {items.map((it) => {
-                if (it.kind === 'arrival') {
-                  const arrivalPerson = session?.people.find(person => person.participantId === it.participantId);
-                  return <div className="ch-msg ur-arrival-line" key={it.id} data-testid="room-arrival">
-                    <div>{arrivalPerson
-                      ? <button type="button" className="ur-name" onClick={() => openMenu(arrivalPerson.username, it.displayName, it.participantId, arrivalPerson.displayNameColor, arrivalPerson.displayNameTierIndex)}><ShinyName displayNameColor={arrivalPerson.displayNameColor} displayNameTierIndex={arrivalPerson.displayNameTierIndex}>{it.displayName}</ShinyName></button>
-                      : <ShinyName>{it.displayName}</ShinyName>} has <strong className="ur-arrived-word">arrived</strong></div>
-                  </div>;
-                }
-                if (it.kind === 'whisper') {
-                  const w = it.w; const nm = nameOf(w.username, w.displayName);
-                  return (
-                    <div className="ch-msg ur-whisper" key={it.id} data-testid={`whisper-${w.id}`}>
-                      <div><span className="ur-wlabel">{w.outgoing && 'You whisper to '}
-                        <button type="button" className="ur-name" aria-haspopup="menu" aria-label={`Actions for ${nm}`} onClick={() => openMenu(w.username, nm, undefined, w.displayNameColor, w.displayNameTierIndex)}><ShinyName displayNameColor={w.displayNameColor ?? nameColorOf(w.username)} displayNameTierIndex={w.displayNameTierIndex ?? people.find(person => person.username === w.username)?.displayNameTierIndex}>{nm}</ShinyName></button>
-                        {!w.outgoing && ' whispers to you'}</span><p>{w.body}</p></div>
-                    </div>
-                  );
-                }
-                const m = it.m; const nm = m.botId ? m.username : nameOf(m.username);
-                if (m.botId) {
-                  let body = m.text.trim();
-                  for (const n of [nm, m.username]) if (n && body.toLowerCase().startsWith(n.toLowerCase())) { body = body.slice(n.length).replace(/^[\s:,\-–—]+/, ''); break; }
-                  if (m.botMessageType === 'visit' && body.trim().replace(/[.!?]+$/, '').toLowerCase() === 'has arrived') {
-                    return <div className="ch-msg ur-arrival-line" key={m.id} data-testid={`bot-arrival-${m.id}`}>
-                      <div><BotActivityLine botId={m.botId} name={nm} body={body} arrived /></div>
-                    </div>;
-                  }
-                  return (
-                    <div className={`ch-msg${m.botMessageType === 'chatter' ? ' ur-bot-chatter' : ''}`} key={m.id} data-testid={`bot-message-${m.id}`}>
-                      <div>
-                        <BotActivityLine botId={m.botId} name={nm} body={body} chatter={m.botMessageType === 'chatter'} />
-                      </div>
-                    </div>
-                  );
-                }
-                const self = isSelf(m.username, m.authorId);
-                const currentPerson = session?.people.find((p) => p.username === m.username);
-                const displayNameColor = currentPerson?.displayNameColor ?? m.displayNameColor ?? '#FFFFFF';
-                const displayNameTierIndex = currentPerson?.displayNameTierIndex ?? m.displayNameTierIndex ?? 0;
-                return (
-                  <div className="ch-msg" key={m.id}
-                    onContextMenu={event => {
-                      if (self) return;
-                      event.preventDefault();
-                      setReporting({ targetType: 'message', targetUsername: m.username, roomId,
-                        messageId: m.id, messageText: m.text });
-                    }}
-                    onTouchStart={() => {
-                      if (self) return;
-                      if (messageLongPress.current) window.clearTimeout(messageLongPress.current);
-                      messageLongPress.current = window.setTimeout(() => setReporting({
-                        targetType: 'message', targetUsername: m.username, roomId, messageId: m.id, messageText: m.text,
-                      }), 600);
-                    }}
-                    onTouchMove={() => {
-                      if (messageLongPress.current) window.clearTimeout(messageLongPress.current);
-                      messageLongPress.current = null;
-                    }}
-                    onTouchEnd={() => {
-                      if (messageLongPress.current) window.clearTimeout(messageLongPress.current);
-                      messageLongPress.current = null;
-                    }}
-                    onTouchCancel={() => {
-                      if (messageLongPress.current) window.clearTimeout(messageLongPress.current);
-                      messageLongPress.current = null;
-                    }}>
-                    <div>
-                       {self ? <span className="ch-sender"><ShinyName displayNameColor={displayNameColor} displayNameTierIndex={displayNameTierIndex}>{nm}</ShinyName></span>
-                          : <span className="ch-sender"><button type="button" className="ur-name" aria-haspopup="menu" aria-label={`Actions for ${nm}`} onClick={() => openMenu(m.username, nm, m.authorId, displayNameColor, displayNameTierIndex)}><ShinyName displayNameColor={displayNameColor} displayNameTierIndex={displayNameTierIndex}>{nm}</ShinyName></button></span>}
-                      <p>{m.text}</p>
-                       {!self && <div className="ch-acts"><button type="button" onClick={() => { setReporting({
-                         targetType: 'message', targetUsername: m.username, roomId, messageId: m.id, messageText: m.text,
-                       }); setNote(null); }}>Report message</button>
-                        <button type="button" disabled={block.isPending} onClick={() => block.mutate({ username: m.username, data: { kind: 'block', active: true } }, { onSuccess: () => { setNote(`Blocked ${m.username}.`); r.refresh(); }, onError: (e) => setNote(errMessage(e)) })}>Block</button></div>
-                       }
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
             {reporting && <SafetyReportDialog {...reporting} roomSessionId={sessionId}
               onClose={() => setReporting(null)} onSubmitted={() => setNote(null)} />}
-            {sendErr && <div className="ch-err" role="alert">{sendErr}</div>}
-            {note && <p role="status">{note} <Link href="/community/blocks" className="bm-link">Blocked list</Link></p>}
-            {whisperTo && (
-              <div className="ur-chip" role="status">
-                <span>Whispering to <b><ShinyName displayNameColor={whisperTo.displayNameColor} displayNameTierIndex={whisperTo.displayNameTierIndex}>{whisperTo.displayName}</ShinyName></b> · private</span>
-                <button type="button" className="bm-btn bm-btn-sm" onClick={() => { setWhisperTo(null); setText(''); setSendErr(null); }} data-testid="button-whisper-close">Back to room</button>
-              </div>
-            )}
-            <form className={`ch-comp dw-room-composer${whispering ? ' ur-wmode' : ''}`} onSubmit={(e) => { e.preventDefault(); if (whispering) doWhisper(); else doSend(text); }}>
-              <input type="text" value={text} maxLength={limit} onChange={(e) => setText(e.target.value)} placeholder={whispering ? 'Whisper (1-1000)' : 'Say something (1-280)'} aria-label={whispering ? 'Whisper' : 'Message'} data-testid="input-message" />
-              <button type="submit" className="bm-btn bm-btn-primary" disabled={(whispering ? whisperMut.isPending : pending) || !text.trim()} data-testid="button-send">
-                <Send size={16} aria-hidden="true" /><span>{whispering ? (whisperMut.isPending ? 'Sending...' : 'Whisper') : pending ? 'Sending...' : 'Send'}</span>
-              </button>
-            </form>
+            {note && <p className="ur-room-note" role="status">{note} <Link href="/community/blocks" className="bm-link">Blocked list</Link></p>}
           </div>
         </div>
       </div>
@@ -683,7 +520,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                     void videoBeam.kick(targetParticipantId);
                   }}>Remove from this room</button>
                 )}
-                <button type="button" role={isSocialRoom ? undefined : 'menuitem'} autoFocus onClick={() => { setWhisperTo(menu); setMenu(null); setDrawer(false); setText(''); setSendErr(null); }}>Whisper</button>
                 <button type="button" role={isSocialRoom ? undefined : 'menuitem'} onClick={() => { const u = menu.username; setMenu(null); nav(`/community/people/${encodeURIComponent(u)}`); }}>View profile</button>
                 <button type="button" role={isSocialRoom ? undefined : 'menuitem'} disabled={ignoreMut.isPending} onClick={() => toggleIgnore(menu)}>{ignored.has(menu.username) ? 'Unignore' : 'Ignore'}</button>
               </>

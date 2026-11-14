@@ -166,7 +166,8 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 .ur-slot-join{flex:none;width:100%;min-height:38px;background:#303b39;border-color:#4b7065;color:#a7ebcf}
 .ur-resume-audio{margin:0 0 8px;padding:6px 10px}
 .ur-beam-error{flex:0 0 auto;margin:0;color:#f0a8ad;font-size:11px}
-.ch.ur .ch-msgs{flex:1;min-height:0}
+.ch.ur .ch-room .ur-beam{flex:1 1 auto}
+.ch.ur .ur-room-note{flex:0 0 auto;margin:0;padding:4px 8px;color:#e7d9a8;font-size:12px}
 @keyframes ur-frame-flow{0%{background-position:0% 50%}25%{background-position:25% 50%}50%{background-position:50% 50%}75%{background-position:75% 50%}100%{background-position:100% 50%}}
 @keyframes ur-speaking-ring{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
 @media (min-width:761px){
@@ -204,11 +205,11 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 @media(prefers-reduced-motion:reduce){.ur-side.is-open{animation:none}.ur-slot.is-speaking .ur-slot-avatar{animation:none}.ur-slot::before{animation:none;background:linear-gradient(135deg,#d63391,#8f49d9 55%,#6f58c4);background-size:100% 100%}.ur-slot:not(.is-occupied)::before{opacity:.46}}
 
 .ch.ur .ch-room.ur-social-room{gap:8px}
-.ch.ur .ur-social-room .ur-beam.is-social-room{flex:0 0 66%;gap:6px}
+.ch.ur .ur-social-room .ur-beam.is-social-room{flex:1 1 auto;gap:6px}
 .ch.ur .ur-social-room .ur-slots{gap:7px}
 .ch.ur .ur-social-room .ur-slot{padding:9px;gap:6px}
 @media(max-width:760px){
-  .ch.ur .ur-social-room .ur-beam.is-social-room{flex-basis:66%;gap:4px}
+  .ch.ur .ur-social-room .ur-beam.is-social-room{flex:1 1 auto;gap:4px}
   .ch.ur .ur-social-room .ur-slots{gap:5px}
   .ch.ur .ur-social-room .ur-slot{padding:6px;gap:4px}
 }
