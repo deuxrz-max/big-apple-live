@@ -35,7 +35,8 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
   const bSession = roomStore.join(roomId, names[1]!, { accountId: b, identity });
   const aContext = { roomId, sessionId: aSession.participantSessionId };
   const bContext = { roomId, sessionId: bSession.participantSessionId };
-  const prefs = { bio: "A real community member", country: "US", interests: ["music"], discoverable: true, badgeId: null };
+  const prefs = { bio: "A real community member", country: "US", interests: ["music"], discoverable: true,
+    badgeId: null, race: "Human" as const, job: "Apprentice" as const };
 
   await t.test("People includes accounts without opting in; filters and profile clears persist", async () => {
     GetSocialMeResponse.parse(await getMe(a));
@@ -43,6 +44,10 @@ test("persistent social privacy, messages, credits and atomic rewards", async t 
     assert.equal((await listPeople(a, { search: token })).total, 2);
     await saveSocialProfile(a, prefs);
     await saveSocialProfile(b, { ...prefs, country: "CA", bio: "Canada fixture", interests: ["art"] });
+    assert.equal((await getMe(a)).profile.race, "Human");
+    assert.equal((await getMe(a)).profile.job, "Apprentice");
+    await saveSocialProfile(a, { ...prefs, job: null });
+    assert.equal((await getMe(a)).profile.job, null);
     const people = GetSocialPeopleResponse.parse(await listPeople(a, { search: token, country: "CA", gender: "Female" }));
     assert.equal(people.total, 1);
     assert.equal(people.people[0]!.username, names[1]);

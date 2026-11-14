@@ -9,6 +9,8 @@ import type { EmojiIdentity } from './emojiIdentity';
 import type { PhotoReviewStatus } from './photoReviewStatus';
 import type { SocialPersonBadgesItem } from './socialPersonBadgesItem';
 import type { SocialPersonExternalPlatform } from './socialPersonExternalPlatform';
+import type { SocialPersonJob } from './socialPersonJob';
+import type { SocialPersonRace } from './socialPersonRace';
 import type { StreamerPassportBadgeSummary } from './streamerPassportBadgeSummary';
 
 export interface SocialPerson {
@@ -44,6 +46,9 @@ export interface SocialPerson {
   bio: string;
   country: string | null;
   interests: string[];
+  race?: SocialPersonRace;
+  /** @nullable */
+  job?: SocialPersonJob;
   discoverable: boolean;
   favorite: boolean;
   blocked: boolean;

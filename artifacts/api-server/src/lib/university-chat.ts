@@ -83,9 +83,12 @@ export async function universitySession(id: string, roomId: string, sessionId: s
     seen.add(ownerId);
     const [profile] = await db.select().from(accountProfiles).where(eq(accountProfiles.accountId, ownerId));
     if (!profile || (process.env.NODE_ENV === "production" && profile.isTestAccount)) continue;
+    const [playerIdentity] = await db.select({ race: socialSettings.race, job: socialSettings.job })
+      .from(socialSettings).where(eq(socialSettings.accountId, ownerId));
     const photos = await visibleProfilePhotos(ownerId, id, profile);
     people.push({ participantId: participant.participantId, username: profile.username,
       displayName: profile.displayName ?? profile.username, photoUrl: photos.photoUrl,
+      race: playerIdentity?.race ?? "Human", job: playerIdentity?.job ?? null,
       identity: {
         emojiId: profile.emojiId, gender: profile.gender, color: profile.color,
         hairColor: profile.hairColor, portraitId: profile.portraitId ?? null,
@@ -102,6 +105,7 @@ export async function universitySession(id: string, roomId: string, sessionId: s
   }
   for (const bot of botRotation.people(roomId.toUpperCase())) people.push({
     participantId: bot.participantId, username: bot.name, displayName: bot.name, photoUrl: bot.avatarUrl,
+    race: "Human", job: null,
     displayNameColor: "#FFFFFF", displayNameTierIndex: 0,
     photoStatus: "approved", self: false, moderator: true, ignored: false, blocked: false, botId: bot.id,
     badgeId: null, badgeName: null, badgeImage: null,

@@ -2,7 +2,7 @@ import '@/beam/beam.css';
 import '@/social/social.css';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Coins, Flame, Swords, Trophy, Users, X } from 'lucide-react';
+import { ArrowLeft, Coins, Flame, Swords, Trophy, Users, X } from 'lucide-react';
 import { useClerk } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -96,7 +96,10 @@ function TopBar({ signedIn }: { signedIn: boolean }) {
   return (
     <div className="st-topbar">
       <Wordmark href={signedIn ? '/home' : '/'} className="st-brand" transparentLogo />
-      {signedIn ? <><CreateRoomButton className="st-topbar-live"><Users size={15} /> Create room</CreateRoomButton><CreditsChip /></> : <Link href="/sign-in" className="bm-btn bm-btn-sm bm-btn-primary">Sign in</Link>}
+      {signedIn ? <><CreateRoomButton className="st-topbar-live"><Users size={15} /> Create room</CreateRoomButton><CreditsChip /></> : <div className="st-topbar-actions">
+        <Link href="/leaderboard" className="bm-btn bm-btn-sm st-home-leaderboard" aria-label="Leaderboard" title="Leaderboard" data-testid="link-header-leaderboard"><Trophy size={18} aria-hidden="true" /></Link>
+        <Link href="/sign-in" className="bm-btn bm-btn-sm bm-btn-primary">Sign in</Link>
+      </div>}
     </div>
   );
 }
@@ -204,7 +207,7 @@ export function ChatDirectory() {
             <span className="dw-home-title"><strong>Big Apple Live</strong><small>Audio rooms</small></span>
           </div>
           <div className="st-dir-account">
-            <Link href="/community/leaderboard" className="bm-btn bm-btn-sm st-home-leaderboard" aria-label="Leaderboard" title="Leaderboard" data-testid="link-home-leaderboard"><Trophy size={18} aria-hidden="true" /></Link>
+            <Link href="/leaderboard" className="bm-btn bm-btn-sm st-home-leaderboard" aria-label="Leaderboard" title="Leaderboard" data-testid="link-home-leaderboard"><Trophy size={18} aria-hidden="true" /></Link>
             <span className={`st-dir-wallet${socialMe.data?.wallet.unlimited ? ' is-unlimited' : ''}`} aria-label="Coin balance" data-testid="link-home-wallet">
               {socialMe.data?.wallet.unlimited
                 ? <><i aria-hidden="true" />Unlimited</>
@@ -242,6 +245,25 @@ export function ChatDirectory() {
         />
       </section>
       <footer className="st-dir-footer"><span>BIG APPLE LIVE · FIND YOUR PEOPLE</span></footer>
+    </Shell>
+  );
+}
+
+export function BattleLeaderboardPage() {
+  return (
+    <Shell className="sc">
+      <header className="st-topbar">
+        <Wordmark href="/home" className="st-brand" transparentLogo />
+        <Link href="/home" className="bm-btn bm-btn-sm" data-testid="link-leaderboard-back"><ArrowLeft size={16} aria-hidden="true" /> Home</Link>
+      </header>
+      <section className="sc-page sc-leaderboard-page" aria-labelledby="leaderboard-title" data-testid="page-leaderboard">
+        <h1 className="sc-h1" id="leaderboard-title"><Trophy size={30} aria-hidden="true" /> Battle leaderboard</h1>
+        <p className="sc-sub">Ranked by battle wins.</p>
+        <div className="sc-empty" role="status" data-testid="leaderboard-empty">
+          <h2>No battles yet</h2>
+          <p>Battle wins will appear here when recorded.</p>
+        </div>
+      </section>
     </Shell>
   );
 }

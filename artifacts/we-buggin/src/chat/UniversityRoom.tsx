@@ -441,41 +441,77 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                             <MicOff size={13} aria-hidden="true" />
                           </span>
                         )}
-                        {person && isSocialRoom && (
-                          <img className="ur-slot-starter-card" src={`${import.meta.env.BASE_URL}battle-assets/cards/card_frame_grey_starter.jpg`} alt="" aria-hidden="true" />
-                        )}
-                        {person && (!photoTrigger ? (
-                          <div className="ur-slot-portrait-layer">{portrait}</div>
+                        {isSocialRoom ? (
+                          <div className="ur-social-card" data-testid={`social-seat-card-${slot.slotNumber}`}>
+                            {person ? (
+                              <>
+                                <div className="ur-social-card-portrait">
+                                  {person.photoUrl
+                                    ? <img src={photoSrc(person.photoUrl)} alt="" onError={event => { event.currentTarget.style.display = 'none'; }} />
+                                    : person.identity
+                                      ? <IdentityAvatar identity={person.identity} name={fallbackName} size="100%" fill />
+                                      : <span>{initials}</span>}
+                                </div>
+                                <img className="ur-slot-starter-card"
+                                  src={`${import.meta.env.BASE_URL}battle-assets/cards/card_frame_grey_starter.png`}
+                                  alt="" aria-hidden="true" />
+                                <div className="ur-social-card-info" aria-label={`${person.displayName}, ${person.race ?? 'Human'}, ${person.job ?? 'No job yet'}`}>
+                                  <span className="ur-social-card-name">{person.displayName}</span>
+                                  <span>{person.race ?? 'Human'}</span>
+                                  <span>{person.job ?? 'No job yet'}</span>
+                                </div>
+                              </>
+                            ) : slot.participantId ? (
+                              <>
+                                <div className="ur-social-card-empty"><span>Loading player</span></div>
+                                <img className="ur-slot-starter-card"
+                                  src={`${import.meta.env.BASE_URL}battle-assets/cards/card_frame_grey_starter.png`}
+                                  alt="" aria-hidden="true" />
+                              </>
+                            ) : (
+                              <>
+                                <div className="ur-social-card-empty"><span>Tap to sit</span></div>
+                                <img className="ur-slot-starter-card"
+                                  src={`${import.meta.env.BASE_URL}battle-assets/cards/card_frame_grey_starter.png`}
+                                  alt="" aria-hidden="true" />
+                              </>
+                            )}
+                          </div>
                         ) : (
-                          <button type="button" className="ur-slot-avatar-button ur-slot-photo-action"
-                            aria-label={`Open profile for ${person.displayName}`} aria-haspopup="dialog"
-                            data-testid={`button-seat-photo-${person.username}`}
-                            onClick={() => quickProfile?.open(person.username)}>
-                            {portrait}
-                          </button>
-                        ))}
-                        {person ? (
-                          <div className="ur-slot-copy">
-                           <span className="ur-slot-name-line">
-                              {person.self || isSocialRoom ? <ShinyName className="ur-slot-name" displayNameColor={person.displayNameColor} displayNameTierIndex={person.displayNameTierIndex}>{person.displayName}</ShinyName>
-                                : <button type="button" className="ur-name ur-slot-name"
-                                  aria-label={`Actions for ${person.displayName}`}
-                                  aria-haspopup={isSocialRoom ? 'dialog' : 'menu'}
-                                  onClick={event => { event.stopPropagation(); openMenu(person.username, person.displayName, person.participantId, person.displayNameColor, person.displayNameTierIndex); }}>
-                                  <ShinyName className="ur-seat-name-text" displayNameColor={person.displayNameColor} displayNameTierIndex={person.displayNameTierIndex}>{person.displayName}</ShinyName>
-                                </button>}
-                            </span>
-                          </div>
-                        ) : slot.participantId ? (
-                          <div className="ur-slot-copy">
-                            <span className="ur-slot-name">Speaker details loading</span>
-                            <span className="ur-slot-caption">Syncing room roster</span>
-                          </div>
-                        ) : (
-                          <div className="ur-slot-empty-copy">
-                            <span className="ur-empty-number" aria-hidden="true">{slot.slotNumber}</span>
-                            <span className="ur-slot-name ur-empty-name">{moveAvailable ? 'Move here' : joinAvailable ? 'Tap to join' : 'Open spot'}</span>
-                          </div>
+                          <>
+                            {person && (!photoTrigger ? (
+                              <div className="ur-slot-portrait-layer">{portrait}</div>
+                            ) : (
+                              <button type="button" className="ur-slot-avatar-button ur-slot-photo-action"
+                                aria-label={`Open profile for ${person.displayName}`} aria-haspopup="dialog"
+                                data-testid={`button-seat-photo-${person.username}`}
+                                onClick={() => quickProfile?.open(person.username)}>
+                                {portrait}
+                              </button>
+                            ))}
+                            {person ? (
+                              <div className="ur-slot-copy">
+                                <span className="ur-slot-name-line">
+                                  <button type="button" className="ur-name ur-slot-name"
+                                    aria-label={`Actions for ${person.displayName}`}
+                                    aria-haspopup="menu"
+                                    onClick={event => { event.stopPropagation(); openMenu(person.username, person.displayName, person.participantId, person.displayNameColor, person.displayNameTierIndex); }}>
+                                    <ShinyName className="ur-seat-name-text" displayNameColor={person.displayNameColor} displayNameTierIndex={person.displayNameTierIndex}>{person.displayName}</ShinyName>
+                                  </button>
+                                </span>
+                              </div>
+                            ) : slot.participantId ? (
+                              <div className="ur-slot-copy">
+                                <span className="ur-slot-name">Speaker details loading</span>
+                                <span className="ur-slot-caption">Syncing room roster</span>
+                              </div>
+                            ) : (
+                              <div className="ur-slot-empty-copy">
+                                <span className="ur-empty-number" aria-hidden="true">{slot.slotNumber}</span>
+                                <span className="ur-slot-name ur-empty-name">{moveAvailable ? 'Move here' : joinAvailable ? 'Tap to join' : 'Open spot'}</span>
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                       {person && !mine && canModerateRoom ? (

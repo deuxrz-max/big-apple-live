@@ -54,7 +54,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
       {!bare && <nav className="bm-nav">
         <Wordmark href="/home" className="bm-logo" />
         <div className="sc-header-actions">
-          <Link href="/community/leaderboard" className="bm-btn bm-btn-sm sc-header-leaderboard" aria-label="Leaderboard" title="Leaderboard" data-testid="link-header-leaderboard">
+          <Link href="/leaderboard" className="bm-btn bm-btn-sm sc-header-leaderboard" aria-label="Leaderboard" title="Leaderboard" data-testid="link-header-leaderboard">
             <Trophy size={18} aria-hidden="true" />
           </Link>
           {!isMessagesPath && path !== '/community/favorites' && path !== '/community/coins' && path !== '/community/credits' && (
@@ -110,16 +110,7 @@ export default function SocialApp({ userId: _userId }: { userId: string }) {
               <Route path="/community/rewards"><RewardsPage /></Route>
               <Route path="/community/coins"><Redirect to="/user-portal" /></Route>
               <Route path="/community/credits"><Redirect to="/user-portal" /></Route>
-              <Route path="/community/leaderboard">
-                <section className="sc-page sc-leaderboard-page" aria-labelledby="leaderboard-title" data-testid="page-leaderboard">
-                  <h1 className="sc-h1" id="leaderboard-title"><Trophy size={30} aria-hidden="true" /> Battle leaderboard</h1>
-                  <p className="sc-sub">Ranked by battle wins.</p>
-                  <div className="sc-empty" role="status" data-testid="leaderboard-empty">
-                    <h2>No battles yet</h2>
-                    <p>Battle wins will appear here when recorded.</p>
-                  </div>
-                </section>
-              </Route>
+              <Route path="/community/leaderboard">{() => <Redirect to="/leaderboard" />}</Route>
               <Route><div className="sc-empty"><h2>Not found</h2><Link href="/community" className="bm-btn">People</Link></div></Route>
             </Switch>
           )}

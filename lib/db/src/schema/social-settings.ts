@@ -7,6 +7,8 @@ export const socialSettings = pgTable('social_settings', {
   accountId: text('account_id').primaryKey().references(() => accountProfiles.accountId, {onDelete:'cascade'}),
   bio: text('bio').notNull().default(''), country: text('country'),
   interests: jsonb('interests').$type<string[]>().notNull().default([]),
+  race: text('race', { enum: ['Human'] }).notNull().default('Human'),
+  job: text('job', { enum: ['Apprentice', 'Squire', 'Initiate', 'Trapper', 'Novice', 'Acolyte', 'Scoundrel', 'Tinker'] }),
   discoverable: boolean('discoverable').notNull().default(false), badgeId: text('badge_id'),
   equippedBadgeId: text('equipped_badge_id'),
   badgeEquipPreferenceSet: boolean('badge_equip_preference_set').notNull().default(false),

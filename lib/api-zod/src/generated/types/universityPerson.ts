@@ -8,6 +8,8 @@
 import type { EmojiIdentity } from './emojiIdentity';
 import type { StreamerPassportBadgeSummary } from './streamerPassportBadgeSummary';
 import type { UniversityPersonBotId } from './universityPersonBotId';
+import type { UniversityPersonJob } from './universityPersonJob';
+import type { UniversityPersonRace } from './universityPersonRace';
 
 export interface UniversityPerson {
   /** @nullable */
@@ -34,6 +36,9 @@ export interface UniversityPerson {
   photoUrl: string | null;
   /** @nullable */
   photoStatus: string | null;
+  race?: UniversityPersonRace;
+  /** @nullable */
+  job?: UniversityPersonJob;
   self: boolean;
   moderator: boolean;
   ignored: boolean;

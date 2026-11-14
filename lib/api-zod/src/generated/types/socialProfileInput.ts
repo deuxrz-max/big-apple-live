@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { SocialProfileInputExternalPlatform } from './socialProfileInputExternalPlatform';
+import type { SocialProfileInputJob } from './socialProfileInputJob';
+import type { SocialProfileInputRace } from './socialProfileInputRace';
 
 export interface SocialProfileInput {
   /** @nullable */
@@ -24,6 +26,9 @@ export interface SocialProfileInput {
      * @items.maxLength 24
      */
   interests: string[];
+  race?: SocialProfileInputRace;
+  /** @nullable */
+  job?: SocialProfileInputJob;
   discoverable: boolean;
   badgeId: string | null;
 }

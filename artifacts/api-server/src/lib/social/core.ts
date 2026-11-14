@@ -98,6 +98,7 @@ export async function person(viewer: string, profile: ProfileRow, settings?: Set
     externalPlatform: blocked ? null : prefs?.externalPlatform ?? null,
     externalHandle: blocked ? null : prefs?.externalHandle ?? null,
     interests: blocked ? [] : prefs?.interests ?? [], discoverable: prefs?.discoverable ?? false,
+    race: prefs?.race ?? "Human", job: prefs?.job ?? null,
     favorite: !!favorite, blocked: !!ownBlock, receivedCredits: wallet?.received ?? 0,
     displayNameColor: nameColor.color,
     displayNameTierIndex: nameColor.tierIndex,

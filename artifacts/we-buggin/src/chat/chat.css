@@ -919,6 +919,7 @@ body.streamtalk-directory-screen #root .ch.st-home{
 .dw-landing-rooms .rc-grid>li:nth-child(2) .dw-landing-room-card{border-color:#49dfff;box-shadow:0 0 10px #49dfff66,inset 0 0 18px #49dfff1a}
 .dw-landing-rooms .rc-grid>li:nth-child(3) .dw-landing-room-card{border-color:#a6ff4d;box-shadow:0 0 10px #a6ff4d66,inset 0 0 18px #a6ff4d1a}
 .st-home-leaderboard{display:grid!important;place-items:center;flex:0 0 36px;width:36px;height:36px;min-height:36px;padding:0!important}
+.st-topbar-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto;margin-left:auto}
 .dw-landing .rc-map-frame{margin-bottom:0}
 .dw-landing .rc-tiles,.st-home .rc-tiles{grid-template-columns:minmax(0,1fr);gap:16px}
 .dw-landing .rc-tiles>.st-home-go-live,.st-home .rc-tiles>.st-home-go-live{margin-top:0}

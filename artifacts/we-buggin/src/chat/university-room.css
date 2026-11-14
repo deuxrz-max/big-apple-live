@@ -268,7 +268,26 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 .ch.ur .ur-social-room .ur-slots{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
 .ur-social-room .ur-slot.has-person :is(.ur-slot-portrait-layer,.ur-slot-photo-action){inset:auto auto 26px 6px;width:38%;height:auto;aspect-ratio:1;border-radius:0;border:1px solid #d6b45d;z-index:3}
 .ur-social-room .ur-slot-photo-fill{object-fit:contain}
-.ur-slot-starter-card{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#0b0a08;z-index:2}
+.ur-slot-starter-card{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:transparent;z-index:2;pointer-events:none}
 /* theme.css "#root .ur-slots" forces the 5-column nine-seat grid and 2/1 aspect; override for social rooms only. */
 #root .ch.ur .ur-social-room .ur-slots{flex:1 1 auto;width:100%;height:auto;min-height:0;aspect-ratio:auto;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
 #root .ch.ur .ur-social-room .ur-beam.is-social-room{flex:0 0 66%}
+
+/* Social-room seats use the transparent grey starter card artwork as a true frame. */
+#root .ch.ur .ur-social-room .ur-slot{padding:2px;background:transparent;border:0;box-shadow:none;overflow:visible}
+#root .ch.ur .ur-social-room .ur-slot::before,
+#root .ch.ur .ur-social-room .ur-slot::after{display:none}
+#root .ch.ur .ur-social-room .ur-slot-media{display:grid;place-items:center;overflow:visible;border-radius:0;background:transparent}
+.ur-social-card{--ur-social-name-color:#fff;position:relative;width:auto;height:100%;max-width:100%;max-height:100%;aspect-ratio:9/16;margin:auto;isolation:isolate}
+.ur-social-card-portrait,.ur-social-card-empty{position:absolute;z-index:1;left:26.2%;top:12.4%;width:47.6%;height:28.6%;border-radius:50%;overflow:hidden;background:#111;display:grid;place-items:center}
+.ur-social-card-portrait img{display:block;width:100%;height:100%;object-fit:cover}
+.ur-social-card-portrait span{display:grid;place-items:center;width:100%;height:100%;background:#121212;color:#d7d7d7;font:700 clamp(10px,3vw,18px) system-ui,sans-serif}
+.ur-social-card-empty{background:#090909;border:1px solid rgba(255,255,255,.18)}
+.ur-social-card-empty span{max-width:80%;color:#fff;text-align:center;font:clamp(8px,2.5vw,12px)/1.1 'Pirata One',Georgia,serif;text-shadow:0 1px 3px #000}
+.ur-social-card-info{position:absolute;z-index:3;left:13%;right:13%;top:47%;bottom:8%;display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;overflow:hidden;background:#191919;color:var(--ur-social-name-color);text-align:center;font:clamp(8px,2.3vw,12px)/1.05 'Pirata One',Georgia,serif;text-shadow:0 1px 2px #000}
+.ur-social-card-info span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ur-social-card-info .ur-social-card-name{font-size:clamp(9px,2.7vw,14px);font-weight:700}
+@media(max-width:420px){
+  .ur-social-card-info{left:9%;right:9%;font-size:clamp(7px,2vw,10px)}
+  .ur-social-card-info .ur-social-card-name{font-size:clamp(8px,2.3vw,12px)}
+}

@@ -180,6 +180,30 @@ export interface EmojiIdentity {
   currentMood?: EmojiIdentityCurrentMood;
 }
 
+export type SocialPersonRace = typeof SocialPersonRace[keyof typeof SocialPersonRace];
+
+
+export const SocialPersonRace = {
+  Human: 'Human',
+} as const;
+
+/**
+ * @nullable
+ */
+export type SocialPersonJob = typeof SocialPersonJob[keyof typeof SocialPersonJob] | null;
+
+
+export const SocialPersonJob = {
+  Apprentice: 'Apprentice',
+  Squire: 'Squire',
+  Initiate: 'Initiate',
+  Trapper: 'Trapper',
+  Novice: 'Novice',
+  Acolyte: 'Acolyte',
+  Scoundrel: 'Scoundrel',
+  Tinker: 'Tinker',
+} as const;
+
 export type StreamerPassportPlatformId = typeof StreamerPassportPlatformId[keyof typeof StreamerPassportPlatformId];
 
 
@@ -244,6 +268,9 @@ export interface SocialPerson {
   bio: string;
   country: string | null;
   interests: string[];
+  race?: SocialPersonRace;
+  /** @nullable */
+  job?: SocialPersonJob;
   discoverable: boolean;
   favorite: boolean;
   blocked: boolean;
@@ -292,6 +319,30 @@ export const UniversityPersonBotId = {
   zombie: 'zombie',
 } as const;
 
+export type UniversityPersonRace = typeof UniversityPersonRace[keyof typeof UniversityPersonRace];
+
+
+export const UniversityPersonRace = {
+  Human: 'Human',
+} as const;
+
+/**
+ * @nullable
+ */
+export type UniversityPersonJob = typeof UniversityPersonJob[keyof typeof UniversityPersonJob] | null;
+
+
+export const UniversityPersonJob = {
+  Apprentice: 'Apprentice',
+  Squire: 'Squire',
+  Initiate: 'Initiate',
+  Trapper: 'Trapper',
+  Novice: 'Novice',
+  Acolyte: 'Acolyte',
+  Scoundrel: 'Scoundrel',
+  Tinker: 'Tinker',
+} as const;
+
 export interface UniversityPerson {
   /** @nullable */
   botId?: UniversityPersonBotId;
@@ -317,6 +368,9 @@ export interface UniversityPerson {
   photoUrl: string | null;
   /** @nullable */
   photoStatus: string | null;
+  race?: UniversityPersonRace;
+  /** @nullable */
+  job?: UniversityPersonJob;
   self: boolean;
   moderator: boolean;
   ignored: boolean;
@@ -2231,6 +2285,30 @@ export const SocialProfileInputExternalPlatform = {
   Super_Live: 'Super Live',
 } as const;
 
+export type SocialProfileInputRace = typeof SocialProfileInputRace[keyof typeof SocialProfileInputRace];
+
+
+export const SocialProfileInputRace = {
+  Human: 'Human',
+} as const;
+
+/**
+ * @nullable
+ */
+export type SocialProfileInputJob = typeof SocialProfileInputJob[keyof typeof SocialProfileInputJob] | null;
+
+
+export const SocialProfileInputJob = {
+  Apprentice: 'Apprentice',
+  Squire: 'Squire',
+  Initiate: 'Initiate',
+  Trapper: 'Trapper',
+  Novice: 'Novice',
+  Acolyte: 'Acolyte',
+  Scoundrel: 'Scoundrel',
+  Tinker: 'Tinker',
+} as const;
+
 export interface SocialProfileInput {
   /** @nullable */
   externalPlatform?: SocialProfileInputExternalPlatform;
@@ -2248,6 +2326,9 @@ export interface SocialProfileInput {
      * @items.maxLength 24
      */
   interests: string[];
+  race?: SocialProfileInputRace;
+  /** @nullable */
+  job?: SocialProfileInputJob;
   discoverable: boolean;
   badgeId: string | null;
 }

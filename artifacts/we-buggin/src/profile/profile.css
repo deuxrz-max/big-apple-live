@@ -46,6 +46,16 @@
 .pf-stats dt{font-size:12px;line-height:1.3;color:#bdbdc6;font-weight:600}
 .pf-links{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
 .pf-links .pf-btn{flex:0 1 auto;font-size:13px;padding:8px 14px}
+.pf-player-identity{display:grid;gap:10px;margin:20px 0;padding:16px;background:var(--pf-bg);border:1px solid rgba(255,255,255,.14);color:#fff}
+.pf-player-identity h2{margin:0;font-size:18px}
+.pf-player-identity>p{margin:0;color:#c7c2b5;font-size:13px}
+.pf-player-identity form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pf-player-identity label{display:grid;gap:5px;min-width:0;font-size:12px;font-weight:700}
+.pf-player-identity select{width:100%;min-width:0;min-height:42px;padding:8px;border:1px solid #8a6d2f;border-radius:0;background:#090909;color:#fff;font:inherit}
+.pf-player-identity select:disabled{opacity:.85}
+.pf-player-identity form>p,.pf-player-identity form>button{grid-column:1/-1}
+.pf-player-identity form>p{margin:0;color:#e6c878;font-size:13px}
+@media(max-width:380px){.pf-player-identity{padding:12px}.pf-player-identity form{grid-template-columns:1fr}}
 .pf-menu{position:relative}
 .pf-scrim{position:fixed;inset:0;background:transparent;border:0;z-index:40;cursor:default}
 .pf-scrim-dim{background:rgba(0,0,0,.6)}

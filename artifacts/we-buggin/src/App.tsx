@@ -9,7 +9,7 @@ import { APP_NAME, Wordmark } from '@/components/brand';
 import { BottomNavigation } from '@/components/bottom-navigation';
 import NotFound from '@/pages/not-found';
 import { clearAllCreds } from '@/lib/room-creds';
-import { AdultGate, ChatDirectory, ChatProfile, ProfileGate, ProfilePhotoReviewPage, PublicChatLanding, TextChatRoom } from '@/chat/ChatApp';
+import { AdultGate, BattleLeaderboardPage, ChatDirectory, ChatProfile, ProfileGate, ProfilePhotoReviewPage, PublicChatLanding, TextChatRoom } from '@/chat/ChatApp';
 import { EmailSignUp } from '@/components/email-signup';
 import '@/chat/chat.css';
 import { OwnProfile } from '@/profile/OwnProfile';
@@ -292,6 +292,7 @@ function ClerkProviderWithRoutes() {
               </Route>
             )}
             <Route path="/" component={HomeRedirect} />
+            <Route path="/leaderboard" component={BattleLeaderboardPage} />
             <Route path="/battle">
               <Suspense fallback={<div className="battle-loading" role="status">Loading battle prototype…</div>}>
                 <BattlePrototypePage />

@@ -1840,6 +1840,8 @@ components:
         identity: { $ref: "#/components/schemas/EmojiIdentity" }
         photoUrl: { type: [string, "null"] }
         photoStatus: { type: [string, "null"] }
+        race: { type: string, enum: [Human] }
+        job: { type: [string, "null"], enum: [Apprentice, Squire, Initiate, Trapper, Novice, Acolyte, Scoundrel, Tinker, null] }
         self: { type: boolean }
         moderator: { type: boolean }
         ignored: { type: boolean }

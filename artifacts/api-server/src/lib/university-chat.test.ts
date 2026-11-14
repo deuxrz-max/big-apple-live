@@ -65,7 +65,9 @@ test("Phase 3 real database and authenticated HTTP privacy safeguards (synthetic
   })));
   await db.insert(profilePhotos).values({ id: photoId, accountId: ids[0]!, objectKey: `fixture-only/${photoId}`, size: 100, status: "pending" });
   await db.insert(chatAdmissions).values(ids.map(accountId => ({ accountId })));
-  await db.insert(socialSettings).values(ids.map(accountId => ({ accountId, discoverable: true })));
+  await db.insert(socialSettings).values(ids.map((accountId, i) => ({
+    accountId, discoverable: true, ...(i === 0 ? { job: "Squire" as const } : {}),
+  })));
   await db.insert(chatModerators).values({ accountId: ids[2]! });
   await db.insert(chatRooms).values([
     { roomId: codes[0]!, historyId: histories[0]!, label: "Fixture university", parentRoomId: "LIVEME", overflowNumber: "50" },
@@ -80,6 +82,16 @@ test("Phase 3 real database and authenticated HTTP privacy safeguards (synthetic
   }
   const whisper = (from: number, to: number, body = "Private fixture whisper", key = randomUUID()) =>
     request(from, `/account/rooms/${codes[0]}/whispers`, { username: names[to], body, idempotencyKey: key }, "POST");
+
+  await t.test("social room roster exposes saved race and job with defaults", async () => {
+    const own = (await feed(0)).people.find(person => person.self)!;
+    const other = (await feed(1)).people.find(person => person.username === names[0])!;
+    assert.equal(own.race, "Human");
+    assert.equal(own.job, "Squire");
+    assert.equal(other.race, "Human");
+    assert.equal(other.job, "Squire");
+    assert.equal((await feed(1)).people.find(person => person.username === names[1])!.job, null);
+  });
 
   await t.test("only sender and recipient can see inline whispers; normal private conversations also retain them", async () => {
     const key = randomUUID();

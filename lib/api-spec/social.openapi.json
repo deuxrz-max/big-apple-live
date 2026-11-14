@@ -1828,6 +1828,14 @@
               "type": "string"
             }
           },
+          "race": {
+            "type": "string",
+            "enum": ["Human"]
+          },
+          "job": {
+            "type": ["string", "null"],
+            "enum": ["Apprentice", "Squire", "Initiate", "Trapper", "Novice", "Acolyte", "Scoundrel", "Tinker", null]
+          },
           "discoverable": {
             "type": "boolean"
           },
@@ -1897,6 +1905,14 @@
               "minLength": 1,
               "maxLength": 24
             }
+          },
+          "race": {
+            "type": "string",
+            "enum": ["Human"]
+          },
+          "job": {
+            "type": ["string", "null"],
+            "enum": ["Apprentice", "Squire", "Initiate", "Trapper", "Novice", "Acolyte", "Scoundrel", "Tinker", null]
           },
           "discoverable": {
             "type": "boolean"

@@ -84,6 +84,8 @@ export async function saveSocialProfile(id: string, input: SocialProfileInput) {
     await tx.update(socialSettings).set({ bio: input.bio.trim(), country: input.country, interests,
       ...(input.externalPlatform !== undefined ? { externalPlatform: input.externalPlatform } : {}),
       ...(input.externalHandle !== undefined ? { externalHandle: input.externalHandle?.trim() || null } : {}),
+      ...(input.race !== undefined ? { race: input.race } : {}),
+      ...(input.job !== undefined ? { job: input.job } : {}),
       discoverable: input.discoverable, badgeId: null, updatedAt: new Date() }).where(eq(socialSettings.accountId, id));
   });
   return person(id, profile);
