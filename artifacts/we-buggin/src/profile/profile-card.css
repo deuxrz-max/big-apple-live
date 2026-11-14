@@ -72,6 +72,51 @@
   font:700 10px/1 'DM Sans',sans-serif;
 }
 .pf .profile-card{flex:0 0 auto}
+/* Profile pages only: exclude the source artwork's transparent outer margins.
+   Store previews and social-room seats retain their existing geometry. */
+.pf-clean-card .profile-card{
+  width:min(100%,420px);
+  aspect-ratio:436/851;
+  container-type:inline-size;
+  overflow:hidden;
+}
+.pf-clean-card .profile-card-frame{
+  inset:auto;
+  left:-16.514%;
+  top:-9.401%;
+  width:132.11%;
+  height:120.329%;
+  max-width:none;
+}
+.pf-clean-card .profile-card-photo{
+  left:15.19%;
+  top:3.47%;
+  width:68.7%;
+}
+.pf-clean-card .profile-card-copy{
+  inset:0;
+  display:block;
+  overflow:visible;
+  font-size:clamp(16px,6.5cqw,28px);
+  color:#fff;
+}
+.pf-clean-card .profile-card-copy > *{
+  position:absolute;
+  left:9%;
+  width:82%;
+  max-width:82%;
+  transform:translateY(-50%);
+  line-height:1.15;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.pf-clean-card .profile-card-name{
+  top:63%;
+  font-size:clamp(20px,8cqw,34px);
+}
+.pf-clean-card .profile-card-copy > :nth-child(2){top:82.7%}
+.pf-clean-card .profile-card-copy > :nth-child(3){top:92.5%}
 @media(min-width:700px){
   .profile-card{width:min(34vw,340px,25.3svh)}
 }
