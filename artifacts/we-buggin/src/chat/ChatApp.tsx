@@ -2,7 +2,7 @@ import '@/beam/beam.css';
 import '@/social/social.css';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Coins, Flame, Users, X } from 'lucide-react';
+import { Coins, Flame, Swords, Trophy, Users, X } from 'lucide-react';
 import { useClerk } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -74,8 +74,9 @@ function List({ preview, query = '' }: { preview?: boolean; query?: string }) {
       {q.isError && <div className="ch-err" role="alert">{preview ? 'Sign in to see the directory.' : 'Could not load the directory.'} {!preview && <button type="button" className="bm-btn bm-btn-sm" onClick={() => q.refetch()}>Retry</button>}</div>}
       {q.data && q.data.length === 0 && <p>No entries.</p>}
       {q.data && q.data.length > 0 && rows.length === 0 && <p>No room matches your search.</p>}
-      <RoomChannels rooms={rows} loading={q.isLoading} baseHref={preview ? '/' : '/home'} showMap={!preview}
-        renderRoom={room => <DirectoryRoomCard room={room} topic={room.label} isFeatured={false} preview={preview} />}
+      <RoomChannels rooms={rows} loading={q.isLoading} baseHref={preview ? '/' : '/home'}
+        battle={<Link href="/battle" className="bm-btn bm-btn-primary dw-battle-cta" data-testid={preview ? 'link-public-battle' : 'link-home-battle'}><Swords size={17} aria-hidden="true" /> Battle</Link>}
+        renderRoom={room => <DirectoryRoomCard room={room} topic={displayRoomName(room.label)} isFeatured={false} preview={preview} />}
         goLive={<Link href="/sign-in" className="st-home-go-live-button"><span className="st-home-go-live-copy"><strong>Create Room</strong><small>Start an audio room</small></span></Link>}
       />
     </>
@@ -104,6 +105,10 @@ export function PublicChatLanding() {
   return (
     <Shell className="dw-landing">
       <TopBar signedIn={false} />
+      <section className="dw-landing-rooms" aria-labelledby="dw-landing-rooms-title">
+        <div className="dw-section-head"><span className="dw-overline">Explore</span><h2 id="dw-landing-rooms-title">Rooms</h2></div>
+        <List preview />
+      </section>
       <section className="dw-landing-hero" aria-labelledby="dw-landing-title" data-testid="section-landing-hero">
         <span className="dw-landing-kicker"><i aria-hidden="true" /> Social audio rooms</span>
         <h1 id="dw-landing-title">Find your people.</h1>
@@ -111,7 +116,6 @@ export function PublicChatLanding() {
         <div className="dw-landing-cta">
           <Link href="/sign-up" className="bm-btn bm-btn-primary" data-testid="link-landing-sign-up">Create account</Link>
           <Link href="/sign-in" className="bm-btn" data-testid="link-landing-sign-in">Sign in</Link>
-          <Link href="/battle" className="bm-btn bm-btn-primary dw-battle-cta" data-testid="link-public-battle">Battle</Link>
         </div>
         <ul className="dw-landing-points" aria-label="What you can do">
           <li><Users size={16} aria-hidden="true" /> Join audio rooms</li>
@@ -121,10 +125,6 @@ export function PublicChatLanding() {
           <summary>About Big Apple Live</summary>
           <p>Big Apple Live is a social platform for audio rooms and messaging.</p>
         </details>
-      </section>
-      <section className="dw-landing-rooms" aria-labelledby="dw-landing-rooms-title">
-        <div className="dw-section-head"><span className="dw-overline">Happening now</span><h2 id="dw-landing-rooms-title">Rooms</h2></div>
-        <List preview />
       </section>
       <footer className="dw-landing-foot"><p className="ch-note">{DISCLAIMER}</p></footer>
     </Shell>
@@ -192,7 +192,7 @@ export function ChatDirectory() {
     : rooms;
   const topicFor = (room: DirectoryRoom) => {
     const source = `${room.label} ${room.roomId}`.toLowerCase().replace(/[^a-z0-9]+/g, ' ');
-    return topics.find((topic) => source.includes(topic.toLowerCase())) ?? room.label;
+    return topics.find((topic) => source.includes(topic.toLowerCase())) ?? displayRoomName(room.label);
   };
   return (
     <Shell className="st-directory st-home">
@@ -204,6 +204,7 @@ export function ChatDirectory() {
             <span className="dw-home-title"><strong>Big Apple Live</strong><small>Audio rooms</small></span>
           </div>
           <div className="st-dir-account">
+            <Link href="/community/leaderboard" className="bm-btn bm-btn-sm st-home-leaderboard" aria-label="Leaderboard" title="Leaderboard" data-testid="link-home-leaderboard"><Trophy size={18} aria-hidden="true" /></Link>
             <span className={`st-dir-wallet${socialMe.data?.wallet.unlimited ? ' is-unlimited' : ''}`} aria-label="Coin balance" data-testid="link-home-wallet">
               {socialMe.data?.wallet.unlimited
                 ? <><i aria-hidden="true" />Unlimited</>
@@ -227,14 +228,13 @@ export function ChatDirectory() {
       </header>
 
       <HomeSections />
-      <Link href="/battle" className="bm-btn bm-btn-primary dw-home-battle-cta" data-testid="link-home-battle">Open Battle</Link>
       <section className="st-dir-explore st-home-rooms" id="live-channels" aria-label="Rooms">
         {directory.isError && <div className="st-dir-state st-dir-error" role="alert"><div className="st-dir-state-mark">!</div><h3>Rooms aren’t loading</h3><p>We couldn’t reach the directory. Give it another try.</p><button type="button" onClick={() => directory.refetch()}>Retry directory</button></div>}
         {directory.data && rooms.length === 0 && <div className="st-dir-state"><div className="st-dir-state-mark">—</div><h3>Quiet for a moment</h3><p>There are no rooms in the directory right now. Check back soon.</p></div>}
         <RoomChannels
           rooms={displayedRooms}
           loading={directory.isLoading}
-          showOtherRoomSigns
+          battle={<Link href="/battle" className="bm-btn bm-btn-primary dw-battle-cta" data-testid="link-home-battle"><Swords size={17} aria-hidden="true" /> Battle</Link>}
           renderRoom={(room) => <DirectoryRoomCard room={room} topic={topicFor(room)} isFeatured={room.roomId === featuredRoom?.roomId} hideDetails />}
           goLive={<CreateRoomButton className="st-home-go-live-button">
             <span className="st-home-go-live-copy"><strong>Create Room</strong><small>Start a four-player audio room</small></span>
@@ -256,16 +256,25 @@ export function DirectoryRoomCard({ room, topic, isFeatured, preview = false, hi
   const [topicPhotoFailed, setTopicPhotoFailed] = useState(false);
   const hasTopicPhoto = !topicPhotoFailed;
   const isWrestling = topic === 'Pro Wrestling';
+  const roomName = displayRoomName(room.label);
+  if (preview) {
+    return (
+      <Link href="/sign-in" className="dw-landing-room-card" aria-label={`Sign in to enter ${roomName}`} data-testid={`card-home-room-${room.roomId}`}>
+        <strong>{roomName}</strong>
+        <span>{room.headcount} here</span>
+      </Link>
+    );
+  }
   return (
-    <Link href={preview ? '/sign-in' : `/rooms/${encodeURIComponent(room.roomId)}`} className={`st-dir-card${isFeatured ? ' is-featured' : ''}`} aria-label={`Enter ${room.label}, ${room.headcount} ${room.headcount === 1 ? 'person' : 'people'} here${isFeatured ? ', featured room' : ''}`} data-testid={`card-home-room-${room.roomId}`}>
+    <Link href={`/rooms/${encodeURIComponent(room.roomId)}`} className={`st-dir-card${isFeatured ? ' is-featured' : ''}`} aria-label={`Enter ${roomName}, ${room.headcount} ${room.headcount === 1 ? 'person' : 'people'} here${isFeatured ? ', featured room' : ''}`} data-testid={`card-home-room-${room.roomId}`}>
       <div className={`st-dir-art st-dir-art-${topicClass(topic)}`}>
         {isWrestling
             ? <WrestlingArenaArt />
             : hasTopicPhoto
             ? <img className="st-dir-topic-photo" src={topicPhotoUrl(topic)} alt="" loading="lazy" onError={() => setTopicPhotoFailed(true)} />
             : <div className="st-dir-art-fallback" aria-hidden="true"><span className="st-dir-art-index">{topicInitial(topic)}</span><span className="st-dir-art-lines" /></div>}
-        {(!hideDetails || room.headcount > 0) && <span className={`st-home-live-label${room.headcount > 0 ? ' is-live' : ''}`} title={hideDetails ? undefined : room.label}>
-          {room.headcount > 0 && <><i aria-hidden="true" /><b>LIVE</b></>}{!hideDetails && <span>{room.label}</span>}
+        {(!hideDetails || room.headcount > 0) && <span className={`st-home-live-label${room.headcount > 0 ? ' is-live' : ''}`} title={hideDetails ? undefined : roomName}>
+          {room.headcount > 0 && <><i aria-hidden="true" /><b>LIVE</b></>}{!hideDetails && <span>{roomName}</span>}
         </span>}
         {!hideDetails && isFeatured && <span className="st-home-featured-badge">Featured</span>}
         <span className="st-dir-art-shade" />
@@ -328,6 +337,10 @@ function WrestlingArenaArt() {
 
 function topicClass(topic: string) {
   return topic.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+}
+
+function displayRoomName(label: string) {
+  return label.trim().replace(/\s+(?:ave(?:nue)?\.?)$/i, '').trim();
 }
 
 function topicInitial(topic: string) {

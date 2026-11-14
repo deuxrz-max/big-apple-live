@@ -15,8 +15,8 @@ export type RoomChannelsProps<R extends DirectoryChannelRoom> = {
   loading: boolean;
   renderRoom: (room: R) => ReactNode;
   goLive: ReactNode;
+  battle?: ReactNode;
   baseHref?: string;
-  showOtherRoomSigns?: boolean;
   showMap?: boolean;
 };
 
@@ -33,8 +33,8 @@ export function RoomChannels<R extends DirectoryChannelRoom>({
   loading,
   renderRoom,
   goLive,
+  battle,
   baseHref = '/home',
-  showOtherRoomSigns = false,
   showMap = true,
 }: RoomChannelsProps<R>) {
   const search = useSearch();
@@ -50,29 +50,26 @@ export function RoomChannels<R extends DirectoryChannelRoom>({
       <ul className="rc-tiles">
         {showMap && (
           <li className="rc-map-item">
-            <div
-              className="rc-map-tile"
-              role="img"
-              aria-label="Aethelgard world map"
-              data-testid="image-home-map"
-              style={{
-                backgroundImage: `url("${import.meta.env.BASE_URL}battle-assets/screens/aethelgard_map_starting_screen.jpg")`,
-              }}
-            />
+            <div className="rc-map-frame" role="group" aria-label="Aethelgard world map and Battle">
+              <div
+                className="rc-map-tile"
+                role="img"
+                aria-label="Aethelgard world map"
+                data-testid="image-home-map"
+                style={{
+                  backgroundImage: `url("${import.meta.env.BASE_URL}battle-assets/screens/aethelgard_map_starting_screen.jpg")`,
+                }}
+              />
+              {battle && <div className="rc-map-battle">{battle}</div>}
+            </div>
           </li>
         )}
         <li className="st-home-go-live">{goLive}</li>
       </ul>
       {!loading && others.length > 0 && (
-        <>
-          <ul className={`rc-grid${showOtherRoomSigns ? ' rc-grid-signed-in-home' : ''}`}>
-            {others.map((room) => (
-              <li key={room.roomId} className={showOtherRoomSigns ? 'rc-other-room-item' : undefined}>
-                {renderRoom(room)}
-              </li>
-            ))}
-          </ul>
-        </>
+        <ul className="rc-grid">
+          {others.map((room) => <li key={room.roomId}>{renderRoom(room)}</li>)}
+        </ul>
       )}
     </div>
   );

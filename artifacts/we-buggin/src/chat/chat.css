@@ -909,3 +909,16 @@ body.streamtalk-directory-screen #root .ch.st-home{
 @media(prefers-reduced-motion:reduce){
   .st-home .rc-tiles > li > a.rc-tile[data-testid^="link-channel-"]{transition:none}
 }
+.dw-landing-room-card{
+  position:relative;display:flex;min-height:120px;align-items:flex-end;justify-content:space-between;gap:8px;
+  padding:14px;overflow:hidden;border:2px solid #ff4fa3;border-radius:0;background:#070609;color:#fff;
+  box-shadow:0 0 10px #ff4fa366,inset 0 0 18px #ff4fa31a;text-decoration:none;
+}
+.dw-landing-room-card strong{font:850 clamp(15px,4.2vw,20px)/1.1 'Bricolage Grotesque','DM Sans',sans-serif;text-transform:uppercase;letter-spacing:.05em}
+.dw-landing-room-card span{flex:0 0 auto;color:#f5cb8d;font-size:12px;font-weight:800}
+.dw-landing-rooms .rc-grid>li:nth-child(2) .dw-landing-room-card{border-color:#49dfff;box-shadow:0 0 10px #49dfff66,inset 0 0 18px #49dfff1a}
+.dw-landing-rooms .rc-grid>li:nth-child(3) .dw-landing-room-card{border-color:#a6ff4d;box-shadow:0 0 10px #a6ff4d66,inset 0 0 18px #a6ff4d1a}
+.st-home-leaderboard{display:grid!important;place-items:center;flex:0 0 36px;width:36px;height:36px;min-height:36px;padding:0!important}
+.dw-landing .rc-map-frame{margin-bottom:0}
+.dw-landing .rc-tiles,.st-home .rc-tiles{grid-template-columns:minmax(0,1fr);gap:16px}
+.dw-landing .rc-tiles>.st-home-go-live,.st-home .rc-tiles>.st-home-go-live{margin-top:0}

@@ -9,7 +9,6 @@
   --st-depth-blue: rgba(116, 169, 255, .34);
   --st-depth-shadow: 0 14px 34px rgba(3, 2, 16, .34), 0 3px 9px rgba(5, 3, 20, .22);
   --st-depth-inset: inset 0 1px 0 rgba(255, 255, 255, .095), inset 0 -1px 0 rgba(7, 4, 22, .44);
-  --st-depth-gold: rgba(255, 190, 92, .6);
 }
 
 /* Raised, glass-dark cards and shared panels. Keep the fill opaque enough for text. */
@@ -18,9 +17,8 @@
   .bc-card, .bc-review, .dh-banner, .dh-card, .ur-side, .ur-slot, .ur-menu,
   .ur-rules, .ur-tv-dialog, .ur-chip, .pf-panel, .pf-dialog, .pf-menu-list,
   .pf-stats > div, .pf-name-tier, .sc-msgs, .sc-skel, .ch-photo-card, .ch-auth .ch-card,
-  .gs-panel, .gs-preview, .gs-library-card, .gs-empty-library, .gs-after-actions,
-  .gs-production-step, .gs-error-panel, .depth-auth-card,
-  .bm-tile, .bm-modal, .bm-mic-panel, .bm-tray, .gift-framework.gift-sheet,
+  .depth-auth-card,
+  .bm-tile, .bm-modal, .bm-mic-panel, .bm-tray,
   .st-live-action-sheet,
   .st-dir-card, .st-dir-live-stream, .st-dir-state, .st-store .st-loading-card,
   .st-store .st-error-card, .st-store .st-empty-state, .st-store .st-query-state,
@@ -36,9 +34,8 @@
   .bc-card, .bc-review, .dh-banner, .dh-card, .ur-side, .ur-slot, .ur-menu,
   .ur-rules, .ur-tv-dialog, .pf-panel, .pf-dialog, .pf-menu-list,
   .pf-stats > div, .pf-name-tier, .sc-msgs, .sc-skel, .ch-photo-card, .ch-auth .ch-card,
-  .gs-panel, .gs-preview, .gs-library-card, .gs-empty-library, .gs-after-actions,
-  .gs-production-step, .gs-error-panel, .depth-auth-card,
-  .bm-tile, .bm-modal, .bm-mic-panel, .bm-tray, .gift-framework.gift-sheet,
+  .depth-auth-card,
+  .bm-tile, .bm-modal, .bm-mic-panel, .bm-tray,
   .st-live-action-sheet,
   .st-dir-card, .st-dir-live-stream, .st-dir-state, .st-store .st-loading-card,
   .st-store .st-error-card, .st-store .st-empty-state, .st-store .st-query-state,
@@ -54,8 +51,7 @@
 #root :is(
   .sc-panel, .sc-card, .sc-wallet, .ib-row, .fg-tile, .bc-card, .bc-review,
   .dh-banner, .dh-card, .pf-panel, .pf-dialog, .pf-menu-list, .pf-name-tier, .sc-msgs, .ch-auth .ch-card,
-  .gs-production-step, .gs-error-panel, .depth-auth-card,
-  .gs-panel, .gs-preview, .gs-library-card, .st-dir-card, .st-store .st-item-card,
+  .depth-auth-card, .st-dir-card, .st-store .st-item-card,
   .st-store .st-launch-tile
 ) {
   box-shadow:
@@ -95,13 +91,6 @@
 #root .sc-skel,
 #root .ch-photo-card,
 #root .ch-auth .ch-card,
-#root .gs-panel,
-#root .gs-preview,
-#root .gs-library-card,
-#root .gs-empty-library,
-#root .gs-after-actions,
-#root .gs-production-step,
-#root .gs-error-panel,
 #root .depth-auth-card,
 #root .beam-app .bm-tile,
 #root .beam-app .bm-modal,
@@ -209,7 +198,7 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 4px 12px rgba(4, 2, 16, .22);
 }
 
-/* Profile, passport, gifts, store and studio surfaces keep existing warm details. */
+/* Profile, store and studio surfaces keep existing warm details. */
 #root .pf-hero {
   box-shadow: inset 0 -18px 30px rgba(7, 4, 20, .26);
 }
@@ -229,21 +218,6 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 4px 12px rgba(3, 2, 14, .22);
 }
 
-#root .gift-framework.gift-sheet {
-  border-top-color: rgba(215, 183, 255, .76);
-  box-shadow: 0 -16px 38px rgba(2, 1, 12, .48), inset 0 1px 0 rgba(255, 255, 255, .12);
-}
-
-#root .gift-framework .gift-item {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 5px 12px rgba(3, 2, 14, .2);
-}
-
-#root .gift-framework .gift-item[aria-pressed="true"] {
-  border-color: var(--st-depth-gold);
-  box-shadow: inset 0 1px 0 rgba(255, 225, 165, .18), inset 0 0 0 1px rgba(255, 190, 92, .12), 0 5px 14px rgba(3, 2, 14, .24);
-}
-
-#root .gift-framework .gift-send,
 #root .st-store .st-detail-action:not(:disabled),
 #root .st-store .st-detail-preview:not(:disabled),
 #root .st-store .st-balance-bar button {
@@ -286,7 +260,6 @@
 #root :is(
   button, [role="button"], .bm-btn, .btn, .pf-btn, .pf-edit, .sc-nav-item,
   .ur-slot-action, .ur-slot-join, .ur-resume-audio,
-  .gs-button, .gs-chip-button, .gs-icon-button, .gift-control, .gift-item,
   .app-bottom-link, .st-dir-card, .st-dir-filter, .st-dir-enter, .st-dir-go-live,
   .st-store .st-header-back, .st-store .st-header-items, .st-store .st-launch-tile,
   .st-store .st-item-card, .st-store .st-detail-action, .st-store .st-detail-preview,
@@ -301,8 +274,7 @@
 #root :is(
   button:not(:disabled), [role="button"], .bm-btn:not(:disabled), .btn:not(:disabled),
   .pf-btn:not(:disabled), .pf-edit, .sc-nav-item, .ur-slot-action:not(:disabled),
-  .ur-slot-join:not(:disabled), .ur-resume-audio, .gs-button:not(:disabled), .gs-chip-button, .gs-icon-button,
-  .gift-control, .gift-item, .app-bottom-link, .st-dir-card, .st-dir-filter,
+  .ur-slot-join:not(:disabled), .ur-resume-audio, .app-bottom-link, .st-dir-card, .st-dir-filter,
   .st-dir-enter, .st-dir-go-live, .st-store .st-header-back, .st-store .st-header-items,
   .st-store .st-launch-tile, .st-store .st-item-card, .st-store .st-detail-action:not(:disabled),
   .st-store .st-detail-preview:not(:disabled), .st-store .st-sheet-close,

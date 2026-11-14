@@ -64,7 +64,7 @@ body {
 }
 
 #root :is(.ch h1, .ch h2, .beam-app h1, .beam-app h2, .sc-h1, .sc-h2,
-  .pf h1, .pf h2, .pf h3, .ib-title, .fg-title, .gs-heading h1) {
+  .pf h1, .pf h2, .pf h3, .ib-title, .fg-title) {
   color: #f7f4ff;
 }
 
@@ -74,7 +74,7 @@ body {
 }
 
 #root :is(.ch-note, .sc-sub, .sc-count, .dh-note, .dh-sub, .ib-prev, .ib-time,
-  .fg-empty, .pf-h2, .pf-badge small, .gs-caption, .gs-mobile-note) {
+  .fg-empty, .pf-h2, .pf-badge small) {
   color: #c2bbd7;
 }
 
@@ -82,8 +82,7 @@ body {
 #root :is(.ch-list li, .sc-card, .sc-panel, .sc-empty, .sc-wallet, .ib-row, .fg-tile,
   .bc-card, .bc-review, .dh-banner, .dh-card, .pf-panel, .pf-dialog, .pf-menu-list,
   .pf-stats > div,
-  .sc-msgs, .sc-skel, .ch-photo-card, .ch-auth .ch-card, .gs-panel, .gs-preview,
-  .gs-library-card, .gs-empty-library) {
+  .sc-msgs, .sc-skel, .ch-photo-card, .ch-auth .ch-card) {
   color: #f7f4ff;
   border-color: rgba(193, 160, 255, .3);
   background-color: rgba(20, 15, 39, .94);
@@ -102,7 +101,7 @@ body {
   background: rgba(34, 26, 63, .82);
 }
 
-#root :is(input, textarea, select, .sc-select, .sc-text, .bm-input-box, .gs-name-field input, .gs-target-field select, .gs-assign-row select) {
+#root :is(input, textarea, select, .sc-select, .sc-text, .bm-input-box) {
   color: #f7f4ff;
   border-color: rgba(193, 160, 255, .42);
   background-color: #100d21;
@@ -114,33 +113,32 @@ body {
 }
 
 #root :is(.bm-btn:not(.bm-btn-primary), .pf-btn:not(.pf-btn-fill), .pf-edit,
-  .sc-nav-item:not(.is-on), .ur-slot-action, .ur-resume-audio, .gs-button:not(.primary), .gs-chip-button, .gs-icon-button) {
+  .sc-nav-item:not(.is-on), .ur-slot-action, .ur-resume-audio) {
   color: #f7f4ff;
   border-color: rgba(193, 160, 255, .48);
   background: rgba(38, 29, 71, .78);
 }
 
 #root :is(.bm-btn-primary, .btn-pink, .pf-btn-fill, .formButtonPrimary, .ur-slot-join,
-  .gift-framework .gift-send, .st-dir-enter, .st-dir-go-live, .st-topbar-live, .gs-button.primary) {
+  .st-dir-enter, .st-dir-go-live, .st-topbar-live) {
   color: #fff !important;
   border-color: transparent;
   background: linear-gradient(115deg, #8e38e8 0%, #bc36c9 54%, #e63c9a 100%);
 }
 
-#root :is(.bm-btn-primary, .btn-pink, .pf-btn-fill, .formButtonPrimary,
-  .gift-framework .gift-send, .gs-button.primary):hover:not(:disabled) {
+#root :is(.bm-btn-primary, .btn-pink, .pf-btn-fill, .formButtonPrimary):hover:not(:disabled) {
   filter: brightness(1.12);
 }
 
 #root :is(.sc-nav-item.is-on, .sc-nav-item[aria-current="page"],
-  .pf-tab[aria-selected="true"], .gs-production-step-link[aria-current="step"]) {
+  .pf-tab[aria-selected="true"]) {
   color: #c8ff8b;
   border-color: rgba(183, 255, 117, .58);
   background: rgba(109, 166, 56, .16);
 }
 
 #root :is(.ur-audio-connected .ur-status-dot, .ur-audio-ready .ur-status-dot,
-  .st-live::before, .st-dir-live-dot, .gs-topline-mark) {
+  .st-live::before, .st-dir-live-dot) {
   background-color: #b7ff75;
   box-shadow: 0 0 10px rgba(183, 255, 117, .55);
 }
@@ -233,7 +231,7 @@ body {
 
 /* Dark glass treatment for dialogs, sheets, menus and popovers. */
 #root :is([role="dialog"], [role="alertdialog"], .ur-menu, .ur-rules, .ur-tv-dialog,
-  .bm-modal, .bm-mic-panel, .bm-tray, .pf-dialog, .pf-menu-list, .gift-framework.gift-sheet, .gs-modal, .gs-save-destination,
+  .bm-modal, .bm-mic-panel, .bm-tray, .pf-dialog, .pf-menu-list,
   .st-live-action-sheet) {
   color: #f7f4ff;
   border-color: rgba(193, 160, 255, .42);
@@ -241,7 +239,7 @@ body {
   box-shadow: 0 18px 54px rgba(0, 0, 0, .56);
 }
 
-#root :is(.ur-modal, .bm-modal-back, .pf-modal, .gift-framework-backdrop, .gs-modal-wrap) {
+#root :is(.ur-modal, .bm-modal-back, .pf-modal) {
   background: rgba(4, 3, 12, .76);
   backdrop-filter: blur(7px);
 }
@@ -277,8 +275,8 @@ body.streamtalk-live-screen {
   color-scheme: dark;
 }
 
-body.streamtalk-live-screen #root :is(.st-live-viewers, .st-live-gifters,
-  .st-live-close-button, .st-live-follow, .st-live-gift-button,
+body.streamtalk-live-screen #root :is(.st-live-viewers,
+  .st-live-close-button, .st-live-follow,
   .st-live-host-controls button, .st-live-report-stream, .st-live-chat-form,
   .st-live-action-sheet) {
   border-color: rgba(222, 204, 255, .42);
@@ -289,7 +287,7 @@ body.streamtalk-live-screen #root :is(.st-live-viewers, .st-live-gifters,
   backdrop-filter: blur(12px);
 }
 
-body.streamtalk-live-screen #root :is(.st-live-viewers svg, .st-live-gift-button svg,
+body.streamtalk-live-screen #root :is(.st-live-viewers svg,
   .st-live-host-controls button svg, .st-live-host-controls button span) {
   color: #fff !important;
   -webkit-text-fill-color: #fff;
@@ -326,85 +324,6 @@ body.streamtalk-live-screen #root .st-live-action-sheet > button:not(.st-live-ac
   background: rgba(38, 29, 71, .82);
 }
 
-/* Gift Studio keeps transparency preview canvases, but all surrounding UI uses
-   the same purple-black panels, magenta actions and lime ready states as Home. */
-#root .gs {
-  --gs-bg: #080714;
-  --gs-panel: #151126;
-  --gs-panel-2: #1b1532;
-  --gs-line: rgba(193, 160, 255, .34);
-  --gs-text: #f7f4ff;
-  --gs-muted: #c2bbd7;
-  --gs-pink: #e63c9a;
-  --gs-lilac: #aa76ff;
-  min-height: 100dvh;
-  color: #f7f4ff;
-  background: linear-gradient(155deg, #100d21, #080714 65%);
-}
-
-#root .gs :is(.gs-panel, .gs-preview, .gs-library-card, .gs-after-actions, .gs-save-destination) {
-  color: #f7f4ff;
-  border-color: rgba(193, 160, 255, .32);
-  background: linear-gradient(145deg, rgba(28, 22, 54, .96), rgba(15, 12, 32, .98));
-  box-shadow: 0 12px 32px rgba(0, 0, 0, .34);
-}
-
-#root .gs :is(.gs-topline, .gs-kicker, .gs-caption, .gs-heading p, .gs-mobile-note,
-  .gs-upload small, .gs-file-meta, .gs-version-info small, .gs-name-field small,
-  .gs-progress-copy, .gs-field-row label, .gs-field-row output, .gs-backdrop-tabs button) {
-  color: #d0c9df;
-}
-
-#root .gs :is(.gs-heading h1, .gs-panel-title, .gs-upload strong, .gs-name-field,
-  .gs-preview-label, .gs-version-info strong, .gs-mobile-note strong) {
-  color: #f7f4ff;
-}
-
-#root .gs :is(.gs-step-number, .gs-version-mark) {
-  color: #eadcff;
-  border-color: rgba(170, 118, 255, .56);
-  background: rgba(123, 67, 190, .25);
-}
-
-#root .gs .gs-topline-mark { background: #b7ff75; }
-#root .gs .gs-upload { color: #f7f4ff; border-color: rgba(193, 160, 255, .52); background: rgba(15, 12, 32, .92); }
-#root .gs .gs-upload-icon { color: #d6baff; border-color: rgba(193, 160, 255, .38); background: #1b1532; }
-#root .gs :is(.gs-choice, .gs-chip-button, .gs-icon-button, .gs-backdrop-tabs, .gs-preview-label) {
-  border-color: rgba(193, 160, 255, .38);
-  background-color: #17132a;
-  color: #f7f4ff;
-}
-#root .gs .gs-backdrop-tabs button[aria-pressed="true"],
-#root .gs .gs-choice[aria-pressed="true"] {
-  border-color: #b889ff;
-  background: rgba(142, 56, 232, .34);
-  color: #fff;
-}
-#root .gs .gs-button.primary {
-  border: 0;
-  color: #fff;
-  background: linear-gradient(115deg, #8e38e8, #bc36c9 54%, #e63c9a);
-}
-#root .gs .gs-name-field input,
-#root .gs .gs-target-field select,
-#root .gs .gs-assign-row select {
-  border-color: rgba(193, 160, 255, .42);
-  background: #100d21;
-  color: #f7f4ff;
-}
-#root .gs .gs-progress-track { background: #302642; }
-#root .gs .gs-progress-fill { background: linear-gradient(90deg, #9d55f5, #e63c9a); }
-#root .gs .gs-status.active,
-#root .gs .gs-success,
-#root .gs .gs-ready-label { color: #c8ff8b !important; }
-#root .gs .gs-status.active { border-color: rgba(183, 255, 117, .45); background: rgba(67, 112, 47, .22); }
-#root .gs .gs-preview-stage.dark { background: #100d21; }
-#root .gs .gs-preview-stage.light { background: #eeeaf0; }
-#root .gs .gs-save-confirmation { border-color: rgba(114, 219, 153, .44); background: rgba(24, 74, 47, .34); color: #d7ffe3; }
-#root .gs .gs-warning { border-color: rgba(246, 191, 100, .45); background: rgba(105, 69, 22, .24); color: #ffe8bd; }
-#root .gs .gs-error,
-#root .gs .gs-error-panel { border-color: rgba(255, 115, 145, .44); background: rgba(86, 22, 42, .34); color: #ffd3dc; }
-
 .st-name-tier-toast {
   position: fixed;
   z-index: 950;
@@ -433,7 +352,7 @@ body.streamtalk-live-screen #root .st-live-action-sheet > button:not(.st-live-ac
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #root :is(.bm-btn, .pf-btn, .sc-nav-item, .gs-button, .gs-chip-button) {
+  #root :is(.bm-btn, .pf-btn, .sc-nav-item) {
     transition-duration: .01ms !important;
   }
   .st-name-tier-toast { animation: none; }

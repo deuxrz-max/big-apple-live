@@ -14,6 +14,10 @@
 .sc-nav-item:hover { color: var(--bm-ink); }
 .sc-nav-item.is-on { color: var(--bm-ink); border-color: var(--bm-acc); background: #0d0d0d; }
 .sc-main { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.sc-header-leaderboard { display: grid; place-items: center; width: 38px; height: 38px; min-height: 38px; padding: 0 !important; }
+.sc-leaderboard-page { width: 100%; max-width: 760px; margin: 0 auto; padding: 16px 0 calc(var(--app-bottom-nav-clearance, 80px) + 24px); }
+.sc-leaderboard-page .sc-h1 { align-items: center; }
+.sc-leaderboard-page .sc-h1 svg { flex: 0 0 auto; color: #f5cb8d; }
 .sc-main section, .sc-embedded-rewards > section, .pf-rewards > section { display: flex; flex-direction: column; gap: 14px; align-items: stretch; }
 .sc-h1 { font-size: clamp(44px, 8vw, 72px); display: flex; align-items: center; gap: 12px; }
 .sc-h2 { font-size: 28px; margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--bm-line); }
@@ -124,7 +128,7 @@
 .sc-empty h2 { font-size: 36px; color: var(--bm-ink); }
 .sc-skel { display: grid; gap: 10px; } .sc-skel i { height: 72px; background: linear-gradient(90deg, #0d0d0d, #1a1a1a, #0d0d0d); background-size: 200% 100%; animation: sc-sh 1.4s linear infinite; }
 @keyframes sc-sh { to { background-position: -200% 0; } }
-/* Purchase-tier (Recharge) cards: rectangular plaque, visually distinct from numbered gifting shields. */
+/* Purchase-tier (Recharge) cards use a rectangular plaque. */
 .sc-product { position: relative; border: 1px solid #c9a24a !important; border-radius: 0 !important; background: linear-gradient(180deg, #14110a, #070605) !important; box-shadow: inset 0 0 0 3px #070605, inset 0 0 0 4px rgba(201,162,74,.45) !important; padding-top: 30px !important; }
 .sc-product .sc-recharge-tag { position: absolute; top: 0; left: 0; right: 0; display: block; padding: 4px 6px; border-radius: 0; background: #c9a24a; color: #0b0904; font-size: 10px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; text-align: center; }
 .sc-product img, .sc-product svg { border-radius: 0 !important; }

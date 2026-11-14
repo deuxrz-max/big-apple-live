@@ -123,7 +123,7 @@ body.streamtalk-light-screen .dark {
 
 /* Inputs and secondary actions. */
 #root .app-page.is-light-screen :is(input,textarea,select,.sc-select,.sc-text,
-  .bm-input-box,.gift-recipient select) {
+  .bm-input-box) {
   color: #211e27;
   border: 1px solid #ded9e5;
   background: #ffffff;
@@ -143,15 +143,14 @@ body.streamtalk-light-screen .dark {
 }
 
 #root .app-page.is-light-screen :is(.bm-btn:not(.bm-btn-primary),.pf-btn:not(.pf-btn-fill),
-  .pf-edit,.sc-nav-item:not(.is-on),
-  .gift-framework .gift-btn:not(.gift-send),.dh-nav-item) {
+  .pf-edit,.sc-nav-item:not(.is-on),.dh-nav-item) {
   border-color: #8b4fd1;
   background: #ffffff;
   color: #52217f;
 }
 
 #root .app-page.is-light-screen :is(.bm-btn-primary,.btn-pink,.pf-btn-fill,
-  .formButtonPrimary,.sc-nav-item.is-on,.gift-framework .gift-send,
+  .formButtonPrimary,.sc-nav-item.is-on,
   .st-card-body .st-enter,.dh-join) {
   border-color: transparent;
   background: linear-gradient(120deg,#9d1dff,#5e00ff);
@@ -272,30 +271,8 @@ body.streamtalk-light-screen #root [data-localization-key*="formButtonPrimary"] 
 #root .app-page.is-light-screen .sc-plus { color: #287b32; }
 #root .app-page.is-light-screen .sc-minus { color: #b42344; }
 
-/* Gift catalog and sheets become light; the animated gift-box control is untouched. */
-#root .app-page.is-light-screen .gift-framework.gift-sheet,
-body.streamtalk-light-screen #root .gift-framework.gift-sheet {
-  --gf-deep: #ffffff;
-  --gf-white: #211e27;
-  color: #211e27;
-  border-color: #d7c8e6;
-  background:
-    linear-gradient(145deg,#ffffff,#faf8fc) padding-box,
-    linear-gradient(135deg,rgba(157,29,255,.5),rgba(201,174,235,.42) 52%,rgba(74,154,214,.43)) border-box;
-  box-shadow: 0 8px 28px rgba(39,26,62,.14);
-}
-body.streamtalk-light-screen #root .gift-framework.gift-sheet :is(h1,h2,h3,p,strong,span,li,label) { color: #211e27; }
-body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-sub { color: #6e6976; }
-body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-recipient select { color: #211e27; background: #ffffff; border-color: #c9b6dc; }
-body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-item { color: #211e27; border: 1px solid #e6e2eb; }
-body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-item[aria-pressed=true] { background: #f3eafb; border-color: #9d1dff; }
-body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-item svg { color: #a77a21; }
-body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-btn:not(.gift-send) { color: #52217f; background: #ffffff; border-color: #8b4fd1; }
-body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-send { color: #ffffff; background: linear-gradient(120deg,#9d1dff,#5e00ff); }
-body.streamtalk-light-screen #root .gift-framework-backdrop { background: rgba(35,30,45,.2); }
-
 /* Light dialogs and menus. */
-body.streamtalk-light-screen #root :is([role="dialog"],[role="alertdialog"],.pf-dialog,.pf-menu-list,.gift-framework.gift-sheet) {
+body.streamtalk-light-screen #root :is([role="dialog"],[role="alertdialog"],.pf-dialog,.pf-menu-list) {
   color: #211e27;
   background-color: #ffffff;
   border-color: #ded7e7;
@@ -303,14 +280,11 @@ body.streamtalk-light-screen #root :is([role="dialog"],[role="alertdialog"],.pf-
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
-body.streamtalk-light-screen #root :is([role="dialog"],[role="alertdialog"],.pf-dialog,.pf-menu-list,.gift-framework.gift-sheet) * {
+body.streamtalk-light-screen #root :is([role="dialog"],[role="alertdialog"],.pf-dialog,.pf-menu-list) * {
   color: #211e27;
   text-shadow: none;
 }
 body.streamtalk-light-screen #root :is(.pf-modal) { background: rgba(32,27,40,.2); backdrop-filter: none; }
-body.streamtalk-light-screen #root .gift-framework.gift-sheet :is(.gift-send,.gift-item[aria-pressed=true]) { color: #ffffff; }
-body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-item[aria-pressed=true] :is(span,svg) { color: #52217f; }
-
 /* The moderator desk opts out of the white community theme. */
 #root .app-page.is-moderation-screen {
   min-height: 100dvh;
@@ -481,7 +455,7 @@ body.streamtalk-light-screen #root .gift-framework.gift-sheet .gift-item[aria-pr
   border-style: dashed;
 }
 
-/* Persistent navigation on white screens. Keep the gift animation and colored icons. */
+/* Persistent navigation on white screens. */
 body.streamtalk-light-screen #root .app-bottom-nav {
   color: #37323d;
   background: #ffffff !important;
@@ -695,7 +669,7 @@ body.streamtalk-light-screen #root :is(.ch-note,.sc-sub,.sc-count,.dh-note,.dh-s
 body.streamtalk-light-screen #root :is(.ch-list li,.sc-card,.sc-panel,.sc-empty,.sc-wallet,.ib-row,.fg-tile,.bc-card,.bc-review,
   .dh-banner,.dh-card,.pf-dialog,.pf-menu-list,.pf-stats>div,
   .sc-msgs,.sc-skel,.ch-photo-card,.ch-auth .ch-card,.ur-side,.ur-slot,.ur-menu,.ur-rules,.ur-tv-dialog,
-  .bm-modal,.bm-mic-panel,.bm-tray,.gs-panel,.gs-preview,.gs-library-card) {
+  .bm-modal,.bm-mic-panel,.bm-tray) {
   border: 1px solid #e7e2ec;
   border-radius: 18px;
   background: #ffffff;
@@ -722,7 +696,7 @@ body.streamtalk-light-screen #root :is(.bm-btn,.btn,.pf-btn,.pf-edit,.sc-nav-ite
   box-shadow: none;
 }
 body.streamtalk-light-screen #root :is(.bm-btn-primary,.btn-pink,.pf-btn-fill,.formButtonPrimary,.sc-nav-item.is-on,
-  .ur-slot-join,.gift-framework .gift-send,.st-card-body .st-enter,.dh-join,.st-live-start-button) {
+  .ur-slot-join,.st-card-body .st-enter,.dh-join,.st-live-start-button) {
   border-color: transparent;
   border-radius: 999px;
   background: linear-gradient(110deg,#a522ed,#e63c9a);
@@ -735,7 +709,7 @@ body.streamtalk-light-screen #root :is(input,textarea,select):focus-visible {
   outline-offset: 2px;
   box-shadow: 0 0 0 3px rgba(165,34,237,.12);
 }
-body.streamtalk-light-screen #root :is([role="dialog"],[role="alertdialog"],.ur-modal,.bm-modal-back,.pf-modal,.gift-framework-backdrop) {
+body.streamtalk-light-screen #root :is([role="dialog"],[role="alertdialog"],.ur-modal,.bm-modal-back,.pf-modal) {
   color: #292630;
   background: rgba(45,39,53,.28);
   backdrop-filter: blur(3px);
@@ -845,57 +819,6 @@ body.streamtalk-light-screen #root .sc-header-home svg,
 body.streamtalk-light-screen #root .sc-more-menu > summary,
 body.streamtalk-light-screen #root .sc-more-menu > nav svg { color: #8b22cb; }
 body.streamtalk-light-screen #root .sc-more-menu > nav a:hover { background: #f7effb; color: #7521ad; }
-body.streamtalk-light-screen #root .gs {
-  --gs-bg: #f8f7fa; --gs-panel: #fff; --gs-panel-2: #f4f1f7; --gs-line: #e5dfea;
-  --gs-text: #292630; --gs-muted: #77727e; --gs-pink: #cf2876; --gs-lilac: #8e45c6;
-  min-height: 100dvh; color: #292630; background: #f8f7fa;
-}
-body.streamtalk-light-screen #root .gs :is(.gs-topline,.gs-heading h1,.gs-heading p,.gs-private,.gs-panel-title,.gs-kicker,
-  .gs-upload strong,.gs-upload small,.gs-file-meta,.gs-caption,.gs-preview-label,.gs-preview-label span,
-  .gs-field-row label,.gs-field-row output,.gs-warning,.gs-mobile-note,.gs-mobile-note strong,.gs-progress-copy,
-  .gs-version-info strong,.gs-version-info small,.gs-status,.gs-empty-library,.gs-name-field,.gs-name-field small) { color: #292630; }
-body.streamtalk-light-screen #root .gs :is(.gs-panel,.gs-preview,.gs-library-card,.gs-upload,.gs-empty-library,.gs-mobile-note) {
-  border-color: #e5dfea; border-radius: 16px; background: #fff; box-shadow: 0 5px 18px rgba(38,29,51,.06);
-}
-body.streamtalk-light-screen #root .gs .gs-preview-label { background: #f3f0f6; }
-body.streamtalk-light-screen #root .gs .gs-preview-stage.checker {
-  background-color: #e9e8e8;
-  background-image: linear-gradient(45deg,#c8c7ca 25%,transparent 25%),linear-gradient(-45deg,#c8c7ca 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#c8c7ca 75%),linear-gradient(-45deg,transparent 75%,#c8c7ca 75%);
-  background-size: 18px 18px; background-position: 0 0,0 9px,9px -9px,-9px 0;
-}
-body.streamtalk-light-screen #root .gs .gs-preview-stage.dark { background: #17151c; }
-body.streamtalk-light-screen #root .gs .gs-preview-stage.light { background: #eeeaf0; }
-body.streamtalk-light-screen #root .gs :is(.gs-button,.gs-chip-button,.gs-icon-button,.gs-choice,.gs-backdrop-tabs) {
-  border-color: #e1d9e9; background: #fff; color: #51465a; border-radius: 999px;
-}
-body.streamtalk-light-screen #root .gs .gs-button.primary { border: 0; background: linear-gradient(110deg,#a522ed,#e63c9a); color: #fff; }
-body.streamtalk-light-screen #root .gs .gs-choice[aria-pressed="true"],
-body.streamtalk-light-screen #root .gs .gs-backdrop-tabs button[aria-pressed="true"] { background: #f4e8fb; color: #7629af; }
-body.streamtalk-light-screen #root .gs .gs-backdrop-tabs button { color: #51465a; }
-body.streamtalk-light-screen #root .gs .gs-backdrop-tabs button[aria-pressed="true"] { color: #7629af; }
-body.streamtalk-light-screen #root .gs .gs-name-field input { background: #fff; color: #292630; border-color: #ddd7e4; border-radius: 12px; }
-body.streamtalk-light-screen #root .gs .gs-modal-wrap { background: rgba(45,39,53,.28); backdrop-filter: blur(3px); }
-body.streamtalk-light-screen #root .gs .gs-modal { background: #fff; border-radius: 20px; }
-body.streamtalk-light-screen #root .gs .gs-step-number {
-  border: 1px solid #e1d1ed; background: #f4eafb; color: #7522ad;
-}
-body.streamtalk-light-screen #root .gs .gs-progress-track { background: #e8e3ec; }
-body.streamtalk-light-screen #root .gs .gs-version-mark {
-  border-color: #e1d9e9; background: linear-gradient(135deg,#f6eefa,#f1eef6); color: #7522ad;
-}
-body.streamtalk-light-screen #root .gs .gs-status.active {
-  border: 1px solid #b8dfc3; background: #edf8f0; color: #1e6e3c;
-}
-body.streamtalk-light-screen #root .gs .gs-error-panel {
-  border-color: #e8bdc6; background: #fff4f6; color: #762e3e;
-}
-body.streamtalk-light-screen #root .gs .gs-error {
-  border-color: #e8bdc6; background: #fff4f6; color: #8a263b;
-}
-body.streamtalk-light-screen #root .gs .gs-success { color: #1e6e3c; }
-body.streamtalk-light-screen #root .gs :disabled { opacity: .76; }
-body.streamtalk-light-screen #root .gs .gs-preview-stage:not(.dark) .gs-empty-preview { color: #292630; }
-
 /* Immersive broadcast keeps its camera/video pixels and two legibility fades;
    all chrome and controls are light chips over that unchanged media canvas. */
 body.streamtalk-live-screen { color-scheme: light; }
@@ -907,8 +830,8 @@ body.streamtalk-live-screen #root .st-live-player { background: #000; }
 body.streamtalk-live-screen #root .st-live-player::after {
   background: linear-gradient(180deg,rgba(8,8,14,.42),transparent 20%),linear-gradient(0deg,rgba(8,8,14,.52),transparent 21%);
 }
-body.streamtalk-live-screen #root :is(.st-live-viewers,.st-live-gifters,.st-live-close-button,.st-live-follow,
-  .st-live-gift-button,.st-live-host-controls button,.st-live-report-stream,.st-live-chat-form,.st-live-action-sheet) {
+body.streamtalk-live-screen #root :is(.st-live-viewers,.st-live-close-button,.st-live-follow,
+  .st-live-host-controls button,.st-live-report-stream,.st-live-chat-form,.st-live-action-sheet) {
   border: 1px solid rgba(255,255,255,.82);
   background: rgba(255,255,255,.94);
   color: #292630 !important;
@@ -916,7 +839,7 @@ body.streamtalk-live-screen #root :is(.st-live-viewers,.st-live-gifters,.st-live
   text-shadow: none;
   backdrop-filter: blur(10px);
 }
-body.streamtalk-live-screen #root :is(.st-live-viewers svg,.st-live-gift-button svg,.st-live-host-controls button svg,
+body.streamtalk-live-screen #root :is(.st-live-viewers svg,.st-live-host-controls button svg,
   .st-live-host-controls button span,.st-live-report-stream) { color: #292630 !important; -webkit-text-fill-color: #292630; text-shadow: none; }
 body.streamtalk-live-screen #root .st-live-follow.is-following { background: rgba(255,255,255,.76); color: #292630; }
 body.streamtalk-live-screen #root .st-live-chat-form input { color: #292630 !important; -webkit-text-fill-color: #292630; }
@@ -1053,7 +976,6 @@ body.streamtalk-light-screen #root .ur-tv-frame:has(.ur-tv-empty) {
 /* Shared bottom navigation: keep the Home treatment consistent on every route. */
 body #root .app-bottom-nav,
 body.streamtalk-light-screen #root .app-bottom-nav,
-body.streamtalk-gift-studio-screen #root .app-bottom-nav,
 body.streamtalk-directory-screen #root .app-bottom-nav {
   background: rgba(8,7,11,.98) !important;
   color: #f7f4fa !important;
@@ -1065,7 +987,6 @@ body #root .app-bottom-nav .app-bottom-link,
 body #root .app-bottom-nav .app-bottom-link.is-active,
 body.streamtalk-light-screen #root .app-bottom-nav .app-bottom-link,
 body.streamtalk-light-screen #root .app-bottom-nav .app-bottom-link.is-active,
-body.streamtalk-gift-studio-screen #root .app-bottom-nav .app-bottom-link,
 body.streamtalk-directory-screen #root .app-bottom-nav .app-bottom-link {
   position: relative;
   color: #e4e0e8 !important;
@@ -1080,34 +1001,29 @@ body.streamtalk-directory-screen #root .app-bottom-nav .app-bottom-link {
 }
 body #root .app-bottom-nav .app-bottom-link svg,
 body.streamtalk-light-screen #root .app-bottom-nav .app-bottom-link svg,
-body.streamtalk-gift-studio-screen #root .app-bottom-nav .app-bottom-link svg,
 body.streamtalk-directory-screen #root .app-bottom-nav .app-bottom-link svg {
   color: inherit !important;
   stroke-width: 3 !important;
 }
 body #root .app-bottom-nav .app-bottom-link span,
 body.streamtalk-light-screen #root .app-bottom-nav .app-bottom-link span,
-body.streamtalk-gift-studio-screen #root .app-bottom-nav .app-bottom-link span,
 body.streamtalk-directory-screen #root .app-bottom-nav .app-bottom-link span {
   color: inherit !important;
   font-weight: 900 !important;
 }
 body #root .app-bottom-nav .app-bottom-link.is-active,
 body.streamtalk-light-screen #root .app-bottom-nav .app-bottom-link.is-active,
-body.streamtalk-gift-studio-screen #root .app-bottom-nav .app-bottom-link.is-active,
 body.streamtalk-directory-screen #root .app-bottom-nav .app-bottom-link.is-active {
   color: #a6ff00 !important;
 }
 body #root .app-bottom-nav .app-bottom-link.is-active svg,
 body.streamtalk-light-screen #root .app-bottom-nav .app-bottom-link.is-active svg,
-body.streamtalk-gift-studio-screen #root .app-bottom-nav .app-bottom-link.is-active svg,
 body.streamtalk-directory-screen #root .app-bottom-nav .app-bottom-link.is-active svg {
   color: #a6ff00 !important;
   filter: drop-shadow(0 0 5px rgba(166,255,0,.48));
 }
 body #root .app-bottom-nav .app-bottom-link.is-active::after,
 body.streamtalk-light-screen #root .app-bottom-nav .app-bottom-link.is-active::after,
-body.streamtalk-gift-studio-screen #root .app-bottom-nav .app-bottom-link.is-active::after,
 body.streamtalk-directory-screen #root .app-bottom-nav .app-bottom-link.is-active::after {
   content: "";
   position: absolute;

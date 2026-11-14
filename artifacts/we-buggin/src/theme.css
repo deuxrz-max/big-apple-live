@@ -190,7 +190,7 @@ body {
 /* Glass surfaces use layered backgrounds so the violet-blue edge stays crisp. */
 #root :is(.ch-list li,.sc-card,.sc-panel,.sc-empty,.sc-wallet,.ib-row,.fg-tile,
   .bc-card,.bc-review,.dh-banner,.dh-card,.ur-side,.ur-slot,.ur-menu,.ur-rules,
-  .ur-chip,.ur-modal > section,.pf-dialog,.pf-menu-list,.pf-stats>div,.sc-msgs,.gift-framework.gift-sheet) {
+  .ur-chip,.ur-modal > section,.pf-dialog,.pf-menu-list,.pf-stats>div,.sc-msgs) {
   border: 1px solid transparent;
   background:
     linear-gradient(145deg, rgba(28, 22, 54, .86), rgba(16, 14, 37, .78)) padding-box,
@@ -362,7 +362,7 @@ body {
 #root .beam-app .bm-btn-primary, #root .beam-app .bm-modal .bm-btn-primary { background: linear-gradient(120deg,#8050de,#a974fa); border-color: transparent; color: #fff; }
 #root .beam-app .bm-btn[data-testid="button-leave"] { color: #ffb6ca; border-color: rgba(255,154,190,.68); }
 
-/* Community, profiles, inbox, gifts and passport. */
+/* Community, profiles and inbox. */
 #root .sc-nav { gap: 6px; }
 #root .sc-nav-item { border-left: 0; padding: 10px 13px; background: rgba(26,20,51,.66); }
 #root .sc-nav-item.is-on { background: linear-gradient(120deg,#7650d4,#9d6aee); color: white; box-shadow: 0 0 19px rgba(148,94,230,.26); }
@@ -387,16 +387,6 @@ body {
 #root .pf-bio { color: var(--space-lime); }
 #root .bc-card,#root .bc-review { border-radius: 18px; }
 #root .bc-cr,#root .bc-bal b { color: var(--space-lime); }
-#root .gift-framework.gift-sheet {
-  border-bottom: 0;
-  border-radius: 24px 24px 0 0;
-  background: linear-gradient(145deg,rgba(35,25,65,.97),rgba(13,11,32,.97)) padding-box,
-    linear-gradient(135deg,#b07bff,#d1b8ff,#91c7ff) border-box;
-}
-#root .gift-framework .gift-item { border: 1px solid rgba(193,160,255,.28); border-radius: 16px; }
-#root .gift-framework .gift-item[aria-pressed=true] { background: rgba(149,97,230,.24); border-color: #c19bff; }
-#root .gift-framework .gift-send { background: linear-gradient(120deg,#8050de,#ad73ff); }
-
 /* Floating navigation: distinct, memorable colorway per destination. */
 #root .app-bottom-nav {
   background: rgba(13,10,30,.88);
@@ -461,7 +451,7 @@ body {
     linear-gradient(145deg, rgba(28, 22, 54, .86), rgba(16, 14, 37, .78)) padding-box,
     linear-gradient(135deg, rgba(179, 127, 255, .8), rgba(209, 184, 255, .42) 52%, rgba(126, 191, 255, .68)) border-box !important;
 }
-#root [role="dialog"]:not(.gift-sheet),
+#root [role="dialog"],
 #root [role="alertdialog"] {
   border: 1px solid transparent;
   border-radius: 22px;
