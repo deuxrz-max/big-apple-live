@@ -39,6 +39,8 @@ export interface BattleCharacter {
   name: string;
   participantId?: string;
   photoUrl?: string | null;
+  race?: string;
+  homeCitySlug?: string | null;
   job: string;
   manaGem: ManaGem;
   skill: SkillKind;
@@ -74,6 +76,8 @@ export type RoomBattlePlayer = {
   participantId: string;
   name: string;
   photoUrl?: string | null;
+  race?: string;
+  homeCitySlug?: string | null;
   level?: number;
 };
 
@@ -273,6 +277,7 @@ export function createBattleState(random: () => number = Math.random, citySlug?:
     id: `humans-${index + 1}`,
     side: "humans",
     name: `Human ${index + 1}`,
+    race: "Human",
     job: job.job,
     manaGem: job.manaGem,
     skill: job.skill,
@@ -343,6 +348,8 @@ export function createRoomBattleState(
       participantId: player.participantId,
       name: player.name,
       photoUrl: player.photoUrl ?? null,
+      race: player.race ?? "Human",
+      homeCitySlug: player.homeCitySlug ?? null,
       level,
       hp: maxHp,
       maxHp,

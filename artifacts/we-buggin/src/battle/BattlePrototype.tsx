@@ -32,6 +32,14 @@ type TargetMode = "board" | "ally" | "enemy" | null;
 const skillMode = (character: BattleCharacter): TargetMode =>
   character.skill === "blast" ? "board" : character.skill === "strike" ? "enemy" : "ally";
 
+function skillSummary(character: BattleCharacter): string {
+  if (character.skill === "heal") return "Heals ally · max 20";
+  if (character.skill === "guard") return "Shields healer";
+  if (character.skill === "strike") return "Enemy hit · 20";
+  if (character.skill === "blast") return "Blast all · 8 dmg";
+  return character.skillName;
+}
+
 function defeatedIcon() {
   return (
     <svg viewBox="0 0 64 64" aria-hidden="true">
@@ -59,9 +67,11 @@ function BattleCard({
   onActivateSkill: (character: BattleCharacter) => void;
 }) {
   const alive = character.hp > 0;
-  const canUseSkill = isHumanTurn && active && alive && character.effects.scaredTurns <= 0 && character.mana >= character.skillCost;
+  const skillReady = isHumanTurn && active && alive && character.effects.scaredTurns <= 0 && character.mana >= character.skillCost;
+  const canActivateSkill = skillReady && character.skill !== "strike";
   const hpRatio = Math.max(0, character.hp / character.maxHp);
   const manaRatio = Math.min(1, character.mana / character.skillCost);
+  const homeCity = !character.bossId && character.homeCitySlug ? cityBySlug(character.homeCitySlug) : undefined;
   const cardClass = [
     "battle-card",
     active ? "is-active" : "",
@@ -82,6 +92,13 @@ function BattleCard({
         <div className="battle-card-front">
           <img className="battle-card-art" src={`${import.meta.env.BASE_URL}battle-assets/cards/card_frame_grey_starter.jpg`} alt="" />
           <span className="battle-level">{character.level}</span>
+          {!character.bossId && (
+            <span className={`battle-home-city${homeCity ? " has-city" : ""}`}
+              aria-label={homeCity ? `Home city: ${homeCity.name}` : "Home city not set"}
+              title={homeCity?.name ?? "Home city not set"}>
+              {homeCity && <img src={`${import.meta.env.BASE_URL}${homeCity.image}`} alt="" />}
+            </span>
+          )}
           <span className="battle-portrait" aria-hidden="true">
             {character.photoUrl
               ? <img src={photoSrc(character.photoUrl)} alt="" />
@@ -89,11 +106,14 @@ function BattleCard({
                 ? <img src={`${import.meta.env.BASE_URL}${character.portrait}`} alt="" />
                 : character.name.slice(0, 1)}
           </span>
-          <span className="battle-job-mark" aria-hidden="true">{character.bossId ? "B" : character.job.slice(0, 1)}</span>
-          <span className="battle-side-mark" aria-hidden="true">{character.bossId ? "B" : "H"}</span>
-          <span className="battle-card-name">{character.name}</span>
+          {character.bossId && <>
+            <span className="battle-job-mark" aria-hidden="true">B</span>
+            <span className="battle-side-mark" aria-hidden="true">B</span>
+          </>}
           {character.bossId ? (
-            <div className="battle-boss-fields" aria-label={`${character.hp} of ${character.maxHp} health, ${character.mana} of ${character.skillCost} mana`}>
+            <>
+              <span className="battle-card-name">{character.name}</span>
+              <div className="battle-boss-fields" aria-label={`${character.hp} of ${character.maxHp} health, ${character.mana} of ${character.skillCost} mana`}>
               <span className="battle-boss-field" title={`${character.cityOfOrigin} · HP ${character.hp}/${character.maxHp}`}>
                 <span>{character.cityOfOrigin}</span>
                 <i className="is-health" style={{ width: `${hpRatio * 100}%` }} />
@@ -102,13 +122,30 @@ function BattleCard({
                 <span>Boss</span>
                 <i className="is-mana" style={{ width: `${manaRatio * 100}%` }} />
               </span>
-            </div>
+              </div>
+            </>
           ) : (
             <>
-              <span className="battle-card-job">{character.job}</span>
-              <div className="battle-card-bars" aria-label={`${character.hp} of ${character.maxHp} health, ${character.mana} of ${character.skillCost} mana`}>
-                <span className="battle-stat-track"><i style={{ width: `${hpRatio * 100}%` }} /><b>HP {character.hp}</b></span>
-                <span className="battle-stat-track mana"><i style={{ width: `${manaRatio * 100}%` }} /><b>{character.mana}/{character.skillCost}</b></span>
+              <span className="battle-current-mana" style={{ "--mana-fill": `${manaRatio * 100}%` } as CSSProperties}
+                aria-label={`${character.mana} mana; matching ${character.manaGem} gems charge ${character.name}`}>
+                {character.mana}
+              </span>
+              <span className="battle-skill-cost" aria-label={`${character.skillCost} mana skill cost`}>{character.skillCost}</span>
+              <div className="battle-health-box" aria-label={`${character.hp} of ${character.maxHp} health`}>
+                <i style={{ width: `${hpRatio * 100}%` }} />
+                <b>{character.hp}</b>
+              </div>
+              <button type="button" className={`battle-info-slot battle-info-slot-top${canActivateSkill ? " is-actionable" : ""}`}
+                style={{ "--name-font-size": `${Math.max(4.5, Math.min(7, 96 / Math.max(1, character.name.length)))}px` } as CSSProperties}
+                disabled={!canActivateSkill}
+                aria-label={canActivateSkill ? `Choose a target for ${character.skillName}` : `${character.name}. ${skillSummary(character)}`}
+                onClick={() => onActivateSkill(character)}>
+                <strong>{character.name}</strong>
+                <span>{skillSummary(character)}</span>
+              </button>
+              <div className="battle-info-slot battle-info-slot-bottom">
+                <strong>{character.race ?? "Human"}</strong>
+                <span>{character.job}</span>
               </div>
             </>
           )}
@@ -144,20 +181,13 @@ function BattleCard({
               onClick={() => onChooseTarget(character.id)}
             />
           )}
-          {alive && (
-            <button
-              type="button"
-              className={`battle-skill-orb${character.mana >= character.skillCost ? " is-charged" : ""}`}
-              disabled={!canUseSkill}
-              aria-label={`Use ${character.skillName}`}
-              title={`${character.skillName} — tap to choose a target`}
-              data-testid={`battle-skill-${character.id}`}
-              onClick={(event) => {
-                event.stopPropagation();
-                onActivateSkill(character);
-              }}
-            />
-          )}
+          {alive && <span
+            className={`battle-skill-orb${character.mana >= character.skillCost ? " is-charged" : ""}`}
+            role="img"
+            aria-label={character.mana >= character.skillCost ? `${character.skillName} ready` : `${character.mana} of ${character.skillCost} mana`}
+            title={character.mana >= character.skillCost ? `${character.skillName} ready` : `${character.mana}/${character.skillCost} mana`}
+            data-testid={`battle-skill-${character.id}`}
+          />}
         </div>
         <div className="battle-card-back">
           {defeatedIcon()}
@@ -257,9 +287,11 @@ export function BattlePrototype({ roomIdOverride, onExit }: { roomIdOverride?: s
   const canActRef = useRef(true);
   const [selected, setSelected] = useState<Cell | null>(null);
   const [targetMode, setTargetMode] = useState<TargetMode>(null);
+  const [pendingEnemySkill, setPendingEnemySkill] = useState<{ actorId: string; targetId: string; turnNumber: number } | null>(null);
   const [feedback, setFeedback] = useState("");
   const targetModeRef = useRef<TargetMode>(null);
   const selectedRef = useRef<Cell | null>(null);
+  const pendingEnemySkillRef = useRef(pendingEnemySkill);
   const latestView = useRef<BoardView | null>(null);
 
   const applyRoomSnapshot = useCallback((snapshot: { version: number; state: unknown }) => {
@@ -343,6 +375,7 @@ export function BattlePrototype({ roomIdOverride, onExit }: { roomIdOverride?: s
   battleRef.current = battle;
   targetModeRef.current = targetMode;
   selectedRef.current = selected;
+  pendingEnemySkillRef.current = pendingEnemySkill;
   latestView.current = battleBoardView(battle, selected, targetMode);
   const activeHuman = battle ? battle.teams.humans[battle.activeIndex.humans] : undefined;
   const canHumanAct = !roomId || (!!user?.id && !!credsRef.current?.participantId
@@ -359,7 +392,7 @@ export function BattlePrototype({ roomIdOverride, onExit }: { roomIdOverride?: s
   const cellTapRef = useRef<(cell: Cell) => void>(() => undefined);
   const chooseCell = useCallback((cell: Cell) => {
     const current = battleRef.current;
-    if (!current || !canActRef.current || current.turnSide !== "humans" || current.outcome) return;
+    if (!current || pendingEnemySkillRef.current || !canActRef.current || current.turnSide !== "humans" || current.outcome) return;
     if (targetModeRef.current === "board") {
       const result = applySkill(current, { kind: "cell", ...cell });
       if (result.accepted) {
@@ -438,8 +471,12 @@ export function BattlePrototype({ roomIdOverride, onExit }: { roomIdOverride?: s
   }, []);
 
   useEffect(() => {
-    if (battle && targetMode && battle.turnSide !== "humans") setTargetMode(null);
-  }, [battle?.turnNumber, battle?.turnSide, targetMode]);
+    if (battle && battle.turnSide !== "humans") {
+      setTargetMode(null);
+      setPendingEnemySkill(null);
+    }
+    if (pendingEnemySkill && pendingEnemySkill.turnNumber !== battle?.turnNumber) setPendingEnemySkill(null);
+  }, [battle?.turnNumber, battle?.turnSide, targetMode, pendingEnemySkill]);
 
   useEffect(() => {
     const view = battleBoardView(battle, selected, targetMode);
@@ -471,7 +508,15 @@ export function BattlePrototype({ roomIdOverride, onExit }: { roomIdOverride?: s
 
   const chooseSkillTarget = useCallback((id: string) => {
     const current = battleRef.current;
-    if (!current || !canActRef.current || !targetModeRef.current || !validSkillTarget(current, { kind: "character", id })) return;
+    if (!current || !canActRef.current || current.turnSide !== "humans" || !validSkillTarget(current, { kind: "character", id })) return;
+    const actor = activeCharacter(current, "humans");
+    if (actor.skill === "strike" && actor.mana >= actor.skillCost) {
+      setPendingEnemySkill({ actorId: actor.id, targetId: id, turnNumber: current.turnNumber });
+      setTargetMode(null);
+      setFeedback("");
+      return;
+    }
+    if (!targetModeRef.current) return;
     const result = applySkill(current, { kind: "character", id });
     if (result.accepted) {
       acceptNextState(result.state);
@@ -481,15 +526,35 @@ export function BattlePrototype({ roomIdOverride, onExit }: { roomIdOverride?: s
     }
   }, [acceptNextState]);
 
+  const confirmEnemySkill = useCallback(() => {
+    const current = battleRef.current;
+    const pending = pendingEnemySkillRef.current;
+    if (!current || !pending || !canActRef.current || current.turnSide !== "humans"
+      || current.turnNumber !== pending.turnNumber
+      || activeCharacter(current, "humans").id !== pending.actorId
+      || !validSkillTarget(current, { kind: "character", id: pending.targetId })) {
+      setPendingEnemySkill(null);
+      return;
+    }
+    const result = applySkill(current, { kind: "character", id: pending.targetId });
+    if (result.accepted) {
+      acceptNextState(result.state);
+      setPendingEnemySkill(null);
+      setSelected(null);
+      setFeedback("");
+    }
+  }, [acceptNextState]);
+
   const activateSkill = useCallback((character: BattleCharacter) => {
     if (!canActRef.current || character.hp <= 0 || character.mana < character.skillCost) return;
+    if (character.skill === "strike") return;
     setSelected(null);
     setTargetMode(skillMode(character));
     setFeedback(character.skill === "blast"
       ? "Tap any board gem to choose Blast’s center."
       : character.skill === "guard"
         ? "Tap your healer’s card. The Squire will intercept their next incoming hit."
-        : `Tap an ${character.skill === "strike" ? "enemy" : "injured ally"} card to use ${character.skillName}.`);
+        : `Tap an injured ally card to use ${character.skillName}.`);
   }, []);
 
   const restart = useCallback(() => {
@@ -514,7 +579,11 @@ export function BattlePrototype({ roomIdOverride, onExit }: { roomIdOverride?: s
   }
 
   const active = activeCharacter(battle);
-  const targetIds = targetMode
+  const activeSkillReady = battle.turnSide === "humans" && canHumanAct && !battle.outcome
+    && active.hp > 0 && active.effects.scaredTurns <= 0 && active.mana >= active.skillCost;
+  const automaticTargetMode = activeSkillReady && active.skill === "strike" ? "enemy" : null;
+  const currentTargetMode = targetMode ?? automaticTargetMode;
+  const targetIds = currentTargetMode === "enemy" || currentTargetMode === "ally"
     ? [...battle.teams.humans, ...battle.teams.bots]
       .filter((character) => validSkillTarget(battle, { kind: "character", id: character.id }))
       .map((character) => character.id)
@@ -564,7 +633,7 @@ export function BattlePrototype({ roomIdOverride, onExit }: { roomIdOverride?: s
           side="humans"
           characters={battle.teams.humans}
           active={activeCharacter(battle, "humans")}
-          isHumanTurn={battle.turnSide === "humans" && !battle.outcome && canHumanAct}
+          isHumanTurn={battle.turnSide === "humans" && !battle.outcome && canHumanAct && !targetMode}
           targetIds={targetIds}
           onChooseTarget={chooseSkillTarget}
           onActivateSkill={activateSkill}
@@ -572,12 +641,29 @@ export function BattlePrototype({ roomIdOverride, onExit }: { roomIdOverride?: s
 
         <div className="battle-footer">
           <p className="battle-instructions">
-            {roomError || feedback || (roomId && !canHumanAct && battle.turnSide === "humans"
-              ? "Waiting for the seated player to make their move."
-              : "Tap two adjacent gems to swap. Match 3 to charge a job; match 4 swords to strike the opposing leader.")}
+            {roomError || feedback || (activeSkillReady && active.skill === "strike"
+              ? `Skill ready: tap an opponent card to use ${active.skillName}.`
+              : roomId && !canHumanAct && battle.turnSide === "humans"
+                ? "Waiting for the seated player to make their move."
+                : "Tap two adjacent gems to swap. Match 3 to charge a job; match 4 swords to strike the opposing leader.")}
           </p>
           <p className="battle-log" aria-live="polite">{battle.log[0]}</p>
         </div>
+
+        {pendingEnemySkill && (() => {
+          const target = [...battle.teams.humans, ...battle.teams.bots].find(character => character.id === pendingEnemySkill.targetId);
+          const actor = battle.teams.humans.find(character => character.id === pendingEnemySkill.actorId);
+          return target && actor ? (
+            <section className="battle-skill-confirm" role="dialog" aria-modal="true" aria-label="Confirm skill target">
+              <strong>{actor.skillName}</strong>
+              <span>Use this skill on {target.name}?</span>
+              <div>
+                <button type="button" className="battle-result-restart" onClick={confirmEnemySkill}>Use Skill</button>
+                <button type="button" className="battle-result-home" onClick={() => setPendingEnemySkill(null)}>Cancel</button>
+              </div>
+            </section>
+          ) : null;
+        })()}
       </div>
 
       {battle.flashId > 0 && (

@@ -14,6 +14,7 @@ import {
   findLegalSwaps,
   findMatches,
   skipScaredTurn,
+  validSkillTarget,
   type Board,
 } from "../src/battle/battle-engine";
 import { BOSS_MOVE_CONFIG, CITY_BOSSES } from "../src/battle/boss-config";
@@ -24,6 +25,8 @@ test("room battle creates matching player and boss teams from one through four s
       participantId: `seat-${index + 1}`,
       name: `Player ${index + 1}`,
       photoUrl: `/photo-${index + 1}`,
+      race: "Human",
+      homeCitySlug: "frosthold",
     }));
     const bosses = Array.from({ length: count }, (_, index) => (["vampire", "wolf", "ghost", "zombie"] as const)[index]);
     const state = createRoomBattleState(players, bosses, () => 0.51);
@@ -31,9 +34,27 @@ test("room battle creates matching player and boss teams from one through four s
     assert.equal(state.teams.bots.length, count);
     assert.deepEqual(state.teams.humans.map(player => player.participantId), players.map(player => player.participantId));
     assert.deepEqual(state.teams.humans.map(player => player.photoUrl), players.map(player => player.photoUrl));
+    assert.deepEqual(state.teams.humans.map(player => player.race), players.map(player => player.race));
+    assert.deepEqual(state.teams.humans.map(player => player.homeCitySlug), players.map(player => player.homeCitySlug));
     assert.deepEqual(state.teams.bots.map(boss => boss.bossId), bosses);
     assert.ok(state.teams.bots.every(boss => boss.maxHp === state.teams.humans[0]!.maxHp * BOSS_MOVE_CONFIG.bossHealthMultiplier));
   }
+});
+
+test("charged card targeting keeps enemy strikes and teammate skills on the correct side", () => {
+  const state = createBattleState(() => 0.51);
+  state.activeIndex.humans = 2;
+  assert.equal(validSkillTarget(state, { kind: "character", id: state.teams.bots[0]!.id }), true);
+  assert.equal(validSkillTarget(state, { kind: "character", id: state.teams.humans[0]!.id }), false);
+
+  state.activeIndex.humans = 1;
+  assert.equal(validSkillTarget(state, { kind: "character", id: state.teams.humans[3]!.id }), true);
+  assert.equal(validSkillTarget(state, { kind: "character", id: state.teams.bots[0]!.id }), false);
+
+  state.activeIndex.humans = 3;
+  state.teams.humans[0]!.hp -= 1;
+  assert.equal(validSkillTarget(state, { kind: "character", id: state.teams.humans[0]!.id }), true);
+  assert.equal(validSkillTarget(state, { kind: "character", id: state.teams.bots[0]!.id }), false);
 });
 
 function freshPattern(): Board {

@@ -208,6 +208,29 @@ body.streamtalk-battle-screen .app-page {
   color: #f4d889;
 }
 
+.battle-home-city {
+  position: absolute;
+  z-index: 3;
+  left: 85%;
+  top: 7.5%;
+  width: 20%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(222, 222, 222, .72);
+  border-radius: 50%;
+  background: rgba(18, 18, 18, .78);
+}
+
+.battle-home-city img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .battle-side-mark {
   left: 85%;
   top: 38.5%;
@@ -294,6 +317,129 @@ body.streamtalk-battle-screen .app-page {
   top: 77%;
   color: var(--mana-color);
   font: 700 7px/1.1 'Space Mono', monospace;
+}
+
+.battle-current-mana,
+.battle-skill-cost {
+  position: absolute;
+  z-index: 3;
+  top: 38.5%;
+  width: 20%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(232, 231, 223, .86);
+  border-radius: 50%;
+  color: #fff;
+  font: 900 clamp(5px, 1.55vw, 8px)/1 'Space Mono', monospace;
+  text-shadow: 0 1px 2px #000, 0 0 3px #000;
+  pointer-events: none;
+}
+
+.battle-current-mana {
+  left: 20%;
+  background: conic-gradient(var(--mana-color) var(--mana-fill), #171717 var(--mana-fill) 100%);
+}
+
+.battle-skill-cost {
+  left: 85%;
+  color: #101010;
+  background: var(--mana-color);
+  text-shadow: 0 1px 1px rgba(255,255,255,.45);
+}
+
+.battle-health-box {
+  position: absolute;
+  z-index: 3;
+  top: 70.5%;
+  left: 14%;
+  width: 72%;
+  height: 5.6%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(224, 218, 207, .72);
+  background: #241817;
+  pointer-events: none;
+}
+
+.battle-health-box > i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  max-width: 100%;
+  background: linear-gradient(90deg, #8d1f27, #e8434e);
+  transition: width .24s ease;
+}
+
+.battle-health-box > b {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  font: 900 clamp(5px, 1.6vw, 8px)/1 'Space Mono', monospace;
+  text-shadow: 0 1px 2px #000, 0 0 3px #000;
+}
+
+.battle-info-slot {
+  position: absolute;
+  z-index: 3;
+  left: 14%;
+  width: 72%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 1px 2px;
+  border: 0;
+  color: #fff;
+  background: transparent;
+  text-align: center;
+  text-shadow: 0 1px 2px #000, 0 0 3px #000;
+  pointer-events: none;
+}
+
+.battle-info-slot-top {
+  top: 76.5%;
+  height: 10%;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.battle-info-slot-top.is-actionable {
+  z-index: 7;
+  pointer-events: auto;
+  cursor: pointer;
+  filter: brightness(1.18);
+}
+
+.battle-info-slot-top:disabled {
+  opacity: 1;
+}
+
+.battle-info-slot-top > strong {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  font: 900 clamp(4px, var(--name-font-size, 7px), 7px)/1 'Pirata One', Georgia, serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.battle-info-slot-top > span {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  font: 600 clamp(4.7px, 1.45vw, 6px)/1.05 'Pirata One', Georgia, serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.battle-info-slot-bottom {
+  top: 87.5%;
+  height: 7.4%;
+  font: 700 clamp(4.8px, 1.55vw, 6.5px)/1 'Pirata One', Georgia, serif;
+  white-space: nowrap;
 }
 
 .battle-card-bars {
@@ -461,14 +607,15 @@ body.streamtalk-battle-screen .app-page {
   border-radius: 50%;
   background: radial-gradient(circle, #172231 20%, #263b4c 68%, #121417 72%);
   box-shadow: inset 0 0 5px #000;
-  cursor: not-allowed;
+  cursor: default;
+  pointer-events: none;
 }
 
 .battle-skill-orb.is-charged {
   border-color: #a9e2ff;
   background: radial-gradient(circle, #d9f4ff 0, #50b9ff 32%, #1482d2 64%, #182c43 72%);
   box-shadow: 0 0 8px #5dbfff, inset 0 0 5px #e9faff;
-  cursor: pointer;
+  cursor: default;
   animation: battle-orb-pulse 1.5s ease-in-out infinite alternate;
 }
 
@@ -477,11 +624,48 @@ body.streamtalk-battle-screen .app-page {
   cursor: default;
 }
 
+.battle-skill-confirm {
+  position: absolute;
+  z-index: 30;
+  left: 50%;
+  bottom: max(54px, env(safe-area-inset-bottom));
+  width: min(360px, calc(100% - 32px));
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--battle-gold);
+  background: rgba(18, 15, 11, .98);
+  box-shadow: 0 8px 26px #000b, 0 0 10px rgba(227, 193, 108, .28);
+  color: #f4f0e7;
+  text-align: center;
+}
+
+.battle-skill-confirm > strong {
+  color: #f4d889;
+  font: 900 12px/1.1 'Space Mono', monospace;
+}
+
+.battle-skill-confirm > span {
+  font-size: 12px;
+}
+
+.battle-skill-confirm > div {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
 /* The supplied card explicitly uses a circular portrait ring and skill orb.
    Keep that artwork local to this prototype, without changing app-wide frames. */
 @layer app-shapes {
   body .battle-prototype .battle-portrait,
-  body .battle-prototype .battle-skill-orb {
+  body .battle-prototype .battle-skill-orb,
+  body .battle-prototype .battle-home-city,
+  body .battle-prototype .battle-current-mana,
+  body .battle-prototype .battle-skill-cost {
     border-radius: 50% !important;
   }
 }
@@ -490,6 +674,7 @@ body.streamtalk-battle-screen .app-page {
   content: "";
   position: absolute;
   inset: -15px;
+  pointer-events: none;
 }
 
 @keyframes battle-orb-pulse {

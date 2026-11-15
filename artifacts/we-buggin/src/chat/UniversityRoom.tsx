@@ -169,6 +169,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
           participantId: slot.participantId!,
           name: person?.displayName ?? roomParticipant?.displayName ?? 'Player',
           photoUrl: person?.photoUrl ?? null,
+          race: person?.race ?? 'Human',
         };
       });
       const bosses = players.map(() => ROOM_BOSS_POOL[Math.floor(Math.random() * ROOM_BOSS_POOL.length)]!);
