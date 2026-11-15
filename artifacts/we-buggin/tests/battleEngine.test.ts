@@ -56,6 +56,27 @@ test("race locks Humans to Oakhaven and every boss resolves its actual origin ci
   }
 });
 
+test("all ten race origins resolve in singular and plural without making new races playable", () => {
+  const origins = [
+    ["Human", "Humans", "oakhaven"],
+    ["High Elf", "High Elves", "verdant-reach"],
+    ["Aetherial", "Aetherials", "sunspire"],
+    ["Dwarf", "Dwarves", "cinderpeak"],
+    ["Gnome", "Gnomes", "cinderpeak"],
+    ["Krell", "Krell", "tidewatch"],
+    ["Dark Elf", "Dark Elves", "gloomhollow"],
+    ["Barbarian", "Barbarians", "frosthold"],
+    ["Troll", "Trolls", "frosthold"],
+    ["Ogre", "Ogres", "drakenspire"],
+  ];
+  for (const [singular, plural, city] of origins) {
+    assert.equal(raceHomeCitySlug(singular), city);
+    assert.equal(raceHomeCitySlug(` ${plural!.toUpperCase()} `), city);
+    assert.equal(cardHomeCity({ race: plural })?.slug, city);
+  }
+  assert.ok(createBattleState().teams.humans.every(player => player.race === "Human"));
+});
+
 test("1v1 room battle resolves a gem match, charges the player, and hands the turn to the boss", () => {
   const state = createRoomBattleState(
     [{ participantId: "seat-1", name: "Player 1" }],
