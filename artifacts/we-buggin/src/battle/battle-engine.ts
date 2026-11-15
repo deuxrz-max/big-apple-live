@@ -1,3 +1,5 @@
+import { BOSS_MOVE_CONFIG, CITY_BOSSES, type BossId } from "./boss-config";
+
 export const ROWS = 8;
 export const COLS = 8;
 
@@ -14,8 +16,16 @@ export const GEM_TYPES = [
 export type GemType = (typeof GEM_TYPES)[number];
 export type ManaGem = Exclude<GemType, "sword">;
 export type BattleSide = "humans" | "bots";
-export type SkillKind = "blast" | "guard" | "strike" | "heal";
+export type SkillKind = "blast" | "guard" | "strike" | "heal" | "boss";
 export type SkillTarget = { kind: "cell"; row: number; col: number } | { kind: "character"; id: string };
+
+export interface BattleEffects {
+  immuneTurns: number;
+  burnTurns: number;
+  burnDamagePerTurn: number;
+  burnDelayTurns: number;
+  scaredTurns: number;
+}
 
 export interface Cell {
   row: number;
@@ -36,6 +46,10 @@ export interface BattleCharacter {
   maxHp: number;
   mana: number;
   guardedBy: string | null;
+  effects: BattleEffects;
+  bossId?: BossId;
+  portrait?: string;
+  cityOfOrigin?: string;
 }
 
 export type Board = GemType[][];
@@ -86,6 +100,10 @@ const isInside = (row: number, col: number) => row >= 0 && row < ROWS && col >= 
 
 function randomGem(random: () => number): GemType {
   return GEM_TYPES[Math.min(GEM_TYPES.length - 1, Math.floor(random() * GEM_TYPES.length))];
+}
+
+function emptyEffects(): BattleEffects {
+  return { immuneTurns: 0, burnTurns: 0, burnDamagePerTurn: 0, burnDelayTurns: 0, scaredTurns: 0 };
 }
 
 export function findMatches(board: Board): Array<{ type: GemType; cells: Cell[] }> {
@@ -199,25 +217,50 @@ function settleBoard(board: Board, random: () => number): { board: Board; summar
   return { board: next, summary: { counts, cascades, swordStrikes } };
 }
 
-export function createBattleState(random: () => number = Math.random): BattleState {
-  const makeTeam = (side: BattleSide) => DEFAULTS.map((job, index): BattleCharacter => ({
-    id: `${side}-${index + 1}`,
-    side,
-    name: side === "humans" ? `Human ${index + 1}` : `Bot ${index + 1}`,
+export function createBattleState(random: () => number = Math.random, citySlug?: string): BattleState {
+  const humans = DEFAULTS.map((job, index): BattleCharacter => ({
+    id: `humans-${index + 1}`,
+    side: "humans",
+    name: `Human ${index + 1}`,
     job: job.job,
     manaGem: job.manaGem,
     skill: job.skill,
     skillName: job.skillName,
     skillCost: job.skillCost,
     level: 5,
-    hp: 75,
-    maxHp: 75,
+    hp: 5 * BOSS_MOVE_CONFIG.regularHealthPerLevel,
+    maxHp: 5 * BOSS_MOVE_CONFIG.regularHealthPerLevel,
     mana: 0,
     guardedBy: null,
+    effects: emptyEffects(),
   }));
+  const averageHumanLevel = Math.round(humans.reduce((total, character) => total + character.level, 0) / humans.length);
+  const regularBotHp = averageHumanLevel * BOSS_MOVE_CONFIG.regularHealthPerLevel;
+  const cityBoss = citySlug ? CITY_BOSSES[citySlug] : undefined;
+  const bots = DEFAULTS.map((job, index): BattleCharacter => {
+    const boss = index === 0 ? cityBoss : undefined;
+    const maxHp = regularBotHp * (boss ? BOSS_MOVE_CONFIG.bossHealthMultiplier : 1);
+    return {
+      id: `bots-${index + 1}`,
+      side: "bots",
+      name: boss?.name ?? `Bot ${index + 1}`,
+      job: boss ? "Boss" : job.job,
+      manaGem: boss?.manaGem ?? job.manaGem,
+      skill: boss ? "boss" : job.skill,
+      skillName: boss?.skillName ?? job.skillName,
+      skillCost: boss ? BOSS_MOVE_CONFIG.manaCost : job.skillCost,
+      level: averageHumanLevel,
+      hp: maxHp,
+      maxHp,
+      mana: 0,
+      guardedBy: null,
+      effects: emptyEffects(),
+      ...(boss ? { bossId: boss.id, portrait: boss.portrait, cityOfOrigin: boss.cityOfOrigin } : {}),
+    };
+  });
   return {
     board: createBoard(random),
-    teams: { humans: makeTeam("humans"), bots: makeTeam("bots") },
+    teams: { humans, bots },
     activeIndex: { humans: 0, bots: 0 },
     turnSide: "humans",
     turnNumber: 1,
@@ -238,51 +281,113 @@ function applyMana(team: BattleCharacter[], counts: Record<GemType, number>): vo
   }
 }
 
-function damageCharacter(team: BattleCharacter[], target: BattleCharacter, damage: number): string {
+function damageCharacter(team: BattleCharacter[], target: BattleCharacter, damage: number): { message: string; dealt: number } {
+  if (target.effects.immuneTurns > 0) {
+    return { message: `${target.name} is immune to damage.`, dealt: 0 };
+  }
   const guard = team.find((character) => character.id === target.guardedBy && character.hp > 0);
   target.guardedBy = null;
   const recipient = guard ?? target;
+  const dealt = Math.min(recipient.hp, damage);
   recipient.hp = Math.max(0, recipient.hp - damage);
-  return guard
-    ? `${guard.name} intercepted ${damage} damage for ${target.name}.`
-    : `${target.name} took ${damage} damage.`;
+  return {
+    message: guard
+      ? `${guard.name} intercepted ${dealt} damage for ${target.name}.`
+      : `${target.name} took ${dealt} damage.`,
+    dealt,
+  };
 }
 
 function damageLeader(team: BattleCharacter[], damage: number): string {
   const leader = team.find((character) => character.hp > 0);
   if (!leader) return "No enemy remains.";
-  return damageCharacter(team, leader, damage);
+  return damageCharacter(team, leader, damage).message;
+}
+
+function nextLivingIndex(team: BattleCharacter[], currentIndex: number): number {
+  for (let step = 1; step <= team.length; step += 1) {
+    const candidate = (currentIndex + step) % team.length;
+    if (team[candidate].hp > 0) return candidate;
+  }
+  return currentIndex;
+}
+
+function battleOutcome(state: BattleState, actingSide: BattleSide): BattleState["outcome"] {
+  const humansDefeated = state.teams.humans.every((character) => character.hp <= 0);
+  const botsDefeated = state.teams.bots.every((character) => character.hp <= 0);
+  if (humansDefeated && botsDefeated) return actingSide === "humans" ? "victory" : "defeat";
+  if (botsDefeated) return "victory";
+  if (humansDefeated) return "defeat";
+  return null;
+}
+
+function cloneBattleState(state: BattleState): BattleState {
+  return {
+    ...state,
+    board: cloneBoard(state.board),
+    teams: {
+      humans: state.teams.humans.map((character) => ({ ...character, effects: { ...character.effects } })),
+      bots: state.teams.bots.map((character) => ({ ...character, effects: { ...character.effects } })),
+    },
+    activeIndex: { ...state.activeIndex },
+    log: [...state.log],
+  };
+}
+
+function startSideEffects(state: BattleState, side: BattleSide): string[] {
+  const messages: string[] = [];
+  const team = state.teams[side];
+  for (const character of team) {
+    if (character.hp <= 0) continue;
+    if (character.effects.immuneTurns > 0) character.effects.immuneTurns -= 1;
+    if (character.effects.burnTurns <= 0) continue;
+    if (character.effects.burnDelayTurns > 0) {
+      character.effects.burnDelayTurns -= 1;
+      continue;
+    }
+    const tick = damageCharacter(team, character, character.effects.burnDamagePerTurn);
+    messages.push(`${character.name} burned for ${tick.dealt} damage.`);
+    character.effects.burnTurns -= 1;
+    if (character.effects.burnTurns <= 0) character.effects.burnDamagePerTurn = 0;
+  }
+  return messages;
 }
 
 function finishTurn(state: BattleState, side: BattleSide, message: string): BattleState {
   const teams = state.teams;
   const enemy = otherSide(side);
-  const outcome = teams[enemy].every((character) => character.hp <= 0)
-    ? side === "humans" ? "victory" : "defeat"
-    : teams[side].every((character) => character.hp <= 0)
-      ? side === "humans" ? "defeat" : "victory"
-      : null;
-  const alive = teams[side].filter((character) => character.hp > 0);
   const current = activeCharacter(state, side);
   const currentPosition = teams[side].findIndex((character) => character.id === current.id);
-  let nextIndex = currentPosition;
-  if (alive.length > 0) {
-    for (let step = 1; step <= teams[side].length; step += 1) {
-      const candidate = (currentPosition + step) % teams[side].length;
-      if (teams[side][candidate].hp > 0) {
-        nextIndex = candidate;
-        break;
-      }
-    }
-  }
-  return {
+  const nextIndex = nextLivingIndex(teams[side], currentPosition);
+  const next: BattleState = {
     ...state,
     turnSide: enemy,
     turnNumber: state.turnNumber + 1,
     activeIndex: { ...state.activeIndex, [side]: nextIndex },
-    outcome,
+    outcome: null,
     log: [message, ...state.log].slice(0, 5),
   };
+  const effectMessages = startSideEffects(next, enemy);
+  next.outcome = battleOutcome(next, side);
+  if (effectMessages.length) next.log = [...effectMessages, ...next.log].slice(0, 5);
+  return next;
+}
+
+export function skipScaredTurn(state: BattleState): BattleState {
+  if (state.turnSide !== "humans" || state.outcome) return state;
+  const active = activeCharacter(state, "humans");
+  if (active.hp <= 0 || active.effects.scaredTurns <= 0) return state;
+  const next = cloneBattleState(state);
+  const target = next.teams.humans.find((character) => character.id === active.id)!;
+  target.effects.scaredTurns = Math.max(0, target.effects.scaredTurns - 1);
+  const currentPosition = next.teams.humans.findIndex((character) => character.id === active.id);
+  next.activeIndex.humans = nextLivingIndex(next.teams.humans, currentPosition);
+  next.turnSide = "bots";
+  next.turnNumber += 1;
+  const effectMessages = startSideEffects(next, "bots");
+  next.outcome = battleOutcome(next, "bots");
+  next.log = [...effectMessages, `${active.name} is scared and loses their turn.`, ...next.log].slice(0, 5);
+  return next;
 }
 
 function appendMatchEffects(state: BattleState, side: BattleSide, settled: { board: Board; summary: MatchSummary }, actor: BattleCharacter): string[] {
@@ -303,11 +408,12 @@ export function applySwap(state: BattleState, from: Cell, to: Cell, random: () =
   if (state.outcome || Math.abs(from.row - to.row) + Math.abs(from.col - to.col) !== 1 || !isInside(from.row, from.col) || !isInside(to.row, to.col)) {
     return { accepted: false, state };
   }
+  if (activeCharacter(state).effects.scaredTurns > 0) return { accepted: false, state };
   const swapped = cloneBoard(state.board);
   [swapped[from.row][from.col], swapped[to.row][to.col]] = [swapped[to.row][to.col], swapped[from.row][from.col]];
   if (!findMatches(swapped).length) return { accepted: false, state };
 
-  const next = { ...state, teams: { humans: state.teams.humans.map((c) => ({ ...c })), bots: state.teams.bots.map((c) => ({ ...c })) } };
+  const next = cloneBattleState(state);
   const actor = activeCharacter(next);
   const settled = settleBoard(swapped, random);
   const messages = appendMatchEffects(next, next.turnSide, settled, actor);
@@ -332,14 +438,10 @@ function blastBoard(board: Board, target: Cell, random: () => number): { board: 
 
 export function applySkill(state: BattleState, target: SkillTarget, random: () => number = Math.random): TurnResult {
   if (state.outcome) return { accepted: false, state };
-  const next: BattleState = {
-    ...state,
-    teams: { humans: state.teams.humans.map((c) => ({ ...c })), bots: state.teams.bots.map((c) => ({ ...c })) },
-    board: cloneBoard(state.board),
-  };
+  const next = cloneBattleState(state);
   const side = next.turnSide;
   const actor = activeCharacter(next);
-  if (actor.mana < actor.skillCost) return { accepted: false, state };
+  if (actor.mana < actor.skillCost || actor.effects.scaredTurns > 0) return { accepted: false, state };
   const allies = next.teams[side];
   const enemies = next.teams[otherSide(side)];
   let message = "";
@@ -358,7 +460,7 @@ export function applySkill(state: BattleState, target: SkillTarget, random: () =
   } else if (actor.skill === "strike" && target.kind === "character") {
     const enemy = enemies.find((character) => character.id === target.id && character.hp > 0);
     if (!enemy) return { accepted: false, state };
-    message = `${actor.name} used Strike. ${damageCharacter(enemies, enemy, 20)}`;
+    message = `${actor.name} used Strike. ${damageCharacter(enemies, enemy, 20).message}`;
   } else if (actor.skill === "heal" && target.kind === "character") {
     const ally = allies.find((character) => character.id === target.id && character.hp > 0);
     if (!ally) return { accepted: false, state };
@@ -386,10 +488,83 @@ export function validSkillTarget(state: BattleState, target: SkillTarget): boole
   return false;
 }
 
+function healCharacter(character: BattleCharacter, amount: number): number {
+  const healed = Math.min(Math.max(0, amount), character.maxHp - character.hp);
+  character.hp += healed;
+  return healed;
+}
+
+function resolveBossMove(state: BattleState, actor: BattleCharacter, random: () => number): string {
+  const bossId = actor.bossId;
+  const humans = state.teams.humans;
+  const aliveHumans = humans.filter((character) => character.hp > 0);
+  if (!bossId) return `${actor.name} could not use a boss move.`;
+
+  if (bossId === "vampire") {
+    let drained = 0;
+    for (const human of aliveHumans) {
+      drained += damageCharacter(humans, human, BOSS_MOVE_CONFIG.vampireDamagePerPlayer).dealt;
+    }
+    const healed = healCharacter(actor, drained * BOSS_MOVE_CONFIG.vampireHealPerDamage);
+    return `${actor.name} drained ${drained} HP from the team and healed ${healed} HP.`;
+  }
+
+  if (bossId === "zombie") {
+    const target = [...aliveHumans].sort((a, b) => a.hp - b.hp)[0];
+    if (!target) return `${actor.name} found no target.`;
+    const dealt = damageCharacter(humans, target, BOSS_MOVE_CONFIG.zombieDamage).dealt;
+    const healed = healCharacter(actor, dealt * BOSS_MOVE_CONFIG.zombieHealPerDamage);
+    return `${actor.name} struck ${target.name} for ${dealt} damage and healed ${healed} HP.`;
+  }
+
+  if (bossId === "ghost") {
+    for (const human of aliveHumans) damageCharacter(humans, human, BOSS_MOVE_CONFIG.ghostDamagePerPlayer);
+    actor.effects.immuneTurns = BOSS_MOVE_CONFIG.ghostImmunityTurns;
+    return `${actor.name} hit the team and became immune for ${actor.effects.immuneTurns} turns.`;
+  }
+
+  if (bossId === "dragon") {
+    const baseDamage = aliveHumans.length
+      ? Math.floor(BOSS_MOVE_CONFIG.dragonTotalDamage / aliveHumans.length)
+      : 0;
+    let remainder = aliveHumans.length
+      ? BOSS_MOVE_CONFIG.dragonTotalDamage % aliveHumans.length
+      : 0;
+    for (const human of aliveHumans) {
+      const damage = baseDamage + (remainder > 0 ? 1 : 0);
+      remainder = Math.max(0, remainder - 1);
+      damageCharacter(humans, human, damage);
+      human.effects.burnTurns = BOSS_MOVE_CONFIG.dragonBurnTurns;
+      human.effects.burnDamagePerTurn = BOSS_MOVE_CONFIG.dragonBurnDamagePerTurn;
+      human.effects.burnDelayTurns = BOSS_MOVE_CONFIG.dragonBurnDelayTurns;
+    }
+    return `${actor.name} dealt ${BOSS_MOVE_CONFIG.dragonTotalDamage} team damage and burned each survivor.`;
+  }
+
+  for (const human of aliveHumans) damageCharacter(humans, human, BOSS_MOVE_CONFIG.wolfDamagePerPlayer);
+  const frightened = [...aliveHumans];
+  const scaredNames: string[] = [];
+  const scaredCount = Math.min(BOSS_MOVE_CONFIG.wolfScaredPlayers, frightened.length);
+  for (let index = 0; index < scaredCount; index += 1) {
+    const selectedIndex = Math.min(frightened.length - 1, Math.floor(random() * frightened.length));
+    const [target] = frightened.splice(selectedIndex, 1);
+    if (!target) continue;
+    target.effects.scaredTurns = Math.max(target.effects.scaredTurns, BOSS_MOVE_CONFIG.wolfScaredTurns);
+    scaredNames.push(target.name);
+  }
+  return `${actor.name} hit the team and howled. ${scaredNames.join(" and ")} lost their next turn.`;
+}
+
 export function botTurn(state: BattleState, random: () => number = Math.random): BattleState {
   if (state.turnSide !== "bots" || state.outcome) return state;
   const actor = activeCharacter(state);
   if (actor.mana >= actor.skillCost) {
+    if (actor.bossId) {
+      const next = cloneBattleState(state);
+      const boss = activeCharacter(next, "bots");
+      boss.mana = 0;
+      return finishTurn(next, "bots", resolveBossMove(next, boss, random));
+    }
     let target: SkillTarget | null = null;
     if (actor.skill === "blast") target = { kind: "cell", row: Math.floor(random() * ROWS), col: Math.floor(random() * COLS) };
     if (actor.skill === "strike") {

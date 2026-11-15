@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import Phaser from "phaser";
 import { Link, useSearch } from "wouter";
+import { AlertTriangle, Flame, ShieldCheck } from "lucide-react";
 import { cityBySlug } from "./aethelgard-cities";
 import { BattleBoardScene, type BoardView } from "./BattleBoardScene";
 import {
@@ -9,6 +10,7 @@ import {
   applySwap,
   botTurn,
   createBattleState,
+  skipScaredTurn,
   validSkillTarget,
   type BattleCharacter,
   type BattleSide,
@@ -50,13 +52,21 @@ function BattleCard({
   onActivateSkill: (character: BattleCharacter) => void;
 }) {
   const alive = character.hp > 0;
-  const canUseSkill = isHumanTurn && active && alive && character.mana >= character.skillCost;
+  const canUseSkill = isHumanTurn && active && alive && character.effects.scaredTurns <= 0 && character.mana >= character.skillCost;
   const hpRatio = Math.max(0, character.hp / character.maxHp);
   const manaRatio = Math.min(1, character.mana / character.skillCost);
+  const cardClass = [
+    "battle-card",
+    active ? "is-active" : "",
+    targetable ? "is-targetable" : "",
+    !alive ? "is-dead" : "",
+    character.bossId ? "is-boss" : "",
+    character.effects.immuneTurns > 0 ? "is-immune" : "",
+  ].filter(Boolean).join(" ");
 
   return (
     <article
-      className={`battle-card${active ? " is-active" : ""}${targetable ? " is-targetable" : ""}${!alive ? " is-dead" : ""}`}
+      className={cardClass}
       style={{ "--mana-color": manaColor(character.manaGem) } as CSSProperties}
       data-testid={`battle-character-${character.id}`}
     >
@@ -64,15 +74,53 @@ function BattleCard({
         <div className="battle-card-front">
           <img className="battle-card-art" src={`${import.meta.env.BASE_URL}battle-assets/cards/card_frame_grey_starter.jpg`} alt="" />
           <span className="battle-level">{character.level}</span>
-          <span className="battle-portrait" aria-hidden="true">{character.name.slice(0, 1)}</span>
-          <span className="battle-job-mark" aria-hidden="true">{character.job.slice(0, 1)}</span>
-          <span className="battle-side-mark" aria-hidden="true">H</span>
+          <span className="battle-portrait" aria-hidden="true">
+            {character.portrait
+              ? <img src={`${import.meta.env.BASE_URL}${character.portrait}`} alt="" />
+              : character.name.slice(0, 1)}
+          </span>
+          <span className="battle-job-mark" aria-hidden="true">{character.bossId ? "B" : character.job.slice(0, 1)}</span>
+          <span className="battle-side-mark" aria-hidden="true">{character.bossId ? "B" : "H"}</span>
           <span className="battle-card-name">{character.name}</span>
-          <span className="battle-card-job">{character.job}</span>
-          <div className="battle-card-bars" aria-label={`${character.hp} of ${character.maxHp} health, ${character.mana} of ${character.skillCost} mana`}>
-            <span className="battle-stat-track"><i style={{ width: `${hpRatio * 100}%` }} /><b>HP {character.hp}</b></span>
-            <span className="battle-stat-track mana"><i style={{ width: `${manaRatio * 100}%` }} /><b>{character.mana}/{character.skillCost}</b></span>
-          </div>
+          {character.bossId ? (
+            <div className="battle-boss-fields" aria-label={`${character.hp} of ${character.maxHp} health, ${character.mana} of ${character.skillCost} mana`}>
+              <span className="battle-boss-field" title={`${character.cityOfOrigin} · HP ${character.hp}/${character.maxHp}`}>
+                <span>{character.cityOfOrigin}</span>
+                <i className="is-health" style={{ width: `${hpRatio * 100}%` }} />
+              </span>
+              <span className="battle-boss-field" title={`Boss · Mana ${character.mana}/${character.skillCost}`}>
+                <span>Boss</span>
+                <i className="is-mana" style={{ width: `${manaRatio * 100}%` }} />
+              </span>
+            </div>
+          ) : (
+            <>
+              <span className="battle-card-job">{character.job}</span>
+              <div className="battle-card-bars" aria-label={`${character.hp} of ${character.maxHp} health, ${character.mana} of ${character.skillCost} mana`}>
+                <span className="battle-stat-track"><i style={{ width: `${hpRatio * 100}%` }} /><b>HP {character.hp}</b></span>
+                <span className="battle-stat-track mana"><i style={{ width: `${manaRatio * 100}%` }} /><b>{character.mana}/{character.skillCost}</b></span>
+              </div>
+            </>
+          )}
+          {(character.effects.immuneTurns > 0 || character.effects.burnTurns > 0 || character.effects.scaredTurns > 0) && (
+            <div className="battle-card-effects" aria-label="Active effects">
+              {character.effects.immuneTurns > 0 && (
+                <span className="battle-effect is-immune" data-testid={`effect-immune-${character.id}`}>
+                  <ShieldCheck size={8} aria-hidden="true" /> IMMUNE {character.effects.immuneTurns}
+                </span>
+              )}
+              {character.effects.burnTurns > 0 && (
+                <span className="battle-effect is-burning" data-testid={`effect-burn-${character.id}`}>
+                  <Flame size={8} aria-hidden="true" /> BURN {character.effects.burnTurns}
+                </span>
+              )}
+              {character.effects.scaredTurns > 0 && (
+                <span className="battle-effect is-scared" data-testid={`effect-scared-${character.id}`}>
+                  <AlertTriangle size={8} aria-hidden="true" /> SCARED
+                </span>
+              )}
+            </div>
+          )}
           {targetable && (
             <button
               type="button"
@@ -177,7 +225,7 @@ export function BattlePrototype() {
   const boardHost = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<BattleBoardScene | null>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
-  const [battle, setBattle] = useState<BattleState | null>(() => createBattleState());
+  const [battle, setBattle] = useState<BattleState | null>(() => createBattleState(Math.random, city?.slug));
   const battleRef = useRef<BattleState | null>(null);
   const [selected, setSelected] = useState<Cell | null>(null);
   const [targetMode, setTargetMode] = useState<TargetMode>(null);
@@ -285,6 +333,17 @@ export function BattlePrototype() {
     return () => window.clearTimeout(timer);
   }, [battle?.turnNumber, battle?.turnSide, battle?.outcome]);
 
+  useEffect(() => {
+    if (!battle || battle.turnSide !== "humans" || battle.outcome) return;
+    const activeHuman = activeCharacter(battle, "humans");
+    if (activeHuman.effects.scaredTurns <= 0) return;
+    const timer = window.setTimeout(() => {
+      setBattle((current) => current ? skipScaredTurn(current) : current);
+      setFeedback("");
+    }, 650);
+    return () => window.clearTimeout(timer);
+  }, [battle?.turnNumber, battle?.turnSide, battle?.activeIndex.humans, battle?.outcome]);
+
   const chooseSkillTarget = useCallback((id: string) => {
     const current = battleRef.current;
     if (!current || !targetModeRef.current || !validSkillTarget(current, { kind: "character", id })) return;
@@ -309,11 +368,11 @@ export function BattlePrototype() {
   }, []);
 
   const restart = useCallback(() => {
-    setBattle(createBattleState());
+    setBattle(createBattleState(Math.random, city?.slug));
     setSelected(null);
     setTargetMode(null);
     setFeedback("");
-  }, []);
+  }, [city?.slug]);
 
   if (!battle) {
     return <main className="battle-prototype"><div className="battle-loading" role="status">Preparing local battle…</div></main>;
@@ -327,6 +386,8 @@ export function BattlePrototype() {
     : [];
   const turnText = battle.outcome
     ? battle.outcome === "victory" ? "Victory" : "Defeat"
+    : battle.turnSide === "humans" && active.effects.scaredTurns > 0
+      ? `${active.name} is scared · turn lost`
     : battle.turnSide === "humans"
       ? `Your turn · ${active.name} · ${active.job}`
       : `Bots’ turn · ${active.name} · ${active.job}`;

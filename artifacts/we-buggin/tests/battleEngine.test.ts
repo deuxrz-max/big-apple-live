@@ -12,12 +12,42 @@ import {
   createBoard,
   findLegalSwaps,
   findMatches,
+  skipScaredTurn,
   type Board,
 } from "../src/battle/battle-engine";
+import { BOSS_MOVE_CONFIG, CITY_BOSSES } from "../src/battle/boss-config";
 
 function freshPattern(): Board {
   return Array.from({ length: ROWS }, (_, row) =>
     Array.from({ length: COLS }, (_, col) => GEM_TYPES[(row * 3 + col * 2) % GEM_TYPES.length]));
+}
+
+function chargedBoss(citySlug: string) {
+  const state = createBattleState(() => 0.51, citySlug);
+  state.turnSide = "bots";
+  state.activeIndex.bots = 0;
+  state.teams.bots[0].mana = state.teams.bots[0].skillCost;
+  return state;
+}
+
+function oneMatchBoard(): Board {
+  const board = freshPattern();
+  board[0][0] = "red";
+  board[0][1] = "red";
+  board[0][2] = "blue";
+  board[0][3] = "red";
+  board[1][2] = "red";
+  return board;
+}
+
+function fourSwordBoard(): Board {
+  const board = freshPattern();
+  board[0][0] = "sword";
+  board[0][1] = "sword";
+  board[0][2] = "red";
+  board[0][3] = "sword";
+  board[1][2] = "sword";
+  return board;
 }
 
 test("the first board is an 8x8 playable grid with no free opening matches", () => {
@@ -128,4 +158,106 @@ test("the bot makes a legal turn and returns control to the human team", () => {
   assert.equal(next.turnNumber, 2);
   assert.equal(findMatches(next.board).length, 0);
   assert.ok(findLegalSwaps(next.board).length > 0);
+});
+
+test("city battles select the matching boss, portrait, level, and double health", () => {
+  for (const [citySlug, definition] of Object.entries(CITY_BOSSES)) {
+    const state = createBattleState(() => 0.51, citySlug);
+    const boss = state.teams.bots[0];
+    const averageLevel = Math.round(state.teams.humans.reduce((sum, character) => sum + character.level, 0) / 4);
+    assert.equal(boss.bossId, definition.id);
+    assert.equal(boss.name, definition.name);
+    assert.equal(boss.cityOfOrigin, definition.cityOfOrigin);
+    assert.equal(boss.portrait, definition.portrait);
+    assert.equal(boss.level, averageLevel);
+    assert.equal(boss.maxHp, averageLevel * BOSS_MOVE_CONFIG.regularHealthPerLevel * BOSS_MOVE_CONFIG.bossHealthMultiplier);
+    assert.equal(state.teams.bots[1].maxHp, averageLevel * BOSS_MOVE_CONFIG.regularHealthPerLevel);
+  }
+  assert.equal(createBattleState(() => 0.51, "cinderpeak").teams.bots.some((character) => character.bossId), false);
+});
+
+test("Vampire drains each living player and heals by the actual total drained", () => {
+  const state = chargedBoss("gloomhollow");
+  const boss = state.teams.bots[0];
+  boss.hp = 100;
+  state.teams.humans.map((character, index) => { character.hp = [5, 20, 30, 40][index]; });
+  const next = botTurn(state, () => 0.5);
+  assert.deepEqual(next.teams.humans.map((character) => character.hp), [0, 12, 22, 32]);
+  assert.equal(next.teams.bots[0].hp, 129);
+  assert.equal(next.teams.bots[0].mana, 0);
+  assert.match(next.log[0], /drained 29 HP/);
+});
+
+test("Zombie strikes the lowest-health player for the Vampire's total drain and heals", () => {
+  const state = chargedBoss("verdant-reach");
+  const boss = state.teams.bots[0];
+  boss.hp = 100;
+  state.teams.humans.map((character, index) => { character.hp = [50, 40, 60, 70][index]; });
+  const next = botTurn(state, () => 0.5);
+  assert.deepEqual(next.teams.humans.map((character) => character.hp), [50, 8, 60, 70]);
+  assert.equal(next.teams.bots[0].hp, 132);
+  assert.equal(BOSS_MOVE_CONFIG.zombieDamage, BOSS_MOVE_CONFIG.vampireDamagePerPlayer * 4);
+});
+
+test("Ghost hits all players and blocks damage for two human turns", () => {
+  const state = chargedBoss("tidewatch");
+  const cast = botTurn(state, () => 0.5);
+  assert.deepEqual(cast.teams.humans.map((character) => character.hp), [67, 67, 67, 67]);
+  assert.equal(cast.teams.bots[0].effects.immuneTurns, 2);
+
+  cast.teams.humans[2].mana = cast.teams.humans[2].skillCost;
+  cast.activeIndex.humans = 2;
+  const blocked = applySkill(cast, { kind: "character", id: "bots-1" });
+  assert.equal(blocked.accepted, true);
+  assert.equal(blocked.state.teams.bots[0].hp, cast.teams.bots[0].hp);
+  assert.equal(blocked.state.teams.bots[0].effects.immuneTurns, 1);
+  assert.match(blocked.state.log[0], /immune to damage/);
+
+  const nextBotTurn = botTurn(blocked.state, () => 0.5);
+  const secondBlocked = applySwap({ ...nextBotTurn, board: fourSwordBoard() }, { row: 0, col: 2 }, { row: 1, col: 2 });
+  assert.equal(secondBlocked.state.teams.bots[0].hp, cast.teams.bots[0].hp);
+  assert.equal(secondBlocked.state.teams.bots[0].effects.immuneTurns, 0);
+  const lastBotTurn = botTurn(secondBlocked.state, () => 0.5);
+  const vulnerable = applySwap({ ...lastBotTurn, board: fourSwordBoard() }, { row: 0, col: 2 }, { row: 1, col: 2 });
+  assert.equal(vulnerable.state.teams.bots[0].hp, cast.teams.bots[0].hp - cast.teams.bots[0].level);
+});
+
+test("Dragon splits damage and burns each player for two later turns", () => {
+  const cast = botTurn(chargedBoss("drakenspire"), () => 0.5);
+  assert.deepEqual(cast.teams.humans.map((character) => character.hp), [67, 67, 67, 67]);
+  assert.ok(cast.teams.humans.every((character) => character.effects.burnTurns === 2));
+  assert.ok(cast.teams.humans.every((character) => character.effects.burnDelayTurns === 0));
+
+  const firstPlayerTurn = applySwap({ ...cast, board: oneMatchBoard() }, { row: 0, col: 2 }, { row: 1, col: 2 });
+  const firstBurn = botTurn(firstPlayerTurn.state, () => 0.5);
+  assert.deepEqual(firstBurn.teams.humans.map((character) => character.hp), [65, 65, 65, 65]);
+  assert.ok(firstBurn.teams.humans.every((character) => character.effects.burnTurns === 1));
+
+  const secondPlayerTurn = applySwap({ ...firstBurn, board: oneMatchBoard() }, { row: 0, col: 2 }, { row: 1, col: 2 });
+  const secondBurn = botTurn(secondPlayerTurn.state, () => 0.5);
+  assert.deepEqual(secondBurn.teams.humans.map((character) => character.hp), [63, 63, 63, 63]);
+  assert.ok(secondBurn.teams.humans.every((character) => character.effects.burnTurns === 0));
+});
+
+test("Wolf hits the team, marks two distinct players scared, and skips the active one", () => {
+  const cast = botTurn(chargedBoss("frosthold"), () => 0);
+  assert.deepEqual(cast.teams.humans.map((character) => character.hp), [67, 67, 67, 67]);
+  assert.deepEqual(cast.teams.humans.map((character) => character.effects.scaredTurns), [1, 1, 0, 0]);
+  const skipped = skipScaredTurn(cast);
+  assert.equal(skipped.turnSide, "bots");
+  assert.equal(skipped.activeIndex.humans, 1);
+  assert.equal(skipped.teams.humans[0].effects.scaredTurns, 0);
+  assert.equal(skipped.teams.humans[1].effects.scaredTurns, 1);
+  assert.match(skipped.log[0], /loses their turn/);
+});
+
+test("a city boss still deals the normal four-sword hit", () => {
+  const state = createBattleState(() => 0.51, "frosthold");
+  state.turnSide = "bots";
+  state.activeIndex.bots = 0;
+  state.board = fourSwordBoard();
+  const result = applySwap(state, { row: 0, col: 2 }, { row: 1, col: 2 });
+  assert.equal(result.accepted, true);
+  assert.equal(result.state.teams.humans[0].hp, 70);
+  assert.equal(result.state.teams.bots[0].hp, result.state.teams.bots[0].maxHp);
 });
