@@ -24,9 +24,28 @@
 .rc-preview.is-unavailable .rc-preview-player, .rc-preview.is-blocked .rc-preview-player { visibility: hidden; }
 .rc-map-item { grid-column: 1; min-width: 0; width: 100%; }
 .rc-map-frame { position: relative; width: 100%; overflow: hidden; border: 3px solid #ff4fa3; background: #08060a; box-shadow: 0 0 9px #ff4fa3, 0 0 24px #ff4fa36b, inset 0 0 16px #ff4fa326; }
-.rc-map-tile { width: 100%; aspect-ratio: 1; line-height: 0; overflow: hidden; background-color:#08060a; background-position:center; background-repeat:no-repeat; background-size:contain; }
+.rc-map-tile { position:relative; width: 100%; aspect-ratio: 1; overflow: hidden; background-color:#08060a; background-position:center; background-repeat:no-repeat; background-size:contain; }
 .rc-map-battle { position: absolute; right: 12px; bottom: 12px; z-index: 1; }
 .rc-map-battle .dw-battle-cta { min-width: 116px; min-height: 44px; margin: 0; box-shadow: 0 2px 14px #000b; }
+.rc-city-marker{
+  position:absolute;
+  z-index:1;
+  transform:translate(-50%,-50%);
+  max-width:30%;
+  padding:2px 4px;
+  border:1px solid rgba(230,196,117,.78);
+  background:rgba(5,5,7,.84);
+  color:#fff3d5;
+  font:clamp(8px,2.25vw,12px)/1 'Pirata One',Georgia,serif;
+  text-align:center;
+  text-decoration:none;
+  text-shadow:0 1px 2px #000;
+  white-space:nowrap;
+  box-shadow:0 1px 4px #000b;
+}
+.rc-city-marker:focus-visible,.rc-city-marker:hover{outline:2px solid #fff0bd;outline-offset:1px;background:#17120c}
+.rc-map-actions{display:flex;justify-content:center;padding-top:10px}
+.rc-random-button{min-width:142px;min-height:42px;justify-content:center;gap:7px}
 @media (min-width: 760px) {
   .rc-tiles { gap: 18px; }
   #root .rc-tiles > .rc-map-item { max-width: 760px; justify-self: center; }

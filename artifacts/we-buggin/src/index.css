@@ -1,4 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
+@font-face {
+  font-family: 'Pirata One';
+  src: url('./assets/fonts/PirataOne-Regular.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
 @layer app-shapes, joker-finish, theme, base, clerk, components, utilities;
 @import 'tailwindcss';
 @import 'tw-animate-css';

@@ -1,0 +1,56 @@
+.aethelgard-city-page{
+  box-sizing:border-box;
+  min-height:calc(100dvh - var(--app-bottom-nav-clearance,80px));
+  padding:0 0 max(84px,env(safe-area-inset-bottom));
+  background:#080808;
+  color:#f5f1e8;
+}
+.aethelgard-city-hero{
+  display:block;
+  width:100%;
+  height:auto;
+  object-fit:contain;
+  object-position:center;
+  background:#111;
+}
+.aethelgard-city-content{
+  width:min(100%,720px);
+  margin:0 auto;
+  padding:18px 16px 22px;
+}
+#root .aethelgard-city-page .aethelgard-city-content h1{
+  margin:0;
+  color:#fff;
+  font:clamp(32px,9vw,48px)/1 'Pirata One',Georgia,serif;
+  text-align:center;
+  text-shadow:0 2px 5px #000;
+}
+.aethelgard-city-content p{
+  margin:10px 0 18px;
+  color:#c9c3b8;
+  font:15px/1.4 'Nunito Sans',system-ui,sans-serif;
+  text-align:center;
+}
+.aethelgard-city-actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.aethelgard-city-actions a{
+  min-height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  padding:8px 10px;
+  border:1px solid #d3af58;
+  border-radius:0;
+  font:800 14px/1.1 'Nunito Sans',system-ui,sans-serif;
+  text-decoration:none;
+  text-align:center;
+}
+.aethelgard-city-battle{background:#d3af58;color:#080808}
+.aethelgard-city-back{background:#111;color:#f1d991}
+@media(max-width:360px){
+  .aethelgard-city-actions{grid-template-columns:1fr}
+}

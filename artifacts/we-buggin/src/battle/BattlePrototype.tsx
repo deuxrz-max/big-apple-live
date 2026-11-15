@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import Phaser from "phaser";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
+import { cityBySlug } from "./aethelgard-cities";
 import { BattleBoardScene, type BoardView } from "./BattleBoardScene";
 import {
   activeCharacter,
@@ -165,6 +166,14 @@ function battleBoardView(state: BattleState | null, selected: Cell | null, targe
 }
 
 export function BattlePrototype() {
+  const search = useSearch();
+  const city = cityBySlug(new URLSearchParams(search).get("city") ?? undefined);
+  const cityBackdrop: CSSProperties | undefined = city ? {
+    backgroundImage: `linear-gradient(rgba(0,0,0,.77),rgba(0,0,0,.84)),url("${import.meta.env.BASE_URL}${city.image}")`,
+    backgroundPosition: "center",
+    backgroundSize: "cover",
+    backgroundRepeat: "no-repeat",
+  } : undefined;
   const boardHost = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<BattleBoardScene | null>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
@@ -323,11 +332,11 @@ export function BattlePrototype() {
       : `Bots’ turn · ${active.name} · ${active.job}`;
 
   return (
-    <main className="battle-prototype" data-testid="battle-prototype">
+    <main className="battle-prototype" style={cityBackdrop} data-city={city?.slug} data-testid="battle-prototype">
       <div className="battle-shell">
         <header className="battle-header">
           <Link href="/" className="battle-back">← Home</Link>
-          <div className="battle-title"><strong>LOCAL BATTLE</strong><span>4 vs 4 · Prototype</span></div>
+          <div className="battle-title"><strong>LOCAL BATTLE</strong><span>{city ? `${city.name} · ` : ''}4 vs 4 · Prototype</span></div>
           <button type="button" className="battle-reset" onClick={restart} data-testid="battle-restart-top">Restart</button>
         </header>
 

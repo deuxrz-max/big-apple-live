@@ -2,7 +2,7 @@ import '@/beam/beam.css';
 import '@/social/social.css';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
-import { ArrowLeft, Flame, Swords, Trophy, Users, X } from 'lucide-react';
+import { ArrowLeft, Flame, Trophy, Users, X } from 'lucide-react';
 import { useClerk } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -18,7 +18,7 @@ import { errMessage } from '@/lib/errors';
 import { PhotoReviewQueue } from './PhotoReviewQueue';
 import { BotModerationPanel } from './BotModerationPanel';
 import { selectFeaturedRoom } from './directory-utils';
-import { RoomChannels } from './RoomChannels';
+import { RandomCityBattleButton, RoomChannels } from './RoomChannels';
 import { CreateRoomButton } from './CreateRoomButton';
 import { ActionMenu, ScreenHeader } from '@/components/app-chrome';
 import { AccessCheckError } from './AccessCheckError';
@@ -76,7 +76,8 @@ function List({ preview, query = '' }: { preview?: boolean; query?: string }) {
       {q.data && q.data.length === 0 && <p>No entries.</p>}
       {q.data && q.data.length > 0 && rows.length === 0 && <p>No room matches your search.</p>}
       <RoomChannels rooms={rows} loading={q.isLoading} baseHref={preview ? '/' : '/home'}
-        battle={<Link href="/battle" className="bm-btn bm-btn-primary dw-battle-cta" data-testid={preview ? 'link-public-battle' : 'link-home-battle'}><Swords size={17} aria-hidden="true" /> Battle</Link>}
+        battle={<RandomCityBattleButton kind="battle" testId={preview ? 'link-public-battle' : 'link-home-battle'} />}
+        random={<RandomCityBattleButton kind="random" testId={preview ? 'button-public-random-city' : 'button-home-random-city'} />}
         renderRoom={room => <DirectoryRoomCard room={room} topic={displayRoomName(room.label)} isFeatured={false} preview={preview} />}
         goLive={<Link href="/sign-in" className="st-home-go-live-button"><span className="st-home-go-live-copy"><strong>Create Room</strong><small>Start an audio room</small></span></Link>}
       />
@@ -221,7 +222,8 @@ export function ChatDirectory() {
         <RoomChannels
           rooms={displayedRooms}
           loading={directory.isLoading}
-          battle={<Link href="/battle" className="bm-btn bm-btn-primary dw-battle-cta" data-testid="link-home-battle"><Swords size={17} aria-hidden="true" /> Battle</Link>}
+          battle={<RandomCityBattleButton kind="battle" testId="link-home-battle" />}
+          random={<RandomCityBattleButton kind="random" testId="button-home-random-city" />}
           renderRoom={(room) => <DirectoryRoomCard room={room} topic={topicFor(room)} isFeatured={room.roomId === featuredRoom?.roomId} hideDetails />}
           goLive={<CreateRoomButton className="st-home-go-live-button">
             <span className="st-home-go-live-copy"><strong>Create Room</strong><small>Start a four-player audio room</small></span>

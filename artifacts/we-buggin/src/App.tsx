@@ -14,6 +14,7 @@ import { EmailSignUp } from '@/components/email-signup';
 import '@/chat/chat.css';
 import { OwnProfile } from '@/profile/OwnProfile';
 import { StorePage } from '@/profile/StorePage';
+import { CityPage } from '@/battle/CityPage';
 import { QuickProfileProvider } from '@/profile/QuickProfile';
 import '@/profile/profile.css';
 import SocialApp from '@/social/SocialApp';
@@ -304,6 +305,7 @@ function ClerkProviderWithRoutes() {
             )}
             <Route path="/" component={HomeRedirect} />
             <Route path="/leaderboard" component={BattleLeaderboardPage} />
+            <Route path="/city/:cityId" component={CityPage} />
             <Route path="/battle">
               <Suspense fallback={<div className="battle-loading" role="status">Loading battle prototype…</div>}>
                 <BattlePrototypePage />
