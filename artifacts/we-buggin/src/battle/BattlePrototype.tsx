@@ -1,23 +1,29 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import Phaser from "phaser";
-import { Link, useSearch } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
+import { useUser } from "@clerk/react";
 import { AlertTriangle, Flame, Shield, ShieldCheck } from "lucide-react";
 import { cityBySlug } from "./aethelgard-cities";
 import { BattleBoardScene, type BoardView } from "./BattleBoardScene";
 import { BOSS_MOVE_CONFIG } from "./boss-config";
+import { photoSrc } from "@/components/user-photo";
+import { loadCreds } from "@/lib/room-creds";
 import {
   activeCharacter,
   applySkill,
   applySwap,
   botTurn,
   createBattleState,
+  createRoomBattleState,
   skipScaredTurn,
   validSkillTarget,
   type BattleCharacter,
   type BattleSide,
   type BattleState,
   type Cell,
+  type RoomBattlePlayer,
   type SkillTarget,
+  ROOM_BOSS_POOL,
 } from "./battle-engine";
 import "./battle.css";
 
@@ -77,9 +83,11 @@ function BattleCard({
           <img className="battle-card-art" src={`${import.meta.env.BASE_URL}battle-assets/cards/card_frame_grey_starter.jpg`} alt="" />
           <span className="battle-level">{character.level}</span>
           <span className="battle-portrait" aria-hidden="true">
-            {character.portrait
-              ? <img src={`${import.meta.env.BASE_URL}${character.portrait}`} alt="" />
-              : character.name.slice(0, 1)}
+            {character.photoUrl
+              ? <img src={photoSrc(character.photoUrl)} alt="" />
+              : character.portrait
+                ? <img src={`${import.meta.env.BASE_URL}${character.portrait}`} alt="" />
+                : character.name.slice(0, 1)}
           </span>
           <span className="battle-job-mark" aria-hidden="true">{character.bossId ? "B" : character.job.slice(0, 1)}</span>
           <span className="battle-side-mark" aria-hidden="true">{character.bossId ? "B" : "H"}</span>
@@ -197,9 +205,9 @@ function TeamRow({
     <section className={`battle-team battle-team-${side}`} aria-label={label}>
       <div className="battle-team-heading">
         <strong>{label}</strong>
-        <span>{living}/4 standing</span>
+        <span>{living}/{characters.length} standing</span>
       </div>
-      <div className="battle-team-cards">
+      <div className="battle-team-cards" style={{ "--team-size": characters.length } as CSSProperties}>
         {characters.map((character) => (
           <BattleCard
             key={character.id}
@@ -225,8 +233,12 @@ function battleBoardView(state: BattleState | null, selected: Cell | null, targe
   } : null;
 }
 
-export function BattlePrototype() {
+export function BattlePrototype({ roomIdOverride, onExit }: { roomIdOverride?: string; onExit?: () => void } = {}) {
   const search = useSearch();
+  const params = new URLSearchParams(search);
+  const roomId = roomIdOverride ?? params.get("room");
+  const { user, isLoaded } = useUser();
+  const [, navigate] = useLocation();
   const city = cityBySlug(new URLSearchParams(search).get("city") ?? undefined);
   const cityBackdrop: CSSProperties | undefined = city ? {
     backgroundImage: `linear-gradient(rgba(0,0,0,.77),rgba(0,0,0,.84)),url("${import.meta.env.BASE_URL}${city.image}")`,
@@ -237,8 +249,12 @@ export function BattlePrototype() {
   const boardHost = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<BattleBoardScene | null>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
-  const [battle, setBattle] = useState<BattleState | null>(() => createBattleState(Math.random, city?.slug));
+  const [battle, setBattle] = useState<BattleState | null>(() => roomId ? null : createBattleState(Math.random, city?.slug));
   const battleRef = useRef<BattleState | null>(null);
+  const versionRef = useRef(0);
+  const credsRef = useRef<ReturnType<typeof loadCreds>>(null);
+  const [roomError, setRoomError] = useState<string | null>(null);
+  const canActRef = useRef(true);
   const [selected, setSelected] = useState<Cell | null>(null);
   const [targetMode, setTargetMode] = useState<TargetMode>(null);
   const [feedback, setFeedback] = useState("");
@@ -246,19 +262,108 @@ export function BattlePrototype() {
   const selectedRef = useRef<Cell | null>(null);
   const latestView = useRef<BoardView | null>(null);
 
+  const applyRoomSnapshot = useCallback((snapshot: { version: number; state: unknown }) => {
+    const nextVersion = Number(snapshot.version);
+    if (!Number.isInteger(nextVersion) || nextVersion <= versionRef.current) return;
+    versionRef.current = nextVersion;
+    setBattle(snapshot.state as BattleState);
+    setRoomError(null);
+    setFeedback("");
+    setSelected(null);
+    setTargetMode(null);
+  }, []);
+
+  const fetchRoomBattle = useCallback(async () => {
+    if (!roomId || !credsRef.current) return;
+    const response = await fetch(`/api/account/rooms/${encodeURIComponent(roomId)}/battle`, {
+      credentials: "same-origin",
+      headers: { "X-Room-Session": credsRef.current.participantSessionId },
+    });
+    const result = await response.json() as { battle?: { version: number; state: unknown } | null; error?: string };
+    if (!response.ok) throw new Error(result.error ?? "Could not sync the room game.");
+    if (result.battle) applyRoomSnapshot(result.battle);
+    else if (!battleRef.current) setRoomError("The room game has not started yet.");
+  }, [roomId, applyRoomSnapshot]);
+
+  const commitRoomBattle = useCallback(async (next: BattleState) => {
+    if (!roomId || !credsRef.current) return;
+    const response = await fetch(`/api/account/rooms/${encodeURIComponent(roomId)}/battle/action`, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Room-Session": credsRef.current.participantSessionId,
+      },
+      body: JSON.stringify({ version: versionRef.current, state: next }),
+    });
+    const result = await response.json() as { battle?: { version: number; state: unknown }; error?: string };
+    if (response.status === 409) {
+      await fetchRoomBattle();
+      return;
+    }
+    if (!response.ok || !result.battle) throw new Error(result.error ?? "Could not sync that turn.");
+    applyRoomSnapshot(result.battle);
+    setRoomError(null);
+  }, [roomId, fetchRoomBattle, applyRoomSnapshot]);
+
+  useEffect(() => {
+    if (!roomId || !isLoaded) return;
+    if (!user?.id) {
+      setRoomError("Sign in to join this room game.");
+      return;
+    }
+    const creds = loadCreds(user.id, roomId);
+    credsRef.current = creds;
+    if (!creds) {
+      setRoomError("Return to the room and take a seat before opening its game.");
+      return;
+    }
+    let active = true;
+    const sync = () => {
+      if (active) void fetchRoomBattle().catch(error => {
+        if (active) setRoomError(error instanceof Error ? error.message : "Could not sync the room game.");
+      });
+    };
+    sync();
+    const poll = window.setInterval(sync, 1000);
+    const heartbeat = window.setInterval(() => {
+      void fetch(`/api/rooms/${encodeURIComponent(roomId)}/participants/${encodeURIComponent(creds.participantSessionId)}/heartbeat`, {
+        method: "POST",
+        credentials: "same-origin",
+      }).catch(() => undefined);
+    }, 25_000);
+    return () => {
+      active = false;
+      window.clearInterval(poll);
+      window.clearInterval(heartbeat);
+      credsRef.current = null;
+    };
+  }, [roomId, isLoaded, user?.id, fetchRoomBattle]);
+
   battleRef.current = battle;
   targetModeRef.current = targetMode;
   selectedRef.current = selected;
   latestView.current = battleBoardView(battle, selected, targetMode);
+  const activeHuman = battle ? battle.teams.humans[battle.activeIndex.humans] : undefined;
+  const canHumanAct = !roomId || (!!user?.id && !!credsRef.current?.participantId
+    && activeHuman?.participantId === credsRef.current.participantId);
+  canActRef.current = canHumanAct;
+
+  const acceptNextState = useCallback((next: BattleState) => {
+    if (roomId) void commitRoomBattle(next).catch(error => {
+      setRoomError(error instanceof Error ? error.message : "Could not sync that turn.");
+    });
+    else setBattle(next);
+  }, [roomId, commitRoomBattle]);
 
   const cellTapRef = useRef<(cell: Cell) => void>(() => undefined);
   const chooseCell = useCallback((cell: Cell) => {
     const current = battleRef.current;
-    if (!current || current.turnSide !== "humans" || current.outcome) return;
+    if (!current || !canActRef.current || current.turnSide !== "humans" || current.outcome) return;
     if (targetModeRef.current === "board") {
       const result = applySkill(current, { kind: "cell", ...cell });
       if (result.accepted) {
-        setBattle(result.state);
+        acceptNextState(result.state);
         setTargetMode(null);
         setSelected(null);
         setFeedback("");
@@ -287,12 +392,12 @@ export function BattlePrototype() {
     const result = applySwap(current, first, cell);
     setSelected(null);
     if (result.accepted) {
-      setBattle(result.state);
+      acceptNextState(result.state);
       setFeedback("");
     } else {
       setFeedback("That swap does not make a match. Choose another adjacent gem pair.");
     }
-  }, []);
+  }, [acceptNextState]);
   cellTapRef.current = chooseCell;
 
   useEffect(() => {
@@ -344,37 +449,40 @@ export function BattlePrototype() {
   useEffect(() => {
     if (!battle || battle.turnSide !== "bots" || battle.outcome) return;
     const timer = window.setTimeout(() => {
-      setBattle((current) => current ? botTurn(current) : current);
+      const current = battleRef.current;
+      if (!current) return;
+      acceptNextState(botTurn(current));
       setFeedback("");
     }, 720);
     return () => window.clearTimeout(timer);
-  }, [battle?.turnNumber, battle?.turnSide, battle?.outcome]);
+  }, [battle?.turnNumber, battle?.turnSide, battle?.outcome, acceptNextState]);
 
   useEffect(() => {
-    if (!battle || battle.turnSide !== "humans" || battle.outcome) return;
+    if (!battle || battle.turnSide !== "humans" || battle.outcome || !canHumanAct) return;
     const activeHuman = activeCharacter(battle, "humans");
     if (activeHuman.effects.scaredTurns <= 0) return;
     const timer = window.setTimeout(() => {
-      setBattle((current) => current ? skipScaredTurn(current) : current);
+      const current = battleRef.current;
+      if (current) acceptNextState(skipScaredTurn(current));
       setFeedback("");
     }, 650);
     return () => window.clearTimeout(timer);
-  }, [battle?.turnNumber, battle?.turnSide, battle?.activeIndex.humans, battle?.outcome]);
+  }, [battle?.turnNumber, battle?.turnSide, battle?.activeIndex.humans, battle?.outcome, canHumanAct, acceptNextState]);
 
   const chooseSkillTarget = useCallback((id: string) => {
     const current = battleRef.current;
-    if (!current || !targetModeRef.current || !validSkillTarget(current, { kind: "character", id })) return;
+    if (!current || !canActRef.current || !targetModeRef.current || !validSkillTarget(current, { kind: "character", id })) return;
     const result = applySkill(current, { kind: "character", id });
     if (result.accepted) {
-      setBattle(result.state);
+      acceptNextState(result.state);
       setTargetMode(null);
       setSelected(null);
       setFeedback("");
     }
-  }, []);
+  }, [acceptNextState]);
 
   const activateSkill = useCallback((character: BattleCharacter) => {
-    if (character.hp <= 0 || character.mana < character.skillCost) return;
+    if (!canActRef.current || character.hp <= 0 || character.mana < character.skillCost) return;
     setSelected(null);
     setTargetMode(skillMode(character));
     setFeedback(character.skill === "blast"
@@ -385,14 +493,24 @@ export function BattlePrototype() {
   }, []);
 
   const restart = useCallback(() => {
+    if (roomId) {
+      if (onExit) onExit();
+      else navigate(`/rooms/${encodeURIComponent(roomId)}`);
+      return;
+    }
     setBattle(createBattleState(Math.random, city?.slug));
     setSelected(null);
     setTargetMode(null);
     setFeedback("");
-  }, [city?.slug]);
+  }, [roomId, navigate, onExit, city?.slug]);
 
   if (!battle) {
-    return <main className="battle-prototype"><div className="battle-loading" role="status">Preparing local battle…</div></main>;
+    return <main className="battle-prototype">
+      <div className="battle-loading" role="status">
+        {roomError ?? "Syncing room game…"}
+        {roomError && roomId && <Link className="battle-result-home" href={`/rooms/${encodeURIComponent(roomId)}`}>Return to room</Link>}
+      </div>
+    </main>;
   }
 
   const active = activeCharacter(battle);
@@ -405,6 +523,8 @@ export function BattlePrototype() {
     ? battle.outcome === "victory" ? "Victory" : "Defeat"
     : battle.turnSide === "humans" && active.effects.scaredTurns > 0
       ? `${active.name} is scared · turn lost`
+    : battle.turnSide === "humans" && roomId && activeHuman?.participantId !== credsRef.current?.participantId
+      ? `${active.name}'s turn`
     : battle.turnSide === "humans"
       ? `Your turn · ${active.name} · ${active.job}`
       : `Bots’ turn · ${active.name} · ${active.job}`;
@@ -413,9 +533,11 @@ export function BattlePrototype() {
     <main className="battle-prototype" style={cityBackdrop} data-city={city?.slug} data-testid="battle-prototype">
       <div className="battle-shell">
         <header className="battle-header">
-          <Link href="/" className="battle-back">← Home</Link>
-          <div className="battle-title"><strong>LOCAL BATTLE</strong><span>{city ? `${city.name} · ` : ''}4 vs 4 · Prototype</span></div>
-          <button type="button" className="battle-reset" onClick={restart} data-testid="battle-restart-top">Restart</button>
+          {roomId && onExit
+            ? <button type="button" className="battle-back" onClick={onExit}>← Room</button>
+            : <Link href={roomId ? `/rooms/${encodeURIComponent(roomId)}` : "/"} className="battle-back">{roomId ? "← Room" : "← Home"}</Link>}
+          <div className="battle-title"><strong>{roomId ? "ROOM BATTLE" : "LOCAL BATTLE"}</strong><span>{roomId ? `${battle.teams.humans.length} vs ${battle.teams.bots.length} · Co-op` : `${city ? `${city.name} · ` : ''}4 vs 4 · Prototype`}</span></div>
+          <button type="button" className="battle-reset" onClick={restart} data-testid="battle-restart-top">{roomId ? "Room" : "Restart"}</button>
         </header>
 
         <TeamRow
@@ -442,7 +564,7 @@ export function BattlePrototype() {
           side="humans"
           characters={battle.teams.humans}
           active={activeCharacter(battle, "humans")}
-          isHumanTurn={battle.turnSide === "humans" && !battle.outcome}
+          isHumanTurn={battle.turnSide === "humans" && !battle.outcome && canHumanAct}
           targetIds={targetIds}
           onChooseTarget={chooseSkillTarget}
           onActivateSkill={activateSkill}
@@ -450,7 +572,9 @@ export function BattlePrototype() {
 
         <div className="battle-footer">
           <p className="battle-instructions">
-            {feedback || "Tap two adjacent gems to swap. Match 3 to charge a job; match 4 swords to strike the opposing leader."}
+            {roomError || feedback || (roomId && !canHumanAct && battle.turnSide === "humans"
+              ? "Waiting for the seated player to make their move."
+              : "Tap two adjacent gems to swap. Match 3 to charge a job; match 4 swords to strike the opposing leader.")}
           </p>
           <p className="battle-log" aria-live="polite">{battle.log[0]}</p>
         </div>
@@ -471,8 +595,8 @@ export function BattlePrototype() {
             <span className="battle-result-kicker">LOCAL BATTLE COMPLETE</span>
             <h1 id="battle-result-title">{battle.outcome === "victory" ? "Victory" : "Defeat"}</h1>
             <p>{battle.outcome === "victory" ? "The opposing team has fallen." : "Your team has fallen."}</p>
-            <button type="button" className="battle-result-restart" onClick={restart} data-testid="battle-restart-result">Play again</button>
-            <Link href="/" className="battle-result-home">Return home</Link>
+            <button type="button" className="battle-result-restart" onClick={restart} data-testid="battle-restart-result">{roomId ? "Return to room" : "Play again"}</button>
+            {!roomId && <Link href="/" className="battle-result-home">Return home</Link>}
           </section>
         </div>
       )}

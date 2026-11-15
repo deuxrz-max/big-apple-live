@@ -17,6 +17,7 @@ const messageError = (error: unknown) => {
 };
 const ordered = (messages: ChatMessage[]) => [...new Map(messages.map(m => [m.id, m])).values()]
   .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() || a.id.localeCompare(b.id));
+export type RoomBattleSnapshot = { version: number; playerIds: string[]; state: unknown };
 
 /** Reuses the authenticated chat SSE and private membership header. No media SDK. */
 export function useTextRoom(roomId: string, userId: string) {
@@ -26,6 +27,7 @@ export function useTextRoom(roomId: string, userId: string) {
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`, [roomId, userId]);
   const [room, setRoom] = useState<RoomState | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [battle, setBattle] = useState<RoomBattleSnapshot | null>(null);
   const [arrivals, setArrivals] = useState<{ id: string; participantId: string; displayName: string; at: number }[]>([]);
   const [creds, setCreds] = useState<RoomCreds | null>(null);
   const credential = useRef<RoomCreds | null>(null);
@@ -74,7 +76,7 @@ export function useTextRoom(roomId: string, userId: string) {
     let joining = false;
     let knownParticipantIds: Set<string> | null = null;
     const headers = () => ({ "X-Room-Session": credential.current!.participantSessionId });
-    setRoom(null); setMessages([]); setArrivals([]); setLoading(true); setError(null);
+    setRoom(null); setMessages([]); setBattle(null); setArrivals([]); setLoading(true); setError(null);
     setRoomUnavailable(false); setOverflow(null);
     credential.current = null; setCreds(null);
 
@@ -171,6 +173,7 @@ export function useTextRoom(roomId: string, userId: string) {
               knownParticipantIds = nextIds;
               setRoom(snapshot);
             }
+            if (type === "room.battle") setBattle(JSON.parse(data) as RoomBattleSnapshot);
             if (type === "chat.accepted") {
               const accepted = JSON.parse(data) as ChatAccepted;
               setMessages(previous => ordered([...previous, accepted.message]));
@@ -214,5 +217,5 @@ export function useTextRoom(roomId: string, userId: string) {
     };
   }, [roomId, userId]);
   return { room, messages, arrivals, creds, loading, connection, error, roomUnavailable,
-    overflow, send, refresh, loadOlder, loadingOlder, hasOlder };
+    overflow, send, refresh, loadOlder, loadingOlder, hasOlder, battle };
 }

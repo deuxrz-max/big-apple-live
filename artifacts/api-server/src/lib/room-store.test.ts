@@ -128,6 +128,38 @@ test("user-created social rooms are nine-seat social rooms, not public topics, a
   assert.equal(store.get("ABCDEF123456").hostParticipantId, "stable-host-participant");
 });
 
+test("social room battles sync versioned turns and reject moves from the wrong seated player", () => {
+  const store = new RoomStore();
+  const identity = { emojiId: "1F600", gender: "Female" as const, color: "#FFFFFF", hairColor: "#000000" };
+  const first = store.createSocialRoom("BATTLE1", "battle-history", "Battle Room", "First", {
+    accountId: "battle-account-1", identity,
+  });
+  const second = store.join("BATTLE1", "Second", { accountId: "battle-account-2", identity });
+  const players = [first.participantId, second.participantId];
+  const state = (turnSide: "humans" | "bots", turnNumber: number) => ({
+    teams: {
+      humans: players.map((participantId, index) => ({ id: `human-${index}`, participantId })),
+      bots: [{ id: "boss-1", bossId: "vampire" }, { id: "boss-2", bossId: "wolf" }],
+    },
+    activeIndex: { humans: 0, bots: 0 },
+    turnSide, turnNumber, outcome: null,
+  });
+  const events: string[] = [];
+  store.subscribe("BATTLE1", event => { if (event.type === "room.battle") events.push(event.type); });
+
+  const started = store.startSocialRoomBattle("BATTLE1", "battle-account-1", players, state("humans", 1));
+  assert.equal(started.version, 1);
+  assert.equal((started.state as ReturnType<typeof state>).teams.humans.length, 2);
+  assert.throws(() => store.commitSocialRoomBattle("BATTLE1", 1, "battle-account-2", state("bots", 2)), /another player's turn/);
+
+  const humanTurn = store.commitSocialRoomBattle("BATTLE1", 1, "battle-account-1", state("bots", 2));
+  assert.equal(humanTurn.version, 2);
+  assert.throws(() => store.commitSocialRoomBattle("BATTLE1", 1, "battle-account-1", state("humans", 3)), /game changed/);
+  const bossTurn = store.commitSocialRoomBattle("BATTLE1", 2, "battle-account-2", state("humans", 3));
+  assert.equal(bossTurn.version, 3);
+  assert.deepEqual(events, ["room.battle", "room.battle", "room.battle"]);
+});
+
 test("community headcount tie timestamp advances only when membership count changes", () => {
   let now = 1_000;
   const store = new RoomStore(() => now);

@@ -11,6 +11,7 @@ import profilePhotosRouter from "./profile-photos";
 import photoReviewRouter from "./photo-review";
 import universityAudioRouter from "./university-audio";
 import universityVideoBeamRouter from "./university-video-beam";
+import roomBattlesRouter from "./room-battles";
 import { accountId } from "./identity";
 import { requireAdult } from "../lib/community";
 import { requireCompletedProfile } from "../lib/account-profiles";
@@ -35,6 +36,7 @@ router.use(chatRouter);
 router.use(universityChatRouter);
 router.use(universityAudioRouter);
 router.use(universityVideoBeamRouter);
+router.use(roomBattlesRouter);
 if (devAudioHarnessEnabled(process.env.NODE_ENV))
   router.use("/__dev/audio-harness", devAudioHarnessRouter);
 router.use(roomsRouter);

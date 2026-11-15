@@ -9,6 +9,7 @@ import {
   applySwap,
   botTurn,
   createBattleState,
+  createRoomBattleState,
   createBoard,
   findLegalSwaps,
   findMatches,
@@ -16,6 +17,24 @@ import {
   type Board,
 } from "../src/battle/battle-engine";
 import { BOSS_MOVE_CONFIG, CITY_BOSSES } from "../src/battle/boss-config";
+
+test("room battle creates matching player and boss teams from one through four seats", () => {
+  for (let count = 1; count <= 4; count += 1) {
+    const players = Array.from({ length: count }, (_, index) => ({
+      participantId: `seat-${index + 1}`,
+      name: `Player ${index + 1}`,
+      photoUrl: `/photo-${index + 1}`,
+    }));
+    const bosses = Array.from({ length: count }, (_, index) => (["vampire", "wolf", "ghost", "zombie"] as const)[index]);
+    const state = createRoomBattleState(players, bosses, () => 0.51);
+    assert.equal(state.teams.humans.length, count);
+    assert.equal(state.teams.bots.length, count);
+    assert.deepEqual(state.teams.humans.map(player => player.participantId), players.map(player => player.participantId));
+    assert.deepEqual(state.teams.humans.map(player => player.photoUrl), players.map(player => player.photoUrl));
+    assert.deepEqual(state.teams.bots.map(boss => boss.bossId), bosses);
+    assert.ok(state.teams.bots.every(boss => boss.maxHp === state.teams.humans[0]!.maxHp * BOSS_MOVE_CONFIG.bossHealthMultiplier));
+  }
+});
 
 function freshPattern(): Board {
   return Array.from({ length: ROWS }, (_, row) =>

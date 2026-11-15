@@ -65,6 +65,13 @@ body.streamtalk-battle-screen .app-page {
   font-weight: 900;
 }
 
+.battle-back {
+  padding: 0;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
 .battle-reset {
   cursor: pointer;
   font: inherit;
@@ -117,7 +124,7 @@ body.streamtalk-battle-screen .app-page {
 
 .battle-team-cards {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--team-size, 4), minmax(0, 1fr));
   gap: 2px;
   align-items: center;
 }

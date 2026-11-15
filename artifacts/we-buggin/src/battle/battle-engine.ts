@@ -37,6 +37,8 @@ export interface BattleCharacter {
   id: string;
   side: BattleSide;
   name: string;
+  participantId?: string;
+  photoUrl?: string | null;
   job: string;
   manaGem: ManaGem;
   skill: SkillKind;
@@ -67,6 +69,15 @@ export interface BattleState {
   outcome: "victory" | "defeat" | null;
   log: string[];
 }
+
+export type RoomBattlePlayer = {
+  participantId: string;
+  name: string;
+  photoUrl?: string | null;
+  level?: number;
+};
+
+export const ROOM_BOSS_POOL: BossId[] = ["vampire", "wolf", "ghost", "zombie", "dragon"];
 
 export interface MatchSummary {
   counts: Record<GemType, number>;
@@ -309,6 +320,64 @@ export function createBattleState(random: () => number = Math.random, citySlug?:
     flashId: 0,
     outcome: null,
     log: ["Match adjacent gems. Three charge a job; four swords strike the opposing leader."],
+  };
+}
+
+export function createRoomBattleState(
+  players: RoomBattlePlayer[],
+  bossIds: BossId[],
+  random: () => number = Math.random,
+): BattleState {
+  if (players.length < 1 || players.length > 4 || bossIds.length !== players.length
+    || bossIds.some(id => !ROOM_BOSS_POOL.includes(id))) {
+    throw new Error("Room battles require one to four players and the same number of available bosses.");
+  }
+  const state = createBattleState(random);
+  const humans = state.teams.humans.slice(0, players.length).map((character, index) => {
+    const player = players[index]!;
+    const level = Math.max(1, Math.round(player.level ?? 5));
+    const maxHp = level * BOSS_MOVE_CONFIG.regularHealthPerLevel;
+    return {
+      ...character,
+      id: `human-${player.participantId}`,
+      participantId: player.participantId,
+      name: player.name,
+      photoUrl: player.photoUrl ?? null,
+      level,
+      hp: maxHp,
+      maxHp,
+    };
+  });
+  const averageLevel = Math.round(humans.reduce((total, character) => total + character.level, 0) / humans.length);
+  const maxBossHp = averageLevel * BOSS_MOVE_CONFIG.regularHealthPerLevel * BOSS_MOVE_CONFIG.bossHealthMultiplier;
+  const bossById = new Map(Object.values(CITY_BOSSES).map(boss => [boss.id, boss]));
+  const bots = bossIds.map((bossId, index): BattleCharacter => {
+    const boss = bossById.get(bossId);
+    if (!boss) throw new Error("Unknown room battle boss.");
+    return {
+      id: `boss-${index + 1}`,
+      side: "bots",
+      name: boss.name,
+      job: "Boss",
+      manaGem: boss.manaGem,
+      skill: "boss",
+      skillName: boss.skillName,
+      skillCost: BOSS_MOVE_CONFIG.manaCost,
+      level: averageLevel,
+      hp: maxBossHp,
+      maxHp: maxBossHp,
+      mana: 0,
+      guardedBy: null,
+      effects: emptyEffects(),
+      bossId: boss.id,
+      portrait: boss.portrait,
+      cityOfOrigin: boss.cityOfOrigin,
+    };
+  });
+  return {
+    ...state,
+    teams: { humans, bots },
+    activeIndex: { humans: 0, bots: 0 },
   };
 }
 

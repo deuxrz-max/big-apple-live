@@ -14,11 +14,13 @@ type RoomEvent =
   | { type: "chat.accepted"; data: ChatAccepted; senderAccountId?: string }
   | { type: "chat.refresh"; data: { roomId: string } }
   | { type: "room.snapshot"; data: RoomState }
+  | { type: "room.battle"; data: SocialRoomBattleSnapshot }
   | { type: "room.kicked"; data: { roomId: string; accountId: string; message: string } }
   | { type: "room.expired"; data: { roomId: string } };
 type Listener = (event: RoomEvent) => void;
 type ActiveSession = { participant: Participant; lastSeenAt: number; accountId?: string; capExempt?: boolean };
 type AccountIdentity = { accountId: string; identity: EmojiIdentity; photoUrl?: string | null; capExempt?: boolean; displayNameColor?: string; displayNameTierIndex?: number };
+export type SocialRoomBattleSnapshot = { version: number; playerIds: string[]; state: unknown };
 function copyParticipant(participant: Participant): Participant {
   return {
     ...participant, joinedAt: new Date(participant.joinedAt),
@@ -40,6 +42,7 @@ type Room = {
   headcountSince: number;
   listeners: Set<Listener>;
   emptySince: number | null;
+  battle: SocialRoomBattleSnapshot | null;
   community?: boolean;
   testOnly?: boolean;
   parentRoomId?: string | null;
@@ -68,7 +71,7 @@ export class RoomStore {
       // Public topic rooms have no audience cap. Capacity 0 is the API's
       // explicit unlimited value; the eight camera seats are tracked separately.
       name: input.label, capacity: 0, roomType: "topic", createdAt: input.createdAt, hostParticipantId: randomUUID(),
-      sessions: new Map(), headcountSince: this.now(), listeners: new Set(), emptySince: null, community: true, testOnly: input.testOnly,
+      sessions: new Map(), headcountSince: this.now(), listeners: new Set(), emptySince: null, battle: null, community: true, testOnly: input.testOnly,
        parentRoomId: input.parentRoomId });
   }
   communityParentId(roomId: string) {
@@ -164,6 +167,7 @@ export class RoomStore {
       sessions: new Map(),
       headcountSince: this.now(),
       listeners: new Set(),
+      battle: null,
        emptySince: null,
     };
     this.rooms.set(roomId, room);
@@ -194,6 +198,7 @@ export class RoomStore {
       sessions: new Map(),
       headcountSince: this.now(),
       listeners: new Set(),
+      battle: null,
       emptySince: null,
        community: true,
     };
@@ -241,6 +246,68 @@ export class RoomStore {
 
   get(roomId: string): RoomState {
     return this.snapshot(this.requireRoom(roomId));
+  }
+
+  getSocialRoomBattle(roomId: string): SocialRoomBattleSnapshot | null {
+    const room = this.requireSocialRoom(roomId);
+    return room.battle ? this.copyBattle(room.battle) : null;
+  }
+
+  startSocialRoomBattle(roomId: string, startedByAccountId: string, playerIds: string[], state: unknown): SocialRoomBattleSnapshot {
+    const room = this.requireSocialRoom(roomId);
+    if (!playerIds.length || playerIds.length > 4 || new Set(playerIds).size !== playerIds.length) {
+      throw new RoomError(400, "A room battle needs one to four seated players.");
+    }
+    if (!playerIds.some(participantId => this.sessionAccountId(roomId, participantId) === startedByAccountId)) {
+      throw new RoomError(403, "Take a seat before starting the game.");
+    }
+    if (room.battle && !this.battleIsOver(room.battle.state)) {
+      if (!room.battle.playerIds.some(participantId => this.sessionAccountId(roomId, participantId) === startedByAccountId)) {
+        throw new RoomError(403, "This game already started with a different group of seated players.");
+      }
+      return this.copyBattle(room.battle);
+    }
+    this.assertBattleTeams(state, playerIds);
+    room.battle = { version: 1, playerIds: [...playerIds], state: this.copyJson(state) };
+    const snapshot = this.copyBattle(room.battle);
+    this.emit(room, { type: "room.battle", data: snapshot });
+    return snapshot;
+  }
+
+  commitSocialRoomBattle(roomId: string, expectedVersion: number, actorAccountId: string, state: unknown): SocialRoomBattleSnapshot {
+    const room = this.requireSocialRoom(roomId);
+    const current = room.battle;
+    if (!current) throw new RoomError(404, "This room has no active game.");
+    if (current.version !== expectedVersion) throw new RoomError(409, "The game changed. Syncing the latest turn.");
+    if (this.battleIsOver(current.state)) throw new RoomError(409, "This game has ended.");
+    if (!current.playerIds.some(participantId => this.sessionAccountId(roomId, participantId) === actorAccountId)) {
+      throw new RoomError(403, "Only players who started this game can take part.");
+    }
+
+    const before = this.battleRecord(current.state);
+    const after = this.battleRecord(state);
+    const beforeSide = before.turnSide;
+    if (beforeSide === "humans") {
+      const activeHero = (before.teams.humans as Record<string, unknown>[])[Number(before.activeIndex.humans)];
+      const activeParticipantId = activeHero?.participantId;
+      if (typeof activeParticipantId !== "string"
+        || this.sessionAccountId(roomId, activeParticipantId) !== actorAccountId) {
+        throw new RoomError(403, "It is another player's turn.");
+      }
+    }
+    const expectedSide = beforeSide === "humans" ? "bots" : "humans";
+    if (after.turnSide !== expectedSide || Number(after.turnNumber) !== Number(before.turnNumber) + 1) {
+      throw new RoomError(400, "Submit exactly one completed turn.");
+    }
+    this.assertBattleTeams(state, current.playerIds);
+    const snapshot = {
+      version: current.version + 1,
+      playerIds: [...current.playerIds],
+      state: this.copyJson(state),
+    };
+    room.battle = snapshot;
+    this.emit(room, { type: "room.battle", data: this.copyBattle(snapshot) });
+    return this.copyBattle(snapshot);
   }
 
   communityHeadcountSince(roomId: string): number {
@@ -411,6 +478,51 @@ export class RoomStore {
       throw new RoomError(404, "Room not found or expired");
     }
     return room;
+  }
+
+  private requireSocialRoom(roomId: string): Room {
+    const room = this.requireRoom(roomId);
+    if (room.roomType !== "social") throw new RoomError(404, "Room game is only available in user-created social rooms.");
+    return room;
+  }
+
+  private battleRecord(value: unknown): Record<string, any> {
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new RoomError(400, "Invalid game state.");
+    const state = value as Record<string, any>;
+    if (!state.teams || !Array.isArray(state.teams.humans) || !Array.isArray(state.teams.bots)
+      || !state.activeIndex || !["humans", "bots"].includes(state.turnSide)
+      || !Number.isInteger(state.turnNumber)) {
+      throw new RoomError(400, "Invalid game state.");
+    }
+    return state;
+  }
+
+  private assertBattleTeams(value: unknown, playerIds: string[]): void {
+    const state = this.battleRecord(value);
+    const humans = state.teams.humans as Record<string, unknown>[];
+    const bots = state.teams.bots as Record<string, unknown>[];
+    if (humans.length !== playerIds.length || bots.length !== playerIds.length) {
+      throw new RoomError(400, "The two teams must have the same number of players.");
+    }
+    if (humans.some((hero, index) => hero.participantId !== playerIds[index])
+      || bots.some(boss => !["vampire", "wolf", "ghost", "zombie", "dragon"].includes(String(boss.bossId)))) {
+      throw new RoomError(400, "The game teams do not match the seated players and available bosses.");
+    }
+  }
+
+  private battleIsOver(value: unknown): boolean {
+    try {
+      const outcome = this.battleRecord(value).outcome;
+      return outcome === "victory" || outcome === "defeat";
+    } catch { return false; }
+  }
+
+  private copyJson<T>(value: T): T {
+    return JSON.parse(JSON.stringify(value)) as T;
+  }
+
+  private copyBattle(battle: SocialRoomBattleSnapshot): SocialRoomBattleSnapshot {
+    return { ...battle, playerIds: [...battle.playerIds], state: this.copyJson(battle.state) };
   }
 
   private addSession(room: Room, displayName: string, account?: AccountIdentity): RoomSession {

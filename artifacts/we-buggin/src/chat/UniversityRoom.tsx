@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { LogOut, Mic, MicOff, X } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { RoomChannelBack } from './RoomChannels';
@@ -21,6 +21,9 @@ import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
 import './university-room.css';
 import { RoomPerimeter } from './RoomPerimeter';
 import './bot-moderation.css';
+import { createRoomBattleState, ROOM_BOSS_POOL, type RoomBattlePlayer } from '@/battle/battle-engine';
+
+const SocialRoomBattle = lazy(() => import('@/battle/BattlePrototype').then(module => ({ default: module.BattlePrototype })));
 
 const RULES = "Stick to the room's topic. Be kind — no harassment or hate. Nothing sexual or explicit in room conversation, names or photos. Don't share real names, phone numbers, addresses or other contact details. Use Ignore on anyone bothering you, or Block and Report for anything serious. Help keep the room welcoming for everyone.";
 
@@ -67,6 +70,10 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const quickProfile = useQuickProfile();
 
   const [note, setNote] = useState<string | null>(null);
+  const [startingGame, setStartingGame] = useState(false);
+  const [gameError, setGameError] = useState<string | null>(null);
+  const [roomGameOpen, setRoomGameOpen] = useState(false);
+  const autoOpenedRoomBattle = useRef(false);
   const [reporting, setReporting] = useState<ReportTarget | null>(null);
   const [menu, setMenu] = useState<Target | null>(null);
   const [drawer, setDrawer] = useState(false);
@@ -135,6 +142,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const people = session?.people ?? [];
   const me = people.find((p) => p.self);
   const beamSlots = [...videoBeam.beam.slots].sort((a, b) => a.slotNumber - b.slotNumber);
+  const seatedSlots = beamSlots.filter(slot => slot.participantId);
   const roomHostParticipantId = isSocialRoom
     ? r.room?.hostParticipantId ?? videoBeam.beam.hostParticipantId
     : videoBeam.beam.hostParticipantId;
@@ -148,6 +156,45 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const speakerCount = beamSlots.filter(slot => slot.participantId).length;
   const isSelf = (username: string, authorId?: string) => (!!authorId && authorId === r.creds?.participantId) || me?.username === username;
   const nameColorOf = (username: string, fallback?: string) => people.find((p) => p.username === username)?.displayNameColor ?? fallback ?? '#FFFFFF';
+
+  const startRoomGame = async () => {
+    if (!isSocialRoom || !videoBeam.ownSlot || !sessionId || startingGame) return;
+    setStartingGame(true);
+    setGameError(null);
+    try {
+      const players: RoomBattlePlayer[] = seatedSlots.map(slot => {
+        const person = people.find(candidate => candidate.participantId === slot.participantId);
+        const roomParticipant = r.room?.participants.find(candidate => candidate.participantId === slot.participantId);
+        return {
+          participantId: slot.participantId!,
+          name: person?.displayName ?? roomParticipant?.displayName ?? 'Player',
+          photoUrl: person?.photoUrl ?? null,
+        };
+      });
+      const bosses = players.map(() => ROOM_BOSS_POOL[Math.floor(Math.random() * ROOM_BOSS_POOL.length)]!);
+      const state = createRoomBattleState(players, bosses);
+      const response = await fetch(`/api/account/rooms/${encodeURIComponent(roomId)}/battle/start`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'X-Room-Session': sessionId },
+        body: JSON.stringify({ state }),
+      });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error ?? 'Could not start the game.');
+      setRoomGameOpen(true);
+    } catch (error) {
+      setGameError(error instanceof Error ? error.message : 'Could not start the game.');
+    } finally {
+      setStartingGame(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isSocialRoom && participantId && r.battle?.playerIds.includes(participantId) && !autoOpenedRoomBattle.current) {
+      autoOpenedRoomBattle.current = true;
+      setRoomGameOpen(true);
+    }
+  }, [isSocialRoom, participantId, r.battle]);
 
   const toggleIgnore = (t: Target) => {
     const next = !ignored.has(t.username);
@@ -447,6 +494,16 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                   );
                 })}
               </div>
+              {isSocialRoom && (
+                <>
+                  <button type="button" className="bm-btn bm-btn-primary ur-start-game"
+                    disabled={!videoBeam.ownSlot || startingGame || seatedSlots.length === 0}
+                    onClick={() => void startRoomGame()} data-testid="button-start-room-game">
+                    {startingGame ? 'Starting…' : 'Start Game'}
+                  </button>
+                  {gameError && <p className="ur-game-error" role="alert">{gameError}</p>}
+                </>
+              )}
               {videoBeam.ownSlot && (
                 <div className="ur-beam-self-controls" role="group" aria-label="Your beam controls">
                   <button type="button" className="ur-slot-action"
@@ -541,6 +598,13 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                 onClick={dismissRules}>{ack.isPending ? 'Saving...' : 'Got it'}</button>
             </div>
           </div>
+        </div>
+      )}
+      {isSocialRoom && roomGameOpen && (
+        <div className="ur-room-game-overlay" data-testid="social-room-game-overlay">
+          <Suspense fallback={<div className="ur-room-game-loading" role="status">Loading game…</div>}>
+            <SocialRoomBattle roomIdOverride={roomId} onExit={() => setRoomGameOpen(false)} />
+          </Suspense>
         </div>
       )}
     </div>

@@ -46,7 +46,7 @@ router.get("/account/rooms/:roomId/events", async (req, res): Promise<void> => {
   const roomId = params.data.roomId;
   const sessionId = req.get("X-Room-Session") ?? "";
   const id = accountId(req);
-  roomStore.requireAccountMember(roomId, sessionId, id);
+  const member = roomStore.requireAccountMember(roomId, sessionId, id);
   const unsubscribe = roomStore.subscribe(roomId, (event) => {
     void (async () => {
     if (res.destroyed || res.writableEnded) return;
@@ -59,6 +59,7 @@ router.get("/account/rooms/:roomId/events", async (req, res): Promise<void> => {
       }
       return;
     }
+    if (event.type === "room.battle" && !event.data.playerIds.includes(member.participantId)) return;
     try { await requireAdult(id); } catch { res.end(); return; }
     if (event.type === "chat.accepted" && event.senderAccountId
       && (await pairBlocked(id, event.senderAccountId) || await isIgnored(id, event.senderAccountId))) return;
@@ -79,6 +80,10 @@ router.get("/account/rooms/:roomId/events", async (req, res): Promise<void> => {
   });
   res.flushHeaders();
   res.write(`event: room.snapshot\ndata: ${JSON.stringify(GetRoomResponse.parse(roomStore.get(roomId)))}\n\n`);
+  const activeBattle = roomStore.isSocialRoom(roomId) ? roomStore.getSocialRoomBattle(roomId) : null;
+  if (activeBattle?.playerIds.includes(member.participantId)) {
+    res.write(`event: room.battle\ndata: ${JSON.stringify(activeBattle)}\n\n`);
+  }
   const keepalive = setInterval(() => {
     void requireAdult(id).catch(() => res.end());
     try { roomStore.requireAccountMember(roomId, sessionId, id); }
