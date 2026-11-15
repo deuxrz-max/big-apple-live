@@ -9,11 +9,13 @@ export interface BoardView {
   board: Board;
   selected: Cell | null;
   targetMode: "board" | "ally" | "enemy" | null;
+  lockedGems: Cell[];
 }
 
 export class BattleBoardScene extends Phaser.Scene {
   private sprites: Phaser.GameObjects.Image[][] = [];
   private marks!: Phaser.GameObjects.Graphics;
+  private vines!: Phaser.GameObjects.Graphics;
   private view: BoardView | null = null;
   ready = false;
 
@@ -36,6 +38,7 @@ export class BattleBoardScene extends Phaser.Scene {
         sprite.setDisplaySize(CELL * 0.82, CELL * 0.82);
         return sprite;
       }));
+    this.vines = this.add.graphics();
 
     this.input.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
       const col = Math.floor((pointer.x - INSET) / CELL);
@@ -54,6 +57,7 @@ export class BattleBoardScene extends Phaser.Scene {
 
   private renderView(view: BoardView) {
     this.marks.clear();
+    this.vines.clear();
     this.marks.fillStyle(0x15120e, 1);
     this.marks.fillRect(0, 0, SIZE, SIZE);
     this.marks.fillStyle(0x393025, 1);
@@ -81,6 +85,30 @@ export class BattleBoardScene extends Phaser.Scene {
           this.marks.strokeRect(x + 2, y + 2, CELL - 4, CELL - 4);
         }
       }
+    }
+
+    for (const cell of view.lockedGems) {
+      const x = INSET + cell.col * CELL;
+      const y = INSET + cell.row * CELL;
+      this.vines.fillStyle(0x17351d, 0.35);
+      this.vines.fillRoundedRect(x + 3, y + 3, CELL - 6, CELL - 6, 5);
+      this.vines.lineStyle(2.4, 0x83b851, 0.98);
+      this.vines.beginPath();
+      this.vines.moveTo(x + 5, y + CELL - 6);
+      this.vines.lineTo(x + CELL * 0.38, y + CELL * 0.63);
+      this.vines.lineTo(x + CELL * 0.6, y + CELL * 0.36);
+      this.vines.lineTo(x + CELL - 5, y + 6);
+      this.vines.strokePath();
+      this.vines.lineStyle(1.6, 0xc0d879, 0.95);
+      this.vines.beginPath();
+      this.vines.moveTo(x + 6, y + 6);
+      this.vines.lineTo(x + CELL * 0.38, y + CELL * 0.38);
+      this.vines.lineTo(x + CELL * 0.62, y + CELL * 0.64);
+      this.vines.lineTo(x + CELL - 6, y + CELL - 6);
+      this.vines.strokePath();
+      this.vines.fillStyle(0xc0d879, 0.95);
+      this.vines.fillEllipse(x + CELL * 0.34, y + CELL * 0.25, 7, 3);
+      this.vines.fillEllipse(x + CELL * 0.68, y + CELL * 0.73, 7, 3);
     }
   }
 }

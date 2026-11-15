@@ -18,6 +18,7 @@ body.streamtalk-battle-screen .app-page {
   --battle-ink: #080808;
   --battle-panel: #15120e;
   --battle-line: #63512b;
+  position: relative;
   width: 100%;
   height: 100dvh;
   min-height: 100svh;
@@ -275,6 +276,13 @@ body.streamtalk-battle-screen .app-page {
   text-shadow: 0 1px 3px #000, 0 0 3px #000;
 }
 
+.battle-card.is-boss.has-long-boss-name .battle-card-name {
+  left: 5%;
+  width: 90%;
+  font-size: clamp(6.4px, 1.8vw, 8px);
+  letter-spacing: -.04em;
+}
+
 .battle-card-job {
   top: 77%;
   color: var(--mana-color);
@@ -372,6 +380,11 @@ body.streamtalk-battle-screen .app-page {
   box-shadow: 0 0 7px rgba(91, 217, 255, .8);
 }
 
+.battle-effect.is-armored {
+  color: #ffd27d;
+  box-shadow: 0 0 7px rgba(255, 184, 76, .75);
+}
+
 .battle-effect.is-burning {
   color: #ff9d57;
   box-shadow: 0 0 6px rgba(255, 110, 39, .75);
@@ -380,6 +393,23 @@ body.streamtalk-battle-screen .app-page {
 .battle-effect.is-scared {
   color: #f3d98c;
   box-shadow: 0 0 6px rgba(243, 217, 140, .55);
+}
+
+.battle-flash {
+  position: absolute;
+  z-index: 20;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(255, 255, 255, .88), rgba(195, 225, 255, .46) 38%, rgba(250, 244, 214, .2) 72%, transparent);
+  animation: battle-blinding-flash var(--flash-duration, 480ms) ease-out both;
+}
+
+@keyframes battle-blinding-flash {
+  0% { opacity: 0; }
+  18% { opacity: .92; }
+  45% { opacity: .46; }
+  100% { opacity: 0; }
 }
 
 .battle-stat-track {

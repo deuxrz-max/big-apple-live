@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import Phaser from "phaser";
 import { Link, useSearch } from "wouter";
-import { AlertTriangle, Flame, ShieldCheck } from "lucide-react";
+import { AlertTriangle, Flame, Shield, ShieldCheck } from "lucide-react";
 import { cityBySlug } from "./aethelgard-cities";
 import { BattleBoardScene, type BoardView } from "./BattleBoardScene";
+import { BOSS_MOVE_CONFIG } from "./boss-config";
 import {
   activeCharacter,
   applySkill,
@@ -61,6 +62,7 @@ function BattleCard({
     targetable ? "is-targetable" : "",
     !alive ? "is-dead" : "",
     character.bossId ? "is-boss" : "",
+    character.bossId && character.name.length > 12 ? "has-long-boss-name" : "",
     character.effects.immuneTurns > 0 ? "is-immune" : "",
   ].filter(Boolean).join(" ");
 
@@ -102,11 +104,16 @@ function BattleCard({
               </div>
             </>
           )}
-          {(character.effects.immuneTurns > 0 || character.effects.burnTurns > 0 || character.effects.scaredTurns > 0) && (
+          {(character.effects.immuneTurns > 0 || character.effects.burnTurns > 0 || character.effects.scaredTurns > 0 || character.effects.armoredTurns > 0) && (
             <div className="battle-card-effects" aria-label="Active effects">
               {character.effects.immuneTurns > 0 && (
                 <span className="battle-effect is-immune" data-testid={`effect-immune-${character.id}`}>
                   <ShieldCheck size={8} aria-hidden="true" /> IMMUNE {character.effects.immuneTurns}
+                </span>
+              )}
+              {character.effects.armoredTurns > 0 && (
+                <span className="battle-effect is-armored" data-testid={`effect-armor-${character.id}`}>
+                  <Shield size={8} aria-hidden="true" /> SHELL {character.effects.armoredTurns}
                 </span>
               )}
               {character.effects.burnTurns > 0 && (
@@ -210,7 +217,12 @@ function TeamRow({
 }
 
 function battleBoardView(state: BattleState | null, selected: Cell | null, targetMode: TargetMode): BoardView | null {
-  return state ? { board: state.board, selected, targetMode: targetMode === "board" ? "board" : null } : null;
+  return state ? {
+    board: state.board,
+    selected,
+    targetMode: targetMode === "board" ? "board" : null,
+    lockedGems: state.lockedGems,
+  } : null;
 }
 
 export function BattlePrototype() {
@@ -254,6 +266,11 @@ export function BattlePrototype() {
       return;
     }
     if (targetModeRef.current) return;
+    if (current.lockedGems.some((locked) => locked.row === cell.row && locked.col === cell.col)) {
+      setSelected(null);
+      setFeedback(`Vines hold that gem for ${current.vinesTurns} more turns.`);
+      return;
+    }
     const first = selectedRef.current;
     if (!first) {
       setSelected(cell);
@@ -416,7 +433,7 @@ export function BattlePrototype() {
           {targetMode && <button type="button" onClick={() => { setTargetMode(null); setFeedback(""); }}>Cancel target</button>}
         </div>
 
-        <section className={`battle-board-wrap${targetMode === "board" ? " is-targeting" : ""}`} aria-label="Match-three game board">
+        <section className={`battle-board-wrap${targetMode === "board" ? " is-targeting" : ""}`} aria-label={`Match-three game board${battle.lockedGems.length ? `, ${battle.lockedGems.length} gems held by vines for ${battle.vinesTurns} more turns` : ""}`}>
           <div className="battle-board" ref={boardHost} />
           {battle.turnSide === "bots" && <div className="battle-bot-thinking" aria-hidden="true">BOT TURN</div>}
         </section>
@@ -438,6 +455,15 @@ export function BattlePrototype() {
           <p className="battle-log" aria-live="polite">{battle.log[0]}</p>
         </div>
       </div>
+
+      {battle.flashId > 0 && (
+        <div
+          key={battle.flashId}
+          className="battle-flash"
+          style={{ "--flash-duration": `${BOSS_MOVE_CONFIG.fallenSeraphFlashDurationMs}ms` } as CSSProperties}
+          aria-hidden="true"
+        />
+      )}
 
       {battle.outcome && (
         <div className="battle-result-backdrop">

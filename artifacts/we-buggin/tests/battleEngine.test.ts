@@ -173,7 +173,10 @@ test("city battles select the matching boss, portrait, level, and double health"
     assert.equal(boss.maxHp, averageLevel * BOSS_MOVE_CONFIG.regularHealthPerLevel * BOSS_MOVE_CONFIG.bossHealthMultiplier);
     assert.equal(state.teams.bots[1].maxHp, averageLevel * BOSS_MOVE_CONFIG.regularHealthPerLevel);
   }
-  assert.equal(createBattleState(() => 0.51, "cinderpeak").teams.bots.some((character) => character.bossId), false);
+  assert.equal(Object.keys(CITY_BOSSES).length, 8);
+  for (const citySlug of Object.keys(CITY_BOSSES)) {
+    assert.ok(createBattleState(() => 0.51, citySlug).teams.bots[0].bossId, `${citySlug} should start with its own boss`);
+  }
 });
 
 test("Vampire drains each living player and heals by the actual total drained", () => {
@@ -260,4 +263,99 @@ test("a city boss still deals the normal four-sword hit", () => {
   assert.equal(result.accepted, true);
   assert.equal(result.state.teams.humans[0].hp, 70);
   assert.equal(result.state.teams.bots[0].hp, result.state.teams.bots[0].maxHp);
+});
+
+test("Magma Golem slams one player and halves incoming damage for two turns", () => {
+  const state = chargedBoss("cinderpeak");
+  const cast = botTurn(state, () => 0);
+  assert.deepEqual(cast.teams.humans.map((character) => character.hp), [43, 75, 75, 75]);
+  assert.equal(cast.teams.bots[0].effects.armoredTurns, BOSS_MOVE_CONFIG.magmaArmorTurns);
+  assert.match(cast.log[0], /slammed Human 1 for 32 damage/);
+
+  cast.teams.humans[2].mana = cast.teams.humans[2].skillCost;
+  cast.activeIndex.humans = 2;
+  const firstHit = applySkill(cast, { kind: "character", id: "bots-1" });
+  assert.equal(firstHit.state.teams.bots[0].hp, 140);
+  assert.equal(firstHit.state.teams.bots[0].effects.armoredTurns, 1);
+  const betweenTurns = botTurn(firstHit.state, () => 0.5);
+  betweenTurns.teams.humans[2].mana = betweenTurns.teams.humans[2].skillCost;
+  betweenTurns.activeIndex.humans = 2;
+  const secondHit = applySkill(betweenTurns, { kind: "character", id: "bots-1" });
+  assert.equal(secondHit.state.teams.bots[0].hp, 130);
+  assert.equal(secondHit.state.teams.bots[0].effects.armoredTurns, 0);
+  const finalBotTurn = botTurn(secondHit.state, () => 0.5);
+  finalBotTurn.teams.humans[2].mana = finalBotTurn.teams.humans[2].skillCost;
+  finalBotTurn.activeIndex.humans = 2;
+  const unarmoredHit = applySkill(finalBotTurn, { kind: "character", id: "bots-1" });
+  assert.equal(unarmoredHit.state.teams.bots[0].hp, 110);
+});
+
+test("Treant heals at turn start and locks six gems until two turns pass", () => {
+  const state = chargedBoss("oakhaven");
+  state.teams.bots[0].hp = 100;
+  const originalBoard = state.board.map((row) => [...row]);
+  const cast = botTurn(state, () => 0.37);
+  assert.equal(cast.teams.bots[0].hp, 100 + BOSS_MOVE_CONFIG.treantTurnHeal);
+  assert.equal(cast.vinesTurns, BOSS_MOVE_CONFIG.treantVineTurns);
+  assert.equal(cast.lockedGems.length, BOSS_MOVE_CONFIG.treantVineCount);
+  assert.equal(new Set(cast.lockedGems.map((cell) => `${cell.row}:${cell.col}`)).size, BOSS_MOVE_CONFIG.treantVineCount);
+  assert.ok(cast.lockedGems.every((cell) => cast.board[cell.row][cell.col] === originalBoard[cell.row][cell.col]));
+  assert.ok(findLegalSwaps(cast.board, cast.lockedGems).length > 0);
+  assert.match(cast.log[0], /vine-locked 6 gems for 2 turns/);
+
+  const locked = cast.lockedGems[0];
+  const neighbor = locked.col < COLS - 1 ? { row: locked.row, col: locked.col + 1 } : { row: locked.row, col: locked.col - 1 };
+  assert.equal(applySwap(cast, locked, neighbor).accepted, false);
+
+  const firstMove = findLegalSwaps(cast.board, cast.lockedGems)[0];
+  const firstHumanTurn = applySwap(cast, firstMove.from, firstMove.to);
+  assert.ok(cast.lockedGems.every((cell) => firstHumanTurn.state.board[cell.row][cell.col] === cast.board[cell.row][cell.col]));
+  assert.equal(firstHumanTurn.state.vinesTurns, 1);
+  assert.equal(firstHumanTurn.state.lockedGems.length, BOSS_MOVE_CONFIG.treantVineCount);
+  const firstBotTurn = botTurn(firstHumanTurn.state, () => 0.51);
+  assert.equal(firstBotTurn.vinesTurns, 0);
+  assert.deepEqual(firstBotTurn.lockedGems, []);
+});
+
+test("a vine-locked gem breaks a line and cannot be swapped", () => {
+  const board = freshPattern();
+  board[0][0] = "red";
+  board[0][1] = "red";
+  board[0][2] = "red";
+  const locked = [{ row: 0, col: 1 }];
+  assert.equal(findMatches(board, locked).length, 0);
+  assert.ok(findLegalSwaps(board, locked).every((swap) =>
+    !locked.some((cell) =>
+      (cell.row === swap.from.row && cell.col === swap.from.col) ||
+      (cell.row === swap.to.row && cell.col === swap.to.col))));
+});
+
+test("Treant heals at the start of every turn even before its mana is full", () => {
+  const state = createBattleState(() => 0.51, "oakhaven");
+  state.turnSide = "bots";
+  state.activeIndex.bots = 0;
+  state.teams.bots[0].hp = 100;
+  state.teams.bots[0].mana = 0;
+  const firstTurn = botTurn(state, () => 0.51);
+  assert.equal(firstTurn.teams.bots[0].hp, 100 + BOSS_MOVE_CONFIG.treantTurnHeal);
+  assert.ok(firstTurn.teams.bots[0].mana < firstTurn.teams.bots[0].skillCost);
+  assert.ok(firstTurn.log.some((message) => /regrew 6 HP/.test(message)));
+  const nextTreantTurn = botTurn({
+    ...firstTurn,
+    turnSide: "bots",
+    activeIndex: { ...firstTurn.activeIndex, bots: 0 },
+  }, () => 0.51);
+  assert.equal(nextTreantTurn.teams.bots[0].hp, 100 + 2 * BOSS_MOVE_CONFIG.treantTurnHeal);
+});
+
+test("Fallen Seraph damages the team, drains half current mana, and requests a flash", () => {
+  const state = chargedBoss("sunspire");
+  state.teams.humans.forEach((character, index) => {
+    character.mana = [1, 4, 9, 12][index];
+  });
+  const next = botTurn(state, () => 0.5);
+  assert.deepEqual(next.teams.humans.map((character) => character.hp), [63, 63, 63, 63]);
+  assert.deepEqual(next.teams.humans.map((character) => character.mana), [0, 2, 4, 6]);
+  assert.equal(next.flashId, 1);
+  assert.match(next.log[0], /blinding light hit the team and drained 14 mana/);
 });

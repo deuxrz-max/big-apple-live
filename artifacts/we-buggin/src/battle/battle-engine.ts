@@ -25,6 +25,7 @@ export interface BattleEffects {
   burnDamagePerTurn: number;
   burnDelayTurns: number;
   scaredTurns: number;
+  armoredTurns: number;
 }
 
 export interface Cell {
@@ -56,10 +57,13 @@ export type Board = GemType[][];
 
 export interface BattleState {
   board: Board;
+  lockedGems: Cell[];
+  vinesTurns: number;
   teams: Record<BattleSide, BattleCharacter[]>;
   activeIndex: Record<BattleSide, number>;
   turnSide: BattleSide;
   turnNumber: number;
+  flashId: number;
   outcome: "victory" | "defeat" | null;
   log: string[];
 }
@@ -103,10 +107,15 @@ function randomGem(random: () => number): GemType {
 }
 
 function emptyEffects(): BattleEffects {
-  return { immuneTurns: 0, burnTurns: 0, burnDamagePerTurn: 0, burnDelayTurns: 0, scaredTurns: 0 };
+  return { immuneTurns: 0, burnTurns: 0, burnDamagePerTurn: 0, burnDelayTurns: 0, scaredTurns: 0, armoredTurns: 0 };
 }
 
-export function findMatches(board: Board): Array<{ type: GemType; cells: Cell[] }> {
+function lockedCellKeys(cells: Cell[]): Set<string> {
+  return new Set(cells.map((cell) => cellKey(cell.row, cell.col)));
+}
+
+export function findMatches(board: Board, lockedGems: Cell[] = []): Array<{ type: GemType; cells: Cell[] }> {
+  const locked = lockedCellKeys(lockedGems);
   const grouped = new Map<GemType, Map<string, Cell>>();
   const addRun = (type: GemType, cells: Cell[]) => {
     if (!grouped.has(type)) grouped.set(type, new Map());
@@ -117,9 +126,9 @@ export function findMatches(board: Board): Array<{ type: GemType; cells: Cell[] 
   for (let row = 0; row < ROWS; row += 1) {
     let start = 0;
     while (start < COLS) {
-      const type = board[row]?.[start];
+      const type = locked.has(cellKey(row, start)) ? null : board[row]?.[start];
       let end = start + 1;
-      while (type && end < COLS && board[row]?.[end] === type) end += 1;
+      while (type && end < COLS && !locked.has(cellKey(row, end)) && board[row]?.[end] === type) end += 1;
       if (type && end - start >= 3) {
         addRun(type, Array.from({ length: end - start }, (_, offset) => ({ row, col: start + offset })));
       }
@@ -130,9 +139,9 @@ export function findMatches(board: Board): Array<{ type: GemType; cells: Cell[] 
   for (let col = 0; col < COLS; col += 1) {
     let start = 0;
     while (start < ROWS) {
-      const type = board[start]?.[col];
+      const type = locked.has(cellKey(start, col)) ? null : board[start]?.[col];
       let end = start + 1;
-      while (type && end < ROWS && board[end]?.[col] === type) end += 1;
+      while (type && end < ROWS && !locked.has(cellKey(end, col)) && board[end]?.[col] === type) end += 1;
       if (type && end - start >= 3) {
         addRun(type, Array.from({ length: end - start }, (_, offset) => ({ row: start + offset, col })));
       }
@@ -143,15 +152,17 @@ export function findMatches(board: Board): Array<{ type: GemType; cells: Cell[] 
   return [...grouped.entries()].map(([type, cells]) => ({ type, cells: [...cells.values()] }));
 }
 
-export function findLegalSwaps(board: Board): Array<{ from: Cell; to: Cell }> {
+export function findLegalSwaps(board: Board, lockedGems: Cell[] = []): Array<{ from: Cell; to: Cell }> {
+  const locked = lockedCellKeys(lockedGems);
   const swaps: Array<{ from: Cell; to: Cell }> = [];
   for (let row = 0; row < ROWS; row += 1) {
     for (let col = 0; col < COLS; col += 1) {
+      if (locked.has(cellKey(row, col))) continue;
       for (const [nextRow, nextCol] of [[row, col + 1], [row + 1, col]] as const) {
-        if (!isInside(nextRow, nextCol)) continue;
+        if (!isInside(nextRow, nextCol) || locked.has(cellKey(nextRow, nextCol))) continue;
         const test = cloneBoard(board);
         [test[row][col], test[nextRow][nextCol]] = [test[nextRow][nextCol], test[row][col]];
-        if (findMatches(test).length > 0) swaps.push({ from: { row, col }, to: { row: nextRow, col: nextCol } });
+        if (findMatches(test, lockedGems).length > 0) swaps.push({ from: { row, col }, to: { row: nextRow, col: nextCol } });
       }
     }
   }
@@ -166,12 +177,14 @@ function fallbackBoard(): Board {
   return board;
 }
 
-function hasFourSwords(board: Board): boolean {
+function hasFourSwords(board: Board, lockedGems: Cell[] = []): boolean {
+  const locked = lockedCellKeys(lockedGems);
   for (let row = 0; row < ROWS; row += 1) {
     for (let col = 0; col < COLS; col += 1) {
       if (board[row][col] !== "sword") continue;
-      if (col <= COLS - 4 && [1, 2, 3].every((offset) => board[row][col + offset] === "sword")) return true;
-      if (row <= ROWS - 4 && [1, 2, 3].every((offset) => board[row + offset][col] === "sword")) return true;
+      if (locked.has(cellKey(row, col))) continue;
+      if (col <= COLS - 4 && [1, 2, 3].every((offset) => !locked.has(cellKey(row, col + offset)) && board[row][col + offset] === "sword")) return true;
+      if (row <= ROWS - 4 && [1, 2, 3].every((offset) => !locked.has(cellKey(row + offset, col)) && board[row + offset][col] === "sword")) return true;
     }
   }
   return false;
@@ -186,16 +199,29 @@ export function createBoard(random: () => number = Math.random): Board {
   return fallbackBoard();
 }
 
-function settleBoard(board: Board, random: () => number): { board: Board; summary: MatchSummary } {
+function createBoardKeepingVines(random: () => number, lockedGems: Cell[], original: Board): Board {
+  for (let attempt = 0; attempt < 300; attempt += 1) {
+    const board = Array.from({ length: ROWS }, () =>
+      Array.from({ length: COLS }, () => randomGem(random)));
+    for (const cell of lockedGems) board[cell.row][cell.col] = original[cell.row][cell.col];
+    if (findMatches(board, lockedGems).length === 0 && findLegalSwaps(board, lockedGems).length > 0) return board;
+  }
+  const fallback = fallbackBoard();
+  for (const cell of lockedGems) fallback[cell.row][cell.col] = original[cell.row][cell.col];
+  return fallback;
+}
+
+function settleBoard(board: Board, random: () => number, lockedGems: Cell[] = []): { board: Board; summary: MatchSummary } {
   const next = cloneBoard(board);
+  const locked = lockedCellKeys(lockedGems);
   const counts = emptyCounts();
   let cascades = 0;
   let swordStrikes = 0;
   while (cascades < 10) {
-    const matches = findMatches(next);
+    const matches = findMatches(next, lockedGems);
     if (!matches.length) break;
     cascades += 1;
-    if (hasFourSwords(next)) swordStrikes += 1;
+    if (hasFourSwords(next, lockedGems)) swordStrikes += 1;
     const removed = new Set<string>();
     for (const match of matches) {
       counts[match.type] += match.cells.length;
@@ -203,16 +229,30 @@ function settleBoard(board: Board, random: () => number): { board: Board; summar
     }
 
     for (let col = 0; col < COLS; col += 1) {
-      const remaining: GemType[] = [];
-      for (let row = ROWS - 1; row >= 0; row -= 1) {
-        if (!removed.has(cellKey(row, col))) remaining.push(next[row][col]);
+      const anchors = lockedGems
+        .filter((cell) => cell.col === col)
+        .map((cell) => cell.row)
+        .sort((a, b) => a - b);
+      let segmentStart = 0;
+      for (const anchor of [...anchors, ROWS]) {
+        const segmentEnd = anchor - 1;
+        const segmentHeight = segmentEnd - segmentStart + 1;
+        if (segmentHeight > 0) {
+          const remaining: GemType[] = [];
+          for (let row = segmentEnd; row >= segmentStart; row -= 1) {
+            if (!removed.has(cellKey(row, col))) remaining.push(next[row][col]);
+          }
+          while (remaining.length < segmentHeight) remaining.push(randomGem(random));
+          for (let row = segmentEnd; row >= segmentStart; row -= 1) {
+            next[row][col] = remaining[segmentEnd - row];
+          }
+        }
+        segmentStart = anchor + 1;
       }
-      while (remaining.length < ROWS) remaining.push(randomGem(random));
-      for (let row = ROWS - 1; row >= 0; row -= 1) next[row][col] = remaining[ROWS - 1 - row];
     }
   }
-  if (findMatches(next).length || !findLegalSwaps(next).length) {
-    return { board: createBoard(random), summary: { counts, cascades, swordStrikes } };
+  if (findMatches(next, lockedGems).length || !findLegalSwaps(next, lockedGems).length) {
+    return { board: locked.size ? createBoardKeepingVines(random, lockedGems, next) : createBoard(random), summary: { counts, cascades, swordStrikes } };
   }
   return { board: next, summary: { counts, cascades, swordStrikes } };
 }
@@ -260,10 +300,13 @@ export function createBattleState(random: () => number = Math.random, citySlug?:
   });
   return {
     board: createBoard(random),
+    lockedGems: [],
+    vinesTurns: 0,
     teams: { humans, bots },
     activeIndex: { humans: 0, bots: 0 },
     turnSide: "humans",
     turnNumber: 1,
+    flashId: 0,
     outcome: null,
     log: ["Match adjacent gems. Three charge a job; four swords strike the opposing leader."],
   };
@@ -288,8 +331,11 @@ function damageCharacter(team: BattleCharacter[], target: BattleCharacter, damag
   const guard = team.find((character) => character.id === target.guardedBy && character.hp > 0);
   target.guardedBy = null;
   const recipient = guard ?? target;
-  const dealt = Math.min(recipient.hp, damage);
-  recipient.hp = Math.max(0, recipient.hp - damage);
+  const adjustedDamage = recipient.effects.armoredTurns > 0
+    ? Math.max(1, Math.ceil(damage * BOSS_MOVE_CONFIG.magmaArmorDamageMultiplier))
+    : damage;
+  const dealt = Math.min(recipient.hp, adjustedDamage);
+  recipient.hp = Math.max(0, recipient.hp - adjustedDamage);
   return {
     message: guard
       ? `${guard.name} intercepted ${dealt} damage for ${target.name}.`
@@ -325,6 +371,7 @@ function cloneBattleState(state: BattleState): BattleState {
   return {
     ...state,
     board: cloneBoard(state.board),
+    lockedGems: state.lockedGems.map((cell) => ({ ...cell })),
     teams: {
       humans: state.teams.humans.map((character) => ({ ...character, effects: { ...character.effects } })),
       bots: state.teams.bots.map((character) => ({ ...character, effects: { ...character.effects } })),
@@ -340,6 +387,7 @@ function startSideEffects(state: BattleState, side: BattleSide): string[] {
   for (const character of team) {
     if (character.hp <= 0) continue;
     if (character.effects.immuneTurns > 0) character.effects.immuneTurns -= 1;
+    if (character.effects.armoredTurns > 0) character.effects.armoredTurns -= 1;
     if (character.effects.burnTurns <= 0) continue;
     if (character.effects.burnDelayTurns > 0) {
       character.effects.burnDelayTurns -= 1;
@@ -353,14 +401,17 @@ function startSideEffects(state: BattleState, side: BattleSide): string[] {
   return messages;
 }
 
-function finishTurn(state: BattleState, side: BattleSide, message: string): BattleState {
+function finishTurn(state: BattleState, side: BattleSide, message: string, preserveNewVines = false): BattleState {
   const teams = state.teams;
   const enemy = otherSide(side);
   const current = activeCharacter(state, side);
   const currentPosition = teams[side].findIndex((character) => character.id === current.id);
   const nextIndex = nextLivingIndex(teams[side], currentPosition);
+  const vinesTurns = preserveNewVines ? state.vinesTurns : Math.max(0, state.vinesTurns - 1);
   const next: BattleState = {
     ...state,
+    lockedGems: vinesTurns > 0 ? state.lockedGems : [],
+    vinesTurns,
     turnSide: enemy,
     turnNumber: state.turnNumber + 1,
     activeIndex: { ...state.activeIndex, [side]: nextIndex },
@@ -382,6 +433,8 @@ export function skipScaredTurn(state: BattleState): BattleState {
   target.effects.scaredTurns = Math.max(0, target.effects.scaredTurns - 1);
   const currentPosition = next.teams.humans.findIndex((character) => character.id === active.id);
   next.activeIndex.humans = nextLivingIndex(next.teams.humans, currentPosition);
+  next.vinesTurns = Math.max(0, next.vinesTurns - 1);
+  if (next.vinesTurns === 0) next.lockedGems = [];
   next.turnSide = "bots";
   next.turnNumber += 1;
   const effectMessages = startSideEffects(next, "bots");
@@ -409,29 +462,32 @@ export function applySwap(state: BattleState, from: Cell, to: Cell, random: () =
     return { accepted: false, state };
   }
   if (activeCharacter(state).effects.scaredTurns > 0) return { accepted: false, state };
+  const locked = lockedCellKeys(state.lockedGems);
+  if (locked.has(cellKey(from.row, from.col)) || locked.has(cellKey(to.row, to.col))) return { accepted: false, state };
   const swapped = cloneBoard(state.board);
   [swapped[from.row][from.col], swapped[to.row][to.col]] = [swapped[to.row][to.col], swapped[from.row][from.col]];
-  if (!findMatches(swapped).length) return { accepted: false, state };
+  if (!findMatches(swapped, state.lockedGems).length) return { accepted: false, state };
 
   const next = cloneBattleState(state);
   const actor = activeCharacter(next);
-  const settled = settleBoard(swapped, random);
+  const settled = settleBoard(swapped, random, next.lockedGems);
   const messages = appendMatchEffects(next, next.turnSide, settled, actor);
   return { accepted: true, state: finishTurn(next, next.turnSide, messages.join(" ")) };
 }
 
-function blastBoard(board: Board, target: Cell, random: () => number): { board: Board; summary: MatchSummary } {
+function blastBoard(board: Board, target: Cell, random: () => number, lockedGems: Cell[] = []): { board: Board; summary: MatchSummary } {
   const next = cloneBoard(board);
+  const locked = lockedCellKeys(lockedGems);
   const counts = emptyCounts();
   for (let row = target.row - 1; row <= target.row + 1; row += 1) {
     for (let col = target.col - 1; col <= target.col + 1; col += 1) {
-      if (isInside(row, col) && (row !== target.row || col !== target.col)) {
+      if (isInside(row, col) && (row !== target.row || col !== target.col) && !locked.has(cellKey(row, col))) {
         counts[next[row][col]] += 1;
         next[row][col] = randomGem(random);
       }
     }
   }
-  const cascaded = settleBoard(next, random);
+  const cascaded = settleBoard(next, random, lockedGems);
   for (const type of GEM_TYPES) counts[type] += cascaded.summary.counts[type];
   return { board: cascaded.board, summary: { ...cascaded.summary, counts, cascades: cascaded.summary.cascades + 1 } };
 }
@@ -447,7 +503,7 @@ export function applySkill(state: BattleState, target: SkillTarget, random: () =
   let message = "";
 
   if (actor.skill === "blast" && target.kind === "cell" && isInside(target.row, target.col)) {
-    const result = blastBoard(next.board, target, random);
+    const result = blastBoard(next.board, target, random, next.lockedGems);
     next.board = result.board;
     applyMana(allies, result.summary.counts);
     for (const enemy of [...enemies].filter((character) => character.hp > 0)) damageCharacter(enemies, enemy, 8);
@@ -494,6 +550,24 @@ function healCharacter(character: BattleCharacter, amount: number): number {
   return healed;
 }
 
+function randomVineCells(state: BattleState, count: number, random: () => number): Cell[] {
+  const cells = Array.from({ length: ROWS * COLS }, (_, index) => ({
+    row: Math.floor(index / COLS),
+    col: index % COLS,
+  }));
+  for (let index = cells.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [cells[index], cells[swapIndex]] = [cells[swapIndex], cells[index]];
+  }
+  const selected: Cell[] = [];
+  for (const cell of cells) {
+    const candidate = [...selected, cell];
+    if (findLegalSwaps(state.board, candidate).length > 0) selected.push(cell);
+    if (selected.length === count) return selected;
+  }
+  return selected;
+}
+
 function resolveBossMove(state: BattleState, actor: BattleCharacter, random: () => number): string {
   const bossId = actor.bossId;
   const humans = state.teams.humans;
@@ -515,6 +589,32 @@ function resolveBossMove(state: BattleState, actor: BattleCharacter, random: () 
     const dealt = damageCharacter(humans, target, BOSS_MOVE_CONFIG.zombieDamage).dealt;
     const healed = healCharacter(actor, dealt * BOSS_MOVE_CONFIG.zombieHealPerDamage);
     return `${actor.name} struck ${target.name} for ${dealt} damage and healed ${healed} HP.`;
+  }
+
+  if (bossId === "magma-golem") {
+    const target = aliveHumans[Math.floor(random() * aliveHumans.length)];
+    if (!target) return `${actor.name} found no target.`;
+    const impact = damageCharacter(humans, target, BOSS_MOVE_CONFIG.magmaDamage);
+    actor.effects.armoredTurns = BOSS_MOVE_CONFIG.magmaArmorTurns;
+    return `${actor.name} slammed ${target.name} for ${impact.dealt} damage and hardened its shell for ${actor.effects.armoredTurns} turns.`;
+  }
+
+  if (bossId === "treant") {
+    state.lockedGems = randomVineCells(state, BOSS_MOVE_CONFIG.treantVineCount, random);
+    state.vinesTurns = BOSS_MOVE_CONFIG.treantVineTurns;
+    return `${actor.name} vine-locked ${state.lockedGems.length} gems for ${state.vinesTurns} turns.`;
+  }
+
+  if (bossId === "fallen-seraph") {
+    let drainedMana = 0;
+    for (const human of aliveHumans) {
+      damageCharacter(humans, human, BOSS_MOVE_CONFIG.fallenSeraphDamagePerPlayer);
+      const drained = Math.ceil(human.mana * BOSS_MOVE_CONFIG.fallenSeraphManaDrainRatio);
+      human.mana = Math.max(0, human.mana - drained);
+      drainedMana += drained;
+    }
+    state.flashId += 1;
+    return `${actor.name}'s blinding light hit the team and drained ${drainedMana} mana.`;
   }
 
   if (bossId === "ghost") {
@@ -557,13 +657,21 @@ function resolveBossMove(state: BattleState, actor: BattleCharacter, random: () 
 
 export function botTurn(state: BattleState, random: () => number = Math.random): BattleState {
   if (state.turnSide !== "bots" || state.outcome) return state;
-  const actor = activeCharacter(state);
+  let turnState = state;
+  const startingActor = activeCharacter(state, "bots");
+  if (startingActor.bossId === "treant") {
+    turnState = cloneBattleState(state);
+    const treant = activeCharacter(turnState, "bots");
+    const healed = healCharacter(treant, BOSS_MOVE_CONFIG.treantTurnHeal);
+    if (healed > 0) turnState.log = [`${treant.name} regrew ${healed} HP at the start of its turn.`, ...turnState.log].slice(0, 5);
+  }
+  const actor = activeCharacter(turnState);
   if (actor.mana >= actor.skillCost) {
     if (actor.bossId) {
-      const next = cloneBattleState(state);
+      const next = cloneBattleState(turnState);
       const boss = activeCharacter(next, "bots");
       boss.mana = 0;
-      return finishTurn(next, "bots", resolveBossMove(next, boss, random));
+      return finishTurn(next, "bots", resolveBossMove(next, boss, random), boss.bossId === "treant");
     }
     let target: SkillTarget | null = null;
     if (actor.skill === "blast") target = { kind: "cell", row: Math.floor(random() * ROWS), col: Math.floor(random() * COLS) };
@@ -581,15 +689,18 @@ export function botTurn(state: BattleState, random: () => number = Math.random):
       if (ally && ally.hp < ally.maxHp) target = { kind: "character", id: ally.id };
     }
     if (target) {
-      const result = applySkill(state, target, random);
+      const result = applySkill(turnState, target, random);
       if (result.accepted) return result.state;
     }
   }
-  const swaps = findLegalSwaps(state.board);
+  const swaps = findLegalSwaps(turnState.board, turnState.lockedGems);
   const swap = swaps[Math.floor(random() * swaps.length)];
   if (!swap) {
-    const next = { ...state, board: createBoard(random), log: ["The board refreshed.", ...state.log].slice(0, 5) };
-    return next;
+    const next = cloneBattleState(turnState);
+    next.board = next.lockedGems.length
+      ? createBoardKeepingVines(random, next.lockedGems, next.board)
+      : createBoard(random);
+    return finishTurn(next, "bots", "The board refreshed.");
   }
-  return applySwap(state, swap.from, swap.to, random).state;
+  return applySwap(turnState, swap.from, swap.to, random).state;
 }

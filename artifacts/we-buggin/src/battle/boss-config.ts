@@ -1,6 +1,14 @@
 import type { ManaGem } from "./battle-engine";
 
-export type BossId = "vampire" | "wolf" | "ghost" | "zombie" | "dragon";
+export type BossId =
+  | "vampire"
+  | "wolf"
+  | "ghost"
+  | "zombie"
+  | "dragon"
+  | "magma-golem"
+  | "treant"
+  | "fallen-seraph";
 
 export const CITY_BOSSES: Record<string, {
   id: BossId;
@@ -50,6 +58,30 @@ export const CITY_BOSSES: Record<string, {
     manaGem: "orange",
     skillName: "Firestorm",
   },
+  cinderpeak: {
+    id: "magma-golem",
+    name: "Magma Golem Bot",
+    cityOfOrigin: "Cinderpeak",
+    portrait: "battle-assets/bosses/magma_golem_bot.webp",
+    manaGem: "orange",
+    skillName: "Molten Slam",
+  },
+  oakhaven: {
+    id: "treant",
+    name: "Treant Bot",
+    cityOfOrigin: "Oakhaven",
+    portrait: "battle-assets/bosses/treant_bot.webp",
+    manaGem: "green",
+    skillName: "Vine Lock",
+  },
+  sunspire: {
+    id: "fallen-seraph",
+    name: "Fallen Seraph Bot",
+    cityOfOrigin: "Sunspire",
+    portrait: "battle-assets/bosses/fallen_seraph_bot.webp",
+    manaGem: "yellow",
+    skillName: "Blinding Light",
+  },
 };
 
 /** All boss tuning values live here. Vampire drain and Zombie damage stay matched. */
@@ -73,4 +105,13 @@ export const BOSS_MOVE_CONFIG = {
   wolfDamagePerPlayer: 8,
   wolfScaredPlayers: 2,
   wolfScaredTurns: 1,
+  magmaDamage: 32,
+  magmaArmorTurns: 2,
+  magmaArmorDamageMultiplier: 0.5,
+  treantTurnHeal: 6,
+  treantVineCount: 6,
+  treantVineTurns: 2,
+  fallenSeraphDamagePerPlayer: 12,
+  fallenSeraphManaDrainRatio: 0.5,
+  fallenSeraphFlashDurationMs: 480,
 } as const;
