@@ -40,6 +40,10 @@ function skillSummary(character: BattleCharacter): string {
   return character.skillName;
 }
 
+function readableBattleName(name: string): string {
+  return name.normalize("NFC").replace(/[\u0000-\u001f\u007f\ufffd]/g, "").trim() || "Player";
+}
+
 function defeatedIcon() {
   return (
     <svg viewBox="0 0 64 64" aria-hidden="true">
@@ -66,6 +70,7 @@ function BattleCard({
   onChooseTarget: (id: string) => void;
   onActivateSkill: (character: BattleCharacter) => void;
 }) {
+  const displayName = readableBattleName(character.name);
   const alive = character.hp > 0;
   const skillReady = isHumanTurn && active && alive && character.effects.scaredTurns <= 0 && character.mana >= character.skillCost;
   const canActivateSkill = skillReady && character.skill !== "strike";
@@ -104,7 +109,7 @@ function BattleCard({
               ? <img src={photoSrc(character.photoUrl)} alt="" />
               : character.portrait
                 ? <img src={`${import.meta.env.BASE_URL}${character.portrait}`} alt="" />
-                : character.name.slice(0, 1)}
+                : displayName.slice(0, 1)}
           </span>
           {character.bossId && <>
             <span className="battle-job-mark" aria-hidden="true">B</span>
@@ -127,7 +132,7 @@ function BattleCard({
           ) : (
             <>
               <span className="battle-current-mana" style={{ "--mana-fill": `${manaRatio * 100}%` } as CSSProperties}
-                aria-label={`${character.mana} mana; matching ${character.manaGem} gems charge ${character.name}`}>
+                aria-label={`${character.mana} mana; matching ${character.manaGem} gems charge ${displayName}`}>
                 {character.mana}
               </span>
               <span className="battle-skill-cost" aria-label={`${character.skillCost} mana skill cost`}>{character.skillCost}</span>
@@ -136,11 +141,11 @@ function BattleCard({
                 <b>{character.hp}</b>
               </div>
               <button type="button" className={`battle-info-slot battle-info-slot-top${canActivateSkill ? " is-actionable" : ""}`}
-                style={{ "--name-font-size": `${Math.max(4.5, Math.min(7, 96 / Math.max(1, character.name.length)))}px` } as CSSProperties}
+                style={{ "--name-font-size": `${Math.max(4.5, Math.min(7, 96 / Math.max(1, displayName.length)))}px` } as CSSProperties}
                 disabled={!canActivateSkill}
-                aria-label={canActivateSkill ? `Choose a target for ${character.skillName}` : `${character.name}. ${skillSummary(character)}`}
+                aria-label={canActivateSkill ? `Choose a target for ${character.skillName}` : `${displayName}. ${skillSummary(character)}`}
                 onClick={() => onActivateSkill(character)}>
-                <strong>{character.name}</strong>
+                <strong>{displayName}</strong>
                 <span>{skillSummary(character)}</span>
               </button>
               <div className="battle-info-slot battle-info-slot-bottom">
@@ -184,7 +189,7 @@ function BattleCard({
           {alive && <span
             className={`battle-skill-orb${character.mana >= character.skillCost ? " is-charged" : ""}`}
             role="img"
-            aria-label={character.mana >= character.skillCost ? `${character.skillName} ready` : `${character.mana} of ${character.skillCost} mana`}
+          aria-label={character.mana >= character.skillCost ? `${character.skillName} ready` : `${character.mana} of ${character.skillCost} mana`}
             title={character.mana >= character.skillCost ? `${character.skillName} ready` : `${character.mana}/${character.skillCost} mana`}
             data-testid={`battle-skill-${character.id}`}
           />}
@@ -192,7 +197,7 @@ function BattleCard({
         <div className="battle-card-back">
           {defeatedIcon()}
           <strong>DEFEATED</strong>
-          <span>{character.name}</span>
+          <span>{displayName}</span>
         </div>
       </div>
     </article>
@@ -456,14 +461,29 @@ export function BattlePrototype({ roomIdOverride, onExit }: { roomIdOverride?: s
       canvas.setAttribute("tabindex", "0");
       canvas.setAttribute("data-testid", "battle-board-canvas");
     }
+    const resizeBoard = () => {
+      const host = boardHost.current;
+      if (!host || host.clientWidth <= 0 || host.clientHeight <= 0) return;
+      game.scale.refresh();
+      if (scene.ready && latestView.current) scene.setView(latestView.current);
+    };
+    const resizeObserver = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(resizeBoard);
+    resizeObserver?.observe(boardHost.current);
+    window.addEventListener("resize", resizeBoard);
     let frame = 0;
     const syncView = () => {
-      if (scene.ready && latestView.current) scene.setView(latestView.current);
+      const host = boardHost.current;
+      if (scene.ready && latestView.current && host && host.clientWidth > 0 && host.clientHeight > 0) {
+        game.scale.refresh();
+        scene.setView(latestView.current);
+      }
       else frame = requestAnimationFrame(syncView);
     };
     frame = requestAnimationFrame(syncView);
     return () => {
       cancelAnimationFrame(frame);
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", resizeBoard);
       game.destroy(true);
       sceneRef.current = null;
       gameRef.current = null;
@@ -591,12 +611,12 @@ export function BattlePrototype({ roomIdOverride, onExit }: { roomIdOverride?: s
   const turnText = battle.outcome
     ? battle.outcome === "victory" ? "Victory" : "Defeat"
     : battle.turnSide === "humans" && active.effects.scaredTurns > 0
-      ? `${active.name} is scared · turn lost`
+    ? `${readableBattleName(active.name)} is scared · turn lost`
     : battle.turnSide === "humans" && roomId && activeHuman?.participantId !== credsRef.current?.participantId
-      ? `${active.name}'s turn`
+      ? `${readableBattleName(active.name)}'s turn`
     : battle.turnSide === "humans"
-      ? `Your turn · ${active.name} · ${active.job}`
-      : `Bots’ turn · ${active.name} · ${active.job}`;
+      ? `Your turn · ${readableBattleName(active.name)} · ${active.job}`
+      : `Bots’ turn · ${readableBattleName(active.name)} · ${active.job}`;
 
   return (
     <main className="battle-prototype" style={cityBackdrop} data-city={city?.slug} data-testid="battle-prototype">
@@ -656,7 +676,7 @@ export function BattlePrototype({ roomIdOverride, onExit }: { roomIdOverride?: s
           return target && actor ? (
             <section className="battle-skill-confirm" role="dialog" aria-modal="true" aria-label="Confirm skill target">
               <strong>{actor.skillName}</strong>
-              <span>Use this skill on {target.name}?</span>
+              <span>Use this skill on {readableBattleName(target.name)}?</span>
               <div>
                 <button type="button" className="battle-result-restart" onClick={confirmEnemySkill}>Use Skill</button>
                 <button type="button" className="battle-result-home" onClick={() => setPendingEnemySkill(null)}>Cancel</button>

@@ -38,7 +38,24 @@ test("room battle creates matching player and boss teams from one through four s
     assert.deepEqual(state.teams.humans.map(player => player.homeCitySlug), players.map(player => player.homeCitySlug));
     assert.deepEqual(state.teams.bots.map(boss => boss.bossId), bosses);
     assert.ok(state.teams.bots.every(boss => boss.maxHp === state.teams.humans[0]!.maxHp * BOSS_MOVE_CONFIG.bossHealthMultiplier));
+    assert.equal(state.board.length, ROWS);
+    assert.ok(state.board.every(row => row.length === COLS));
+    assert.ok(findLegalSwaps(state.board).length > 0);
   }
+});
+
+test("1v1 room battle resolves a gem match, charges the player, and hands the turn to the boss", () => {
+  const state = createRoomBattleState(
+    [{ participantId: "seat-1", name: "Player 1" }],
+    ["dragon"],
+    () => 0,
+  );
+  const result = applySwap(state, { row: 0, col: 2 }, { row: 1, col: 2 });
+  assert.equal(result.accepted, true);
+  assert.equal(result.state.turnSide, "bots");
+  assert.ok(result.state.teams.humans[0]!.mana > 0);
+  assert.notDeepEqual(result.state.board, state.board);
+  assert.equal(botTurn(result.state).turnSide, "humans");
 });
 
 test("charged card targeting keeps enemy strikes and teammate skills on the correct side", () => {

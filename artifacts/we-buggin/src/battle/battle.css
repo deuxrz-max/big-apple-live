@@ -88,7 +88,7 @@ body.streamtalk-battle-screen .app-page {
 
 .battle-title strong {
   color: #f4d889;
-  font: 900 13px/1 'Space Mono', monospace;
+  font: 900 13px/1 'Space Mono', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', system-ui, monospace;
   letter-spacing: .08em;
 }
 
@@ -421,7 +421,7 @@ body.streamtalk-battle-screen .app-page {
   display: block;
   width: 100%;
   overflow: hidden;
-  font: 900 clamp(4px, var(--name-font-size, 7px), 7px)/1 'Pirata One', Georgia, serif;
+  font: 900 clamp(4px, var(--name-font-size, 7px), 7px)/1 'Pirata One', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', system-ui, Georgia, serif;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -438,7 +438,7 @@ body.streamtalk-battle-screen .app-page {
 .battle-info-slot-bottom {
   top: 87.5%;
   height: 7.4%;
-  font: 700 clamp(4.8px, 1.55vw, 6.5px)/1 'Pirata One', Georgia, serif;
+  font: 700 clamp(4.8px, 1.55vw, 6.5px)/1 'Pirata One', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', system-ui, Georgia, serif;
   white-space: nowrap;
 }
 
@@ -741,7 +741,7 @@ body.streamtalk-battle-screen .app-page {
 }
 
 .battle-turn strong {
-  font: 800 9px/1.15 'Space Mono', monospace;
+  font: 800 9px/1.15 'Space Mono', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', system-ui, monospace;
 }
 
 .battle-turn.is-bot-turn {
@@ -760,8 +760,9 @@ body.streamtalk-battle-screen .app-page {
 
 .battle-board-wrap {
   position: relative;
+  flex: 0 0 auto;
   width: min(94vw, calc(100dvh - 468px), 420px);
-  aspect-ratio: 1;
+  height: min(94vw, calc(100dvh - 468px), 420px);
   margin: 0 auto;
   border: 2px solid #806d48;
   background: #15120e;
@@ -769,8 +770,12 @@ body.streamtalk-battle-screen .app-page {
 }
 
 .battle-board {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
   touch-action: manipulation;
 }
 
@@ -895,7 +900,10 @@ body.streamtalk-battle-screen .app-page {
   .battle-team-heading { min-height: 11px; margin-bottom: 1px; }
   .battle-card { height: clamp(96px, 14vh, 112px); }
   .battle-turn { min-height: 24px; padding: 3px; }
-  .battle-board-wrap { width: min(88vw, calc(100dvh - 390px), 360px); }
+  .battle-board-wrap {
+    width: min(88vw, calc(100dvh - 390px), 360px);
+    height: min(88vw, calc(100dvh - 390px), 360px);
+  }
   .battle-footer { min-height: 26px; }
   .battle-instructions { font-size: 8px; }
 }
