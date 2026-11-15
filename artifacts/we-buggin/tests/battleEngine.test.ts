@@ -18,6 +18,7 @@ import {
   type Board,
 } from "../src/battle/battle-engine";
 import { BOSS_MOVE_CONFIG, CITY_BOSSES } from "../src/battle/boss-config";
+import { cardHomeCity, raceHomeCitySlug } from "../src/battle/race-home-cities";
 
 test("room battle creates matching player and boss teams from one through four seats", () => {
   for (let count = 1; count <= 4; count += 1) {
@@ -35,12 +36,23 @@ test("room battle creates matching player and boss teams from one through four s
     assert.deepEqual(state.teams.humans.map(player => player.participantId), players.map(player => player.participantId));
     assert.deepEqual(state.teams.humans.map(player => player.photoUrl), players.map(player => player.photoUrl));
     assert.deepEqual(state.teams.humans.map(player => player.race), players.map(player => player.race));
-    assert.deepEqual(state.teams.humans.map(player => player.homeCitySlug), players.map(player => player.homeCitySlug));
+    assert.ok(state.teams.humans.every(player => player.homeCitySlug === "oakhaven"));
     assert.deepEqual(state.teams.bots.map(boss => boss.bossId), bosses);
     assert.ok(state.teams.bots.every(boss => boss.maxHp === state.teams.humans[0]!.maxHp * BOSS_MOVE_CONFIG.bossHealthMultiplier));
     assert.equal(state.board.length, ROWS);
     assert.ok(state.board.every(row => row.length === COLS));
     assert.ok(findLegalSwaps(state.board).length > 0);
+  }
+});
+
+test("race locks Humans to Oakhaven and every boss resolves its actual origin city", () => {
+  assert.equal(raceHomeCitySlug("Human"), "oakhaven");
+  assert.equal(raceHomeCitySlug("Humans"), "oakhaven");
+  assert.equal(raceHomeCitySlug(undefined), "oakhaven");
+  assert.equal(raceHomeCitySlug("unknown race"), undefined);
+  assert.ok(createBattleState().teams.humans.every(player => cardHomeCity(player)?.slug === "oakhaven"));
+  for (const [slug, boss] of Object.entries(CITY_BOSSES)) {
+    assert.equal(cardHomeCity({ bossId: boss.id, cityOfOrigin: boss.cityOfOrigin })?.slug, slug);
   }
 });
 

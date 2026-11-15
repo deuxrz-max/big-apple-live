@@ -22,6 +22,7 @@ import './university-room.css';
 import { RoomPerimeter } from './RoomPerimeter';
 import './bot-moderation.css';
 import { createRoomBattleState, ROOM_BOSS_POOL, type RoomBattlePlayer } from '@/battle/battle-engine';
+import { CardCity } from '@/profile/CardCity';
 
 const SocialRoomBattle = lazy(() => import('@/battle/BattlePrototype').then(module => ({ default: module.BattlePrototype })));
 
@@ -423,6 +424,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                                   <span>{person.race ?? 'Human'}</span>
                                   <span>{person.job ?? 'No job yet'}</span>
                                 </div>
+                                <CardCity race={person.race} />
                               </>
                             ) : slot.participantId ? (
                               <>

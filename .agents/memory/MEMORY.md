@@ -46,6 +46,7 @@
 - [Personal block boundaries](personal-block-semantics.md) — personal blocks filter text and bilateral DMs/whispers, but never remove room presence, voice, seats or gift effects.
 - [Card-game room scope](card-game-room-scope.md) — the card engine and test mode belong only in user-created no-TV social rooms, never themed/video or livestream rooms.
 - [Current product scope](current-product-retirement.md) — preserve audio/social rooms; retired features stay removed; the new local Phaser fantasy prototype is separately approved.
+- [Race-locked home cities](race-home-city-policy.md) — Humans inherit Oakhaven; boss origins are fixed; never infer faction city ownership.
 - [Chess room scope](chess-room-scope.md) — separate two-player audio-only rooms: White above, Black below, no chat, audience, TV or card game.
 - [Recharge economics safeguards](recharge-economics.md) — earned-only $100/30,000 rate; bonus liability includes every coin; unknown fees block real checkout approval.
 - [Room composer regression checks](room-composer-regressions.md) — run room tests with mobile-shell styles; legacy zero-width flex inputs collapse when their parent becomes grid.

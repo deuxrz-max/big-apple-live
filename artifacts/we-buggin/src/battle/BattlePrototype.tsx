@@ -4,6 +4,7 @@ import { Link, useLocation, useSearch } from "wouter";
 import { useUser } from "@clerk/react";
 import { AlertTriangle, Flame, Shield, ShieldCheck } from "lucide-react";
 import { cityBySlug } from "./aethelgard-cities";
+import { cardHomeCity } from "./race-home-cities";
 import { BattleBoardScene, type BoardView } from "./BattleBoardScene";
 import { BOSS_MOVE_CONFIG } from "./boss-config";
 import { photoSrc } from "@/components/user-photo";
@@ -76,7 +77,7 @@ function BattleCard({
   const canActivateSkill = skillReady && character.skill !== "strike";
   const hpRatio = Math.max(0, character.hp / character.maxHp);
   const manaRatio = Math.min(1, character.mana / character.skillCost);
-  const homeCity = !character.bossId && character.homeCitySlug ? cityBySlug(character.homeCitySlug) : undefined;
+  const homeCity = cardHomeCity(character);
   const cardClass = [
     "battle-card",
     active ? "is-active" : "",
@@ -97,13 +98,11 @@ function BattleCard({
         <div className="battle-card-front">
           <img className="battle-card-art" src={`${import.meta.env.BASE_URL}battle-assets/cards/card_frame_grey_starter.jpg`} alt="" />
           <span className="battle-level">{character.level}</span>
-          {!character.bossId && (
-            <span className={`battle-home-city${homeCity ? " has-city" : ""}`}
-              aria-label={homeCity ? `Home city: ${homeCity.name}` : "Home city not set"}
-              title={homeCity?.name ?? "Home city not set"}>
-              {homeCity && <img src={`${import.meta.env.BASE_URL}${homeCity.image}`} alt="" />}
-            </span>
-          )}
+          <span className={`battle-home-city${homeCity ? " has-city" : ""}`}
+            aria-label={homeCity ? `Home city: ${homeCity.name}` : "Home city not set"}
+            title={homeCity?.name ?? "Home city not set"}>
+            {homeCity && <img src={`${import.meta.env.BASE_URL}${homeCity.image}`} alt="" />}
+          </span>
           <span className="battle-portrait" aria-hidden="true">
             {character.photoUrl
               ? <img src={photoSrc(character.photoUrl)} alt="" />

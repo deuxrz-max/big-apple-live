@@ -1,4 +1,5 @@
 import { BOSS_MOVE_CONFIG, CITY_BOSSES, type BossId } from "./boss-config";
+import { raceHomeCitySlug } from "./race-home-cities";
 
 export const ROWS = 8;
 export const COLS = 8;
@@ -278,6 +279,7 @@ export function createBattleState(random: () => number = Math.random, citySlug?:
     side: "humans",
     name: `Human ${index + 1}`,
     race: "Human",
+    homeCitySlug: raceHomeCitySlug("Human"),
     job: job.job,
     manaGem: job.manaGem,
     skill: job.skill,
@@ -349,7 +351,7 @@ export function createRoomBattleState(
       name: player.name,
       photoUrl: player.photoUrl ?? null,
       race: player.race ?? "Human",
-      homeCitySlug: player.homeCitySlug ?? null,
+      homeCitySlug: raceHomeCitySlug(player.race) ?? null,
       level,
       hp: maxHp,
       maxHp,

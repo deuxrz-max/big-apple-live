@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { photoSrc } from '@/components/user-photo';
 import { ShinyName } from '@/components/ShinyName';
+import { CardCity } from './CardCity';
 import './profile-card.css';
 
 const frameFilters: Record<string, string> = {
@@ -50,6 +51,7 @@ export function ProfileCard({ person, editable = false }: {
         onError={() => setFrameMissing(true)}
         style={{ filter: frameMissing ? (frameFilters[frameId] ?? 'none') : 'none' }}
       />
+      <CardCity race={person.race} />
       {editable && <span className="profile-card-edit-label">Edit profile</span>}
     </div>
   );
