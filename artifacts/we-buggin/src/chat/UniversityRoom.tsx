@@ -26,6 +26,9 @@ import { CardCity } from '@/profile/CardCity';
 const SocialRoomBattle = lazy(() => import('@/battle/BattlePrototype').then(module => ({ default: module.BattlePrototype })));
 
 const RULES = "Stick to the room's topic. Be kind — no harassment or hate. Nothing sexual or explicit in room conversation, names or photos. Don't share real names, phone numbers, addresses or other contact details. Use Ignore on anyone bothering you, or Block and Report for anything serious. Help keep the room welcoming for everyone.";
+const RETURN_SEAT_KEY = 'big-apple-live:room-return-seat';
+const RETURN_SEAT_MAX_AGE_MS = 2 * 60 * 60 * 1000;
+type SavedRoomSeat = { roomId: string; seatNumber: number; savedAt: number };
 
 type Target = {
   username: string;
@@ -78,6 +81,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const [drawer, setDrawer] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [ignored, setIgnored] = useState<Set<string>>(new Set());
+  const seatRestoreAttempted = useRef<string | null>(null);
   const ignoreBusy = useRef(0);
   const autoRules = useRef(false);
   const ignoreVersion = useRef<string | null>(null);
@@ -163,13 +167,59 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
 
   const startRoomGame = () => {
     if (!isSocialRoom || !sessionId || startingGame) return;
+    seatRestoreAttempted.current = null;
     setStartingGame(true);
     setGameError(null);
+    try {
+      if (videoBeam.ownSlot) {
+        const saved: SavedRoomSeat = { roomId, seatNumber: videoBeam.ownSlot.slotNumber, savedAt: Date.now() };
+        sessionStorage.setItem(RETURN_SEAT_KEY, JSON.stringify(saved));
+      } else {
+        sessionStorage.removeItem(RETURN_SEAT_KEY);
+      }
+    } catch { /* Game launch should still work when session storage is unavailable. */ }
     const gameUrl = new URL('/skullcraft/', window.location.origin);
     gameUrl.searchParams.set('playerName', me?.displayName?.trim() || me?.username || 'Hero');
     gameUrl.searchParams.set('returnTo', `/rooms/${encodeURIComponent(roomId)}`);
     window.location.assign(gameUrl.toString());
   };
+
+  useEffect(() => {
+    if (!isSocialRoom || !r.room || !sessionId || !participantId
+      || startingGame || videoBeam.connection !== 'connected' || videoBeam.busy
+      || seatRestoreAttempted.current === roomId) return;
+
+    let raw: string | null;
+    try { raw = sessionStorage.getItem(RETURN_SEAT_KEY); }
+    catch { return; }
+    if (!raw) return;
+
+    let saved: Partial<SavedRoomSeat> | null;
+    try { saved = JSON.parse(raw) as Partial<SavedRoomSeat> | null; }
+    catch {
+      seatRestoreAttempted.current = roomId;
+      try { sessionStorage.removeItem(RETURN_SEAT_KEY); } catch { /* Ignore unavailable storage. */ }
+      return;
+    }
+    if (!saved || typeof saved !== 'object') {
+      seatRestoreAttempted.current = roomId;
+      try { sessionStorage.removeItem(RETURN_SEAT_KEY); } catch { /* Ignore unavailable storage. */ }
+      return;
+    }
+    if (saved.roomId !== roomId) return;
+
+    seatRestoreAttempted.current = roomId;
+    try { sessionStorage.removeItem(RETURN_SEAT_KEY); } catch { /* Ignore unavailable storage. */ }
+    if (typeof saved.seatNumber !== 'number' || typeof saved.savedAt !== 'number') return;
+    const age = Date.now() - saved.savedAt;
+    if (!Number.isInteger(saved.seatNumber) || saved.seatNumber < 1 || saved.seatNumber > 4
+      || !Number.isFinite(saved.savedAt) || age < 0 || age > RETURN_SEAT_MAX_AGE_MS) return;
+
+    void videoBeam.joinSpeaker(saved.seatNumber, { quietIfUnavailable: true });
+  }, [
+    isSocialRoom, r.room, roomId, sessionId, participantId, startingGame,
+    videoBeam.connection, videoBeam.busy, videoBeam.joinSpeaker,
+  ]);
 
   const toggleIgnore = (t: Target) => {
     const next = !ignored.has(t.username);

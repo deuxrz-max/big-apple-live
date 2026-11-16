@@ -357,22 +357,33 @@ export function useUniversityVideoBeam(
     applyBeam(state);
   }, [applyBeam, headers]);
 
-  const joinSpeaker = useCallback(async (targetSlotNumber?: number) => {
+  const joinSpeaker = useCallback(async (
+    targetSlotNumber?: number,
+    options?: { quietIfUnavailable?: boolean },
+  ) => {
     const args = latest.current;
     if (actionRef.current || !args.roomSessionId || !args.participantId) return;
+    const quietIfUnavailable = options?.quietIfUnavailable === true && targetSlotNumber !== undefined;
     actionRef.current = true;
     setBusy(true);
     setError(null);
     let localTracks: LocalTrack[] = [];
     let room: Room | null = null;
+    let reservingRequestedSlot = false;
     try {
-      if (roleRef.current === "audience") clearRoom(false);
+      const keepAudienceUntilReservation = quietIfUnavailable && roleRef.current === "audience";
+      if (roleRef.current === "audience" && !keepAudienceUntilReservation) clearRoom(false);
       const latestBeam = await getUniversityVideoBeamState(args.roomId, {
         headers: headers(args.roomSessionId),
         credentials: "include",
       });
       applyBeam(latestBeam);
-      const alreadyOwnsSpot = latestBeam.slots.some(slot => slot.participantId === args.participantId);
+      const currentSlot = latestBeam.slots.find(slot => slot.participantId === args.participantId);
+      const alreadyOwnsSpot = !!currentSlot;
+      if (quietIfUnavailable && currentSlot && currentSlot.slotNumber !== targetSlotNumber) return;
+      const requestedSlot = targetSlotNumber === undefined
+        ? undefined : latestBeam.slots.find(slot => slot.slotNumber === targetSlotNumber);
+      if (quietIfUnavailable && !alreadyOwnsSpot && (!requestedSlot || requestedSlot.participantId)) return;
       const available = alreadyOwnsSpot || latestBeam.slots.some(slot => !slot.participantId);
       if (!available) throw new Error("All player boxes are full. You can still listen and chat.");
       if (!navigator.mediaDevices?.getUserMedia) {
@@ -381,7 +392,10 @@ export function useUniversityVideoBeam(
 
       // Reserve before the browser prompt, so two people cannot claim the same
       // last spot and a slow permission response cannot be mistaken for a leave.
+      reservingRequestedSlot = quietIfUnavailable;
       const reserved = await doAction(args, { action: "reserve-slot", targetSlotNumber });
+      reservingRequestedSlot = false;
+      if (roleRef.current === "audience") clearRoom(false);
       applyBeam(reserved);
 
       // Capture is requested only inside the explicit speaker-join click.
@@ -491,6 +505,10 @@ export function useUniversityVideoBeam(
         setPlaybackBlocked(true);
       }
     } catch (failure) {
+      if (quietIfUnavailable && reservingRequestedSlot && errStatus(failure) === 409) {
+        if (roleRef.current === "audience") setConnection("connected");
+        return;
+      }
       if (room) {
         room.removeAllListeners();
         await room.disconnect().catch(() => undefined);
