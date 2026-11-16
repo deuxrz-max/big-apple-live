@@ -612,7 +612,7 @@ export function applySkill(state: BattleState, target: SkillTarget, random: () =
 
 export function validSkillTarget(state: BattleState, target: SkillTarget): boolean {
   const actor = activeCharacter(state);
-  const team = target.kind === "cell" ? null : state.teams[target.id.startsWith(`${state.turnSide}-`) ? state.turnSide : otherSide(state.turnSide)];
+  const team = target.kind === "cell" ? null : Object.values(state.teams).find((characters) => characters.some((candidate) => candidate.id === target.id));
   if (target.kind === "cell") return actor.skill === "blast" && isInside(target.row, target.col);
   const character = team?.find((candidate) => candidate.id === target.id && candidate.hp > 0);
   if (!character) return false;
