@@ -43557,6 +43557,7 @@ var assets_default = {
   packs: {
     title: [
       { kind: "image", key: "logo", url: "fmwj13w9qcleq0u-webp.webp" },
+      { kind: "image", key: "start-button-art", url: new URL("./start-button.png", import.meta.url).href },
       { kind: "sprite", key: "pause-seal", file: "fmwj17cip31yd0a" },
       { kind: "sprite", key: "audio-toggle", file: "fmwj17ckk996znt" },
       { kind: "json", key: "ui-theme", url: "fmwj17ic6r6p1ym.json" },
@@ -44776,7 +44777,12 @@ var Title = {
         game.scenes.go("spell-choice");
       });
     };
-    game.ui.button({ anchor: "bottom-center", y: -200, h: 110, text: "Play", style: "good", icon: "play", onClick: start });
+    game.spawn({ id: "title-start-button-art", texture: "start-button-art", x: 360, y: 1080, width: 240, height: 356, layer: "hud" });
+    game.ui.button({
+      anchor: "bottom-center", y: -200, w: 240, h: 356, text: "", accessibleLabel: "Start",
+      style: { fill: "#00000000", fillTo: "#00000000", border: 0, depth: 0, gloss: 0, shine: 0, shadow: 0, textColor: "#00000000", textStroke: 0, textDepth: 0, radius: 0 },
+      onClick: start
+    });
     game.step("title", () => {
       if (game.input.keyPressed("Space") || game.input.keyPressed("Enter") || game.input.gamepads[0]?.button("a")) start();
     });

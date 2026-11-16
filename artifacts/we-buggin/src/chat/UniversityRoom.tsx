@@ -536,8 +536,9 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                 <>
                   <button type="button" className="bm-btn bm-btn-primary ur-start-game"
                     disabled={startingGame}
-                    onClick={() => void startRoomGame()} data-testid="button-start-room-game">
-                    {startingGame ? 'Starting…' : 'Start Game'}
+                    onClick={() => void startRoomGame()} data-testid="button-start-room-game"
+                    aria-label={startingGame ? 'Starting game' : 'Start Game'}>
+                    <img src={`${import.meta.env.BASE_URL}battle-assets/ui/start-button.png`} alt="" aria-hidden="true" />
                   </button>
                   {gameError && <p className="ur-game-error" role="alert">{gameError}</p>}
                 </>
