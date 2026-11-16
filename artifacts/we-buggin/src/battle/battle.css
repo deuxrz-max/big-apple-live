@@ -319,6 +319,39 @@ body.streamtalk-battle-screen .app-page {
   font: 700 7px/1.1 'Space Mono', monospace;
 }
 
+.battle-card:not(.is-boss) .battle-card-name {
+  top: 51%;
+  left: 7%;
+  width: 86%;
+  color: #fff;
+  font: 900 var(--card-name-size, 7px)/1 'Pirata One', Georgia, serif;
+  text-shadow: 0 1px 2px #000, 0 0 3px #000;
+}
+
+.battle-card-race,
+.battle-card:not(.is-boss) .battle-card-job {
+  position: absolute;
+  z-index: 2;
+  left: 8%;
+  width: 84%;
+  overflow: hidden;
+  color: #fff;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  font: 700 clamp(6px, 1.8vw, 7px)/1 'Pirata One', Georgia, serif;
+  text-shadow: 0 1px 2px #000, 0 0 3px #000;
+}
+
+.battle-card-race {
+  top: 59.5%;
+}
+
+.battle-card:not(.is-boss) .battle-card-job {
+  top: 67%;
+}
+
 .battle-current-mana,
 .battle-skill-cost {
   position: absolute;
@@ -353,10 +386,10 @@ body.streamtalk-battle-screen .app-page {
 .battle-health-box {
   position: absolute;
   z-index: 3;
-  top: 70.5%;
-  left: 14%;
-  width: 72%;
-  height: 5.6%;
+  top: 78.5%;
+  left: 20%;
+  width: 60%;
+  height: 6.2%;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -611,6 +644,19 @@ body.streamtalk-battle-screen .app-page {
   pointer-events: none;
 }
 
+.battle-card:not(.is-boss) button.battle-skill-orb {
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font: 800 4px/1 'Pirata One', Georgia, serif;
+  text-shadow: 0 1px 2px #000, 0 0 2px #000;
+}
+
+.battle-card:not(.is-boss) button.battle-skill-orb.is-actionable {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
 .battle-skill-orb.is-charged {
   border-color: #a9e2ff;
   background: radial-gradient(circle, #d9f4ff 0, #50b9ff 32%, #1482d2 64%, #182c43 72%);
@@ -622,6 +668,15 @@ body.streamtalk-battle-screen .app-page {
 .battle-skill-orb:disabled {
   opacity: 1;
   cursor: default;
+}
+
+.battle-skill-orb-label {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: nowrap;
+  text-align: center;
 }
 
 .battle-skill-confirm {

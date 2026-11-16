@@ -41,6 +41,14 @@ function skillSummary(character: BattleCharacter): string {
   return character.skillName;
 }
 
+function skillOrbLabel(character: BattleCharacter): string {
+  if (character.skill === "heal") return "HEAL";
+  if (character.skill === "guard") return "GUARD";
+  if (character.skill === "strike") return "STRIKE";
+  if (character.skill === "blast") return "BLAST";
+  return character.skillName.slice(0, 6).toUpperCase();
+}
+
 function readableBattleName(name: string): string {
   return name.normalize("NFC").replace(/[\u0000-\u001f\u007f\ufffd]/g, "").trim() || "Player";
 }
@@ -135,21 +143,15 @@ function BattleCard({
                 {character.mana}
               </span>
               <span className="battle-skill-cost" aria-label={`${character.skillCost} mana skill cost`}>{character.skillCost}</span>
+              <span className="battle-card-name"
+                style={{ "--card-name-size": `${Math.max(5, Math.min(9, 100 / Math.max(1, displayName.length)))}px` } as CSSProperties}>
+                {displayName}
+              </span>
+              <span className="battle-card-race">{readableBattleName(character.race ?? "Human")}</span>
+              <span className="battle-card-job">{readableBattleName(character.job)}</span>
               <div className="battle-health-box" aria-label={`${character.hp} of ${character.maxHp} health`}>
                 <i style={{ width: `${hpRatio * 100}%` }} />
                 <b>{character.hp}</b>
-              </div>
-              <button type="button" className={`battle-info-slot battle-info-slot-top${canActivateSkill ? " is-actionable" : ""}`}
-                style={{ "--name-font-size": `${Math.max(4.5, Math.min(7, 96 / Math.max(1, displayName.length)))}px` } as CSSProperties}
-                disabled={!canActivateSkill}
-                aria-label={canActivateSkill ? `Choose a target for ${character.skillName}` : `${displayName}. ${skillSummary(character)}`}
-                onClick={() => onActivateSkill(character)}>
-                <strong>{displayName}</strong>
-                <span>{skillSummary(character)}</span>
-              </button>
-              <div className="battle-info-slot battle-info-slot-bottom">
-                <strong>{character.race ?? "Human"}</strong>
-                <span>{character.job}</span>
               </div>
             </>
           )}
@@ -185,13 +187,25 @@ function BattleCard({
               onClick={() => onChooseTarget(character.id)}
             />
           )}
-          {alive && <span
-            className={`battle-skill-orb${character.mana >= character.skillCost ? " is-charged" : ""}`}
-            role="img"
-          aria-label={character.mana >= character.skillCost ? `${character.skillName} ready` : `${character.mana} of ${character.skillCost} mana`}
-            title={character.mana >= character.skillCost ? `${character.skillName} ready` : `${character.mana}/${character.skillCost} mana`}
-            data-testid={`battle-skill-${character.id}`}
-          />}
+          {alive && (character.bossId ? (
+            <span
+              className={`battle-skill-orb${character.mana >= character.skillCost ? " is-charged" : ""}`}
+              role="img"
+              aria-label={character.mana >= character.skillCost ? `${character.skillName} ready` : `${character.mana} of ${character.skillCost} mana`}
+              title={character.mana >= character.skillCost ? `${character.skillName} ready` : `${character.mana}/${character.skillCost} mana`}
+              data-testid={`battle-skill-${character.id}`}
+            />
+          ) : (
+            <button
+              type="button"
+              className={`battle-skill-orb${character.mana >= character.skillCost ? " is-charged" : ""}${canActivateSkill ? " is-actionable" : ""}`}
+              disabled={!canActivateSkill}
+              aria-label={canActivateSkill ? `Use ${character.skillName}` : character.mana >= character.skillCost ? `${character.skillName} ready` : `${character.mana} of ${character.skillCost} mana`}
+              title={character.mana >= character.skillCost ? character.skillName : `${character.mana}/${character.skillCost} mana · ${character.skillName}`}
+              onClick={() => onActivateSkill(character)}
+              data-testid={`battle-skill-${character.id}`}
+            ><span className="battle-skill-orb-label" aria-hidden="true">{skillOrbLabel(character)}</span></button>
+          ))}
         </div>
         <div className="battle-card-back">
           {defeatedIcon()}

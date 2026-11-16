@@ -266,3 +266,17 @@ mtime_ms = 1793505755270
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/ccae334f-a375-494b-be17-e5c908c5923e/1b7a3999-367e-4f1d-bbfd-2c7eabb989cb"
 storage_version_token = "1793505846127950"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "NcXh_Fpe8XnxwB4k7_ov1"
+uri = "file://artifacts/we-buggin/test-results/room-battle-damaged-card.png"
+type = "image"
+title = "Phone battle screenshot — damaged player card"
+description = "390×844 local battle screenshot. Human 1 is at 70 HP after taking 5 damage; the shared player card shows the health bar in the upper lower-frame slot and the lower slot empty."
+logical_id = "1170449c-7003-4441-a505-3c203af3c591"
+content_hash = "sha256:a54b8b91147c2e6440c2b8d73cad792372c9aa8a14779eda6fbbc1c2a815a72c"
+size = 288790
+mtime_ms = 1794841260202
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:2456d227-4b27-4eb6-8754-86016f4aaf87/1170449c-7003-4441-a505-3c203af3c591/1ff0c46e-f28f-448b-96c7-f924b9b9cd90"
+storage_version_token = "1794841516574356"
+content_type = "image/png"
