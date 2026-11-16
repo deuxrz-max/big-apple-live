@@ -451,12 +451,8 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                                     ? <img src={photoSrc(person.photoUrl)} alt="" onError={event => { event.currentTarget.style.display = 'none'; }} />
                                     : <span>{initials}</span>}
                                 </div>
-                                <img className="ur-slot-starter-card"
-                                  src={`${import.meta.env.BASE_URL}battle-assets/cards/card_frame_${(person.frameId ?? 'grey-starter').replace(/[^a-z-]/g, '')}.png`}
-                                  onError={event => {
-                                    const starter = `${import.meta.env.BASE_URL}battle-assets/cards/card_frame_grey_starter.png`;
-                                    if (!event.currentTarget.src.endsWith('/card_frame_grey_starter.png')) event.currentTarget.src = starter;
-                                  }}
+                                <img className="ur-social-card-art"
+                                  src={`${import.meta.env.BASE_URL}battle-assets/cards/profile-square-card.jpg`}
                                   alt="" aria-hidden="true" />
                                 <div className="ur-social-card-info" aria-label={`${person.displayName}, ${person.race ?? 'Human'}, ${person.job ?? 'No job yet'}`}>
                                   <ShinyName className="ur-social-card-name" fitOneLine displayNameColor={person.displayNameColor} displayNameTierIndex={person.displayNameTierIndex}>{person.displayName}</ShinyName>
@@ -468,15 +464,15 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                             ) : slot.participantId ? (
                               <>
                                 <div className="ur-social-card-empty"><span>Loading player</span></div>
-                                <img className="ur-slot-starter-card"
-                                  src={`${import.meta.env.BASE_URL}battle-assets/cards/card_frame_grey_starter.png`}
+                                <img className="ur-social-card-art"
+                                  src={`${import.meta.env.BASE_URL}battle-assets/cards/profile-square-card.jpg`}
                                   alt="" aria-hidden="true" />
                               </>
                             ) : (
                               <>
                                 <div className="ur-social-card-empty"><span>Tap to sit</span></div>
-                                <img className="ur-slot-starter-card"
-                                  src={`${import.meta.env.BASE_URL}battle-assets/cards/card_frame_grey_starter.png`}
+                                <img className="ur-social-card-art"
+                                  src={`${import.meta.env.BASE_URL}battle-assets/cards/profile-square-card.jpg`}
                                   alt="" aria-hidden="true" />
                               </>
                             )}

@@ -202,7 +202,7 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
   .ur-slot-name{font-size:12px}
 }
 @keyframes ur-drawer-in{from{transform:translateX(-100%)}to{transform:translateX(0)}}
-@media(prefers-reduced-motion:reduce){.ur-side.is-open{animation:none}.ur-slot.is-speaking .ur-slot-avatar{animation:none}.ur-slot::before{animation:none;background:linear-gradient(135deg,#d63391,#8f49d9 55%,#6f58c4);background-size:100% 100%}.ur-slot:not(.is-occupied)::before{opacity:.46}}
+@media(prefers-reduced-motion:reduce){.ur-side.is-open{animation:none}.ur-slot.is-speaking .ur-slot-avatar,.ur-slot.is-speaking.has-person .ur-social-card-portrait{animation:none}.ur-slot::before{animation:none;background:linear-gradient(135deg,#d63391,#8f49d9 55%,#6f58c4);background-size:100% 100%}.ur-slot:not(.is-occupied)::before{opacity:.46}}
 
 .ch.ur .ch-room.ur-social-room{gap:8px}
 .ch.ur .ur-social-room .ur-beam.is-social-room{flex:1 1 auto;gap:6px}
@@ -256,12 +256,11 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 .ur-social-profile-popup>button{min-width:0;min-height:34px;padding:4px 6px;text-align:center;font-size:12px;line-height:1.15;overflow-wrap:anywhere}
 @media (max-width:420px){.ur-social-profile-popup{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .ch.ur .ur-social-room .ur-slots{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
-.ur-social-room .ur-slot.has-person :is(.ur-slot-portrait-layer,.ur-slot-photo-action){inset:auto auto 26px 6px;width:38%;height:auto;aspect-ratio:1;border-radius:0;border:1px solid #d6b45d;z-index:3}
-.ur-social-room .ur-slot-photo-fill{object-fit:contain}
-.ur-slot-starter-card{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:transparent;z-index:2;pointer-events:none}
+.ur-social-room .ur-slot-photo-fill{object-fit:cover}
 /* theme.css "#root .ur-slots" forces the 5-column nine-seat grid and 2/1 aspect; override for social rooms only. */
 #root .ch.ur .ur-social-room .ur-slots{flex:1 1 auto;width:100%;height:auto;min-height:0;aspect-ratio:auto;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
 #root .ch.ur .ur-social-room .ur-beam.is-social-room{flex:1 1 0%;min-height:0}
+#root .ch.ur .ur-social-room .ur-slot-media{container-type:size}
 .ur-social-room .ur-start-game{flex:0 0 auto;width:100%;min-height:36px;padding:6px 10px}
 .ur-social-room .ur-game-error{flex:0 0 auto;margin:0;color:#f0a8ad;font-size:11px;text-align:center}
 .ur-room-game-overlay{position:fixed;inset:0;z-index:1000;background:#080706}
@@ -272,16 +271,19 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 #root .ch.ur .ur-social-room .ur-slot::before,
 #root .ch.ur .ur-social-room .ur-slot::after{display:none}
 #root .ch.ur .ur-social-room .ur-slot-media{display:grid;place-items:center;overflow:visible;border-radius:0;background:transparent}
-.ur-social-card{--ur-social-name-color:#fff;position:relative;width:auto;height:100%;max-width:100%;max-height:100%;aspect-ratio:436/851;margin:auto;isolation:isolate;container-type:inline-size}
-.ur-social-card .ur-slot-starter-card{inset:auto;left:-16.514%;top:-9.401%;width:132.11%;height:120.329%;max-width:none;object-fit:fill}
-.ur-social-card-portrait,.ur-social-card-empty{position:absolute;z-index:1;left:15.19%;top:3.47%;width:68.7%;aspect-ratio:1;border-radius:50%;overflow:hidden;background:#111;display:grid;place-items:center}
-.ur-social-card-portrait img{display:block;width:100%;height:100%;object-fit:contain}
-.ur-social-card-portrait span{display:grid;place-items:center;width:100%;height:100%;background:#121212;color:#d7d7d7;font:700 clamp(10px,3vw,18px) system-ui,sans-serif}
-.ur-social-card-empty{background:#090909;border:1px solid rgba(255,255,255,.18)}
-.ur-social-card-empty span{max-width:80%;color:#fff;text-align:center;font:clamp(8px,2.5vw,12px)/1.1 'Pirata One',Georgia,serif;text-shadow:0 1px 3px #000}
-.ur-social-card-info{position:absolute;z-index:3;inset:0;overflow:visible;background:transparent;color:var(--ur-social-name-color);text-align:center;font:clamp(4px,8.5cqw,32px)/1 'Pirata One',Georgia,serif;text-shadow:0 1px 2px #000}
-.ur-social-card-info span{position:absolute;left:9%;width:82%;max-width:82%;transform:translateY(-50%);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ur-social-card-info .ur-social-card-name{top:59%;font-size:clamp(4px,10.5cqw,40px);font-weight:700;line-height:1}
-.ur-social-card-info span:nth-child(2){top:82.7%}
-.ur-social-card-info span:nth-child(3){top:92.5%}
+.ur-social-card{position:relative;width:min(100cqw,100cqh);height:min(100cqw,100cqh);max-width:100%;max-height:100%;aspect-ratio:1;margin:auto;isolation:isolate;container-type:inline-size}
+.ur-social-card-art{position:absolute;inset:0;z-index:1;display:block;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.ur-social-card-portrait,.ur-social-card-empty{position:absolute;z-index:2;left:29.6%;top:13.9%;width:40%;aspect-ratio:1;transform:none;border-radius:50%;overflow:hidden;background:transparent;display:grid;place-items:center}
+.ur-social-card-portrait img{display:block;width:100%;height:100%;object-fit:cover}
+.ur-social-card-portrait span{display:grid;place-items:center;width:100%;height:100%;background:transparent;color:#fff;font:700 clamp(10px,4cqw,18px) 'Pirata One',Georgia,serif;text-shadow:0 1px 3px #000}
+.ur-social-card-empty{border:0}
+.ur-social-card-empty span{max-width:82%;color:#fff;text-align:center;font:clamp(7px,4.5cqw,13px)/1.1 'Pirata One',Georgia,serif;text-shadow:0 1px 3px #000}
+.ur-social-card-info{position:absolute;z-index:3;inset:0;overflow:visible;background:transparent;color:#fff;text-align:center;font:clamp(8px,6.5cqw,28px)/1 'Pirata One',Georgia,serif;text-shadow:0 1px 3px #000,0 0 5px #000}
+.ur-social-card-info span{position:absolute;left:20%;width:60%;max-width:60%;transform:translateY(-50%);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;line-height:1}
+.ur-social-card-info .ur-social-card-name{left:12%;width:76%;max-width:76%;top:63.5%;font-size:clamp(6px,7.4cqw,30px);font-weight:700;line-height:1;color:#fff!important;-webkit-text-fill-color:#fff!important;background:none!important;background-image:none!important}
+.ur-social-card-info span:nth-child(2){top:71.7%;font-size:clamp(6px,6.2cqw,24px)}
+.ur-social-card-info span:nth-child(3){top:83.3%;font-size:clamp(6px,6.2cqw,24px)}
+.ur-social-card-info .shiny-name{text-shadow:0 1px 3px #000,0 0 5px #000;animation:none;filter:none}
 .ur-social-card .ur-slot-mic-icon{top:4%;left:auto;right:4%}
+.ur-slot.is-speaking.has-person .ur-social-card-portrait{box-shadow:0 0 0 2px #79dfbb,0 0 12px rgba(121,223,187,.66);animation:ur-speaking-ring 1.35s ease-in-out infinite}
+#root .ch.ur .ur-social-room .ur-social-card .card-home-city{z-index:4;left:71%;top:16.5%;width:10%}
