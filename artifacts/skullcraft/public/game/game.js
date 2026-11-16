@@ -43905,7 +43905,7 @@ function startBattle(onEnd) {
     game.ui.panel({ anchor: "top-left", x: x - w / 2, y: NAME_Y - 20, w, h: 40, safeArea: false, layer: "hud", z: 10, style: { fill: "#14171ce6", radius: 10, border: 0, bevel: 0, gloss: 0, shadow: 0 } });
     game.text(t, x, NAME_Y, { size: NAME_SIZE, font: "Cinzel", color: "#f5e6b8", stroke: { color: "#000000", width: 4 }, ...HUD_TEXT });
   };
-  namePlate("Hero", HERO_NAME_X);
+  namePlate(new URLSearchParams(location.search).get("playerName")?.trim().slice(0, 40) || "Hero", HERO_NAME_X);
   namePlate(beastInfo.name, BEAST_NAME_X);
   const flask = (x, max) => game.bars.create({
     style: "glossy",

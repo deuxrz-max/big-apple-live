@@ -21,7 +21,6 @@ import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
 import './university-room.css';
 import { RoomPerimeter } from './RoomPerimeter';
 import './bot-moderation.css';
-import { createRoomBattleState, ROOM_BOSS_POOL, type RoomBattlePlayer } from '@/battle/battle-engine';
 import { CardCity } from '@/profile/CardCity';
 
 const SocialRoomBattle = lazy(() => import('@/battle/BattlePrototype').then(module => ({ default: module.BattlePrototype })));
@@ -158,37 +157,14 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const isSelf = (username: string, authorId?: string) => (!!authorId && authorId === r.creds?.participantId) || me?.username === username;
   const nameColorOf = (username: string, fallback?: string) => people.find((p) => p.username === username)?.displayNameColor ?? fallback ?? '#FFFFFF';
 
-  const startRoomGame = async () => {
+  const startRoomGame = () => {
     if (!isSocialRoom || !videoBeam.ownSlot || !sessionId || startingGame) return;
     setStartingGame(true);
     setGameError(null);
-    try {
-      const players: RoomBattlePlayer[] = seatedSlots.map(slot => {
-        const person = people.find(candidate => candidate.participantId === slot.participantId);
-        const roomParticipant = r.room?.participants.find(candidate => candidate.participantId === slot.participantId);
-        return {
-          participantId: slot.participantId!,
-          name: person?.displayName ?? roomParticipant?.displayName ?? 'Player',
-          photoUrl: person?.photoUrl ?? null,
-          race: person?.race ?? 'Human',
-        };
-      });
-      const bosses = players.map(() => ROOM_BOSS_POOL[Math.floor(Math.random() * ROOM_BOSS_POOL.length)]!);
-      const state = createRoomBattleState(players, bosses);
-      const response = await fetch(`/api/account/rooms/${encodeURIComponent(roomId)}/battle/start`, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json', 'X-Room-Session': sessionId },
-        body: JSON.stringify({ state }),
-      });
-      const result = await response.json() as { error?: string };
-      if (!response.ok) throw new Error(result.error ?? 'Could not start the game.');
-      setRoomGameOpen(true);
-    } catch (error) {
-      setGameError(error instanceof Error ? error.message : 'Could not start the game.');
-    } finally {
-      setStartingGame(false);
-    }
+    const gameUrl = new URL('/skullcraft/', window.location.origin);
+    gameUrl.searchParams.set('playerName', me?.displayName?.trim() || me?.username || 'Hero');
+    gameUrl.searchParams.set('returnTo', `/rooms/${encodeURIComponent(roomId)}`);
+    window.location.assign(gameUrl.toString());
   };
 
   useEffect(() => {
