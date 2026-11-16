@@ -74,22 +74,19 @@
    Store previews and social-room seats retain their existing geometry. */
 .pf-clean-card .profile-card{
   width:min(100%,420px);
-  aspect-ratio:436/851;
+  aspect-ratio:1;
   container-type:inline-size;
   overflow:hidden;
+  background:#080808 var(--profile-square-art) center/contain no-repeat;
 }
 .pf-clean-card .profile-card-frame{
-  inset:auto;
-  left:-16.514%;
-  top:-9.401%;
-  width:132.11%;
-  height:120.329%;
-  max-width:none;
+  display:none;
 }
 .pf-clean-card .profile-card-photo{
-  left:15.19%;
-  top:3.47%;
-  width:68.7%;
+  left:29.6%;
+  top:13.9%;
+  width:40%;
+  object-fit:cover;
 }
 .pf-clean-card .profile-card-copy{
   inset:0;
@@ -110,19 +107,34 @@
   text-overflow:ellipsis;
 }
 .pf-clean-card .profile-card-name{
-  top:59%;
-  font-size:clamp(4px,10.5cqw,40px);
+  left:12%;
+  width:76%;
+  max-width:76%;
+  top:63.5%;
+  font-size:clamp(6px,7.4cqw,30px);
   line-height:1;
 }
 .pf-clean-card .profile-card-copy > :nth-child(2){
-  top:82.7%;
-  font-size:clamp(4px,8.5cqw,32px);
+  left:20%;
+  width:60%;
+  max-width:60%;
+  top:71.7%;
+  font-size:clamp(6px,6.2cqw,24px);
   line-height:1;
 }
 .pf-clean-card .profile-card-copy > :nth-child(3){
-  top:92.5%;
-  font-size:clamp(4px,8.5cqw,32px);
+  left:20%;
+  width:60%;
+  max-width:60%;
+  top:83.3%;
+  font-size:clamp(6px,6.2cqw,24px);
   line-height:1;
+}
+.pf-clean-card .profile-card .card-home-city{
+  z-index:4;
+  left:71%;
+  top:16.5%;
+  width:10%;
 }
 @media(min-width:700px){
   .profile-card{width:min(34vw,340px,25.3svh)}

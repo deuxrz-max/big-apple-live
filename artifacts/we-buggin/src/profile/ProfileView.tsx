@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { Link } from 'wouter';
 import { useClerk } from '@clerk/react';
 import { ArrowLeft, MoreVertical, Ban, Flag, Undo2, Store, Pencil } from 'lucide-react';
@@ -66,7 +66,10 @@ export function ProfileView({ person, own = false, backHref, menu, actions }: {
         <strong>{own ? 'Me' : 'Profile'}</strong>
         {menu ?? (own ? <Link href="/user-portal/edit" className="pf-round" aria-label="Edit profile" data-testid="link-edit-profile">Edit</Link> : <span />)}
       </header>
-      <div className="pf-clean-card">
+      <div
+        className="pf-clean-card"
+        style={{ '--profile-square-art': `url("${import.meta.env.BASE_URL}battle-assets/cards/profile-square-card.jpg")` } as CSSProperties}
+      >
         <ProfileCard person={person} />
         {own && <Link className="pf-edit-card-link" href="/user-portal/edit" aria-label="Edit profile" data-testid="link-edit-card"><Pencil size={17} aria-hidden /></Link>}
       </div>
