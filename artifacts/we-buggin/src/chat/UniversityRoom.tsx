@@ -81,6 +81,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const [drawer, setDrawer] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [ignored, setIgnored] = useState<Set<string>>(new Set());
+  const [roomAudioStatusLoadedFor, setRoomAudioStatusLoadedFor] = useState<string | null>(null);
   const seatRestoreAttempted = useRef<string | null>(null);
   const ignoreBusy = useRef(0);
   const autoRules = useRef(false);
@@ -116,6 +117,14 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   useEffect(() => {
     if (session && !session.rulesSeen && !autoRules.current) { autoRules.current = true; setRulesOpen(true); }
   }, [session]);
+  useEffect(() => {
+    let current = true;
+    if (!sessionId || !participantId) return;
+    void videoBeam.refresh().then(() => {
+      if (current) setRoomAudioStatusLoadedFor(roomId);
+    }).catch(() => undefined);
+    return () => { current = false; };
+  }, [roomId, sessionId, participantId, videoBeam.refresh]);
   useEffect(() => {
     if (!drawer && !menu && !rulesOpen) return;
     const dialog = menu ? menuBox.current : rulesOpen ? rulesBox.current : drawerBox.current;
@@ -162,6 +171,12 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
     ? beamSlots.slice(0, 4).map((slot, i) => ({ slot, area: 'grid' as const, gridColumn: (i % 2) + 1, gridRow: Math.floor(i / 2) + 1 }))
     : arrangeAudioSeats(beamSlots, roomHostParticipantId);
   const speakerCount = beamSlots.filter(slot => slot.participantId).length;
+  const emptyRoomAudioReady = roomAudioStatusLoadedFor === roomId
+    && videoBeam.beam.roomId === roomId
+    && !videoBeam.beam.beamActive
+    && speakerCount === 0
+    && videoBeam.connection !== 'connecting';
+  const roomAudioReadyForSeatRestore = videoBeam.connection === 'connected' || emptyRoomAudioReady;
   const isSelf = (username: string, authorId?: string) => (!!authorId && authorId === r.creds?.participantId) || me?.username === username;
   const nameColorOf = (username: string, fallback?: string) => people.find((p) => p.username === username)?.displayNameColor ?? fallback ?? '#FFFFFF';
 
@@ -186,7 +201,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
 
   useEffect(() => {
     if (!isSocialRoom || !r.room || !sessionId || !participantId
-      || startingGame || videoBeam.connection !== 'connected' || videoBeam.busy
+      || startingGame || !roomAudioReadyForSeatRestore || videoBeam.busy
       || seatRestoreAttempted.current === roomId) return;
 
     let raw: string | null;
@@ -218,7 +233,8 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
     void videoBeam.joinSpeaker(saved.seatNumber, { quietIfUnavailable: true });
   }, [
     isSocialRoom, r.room, roomId, sessionId, participantId, startingGame,
-    videoBeam.connection, videoBeam.busy, videoBeam.joinSpeaker,
+    roomAudioReadyForSeatRestore, videoBeam.busy, videoBeam.joinSpeaker,
+    roomAudioStatusLoadedFor, videoBeam.beam.roomId, videoBeam.beam.beamActive, speakerCount,
   ]);
 
   const toggleIgnore = (t: Target) => {
