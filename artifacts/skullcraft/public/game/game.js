@@ -44796,6 +44796,7 @@ var Pause = {
       game.scenes.go("play");
     } });
     game.ui.button({ parent: menu, h: 72, text: "Quit to title", icon: "home", onClick: () => game.scenes.go("title") });
+    if (roomReturnTo) game.ui.button({ parent: menu, h: 72, text: "Back to Room", icon: "home", onClick: backToRoom });
     const snd = game.ui.button({ parent: menu, h: 72, text: game.sound.muted ? "Sound off" : "Sound on", icon: "audio-toggle", onClick: () => {
       if (game.sound.muted) game.commands.unmute();
       else game.commands.mute();
@@ -44880,6 +44881,13 @@ var WIN_W = 560;
 var HEAD_SIZE = 36;
 var LINE_SIZE = 24;
 var BTN_H = 84;
+var roomReturnTo = (() => {
+  const path = new URLSearchParams(location.search).get("returnTo")?.trim() || "";
+  return path.startsWith("/rooms/") ? path : "";
+})();
+var backToRoom = () => {
+  if (roomReturnTo) window.parent.location.assign(roomReturnTo);
+};
 function shell(title, lines, bg, gold = false) {
   game.spawn({ id: "bg", texture: bg, x: 360, y: 640, height: 1280, layer: "back" });
   game.ui.panel({ anchor: "center", w: 720, h: 1280, safeArea: false, style: { fill: "#00000090", radius: 0, border: 0, bevel: 0, gloss: 0, shadow: 0 } });
@@ -44919,6 +44927,7 @@ var Victory = {
       game.scenes.go("spell-choice");
     } });
     game.ui.button({ parent: w, h: BTN_H - 12, text: "Title", icon: "home", onClick: () => game.scenes.go("title") });
+    if (roomReturnTo) game.ui.button({ parent: w, h: BTN_H - 12, text: "Back to Room", icon: "home", onClick: backToRoom });
   }
 };
 var Defeat = {
@@ -44929,6 +44938,7 @@ var Defeat = {
     const retry = () => game.scenes.go("spell-choice");
     game.ui.button({ parent: w, h: 84, text: "Retry", style: "good", icon: "restart", onClick: retry });
     game.ui.button({ parent: w, h: BTN_H - 12, text: "Title", icon: "home", onClick: () => game.scenes.go("title") });
+    if (roomReturnTo) game.ui.button({ parent: w, h: BTN_H - 12, text: "Back to Room", icon: "home", onClick: backToRoom });
     game.step("df", () => {
       if (game.input.keyPressed("Enter") || game.input.keyPressed("Space")) retry();
     });

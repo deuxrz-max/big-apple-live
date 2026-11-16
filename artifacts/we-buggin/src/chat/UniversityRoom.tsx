@@ -73,7 +73,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const [startingGame, setStartingGame] = useState(false);
   const [gameError, setGameError] = useState<string | null>(null);
   const [roomGameOpen, setRoomGameOpen] = useState(false);
-  const autoOpenedRoomBattle = useRef(false);
   const [reporting, setReporting] = useState<ReportTarget | null>(null);
   const [menu, setMenu] = useState<Target | null>(null);
   const [drawer, setDrawer] = useState(false);
@@ -94,6 +93,11 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
     setIgnored(new Set()); setNote(null);
     autoRules.current = false; ignoreVersion.current = null;
   }, [roomId, userId]);
+  useEffect(() => {
+    const resetGameStart = () => setStartingGame(false);
+    window.addEventListener('pageshow', resetGameStart);
+    return () => window.removeEventListener('pageshow', resetGameStart);
+  }, []);
   useEffect(() => {
     if (r.roomUnavailable) nav('/community');
   }, [r.roomUnavailable, nav]);
@@ -158,7 +162,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
   const nameColorOf = (username: string, fallback?: string) => people.find((p) => p.username === username)?.displayNameColor ?? fallback ?? '#FFFFFF';
 
   const startRoomGame = () => {
-    if (!isSocialRoom || !videoBeam.ownSlot || !sessionId || startingGame) return;
+    if (!isSocialRoom || !sessionId || startingGame) return;
     setStartingGame(true);
     setGameError(null);
     const gameUrl = new URL('/skullcraft/', window.location.origin);
@@ -166,13 +170,6 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
     gameUrl.searchParams.set('returnTo', `/rooms/${encodeURIComponent(roomId)}`);
     window.location.assign(gameUrl.toString());
   };
-
-  useEffect(() => {
-    if (isSocialRoom && participantId && r.battle?.playerIds.includes(participantId) && !autoOpenedRoomBattle.current) {
-      autoOpenedRoomBattle.current = true;
-      setRoomGameOpen(true);
-    }
-  }, [isSocialRoom, participantId, r.battle]);
 
   const toggleIgnore = (t: Target) => {
     const next = !ignored.has(t.username);
@@ -476,7 +473,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
               {isSocialRoom && (
                 <>
                   <button type="button" className="bm-btn bm-btn-primary ur-start-game"
-                    disabled={!videoBeam.ownSlot || startingGame || seatedSlots.length === 0}
+                    disabled={startingGame}
                     onClick={() => void startRoomGame()} data-testid="button-start-room-game">
                     {startingGame ? 'Starting…' : 'Start Game'}
                   </button>

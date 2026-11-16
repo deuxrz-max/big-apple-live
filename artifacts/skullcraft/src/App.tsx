@@ -5,6 +5,7 @@ function App() {
   const returnTo = requestedReturnTo.startsWith('/rooms/') ? requestedReturnTo : '/';
   const gameParams = new URLSearchParams();
   if (playerName) gameParams.set('playerName', playerName);
+  if (returnTo.startsWith('/rooms/')) gameParams.set('returnTo', returnTo);
   const gameQuery = gameParams.toString();
   return (
     <main style={{ position: 'fixed', inset: 0, background: '#000' }}>
