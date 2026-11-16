@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Skullcraft"
+description = "The owner-provided Phaser AE Skullcraft game, served from its complete self-contained web export as the main app."
+version = "1.0.0"
+id = "artifacts/skullcraft"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20273
+
+[services.development]
+run = "pnpm --filter @workspace/skullcraft run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/skullcraft", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/skullcraft/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20273"
+BASE_PATH = "/"
