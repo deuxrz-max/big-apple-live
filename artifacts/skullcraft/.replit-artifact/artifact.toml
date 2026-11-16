@@ -1,5 +1,5 @@
 kind = "web"
-previewPath = "/"
+previewPath = "/skullcraft/"
 title = "Skullcraft"
 description = "The owner-provided Phaser AE Skullcraft game, served from its complete self-contained web export as the main app."
 version = "1.0.0"
@@ -8,7 +8,7 @@ router = "path"
 
 [[services]]
 name = "web"
-paths = [ "/" ]
+paths = [ "/skullcraft/" ]
 localPort = 20273
 
 [services.development]
@@ -25,4 +25,4 @@ to = "/index.html"
 
 [services.env]
 PORT = "20273"
-BASE_PATH = "/"
+BASE_PATH = "/skullcraft/"

@@ -1,5 +1,5 @@
 kind = "web"
-previewPath = "/legacy-big-apple/"
+previewPath = "/"
 title = "Big Apple Live"
 description = "Adults-only social chat universities with uploaded profile photos, saved messages and independent atmosphere."
 version = "1.0.0"
@@ -8,7 +8,7 @@ router = "path"
 
 [[services]]
 name = "web"
-paths = [ "/legacy-big-apple/" ]
+paths = [ "/" ]
 localPort = 24150
 
 [services.development]
@@ -25,4 +25,4 @@ to = "/index.html"
 
 [services.env]
 PORT = "24150"
-BASE_PATH = "/legacy-big-apple/"
+BASE_PATH = "/"

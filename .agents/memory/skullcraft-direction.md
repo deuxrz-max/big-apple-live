@@ -2,8 +2,8 @@
 name: Skullcraft replacement direction
 description: Owner-approved replacement of Big Apple Live with the user's Phaser AE Skullcraft design.
 ---
-Replace Big Apple Live as the main app with Skullcraft, using the owner's existing Phaser AE design. The owner supplied a complete web export after CLI account approval blocked source generation; preserve that game's art and behavior rather than inventing a replacement. Do not treat Skullcraft as a separate companion app.
+Big Apple Live must remain the main app at `/`, with its social rooms and accounts. Skullcraft is reached from the Home Battle button at `/skullcraft/`, with a wrapper Home button. Preserve the supplied Phaser AE web export's art and behavior unchanged.
 
-**Why:** the owner explicitly said, "Replace the old big apple live with Skullcraft."
+**Why:** the owner corrected the earlier replacement direction: "incorporate the game into what we was already building" and wants rooms and other existing app functionality first.
 
-**How to apply:** preserve rollback before replacing the existing app. The old Big Apple Live gameplay is not Skullcraft's specification. Preserve old accounts and stored data unless separately authorized to remove them.
+**How to apply:** keep the root on Big Apple Live and preserve old legacy-prefix bookmarks through a redirect. Do not change room Start Game behavior when updating the homepage Battle entry. Preserve accounts and stored data.

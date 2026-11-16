@@ -36,7 +36,7 @@ export function RandomCityBattleButton({ kind, testId }: {
     <button type="button"
       className={isBattle ? 'bm-btn bm-btn-primary dw-battle-cta' : 'bm-btn bm-btn-primary rc-random-button'}
       data-testid={testId}
-      onClick={() => setLocation(battleHrefForCity(city()))}>
+      onClick={() => isBattle ? window.location.assign('/skullcraft/') : setLocation(battleHrefForCity(city()))}>
       <Icon size={17} aria-hidden="true" /> {isBattle ? 'Battle' : 'Random'}
     </button>
   );

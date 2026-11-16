@@ -1,4 +1,4 @@
-- [Skullcraft replacement](skullcraft-direction.md) — owner wants the existing Phaser AE Skullcraft design to replace Big Apple Live as the main app.
+- [Skullcraft integration](skullcraft-direction.md) — Big Apple Live stays at root; Home Battle opens unchanged Skullcraft at /skullcraft/ with a Home return.
 - [Headless WebRTC verification](webrtc-testing.md) — browser capture and shell Chromium support differ; verify real RTP/playback with synthetic input and report runner limits.
 - [Streamtalk owner access](owner-privileges.md) — only the non-test Vampsquad account has full owner/admin and preview test privileges.
 - [Preview fixture boundaries](preview-fixture-boundaries.md) — owner-requested inspection accounts persist; keep regression cleanup separate and never auto-seed production.
