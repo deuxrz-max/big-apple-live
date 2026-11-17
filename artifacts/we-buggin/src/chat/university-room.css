@@ -255,15 +255,15 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 .ur-social-profile-popup>.ur-profile-popup-head,.ur-social-profile-popup>.ur-profile-popup-cards{grid-column:1/-1}
 .ur-social-profile-popup>button{min-width:0;min-height:34px;padding:4px 6px;text-align:center;font-size:12px;line-height:1.15;overflow-wrap:anywhere}
 @media (max-width:420px){.ur-social-profile-popup{grid-template-columns:repeat(3,minmax(0,1fr))}}
-.ch.ur .ur-social-room .ur-slots{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:minmax(0,1fr)}
+.ch.ur .ur-social-room .ur-slots{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
 .ur-social-room .ur-slot-photo-fill{object-fit:cover}
 /* theme.css "#root .ur-slots" forces the 5-column nine-seat grid and 2/1 aspect; override for social rooms only. */
-#root .ch.ur .ur-social-room .ur-slots{box-sizing:border-box;flex:0 1 auto;width:100%;height:auto;min-height:0;aspect-ratio:4/1;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:minmax(0,1fr)}
+#root .ch.ur .ur-social-room .ur-slots{box-sizing:border-box;flex:1 1 auto;width:100%;height:auto;min-height:0;aspect-ratio:auto;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
 #root .ch.ur .ur-social-room .ur-beam.is-social-room{flex:1 1 0%;min-height:0}
 #root .ch.ur .ur-social-room .ur-slot-media{container-type:size}
-.ur-social-room .ur-start-game{align-self:center;flex:0 0 auto;width:auto;height:clamp(64px,9svh,80px);min-height:64px;padding:0;border:0;background:transparent;box-shadow:none}
+.ur-social-room .ur-start-game{align-self:center;flex:0 0 auto;width:auto;height:clamp(120px,17svh,150px);min-height:120px;padding:0;border:0;background:transparent;box-shadow:none}
 .ur-social-room .ur-start-game:hover,.ur-social-room .ur-start-game:active{background:transparent;box-shadow:none}
-.ur-social-room .ur-start-game img{display:block;width:auto;height:100%;max-width:min(100%,80px);object-fit:contain}
+.ur-social-room .ur-start-game img{display:block;width:auto;height:100%;max-width:min(100%,130px);object-fit:contain}
 .ur-social-room .ur-game-error{flex:0 0 auto;margin:0;color:#f0a8ad;font-size:11px;text-align:center}
 .ur-room-game-overlay{position:fixed;inset:0;z-index:1000;background:#080706}
 .ur-room-game-loading{display:grid;place-items:center;width:100%;height:100%;color:#f1d995}
