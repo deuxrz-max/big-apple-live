@@ -404,7 +404,7 @@ export function TextChatRoom({ roomId, userId }: { roomId: string; userId: strin
                     <article className={`ur-slot${isSpeaking ? ' is-speaking' : ''}${slot.participantId ? ' is-occupied' : ''}${person ? ' has-person' : ''}${isBeamHost ? ' is-beam-host' : ''}`}
                       key={slot.slotNumber}
                       data-seat-position={area}
-                      style={{ gridColumn, gridRow: area === 'host' ? '1 / span 2' : gridRow }}
+                      style={isSocialRoom ? undefined : { gridColumn, gridRow: area === 'host' ? '1 / span 2' : gridRow }}
                       aria-label={`Speaker slot ${slot.slotNumber}${slot.participantId ? `, ${person?.displayName ?? 'occupied'}` : ', empty'}`}>
                       <div className="ur-slot-media"
                         role={seatInteractive && !videoBeam.busy ? 'button' : undefined}
