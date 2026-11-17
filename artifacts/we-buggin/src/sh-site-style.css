@@ -466,3 +466,143 @@ body #root .app-bottom-nav .app-bottom-link.is-active::after {
   color: var(--sh-game-cream);
   text-decoration-color: var(--sh-game-gold);
 }
+
+/* Profile page chrome only; card styling is intentionally omitted. */
+#root .beam-app.pf.pf-clean {
+  color: var(--sh-game-cream-soft);
+  background-color: var(--sh-game-shadow);
+  background-image:
+    linear-gradient(rgba(8,9,11,.82), rgba(8,9,11,.82)),
+    url("/site-assets/bg-crypt-of-skulls.webp");
+  background-position: center, center;
+  background-size: cover, cover;
+  background-repeat: no-repeat, no-repeat;
+  background-attachment: fixed, fixed;
+}
+
+#root .beam-app.pf.pf-clean .pf-clean-header > strong {
+  color: var(--sh-game-cream);
+  font-family: var(--sh-game-font);
+  letter-spacing: 1.5px;
+  text-shadow: 0 2px 2px rgba(8,9,11,.8);
+}
+
+#root .beam-app.pf.pf-clean .pf-clean-header > [data-testid="link-profile-back"] {
+  color: var(--sh-game-cream);
+  background: linear-gradient(180deg, var(--sh-game-panel), var(--sh-game-panel-dark));
+  border: 1px solid rgba(194,155,83,.65);
+  border-radius: 4px;
+  font-family: var(--sh-game-font);
+  text-transform: uppercase;
+}
+
+#root .beam-app.pf.pf-clean .pf-clean-header > [data-testid="link-profile-back"]:hover {
+  color: var(--sh-game-gold);
+  border-color: var(--sh-game-gold);
+}
+
+#root .beam-app.pf.pf-clean .pf-clean-header > [data-testid="link-edit-profile"],
+#root .beam-app.pf.pf-clean .pf-own-actions > .pf-store-button {
+  color: var(--sh-game-cream) !important;
+  background: linear-gradient(180deg, var(--sh-game-oxblood), var(--sh-game-oxblood-dark)) !important;
+  border: 2px solid var(--sh-game-gold) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 3px 0 var(--sh-game-shadow) !important;
+  font-family: var(--sh-game-font);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 2px rgba(8,9,11,.8);
+}
+
+#root .beam-app.pf.pf-clean .pf-own-actions > .pf-signout-button {
+  color: var(--sh-game-cream) !important;
+  background: linear-gradient(180deg, var(--sh-game-red), var(--sh-game-red-dark)) !important;
+  border: 2px solid var(--sh-game-gold) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 3px 0 var(--sh-game-shadow) !important;
+  font-family: var(--sh-game-font);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 2px rgba(8,9,11,.8);
+}
+
+/* The current Edit Profile route is a form screen, not a modal dialog. */
+#root .ch.ch-profile-screen .dw-screen-header h1 {
+  position: relative;
+  z-index: 0;
+  color: var(--sh-game-cream);
+  font-family: var(--sh-game-font);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 2px rgba(8,9,11,.8);
+}
+
+#root .ch.ch-profile-screen .dw-screen-header h1::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: 50%;
+  width: min(220px, 100%);
+  aspect-ratio: 256 / 178;
+  transform: translate(-50%, -50%);
+  background: url("/site-assets/turn-banner.webp") center / contain no-repeat;
+  pointer-events: none;
+}
+
+#root .ch.ch-profile-screen .dw-screen-header .dw-icon-btn {
+  color: var(--sh-game-cream);
+  background: linear-gradient(180deg, var(--sh-game-panel), var(--sh-game-panel-dark));
+  border: 1px solid rgba(194,155,83,.65);
+  border-radius: 4px;
+}
+
+#root .ch.ch-profile-screen .dw-screen-header .dw-icon-btn:hover {
+  color: var(--sh-game-gold);
+  border-color: var(--sh-game-gold);
+}
+
+#root .ch.ch-profile-screen .ch-form {
+  color: var(--sh-game-cream-soft);
+  background: linear-gradient(180deg, var(--sh-game-dialog), var(--sh-game-dialog-dark));
+  border: 2px solid var(--sh-game-gold);
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 5px rgba(194,155,83,.24), inset 0 0 18px rgba(8,9,11,.68), 0 8px 24px rgba(8,9,11,.58);
+}
+
+#root .ch.ch-profile-screen .ch-form > label,
+#root .ch.ch-profile-screen .ch-form :is(.ch-profile-photo-edit, .ch-profile-identity) > b,
+#root .ch.ch-profile-screen .ch-form .ch-profile-identity label {
+  color: var(--sh-game-cream);
+  font-family: var(--sh-game-font);
+  letter-spacing: .7px;
+}
+
+#root .ch.ch-profile-screen .ch-form :is(input, select, textarea) {
+  color: var(--sh-game-cream-soft);
+  background: var(--sh-game-panel-dark);
+  border: 1px solid rgba(194,155,83,.65);
+  border-radius: 4px;
+  font-family: var(--sh-font-body);
+}
+
+#root .ch.ch-profile-screen .ch-form :is(input, select, textarea):focus {
+  border-color: var(--sh-game-gold);
+  outline: 2px solid rgba(194,155,83,.22);
+  outline-offset: 1px;
+}
+
+#root .ch.ch-profile-screen .ch-form > p > button[type="submit"] {
+  color: var(--sh-game-cream) !important;
+  background: linear-gradient(180deg, var(--sh-game-oxblood), var(--sh-game-oxblood-dark)) !important;
+  border: 2px solid var(--sh-game-gold) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 3px 0 var(--sh-game-shadow) !important;
+  font-family: var(--sh-game-font);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 2px rgba(8,9,11,.8);
+}
