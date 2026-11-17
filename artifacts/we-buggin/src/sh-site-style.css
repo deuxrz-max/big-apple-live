@@ -729,3 +729,126 @@ body #root .app-bottom-nav .app-bottom-link.is-active::after {
   letter-spacing: 1.2px;
   text-transform: uppercase;
 }
+
+/* Leaderboard page only; avatars and player-card classes are not targeted. */
+#root .ch.sc:has(.sc-leaderboard-page) {
+  background-color: var(--sh-game-shadow);
+  background-image:
+    linear-gradient(rgba(8,9,11,.82), rgba(8,9,11,.82)),
+    url("/site-assets/bg-crypt-of-skulls.webp");
+  background-position: center, center;
+  background-size: cover, cover;
+  background-repeat: no-repeat, no-repeat;
+  background-attachment: fixed, fixed;
+}
+
+#root .sc-leaderboard-page .sc-h1 {
+  position: relative;
+  z-index: 0;
+  color: var(--sh-game-cream);
+  font-family: var(--sh-game-font);
+  letter-spacing: 1.5px;
+  text-shadow: 0 2px 2px rgba(8,9,11,.8);
+  text-transform: uppercase;
+}
+
+#root .sc-leaderboard-page .sc-h1::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: 50%;
+  width: min(220px, 100%);
+  aspect-ratio: 256 / 178;
+  transform: translate(-50%, -50%);
+  background: url("/site-assets/turn-banner.webp") center / contain no-repeat;
+  pointer-events: none;
+}
+
+#root .ch.sc:has(.sc-leaderboard-page) [data-testid="link-leaderboard-back"] {
+  color: var(--sh-game-cream-soft) !important;
+  background: linear-gradient(180deg, var(--sh-game-panel), var(--sh-game-panel-dark)) !important;
+  border: 1px solid rgba(194,155,83,.65) !important;
+  border-radius: 4px !important;
+  font-family: var(--sh-game-font);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+#root .ch.sc:has(.sc-leaderboard-page) [data-testid="link-leaderboard-back"]:hover,
+#root .ch.sc:has(.sc-leaderboard-page) [data-testid="link-leaderboard-back"]:focus-visible {
+  color: var(--sh-game-gold) !important;
+  border-color: var(--sh-game-gold) !important;
+}
+
+#root .sc-leaderboard-page :is(.sc-filters, [role="tablist"]) > :is(a, button) {
+  color: var(--sh-game-cream-soft);
+  background: linear-gradient(180deg, var(--sh-game-panel), var(--sh-game-panel-dark));
+  border: 1px solid rgba(194,155,83,.65);
+  border-radius: 4px;
+  font-family: var(--sh-game-font);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+#root .sc-leaderboard-page :is(.sc-filters, [role="tablist"]) > :is(a, button):is([aria-current="page"], [aria-selected="true"], [aria-pressed="true"], .is-active) {
+  color: var(--sh-game-cream);
+  background: linear-gradient(180deg, var(--sh-game-oxblood), var(--sh-game-oxblood-dark));
+  border: 2px solid var(--sh-game-gold);
+  box-shadow: 0 0 8px rgba(194,155,83,.2);
+}
+
+#root .sc-leaderboard-page .sc-rank,
+#root .sc-leaderboard-page .sc-empty {
+  color: var(--sh-game-cream-soft);
+  background: linear-gradient(180deg, var(--sh-game-dialog), var(--sh-game-dialog-dark));
+  border: 2px solid var(--sh-game-gold);
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 5px rgba(194,155,83,.24), inset 0 0 18px rgba(8,9,11,.68), 0 8px 24px rgba(8,9,11,.58);
+}
+
+#root .sc-leaderboard-page .sc-rank > li {
+  border-bottom: 1px solid rgba(194,155,83,.24);
+}
+
+#root .sc-leaderboard-page .sc-rank .sc-name {
+  color: var(--sh-game-cream-soft);
+  font-family: var(--sh-font-body);
+}
+
+#root .sc-leaderboard-page .sc-rank .sc-score {
+  color: var(--sh-game-cream);
+  font-family: var(--sh-game-font);
+}
+
+#root .sc-leaderboard-page .sc-rank .sc-pos {
+  font-family: var(--sh-game-font);
+}
+
+#root .sc-leaderboard-page .sc-rank > li:nth-child(1) .sc-pos {
+  color: #c29b53;
+}
+
+#root .sc-leaderboard-page .sc-rank > li:nth-child(2) .sc-pos {
+  color: #B6ADB1;
+}
+
+#root .sc-leaderboard-page .sc-rank > li:nth-child(3) .sc-pos {
+  color: #886d3a;
+}
+
+#root .sc-leaderboard-page .sc-empty {
+  border-style: solid;
+}
+
+#root .sc-leaderboard-page .sc-empty h2 {
+  color: var(--sh-game-cream);
+  font-family: var(--sh-game-font);
+  text-shadow: 0 2px 2px rgba(8,9,11,.8);
+}
+
+#root .sc-leaderboard-page .sc-empty p,
+#root .sc-leaderboard-page .sc-sub {
+  color: var(--sh-game-cream-soft);
+  font-family: var(--sh-font-body);
+}
