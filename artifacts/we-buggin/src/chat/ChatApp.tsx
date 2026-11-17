@@ -2,7 +2,7 @@ import '@/beam/beam.css';
 import '@/social/social.css';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
-import { ArrowLeft, Flame, Trophy, Users, X } from 'lucide-react';
+import { ArrowLeft, Flame, Swords, Trophy, Users, X } from 'lucide-react';
 import { useClerk } from '@clerk/react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -76,10 +76,12 @@ function List({ preview, query = '' }: { preview?: boolean; query?: string }) {
       {q.data && q.data.length === 0 && <p>No entries.</p>}
       {q.data && q.data.length > 0 && rows.length === 0 && <p>No room matches your search.</p>}
       <RoomChannels rooms={rows} loading={q.isLoading} baseHref={preview ? '/' : '/home'}
-        battle={<RandomCityBattleButton kind="battle" testId={preview ? 'link-public-battle' : 'link-home-battle'} />}
-        random={<RandomCityBattleButton kind="random" testId={preview ? 'button-public-random-city' : 'button-home-random-city'} />}
+        battle={preview
+          ? <Link href="/sign-in" className="bm-btn bm-btn-primary dw-battle-cta" data-testid="link-public-battle"><Swords size={17} aria-hidden="true" /> Battle</Link>
+          : <CreateRoomButton className="bm-btn bm-btn-primary dw-battle-cta"><Swords size={17} aria-hidden="true" /> Battle</CreateRoomButton>}
+        random={<RandomCityBattleButton testId={preview ? 'button-public-random-city' : 'button-home-random-city'} />}
         renderRoom={room => <DirectoryRoomCard room={room} topic={displayRoomName(room.label)} isFeatured={false} preview={preview} />}
-        goLive={<Link href="/sign-in" className="st-home-go-live-button"><span className="st-home-go-live-copy"><strong>Create Room</strong><small>Start an audio room</small></span></Link>}
+        goLive={null}
       />
     </>
   );
@@ -222,12 +224,10 @@ export function ChatDirectory() {
         <RoomChannels
           rooms={displayedRooms}
           loading={directory.isLoading}
-          battle={<RandomCityBattleButton kind="battle" testId="link-home-battle" />}
-          random={<RandomCityBattleButton kind="random" testId="button-home-random-city" />}
+          battle={<CreateRoomButton className="bm-btn bm-btn-primary dw-battle-cta"><Swords size={17} aria-hidden="true" /> Battle</CreateRoomButton>}
+          random={<RandomCityBattleButton testId="button-home-random-city" />}
           renderRoom={(room) => <DirectoryRoomCard room={room} topic={topicFor(room)} isFeatured={room.roomId === featuredRoom?.roomId} hideDetails />}
-          goLive={<CreateRoomButton className="st-home-go-live-button">
-            <span className="st-home-go-live-copy"><strong>Create Room</strong><small>Start a four-player audio room</small></span>
-          </CreateRoomButton>}
+          goLive={null}
         />
       </section>
       <footer className="st-dir-footer"><span>BIG APPLE LIVE · FIND YOUR PEOPLE</span></footer>

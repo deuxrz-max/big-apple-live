@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link, Redirect, useLocation, useSearch } from 'wouter';
-import { Shuffle, Swords } from 'lucide-react';
+import { Shuffle } from 'lucide-react';
 import { AETHELGARD_CITIES, randomAethelgardCity, battleHrefForCity } from '@/battle/aethelgard-cities';
 import { channelBySlug, channelForDirectoryRoom, roomChannelHref } from './room-channels';
 import './room-channels.css';
@@ -23,21 +23,16 @@ export type RoomChannelsProps<R extends DirectoryChannelRoom> = {
   showMap?: boolean;
 };
 
-export function RandomCityBattleButton({ kind, testId }: {
-  kind: 'battle' | 'random';
-  testId: string;
-}) {
+export function RandomCityBattleButton({ testId }: { testId: string }) {
   const [, setLocation] = useLocation();
-  const isBattle = kind === 'battle';
-  const Icon = isBattle ? Swords : Shuffle;
   const city = randomAethelgardCity;
 
   return (
     <button type="button"
-      className={isBattle ? 'bm-btn bm-btn-primary dw-battle-cta' : 'bm-btn bm-btn-primary rc-random-button'}
+      className="bm-btn bm-btn-primary rc-random-button"
       data-testid={testId}
-      onClick={() => isBattle ? window.location.assign('/skullcraft/') : setLocation(battleHrefForCity(city()))}>
-      <Icon size={17} aria-hidden="true" /> {isBattle ? 'Battle' : 'Random'}
+      onClick={() => setLocation(battleHrefForCity(city()))}>
+      <Shuffle size={17} aria-hidden="true" /> Random
     </button>
   );
 }
@@ -79,10 +74,12 @@ export function RoomChannels<R extends DirectoryChannelRoom>({
                 role="group"
                 aria-label="Choose a city on the Aethelgard map"
                 data-testid="image-home-map"
-                style={{
-                  backgroundImage: `url("${import.meta.env.BASE_URL}battle-assets/screens/aethelgard_map_starting_screen.jpg")`,
-                }}
               >
+                <video className="rc-map-video" autoPlay muted loop playsInline preload="metadata"
+                  poster={`${import.meta.env.BASE_URL}battle-assets/screens/aethelgard-map-poster.jpg`}
+                  aria-hidden="true">
+                  <source src={`${import.meta.env.BASE_URL}battle-assets/screens/aethelgard-map-loop.mp4`} type="video/mp4" />
+                </video>
                 {AETHELGARD_CITIES.map(city => (
                   <Link key={city.slug} href={`/city/${city.slug}`}
                     className="rc-city-marker"
@@ -92,13 +89,13 @@ export function RoomChannels<R extends DirectoryChannelRoom>({
                     {city.name}
                   </Link>
                 ))}
+                {battle && <div className="rc-map-battle">{battle}</div>}
               </div>
-              {battle && <div className="rc-map-battle">{battle}</div>}
             </div>
             {random && <div className="rc-map-actions">{random}</div>}
           </li>
         )}
-        <li className="st-home-go-live">{goLive}</li>
+        {goLive != null && <li className="st-home-go-live">{goLive}</li>}
       </ul>
       {!loading && others.length > 0 && (
         <ul className="rc-grid">

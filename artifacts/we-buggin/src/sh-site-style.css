@@ -199,7 +199,8 @@ body.streamtalk-directory-screen #root .ch.st-home .dw-home-tabs > a.is-on {
   box-shadow: 0 2px 8px -5px var(--sh-gold);
 }
 
-body.streamtalk-directory-screen #root .ch.st-home .dw-battle-cta {
+body.streamtalk-directory-screen #root .ch.st-home .dw-battle-cta,
+#root .ch.dw-landing .dw-battle-cta {
   color: var(--sh-game-cream) !important;
   background: linear-gradient(180deg, var(--sh-game-oxblood), var(--sh-game-oxblood-dark)) !important;
   border: 2px solid var(--sh-game-gold) !important;
@@ -213,11 +214,13 @@ body.streamtalk-directory-screen #root .ch.st-home .dw-battle-cta {
   transition: background .14s ease, transform .14s ease, box-shadow .14s ease;
 }
 
-body.streamtalk-directory-screen #root .ch.st-home .dw-battle-cta:hover:not(:disabled) {
+body.streamtalk-directory-screen #root .ch.st-home .dw-battle-cta:hover:not(:disabled),
+#root .ch.dw-landing .dw-battle-cta:hover:not(:disabled) {
   background: linear-gradient(180deg, #54423d, #221613) !important;
 }
 
-body.streamtalk-directory-screen #root .ch.st-home .dw-battle-cta:active:not(:disabled) {
+body.streamtalk-directory-screen #root .ch.st-home .dw-battle-cta:active:not(:disabled),
+#root .ch.dw-landing .dw-battle-cta:active:not(:disabled) {
   transform: translateY(2px);
   box-shadow: 0 1px 0 var(--sh-game-shadow) !important;
 }
