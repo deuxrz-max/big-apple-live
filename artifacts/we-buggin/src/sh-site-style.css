@@ -1,0 +1,219 @@
+:root {
+  --sh-bg: #0A0D12;
+  --sh-panel: #14171D;
+  --sh-panel-raised: #1C2028;
+  --sh-silver: #B6ADB1;
+  --sh-silver-mid: #8A8F9E;
+  --sh-silver-dark: #4A4E58;
+  --sh-gold: #C9A25E;
+  --sh-gold-hi: #F2D08A;
+  --sh-gold-lo: #97692A;
+  --sh-purple: #5F378C;
+  --sh-purple-deep: #35226E;
+  --sh-red: #7A1414;
+  --sh-red-hi: #B0262A;
+  --sh-text: #F4F1EA;
+  --sh-muted: #B9B2A2;
+  --sh-font-title: "Pirata One", Georgia, serif;
+  --sh-font-body: "Nunito Sans", system-ui, sans-serif;
+  --sh-text-shadow: 0 2px 0 #000, 0 0 6px rgba(0,0,0,.8);
+}
+
+.sh-panel {
+  color: var(--sh-text);
+  background: var(--sh-panel);
+  border: 2px solid var(--sh-silver);
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px var(--sh-silver-dark), inset 0 1px 8px rgba(0,0,0,.55);
+}
+
+.sh-title {
+  color: var(--sh-text);
+  font-family: var(--sh-font-title);
+  text-shadow: var(--sh-text-shadow);
+}
+
+.sh-btn-gold {
+  color: var(--sh-text);
+  background: linear-gradient(180deg, var(--sh-gold-hi), var(--sh-gold) 55%, var(--sh-gold-lo));
+  border: 1px solid var(--sh-gold-lo);
+  font-family: var(--sh-font-title);
+  text-shadow: 0 1px 2px rgba(0,0,0,.8);
+}
+
+.sh-btn-silver {
+  color: var(--sh-text);
+  background: var(--sh-panel-raised);
+  border: 1px solid var(--sh-silver-mid);
+  font-family: var(--sh-font-title);
+  text-shadow: var(--sh-text-shadow);
+}
+
+.sh-btn-silver:active,
+.sh-btn-silver[aria-pressed="true"] {
+  border-color: var(--sh-gold);
+}
+
+.sh-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  color: var(--sh-gold-hi);
+  background: var(--sh-panel);
+  border: 1px solid var(--sh-silver-mid);
+  box-shadow: inset 0 0 0 1px var(--sh-silver-dark);
+}
+
+/* Signed-in Home only: keep the map and all page geometry untouched. */
+body.streamtalk-directory-screen #root .ch.st-home .st-home-background {
+  background: linear-gradient(155deg, var(--sh-panel) 0%, var(--sh-bg) 58%, #07090D 100%) !important;
+}
+
+body.streamtalk-directory-screen #root .ch.st-home .dw-home-title strong,
+body.streamtalk-directory-screen #root .ch.st-home .dw-home-title small {
+  color: var(--sh-text);
+  font-family: var(--sh-font-title);
+  text-shadow: var(--sh-text-shadow);
+}
+
+body.streamtalk-directory-screen #root .ch.st-home .dw-home-title small {
+  color: var(--sh-muted);
+}
+
+body.streamtalk-directory-screen #root .ch.st-home .st-home-leaderboard {
+  color: var(--sh-gold-hi) !important;
+  background: var(--sh-panel) !important;
+  border: 1px solid var(--sh-silver-mid) !important;
+  box-shadow: inset 0 0 0 1px var(--sh-silver-dark) !important;
+}
+
+body.streamtalk-directory-screen #root .ch.st-home .st-home-leaderboard svg {
+  color: var(--sh-gold-hi);
+  stroke: currentColor;
+}
+
+body.streamtalk-directory-screen #root .ch.st-home .st-home-profile-dropdown {
+  color: var(--sh-text);
+  background: var(--sh-panel);
+  border: 2px solid var(--sh-silver);
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px var(--sh-silver-dark), 0 12px 30px rgba(0,0,0,.6);
+}
+
+body.streamtalk-directory-screen #root .ch.st-home .st-home-profile-dropdown a,
+body.streamtalk-directory-screen #root .ch.st-home .st-home-profile-dropdown button {
+  color: var(--sh-text);
+  font-family: var(--sh-font-body);
+}
+
+body.streamtalk-directory-screen #root .ch.st-home .st-home-profile-dropdown :is(a, button):hover {
+  background: var(--sh-panel-raised);
+}
+
+body.streamtalk-directory-screen #root .ch.st-home .dw-home-tabs a,
+body.streamtalk-directory-screen #root .ch.st-home .st-dir-section-head h2 {
+  color: var(--sh-text);
+  font-family: var(--sh-font-title);
+  text-shadow: var(--sh-text-shadow);
+}
+
+body.streamtalk-directory-screen #root .ch.st-home .dw-home-tabs > a {
+  color: var(--sh-muted);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+}
+
+body.streamtalk-directory-screen #root .ch.st-home .dw-home-tabs > a.is-on {
+  color: var(--sh-text);
+  background: transparent;
+  border-bottom-color: var(--sh-gold);
+  box-shadow: 0 2px 8px -5px var(--sh-gold);
+}
+
+body.streamtalk-directory-screen #root .ch.st-home .dw-battle-cta {
+  color: var(--sh-text) !important;
+  background: linear-gradient(180deg, var(--sh-gold-hi), var(--sh-gold) 55%, var(--sh-gold-lo)) !important;
+  border: 1px solid var(--sh-gold-lo) !important;
+  font-family: var(--sh-font-title);
+  text-shadow: 0 1px 2px rgba(0,0,0,.8);
+}
+
+body.streamtalk-directory-screen #root .ch.st-home .rc-random-button {
+  color: var(--sh-text) !important;
+  background: var(--sh-panel-raised) !important;
+  border: 1px solid var(--sh-silver-mid) !important;
+  font-family: var(--sh-font-title);
+  text-shadow: var(--sh-text-shadow);
+}
+
+body.streamtalk-directory-screen #root .ch.st-home .st-home-go-live-button {
+  color: var(--sh-text) !important;
+  background: var(--sh-panel) !important;
+  border: 2px solid var(--sh-silver) !important;
+  box-shadow: inset 0 0 0 1px var(--sh-silver-dark), inset 0 1px 8px rgba(0,0,0,.55) !important;
+  text-shadow: var(--sh-text-shadow);
+}
+
+body.streamtalk-directory-screen #root .ch.st-home .st-home-go-live-copy strong {
+  color: var(--sh-text);
+  font-family: var(--sh-font-title);
+  text-shadow: var(--sh-text-shadow);
+}
+
+body.streamtalk-directory-screen #root .ch.st-home .st-home-go-live-copy small {
+  color: var(--sh-muted);
+  font-family: var(--sh-font-body);
+}
+
+body.streamtalk-directory-screen #root .ch.st-home .st-dir-card {
+  border-color: var(--sh-silver-mid);
+  box-shadow: inset 0 0 0 1px var(--sh-silver-dark), 0 8px 24px rgba(0,0,0,.45);
+}
+
+body.streamtalk-directory-screen #root .ch.st-home .st-home-live-label i {
+  background: var(--sh-red-hi);
+  box-shadow: 0 0 8px rgba(176,38,42,.65);
+}
+
+body.streamtalk-directory-screen #root .ch.st-home .st-dir-footer > span {
+  color: var(--sh-muted);
+  font-family: var(--sh-font-title);
+}
+
+/* The bottom navigation is shared across the app. */
+body #root nav.app-bottom-nav {
+  color: var(--sh-silver);
+  background: var(--sh-bg) !important;
+  border-top: 1px solid var(--sh-silver-dark) !important;
+  box-shadow: 0 -8px 24px rgba(0,0,0,.45) !important;
+}
+
+body #root .app-bottom-nav .app-bottom-link {
+  color: var(--sh-silver) !important;
+  font-family: var(--sh-font-title);
+}
+
+body #root .app-bottom-nav .app-bottom-link :is(svg, span) {
+  color: inherit !important;
+}
+
+body #root .app-bottom-nav .app-bottom-link.is-active {
+  color: var(--sh-gold-hi) !important;
+  text-shadow: 0 0 7px rgba(242,208,138,.35);
+}
+
+body #root .app-bottom-nav .app-bottom-link.is-active svg {
+  filter: drop-shadow(0 0 4px rgba(242,208,138,.45));
+}
+
+body #root .app-bottom-nav .app-bottom-link.is-active::after {
+  background: var(--sh-gold) !important;
+  box-shadow: 0 0 8px rgba(201,162,94,.65) !important;
+}
+
+@layer app-shapes {
+  body.streamtalk-directory-screen #root .ch.st-home .st-home-go-live-button {
+    border-radius: 4px !important;
+  }
+}

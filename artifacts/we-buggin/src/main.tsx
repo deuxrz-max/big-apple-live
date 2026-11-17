@@ -4,6 +4,7 @@ import App from './App';
 import { ErrorBoundary } from '@/components/error-boundary';
 
 import './index.css';
+import './sh-site-style.css';
 
 // Preserve old bookmarks without maintaining a second app under the old prefix.
 if (/^\/legacy-big-apple(?:\/|$)/.test(window.location.pathname)) {
