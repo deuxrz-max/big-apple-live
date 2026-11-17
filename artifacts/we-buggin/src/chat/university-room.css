@@ -292,3 +292,10 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 .ur-social-card .ur-slot-mic-icon{top:4%;left:auto;right:4%}
 .ur-slot.is-speaking.has-person .ur-social-card-portrait{box-shadow:0 0 0 2px #79dfbb,0 0 12px rgba(121,223,187,.66);animation:ur-speaking-ring 1.35s ease-in-out infinite}
 #root .ch.ur .ur-social-room .ur-social-card .card-home-city{z-index:4;left:71%;top:16.5%;width:10%}
+
+/* Social-room seat fill adjustment */
+#root .ch.ur .ur-social-room .ur-slots{padding:0;column-gap:8px;row-gap:12px}
+#root .ch.ur .ur-social-room .ur-slot{overflow:hidden}
+#root .ch.ur .ur-social-room .ur-social-card{transform:scale(1.14);transform-origin:center}
+#root .ch.ur .ur-social-room .ur-social-card .ur-slot-mic-icon{top:9%;right:9%}
+#root .ch.ur .ur-social-room .ur-beam.is-social-room{overflow-y:auto}
