@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&display=swap');
+
 :root {
   --sh-bg: #0A0D12;
   --sh-panel: #14171D;
@@ -17,6 +19,20 @@
   --sh-font-title: "Pirata One", Georgia, serif;
   --sh-font-body: "Nunito Sans", system-ui, sans-serif;
   --sh-text-shadow: 0 2px 0 #000, 0 0 6px rgba(0,0,0,.8);
+  --sh-game-gold: #c29b53;
+  --sh-game-gold-dark: #886d3a;
+  --sh-game-oxblood: #3d2822;
+  --sh-game-oxblood-dark: #1b120f;
+  --sh-game-panel: #1f2429;
+  --sh-game-panel-dark: #15181b;
+  --sh-game-dialog: #14171c;
+  --sh-game-dialog-dark: #0d0f13;
+  --sh-game-cream: #faecd0;
+  --sh-game-cream-soft: #f5eee6;
+  --sh-game-red: #b82222;
+  --sh-game-red-dark: #530f0f;
+  --sh-game-shadow: #08090b;
+  --sh-game-font: "Cinzel", Georgia, serif;
 }
 
 .sh-panel {
@@ -61,6 +77,48 @@
   background: var(--sh-panel);
   border: 1px solid var(--sh-silver-mid);
   box-shadow: inset 0 0 0 1px var(--sh-silver-dark);
+}
+
+.sh-game-btn {
+  appearance: none;
+  color: var(--sh-game-cream);
+  background: linear-gradient(180deg, var(--sh-game-oxblood), var(--sh-game-oxblood-dark));
+  border: 2px solid var(--sh-game-gold);
+  border-radius: 4px;
+  box-shadow: 0 3px 0 var(--sh-game-shadow);
+  font-family: var(--sh-game-font);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 2px rgba(8,9,11,.8);
+  transition: background .14s ease, border-color .14s ease, transform .14s ease, box-shadow .14s ease;
+}
+
+.sh-game-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #54423d, #221613);
+}
+
+.sh-game-btn:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--sh-game-shadow);
+}
+
+.sh-game-btn.is-danger {
+  background: linear-gradient(180deg, var(--sh-game-red), var(--sh-game-red-dark));
+}
+
+.sh-game-btn.is-flat {
+  background: linear-gradient(180deg, var(--sh-game-panel), var(--sh-game-panel-dark));
+  border-color: rgba(194,155,83,.65);
+  box-shadow: none;
+}
+
+.sh-game-panel {
+  color: var(--sh-game-cream-soft);
+  background: linear-gradient(180deg, var(--sh-game-dialog), var(--sh-game-dialog-dark));
+  border: 2px solid var(--sh-game-gold);
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 5px rgba(194,155,83,.24), inset 0 0 18px rgba(8,9,11,.68), 0 8px 24px rgba(8,9,11,.58);
 }
 
 /* Signed-in Home only: keep the map and all page geometry untouched. */

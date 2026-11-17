@@ -313,3 +313,188 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 
 #root .ch.ur .ur-social-room .ur-social-card .card-home-city { clip-path: circle(50%); }
 #root .ch.ur .ur-social-room .ur-social-card .card-home-city img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Skullcraft runestone-bone finish for room chrome only; seats and START stay untouched. */
+#root .ch-university.ur {
+  background-color: var(--sh-game-shadow);
+  background-image:
+    linear-gradient(rgba(8,9,11,.80), rgba(8,9,11,.80)),
+    url("/site-assets/bg-crypt-of-skulls.webp") !important;
+  background-position: center, center;
+  background-size: cover, cover;
+  background-repeat: no-repeat, no-repeat;
+  background-attachment: fixed, fixed;
+}
+
+#root .ch-university.ur .ur-in {
+  background: transparent !important;
+}
+
+#root .ch-university.ur :is(.ur-people-btn, .ur-rules-btn) {
+  color: var(--sh-game-cream) !important;
+  background: linear-gradient(180deg, var(--sh-game-oxblood), var(--sh-game-oxblood-dark)) !important;
+  border: 2px solid var(--sh-game-gold) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 3px 0 var(--sh-game-shadow) !important;
+  font-family: var(--sh-game-font);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 2px rgba(8,9,11,.8);
+}
+
+#root .ch-university.ur :is(.ur-people-btn, .ur-rules-btn):hover:not(:disabled) {
+  background: linear-gradient(180deg, #54423d, #221613) !important;
+}
+
+#root .ch-university.ur :is(.ur-people-btn, .ur-rules-btn):active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--sh-game-shadow) !important;
+}
+
+#root .ch-university.ur .ur-channel-back {
+  color: var(--sh-game-cream);
+  font-family: var(--sh-game-font);
+  text-shadow: 0 2px 2px rgba(8,9,11,.8);
+}
+
+#root .ch-university.ur .ur-channel-back:hover,
+#root .ch-university.ur .ur-channel-back:focus-visible {
+  color: var(--sh-game-gold);
+}
+
+#root .ch-university.ur .ur-audio-status {
+  color: var(--sh-game-cream-soft);
+  font-family: var(--sh-game-font);
+  text-shadow: 0 1px 2px var(--sh-game-shadow);
+}
+
+#root .ch-university.ur .ur-audio-status::before {
+  content: "";
+  display: inline-block;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  background: url("/site-assets/audio-icon.webp") center / contain no-repeat;
+}
+
+#root .ch-university.ur .ur-beam-self-controls .ur-slot-action {
+  color: var(--sh-game-cream) !important;
+  background: linear-gradient(180deg, var(--sh-game-oxblood), var(--sh-game-oxblood-dark)) !important;
+  border: 2px solid var(--sh-game-gold) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 3px 0 var(--sh-game-shadow) !important;
+  font-family: var(--sh-game-font);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 2px rgba(8,9,11,.8);
+}
+
+#root .ch-university.ur .ur-beam-self-controls .ur-slot-action:hover:not(:disabled) {
+  background: linear-gradient(180deg, #54423d, #221613) !important;
+}
+
+#root .ch-university.ur .ur-beam-self-controls .ur-slot-action:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--sh-game-shadow) !important;
+}
+
+#root .ch-university.ur .ur-beam-self-controls .ur-slot-action.ur-slot-leave {
+  background: linear-gradient(180deg, var(--sh-game-red), var(--sh-game-red-dark)) !important;
+}
+
+#root .ch-university.ur .ur-side,
+#root .ch-university.ur .ur-rules,
+#root .ch-university.ur .ur-social-profile-popup {
+  color: var(--sh-game-cream-soft);
+  background: linear-gradient(180deg, var(--sh-game-dialog), var(--sh-game-dialog-dark)) !important;
+  border: 2px solid var(--sh-game-gold) !important;
+  border-radius: 4px !important;
+  box-shadow: inset 0 0 0 5px rgba(194,155,83,.24), inset 0 0 18px rgba(8,9,11,.68), 0 8px 24px rgba(8,9,11,.58) !important;
+  font-family: var(--sh-font-body);
+}
+
+#root .ch-university.ur .ur-people-head {
+  color: var(--sh-game-cream);
+  border-bottom: 1px solid rgba(194,155,83,.28);
+}
+
+#root .ch-university.ur .ur-people-head h2,
+#root .ch-university.ur .ur-rules h2,
+#root .ch-university.ur .ur-profile-popup-cards > strong {
+  color: var(--sh-game-cream) !important;
+  font-family: var(--sh-game-font);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 2px rgba(8,9,11,.8);
+}
+
+#root .ch-university.ur .ur-rules h2 {
+  position: relative;
+  z-index: 0;
+}
+
+#root .ch-university.ur .ur-rules h2::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: 50%;
+  width: min(220px, 100%);
+  aspect-ratio: 256 / 178;
+  transform: translate(-50%, -50%);
+  background: url("/site-assets/turn-banner.webp") center / contain no-repeat;
+  pointer-events: none;
+}
+
+#root .ch-university.ur .ur-rules p,
+#root .ch-university.ur .ur-social-profile-popup,
+#root .ch-university.ur .ur-side {
+  color: var(--sh-game-cream-soft);
+  font-family: var(--sh-font-body);
+}
+
+#root .ch-university.ur .ur-social-profile-popup .ur-profile-popup-head strong,
+#root .ch-university.ur .ur-social-profile-popup .ur-profile-popup-head span {
+  color: var(--sh-game-cream-soft);
+  font-family: var(--sh-font-body);
+  text-shadow: 0 1px 2px var(--sh-game-shadow);
+}
+
+#root .ch-university.ur .ur-people > li {
+  border-bottom: 1px solid rgba(194,155,83,.22);
+}
+
+#root .ch-university.ur .ur-side .ur-close,
+#root .ch-university.ur .ur-rules-act > button:not(.bm-btn-primary),
+#root .ch-university.ur .ur-social-profile-popup .ur-profile-popup-x {
+  color: var(--sh-game-cream-soft) !important;
+  background: linear-gradient(180deg, var(--sh-game-panel), var(--sh-game-panel-dark)) !important;
+  border: 1px solid rgba(194,155,83,.65) !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  font-family: var(--sh-game-font);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+#root .ch-university.ur .ur-rules-act > .bm-btn-primary {
+  color: var(--sh-game-cream) !important;
+  background: linear-gradient(180deg, var(--sh-game-oxblood), var(--sh-game-oxblood-dark)) !important;
+  border: 2px solid var(--sh-game-gold) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 3px 0 var(--sh-game-shadow) !important;
+  font-family: var(--sh-game-font);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 2px rgba(8,9,11,.8);
+}
+
+#root .ch-university.ur .ur-side .ur-prow,
+#root .ch-university.ur .ur-rules p,
+#root .ch-university.ur .ur-social-profile-popup > button {
+  color: var(--sh-game-cream-soft);
+  font-family: var(--sh-font-body);
+}
