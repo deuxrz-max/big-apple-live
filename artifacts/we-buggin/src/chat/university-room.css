@@ -299,3 +299,17 @@ button.ur-prow:hover,button.ur-prow:focus-visible{background:#2a2a33;outline:non
 #root .ch.ur .ur-social-room .ur-social-card{transform:scale(1.14);transform-origin:center}
 #root .ch.ur .ur-social-room .ur-social-card .ur-slot-mic-icon{top:9%;right:9%}
 #root .ch.ur .ur-social-room .ur-beam.is-social-room{overflow-y:auto}
+
+.ur-social-card-portrait, .ur-social-card-empty { clip-path: circle(50%); }
+.ur-social-card-portrait img { object-fit: cover; }
+
+.ur-social-card-info span.shiny-name { position: static; left: auto; top: auto; width: auto; max-width: none; transform: none; display: inline; overflow: visible; }
+
+.ur-slot.is-speaking.has-person .ur-social-card-portrait { box-shadow: none; animation: none; }
+#root .ch.ur .ur-social-room .ur-slot.is-speaking.has-person .ur-slot-media { box-shadow: none; }
+#root .ch.ur .ur-social-room .ur-slot.is-speaking.has-person .ur-slot-media::after { display: none; content: none; }
+.ur-slot.is-speaking.has-person .ur-social-card::before { content: ""; position: absolute; z-index: 3; left: 27.6%; top: 11.9%; width: 44%; aspect-ratio: 1; pointer-events: none; background: radial-gradient(circle closest-side, transparent 84%, rgba(121,223,187,.95) 89%, rgba(121,223,187,.45) 94%, rgba(121,223,187,0) 100%); animation: ur-speaking-ring 1.35s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .ur-slot.is-speaking.has-person .ur-social-card::before { animation: none; } }
+
+#root .ch.ur .ur-social-room .ur-social-card .card-home-city { clip-path: circle(50%); }
+#root .ch.ur .ur-social-room .ur-social-card .card-home-city img { width: 100%; height: 100%; object-fit: cover; }
