@@ -852,3 +852,210 @@ body #root .app-bottom-nav .app-bottom-link.is-active::after {
   color: var(--sh-game-cream-soft);
   font-family: var(--sh-font-body);
 }
+
+/* Signed-out landing and authentication pages only. */
+#root :is(.dw-landing, .st-sign-in, .ch-auth) {
+  color: var(--sh-game-cream-soft);
+  background-color: var(--sh-game-shadow);
+  background-image:
+    linear-gradient(rgba(8,9,11,.78), rgba(8,9,11,.78)),
+    url("/site-assets/bg-title.webp");
+  background-position: center, center;
+  background-size: cover, cover;
+  background-repeat: no-repeat, no-repeat;
+  background-attachment: fixed, fixed;
+}
+
+#root .dw-landing .dw-landing-hero h1 {
+  color: var(--sh-game-cream);
+  font-family: var(--sh-font-title);
+  text-shadow: var(--sh-text-shadow);
+}
+
+#root .dw-landing .dw-landing-kicker {
+  color: var(--sh-game-cream);
+  font-family: var(--sh-game-font);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 2px rgba(8,9,11,.8);
+}
+
+#root .dw-landing .dw-landing-hero > p,
+#root .st-sign-in .cl-headerSubtitle {
+  color: var(--sh-game-cream-soft);
+  font-family: var(--sh-font-body);
+}
+
+#root .ch-auth .ch-card,
+#root .st-sign-in .cl-card,
+#root .st-sign-in .cl-cardBox {
+  color: var(--sh-game-cream-soft) !important;
+  background: linear-gradient(180deg, var(--sh-game-dialog), var(--sh-game-dialog-dark)) !important;
+  border: 2px solid var(--sh-game-gold) !important;
+  border-radius: 4px !important;
+  box-shadow: inset 0 0 0 5px rgba(194,155,83,.24), inset 0 0 18px rgba(8,9,11,.68) !important;
+}
+
+#root .ch-auth .ch-card h2,
+#root .st-sign-in .cl-headerTitle {
+  color: var(--sh-game-cream) !important;
+  font-family: var(--sh-game-font) !important;
+  letter-spacing: 1.5px !important;
+  text-shadow: 0 2px 2px rgba(8,9,11,.8);
+  text-transform: uppercase;
+}
+
+#root .ch-auth .ch-card label,
+#root .st-sign-in .cl-formFieldLabel {
+  color: var(--sh-game-cream) !important;
+  font-family: var(--sh-game-font) !important;
+  letter-spacing: .7px;
+}
+
+#root .ch-auth .ch-card :is(input, select, textarea),
+#root .st-sign-in :is(.cl-formFieldInput, input, select, textarea) {
+  color: var(--sh-game-cream-soft) !important;
+  background: var(--sh-game-panel-dark) !important;
+  border: 1px solid rgba(194,155,83,.65) !important;
+  border-radius: 4px !important;
+  font-family: var(--sh-font-body) !important;
+}
+
+#root .ch-auth .ch-card :is(input, select, textarea):focus,
+#root .st-sign-in :is(.cl-formFieldInput, input, select, textarea):focus {
+  border-color: var(--sh-game-gold) !important;
+  outline: 2px solid rgba(194,155,83,.22) !important;
+  outline-offset: 1px !important;
+}
+
+#root .ch-auth .ch-card .bm-btn-primary,
+#root .st-sign-in .cl-formButtonPrimary {
+  color: var(--sh-game-cream) !important;
+  background: linear-gradient(180deg, var(--sh-game-oxblood), var(--sh-game-oxblood-dark)) !important;
+  border: 2px solid var(--sh-game-gold) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 3px 0 var(--sh-game-shadow) !important;
+  font-family: var(--sh-game-font) !important;
+  font-weight: 700 !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase;
+  text-shadow: 0 2px 2px rgba(8,9,11,.8);
+}
+
+#root .ch-auth .ch-card .bm-btn-primary:hover:not(:disabled),
+#root .st-sign-in .cl-formButtonPrimary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #54423d, #221613) !important;
+}
+
+#root .ch-auth .ch-card :is(button:not(.bm-btn-primary), a:not(.bm-btn-primary)),
+#root .st-sign-in :is(.cl-socialButtonsBlockButton, .cl-formButtonReset) {
+  color: var(--sh-game-cream-soft);
+  background: linear-gradient(180deg, var(--sh-game-panel), var(--sh-game-panel-dark));
+  border: 1px solid rgba(194,155,83,.65);
+  border-radius: 4px;
+  font-family: var(--sh-game-font);
+}
+
+#root .st-sign-in .cl-footerActionLink {
+  background: linear-gradient(180deg, var(--sh-game-panel), var(--sh-game-panel-dark));
+  border: 1px solid rgba(194,155,83,.65);
+  border-radius: 4px;
+}
+
+#root .st-sign-in .cl-socialButtonsBlockButtonText {
+  color: var(--sh-game-cream-soft);
+}
+
+#root .dw-landing .dw-landing-cta .bm-btn-primary {
+  color: var(--sh-game-cream) !important;
+  background: linear-gradient(180deg, var(--sh-game-oxblood), var(--sh-game-oxblood-dark)) !important;
+  border: 2px solid var(--sh-game-gold) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 3px 0 var(--sh-game-shadow) !important;
+  font-family: var(--sh-game-font) !important;
+  font-weight: 700 !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase;
+  text-shadow: 0 2px 2px rgba(8,9,11,.8);
+}
+
+#root .dw-landing .st-topbar-actions .bm-btn-primary {
+  color: var(--sh-game-cream) !important;
+  background: linear-gradient(180deg, var(--sh-game-oxblood), var(--sh-game-oxblood-dark)) !important;
+  border: 2px solid var(--sh-game-gold) !important;
+  box-shadow: 0 3px 0 var(--sh-game-shadow) !important;
+  font-family: var(--sh-game-font) !important;
+  font-weight: 700 !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase;
+  text-shadow: 0 2px 2px rgba(8,9,11,.8);
+}
+
+#root .dw-landing .dw-landing-cta .bm-btn:not(.bm-btn-primary) {
+  color: var(--sh-game-cream-soft) !important;
+  background: linear-gradient(180deg, var(--sh-game-panel), var(--sh-game-panel-dark)) !important;
+  border: 1px solid rgba(194,155,83,.65) !important;
+  border-radius: 4px !important;
+  font-family: var(--sh-game-font) !important;
+}
+
+#root .ch-auth [role="tab"] {
+  color: var(--sh-game-cream-soft) !important;
+  background: linear-gradient(180deg, var(--sh-game-panel), var(--sh-game-panel-dark)) !important;
+  border: 1px solid rgba(194,155,83,.65) !important;
+  border-radius: 4px !important;
+  font-family: var(--sh-game-font) !important;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+#root .ch-auth [role="tab"][aria-selected="true"] {
+  color: var(--sh-game-cream) !important;
+  background: linear-gradient(180deg, var(--sh-game-oxblood), var(--sh-game-oxblood-dark)) !important;
+  border: 2px solid var(--sh-game-gold) !important;
+  box-shadow: 0 0 8px rgba(194,155,83,.2);
+}
+
+#root .ch-auth .ch-card a,
+#root .st-sign-in .cl-footerActionLink {
+  color: var(--sh-game-cream-soft) !important;
+  text-decoration: underline;
+  text-decoration-color: var(--sh-game-gold);
+  text-underline-offset: 3px;
+}
+
+#root .ch-auth .ch-card :is(.ch-err, .ch-fe),
+#root .st-sign-in :is(.cl-formFieldErrorText, .cl-formFieldError) {
+  color: #f0b2a6 !important;
+}
+
+@layer app-shapes {
+  #root .ch-auth .ch-card :is(input, select, textarea):focus,
+  #root .st-sign-in :is(.cl-formFieldInput, input, select, textarea):focus {
+    border-color: var(--sh-game-gold) !important;
+    outline-color: rgba(194,155,83,.22) !important;
+  }
+
+  #root .ch-auth .ch-card,
+  #root .st-sign-in .cl-card,
+  #root .st-sign-in .cl-cardBox {
+    border-radius: 4px !important;
+  }
+
+  #root .ch-auth .ch-card :is(input, select, textarea),
+  #root .st-sign-in :is(.cl-formFieldInput, input, select, textarea) {
+    color: var(--sh-game-cream-soft) !important;
+    background: var(--sh-game-panel-dark) !important;
+    border: 1px solid rgba(194,155,83,.65) !important;
+    border-radius: 4px !important;
+    font-family: var(--sh-font-body) !important;
+  }
+
+  #root .ch-auth .ch-card .bm-btn-primary,
+  #root .ch-auth [role="tab"],
+  #root .st-sign-in :is(.cl-formButtonPrimary, .cl-socialButtonsBlockButton, .cl-formButtonReset, .cl-footerActionLink),
+  #root .dw-landing .dw-landing-cta .bm-btn,
+  #root .dw-landing .st-topbar-actions .bm-btn-primary {
+    border-radius: 4px !important;
+  }
+}
