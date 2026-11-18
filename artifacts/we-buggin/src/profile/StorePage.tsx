@@ -55,7 +55,7 @@ export function StorePage() {
       <header className="store-header">
         <Link href="/user-portal" className="store-back">Back to Me</Link>
         <h1>Store</h1>
-        <p>Profile cosmetics — new frames coming soon.</p>
+        <p>Profile cosmetics. Payments are not available yet.</p>
       </header>
       {loading && <Loading />}
       {error && !data && <ErrorBox error={error} retry={() => void load()} />}
@@ -76,7 +76,7 @@ export function StorePage() {
                   <div className="store-name-preview store-name-shimmer"><ShinyName displayNameColor="#f5f4ef" displayNameTierIndex={1}>Your Name</ShinyName><Sparkles size={16} aria-hidden /></div>
                 )}
                 <strong>{item.name}</strong>
-                {item.available && <span className="store-price">{item.priceCents === 0 ? 'Included' : previewPrice(item.priceCents)}</span>}
+                <span className="store-price">{item.priceCents === 0 ? 'Included' : previewPrice(item.priceCents)}</span>
                 {item.equipped ? <span className="store-state"><Check size={15} /> Equipped</span>
                   : item.owned ? <button type="button" className="store-equip" onClick={() => void equip(section.kind, item)} disabled={pending !== null}>{pending === `${section.kind}:${item.id}` ? 'Equipping…' : 'Equip'}</button>
                   : <button type="button" className="store-coming" disabled>Coming soon</button>}

@@ -20,8 +20,6 @@ import { BotModerationPanel } from './BotModerationPanel';
 import { selectFeaturedRoom } from './directory-utils';
 import { RandomCityBattleButton, RoomChannels } from './RoomChannels';
 import { CreateRoomButton } from './CreateRoomButton';
-import { battleHrefForCity, dailyAethelgardCity, randomAethelgardCity, type AethelgardCity } from '@/battle/aethelgard-cities';
-import { CITY_BOSSES } from '@/battle/boss-config';
 import { ActionMenu, ScreenHeader } from '@/components/app-chrome';
 import { AccessCheckError } from './AccessCheckError';
 import './chat.css';
@@ -178,68 +176,6 @@ export function HomeSections() {
   </nav>;
 }
 
-/**
- * Home map Battle button: games can start from the homepage or inside a room,
- * so tapping it offers the choice — create a room, or play the game (a battle
- * in a random city, the same destination as the Random button).
- */
-export function HomeBattleButton() {
-  const [choiceOpen, setChoiceOpen] = useState(false);
-  const [playCity, setPlayCity] = useState<AethelgardCity | null>(null);
-  const dialog = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    if (!choiceOpen) return;
-    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setChoiceOpen(false);
-    };
-    document.addEventListener('keydown', onKeyDown);
-    dialog.current?.querySelector<HTMLButtonElement | HTMLAnchorElement>('button, a')?.focus();
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      previous?.focus();
-    };
-  }, [choiceOpen]);
-
-  const openChoice = () => {
-    setPlayCity(randomAethelgardCity());
-    setChoiceOpen(true);
-  };
-  const playBoss = playCity ? CITY_BOSSES[playCity.slug] : undefined;
-
-  return (
-    <>
-      <button type="button" className="bm-btn bm-btn-primary dw-battle-cta" aria-haspopup="dialog" aria-expanded={choiceOpen}
-        onClick={openChoice}>
-        <Swords size={17} aria-hidden="true" /> Battle
-      </button>
-      {choiceOpen && playCity && (
-        <div className="st-room-choice-scrim" onMouseDown={(event) => {
-          if (event.target === event.currentTarget) setChoiceOpen(false);
-        }}>
-          <section ref={dialog} className="st-room-choice-card" role="dialog" aria-modal="true"
-            aria-labelledby="st-battle-choice-title" data-testid="dialog-battle-choice">
-            <button type="button" className="st-room-choice-close" aria-label="Close battle choices"
-              onClick={() => setChoiceOpen(false)}><X size={18} /></button>
-            <h2 id="st-battle-choice-title">Battle</h2>
-            <div className="st-room-choice-room-form">
-              <CreateRoomButton className="st-room-choice-option" onOpen={() => setChoiceOpen(false)}>
-                <span className="st-room-choice-icon"><Users size={22} aria-hidden="true" /></span>
-                <span><strong>Create a room</strong><small>Open a four-player social room with chat and live audio.</small></span>
-              </CreateRoomButton>
-              <Link href={battleHrefForCity(playCity)} className="st-room-choice-option" data-testid="link-battle-play-game">
-                <span className="st-room-choice-icon"><Swords size={22} aria-hidden="true" /></span>
-                <span><strong>Play the game</strong><small>{playBoss ? `Battle the ${playBoss.name} in ${playCity.name}.` : `Battle in ${playCity.name}.`}</small></span>
-              </Link>
-            </div>
-          </section>
-        </div>
-      )}
-    </>
-  );
-}
-
 export function ChatDirectory() {
   const { signOut } = useClerk();
   const directory = useGetChatDirectory({ query: { queryKey: getGetChatDirectoryQueryKey(), refetchInterval: 5_000 } });
@@ -248,8 +184,6 @@ export function ChatDirectory() {
   type DirectoryRoom = { roomId: string; label: string; headcount: number; headcountSince: number };
   const rooms = (directory.data ?? []) as DirectoryRoom[];
   const featuredRoom = selectFeaturedRoom(rooms);
-  const todayCity = dailyAethelgardCity();
-  const todayBoss = CITY_BOSSES[todayCity.slug];
   const displayedRooms = featuredRoom
     ? [featuredRoom, ...rooms.filter((room) => room.roomId !== featuredRoom.roomId)]
     : rooms;
@@ -286,27 +220,11 @@ export function ChatDirectory() {
       <HomeSections />
       <section className="st-dir-explore st-home-rooms" id="live-channels" aria-label="Rooms">
         {directory.isError && <div className="st-dir-state st-dir-error" role="alert"><div className="st-dir-state-mark">!</div><h3>Rooms aren’t loading</h3><p>We couldn’t reach the directory. Give it another try.</p><button type="button" onClick={() => directory.refetch()}>Retry directory</button></div>}
-        {directory.data && rooms.length === 0 && (
-          <div className="st-dir-state st-dir-happening" data-testid="home-happening-soon">
-            <div className="st-dir-state-mark">—</div>
-            <h3>Happening soon</h3>
-            <p>No rooms are live right now. Battle today’s city or start the first room.</p>
-            <div className="st-happening-cards">
-              <Link href={battleHrefForCity(todayCity)} className="st-happening-card" data-testid="link-daily-battle">
-                <Swords size={17} aria-hidden="true" />
-                <span><strong>Daily battle — {todayCity.name}</strong><small>{todayBoss ? `Take on the ${todayBoss.name}` : "Battle today's boss bot"}</small></span>
-              </Link>
-              <CreateRoomButton className="st-happening-card">
-                <Users size={17} aria-hidden="true" />
-                <span><strong>Create the first room</strong><small>Open a four-player audio room</small></span>
-              </CreateRoomButton>
-            </div>
-          </div>
-        )}
+        {directory.data && rooms.length === 0 && <div className="st-dir-state"><div className="st-dir-state-mark">—</div><h3>Quiet for a moment</h3><p>There are no rooms in the directory right now. Check back soon.</p></div>}
         <RoomChannels
           rooms={displayedRooms}
           loading={directory.isLoading}
-          battle={<HomeBattleButton />}
+          battle={<CreateRoomButton className="bm-btn bm-btn-primary dw-battle-cta"><Swords size={17} aria-hidden="true" /> Battle</CreateRoomButton>}
           random={<RandomCityBattleButton testId="button-home-random-city" />}
           renderRoom={(room) => <DirectoryRoomCard room={room} topic={topicFor(room)} isFeatured={room.roomId === featuredRoom?.roomId} hideDetails />}
           goLive={null}

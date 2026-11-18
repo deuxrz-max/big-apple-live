@@ -57,6 +57,7 @@ export function RoomChannels<R extends DirectoryChannelRoom>({
 }: RoomChannelsProps<R>) {
   const search = useSearch();
   const selected = channelBySlug(new URLSearchParams(search).get('channel'));
+  const others = rooms.filter((r) => !channelForDirectoryRoom(r.roomId));
 
   if (selected) {
     return <Redirect to={baseHref === '/' ? '/sign-in' : `/rooms/${selected.roomId}`} />;
@@ -96,9 +97,9 @@ export function RoomChannels<R extends DirectoryChannelRoom>({
         )}
         {goLive != null && <li className="st-home-go-live">{goLive}</li>}
       </ul>
-      {!loading && rooms.length > 0 && (
+      {!loading && others.length > 0 && (
         <ul className="rc-grid">
-          {rooms.map((room) => <li key={room.roomId}>{renderRoom(room)}</li>)}
+          {others.map((room) => <li key={room.roomId}>{renderRoom(room)}</li>)}
         </ul>
       )}
     </div>
