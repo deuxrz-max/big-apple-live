@@ -7,6 +7,7 @@ import {
 } from '@workspace/api-client-react';
 import { Avatar, Empty, ErrorBox } from './common';
 import { ShinyName } from '@/components/ShinyName';
+import { GameGem } from '@/components/game-gem';
 import './inbox.css';
 
 function stamp(s: string): string {
@@ -32,7 +33,7 @@ export function InboxPage() {
 
   return (
     <section className="ib">
-      <ScreenHeader className="ib-bar" backHref="/home" backLabel="Back to home" title="Messages" testId="header-inbox"
+      <ScreenHeader className="ib-bar" backHref="/home" backLabel="Back to home" title={<><GameGem color="blue" size={26} /> Messages</>} testId="header-inbox"
         subtitle={q.data ? `${q.data.conversations.length} conversation${q.data.conversations.length === 1 ? '' : 's'}` : undefined} />
       {q.isLoading && <div className="sc-skel" role="status" aria-label="Loading"><i /><i /><i /></div>}
       {q.isError && <ErrorBox error={q.error} retry={() => q.refetch()} />}

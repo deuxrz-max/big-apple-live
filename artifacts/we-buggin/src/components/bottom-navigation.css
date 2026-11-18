@@ -52,3 +52,11 @@ html { scroll-padding-bottom: var(--app-bottom-nav-clearance); }
 .app-bottom-link.is-active { color: #f2f2ee; border-top-color: #f2f2ee; }
 .app-bottom-link:hover { color: #fff; background: #181818; }
 .app-bottom-link:focus-visible { outline: 2px solid #fff; outline-offset: -4px; }
+
+/* Game look: gem icons cut from the game's own art. Inactive tabs sit dimmed
+   and greyed; the active tab's gem glows gold, matching the game's gold. */
+.app-bottom-gem { width: 28px; height: 28px; filter: grayscale(.45) brightness(.85); transition: filter .15s ease; }
+.app-bottom-link:hover .app-bottom-gem { filter: grayscale(.15) brightness(.95); }
+.app-bottom-link.is-active .app-bottom-gem { filter: drop-shadow(0 0 6px rgba(242, 208, 138, .65)); }
+#root .app-bottom-nav { border-top: 2px solid #c29b53; }
+#root .app-bottom-link.is-active { color: #f2d08a; }

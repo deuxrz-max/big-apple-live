@@ -5,6 +5,7 @@ import { useUser } from "@clerk/react";
 import { AlertTriangle, Flame, Shield, ShieldCheck } from "lucide-react";
 import { cityBySlug } from "./aethelgard-cities";
 import { cardHomeCity } from "./race-home-cities";
+import { CreateRoomButton } from "@/chat/CreateRoomButton";
 import { BattleBoardScene, type BoardView } from "./BattleBoardScene";
 import { BOSS_MOVE_CONFIG } from "./boss-config";
 import { photoSrc } from "@/components/user-photo";
@@ -612,6 +613,7 @@ export function BattlePrototype({ roomIdOverride, onExit }: { roomIdOverride?: s
   }
 
   const active = activeCharacter(battle);
+  const bossName = battle.teams.bots.find((character) => character.bossId)?.name;
   const activeSkillReady = battle.turnSide === "humans" && canHumanAct && !battle.outcome
     && active.hp > 0 && active.effects.scaredTurns <= 0 && active.mana >= active.skillCost;
   const automaticTargetMode = activeSkillReady && active.skill === "strike" ? "enemy" : null;
@@ -638,7 +640,7 @@ export function BattlePrototype({ roomIdOverride, onExit }: { roomIdOverride?: s
           {roomId && onExit
             ? <button type="button" className="battle-back" onClick={onExit}>← Room</button>
             : <Link href={roomId ? `/rooms/${encodeURIComponent(roomId)}` : "/"} className="battle-back">{roomId ? "← Room" : "← Home"}</Link>}
-          <div className="battle-title"><strong>{roomId ? "ROOM BATTLE" : "LOCAL BATTLE"}</strong><span>{roomId ? `${battle.teams.humans.length} vs ${battle.teams.bots.length} · Co-op` : `${city ? `${city.name} · ` : ''}4 vs 4 · Prototype`}</span></div>
+          <div className="battle-title"><strong>{roomId ? "ROOM BATTLE" : "LOCAL BATTLE"}</strong><span>{roomId ? `${battle.teams.humans.length} vs ${battle.teams.bots.length} · Co-op` : `${city ? `${city.name} · ` : ''}${bossName ? `vs ${bossName} · ` : ''}4 vs 4 · Prototype`}</span></div>
           <button type="button" className="battle-reset" onClick={restart} data-testid="battle-restart-top">{roomId ? "Room" : "Restart"}</button>
         </header>
 
@@ -715,6 +717,9 @@ export function BattlePrototype({ roomIdOverride, onExit }: { roomIdOverride?: s
             <h1 id="battle-result-title">{battle.outcome === "victory" ? "Victory" : "Defeat"}</h1>
             <p>{battle.outcome === "victory" ? "The opposing team has fallen." : "Your team has fallen."}</p>
             <button type="button" className="battle-result-restart" onClick={restart} data-testid="battle-restart-result">{roomId ? "Return to room" : "Play again"}</button>
+            {!roomId && battle.outcome === "victory" && (
+              <CreateRoomButton className="battle-result-restart" defaultTitle={city?.slug ?? "Battle"}>Challenge in a room</CreateRoomButton>
+            )}
             {!roomId && <Link href="/" className="battle-result-home">Return home</Link>}
           </section>
         </div>

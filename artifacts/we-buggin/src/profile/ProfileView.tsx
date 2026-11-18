@@ -6,6 +6,7 @@ import type { SocialPerson } from '@workspace/api-client-react';
 import { BotShield } from '@/chat/BotShield';
 import { SafetyReportDialog } from '@/safety/SafetyReportDialog';
 import { ProfileCard } from './ProfileCard';
+import { GameGem } from '@/components/game-gem';
 import './profile.css';
 import './profile-card.css';
 import { useProfileBackHref } from './QuickProfile';
@@ -63,7 +64,7 @@ export function ProfileView({ person, own = false, backHref, menu, actions }: {
     <div className="beam-app pf pf-clean" data-testid="profile-view">
       <header className="pf-clean-header">
         <BackButton href={backHref} label="Back" />
-        <strong>{own ? 'Me' : 'Profile'}</strong>
+        <strong><GameGem color="red" size={22} /> {own ? 'Me' : 'Profile'}</strong>
         {menu ?? (own ? <Link href="/user-portal/edit" className="pf-round" aria-label="Edit profile" data-testid="link-edit-profile">Edit</Link> : <span />)}
       </header>
       <div

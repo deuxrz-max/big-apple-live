@@ -13,6 +13,7 @@ import { BackButton, ProfileView, ProfileMenu } from '@/profile/ProfileView';
 import { useProfileBackHref } from '@/profile/QuickProfile';
 import { FavoritesGallery, type FavoriteEntry } from './FavoritesGallery';
 import { ShinyName } from '@/components/ShinyName';
+import { GameGem } from '@/components/game-gem';
 
 export function CommunityPage() {
   const me = useGetSocialMe();
@@ -145,7 +146,7 @@ export function FavoritesPage() {
   }
   return (
     <section className="fg-page">
-      <h1 className="fg-title">Following</h1>
+      <h1 className="fg-title"><GameGem color="green" size={30} /> Following</h1>
       {notice && <p className="sc-note" role="status">{notice}</p>}
       {q.isLoading && <Loading />}
       {q.isError && <ErrorBox error={q.error} retry={() => q.refetch()} />}

@@ -1,0 +1,6 @@
+/* Gem icons cut from the game's own art (battle-assets/gems/*.png). */
+.game-gem {
+  display: block;
+  object-fit: contain;
+  flex: 0 0 auto;
+}

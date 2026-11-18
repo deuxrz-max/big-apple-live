@@ -51,6 +51,20 @@
 }
 .aethelgard-city-battle{background:#d3af58;color:#080808}
 .aethelgard-city-back{background:#111;color:#f1d991}
+.aethelgard-city-boss{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-top:18px;
+  padding:14px;
+  border:1px solid #d3af58;
+  background:#111;
+}
+.aethelgard-city-boss-portrait{width:72px;height:72px;object-fit:cover;flex:none}
+.aethelgard-city-boss-info{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.aethelgard-city-boss-info strong{color:#fff;font:800 16px 'Nunito Sans',system-ui,sans-serif}
+.aethelgard-city-boss-info span{color:#c9c3b8;font:14px 'Nunito Sans',system-ui,sans-serif}
+.aethelgard-city-boss-battle{flex:none;min-height:44px;display:flex;align-items:center;gap:7px;padding:8px 12px;font:800 14px/1.1 'Nunito Sans',system-ui,sans-serif;text-decoration:none}
 @media(max-width:360px){
   .aethelgard-city-actions{grid-template-columns:1fr}
 }

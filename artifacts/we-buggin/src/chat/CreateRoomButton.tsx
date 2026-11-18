@@ -7,15 +7,15 @@ import { getGetRoomQueryKey, useCreateAccountRoom, useGetSocialMe } from "@works
 import type { RoomSession } from "@workspace/api-client-react";
 import { saveCreds } from "@/lib/room-creds";
 
-/** Creates an audio-only social room. */
-export function CreateRoomButton({ className, children }: { className: string; children: ReactNode }) {
+/** Creates an audio-only social room. `defaultTitle` prefills the one-word room name (e.g. a city slug). `onOpen` fires when the dialog is opened. */
+export function CreateRoomButton({ className, children, defaultTitle, onOpen }: { className: string; children: ReactNode; defaultTitle?: string; onOpen?: () => void }) {
   const [, navigate] = useLocation();
   const { user } = useUser();
   const qc = useQueryClient();
   const me = useGetSocialMe();
   const createRoom = useCreateAccountRoom();
   const [open, setOpen] = useState(false);
-  const [roomTitle, setRoomTitle] = useState("");
+  const [roomTitle, setRoomTitle] = useState(defaultTitle ?? "");
   const [attempted, setAttempted] = useState(false);
   const dialog = useRef<HTMLElement>(null);
   const username = me.data?.profile?.username ?? "";
@@ -61,9 +61,10 @@ export function CreateRoomButton({ className, children }: { className: string; c
     <button type="button" className={className} aria-haspopup="dialog" aria-expanded={open}
       onClick={() => {
         createRoom.reset();
-        setRoomTitle("");
+        setRoomTitle(defaultTitle ?? "");
         setAttempted(false);
         setOpen(true);
+        onOpen?.();
       }}>
       {children}
     </button>

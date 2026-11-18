@@ -846,3 +846,14 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ============ Game look: the game's own gold + gems, no new assets ============
+   The game already speaks gold (#c29b53) on dark oxblood with Cinzel titles.
+   These rules extend that language to the app chrome: gold rules under the
+   top bar and screen headers, gem icons on the Following / Messages / Me
+   titles, and Cinzel on the Following title. Behavior and routing untouched. */
+#root .st-topbar { border-bottom: 1px solid rgba(194, 155, 83, .45); }
+#root .dw-screen-header { border-bottom: 1px solid rgba(194, 155, 83, .45); }
+#root .dw-screen-header-title h1 { display: flex; align-items: center; justify-content: center; gap: 10px; }
+#root .fg-title { display: flex; align-items: center; gap: 10px; font-family: 'Cinzel', Georgia, serif; letter-spacing: .02em; }
+#root .pf-clean-header strong { display: inline-flex; align-items: center; gap: 8px; }

@@ -139,6 +139,12 @@
 .st-dir-state h3{margin:16px 0 5px;color:#f5efff;font:750 21px 'Bricolage Grotesque',sans-serif}
 .st-dir-state p{margin:0;color:#aaa0ba;font-size:13px;line-height:1.5}
 .st-dir-state button{margin-top:16px;border:1px solid rgba(166,255,0,.38);border-radius:999px;padding:9px 15px;background:rgba(166,255,0,.08);color:var(--dir-lime);font:700 12px 'DM Sans',sans-serif;cursor:pointer}
+.st-dir-happening .st-happening-cards{display:grid;gap:10px;width:100%;margin-top:16px}
+.st-dir-happening .st-happening-card{display:flex;align-items:center;gap:12px;width:100%;margin:0;padding:14px;border:1px solid rgba(166,255,0,.38);border-radius:14px;background:rgba(166,255,0,.08);color:#f5efff;font:700 13px 'DM Sans',sans-serif;text-decoration:none;text-align:left;cursor:pointer}
+.st-dir-happening .st-happening-card svg{flex:none;color:var(--dir-lime)}
+.st-dir-happening .st-happening-card strong{display:block;font-size:14px}
+.st-dir-happening .st-happening-card small{display:block;margin-top:2px;color:#aaa0ba;font-weight:400}
+a.st-room-choice-option{display:block;text-decoration:none}
 .st-dir-footer{margin-top:clamp(35px,6vw,58px);padding-top:16px;border-top:1px solid rgba(192,167,255,.15)}
 .st-dir-footer>span{color:#958aa8;font:800 9px 'DM Sans',sans-serif;letter-spacing:.14em}
 .st-dir-footer p{max-width:650px;margin:8px 0 0;color:#80778f;font-size:10px;line-height:1.5}
